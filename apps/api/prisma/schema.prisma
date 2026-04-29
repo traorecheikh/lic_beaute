@@ -1,0 +1,492 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  client
+  salon_staff
+  salon_owner
+  platform_admin
+}
+
+enum SalonApprovalStatus {
+  pending_review
+  needs_info
+  approved
+  rejected
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  in_progress
+  completed
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  authorized
+  succeeded
+  failed
+  refunded
+}
+
+enum SubscriptionTier {
+  standard
+  premium
+}
+
+enum SubscriptionStatus {
+  inactive
+  active
+  past_due
+  cancelled
+  expired
+  paused
+}
+
+enum PaymentProvider {
+  wave
+  orange_money
+}
+
+enum BlockedSlotScope {
+  salon
+  employee
+}
+
+enum SubscriptionChargeType {
+  upgrade
+  renewal
+}
+
+enum MediaOwnerType {
+  salon
+  user
+}
+
+enum PushPlatform {
+  ios
+  android
+}
+
+enum SettlementEventType {
+  held
+  released
+  refunded
+}
+
+// ─── Core models ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String         @id @default(cuid())
+  fullName      String
+  email         String?        @unique
+  phone         String?        @unique
+  passwordHash  String?
+  role          Role
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  salonId       String?
+  salon         Salon?         @relation(fields: [salonId], references: [id], onDelete: SetNull)
+  sessions      Session[]
+  bookings      Booking[]
+  notifications Notification[]
+  employees     Employee[]
+  favorites     Favorite[]
+  reviewsAsClient  Review[]    @relation("ReviewClient")
+  reviewResponses  Review[]    @relation("ReviewResponder")
+  pushTokens    PushToken[]
+  bookingEvents BookingEvent[]
+  blockedSlotsCreated BlockedSlot[] @relation("BlockedSlotCreator")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  clientType   String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Salon {
+  id                     String              @id @default(cuid())
+  name                   String
+  category               String
+  description            String
+  city                   String
+  neighborhood           String?
+  address                String
+  latitude               Float?
+  longitude              Float?
+  averageRating          Float               @default(0)
+  subscriptionTier       SubscriptionTier    @default(standard)
+  subscriptionIntentTier SubscriptionTier    @default(standard)
+  approvalStatus         SalonApprovalStatus @default(pending_review)
+  latestAdminNote        String?
+  submittedAt            DateTime            @default(now())
+  depositPercentDefault  Float?
+  isVisibleInMarketplace Boolean             @default(false)
+  canReceiveBookings     Boolean             @default(false)
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  staffMembers           User[]
+  services               Service[]
+  bookings               Booking[]
+  subscription           Subscription?
+  documents              SalonDocument[]
+  gallery                SalonGalleryImage[]
+  employees              Employee[]
+  blockedSlots           BlockedSlot[]
+  salonHours             SalonHours[]
+  favorites              Favorite[]
+  reviews                Review[]
+}
+
+model Service {
+  id                  String              @id @default(cuid())
+  salonId             String
+  name                String
+  durationMinutes     Int
+  priceXof            Int
+  depositMode         String              @default("none")
+  depositAmountXof    Int?
+  depositPercent      Int?
+  isActive            Boolean             @default(true)
+  displayOrder        Int                 @default(0)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  salon               Salon               @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  bookings            Booking[]
+  employeeSpecialties EmployeeSpecialty[]
+}
+
+model Booking {
+  id                   String            @id @default(cuid())
+  clientId             String
+  salonId              String
+  serviceId            String
+  employeeId           String?
+  startsAt             DateTime
+  endsAt               DateTime
+  status               BookingStatus     @default(pending)
+  source               String            @default("marketplace")
+  depositAmountXof     Int               @default(0)
+  depositPaymentStatus PaymentStatus     @default(pending)
+  paymentProvider      PaymentProvider?
+  paymentReference     String?
+  clientNote           String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  client               User              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  salon                Salon             @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  service              Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  employee             Employee?         @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  payments             Payment[]
+  bookingEvents        BookingEvent[]
+  settlementEvents     SettlementEvent[]
+  review               Review?
+}
+
+model Payment {
+  id               String            @id @default(cuid())
+  bookingId        String
+  provider         PaymentProvider   @default(wave)
+  status           PaymentStatus     @default(pending)
+  amountXof        Int
+  providerTxId     String?
+  idempotencyKey   String            @unique
+  webhookSignature String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  booking          Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  settlementEvents SettlementEvent[]
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  channel   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id              String               @id @default(cuid())
+  salonId         String               @unique
+  tier            SubscriptionTier     @default(standard)
+  status          SubscriptionStatus   @default(inactive)
+  billingProvider PaymentProvider?
+  isComplimentary Boolean              @default(false)
+  autoRenew       Boolean              @default(false)
+  startedAt       DateTime             @default(now())
+  renewedAt       DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  salon           Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  events          SubscriptionEvent[]
+  invoices        BillingInvoice[]
+  charges         SubscriptionCharge[]
+}
+
+model SubscriptionEvent {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  eventType      String
+  summary        String
+  actorName      String
+  source         String
+  payloadPreview String?
+  createdAt      DateTime     @default(now())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+}
+
+model BillingInvoice {
+  id             String              @id @default(cuid())
+  subscriptionId String
+  invoiceNumber  String              @unique
+  amountXof      Int                 @default(0)
+  status         String              @default("issued")
+  pdfUrl         String              @default("")
+  createdAt      DateTime            @default(now())
+  subscription   Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  charge         SubscriptionCharge?
+}
+
+model AuditLog {
+  id               String   @id @default(cuid())
+  action           String
+  summary          String
+  entityType       String
+  entityId         String
+  actorName        String
+  actorUserId      String?
+  severity         String   @default("info")
+  payloadJson      String   @default("{}")
+  relatedLinksJson String   @default("[]")
+  createdAt        DateTime @default(now())
+}
+
+model SalonDocument {
+  id      String  @id @default(cuid())
+  salonId String
+  label   String
+  status  String  @default("missing")
+  note    String?
+  fileUrl String?
+  salon   Salon   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+}
+
+model SalonGalleryImage {
+  id        String   @id @default(cuid())
+  salonId   String
+  url       String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  queue       String
+  type        String
+  payloadJson String
+  status      String    @default("pending")
+  attempts    Int       @default(0)
+  runAfter    DateTime  @default(now())
+  lockedAt    DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  group       String
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model PlatformSalonCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model PlatformRequiredDocument {
+  id         String   @id @default(cuid())
+  label      String   @unique
+  slug       String   @unique
+  type       String
+  isRequired Boolean  @default(true)
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+// ─── New models ───────────────────────────────────────────────────────────────
+
+model SalonHours {
+  id        String  @id @default(cuid())
+  salonId   String
+  dayOfWeek Int
+  isOpen    Boolean @default(false)
+  opensAt   String?
+  closesAt  String?
+  salon     Salon   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@unique([salonId, dayOfWeek])
+}
+
+model Employee {
+  id                String              @id @default(cuid())
+  salonId           String
+  userId            String
+  displayName       String
+  isActive          Boolean             @default(true)
+  schedulingEnabled Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  salon             Salon               @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialties       EmployeeSpecialty[]
+  bookings          Booking[]
+  blockedSlots      BlockedSlot[]
+
+  @@unique([salonId, userId])
+}
+
+model EmployeeSpecialty {
+  id         String   @id @default(cuid())
+  employeeId String
+  serviceId  String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, serviceId])
+}
+
+model BlockedSlot {
+  id              String           @id @default(cuid())
+  salonId         String
+  employeeId      String?
+  startsAt        DateTime
+  endsAt          DateTime
+  reason          String?
+  scope           BlockedSlotScope @default(salon)
+  createdByUserId String
+  createdAt       DateTime         @default(now())
+  salon           Salon            @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  createdBy       User             @relation("BlockedSlotCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  salonId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, salonId])
+}
+
+model Review {
+  id               String   @id @default(cuid())
+  bookingId        String   @unique
+  salonId          String
+  clientId         String
+  rating           Int
+  comment          String?
+  responseText     String?
+  responseByUserId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  salon            Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  client           User     @relation("ReviewClient", fields: [clientId], references: [id], onDelete: Cascade)
+  responseBy       User?    @relation("ReviewResponder", fields: [responseByUserId], references: [id], onDelete: SetNull)
+}
+
+model PushToken {
+  id        String       @id @default(cuid())
+  userId    String
+  platform  PushPlatform
+  deviceId  String
+  token     String       @unique
+  revokedAt DateTime?
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SubscriptionCharge {
+  id             String                 @id @default(cuid())
+  subscriptionId String
+  provider       PaymentProvider
+  status         PaymentStatus          @default(pending)
+  amountXof      Int
+  providerTxId   String?
+  idempotencyKey String                 @unique
+  chargeType     SubscriptionChargeType
+  invoiceId      String?                @unique
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  subscription   Subscription           @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  invoice        BillingInvoice?        @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+}
+
+model BookingEvent {
+  id          String   @id @default(cuid())
+  bookingId   String
+  actorUserId String?
+  eventType   String
+  fromStatus  String?
+  toStatus    String?
+  payloadJson String   @default("{}")
+  createdAt   DateTime @default(now())
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+}
+
+model MediaAsset {
+  id           String         @id @default(cuid())
+  ownerType    MediaOwnerType
+  ownerId      String
+  objectKey    String         @unique
+  publicUrl    String
+  mimeType     String
+  sizeBytes    Int
+  displayOrder Int            @default(0)
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+}
+
+model SettlementEvent {
+  id                String              @id @default(cuid())
+  bookingId         String
+  paymentId         String?
+  eventType         SettlementEventType
+  amountXof         Int
+  providerReference String?
+  createdAt         DateTime            @default(now())
+  booking           Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payment           Payment?            @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+}
