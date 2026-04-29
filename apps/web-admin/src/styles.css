@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand Palette (Restored) ──────────────────────────────── */
+  --color-primary: #D96B8C;        /* Blush / Pink */
+  --color-secondary: #C9A26A;      /* Gold / Sand */
+  --color-tertiary: #8B4A2E;       /* Cocoa / Brown */
+  
+  --color-espresso: #2D1A12;
+  --color-cocoa: #4A3728;
+  --color-sand: #F9F5F0;
+  --color-blush: #FCEEF2;
+
+  /* ── Neutral Surfaces ────────────────────────────────────────── */
+  --color-neutral-bg: #F6F6F6;
+  --color-surface: #FFFFFF;
+  --color-on-surface: #2D1A12;     /* Using Espresso as default text */
+  --color-on-surface-variant: #4A3728;
+  --color-outline-variant: #E8E2DA;
+
+  /* ── Semantic ────────────────────────────────────────────────── */
+  --color-error: #BA1A1A;
+
+  /* ── Typography ──────────────────────────────────────────────── */
+  --font-display: "Cormorant Garamond", serif;
+  --font-sans: "Inter", sans-serif;
+
+  /* ── Rounded ─────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+}
+
+@layer base {
+  body {
+    @apply min-h-screen bg-neutral-bg text-espresso font-sans antialiased selection:bg-primary/10;
+  }
+
+  h1, h2, h3 {
+    @apply font-display font-bold leading-tight text-espresso;
+  }
+}
+
+/* ── Admin Typography Scale ──────────────────────────────────── */
+/* One scale for all admin + pro pages. Never use ad-hoc text-* sizes. */
+
+@utility page-title {
+  /* "Pilotage", "Salons", "Abonnements" — every list page header */
+  @apply font-display text-2xl font-bold tracking-tight text-espresso;
+}
+
+@utility entity-title {
+  /* Salon name, subscription name on detail pages */
+  @apply font-display text-2xl font-bold tracking-tight text-espresso;
+}
+
+@utility section-label {
+  /* "Pièces Justificatives", "Top croissance" — section dividers */
+  @apply font-sans text-[10px] font-semibold uppercase tracking-[0.25em] text-cocoa/80;
+}
+
+@utility row-primary {
+  /* Primary text in list rows and table cells */
+  @apply font-sans text-[14px] font-semibold text-espresso;
+}
+
+@utility row-meta {
+  /* Secondary metadata in list rows */
+  @apply font-sans text-[12px] text-cocoa/80;
+}
+
+@utility metric-value {
+  /* KPI numbers */
+  @apply font-sans text-2xl font-bold text-espresso tabular-nums;
+}
+
+@utility metric-label {
+  /* KPI label underneath */
+  @apply font-sans text-[10px] font-semibold uppercase tracking-widest text-cocoa/80;
+}
+
+/* ── Shared Layout ───────────────────────────────────────────── */
+
+@utility panel-clean {
+  @apply bg-surface rounded-2xl border border-outline-variant/50 shadow-[0_2px_8px_rgba(45,26,18,0.02)];
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+
+@utility btn-primary {
+  @apply inline-flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-[0.98] disabled:opacity-50;
+  @apply bg-primary text-white px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  &:hover {
+    @apply shadow-lg shadow-primary/20 bg-[#C45A7A];
+  }
+}
+
+@utility btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-[0.98] disabled:opacity-50;
+  @apply bg-white text-espresso px-8 py-2.5 text-[12px] ring-1 ring-outline-variant tracking-widest uppercase;
+  &:hover {
+    @apply bg-sand;
+  }
+}
+
+@utility btn-gold {
+  @apply inline-flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-[0.98] disabled:opacity-50;
+  @apply bg-secondary text-white px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  &:hover {
+    @apply opacity-90 shadow-lg shadow-secondary/10;
+  }
+}
+
+/* ── Form ────────────────────────────────────────────────────── */
+
+@utility input-shell {
+  @apply w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-sm text-espresso placeholder:text-cocoa/60 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all;
+}
+
+@utility input-error {
+  @apply border-error/50 ring-1 ring-error/20 bg-error/[0.02];
+}
+
+@utility input-dirty {
+  @apply border-primary/40 ring-1 ring-primary/10;
+}
+
+@keyframes field-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  60%       { transform: translateX(4px); }
+  80%       { transform: translateX(-2px); }
+}
+
+@utility animate-field-shake {
+  animation: field-shake 0.28s ease-in-out;
+}
