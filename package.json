@@ -1,0 +1,23 @@
+{
+  "name": "beauteavenue",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @beauteavenue/api --filter @beauteavenue/web-admin dev",
+    "dev:api": "pnpm --filter @beauteavenue/api dev",
+    "dev:worker": "pnpm --filter @beauteavenue/api worker:dev",
+    "dev:web": "pnpm --filter @beauteavenue/web-admin dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:generate": "pnpm --filter @beauteavenue/api prisma:generate",
+    "db:migrate": "pnpm --filter @beauteavenue/api prisma:migrate",
+    "db:seed": "pnpm --filter @beauteavenue/api prisma:seed",
+    "openapi:generate": "pnpm --filter @beauteavenue/contracts openapi:generate",
+    "docker:up": "docker compose -f infra/compose/docker-compose.yml up --build",
+    "docker:down": "docker compose -f infra/compose/docker-compose.yml down -v"
+  }
+}
+
