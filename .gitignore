@@ -59,9 +59,9 @@ Fresha/
 t.txt
 
 # Root design exports not used by app runtime
-logo.png
-om.png
-wave.png
+/logo.png
+/om.png
+/wave.png
 
 # Mobile scratch asset
 apps/mobile-client/flutter_01.png
