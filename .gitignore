@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# Build outputs
+.turbo/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS / editor
+.DS_Store
+.idea/
+.playwright-mcp/
+
+# Logs
+*.log
+
+# Local API runtime artifacts
+apps/api/.data/
+
+# Flutter / mobile generated
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/android/.gradle/
+**/android/local.properties
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+
+# Keep generated mobile package lock files out of git
+apps/mobile-client/packages/beauteavenue_api/pubspec.lock
+
+# Irrelevant planning and assistant prompt docs (requested)
+AGENT.md
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+DESIGN.md
+docs/
+plans/
+ux-example.md
+beautyavenue-audit.md
+PRODUCT.md
+Fresha/
+
+# Scratch files
+t.txt
+
+# Root design exports not used by app runtime
+logo.png
+om.png
+wave.png
+
+# Mobile scratch asset
+apps/mobile-client/flutter_01.png
