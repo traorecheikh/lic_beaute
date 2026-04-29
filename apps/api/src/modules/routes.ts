@@ -1,0 +1,137 @@
+import type { FastifyInstance } from "fastify";
+
+import type { DatabaseRuntime } from "../lib/database-runtime.js";
+import { AdminController } from "./admin.js";
+import { AuthController } from "./auth.js";
+import { BookingController } from "./bookings.js";
+import { CatalogController } from "./catalog.js";
+import { MediaController } from "./media.js";
+import { NotificationController } from "./notifications.js";
+import { PaymentController } from "./payments.js";
+import { ProController } from "./pro.js";
+
+export async function registerRoutes(app: FastifyInstance, databaseRuntime: DatabaseRuntime) {
+  const auth = new AuthController();
+  const catalog = new CatalogController();
+  const bookings = new BookingController();
+  const admin = new AdminController();
+  const pro = new ProController();
+  const payments = new PaymentController();
+  const notifications = new NotificationController();
+  const media = new MediaController();
+
+  // ── Health ────────────────────────────────────────────────────────────────
+  app.get("/health", async () => ({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    database: {
+      driver: databaseRuntime.driver,
+      mode: databaseRuntime.mode,
+      attempts: databaseRuntime.attempts
+    }
+  }));
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  app.post("/api/v1/auth/register", (req, rep) => auth.register(req, rep));
+  app.post("/api/v1/auth/login", (req, rep) => auth.login(req, rep));
+  app.post("/api/v1/auth/otp/request", (req, rep) => auth.requestOtp(req, rep));
+  app.post("/api/v1/auth/otp/verify", (req, rep) => auth.verifyOtp(req, rep));
+  app.post("/api/v1/auth/refresh", (req, rep) => auth.refresh(req, rep));
+  app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
+  app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
+  app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));
+
+  // ── Catalog ───────────────────────────────────────────────────────────────
+  app.get("/api/v1/salons", (req, rep) => catalog.list(req, rep));
+  app.get("/api/v1/salons/:id", (req, rep) => catalog.detail(req, rep));
+  app.get("/api/v1/salons/:id/availability", (req, rep) => catalog.availability(req, rep));
+  app.get("/api/v1/salons/:id/reviews", (req, rep) => catalog.reviews(req, rep));
+  app.get("/api/v1/config/pricing", (req, rep) => catalog.pricing(req, rep));
+
+  // ── Favorites ─────────────────────────────────────────────────────────────
+  app.get("/api/v1/favorites", (req, rep) => catalog.listFavorites(req, rep));
+  app.post("/api/v1/favorites/:salonId", (req, rep) => catalog.addFavorite(req, rep));
+  app.delete("/api/v1/favorites/:salonId", (req, rep) => catalog.removeFavorite(req, rep));
+
+  // ── Bookings ──────────────────────────────────────────────────────────────
+  app.get("/api/v1/bookings", (req, rep) => bookings.list(req, rep));
+  app.post("/api/v1/bookings", (req, rep) => bookings.create(req, rep));
+  app.get("/api/v1/bookings/:bookingId", (req, rep) => bookings.detail(req, rep));
+  app.post("/api/v1/bookings/:bookingId/cancel", (req, rep) => bookings.cancel(req, rep));
+  app.post("/api/v1/bookings/:bookingId/reschedule", (req, rep) => bookings.reschedule(req, rep));
+  app.post("/api/v1/bookings/:bookingId/review", (req, rep) => bookings.submitReview(req, rep));
+
+  // ── Payments ──────────────────────────────────────────────────────────────
+  app.post("/api/v1/payments/deposits/initiate", (req, rep) => payments.initiate(req, rep));
+  app.get("/api/v1/payments/:paymentId", (req, rep) => payments.status(req, rep));
+  app.post("/api/v1/payments/webhooks/wave", (req, rep) => payments.webhookWave(req, rep));
+  app.post("/api/v1/payments/webhooks/orange-money", (req, rep) => payments.webhookOrangeMoney(req, rep));
+  app.post("/api/v1/payments/:paymentId/refund", (req, rep) => payments.refund(req, rep));
+
+  // ── Pro ───────────────────────────────────────────────────────────────────
+  app.get("/api/v1/pro/dashboard", (req, rep) => pro.dashboard(req, rep));
+  app.get("/api/v1/pro/salon", (req, rep) => pro.getSalon(req, rep));
+  app.patch("/api/v1/pro/salon", (req, rep) => pro.updateSalon(req, rep));
+  app.get("/api/v1/pro/services", (req, rep) => pro.listServices(req, rep));
+  app.post("/api/v1/pro/services", (req, rep) => pro.createService(req, rep));
+  app.patch("/api/v1/pro/services/:serviceId", (req, rep) => pro.updateService(req, rep));
+  app.delete("/api/v1/pro/services/:serviceId", (req, rep) => pro.deleteService(req, rep));
+  app.get("/api/v1/pro/staff", (req, rep) => pro.listStaff(req, rep));
+  app.post("/api/v1/pro/staff", (req, rep) => pro.createStaff(req, rep));
+  app.patch("/api/v1/pro/staff/:employeeId", (req, rep) => pro.updateStaff(req, rep));
+  app.delete("/api/v1/pro/staff/:employeeId", (req, rep) => pro.deleteStaff(req, rep));
+  app.get("/api/v1/pro/hours", (req, rep) => pro.getHours(req, rep));
+  app.put("/api/v1/pro/hours", (req, rep) => pro.updateHours(req, rep));
+  app.get("/api/v1/pro/blocked-slots", (req, rep) => pro.listBlockedSlots(req, rep));
+  app.post("/api/v1/pro/blocked-slots", (req, rep) => pro.createBlockedSlot(req, rep));
+  app.delete("/api/v1/pro/blocked-slots/:slotId", (req, rep) => pro.deleteBlockedSlot(req, rep));
+  app.get("/api/v1/pro/bookings", (req, rep) => pro.listBookings(req, rep));
+  app.post("/api/v1/pro/bookings/manual", (req, rep) => pro.createManualBooking(req, rep));
+  app.get("/api/v1/pro/bookings/:bookingId", (req, rep) => pro.getBooking(req, rep));
+  app.post("/api/v1/pro/bookings/:bookingId/accept", (req, rep) => pro.acceptBooking(req, rep));
+  app.post("/api/v1/pro/bookings/:bookingId/reject", (req, rep) => pro.rejectBooking(req, rep));
+  app.post("/api/v1/pro/bookings/:bookingId/start", (req, rep) => pro.startBooking(req, rep));
+  app.post("/api/v1/pro/bookings/:bookingId/complete", (req, rep) => pro.completeBooking(req, rep));
+  app.get("/api/v1/pro/reviews", (req, rep) => pro.listReviews(req, rep));
+  app.post("/api/v1/pro/reviews/:reviewId/response", (req, rep) => pro.respondToReview(req, rep));
+  app.get("/api/v1/pro/analytics", (req, rep) => pro.analytics(req, rep));
+  app.get("/api/v1/pro/subscription", (req, rep) => pro.getSubscription(req, rep));
+  app.patch("/api/v1/pro/subscription", (req, rep) => pro.updateSubscription(req, rep));
+  app.post("/api/v1/pro/subscription/checkout", (req, rep) => pro.subscriptionCheckout(req, rep));
+  app.get("/api/v1/pro/payouts", (req, rep) => pro.listPayouts(req, rep));
+  app.get("/api/v1/pro/invoices", (req, rep) => pro.listInvoices(req, rep));
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+  app.get("/api/v1/notifications", (req, rep) => notifications.list(req, rep));
+  app.post("/api/v1/notifications/:id/read", (req, rep) => notifications.markRead(req, rep));
+  app.post("/api/v1/push-tokens", (req, rep) => notifications.registerPushToken(req, rep));
+  app.delete("/api/v1/push-tokens/:tokenId", (req, rep) => notifications.revokePushToken(req, rep));
+
+  // ── Media ─────────────────────────────────────────────────────────────────
+  app.post("/api/v1/media/upload", (req, rep) => media.upload(req, rep));
+  app.get("/api/v1/media/:mediaId", (req, rep) => media.get(req, rep));
+  app.delete("/api/v1/media/:mediaId", (req, rep) => media.delete(req, rep));
+
+  // ── Admin ─────────────────────────────────────────────────────────────────
+  app.get("/api/v1/admin/dashboard", (req, rep) => admin.dashboard(req, rep));
+  app.get("/api/v1/admin/salons", (req, rep) => admin.listSalons(req, rep));
+  app.get("/api/v1/admin/salons/pending", (req, rep) => admin.listPendingSalons(req, rep));
+  app.get("/api/v1/admin/salons/:salonId", (req, rep) => admin.salonDetail(req, rep));
+  app.post("/api/v1/admin/salons", (req, rep) => admin.createSalon(req, rep));
+  app.post("/api/v1/admin/salons/:salonId/approve", (req, rep) => admin.approveSalon(req, rep));
+  app.post("/api/v1/admin/salons/:salonId/reject", (req, rep) => admin.rejectSalon(req, rep));
+  app.post("/api/v1/admin/salons/:salonId/request-info", (req, rep) => admin.requestSalonInfo(req, rep));
+  app.get("/api/v1/admin/subscriptions", (req, rep) => admin.listSubscriptions(req, rep));
+  app.get("/api/v1/admin/subscriptions/:subscriptionId", (req, rep) => admin.subscriptionDetail(req, rep));
+  app.post("/api/v1/admin/subscriptions/:subscriptionId/override", (req, rep) => admin.overrideSubscription(req, rep));
+  app.get("/api/v1/admin/audit", (req, rep) => admin.listAudit(req, rep));
+  app.get("/api/v1/admin/audit/:auditId", (req, rep) => admin.auditDetail(req, rep));
+  app.get("/api/v1/admin/config/settings", (req, rep) => admin.listSettings(req, rep));
+  app.patch("/api/v1/admin/config/settings/:key", (req, rep) => admin.updateSetting(req, rep));
+  app.get("/api/v1/admin/config/categories", (req, rep) => admin.listCategories(req, rep));
+  app.post("/api/v1/admin/config/categories", (req, rep) => admin.upsertCategory(req, rep));
+  app.delete("/api/v1/admin/config/categories/:id", (req, rep) => admin.deleteCategory(req, rep));
+  app.get("/api/v1/admin/config/documents", (req, rep) => admin.listDocuments(req, rep));
+  app.post("/api/v1/admin/config/documents", (req, rep) => admin.upsertDocument(req, rep));
+  app.delete("/api/v1/admin/config/documents/:id", (req, rep) => admin.deleteDocument(req, rep));
+}
