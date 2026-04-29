@@ -1,0 +1,127 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
+import '../constants/storage_keys.dart';
+import '../env/app_env.dart';
+import '../storage/secure_storage.dart';
+
+Dio createDio(SecureStorage secureStorage) {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: AppEnv.apiBaseUrl,
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: const {'Content-Type': 'application/json'},
+    ),
+  );
+
+  dio.interceptors.addAll([
+    _AuthInterceptor(secureStorage: secureStorage, dio: dio),
+    if (kDebugMode)
+      LogInterceptor(requestBody: true, responseBody: true, logPrint: (o) => debugPrint(o.toString())),
+  ]);
+
+  return dio;
+}
+
+class _AuthInterceptor extends Interceptor {
+  _AuthInterceptor({required this.secureStorage, required this.dio});
+
+  final SecureStorage secureStorage;
+  final Dio dio;
+
+  bool _isRefreshing = false;
+  final List<({RequestOptions options, ErrorInterceptorHandler handler})> _queue = [];
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    // Skip auth header for auth endpoints
+    if (_isAuthPath(options.path)) {
+      handler.next(options);
+      return;
+    }
+    final token = await secureStorage.read(StorageKeys.accessToken);
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+
+  @override
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (err.response?.statusCode != 401 || _isAuthPath(err.requestOptions.path)) {
+      handler.next(err);
+      return;
+    }
+
+    if (_isRefreshing) {
+      _queue.add((options: err.requestOptions, handler: handler));
+      return;
+    }
+
+    _isRefreshing = true;
+    try {
+      final refreshToken = await secureStorage.read(StorageKeys.refreshToken);
+      if (refreshToken == null) {
+        await _clearSession();
+        handler.next(err);
+        return;
+      }
+
+      final response = await dio.post<Map<String, dynamic>>(
+        '/api/v1/auth/refresh',
+        data: {'refreshToken': refreshToken},
+        options: Options(headers: {}), // no auth header on refresh
+      );
+
+      final newAccess = response.data?['accessToken'] as String?;
+      final newRefresh = response.data?['refreshToken'] as String?;
+
+      if (newAccess == null || newRefresh == null) {
+        await _clearSession();
+        handler.next(err);
+        return;
+      }
+
+      await secureStorage.write(StorageKeys.accessToken, newAccess);
+      await secureStorage.write(StorageKeys.refreshToken, newRefresh);
+
+      // Retry original + queued requests with new token
+      final retryOptions = err.requestOptions
+        ..headers['Authorization'] = 'Bearer $newAccess';
+      final retryResponse = await dio.fetch<dynamic>(retryOptions);
+      handler.resolve(retryResponse);
+
+      for (final queued in _queue) {
+        queued.options.headers['Authorization'] = 'Bearer $newAccess';
+        final r = await dio.fetch<dynamic>(queued.options);
+        queued.handler.resolve(r);
+      }
+      _queue.clear();
+    } catch (_) {
+      await _clearSession();
+      _queue.clear();
+      handler.next(err);
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  Future<void> _clearSession() async {
+    await secureStorage.delete(StorageKeys.accessToken);
+    await secureStorage.delete(StorageKeys.refreshToken);
+    await secureStorage.delete(StorageKeys.userId);
+  }
+
+  bool _isAuthPath(String path) =>
+      path.contains('/auth/login') ||
+      path.contains('/auth/register') ||
+      path.contains('/auth/refresh') ||
+      path.contains('/auth/otp');
+}
