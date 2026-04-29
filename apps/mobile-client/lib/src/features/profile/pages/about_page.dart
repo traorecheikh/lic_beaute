@@ -1,0 +1,102 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.neutral,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        title: Text("À propos", style: AppTextStyles.headlineSm),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 60.h),
+        child: Column(
+          children: [
+            // Logo + app name
+            Image.asset('assets/logo.png', width: 80.r, height: 80.r),
+            SizedBox(height: 16.h),
+            Text(
+              'Beauté Avenue',
+              style: AppTextStyles.displaySm.copyWith(height: 1.1),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              "L'excellence à votre portée",
+              style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Version 1.0.0',
+              style: AppTextStyles.bodySm.copyWith(color: AppColors.outline),
+            ),
+            SizedBox(height: 40.h),
+            _InfoCard(
+              title: 'Notre mission',
+              body:
+                  "Beauté Avenue connecte les clients sénégalais aux meilleurs salons de beauté de leur quartier. Réservez en quelques secondes, payez en toute sécurité avec Wave ou Orange Money, et profitez d'une expérience beauté sans stress.",
+            ),
+            SizedBox(height: 12.h),
+            _InfoCard(
+              title: 'Qui sommes-nous ?',
+              body:
+                  "Nous sommes une startup basée à Dakar, fondée par des passionnés de beauté et de technologie. Notre ambition : digitaliser l'expérience beauté en Afrique de l'Ouest, en partant du Sénégal.",
+            ),
+            SizedBox(height: 12.h),
+            _InfoCard(
+              title: 'Contactez-nous',
+              body: "contact@beauteavenue.sn\n+221 77 000 00 00\nDakar, Sénégal",
+            ),
+            SizedBox(height: 32.h),
+            Text(
+              '© 2025 Beauté Avenue. Tous droits réservés.',
+              style: AppTextStyles.bodySm.copyWith(color: AppColors.outline),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.title, required this.body});
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTextStyles.labelMd),
+          SizedBox(height: 8.h),
+          Text(
+            body,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
