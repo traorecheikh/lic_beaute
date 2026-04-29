@@ -1,0 +1,335 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+
+// ignore_for_file: unused_element
+import 'package:beauteavenue_api/src/model/salon_detail_services_inner.dart';
+import 'package:built_collection/built_collection.dart';
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+
+part 'salon_detail.g.dart';
+
+/// SalonDetail
+///
+/// Properties:
+/// * [id] 
+/// * [name] 
+/// * [category] 
+/// * [city] 
+/// * [neighborhood] 
+/// * [averageRating] 
+/// * [latitude] 
+/// * [longitude] 
+/// * [subscriptionTier] 
+/// * [featured] 
+/// * [description] 
+/// * [address] 
+/// * [gallery] 
+/// * [services] 
+@BuiltValue()
+abstract class SalonDetail implements Built<SalonDetail, SalonDetailBuilder> {
+  @BuiltValueField(wireName: r'id')
+  String get id;
+
+  @BuiltValueField(wireName: r'name')
+  String get name;
+
+  @BuiltValueField(wireName: r'category')
+  String get category;
+
+  @BuiltValueField(wireName: r'city')
+  String get city;
+
+  @BuiltValueField(wireName: r'neighborhood')
+  String? get neighborhood;
+
+  @BuiltValueField(wireName: r'averageRating')
+  num get averageRating;
+
+  @BuiltValueField(wireName: r'latitude')
+  num? get latitude;
+
+  @BuiltValueField(wireName: r'longitude')
+  num? get longitude;
+
+  @BuiltValueField(wireName: r'subscriptionTier')
+  SalonDetailSubscriptionTierEnum get subscriptionTier;
+  // enum subscriptionTierEnum {  standard,  premium,  };
+
+  @BuiltValueField(wireName: r'featured')
+  bool get featured;
+
+  @BuiltValueField(wireName: r'description')
+  String get description;
+
+  @BuiltValueField(wireName: r'address')
+  String get address;
+
+  @BuiltValueField(wireName: r'gallery')
+  BuiltList<String> get gallery;
+
+  @BuiltValueField(wireName: r'services')
+  BuiltList<SalonDetailServicesInner> get services;
+
+  SalonDetail._();
+
+  factory SalonDetail([void updates(SalonDetailBuilder b)]) = _$SalonDetail;
+
+  @BuiltValueHook(initializeBuilder: true)
+  static void _defaults(SalonDetailBuilder b) => b;
+
+  @BuiltValueSerializer(custom: true)
+  static Serializer<SalonDetail> get serializer => _$SalonDetailSerializer();
+}
+
+class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
+  @override
+  final Iterable<Type> types = const [SalonDetail, _$SalonDetail];
+
+  @override
+  final String wireName = r'SalonDetail';
+
+  Iterable<Object?> _serializeProperties(
+    Serializers serializers,
+    SalonDetail object, {
+    FullType specifiedType = FullType.unspecified,
+  }) sync* {
+    yield r'id';
+    yield serializers.serialize(
+      object.id,
+      specifiedType: const FullType(String),
+    );
+    yield r'name';
+    yield serializers.serialize(
+      object.name,
+      specifiedType: const FullType(String),
+    );
+    yield r'category';
+    yield serializers.serialize(
+      object.category,
+      specifiedType: const FullType(String),
+    );
+    yield r'city';
+    yield serializers.serialize(
+      object.city,
+      specifiedType: const FullType(String),
+    );
+    yield r'neighborhood';
+    yield object.neighborhood == null ? null : serializers.serialize(
+      object.neighborhood,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'averageRating';
+    yield serializers.serialize(
+      object.averageRating,
+      specifiedType: const FullType(num),
+    );
+    yield r'latitude';
+    yield object.latitude == null ? null : serializers.serialize(
+      object.latitude,
+      specifiedType: const FullType.nullable(num),
+    );
+    yield r'longitude';
+    yield object.longitude == null ? null : serializers.serialize(
+      object.longitude,
+      specifiedType: const FullType.nullable(num),
+    );
+    yield r'subscriptionTier';
+    yield serializers.serialize(
+      object.subscriptionTier,
+      specifiedType: const FullType(SalonDetailSubscriptionTierEnum),
+    );
+    yield r'featured';
+    yield serializers.serialize(
+      object.featured,
+      specifiedType: const FullType(bool),
+    );
+    yield r'description';
+    yield serializers.serialize(
+      object.description,
+      specifiedType: const FullType(String),
+    );
+    yield r'address';
+    yield serializers.serialize(
+      object.address,
+      specifiedType: const FullType(String),
+    );
+    yield r'gallery';
+    yield serializers.serialize(
+      object.gallery,
+      specifiedType: const FullType(BuiltList, [FullType(String)]),
+    );
+    yield r'services';
+    yield serializers.serialize(
+      object.services,
+      specifiedType: const FullType(BuiltList, [FullType(SalonDetailServicesInner)]),
+    );
+  }
+
+  @override
+  Object serialize(
+    Serializers serializers,
+    SalonDetail object, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+  }
+
+  void _deserializeProperties(
+    Serializers serializers,
+    Object serialized, {
+    FullType specifiedType = FullType.unspecified,
+    required List<Object?> serializedList,
+    required SalonDetailBuilder result,
+    required List<Object?> unhandled,
+  }) {
+    for (var i = 0; i < serializedList.length; i += 2) {
+      final key = serializedList[i] as String;
+      final value = serializedList[i + 1];
+      switch (key) {
+        case r'id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.id = valueDes;
+          break;
+        case r'name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.name = valueDes;
+          break;
+        case r'category':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.category = valueDes;
+          break;
+        case r'city':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.city = valueDes;
+          break;
+        case r'neighborhood':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.neighborhood = valueDes;
+          break;
+        case r'averageRating':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(num),
+          ) as num;
+          result.averageRating = valueDes;
+          break;
+        case r'latitude':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
+          if (valueDes == null) continue;
+          result.latitude = valueDes;
+          break;
+        case r'longitude':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
+          if (valueDes == null) continue;
+          result.longitude = valueDes;
+          break;
+        case r'subscriptionTier':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(SalonDetailSubscriptionTierEnum),
+          ) as SalonDetailSubscriptionTierEnum;
+          result.subscriptionTier = valueDes;
+          break;
+        case r'featured':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.featured = valueDes;
+          break;
+        case r'description':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.description = valueDes;
+          break;
+        case r'address':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.address = valueDes;
+          break;
+        case r'gallery':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>;
+          result.gallery.replace(valueDes);
+          break;
+        case r'services':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(SalonDetailServicesInner)]),
+          ) as BuiltList<SalonDetailServicesInner>;
+          result.services.replace(valueDes);
+          break;
+        default:
+          unhandled.add(key);
+          unhandled.add(value);
+          break;
+      }
+    }
+  }
+
+  @override
+  SalonDetail deserialize(
+    Serializers serializers,
+    Object serialized, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    final result = SalonDetailBuilder();
+    final serializedList = (serialized as Iterable<Object?>).toList();
+    final unhandled = <Object?>[];
+    _deserializeProperties(
+      serializers,
+      serialized,
+      specifiedType: specifiedType,
+      serializedList: serializedList,
+      unhandled: unhandled,
+      result: result,
+    );
+    return result.build();
+  }
+}
+
+class SalonDetailSubscriptionTierEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'standard')
+  static const SalonDetailSubscriptionTierEnum standard = _$salonDetailSubscriptionTierEnum_standard;
+  @BuiltValueEnumConst(wireName: r'premium')
+  static const SalonDetailSubscriptionTierEnum premium = _$salonDetailSubscriptionTierEnum_premium;
+
+  static Serializer<SalonDetailSubscriptionTierEnum> get serializer => _$salonDetailSubscriptionTierEnumSerializer;
+
+  const SalonDetailSubscriptionTierEnum._(String name): super(name);
+
+  static BuiltSet<SalonDetailSubscriptionTierEnum> get values => _$salonDetailSubscriptionTierEnumValues;
+  static SalonDetailSubscriptionTierEnum valueOf(String name) => _$salonDetailSubscriptionTierEnumValueOf(name);
+}
+

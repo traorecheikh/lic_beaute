@@ -1,0 +1,270 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'salon_summary.dart';
+
+// **************************************************************************
+// BuiltValueGenerator
+// **************************************************************************
+
+const SalonSummarySubscriptionTierEnum
+    _$salonSummarySubscriptionTierEnum_standard =
+    const SalonSummarySubscriptionTierEnum._('standard');
+const SalonSummarySubscriptionTierEnum
+    _$salonSummarySubscriptionTierEnum_premium =
+    const SalonSummarySubscriptionTierEnum._('premium');
+
+SalonSummarySubscriptionTierEnum _$salonSummarySubscriptionTierEnumValueOf(
+    String name) {
+  switch (name) {
+    case 'standard':
+      return _$salonSummarySubscriptionTierEnum_standard;
+    case 'premium':
+      return _$salonSummarySubscriptionTierEnum_premium;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<SalonSummarySubscriptionTierEnum>
+    _$salonSummarySubscriptionTierEnumValues = BuiltSet<
+        SalonSummarySubscriptionTierEnum>(const <SalonSummarySubscriptionTierEnum>[
+  _$salonSummarySubscriptionTierEnum_standard,
+  _$salonSummarySubscriptionTierEnum_premium,
+]);
+
+Serializer<SalonSummarySubscriptionTierEnum>
+    _$salonSummarySubscriptionTierEnumSerializer =
+    _$SalonSummarySubscriptionTierEnumSerializer();
+
+class _$SalonSummarySubscriptionTierEnumSerializer
+    implements PrimitiveSerializer<SalonSummarySubscriptionTierEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[SalonSummarySubscriptionTierEnum];
+  @override
+  final String wireName = 'SalonSummarySubscriptionTierEnum';
+
+  @override
+  Object serialize(
+          Serializers serializers, SalonSummarySubscriptionTierEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  SalonSummarySubscriptionTierEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      SalonSummarySubscriptionTierEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
+class _$SalonSummary extends SalonSummary {
+  @override
+  final String id;
+  @override
+  final String name;
+  @override
+  final String category;
+  @override
+  final String city;
+  @override
+  final String? neighborhood;
+  @override
+  final num averageRating;
+  @override
+  final num? latitude;
+  @override
+  final num? longitude;
+  @override
+  final SalonSummarySubscriptionTierEnum subscriptionTier;
+  @override
+  final bool featured;
+
+  factory _$SalonSummary([void Function(SalonSummaryBuilder)? updates]) =>
+      (SalonSummaryBuilder()..update(updates))._build();
+
+  _$SalonSummary._(
+      {required this.id,
+      required this.name,
+      required this.category,
+      required this.city,
+      this.neighborhood,
+      required this.averageRating,
+      this.latitude,
+      this.longitude,
+      required this.subscriptionTier,
+      required this.featured})
+      : super._();
+  @override
+  SalonSummary rebuild(void Function(SalonSummaryBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
+
+  @override
+  SalonSummaryBuilder toBuilder() => SalonSummaryBuilder()..replace(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(other, this)) return true;
+    return other is SalonSummary &&
+        id == other.id &&
+        name == other.name &&
+        category == other.category &&
+        city == other.city &&
+        neighborhood == other.neighborhood &&
+        averageRating == other.averageRating &&
+        latitude == other.latitude &&
+        longitude == other.longitude &&
+        subscriptionTier == other.subscriptionTier &&
+        featured == other.featured;
+  }
+
+  @override
+  int get hashCode {
+    var _$hash = 0;
+    _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, category.hashCode);
+    _$hash = $jc(_$hash, city.hashCode);
+    _$hash = $jc(_$hash, neighborhood.hashCode);
+    _$hash = $jc(_$hash, averageRating.hashCode);
+    _$hash = $jc(_$hash, latitude.hashCode);
+    _$hash = $jc(_$hash, longitude.hashCode);
+    _$hash = $jc(_$hash, subscriptionTier.hashCode);
+    _$hash = $jc(_$hash, featured.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
+  }
+
+  @override
+  String toString() {
+    return (newBuiltValueToStringHelper(r'SalonSummary')
+          ..add('id', id)
+          ..add('name', name)
+          ..add('category', category)
+          ..add('city', city)
+          ..add('neighborhood', neighborhood)
+          ..add('averageRating', averageRating)
+          ..add('latitude', latitude)
+          ..add('longitude', longitude)
+          ..add('subscriptionTier', subscriptionTier)
+          ..add('featured', featured))
+        .toString();
+  }
+}
+
+class SalonSummaryBuilder
+    implements Builder<SalonSummary, SalonSummaryBuilder> {
+  _$SalonSummary? _$v;
+
+  String? _id;
+  String? get id => _$this._id;
+  set id(String? id) => _$this._id = id;
+
+  String? _name;
+  String? get name => _$this._name;
+  set name(String? name) => _$this._name = name;
+
+  String? _category;
+  String? get category => _$this._category;
+  set category(String? category) => _$this._category = category;
+
+  String? _city;
+  String? get city => _$this._city;
+  set city(String? city) => _$this._city = city;
+
+  String? _neighborhood;
+  String? get neighborhood => _$this._neighborhood;
+  set neighborhood(String? neighborhood) => _$this._neighborhood = neighborhood;
+
+  num? _averageRating;
+  num? get averageRating => _$this._averageRating;
+  set averageRating(num? averageRating) =>
+      _$this._averageRating = averageRating;
+
+  num? _latitude;
+  num? get latitude => _$this._latitude;
+  set latitude(num? latitude) => _$this._latitude = latitude;
+
+  num? _longitude;
+  num? get longitude => _$this._longitude;
+  set longitude(num? longitude) => _$this._longitude = longitude;
+
+  SalonSummarySubscriptionTierEnum? _subscriptionTier;
+  SalonSummarySubscriptionTierEnum? get subscriptionTier =>
+      _$this._subscriptionTier;
+  set subscriptionTier(SalonSummarySubscriptionTierEnum? subscriptionTier) =>
+      _$this._subscriptionTier = subscriptionTier;
+
+  bool? _featured;
+  bool? get featured => _$this._featured;
+  set featured(bool? featured) => _$this._featured = featured;
+
+  SalonSummaryBuilder() {
+    SalonSummary._defaults(this);
+  }
+
+  SalonSummaryBuilder get _$this {
+    final $v = _$v;
+    if ($v != null) {
+      _id = $v.id;
+      _name = $v.name;
+      _category = $v.category;
+      _city = $v.city;
+      _neighborhood = $v.neighborhood;
+      _averageRating = $v.averageRating;
+      _latitude = $v.latitude;
+      _longitude = $v.longitude;
+      _subscriptionTier = $v.subscriptionTier;
+      _featured = $v.featured;
+      _$v = null;
+    }
+    return this;
+  }
+
+  @override
+  void replace(SalonSummary other) {
+    _$v = other as _$SalonSummary;
+  }
+
+  @override
+  void update(void Function(SalonSummaryBuilder)? updates) {
+    if (updates != null) updates(this);
+  }
+
+  @override
+  SalonSummary build() => _build();
+
+  _$SalonSummary _build() {
+    final _$result = _$v ??
+        _$SalonSummary._(
+          id: BuiltValueNullFieldError.checkNotNull(id, r'SalonSummary', 'id'),
+          name: BuiltValueNullFieldError.checkNotNull(
+              name, r'SalonSummary', 'name'),
+          category: BuiltValueNullFieldError.checkNotNull(
+              category, r'SalonSummary', 'category'),
+          city: BuiltValueNullFieldError.checkNotNull(
+              city, r'SalonSummary', 'city'),
+          neighborhood: neighborhood,
+          averageRating: BuiltValueNullFieldError.checkNotNull(
+              averageRating, r'SalonSummary', 'averageRating'),
+          latitude: latitude,
+          longitude: longitude,
+          subscriptionTier: BuiltValueNullFieldError.checkNotNull(
+              subscriptionTier, r'SalonSummary', 'subscriptionTier'),
+          featured: BuiltValueNullFieldError.checkNotNull(
+              featured, r'SalonSummary', 'featured'),
+        );
+    replace(_$result);
+    return _$result;
+  }
+}
+
+// ignore_for_file: deprecated_member_use_from_same_package,type=lint
