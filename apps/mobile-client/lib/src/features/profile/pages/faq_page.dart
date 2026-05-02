@@ -97,7 +97,9 @@ class _FaqTileState extends State<_FaqTile> {
                   child: Text(
                     widget.item.q,
                     style: AppTextStyles.labelLg.copyWith(
-                      color: _expanded ? AppColors.primary : AppColors.onSurface,
+                      color: _expanded
+                          ? AppColors.primary
+                          : AppColors.onSurface,
                     ),
                   ),
                 ),
@@ -108,7 +110,9 @@ class _FaqTileState extends State<_FaqTile> {
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 22.r,
-                    color: _expanded ? AppColors.primary : AppColors.onSurfaceVariant,
+                    color: _expanded
+                        ? AppColors.primary
+                        : AppColors.onSurfaceVariant,
                   ),
                 ),
               ],

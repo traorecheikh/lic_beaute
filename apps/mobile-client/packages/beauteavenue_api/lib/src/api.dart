@@ -9,9 +9,11 @@ import 'package:beauteavenue_api/src/auth/api_key_auth.dart';
 import 'package:beauteavenue_api/src/auth/basic_auth.dart';
 import 'package:beauteavenue_api/src/auth/bearer_auth.dart';
 import 'package:beauteavenue_api/src/auth/oauth.dart';
+import 'package:beauteavenue_api/src/api/admin_api.dart';
 import 'package:beauteavenue_api/src/api/auth_api.dart';
 import 'package:beauteavenue_api/src/api/bookings_api.dart';
 import 'package:beauteavenue_api/src/api/health_api.dart';
+import 'package:beauteavenue_api/src/api/pro_api.dart';
 import 'package:beauteavenue_api/src/api/salons_api.dart';
 
 class BeauteavenueApi {
@@ -46,7 +48,9 @@ class BeauteavenueApi {
 
   void setOAuthToken(String name, String token) {
     if (this.dio.interceptors.any((i) => i is OAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((i) => i is OAuthInterceptor) as OAuthInterceptor).tokens[name] = token;
+      (this.dio.interceptors.firstWhere((i) => i is OAuthInterceptor)
+              as OAuthInterceptor)
+          .tokens[name] = token;
     }
   }
 
@@ -56,13 +60,18 @@ class BeauteavenueApi {
   /// [name], this method has no effect.
   void removeOAuthToken(String name) {
     if (this.dio.interceptors.any((i) => i is OAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((i) => i is OAuthInterceptor) as OAuthInterceptor).tokens.remove(name);
+      (this.dio.interceptors.firstWhere((i) => i is OAuthInterceptor)
+              as OAuthInterceptor)
+          .tokens
+          .remove(name);
     }
   }
 
   void setBearerAuth(String name, String token) {
     if (this.dio.interceptors.any((i) => i is BearerAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((i) => i is BearerAuthInterceptor) as BearerAuthInterceptor).tokens[name] = token;
+      (this.dio.interceptors.firstWhere((i) => i is BearerAuthInterceptor)
+              as BearerAuthInterceptor)
+          .tokens[name] = token;
     }
   }
 
@@ -72,13 +81,18 @@ class BeauteavenueApi {
   /// given [name], this method has no effect.
   void removeBearerAuth(String name) {
     if (this.dio.interceptors.any((i) => i is BearerAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((i) => i is BearerAuthInterceptor) as BearerAuthInterceptor).tokens.remove(name);
+      (this.dio.interceptors.firstWhere((i) => i is BearerAuthInterceptor)
+              as BearerAuthInterceptor)
+          .tokens
+          .remove(name);
     }
   }
 
   void setBasicAuth(String name, String username, String password) {
     if (this.dio.interceptors.any((i) => i is BasicAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((i) => i is BasicAuthInterceptor) as BasicAuthInterceptor).authInfo[name] = BasicAuthInfo(username, password);
+      (this.dio.interceptors.firstWhere((i) => i is BasicAuthInterceptor)
+              as BasicAuthInterceptor)
+          .authInfo[name] = BasicAuthInfo(username, password);
     }
   }
 
@@ -88,13 +102,21 @@ class BeauteavenueApi {
   /// given [name], this method has no effect.
   void removeBasicAuth(String name) {
     if (this.dio.interceptors.any((i) => i is BasicAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((i) => i is BasicAuthInterceptor) as BasicAuthInterceptor).authInfo.remove(name);
+      (this.dio.interceptors.firstWhere((i) => i is BasicAuthInterceptor)
+              as BasicAuthInterceptor)
+          .authInfo
+          .remove(name);
     }
   }
 
   void setApiKey(String name, String apiKey) {
     if (this.dio.interceptors.any((i) => i is ApiKeyAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((element) => element is ApiKeyAuthInterceptor) as ApiKeyAuthInterceptor).apiKeys[name] = apiKey;
+      (this
+                  .dio
+                  .interceptors
+                  .firstWhere((element) => element is ApiKeyAuthInterceptor)
+              as ApiKeyAuthInterceptor)
+          .apiKeys[name] = apiKey;
     }
   }
 
@@ -104,8 +126,20 @@ class BeauteavenueApi {
   /// given [name], this method has no effect.
   void removeApiKey(String name) {
     if (this.dio.interceptors.any((i) => i is ApiKeyAuthInterceptor)) {
-      (this.dio.interceptors.firstWhere((element) => element is ApiKeyAuthInterceptor) as ApiKeyAuthInterceptor).apiKeys.remove(name);
+      (this
+                  .dio
+                  .interceptors
+                  .firstWhere((element) => element is ApiKeyAuthInterceptor)
+              as ApiKeyAuthInterceptor)
+          .apiKeys
+          .remove(name);
     }
+  }
+
+  /// Get AdminApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  AdminApi getAdminApi() {
+    return AdminApi(dio, serializers);
   }
 
   /// Get AuthApi instance, base route and serializer can be overridden by a given but be careful,
@@ -124,6 +158,12 @@ class BeauteavenueApi {
   /// by doing that all interceptors will not be executed
   HealthApi getHealthApi() {
     return HealthApi(dio, serializers);
+  }
+
+  /// Get ProApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ProApi getProApi() {
+    return ProApi(dio, serializers);
   }
 
   /// Get SalonsApi instance, base route and serializer can be overridden by a given but be careful,

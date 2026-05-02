@@ -34,9 +34,7 @@ abstract final class AppShare {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes);
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'image/png')],
-    );
+    await Share.shareXFiles([XFile(file.path, mimeType: 'image/png')]);
   }
 }
 
@@ -113,9 +111,7 @@ class BookingShareCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   service,
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: Colors.white70,
-                  ),
+                  style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
                 ),
               ],
             ),
@@ -125,7 +121,10 @@ class BookingShareCard extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                _Row(icon: Icons.calendar_today_rounded, label: '$date · $time'),
+                _Row(
+                  icon: Icons.calendar_today_rounded,
+                  label: '$date · $time',
+                ),
                 const SizedBox(height: 14),
                 _Row(icon: Icons.person_outline_rounded, label: staffName),
                 if (price.isNotEmpty) ...[

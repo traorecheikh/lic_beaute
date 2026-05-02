@@ -59,7 +59,8 @@ class SalonMapCard extends StatelessWidget {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'sn.beauteavenue.mobile',
                   ),
                   MarkerLayer(
@@ -95,22 +96,25 @@ class SalonMapCard extends StatelessWidget {
             ),
             // Bottom overlay with address + "Open in Maps" hint
             Positioned(
-              left: 0, right: 0, bottom: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withAlpha(180),
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.black.withAlpha(180), Colors.transparent],
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.map_rounded, size: 14, color: Colors.white70),
+                    const Icon(
+                      Icons.map_rounded,
+                      size: 14,
+                      color: Colors.white70,
+                    ),
                     SizedBox(width: 6.w),
                     Expanded(
                       child: Text(

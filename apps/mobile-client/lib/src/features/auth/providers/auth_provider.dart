@@ -18,6 +18,15 @@ final currentUserProvider = FutureProvider<CurrentUser?>((ref) async {
 
 final authActionsProvider = Provider<AuthActions>((ref) => AuthActions(ref));
 
+class ClientOnlyAuthException implements Exception {
+  const ClientOnlyAuthException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class AuthActions {
   AuthActions(this._ref);
 
@@ -29,9 +38,11 @@ class AuthActions {
   }) async {
     final api = _ref.read(apiClientProvider).getAuthApi();
     final sessionResponse = await api.apiV1AuthLoginPost(
-      emailLoginInput: EmailLoginInput((b) => b
-        ..email = email
-        ..password = password),
+      emailLoginInput: EmailLoginInput(
+        (b) => b
+          ..email = email
+          ..password = password,
+      ),
     );
     await _hydrateSession(sessionResponse.data!);
   }
@@ -43,15 +54,14 @@ class AuthActions {
     );
   }
 
-  Future<void> verifyOtp({
-    required String phone,
-    required String code,
-  }) async {
+  Future<void> verifyOtp({required String phone, required String code}) async {
     final api = _ref.read(apiClientProvider).getAuthApi();
     final sessionResponse = await api.apiV1AuthOtpVerifyPost(
-      otpVerifyInput: OtpVerifyInput((b) => b
-        ..phone = phone
-        ..code = code),
+      otpVerifyInput: OtpVerifyInput(
+        (b) => b
+          ..phone = phone
+          ..code = code,
+      ),
     );
     await _hydrateSession(sessionResponse.data!);
   }
@@ -77,6 +87,12 @@ class AuthActions {
     final api = _ref.read(apiClientProvider).getAuthApi();
     final meResponse = await api.apiV1MeGet();
     final user = meResponse.data!;
+    if (user.role.name != 'client') {
+      await notifier.logout();
+      throw const ClientOnlyAuthException(
+        'Ce compte professionnel ne peut pas utiliser l’application cliente.',
+      );
+    }
     await notifier.login(
       accessToken: authSession.accessToken,
       refreshToken: authSession.refreshToken,

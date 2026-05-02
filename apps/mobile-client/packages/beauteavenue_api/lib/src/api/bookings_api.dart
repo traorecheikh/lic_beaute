@@ -4,7 +4,6 @@
 
 import 'dart:async';
 
-import 'package:built_value/json_object.dart';
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 
@@ -13,7 +12,6 @@ import 'package:beauteavenue_api/src/model/booking_summary.dart';
 import 'package:beauteavenue_api/src/model/booking_summary_list_response.dart';
 
 class BookingsApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -21,7 +19,7 @@ class BookingsApi {
   const BookingsApi(this._dio, this._serializers);
 
   /// List bookings
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -33,7 +31,7 @@ class BookingsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [BookingSummaryListResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<BookingSummaryListResponse>> apiV1BookingsGet({ 
+  Future<Response<BookingSummaryListResponse>> apiV1BookingsGet({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -72,11 +70,12 @@ class BookingsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(BookingSummaryListResponse),
-      ) as BookingSummaryListResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(BookingSummaryListResponse),
+            ) as BookingSummaryListResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -100,10 +99,10 @@ class BookingsApi {
   }
 
   /// Create booking
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [bookingCreateInput] 
+  /// * [bookingCreateInput]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -113,7 +112,7 @@ class BookingsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [BookingSummary] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<BookingSummary>> apiV1BookingsPost({ 
+  Future<Response<BookingSummary>> apiV1BookingsPost({
     required BookingCreateInput bookingCreateInput,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -146,11 +145,11 @@ class BookingsApi {
 
     try {
       const _type = FullType(BookingCreateInput);
-      _bodyData = _serializers.serialize(bookingCreateInput, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(bookingCreateInput, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -173,11 +172,12 @@ class BookingsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(BookingSummary),
-      ) as BookingSummary;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(BookingSummary),
+            ) as BookingSummary;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -199,5 +199,4 @@ class BookingsApi {
       extra: _response.extra,
     );
   }
-
 }

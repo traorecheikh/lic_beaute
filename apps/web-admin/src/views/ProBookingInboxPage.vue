@@ -5,7 +5,7 @@
         <h1 class="page-title mb-2">Inbox Réservations</h1>
         <p class="text-cocoa/60">Gérez vos demandes entrantes et à venir.</p>
       </div>
-      <button class="btn-primary gap-2">
+      <button @click="newBooking" class="btn-primary gap-2">
         <PlusIcon class="w-4 h-4" />
         Nouveau RDV
       </button>
@@ -49,10 +49,10 @@
                 {{ statusLabels[booking.status] }}
               </span>
             </div>
-            <p class="row-meta truncate">{{ booking.service }} • {{ booking.time }} • {{ booking.staff }}</p>
+              <p class="row-meta truncate">{{ booking.service }} • {{ booking.time }} • {{ booking.staff }}</p>
           </div>
           <div class="text-right shrink-0">
-            <p class="text-sm font-bold text-espresso">{{ booking.price }} FCFA</p>
+            <p class="text-sm font-bold text-espresso">{{ booking.price }}</p>
             <p class="text-[10px] text-cocoa/40 font-semibold uppercase tracking-widest">Payé: {{ booking.deposit }}</p>
           </div>
         </div>
@@ -85,10 +85,10 @@
           </div>
 
           <div v-if="selectedBooking.status === 'pending'" class="grid grid-cols-2 gap-3">
-            <button @click="rejectBooking" class="btn-secondary py-3 ring-0 border text-[11px]">Refuser</button>
-            <button @click="acceptBooking" class="btn-primary py-3 text-[11px]">Accepter</button>
+            <button :disabled="actionLoading" @click="rejectBooking" class="btn-secondary py-3 ring-0 border text-[11px] disabled:opacity-60">Refuser</button>
+            <button :disabled="actionLoading" @click="acceptBooking" class="btn-primary py-3 text-[11px] disabled:opacity-60">Accepter</button>
           </div>
-          <button v-else class="btn-secondary w-full py-3 ring-0 border text-[11px]">Voir dans l'agenda</button>
+          <button v-else @click="viewInCalendar" class="btn-secondary w-full py-3 ring-0 border text-[11px]">Voir dans l'agenda</button>
         </div>
         <div v-else class="panel-clean p-8 text-center border-dashed flex flex-col items-center justify-center min-h-[400px]">
           <InboxIcon class="w-12 h-12 text-cocoa/20 mb-4" />
@@ -100,63 +100,184 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import dayjs from "dayjs";
+import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { PlusIcon, InboxIcon } from "@heroicons/vue/24/outline";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  acceptProBooking,
+  fetchProBooking,
+  fetchProBookings,
+  rejectProBooking
+} from "@/lib/pro-api";
+import { useProAuthStore } from "@/stores/proAuth";
 
 const filters = ["Tous", "En attente", "Confirmés", "Aujourd'hui", "Cette semaine"];
 const activeFilter = ref("Tous");
-const selectedId = ref<number | null>(1);
+const selectedId = ref<string | null>(null);
+const route = useRoute();
+const router = useRouter();
+const auth = useProAuthStore();
+const queryClient = useQueryClient();
 
-const bookings = ref([
-  { 
-    id: 1, day: "MAR", date: "16", time: "14:30", client: "Awa Ndiaye", clientInitials: "AN",
-    phone: "+221 77 123 45 67", service: "Brushing + Soin", staff: "Marie Diop",
-    fullDate: "Mardi 16 juillet", price: "25 000", deposit: "5 000", status: "pending" 
-  },
-  { 
-    id: 2, day: "MER", date: "17", time: "10:00", client: "Fatou Sow", clientInitials: "FS",
-    phone: "+221 78 987 65 43", service: "Manucure", staff: "Awa Sow",
-    fullDate: "Mercredi 17 juillet", price: "15 000", deposit: "3 000", status: "confirmed" 
-  },
-  { 
-    id: 3, day: "MER", date: "17", time: "16:30", client: "Ibrahim Diallo", clientInitials: "ID",
-    phone: "+221 70 555 44 33", service: "Coupe Homme", staff: "Jean Faye",
-    fullDate: "Mercredi 17 juillet", price: "10 000", deposit: "2 000", status: "confirmed" 
-  }
-]);
-
-const filteredBookings = computed(() => {
-  if (activeFilter.value === "Tous") return bookings.value;
-  if (activeFilter.value === "En attente") return bookings.value.filter(b => b.status === 'pending');
-  if (activeFilter.value === "Confirmés") return bookings.value.filter(b => b.status === 'confirmed');
-  return bookings.value;
+const bookingsQuery = useQuery({
+  queryKey: ["pro-bookings", "inbox"],
+  queryFn: () => fetchProBookings(auth.accessToken ?? "", { page: 0, pageSize: 50 }),
+  enabled: computed(() => Boolean(auth.accessToken))
 });
 
-const selectedBooking = computed(() => bookings.value.find(b => b.id === selectedId.value));
+const acceptMutation = useMutation({
+  mutationFn: (bookingId: string) => acceptProBooking(auth.accessToken ?? "", bookingId),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-bookings"] });
+    toast.success("Réservation acceptée.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Action impossible pour le moment."));
+  }
+});
 
-const statusLabels: any = {
+const rejectMutation = useMutation({
+  mutationFn: (bookingId: string) => rejectProBooking(auth.accessToken ?? "", bookingId),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-bookings"] });
+    toast.info("Réservation refusée.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Action impossible pour le moment."));
+  }
+});
+
+const actionLoading = computed(() => acceptMutation.isPending.value || rejectMutation.isPending.value);
+
+const selectedBookingQuery = useQuery({
+  queryKey: computed(() => ["pro-booking", selectedId.value]),
+  queryFn: () => fetchProBooking(auth.accessToken ?? "", selectedId.value ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && selectedId.value))
+});
+
+const bookingRows = computed(() => {
+  return (bookingsQuery.data.value ?? []).map((booking) => {
+    const startsAt = dayjs(booking.startsAt);
+    const clientName = booking.clientName ?? "Client";
+    return {
+      id: booking.id,
+      day: startsAt.format("ddd").toUpperCase(),
+      date: startsAt.format("DD"),
+      time: startsAt.format("HH:mm"),
+      client: clientName,
+      clientInitials: clientName
+        .split(" ")
+        .slice(0, 2)
+        .map((name) => name[0]?.toUpperCase() ?? "")
+        .join(""),
+      phone: booking.clientPhone ?? "Non renseigné",
+      service: booking.serviceName,
+      staff: booking.employeeName ?? "Non assigné",
+      fullDate: startsAt.format("dddd DD MMMM"),
+      price: formatMoneyXof(Math.max(booking.depositAmountXof, 0)),
+      deposit: formatMoneyXof(booking.depositAmountXof),
+      status: booking.status,
+      startsAt
+    };
+  });
+});
+
+const filteredBookings = computed(() => {
+  if (activeFilter.value === "Tous") return bookingRows.value;
+  if (activeFilter.value === "En attente") return bookingRows.value.filter((booking) => booking.status === "pending");
+  if (activeFilter.value === "Confirmés") return bookingRows.value.filter((booking) => booking.status === "confirmed");
+  if (activeFilter.value === "Aujourd'hui") {
+    return bookingRows.value.filter((booking) => booking.startsAt.isSame(dayjs(), "day"));
+  }
+  if (activeFilter.value === "Cette semaine") {
+    const start = dayjs().startOf("day");
+    const end = dayjs().add(7, "day").endOf("day");
+    return bookingRows.value.filter((booking) => booking.startsAt.isAfter(start) && booking.startsAt.isBefore(end));
+  }
+  return bookingRows.value;
+});
+
+const selectedBooking = computed(() => {
+  const booking = filteredBookings.value.find((value) => value.id === selectedId.value)
+    ?? bookingRows.value.find((value) => value.id === selectedId.value);
+  if (!booking) return null;
+
+  const detailed = selectedBookingQuery.data.value;
+  return {
+    ...booking,
+    phone: detailed?.clientPhone ?? booking.phone,
+    status: detailed?.status ?? booking.status
+  };
+});
+
+const statusLabels: Record<string, string> = {
   pending: "En attente",
-  confirmed: "Confirmé"
+  confirmed: "Confirmé",
+  in_progress: "En cours",
+  completed: "Terminé",
+  cancelled: "Annulé"
 };
 
-const statusStyles: any = {
+const statusStyles: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700",
-  confirmed: "bg-blue-100 text-blue-700"
+  confirmed: "bg-blue-100 text-blue-700",
+  in_progress: "bg-purple-100 text-purple-700",
+  completed: "bg-green-100 text-green-700",
+  cancelled: "bg-red-100 text-red-700"
 };
 
 function acceptBooking() {
-  if (selectedBooking.value) {
-    selectedBooking.value.status = 'confirmed';
-    toast.success("Réservation acceptée !");
+  if (selectedBooking.value?.id) {
+    acceptMutation.mutate(selectedBooking.value.id);
   }
 }
 
 function rejectBooking() {
-  bookings.value = bookings.value.filter(b => b.id !== selectedId.value);
-  selectedId.value = bookings.value[0]?.id || null;
-  toast.info("Réservation refusée.");
+  if (selectedBooking.value?.id) {
+    rejectMutation.mutate(selectedBooking.value.id);
+  }
 }
+
+function newBooking() {
+  void router.push({ path: "/pro/calendar", query: { compose: "manual" } });
+}
+
+function viewInCalendar() {
+  if (!selectedBooking.value?.id) return;
+  void router.push({
+    path: "/pro/calendar",
+    query: { bookingId: selectedBooking.value.id }
+  });
+}
+
+watch(
+  () => filteredBookings.value,
+  (rows) => {
+    if (!rows.length) {
+      selectedId.value = null;
+      return;
+    }
+    if (!selectedId.value || !rows.some((row) => row.id === selectedId.value)) {
+      selectedId.value = rows[0].id;
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => route.query.bookingId,
+  (bookingId) => {
+    if (typeof bookingId === "string" && bookingRows.value.some((row) => row.id === bookingId)) {
+      selectedId.value = bookingId;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

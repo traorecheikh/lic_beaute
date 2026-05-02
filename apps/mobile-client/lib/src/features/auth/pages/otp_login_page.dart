@@ -1,11 +1,16 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/session/session_store.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
+import '../providers/auth_provider.dart';
+import '../widgets/auth_form_widgets.dart';
 
 class OtpLoginPage extends ConsumerStatefulWidget {
   const OtpLoginPage({super.key});
@@ -15,9 +20,10 @@ class OtpLoginPage extends ConsumerStatefulWidget {
 }
 
 class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
-  final _phoneController = TextEditingController(text: '77 123 45 67');
+  final _phoneController = TextEditingController(text: '77 000 00 00');
   final _otpController = TextEditingController(text: '123456');
   bool _codeSent = false;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -39,20 +45,24 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             size: 20.w,
             color: AppColors.onSurface,
           ),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (_codeSent) {
+              setState(() => _codeSent = false);
+            } else {
+              context.pop();
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        padding: EdgeInsets.symmetric(horizontal: 28.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
             Text(
               _codeSent ? 'Vérification' : 'Inscription',
-              style: AppTextStyles.displayMd.copyWith(
-                color: AppColors.onSurface,
-              ),
+              style: AppTextStyles.displayMd,
             ),
             SizedBox(height: 8.h),
             Text(
@@ -64,89 +74,49 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
               ),
             ),
             SizedBox(height: 48.h),
-
             if (!_codeSent) ...[
-              _buildEditorialTextField(
+              EditorialField(
                 label: 'NUMÉRO DE TÉLÉPHONE',
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 prefixText: '+221 ',
               ),
               SizedBox(height: 48.h),
-              GestureDetector(
-                onTap: () => setState(() => _codeSent = true),
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 20.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'RECEVOIR LE CODE',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: Colors.white,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
+              AuthPrimaryButton(
+                label: 'RECEVOIR LE CODE',
+                loading: _submitting,
+                onTap: _requestCode,
               ),
             ] else ...[
-              _buildEditorialTextField(
+              EditorialField(
                 label: 'CODE À 6 CHIFFRES',
                 controller: _otpController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.headlineLg.copyWith(
-                  letterSpacing: 16.w,
+                  letterSpacing: 12.w,
                   color: AppColors.onSurface,
                 ),
               ),
               SizedBox(height: 48.h),
-              GestureDetector(
-                onTap: () async {
-                  await ref
-                      .read(sessionProvider.notifier)
-                      .login(
-                        accessToken: 'mock_access_token',
-                        refreshToken: 'mock_refresh_token',
-                        userId: 'mock_user_1',
-                        role: 'client',
-                      );
-                  if (!mounted) return;
-                  context.go(AppRoutes.profileBootstrap);
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 20.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'VÉRIFIER LE CODE',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: Colors.white,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
+              AuthPrimaryButton(
+                label: 'VÉRIFIER LE CODE',
+                loading: _submitting,
+                onTap: _verifyCode,
               ),
               SizedBox(height: 24.h),
               Center(
-                child: TextButton(
-                  onPressed: () => setState(() => _codeSent = false),
-                  child: Text(
-                    'Modifier le numéro',
-                    style: AppTextStyles.labelSm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      decoration: TextDecoration.underline,
+                child: GestureDetector(
+                  onTap: () => setState(() => _codeSent = false),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Text(
+                      'Modifier le numéro',
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
@@ -158,47 +128,83 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     );
   }
 
-  Widget _buildEditorialTextField({
-    required String label,
-    required TextEditingController controller,
-    TextInputType? keyboardType,
-    String? prefixText,
-    TextAlign textAlign = TextAlign.start,
-    TextStyle? style,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.labelSm.copyWith(
-            color: AppColors.onSurfaceVariant,
-            letterSpacing: 1.5,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          textAlign: textAlign,
-          style:
-              style ??
-              AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(vertical: 16.h),
-            prefixText: prefixText,
-            prefixStyle: AppTextStyles.bodyLg.copyWith(
-              color: AppColors.onSurfaceVariant,
-            ),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.outlineVariant),
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
+  Future<void> _requestCode() async {
+    final phone = _normalizeSenegalPhone(_phoneController.text);
+    if (phone == null) {
+      AppSnackbar.info(
+        context,
+        'Numéro invalide. Entrez un numéro Sénégal (+221 XX XXX XX XX).',
+      );
+      return;
+    }
+    AppHaptics.light();
+    setState(() => _submitting = true);
+    try {
+      await ref.read(authActionsProvider).requestOtp(phone: phone);
+      if (!mounted) return;
+      setState(() => _codeSent = true);
+      AppSnackbar.success(context, 'Code OTP envoyé.');
+    } on DioException catch (error) {
+      if (!mounted) return;
+      final message = (error.response?.data is Map<String, dynamic>)
+          ? ((error.response!.data as Map<String, dynamic>)['message']
+                    as String? ??
+                'Envoi OTP impossible.')
+          : 'Envoi OTP impossible.';
+      AppSnackbar.error(context, message);
+    } on ClientOnlyAuthException catch (error) {
+      if (!mounted) return;
+      AppSnackbar.error(context, error.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackbar.error(context, 'Envoi OTP impossible.');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _verifyCode() async {
+    final phone = _normalizeSenegalPhone(_phoneController.text);
+    final code = _otpController.text.trim();
+    if (phone == null) {
+      AppSnackbar.info(context, 'Numéro Sénégal invalide.');
+      return;
+    }
+    if (code.length != 6) {
+      AppSnackbar.info(context, 'Le code doit contenir 6 chiffres.');
+      return;
+    }
+    AppHaptics.light();
+    setState(() => _submitting = true);
+    try {
+      await ref.read(authActionsProvider).verifyOtp(phone: phone, code: code);
+      final user = await ref.read(currentUserProvider.future);
+      if (!mounted) return;
+      final needsBootstrap = (user?.fullName ?? '').trim().isEmpty;
+      context.go(needsBootstrap ? AppRoutes.profileBootstrap : AppRoutes.home);
+    } on DioException catch (error) {
+      if (!mounted) return;
+      final message = (error.response?.data is Map<String, dynamic>)
+          ? ((error.response!.data as Map<String, dynamic>)['message']
+                    as String? ??
+                'Vérification OTP impossible.')
+          : 'Vérification OTP impossible.';
+      AppSnackbar.error(context, message);
+    } on ClientOnlyAuthException catch (error) {
+      if (!mounted) return;
+      AppSnackbar.error(context, error.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackbar.error(context, 'Vérification OTP impossible.');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  String? _normalizeSenegalPhone(String raw) {
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.startsWith('221') && digits.length == 12) return '+$digits';
+    if (digits.length == 9) return '+221$digits';
+    return null;
   }
 }

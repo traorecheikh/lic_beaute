@@ -168,7 +168,9 @@ class _NavItem extends StatelessWidget {
             Text(
               item.label,
               style: AppTextStyles.labelSm.copyWith(
-                color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                color: isActive
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
                 fontSize: 10.sp,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -185,10 +187,7 @@ class _NavItem extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AuthPromptSheet extends StatelessWidget {
-  const _AuthPromptSheet({
-    required this.onLogin,
-    required this.onDismiss,
-  });
+  const _AuthPromptSheet({required this.onLogin, required this.onDismiss});
 
   final VoidCallback onLogin;
   final VoidCallback onDismiss;
@@ -207,7 +206,9 @@ class _AuthPromptSheet extends StatelessWidget {
             SizedBox(height: 8.h),
             Text(
               'Connectez-vous pour accéder à vos rendez-vous et à votre profil.',
-              style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             SizedBox(height: 24.h),
             SizedBox(
@@ -237,11 +238,7 @@ class _AuthPromptSheet extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _TabItem {
-  const _TabItem({
-    required this.icon,
-    required this.label,
-    required this.path,
-  });
+  const _TabItem({required this.icon, required this.label, required this.path});
 
   final String icon;
   final String label;

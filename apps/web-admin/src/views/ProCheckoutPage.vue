@@ -78,7 +78,7 @@
                   class="input-shell w-full"
                 />
               </div>
-              <button class="btn-secondary py-3 px-6 h-[50px]">Appliquer</button>
+                <button @click="applyDiscount" class="btn-secondary py-3 px-6 h-[50px]">Appliquer</button>
             </div>
           </div>
         </div>
@@ -92,19 +92,19 @@
           <div class="space-y-4 mb-8">
             <div class="flex justify-between text-sm">
               <span class="text-cocoa/60">Sous-total</span>
-              <span class="font-bold text-espresso tabular-nums">{{ subtotal.toLocaleString() }} FCFA</span>
+              <span class="font-bold text-espresso tabular-nums">{{ formatMoneyXof(subtotal) }}</span>
             </div>
             <div v-if="discount > 0" class="flex justify-between text-sm text-green-600">
               <span>Remise</span>
-              <span class="font-bold tabular-nums">- {{ discount.toLocaleString() }} FCFA</span>
+              <span class="font-bold tabular-nums">- {{ formatMoneyXof(discount) }}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-cocoa/60">Acompte payé</span>
-              <span class="font-bold text-espresso tabular-nums">- {{ deposit.toLocaleString() }} FCFA</span>
+              <span class="font-bold text-espresso tabular-nums">- {{ formatMoneyXof(deposit) }}</span>
             </div>
             <div class="pt-4 border-t border-outline-variant flex justify-between items-end">
               <span class="font-bold text-espresso">Reste à payer</span>
-              <span class="metric-value text-primary">{{ balance.toLocaleString() }} FCFA</span>
+              <span class="metric-value text-primary">{{ formatMoneyXof(balance) }}</span>
             </div>
           </div>
 
@@ -127,9 +127,9 @@
           </div>
 
           <div class="space-y-3">
-            <button @click="completeCheckout" class="btn-primary w-full py-4 text-sm flex items-center justify-center gap-2">
+            <button :disabled="completeMutation.isPending.value" @click="completeCheckout" class="btn-primary w-full py-4 text-sm flex items-center justify-center gap-2 disabled:opacity-60">
               <CheckCircleIcon class="w-5 h-5" />
-              ENCAISSER {{ balance.toLocaleString() }} FCFA
+              {{ completeMutation.isPending.value ? "ENCAISSEMENT..." : `ENCAISSER ${formatMoneyXof(balance)}` }}
             </button>
             <button @click="sendToClient" class="btn-secondary w-full py-4 text-sm flex items-center justify-center gap-2">
               <PaperAirplaneIcon class="w-4 h-4" />
@@ -147,7 +147,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
+import { useMutation, useQuery } from "@tanstack/vue-query";
+import dayjs from "dayjs";
+import { formatMoneyXof } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { 
@@ -161,27 +164,72 @@ import {
   WalletIcon,
   EllipsisHorizontalCircleIcon
 } from "@heroicons/vue/24/outline";
+import { completeProCheckout, fetchProCheckout } from "@/lib/pro-api";
+import { useProAuthStore } from "@/stores/proAuth";
+import { getErrorMessage } from "@/lib/errors";
 
 const route = useRoute();
 const router = useRouter();
+const auth = useProAuthStore();
 
-const booking = ref<any>(null);
-const items = ref<any[]>([]);
+const items = ref<Array<{ name: string; price: number }>>([]);
 const discountCode = ref("");
 const discount = ref(0);
-const deposit = ref(5000);
 const selectedMethod = ref("cash");
 
 const paymentMethods = [
   { id: "cash", label: "Espèces", icon: BanknotesIcon },
   { id: "wave", label: "Wave", icon: WalletIcon },
-  { id: "om", label: "Orange Money", icon: DevicePhoneMobileIcon },
+  { id: "orange_money", label: "Orange Money", icon: DevicePhoneMobileIcon },
   { id: "other", label: "Autre", icon: EllipsisHorizontalCircleIcon },
 ];
+
+const checkoutQuery = useQuery({
+  queryKey: computed(() => ["pro-checkout", route.params.bookingId]),
+  queryFn: () => fetchProCheckout(auth.accessToken ?? "", String(route.params.bookingId)),
+  enabled: computed(() => Boolean(auth.accessToken && route.params.bookingId))
+});
+
+const completeMutation = useMutation({
+  mutationFn: () =>
+    completeProCheckout(auth.accessToken ?? "", String(route.params.bookingId), {
+      paymentMethod: selectedMethod.value as "cash" | "wave" | "orange_money" | "other",
+      discountXof: discount.value,
+      lineItems: items.value
+        .map((item) => ({
+          name: item.name.trim(),
+          amountXof: Math.max(0, Number(item.price || 0))
+        }))
+        .filter((item) => item.name.length > 0)
+    }),
+  onSuccess: async () => {
+    toast.success("Paiement enregistré avec succès.");
+    await router.push("/pro/calendar");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Encaissement impossible pour le moment."));
+  }
+});
+
+const booking = computed(() => {
+  const data = checkoutQuery.data.value;
+  if (!data) return null;
+  return {
+    id: data.bookingId,
+    clientName: data.clientName ?? "Client",
+    date: dayjs(data.startsAt).format("DD MMM YYYY"),
+    time: dayjs(data.startsAt).format("HH:mm"),
+    staffName: data.staffName ?? "Non assigné",
+    serviceName: data.serviceName,
+    price: data.subtotalXof
+  };
+});
 
 const subtotal = computed(() => {
   return items.value.reduce((sum, item) => sum + (item.price || 0), 0);
 });
+
+const deposit = computed(() => checkoutQuery.data.value?.depositPaidXof ?? 0);
 
 const balance = computed(() => {
   const total = subtotal.value - discount.value - deposit.value;
@@ -192,7 +240,7 @@ const clientInitials = computed(() => {
   if (!booking.value?.clientName) return "??";
   return booking.value.clientName
     .split(" ")
-    .map((n: string) => n[0])
+    .map((n: string) => n[0] ?? "")
     .join("")
     .toUpperCase();
 });
@@ -205,32 +253,67 @@ function removeItem(index: number) {
   items.value.splice(index, 1);
 }
 
+function applyDiscount() {
+  const raw = discountCode.value.trim().toUpperCase();
+  if (!raw) {
+    discount.value = 0;
+    toast.info("Remise réinitialisée.");
+    return;
+  }
+
+  let nextDiscount = 0;
+
+  if (/^\d+$/.test(raw)) {
+    nextDiscount = Number(raw);
+  } else if (/^\d+%$/.test(raw)) {
+    const percent = Number(raw.replace("%", ""));
+    nextDiscount = Math.round(subtotal.value * (percent / 100));
+  } else if (/^BIENVENUE\d+$/.test(raw)) {
+    const percent = Number(raw.replace("BIENVENUE", ""));
+    nextDiscount = Math.round(subtotal.value * (percent / 100));
+  } else if (/^VIP\d+$/.test(raw)) {
+    const percent = Number(raw.replace("VIP", ""));
+    nextDiscount = Math.round(subtotal.value * (percent / 100));
+  } else {
+    toast.error("Code de remise invalide. Utilisez par exemple BIENVENUE10 ou 5000.");
+    return;
+  }
+
+  const maxDiscount = Math.max(0, subtotal.value - deposit.value);
+  discount.value = Math.max(0, Math.min(nextDiscount, maxDiscount));
+  toast.success(`Remise appliquée: ${formatMoneyXof(discount.value)}.`);
+}
+
 function completeCheckout() {
-  toast.success("Paiement enregistré avec succès !");
-  router.push("/pro/calendar");
+  if (!items.value.some((item) => item.name.trim().length > 0)) {
+    toast.error("Ajoutez au moins une ligne de facturation.");
+    return;
+  }
+  completeMutation.mutate();
 }
 
-function sendToClient() {
-  toast.info("Lien de paiement envoyé au client par SMS.");
+async function sendToClient() {
+  const clientName = booking.value?.clientName ?? "Client";
+  const checkoutUrl = `${window.location.origin}/pro/checkout/${route.params.bookingId}`;
+  const message = `Bonjour ${clientName}, voici le lien de suivi de votre encaissement: ${checkoutUrl}`;
+
+  try {
+    await navigator.clipboard.writeText(message);
+    toast.success("Message copié. Vous pouvez le coller dans SMS ou WhatsApp.");
+  } catch {
+    toast.info(message);
+  }
 }
 
-onMounted(() => {
-  // Mock data fetching based on :bookingId
-  const bookingId = route.params.bookingId;
-  
-  // In a real app, we'd call fetchBooking(bookingId)
-  booking.value = {
-    id: bookingId,
-    clientName: "Fatou Binetou",
-    date: "16 Juillet 2026",
-    time: "09:30",
-    staffName: "Marie Diop",
-    serviceName: "Tresses + Soin",
-    price: 25000
-  };
-
-  items.value = [
-    { name: booking.value.serviceName, price: booking.value.price }
-  ];
-});
+watch(
+  () => checkoutQuery.data.value,
+  (data) => {
+    if (!data) return;
+    items.value = data.lineItems.map((item) => ({
+      name: item.name,
+      price: item.amountXof
+    }));
+  },
+  { immediate: true }
+);
 </script>

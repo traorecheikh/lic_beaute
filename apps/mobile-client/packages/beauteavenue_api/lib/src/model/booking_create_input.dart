@@ -12,14 +12,15 @@ part 'booking_create_input.g.dart';
 /// BookingCreateInput
 ///
 /// Properties:
-/// * [salonId] 
-/// * [serviceId] 
-/// * [employeeId] 
-/// * [startsAt] 
-/// * [clientNote] 
-/// * [provider] 
+/// * [salonId]
+/// * [serviceId]
+/// * [employeeId]
+/// * [startsAt]
+/// * [clientNote]
+/// * [provider]
 @BuiltValue()
-abstract class BookingCreateInput implements Built<BookingCreateInput, BookingCreateInputBuilder> {
+abstract class BookingCreateInput
+    implements Built<BookingCreateInput, BookingCreateInputBuilder> {
   @BuiltValueField(wireName: r'salonId')
   String get salonId;
 
@@ -41,16 +42,19 @@ abstract class BookingCreateInput implements Built<BookingCreateInput, BookingCr
 
   BookingCreateInput._();
 
-  factory BookingCreateInput([void updates(BookingCreateInputBuilder b)]) = _$BookingCreateInput;
+  factory BookingCreateInput([void updates(BookingCreateInputBuilder b)]) =
+      _$BookingCreateInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BookingCreateInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BookingCreateInput> get serializer => _$BookingCreateInputSerializer();
+  static Serializer<BookingCreateInput> get serializer =>
+      _$BookingCreateInputSerializer();
 }
 
-class _$BookingCreateInputSerializer implements PrimitiveSerializer<BookingCreateInput> {
+class _$BookingCreateInputSerializer
+    implements PrimitiveSerializer<BookingCreateInput> {
   @override
   final Iterable<Type> types = const [BookingCreateInput, _$BookingCreateInput];
 
@@ -106,7 +110,9 @@ class _$BookingCreateInputSerializer implements PrimitiveSerializer<BookingCreat
     BookingCreateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -193,17 +199,20 @@ class _$BookingCreateInputSerializer implements PrimitiveSerializer<BookingCreat
 }
 
 class BookingCreateInputProviderEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'wave')
-  static const BookingCreateInputProviderEnum wave = _$bookingCreateInputProviderEnum_wave;
+  static const BookingCreateInputProviderEnum wave =
+      _$bookingCreateInputProviderEnum_wave;
   @BuiltValueEnumConst(wireName: r'orange_money')
-  static const BookingCreateInputProviderEnum orangeMoney = _$bookingCreateInputProviderEnum_orangeMoney;
+  static const BookingCreateInputProviderEnum orangeMoney =
+      _$bookingCreateInputProviderEnum_orangeMoney;
 
-  static Serializer<BookingCreateInputProviderEnum> get serializer => _$bookingCreateInputProviderEnumSerializer;
+  static Serializer<BookingCreateInputProviderEnum> get serializer =>
+      _$bookingCreateInputProviderEnumSerializer;
 
-  const BookingCreateInputProviderEnum._(String name): super(name);
+  const BookingCreateInputProviderEnum._(String name) : super(name);
 
-  static BuiltSet<BookingCreateInputProviderEnum> get values => _$bookingCreateInputProviderEnumValues;
-  static BookingCreateInputProviderEnum valueOf(String name) => _$bookingCreateInputProviderEnumValueOf(name);
+  static BuiltSet<BookingCreateInputProviderEnum> get values =>
+      _$bookingCreateInputProviderEnumValues;
+  static BookingCreateInputProviderEnum valueOf(String name) =>
+      _$bookingCreateInputProviderEnumValueOf(name);
 }
-

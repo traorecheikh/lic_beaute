@@ -13,10 +13,12 @@ part 'booking_summary_list_response.g.dart';
 /// BookingSummaryListResponse
 ///
 /// Properties:
-/// * [items] 
-/// * [total] 
+/// * [items]
+/// * [total]
 @BuiltValue()
-abstract class BookingSummaryListResponse implements Built<BookingSummaryListResponse, BookingSummaryListResponseBuilder> {
+abstract class BookingSummaryListResponse
+    implements
+        Built<BookingSummaryListResponse, BookingSummaryListResponseBuilder> {
   @BuiltValueField(wireName: r'items')
   BuiltList<BookingSummaryListResponseItemsInner> get items;
 
@@ -25,18 +27,25 @@ abstract class BookingSummaryListResponse implements Built<BookingSummaryListRes
 
   BookingSummaryListResponse._();
 
-  factory BookingSummaryListResponse([void updates(BookingSummaryListResponseBuilder b)]) = _$BookingSummaryListResponse;
+  factory BookingSummaryListResponse(
+          [void updates(BookingSummaryListResponseBuilder b)]) =
+      _$BookingSummaryListResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BookingSummaryListResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BookingSummaryListResponse> get serializer => _$BookingSummaryListResponseSerializer();
+  static Serializer<BookingSummaryListResponse> get serializer =>
+      _$BookingSummaryListResponseSerializer();
 }
 
-class _$BookingSummaryListResponseSerializer implements PrimitiveSerializer<BookingSummaryListResponse> {
+class _$BookingSummaryListResponseSerializer
+    implements PrimitiveSerializer<BookingSummaryListResponse> {
   @override
-  final Iterable<Type> types = const [BookingSummaryListResponse, _$BookingSummaryListResponse];
+  final Iterable<Type> types = const [
+    BookingSummaryListResponse,
+    _$BookingSummaryListResponse
+  ];
 
   @override
   final String wireName = r'BookingSummaryListResponse';
@@ -49,7 +58,8 @@ class _$BookingSummaryListResponseSerializer implements PrimitiveSerializer<Book
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(BuiltList, [FullType(BookingSummaryListResponseItemsInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(BookingSummaryListResponseItemsInner)]),
     );
     yield r'total';
     yield serializers.serialize(
@@ -64,7 +74,9 @@ class _$BookingSummaryListResponseSerializer implements PrimitiveSerializer<Book
     BookingSummaryListResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -82,7 +94,8 @@ class _$BookingSummaryListResponseSerializer implements PrimitiveSerializer<Book
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(BookingSummaryListResponseItemsInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(BookingSummaryListResponseItemsInner)]),
           ) as BuiltList<BookingSummaryListResponseItemsInner>;
           result.items.replace(valueDes);
           break;
@@ -121,4 +134,3 @@ class _$BookingSummaryListResponseSerializer implements PrimitiveSerializer<Book
     return result.build();
   }
 }
-

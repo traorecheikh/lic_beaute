@@ -31,7 +31,9 @@ class AboutPage extends StatelessWidget {
             SizedBox(height: 6.h),
             Text(
               "L'excellence à votre portée",
-              style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             SizedBox(height: 4.h),
             Text(
@@ -53,7 +55,8 @@ class AboutPage extends StatelessWidget {
             SizedBox(height: 12.h),
             _InfoCard(
               title: 'Contactez-nous',
-              body: "contact@beauteavenue.sn\n+221 77 000 00 00\nDakar, Sénégal",
+              body:
+                  "contact@beauteavenue.sn\n+221 77 000 00 00\nDakar, Sénégal",
             ),
             SizedBox(height: 32.h),
             Text(

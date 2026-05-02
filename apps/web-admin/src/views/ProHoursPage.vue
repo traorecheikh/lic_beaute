@@ -50,15 +50,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { computed, reactive, ref, watch } from "vue";
+import { useMutation, useQuery } from "@tanstack/vue-query";
 import { toast } from "vue-sonner";
 import { 
   DocumentDuplicateIcon,
   InformationCircleIcon
 } from "@heroicons/vue/24/outline";
+import { fetchProHours, updateProHours } from "@/lib/pro-api";
+import { useProAuthStore } from "@/stores/proAuth";
+import { getErrorMessage } from "@/lib/errors";
 
 const saving = ref(false);
 const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+const dayOfWeekByLabel: Record<string, number> = {
+  Lundi: 1,
+  Mardi: 2,
+  Mercredi: 3,
+  Jeudi: 4,
+  Vendredi: 5,
+  Samedi: 6,
+  Dimanche: 0
+};
+const auth = useProAuthStore();
 
 const hours = reactive(days.reduce((acc, day) => {
   acc[day] = { 
@@ -68,6 +82,34 @@ const hours = reactive(days.reduce((acc, day) => {
   };
   return acc;
 }, {} as any));
+
+const hoursQuery = useQuery({
+  queryKey: ["pro-hours"],
+  queryFn: () => fetchProHours(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+});
+
+const saveMutation = useMutation({
+  mutationFn: () =>
+    updateProHours(
+      auth.accessToken ?? "",
+      days.map((day) => ({
+        dayOfWeek: dayOfWeekByLabel[day],
+        isOpen: Boolean(hours[day].open),
+        opensAt: hours[day].open ? hours[day].start : null,
+        closesAt: hours[day].open ? hours[day].end : null
+      }))
+    ),
+  onSuccess: () => {
+    toast.success("Horaires enregistrés.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Mise à jour impossible pour le moment."));
+  },
+  onSettled: () => {
+    saving.value = false;
+  }
+});
 
 function copyToAll(sourceDay: string) {
   const source = hours[sourceDay];
@@ -82,9 +124,21 @@ function copyToAll(sourceDay: string) {
 
 async function saveHours() {
   saving.value = true;
-  setTimeout(() => {
-    saving.value = false;
-    toast.success("Horaires enregistrés.");
-  }, 1000);
+  saveMutation.mutate();
 }
+
+watch(
+  () => hoursQuery.data.value,
+  (data) => {
+    if (!data) return;
+    for (const day of days) {
+      const apiDay = data.find((entry) => entry.dayOfWeek === dayOfWeekByLabel[day]);
+      if (!apiDay) continue;
+      hours[day].open = apiDay.isOpen;
+      hours[day].start = apiDay.opensAt ?? "09:00";
+      hours[day].end = apiDay.closesAt ?? "19:00";
+    }
+  },
+  { immediate: true }
+);
 </script>

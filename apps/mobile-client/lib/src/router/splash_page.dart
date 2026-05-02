@@ -31,13 +31,22 @@ class _SplashPageState extends ConsumerState<SplashPage>
     );
 
     _scale = Tween<double>(begin: 0.72, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack)),
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack),
+      ),
     );
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.45, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+      ),
     );
     _wordmarkFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: const Interval(0.5, 0.9, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.5, 0.9, curve: Curves.easeOut),
+      ),
     );
 
     _ctrl.forward();
@@ -106,7 +115,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         Text(
                           'L\'excellence à votre portée',
                           style: AppTextStyles.bodyMd.copyWith(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -188,7 +197,7 @@ class _PulsingDotsState extends State<_PulsingDots>
               height: 5.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(opacity),
+                color: AppColors.primary.withValues(alpha: opacity),
               ),
             );
           }),

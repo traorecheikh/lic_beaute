@@ -1,173 +1,277 @@
+import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../router/app_router.dart';
 
-class BookingsListPage extends StatelessWidget {
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../router/app_router.dart';
+import '../../discovery/widgets/stale_data_notice.dart';
+import '../providers/bookings_list_provider.dart';
+
+class BookingsListPage extends ConsumerWidget {
   const BookingsListPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bookingsAsync = ref.watch(bookingsListProvider);
+    Future<void> refreshBookings() => ref.refresh(bookingsListProvider.future);
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: AppColors.neutral,
-        appBar: AppBar(
-          backgroundColor: AppColors.surface,
-          title: Text('Mes Rendez-vous', style: AppTextStyles.headlineMd),
-          bottom: TabBar(
-            indicatorColor: AppColors.primary,
-            indicatorWeight: 3,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.onSurfaceVariant,
-            labelStyle: AppTextStyles.labelLg,
-            tabs: const [
-              Tab(text: 'À VENIR'),
-              Tab(text: 'PASSÉS'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildBookingsList(context, isUpcoming: true),
-            _buildBookingsList(context, isUpcoming: false),
+        body: NestedScrollView(
+          headerSliverBuilder: (context, _) => [
+            SliverSafeArea(
+              bottom: false,
+              sliver: SliverToBoxAdapter(
+                child: Container(
+                  color: AppColors.surface,
+                  padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
+                  child: Text(
+                    'Mes Rendez-vous',
+                    style: AppTextStyles.headlineMd,
+                  ),
+                ),
+              ),
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _TabBarDelegate(
+                TabBar(
+                  indicatorColor: AppColors.primary,
+                  indicatorWeight: 3,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.onSurfaceVariant,
+                  labelStyle: AppTextStyles.labelLg,
+                  tabs: const [
+                    Tab(text: 'À VENIR'),
+                    Tab(text: 'PASSÉS'),
+                  ],
+                ),
+              ),
+            ),
           ],
+          body: bookingsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Padding(
+            padding: EdgeInsets.all(24.r),
+            child: AppErrorState(
+              error: error,
+              fallbackTitle: 'Impossible de charger les rendez-vous',
+              serverTitle: 'Le suivi des rendez-vous est indisponible',
+              onRetry: refreshBookings,
+            ),
+          ),
+          data: (resource) {
+            final all =
+                resource.data?.items.toList() ??
+                const <BookingSummaryListResponseItemsInner>[];
+            final now = DateTime.now();
+            final upcoming = all
+                .where(
+                  (b) =>
+                      b.startsAt.isAfter(now) &&
+                      b.status !=
+                          BookingSummaryListResponseItemsInnerStatusEnum
+                              .cancelled,
+                )
+                .toList();
+            final past = all
+                .where(
+                  (b) =>
+                      b.startsAt.isBefore(now) ||
+                      b.status ==
+                          BookingSummaryListResponseItemsInnerStatusEnum
+                              .completed,
+                )
+                .toList();
+
+            return TabBarView(
+              children: [
+                _BookingTab(
+                  items: upcoming,
+                  isUpcoming: true,
+                  onRefresh: refreshBookings,
+                  staleAt: resource.isStale ? resource.cachedAt : null,
+                ),
+                _BookingTab(
+                  items: past,
+                  isUpcoming: false,
+                  onRefresh: refreshBookings,
+                  staleAt: resource.isStale ? resource.cachedAt : null,
+                ),
+              ],
+            );
+          },
         ),
       ),
+    ),
+  );
+  }
+}
+
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  _TabBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: AppColors.surface,
+      child: _tabBar,
     );
   }
 
-  Widget _buildBookingsList(BuildContext context, {required bool isUpcoming}) {
-    // Mocked data for editorial feel
-    final bookings = isUpcoming 
-      ? [
-          _BookingItem(
-            salonName: 'Maison Kinka',
-            serviceName: 'Soin Visage Hydratant',
-            date: 'Sam. 12 Juil.',
-            time: '14:30',
-            status: 'Confirmé',
-            statusColor: AppColors.statusConfirmedBg,
-            statusTextColor: AppColors.statusConfirmedText,
-          ),
-        ]
-      : [
-          _BookingItem(
-            salonName: 'L\'Atelier de Beauté',
-            serviceName: 'Shampoing + Brushing',
-            date: 'Lun. 20 Juin',
-            time: '10:00',
-            status: 'Terminé',
-            statusColor: AppColors.outlineVariant,
-            statusTextColor: AppColors.onSurfaceVariant,
-          ),
-        ];
+  @override
+  bool shouldRebuild(_TabBarDelegate oldDelegate) => _tabBar != oldDelegate._tabBar;
+}
 
-    if (bookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+class _BookingTab extends StatelessWidget {
+  const _BookingTab({
+    required this.items,
+    required this.isUpcoming,
+    required this.onRefresh,
+    required this.staleAt,
+  });
+
+  final List<BookingSummaryListResponseItemsInner> items;
+  final bool isUpcoming;
+  final Future<void> Function() onRefresh;
+  final DateTime? staleAt;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return RefreshIndicator.adaptive(
+        color: AppColors.primary,
+        onRefresh: onRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           children: [
-            Icon(Icons.calendar_today_outlined, size: 64.w, color: AppColors.outline),
-            SizedBox(height: 24.h),
-            Text('Aucun rendez-vous', style: AppTextStyles.headlineMd),
-            SizedBox(height: 8.h),
-            Text('Vos futures séances apparaîtront ici.', style: AppTextStyles.bodySm),
+            if (staleAt != null)
+              Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+                child: StaleDataNotice(cachedAt: staleAt!),
+              ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: Center(
+                child: Text('Aucun rendez-vous', style: AppTextStyles.bodyMd),
+              ),
+            ),
           ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: EdgeInsets.all(24.w),
-      itemCount: bookings.length,
-      separatorBuilder: (_, __) => SizedBox(height: 20.h),
-      itemBuilder: (context, index) {
-        final booking = bookings[index];
-        return GestureDetector(
-          onTap: () => context.push(
-            '${AppRoutes.bookingDetailPath('booking-123')}${isUpcoming ? '' : '?past=true'}',
-          ),
-          child: Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: AppColors.outlineVariant.withOpacity(0.5)),
+    return RefreshIndicator.adaptive(
+      color: AppColors.primary,
+      onRefresh: onRefresh,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: EdgeInsets.all(20.w),
+        itemCount: items.length + (staleAt != null ? 1 : 0),
+        separatorBuilder: (_, __) => SizedBox(height: 12.h),
+        itemBuilder: (_, i) {
+          if (staleAt != null) {
+            if (i == 0) {
+              return StaleDataNotice(cachedAt: staleAt!);
+            }
+            i -= 1;
+          }
+          final b = items[i];
+          final date = b.startsAt.toLocal();
+          final dateLabel =
+              '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
+          final timeLabel =
+              '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+          return GestureDetector(
+            onTap: () => context.push(
+              '${AppRoutes.bookingDetailPath(b.id)}${isUpcoming ? '' : '?past=true'}',
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: booking.statusColor,
-                        borderRadius: BorderRadius.circular(6.r),
-                      ),
-                      child: Text(
-                        booking.status.toUpperCase(),
-                        style: AppTextStyles.labelSm.copyWith(color: booking.statusTextColor, fontSize: 10.sp),
+            child: Container(
+              padding: EdgeInsets.all(18.r),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20.r),
+                boxShadow: AppShadows.card,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48.r,
+                    height: 48.r,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Center(
+                      child: AppIcon(
+                        'calendar',
+                        size: 20,
+                        color: AppColors.primary,
                       ),
                     ),
-                    Text('${booking.date} • ${booking.time}', style: AppTextStyles.labelSm),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                Text(booking.salonName, style: AppTextStyles.labelLg),
-                Text(booking.serviceName, style: AppTextStyles.bodySm),
-                SizedBox(height: 20.h),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: isUpcoming ? 1 : 3,
-                      child: OutlinedButton(
-                        onPressed: () {},
-                        child: Text(isUpcoming ? 'Modifier' : 'Réserver'),
-                      ),
-                    ),
-                    if (!isUpcoming) ...[
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: () => context.push(AppRoutes.review('booking-123')),
-                          child: const Text('Laisser un avis'),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(b.salonName, style: AppTextStyles.labelLg),
+                        SizedBox(height: 2.h),
+                        Text(b.serviceName, style: AppTextStyles.bodySm),
+                        SizedBox(height: 6.h),
+                        Text(
+                          '$dateLabel · $timeLabel',
+                          style: AppTextStyles.labelSm,
                         ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isUpcoming
+                          ? AppColors.statusConfirmedBg
+                          : AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      b.status.name,
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: isUpcoming
+                            ? AppColors.statusConfirmedText
+                            : AppColors.onSurfaceVariant,
                       ),
-                    ],
-                  ],
-                ),
-              ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
-
-}
-
-class _BookingItem {
-  final String salonName;
-  final String serviceName;
-  final String date;
-  final String time;
-  final String status;
-  final Color statusColor;
-  final Color statusTextColor;
-
-  _BookingItem({
-    required this.salonName,
-    required this.serviceName,
-    required this.date,
-    required this.time,
-    required this.status,
-    required this.statusColor,
-    required this.statusTextColor,
-  });
 }

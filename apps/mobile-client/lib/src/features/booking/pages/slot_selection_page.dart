@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../features/discovery/providers/salon_detail_provider.dart';
 import '../../../router/app_router.dart';
+import '../providers/booking_funnel_provider.dart';
 
-class SlotSelectionPage extends StatefulWidget {
+class SlotSelectionPage extends ConsumerStatefulWidget {
   const SlotSelectionPage({
     required this.serviceId,
     required this.salonId,
@@ -21,25 +25,38 @@ class SlotSelectionPage extends StatefulWidget {
   final String? employeeId;
 
   @override
-  State<SlotSelectionPage> createState() => _SlotSelectionPageState();
+  ConsumerState<SlotSelectionPage> createState() => _SlotSelectionPageState();
 }
 
-class _SlotSelectionPageState extends State<SlotSelectionPage> {
+class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
   DateTime _selected = DateTime.now().add(const Duration(days: 1));
-  String? _selectedSlot;
-
-  static const _slots = [
-    '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00',
-    '17:00', '18:00',
-  ];
-
-  static const _unavailable = {'12:00', '16:00'};
+  Map<String, dynamic>? _selectedSlot;
 
   static const _weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+  Future<void> _refreshCurrentAvailability() async {
+    final params = (
+      salonId: widget.salonId,
+      date: _ymd(_selected),
+      serviceId: widget.serviceId,
+      employeeId: widget.employeeId?.isEmpty == true ? null : widget.employeeId,
+    );
+    ref.invalidate(salonAvailabilityProvider(params));
+    await ref.read(salonAvailabilityProvider(params).future);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final availabilityParams = (
+      salonId: widget.salonId,
+      date: _ymd(_selected),
+      serviceId: widget.serviceId,
+      employeeId: widget.employeeId?.isEmpty == true ? null : widget.employeeId,
+    );
+    final availabilityAsync = ref.watch(
+      salonAvailabilityProvider(availabilityParams),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.neutral,
       appBar: AppBar(
@@ -51,7 +68,7 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Étape 2 sur 4',
+              'Étape 3 sur 4',
               style: AppTextStyles.overline.copyWith(color: AppColors.primary),
             ),
             Text('Choisir un créneau', style: AppTextStyles.headlineMd),
@@ -62,7 +79,21 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDateStrip(),
-          Expanded(child: _buildSlotGrid()),
+          Expanded(
+            child: availabilityAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Padding(
+                padding: EdgeInsets.all(24.r),
+                child: AppErrorState(
+                  error: error,
+                  fallbackTitle: 'Impossible de charger les disponibilités',
+                  serverTitle: 'Les disponibilités sont indisponibles',
+                  onRetry: _refreshCurrentAvailability,
+                ),
+              ),
+              data: (slots) => _buildSlotGrid(slots),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -71,11 +102,19 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
           child: ElevatedButton(
             onPressed: _selectedSlot == null
                 ? null
-                : () => context.push(AppRoutes.bookingReview),
+                : () {
+                    ref
+                        .read(bookingFunnelProvider.notifier)
+                        .selectSlot(
+                          startsAtIso: _selectedSlot!['startsAt'] as String,
+                          employeeId: _selectedSlot!['employeeId'] as String?,
+                        );
+                    context.push(AppRoutes.bookingReview);
+                  },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Confirmer · ${_selectedSlot ?? '–'}'),
+                Text('Confirmer · ${_selectedSlotLabel()}'),
                 SizedBox(width: 8.w),
                 AppIcon('chevron-right', size: 16, color: Colors.white),
               ],
@@ -84,6 +123,13 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
         ),
       ),
     );
+  }
+
+  String _ymd(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   Widget _buildDateStrip() {
@@ -96,8 +142,10 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
         itemCount: 14,
         itemBuilder: (_, i) {
           final date = DateTime.now().add(Duration(days: i + 1));
-          final isSelected = _selected.day == date.day &&
-              _selected.month == date.month;
+          final isSelected =
+              _selected.day == date.day &&
+              _selected.month == date.month &&
+              _selected.year == date.year;
 
           return GestureDetector(
             onTap: () => setState(() {
@@ -120,7 +168,7 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
                     _weekDays[date.weekday - 1],
                     style: AppTextStyles.bodyXs.copyWith(
                       color: isSelected
-                          ? AppColors.surface.withOpacity(0.7)
+                          ? AppColors.surface.withValues(alpha: 0.7)
                           : AppColors.onSurfaceVariant,
                     ),
                   ),
@@ -128,7 +176,9 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
                   Text(
                     '${date.day}',
                     style: AppTextStyles.headlineSm.copyWith(
-                      color: isSelected ? AppColors.surface : AppColors.onSurface,
+                      color: isSelected
+                          ? AppColors.surface
+                          : AppColors.onSurface,
                     ),
                   ),
                 ],
@@ -140,59 +190,87 @@ class _SlotSelectionPageState extends State<SlotSelectionPage> {
     );
   }
 
-  Widget _buildSlotGrid() {
-    return GridView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 2.4,
-        crossAxisSpacing: 10.w,
-        mainAxisSpacing: 10.h,
-      ),
-      itemCount: _slots.length,
-      itemBuilder: (_, i) {
-        final slot = _slots[i];
-        final isUnavailable = _unavailable.contains(slot);
-        final isSelected = _selectedSlot == slot;
-
-        return GestureDetector(
-          onTap: isUnavailable ? null : () => setState(() => _selectedSlot = slot),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary
-                  : isUnavailable
-                      ? AppColors.surfaceVariant
-                      : AppColors.surface,
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.outlineVariant,
-                width: isSelected ? 1.5 : 1,
+  Widget _buildSlotGrid(List<dynamic> slots) {
+    if (slots.isEmpty) {
+      return RefreshIndicator.adaptive(
+        color: AppColors.primary,
+        onRefresh: _refreshCurrentAvailability,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.45,
+              child: const Center(
+                child: Text('Aucun créneau disponible ce jour.'),
               ),
-              boxShadow: isSelected ? null : AppShadows.sm,
             ),
-            child: Center(
-              child: Text(
-                slot,
-                style: AppTextStyles.labelMd.copyWith(
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator.adaptive(
+      color: AppColors.primary,
+      onRefresh: _refreshCurrentAvailability,
+      child: GridView.builder(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 2.4,
+          crossAxisSpacing: 10.w,
+          mainAxisSpacing: 10.h,
+        ),
+        itemCount: slots.length,
+        itemBuilder: (_, i) {
+          final item = slots[i] as Map<String, dynamic>;
+          final startsAt = DateTime.parse(item['startsAt'] as String).toLocal();
+          final hh = startsAt.hour.toString().padLeft(2, '0');
+          final mm = startsAt.minute.toString().padLeft(2, '0');
+          final slot = '$hh:$mm';
+          final isSelected = _selectedSlot?['startsAt'] == item['startsAt'];
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedSlot = item),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.surface,
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(
                   color: isSelected
-                      ? Colors.white
-                      : isUnavailable
-                          ? AppColors.outline
-                          : AppColors.onSurface,
-                  decoration: isUnavailable
-                      ? TextDecoration.lineThrough
-                      : null,
+                      ? AppColors.primary
+                      : AppColors.outlineVariant,
+                  width: isSelected ? 1.5 : 1,
+                ),
+                boxShadow: isSelected ? null : AppShadows.sm,
+              ),
+              child: Center(
+                child: Text(
+                  slot,
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: isSelected ? Colors.white : AppColors.onSurface,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
+  }
+
+  String _selectedSlotLabel() {
+    if (_selectedSlot == null) return '–';
+    final startsAt = DateTime.parse(
+      _selectedSlot!['startsAt'] as String,
+    ).toLocal();
+    final hh = startsAt.hour.toString().padLeft(2, '0');
+    final mm = startsAt.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 }

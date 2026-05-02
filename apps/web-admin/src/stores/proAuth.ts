@@ -1,56 +1,111 @@
+import type { CurrentUser } from "@/lib/generated";
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
 
-export interface ProUser {
-  id: string;
-  email: string;
-  fullName: string;
-  role: "salon_owner" | "salon_staff";
-  salonId: string;
-  salonName: string;
+import {
+  fetchProCurrentUser,
+  fetchProSalon,
+  loginPro,
+  logoutPro,
+  verifyProOtp
+} from "@/lib/pro-api";
+
+type ProAuthState = {
+  accessToken: string | null;
+  refreshToken: string | null;
+  currentUser: CurrentUser | null;
+  salonName: string | null;
+  initialized: boolean;
+};
+
+function isProRole(role: CurrentUser["role"]): role is "salon_owner" | "salon_staff" {
+  return role === "salon_owner" || role === "salon_staff";
 }
 
-export const useProAuthStore = defineStore("proAuth", () => {
-  const currentUser = ref<ProUser | null>(null);
-  const initialized = ref(false);
+export const useProAuthStore = defineStore("pro-auth", {
+  state: (): ProAuthState => ({
+    accessToken: null,
+    refreshToken: null,
+    currentUser: null,
+    salonName: null,
+    initialized: false
+  }),
+  persist: {
+    key: "beauteavenue.pro.session",
+    paths: ["accessToken", "refreshToken"]
+  },
+  getters: {
+    isAuthenticated: (state) => {
+      return Boolean(state.accessToken && state.currentUser && isProRole(state.currentUser.role));
+    },
+    isOwner: (state) => state.currentUser?.role === "salon_owner"
+  },
+  actions: {
+    async applySession(accessToken: string, refreshToken: string) {
+      this.accessToken = accessToken;
+      this.refreshToken = refreshToken;
+      await this.restoreSession();
+      if (!this.isAuthenticated) {
+        throw new Error("Ce compte n'a pas accès à l'espace pro.");
+      }
+    },
 
-  const isAuthenticated = computed(() => !!currentUser.value);
-  const isOwner = computed(() => currentUser.value?.role === "salon_owner");
+    async restoreSession() {
+      if (!this.accessToken) {
+        this.currentUser = null;
+        this.salonName = null;
+        this.initialized = true;
+        return;
+      }
 
-  async function restoreSession() {
-    // Mock session restoration
-    const savedUser = localStorage.getItem("pro_user");
-    if (savedUser) {
-      currentUser.value = JSON.parse(savedUser);
+      try {
+        const user = await fetchProCurrentUser(this.accessToken);
+        if (!isProRole(user.role)) {
+          this.accessToken = null;
+          this.refreshToken = null;
+          this.currentUser = null;
+          this.salonName = null;
+          this.initialized = true;
+          return;
+        }
+
+        this.currentUser = user;
+
+        try {
+          const salon = await fetchProSalon(this.accessToken);
+          this.salonName = salon.name;
+        } catch {
+          this.salonName = null;
+        }
+      } catch {
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.currentUser = null;
+        this.salonName = null;
+      } finally {
+        this.initialized = true;
+      }
+    },
+
+    async login(email: string, password: string) {
+      const session = await loginPro({ email, password });
+      await this.applySession(session.accessToken, session.refreshToken);
+    },
+
+    async loginWithOtp(phone: string, code: string) {
+      const session = await verifyProOtp({ phone, code });
+      await this.applySession(session.accessToken, session.refreshToken);
+    },
+
+    async logout() {
+      const token = this.accessToken;
+      const refreshToken = this.refreshToken;
+
+      if (token) {
+        await logoutPro(token, refreshToken ?? undefined).catch(() => undefined);
+      }
+
+      this.$reset();
+      this.initialized = true;
     }
-    initialized.value = true;
   }
-
-  async function login(role: "salon_owner" | "salon_staff" = "salon_owner") {
-    const mockUser: ProUser = {
-      id: "pro-1",
-      email: role === "salon_owner" ? "owner@example.com" : "staff@example.com",
-      fullName: role === "salon_owner" ? "Marie Diop" : "Jean Faye",
-      role,
-      salonId: "salon-1",
-      salonName: "Beauté Divine"
-    };
-    currentUser.value = mockUser;
-    localStorage.setItem("pro_user", JSON.stringify(mockUser));
-  }
-
-  async function logout() {
-    currentUser.value = null;
-    localStorage.removeItem("pro_user");
-  }
-
-  return {
-    currentUser,
-    initialized,
-    isAuthenticated,
-    isOwner,
-    restoreSession,
-    login,
-    logout
-  };
 });

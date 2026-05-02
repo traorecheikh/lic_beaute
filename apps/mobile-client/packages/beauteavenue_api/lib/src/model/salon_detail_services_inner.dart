@@ -11,18 +11,24 @@ part 'salon_detail_services_inner.g.dart';
 /// SalonDetailServicesInner
 ///
 /// Properties:
-/// * [id] 
-/// * [name] 
-/// * [durationMinutes] 
-/// * [priceXof] 
-/// * [depositRequiredXof] 
+/// * [id]
+/// * [name]
+/// * [category]
+/// * [durationMinutes]
+/// * [priceXof]
+/// * [depositRequiredXof]
 @BuiltValue()
-abstract class SalonDetailServicesInner implements Built<SalonDetailServicesInner, SalonDetailServicesInnerBuilder> {
+abstract class SalonDetailServicesInner
+    implements
+        Built<SalonDetailServicesInner, SalonDetailServicesInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
   @BuiltValueField(wireName: r'name')
   String get name;
+
+  @BuiltValueField(wireName: r'category')
+  String get category;
 
   @BuiltValueField(wireName: r'durationMinutes')
   int get durationMinutes;
@@ -35,18 +41,25 @@ abstract class SalonDetailServicesInner implements Built<SalonDetailServicesInne
 
   SalonDetailServicesInner._();
 
-  factory SalonDetailServicesInner([void updates(SalonDetailServicesInnerBuilder b)]) = _$SalonDetailServicesInner;
+  factory SalonDetailServicesInner(
+          [void updates(SalonDetailServicesInnerBuilder b)]) =
+      _$SalonDetailServicesInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SalonDetailServicesInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SalonDetailServicesInner> get serializer => _$SalonDetailServicesInnerSerializer();
+  static Serializer<SalonDetailServicesInner> get serializer =>
+      _$SalonDetailServicesInnerSerializer();
 }
 
-class _$SalonDetailServicesInnerSerializer implements PrimitiveSerializer<SalonDetailServicesInner> {
+class _$SalonDetailServicesInnerSerializer
+    implements PrimitiveSerializer<SalonDetailServicesInner> {
   @override
-  final Iterable<Type> types = const [SalonDetailServicesInner, _$SalonDetailServicesInner];
+  final Iterable<Type> types = const [
+    SalonDetailServicesInner,
+    _$SalonDetailServicesInner
+  ];
 
   @override
   final String wireName = r'SalonDetailServicesInner';
@@ -66,6 +79,11 @@ class _$SalonDetailServicesInnerSerializer implements PrimitiveSerializer<SalonD
       object.name,
       specifiedType: const FullType(String),
     );
+    yield r'category';
+    yield serializers.serialize(
+      object.category,
+      specifiedType: const FullType(String),
+    );
     yield r'durationMinutes';
     yield serializers.serialize(
       object.durationMinutes,
@@ -77,10 +95,12 @@ class _$SalonDetailServicesInnerSerializer implements PrimitiveSerializer<SalonD
       specifiedType: const FullType(num),
     );
     yield r'depositRequiredXof';
-    yield object.depositRequiredXof == null ? null : serializers.serialize(
-      object.depositRequiredXof,
-      specifiedType: const FullType.nullable(num),
-    );
+    yield object.depositRequiredXof == null
+        ? null
+        : serializers.serialize(
+            object.depositRequiredXof,
+            specifiedType: const FullType.nullable(num),
+          );
   }
 
   @override
@@ -89,7 +109,9 @@ class _$SalonDetailServicesInnerSerializer implements PrimitiveSerializer<SalonD
     SalonDetailServicesInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -117,6 +139,13 @@ class _$SalonDetailServicesInnerSerializer implements PrimitiveSerializer<SalonD
             specifiedType: const FullType(String),
           ) as String;
           result.name = valueDes;
+          break;
+        case r'category':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.category = valueDes;
           break;
         case r'durationMinutes':
           final valueDes = serializers.deserialize(
@@ -168,4 +197,3 @@ class _$SalonDetailServicesInnerSerializer implements PrimitiveSerializer<SalonD
     return result.build();
   }
 }
-

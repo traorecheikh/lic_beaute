@@ -11,10 +11,11 @@ part 'email_login_input.g.dart';
 /// EmailLoginInput
 ///
 /// Properties:
-/// * [email] 
-/// * [password] 
+/// * [email]
+/// * [password]
 @BuiltValue()
-abstract class EmailLoginInput implements Built<EmailLoginInput, EmailLoginInputBuilder> {
+abstract class EmailLoginInput
+    implements Built<EmailLoginInput, EmailLoginInputBuilder> {
   @BuiltValueField(wireName: r'email')
   String get email;
 
@@ -23,16 +24,19 @@ abstract class EmailLoginInput implements Built<EmailLoginInput, EmailLoginInput
 
   EmailLoginInput._();
 
-  factory EmailLoginInput([void updates(EmailLoginInputBuilder b)]) = _$EmailLoginInput;
+  factory EmailLoginInput([void updates(EmailLoginInputBuilder b)]) =
+      _$EmailLoginInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(EmailLoginInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<EmailLoginInput> get serializer => _$EmailLoginInputSerializer();
+  static Serializer<EmailLoginInput> get serializer =>
+      _$EmailLoginInputSerializer();
 }
 
-class _$EmailLoginInputSerializer implements PrimitiveSerializer<EmailLoginInput> {
+class _$EmailLoginInputSerializer
+    implements PrimitiveSerializer<EmailLoginInput> {
   @override
   final Iterable<Type> types = const [EmailLoginInput, _$EmailLoginInput];
 
@@ -62,7 +66,9 @@ class _$EmailLoginInputSerializer implements PrimitiveSerializer<EmailLoginInput
     EmailLoginInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +125,3 @@ class _$EmailLoginInputSerializer implements PrimitiveSerializer<EmailLoginInput
     return result.build();
   }
 }
-

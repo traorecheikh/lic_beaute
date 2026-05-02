@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/widgets/app_connectivity_banner.dart';
+import 'core/widgets/app_connectivity_recovery.dart';
 import 'router/app_router.dart';
 
 class ClientApp extends ConsumerWidget {
@@ -24,6 +26,16 @@ class ClientApp extends ConsumerWidget {
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
         routerConfig: router,
+        builder: (context, routedChild) {
+          return AppConnectivityRecovery(
+            child: Stack(
+              children: [
+                routedChild ?? const SizedBox.shrink(),
+                const AppConnectivityBanner(),
+              ],
+            ),
+          );
+        },
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

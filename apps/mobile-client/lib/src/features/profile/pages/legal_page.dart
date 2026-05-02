@@ -27,12 +27,28 @@ class LegalPage extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Image.asset('assets/logo.png', height: 60.h, errorBuilder: (c, e, s) => Icon(Icons.auto_awesome, size: 60.h, color: colorScheme.primary)),
+                Image.asset(
+                  'assets/logo.png',
+                  height: 60.h,
+                  errorBuilder: (c, e, s) => Icon(
+                    Icons.auto_awesome,
+                    size: 60.h,
+                    color: colorScheme.primary,
+                  ),
+                ),
                 SizedBox(height: 16.h),
-                Text('Beauté Avenue SARL', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Beauté Avenue SARL',
+                  style: AppTextStyles.bodyMd.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Text('Dakar, Sénégal', style: AppTextStyles.bodySm),
                 SizedBox(height: 8.h),
-                Text('© 2026 Tous droits réservés', style: AppTextStyles.bodyXs.copyWith(color: Colors.grey)),
+                Text(
+                  '© 2026 Tous droits réservés',
+                  style: AppTextStyles.bodyXs.copyWith(color: Colors.grey),
+                ),
               ],
             ),
           ),

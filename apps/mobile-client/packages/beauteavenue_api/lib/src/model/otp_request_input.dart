@@ -11,24 +11,28 @@ part 'otp_request_input.g.dart';
 /// OtpRequestInput
 ///
 /// Properties:
-/// * [phone] 
+/// * [phone]
 @BuiltValue()
-abstract class OtpRequestInput implements Built<OtpRequestInput, OtpRequestInputBuilder> {
+abstract class OtpRequestInput
+    implements Built<OtpRequestInput, OtpRequestInputBuilder> {
   @BuiltValueField(wireName: r'phone')
   String get phone;
 
   OtpRequestInput._();
 
-  factory OtpRequestInput([void updates(OtpRequestInputBuilder b)]) = _$OtpRequestInput;
+  factory OtpRequestInput([void updates(OtpRequestInputBuilder b)]) =
+      _$OtpRequestInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OtpRequestInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OtpRequestInput> get serializer => _$OtpRequestInputSerializer();
+  static Serializer<OtpRequestInput> get serializer =>
+      _$OtpRequestInputSerializer();
 }
 
-class _$OtpRequestInputSerializer implements PrimitiveSerializer<OtpRequestInput> {
+class _$OtpRequestInputSerializer
+    implements PrimitiveSerializer<OtpRequestInput> {
   @override
   final Iterable<Type> types = const [OtpRequestInput, _$OtpRequestInput];
 
@@ -53,7 +57,9 @@ class _$OtpRequestInputSerializer implements PrimitiveSerializer<OtpRequestInput
     OtpRequestInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +109,3 @@ class _$OtpRequestInputSerializer implements PrimitiveSerializer<OtpRequestInput
     return result.build();
   }
 }
-

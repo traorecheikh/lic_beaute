@@ -74,6 +74,8 @@ class _$SalonDetail extends SalonDetail {
   @override
   final String category;
   @override
+  final String? logoUrl;
+  @override
   final String city;
   @override
   final String? neighborhood;
@@ -88,6 +90,12 @@ class _$SalonDetail extends SalonDetail {
   @override
   final bool featured;
   @override
+  final bool isPrestige;
+  @override
+  final num? prestigeScore;
+  @override
+  final num? distanceKm;
+  @override
   final String description;
   @override
   final String address;
@@ -95,6 +103,10 @@ class _$SalonDetail extends SalonDetail {
   final BuiltList<String> gallery;
   @override
   final BuiltList<SalonDetailServicesInner> services;
+  @override
+  final SalonDetailTeamDisplay teamDisplay;
+  @override
+  final BuiltList<SalonDetailStaffInner> staff;
 
   factory _$SalonDetail([void Function(SalonDetailBuilder)? updates]) =>
       (SalonDetailBuilder()..update(updates))._build();
@@ -103,6 +115,7 @@ class _$SalonDetail extends SalonDetail {
       {required this.id,
       required this.name,
       required this.category,
+      this.logoUrl,
       required this.city,
       this.neighborhood,
       required this.averageRating,
@@ -110,10 +123,15 @@ class _$SalonDetail extends SalonDetail {
       this.longitude,
       required this.subscriptionTier,
       required this.featured,
+      required this.isPrestige,
+      this.prestigeScore,
+      this.distanceKm,
       required this.description,
       required this.address,
       required this.gallery,
-      required this.services})
+      required this.services,
+      required this.teamDisplay,
+      required this.staff})
       : super._();
   @override
   SalonDetail rebuild(void Function(SalonDetailBuilder) updates) =>
@@ -129,6 +147,7 @@ class _$SalonDetail extends SalonDetail {
         id == other.id &&
         name == other.name &&
         category == other.category &&
+        logoUrl == other.logoUrl &&
         city == other.city &&
         neighborhood == other.neighborhood &&
         averageRating == other.averageRating &&
@@ -136,10 +155,15 @@ class _$SalonDetail extends SalonDetail {
         longitude == other.longitude &&
         subscriptionTier == other.subscriptionTier &&
         featured == other.featured &&
+        isPrestige == other.isPrestige &&
+        prestigeScore == other.prestigeScore &&
+        distanceKm == other.distanceKm &&
         description == other.description &&
         address == other.address &&
         gallery == other.gallery &&
-        services == other.services;
+        services == other.services &&
+        teamDisplay == other.teamDisplay &&
+        staff == other.staff;
   }
 
   @override
@@ -148,6 +172,7 @@ class _$SalonDetail extends SalonDetail {
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, category.hashCode);
+    _$hash = $jc(_$hash, logoUrl.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
     _$hash = $jc(_$hash, neighborhood.hashCode);
     _$hash = $jc(_$hash, averageRating.hashCode);
@@ -155,10 +180,15 @@ class _$SalonDetail extends SalonDetail {
     _$hash = $jc(_$hash, longitude.hashCode);
     _$hash = $jc(_$hash, subscriptionTier.hashCode);
     _$hash = $jc(_$hash, featured.hashCode);
+    _$hash = $jc(_$hash, isPrestige.hashCode);
+    _$hash = $jc(_$hash, prestigeScore.hashCode);
+    _$hash = $jc(_$hash, distanceKm.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, address.hashCode);
     _$hash = $jc(_$hash, gallery.hashCode);
     _$hash = $jc(_$hash, services.hashCode);
+    _$hash = $jc(_$hash, teamDisplay.hashCode);
+    _$hash = $jc(_$hash, staff.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -169,6 +199,7 @@ class _$SalonDetail extends SalonDetail {
           ..add('id', id)
           ..add('name', name)
           ..add('category', category)
+          ..add('logoUrl', logoUrl)
           ..add('city', city)
           ..add('neighborhood', neighborhood)
           ..add('averageRating', averageRating)
@@ -176,10 +207,15 @@ class _$SalonDetail extends SalonDetail {
           ..add('longitude', longitude)
           ..add('subscriptionTier', subscriptionTier)
           ..add('featured', featured)
+          ..add('isPrestige', isPrestige)
+          ..add('prestigeScore', prestigeScore)
+          ..add('distanceKm', distanceKm)
           ..add('description', description)
           ..add('address', address)
           ..add('gallery', gallery)
-          ..add('services', services))
+          ..add('services', services)
+          ..add('teamDisplay', teamDisplay)
+          ..add('staff', staff))
         .toString();
   }
 }
@@ -198,6 +234,10 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
   String? _category;
   String? get category => _$this._category;
   set category(String? category) => _$this._category = category;
+
+  String? _logoUrl;
+  String? get logoUrl => _$this._logoUrl;
+  set logoUrl(String? logoUrl) => _$this._logoUrl = logoUrl;
 
   String? _city;
   String? get city => _$this._city;
@@ -230,6 +270,19 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
   bool? get featured => _$this._featured;
   set featured(bool? featured) => _$this._featured = featured;
 
+  bool? _isPrestige;
+  bool? get isPrestige => _$this._isPrestige;
+  set isPrestige(bool? isPrestige) => _$this._isPrestige = isPrestige;
+
+  num? _prestigeScore;
+  num? get prestigeScore => _$this._prestigeScore;
+  set prestigeScore(num? prestigeScore) =>
+      _$this._prestigeScore = prestigeScore;
+
+  num? _distanceKm;
+  num? get distanceKm => _$this._distanceKm;
+  set distanceKm(num? distanceKm) => _$this._distanceKm = distanceKm;
+
   String? _description;
   String? get description => _$this._description;
   set description(String? description) => _$this._description = description;
@@ -248,6 +301,17 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
   set services(ListBuilder<SalonDetailServicesInner>? services) =>
       _$this._services = services;
 
+  SalonDetailTeamDisplayBuilder? _teamDisplay;
+  SalonDetailTeamDisplayBuilder get teamDisplay =>
+      _$this._teamDisplay ??= SalonDetailTeamDisplayBuilder();
+  set teamDisplay(SalonDetailTeamDisplayBuilder? teamDisplay) =>
+      _$this._teamDisplay = teamDisplay;
+
+  ListBuilder<SalonDetailStaffInner>? _staff;
+  ListBuilder<SalonDetailStaffInner> get staff =>
+      _$this._staff ??= ListBuilder<SalonDetailStaffInner>();
+  set staff(ListBuilder<SalonDetailStaffInner>? staff) => _$this._staff = staff;
+
   SalonDetailBuilder() {
     SalonDetail._defaults(this);
   }
@@ -258,6 +322,7 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
       _id = $v.id;
       _name = $v.name;
       _category = $v.category;
+      _logoUrl = $v.logoUrl;
       _city = $v.city;
       _neighborhood = $v.neighborhood;
       _averageRating = $v.averageRating;
@@ -265,10 +330,15 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
       _longitude = $v.longitude;
       _subscriptionTier = $v.subscriptionTier;
       _featured = $v.featured;
+      _isPrestige = $v.isPrestige;
+      _prestigeScore = $v.prestigeScore;
+      _distanceKm = $v.distanceKm;
       _description = $v.description;
       _address = $v.address;
       _gallery = $v.gallery.toBuilder();
       _services = $v.services.toBuilder();
+      _teamDisplay = $v.teamDisplay.toBuilder();
+      _staff = $v.staff.toBuilder();
       _$v = null;
     }
     return this;
@@ -297,6 +367,7 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
                 name, r'SalonDetail', 'name'),
             category: BuiltValueNullFieldError.checkNotNull(
                 category, r'SalonDetail', 'category'),
+            logoUrl: logoUrl,
             city: BuiltValueNullFieldError.checkNotNull(
                 city, r'SalonDetail', 'city'),
             neighborhood: neighborhood,
@@ -308,12 +379,18 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
                 subscriptionTier, r'SalonDetail', 'subscriptionTier'),
             featured: BuiltValueNullFieldError.checkNotNull(
                 featured, r'SalonDetail', 'featured'),
+            isPrestige: BuiltValueNullFieldError.checkNotNull(
+                isPrestige, r'SalonDetail', 'isPrestige'),
+            prestigeScore: prestigeScore,
+            distanceKm: distanceKm,
             description: BuiltValueNullFieldError.checkNotNull(
                 description, r'SalonDetail', 'description'),
             address: BuiltValueNullFieldError.checkNotNull(
                 address, r'SalonDetail', 'address'),
             gallery: gallery.build(),
             services: services.build(),
+            teamDisplay: teamDisplay.build(),
+            staff: staff.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -322,6 +399,10 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
         gallery.build();
         _$failedField = 'services';
         services.build();
+        _$failedField = 'teamDisplay';
+        teamDisplay.build();
+        _$failedField = 'staff';
+        staff.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'SalonDetail', _$failedField, e.toString());

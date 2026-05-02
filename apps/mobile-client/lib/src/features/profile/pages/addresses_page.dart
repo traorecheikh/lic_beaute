@@ -16,8 +16,18 @@ class AddressesPage extends StatefulWidget {
 
 class _AddressesPageState extends State<AddressesPage> {
   final List<_Address> _addresses = [
-    _Address(id: '1', title: 'Domicile', address: 'Villa 123, Mermoz Pyrotechnie, Dakar', isDefault: true),
-    _Address(id: '2', title: 'Bureau', address: 'Immeuble ABC, Plateau, Dakar', isDefault: false),
+    _Address(
+      id: '1',
+      title: 'Domicile',
+      address: 'Villa 123, Mermoz Pyrotechnie, Dakar',
+      isDefault: true,
+    ),
+    _Address(
+      id: '2',
+      title: 'Bureau',
+      address: 'Immeuble ABC, Plateau, Dakar',
+      isDefault: false,
+    ),
   ];
 
   void _delete(String id) async {
@@ -61,14 +71,16 @@ class _AddressesPageState extends State<AddressesPage> {
       body: ListView(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
         children: [
-          ..._addresses.map((a) => Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
-            child: _AddressCard(
-              address: a,
-              onSetDefault: () => _setDefault(a.id),
-              onDelete: () => _delete(a.id),
+          ..._addresses.map(
+            (a) => Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: _AddressCard(
+                address: a,
+                onSetDefault: () => _setDefault(a.id),
+                onDelete: () => _delete(a.id),
+              ),
             ),
-          )),
+          ),
           SizedBox(height: 8.h),
           GestureDetector(
             onTap: _addAddress,
@@ -86,7 +98,9 @@ class _AddressesPageState extends State<AddressesPage> {
                   SizedBox(width: 8.w),
                   Text(
                     'Ajouter une adresse',
-                    style: AppTextStyles.labelLg.copyWith(color: AppColors.primary),
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: AppColors.primary,
+                    ),
                   ),
                 ],
               ),
@@ -127,7 +141,9 @@ class _AddressCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                address.title == 'Domicile' ? Icons.home_outlined : Icons.work_outline,
+                address.title == 'Domicile'
+                    ? Icons.home_outlined
+                    : Icons.work_outline,
                 size: 18.r,
                 color: AppColors.onSurfaceVariant,
               ),
@@ -154,7 +170,9 @@ class _AddressCard extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(
             address.address,
-            style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
           SizedBox(height: 14.h),
           Row(
@@ -170,7 +188,9 @@ class _AddressCard extends StatelessWidget {
                   ),
                   child: Text(
                     'Définir par défaut',
-                    style: AppTextStyles.labelSm.copyWith(color: AppColors.primary),
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               const Spacer(),

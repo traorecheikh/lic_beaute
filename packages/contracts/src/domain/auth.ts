@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { roleSchema } from "./enums.js";
+import { clientContactChannelSchema, roleSchema } from "./enums.js";
 
 export const emailLoginSchema = z.object({
   email: z.string().email(),
@@ -28,7 +28,13 @@ export const currentUserSchema = z.object({
   email: z.string().email().nullable(),
   phone: z.string().nullable(),
   role: roleSchema,
-  salonId: z.string().nullable()
+  salonId: z.string().nullable(),
+  city: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  preferredContactChannel: clientContactChannelSchema,
+  pushOptIn: z.boolean(),
+  marketingOptIn: z.boolean(),
+  preferredLanguage: z.enum(["fr", "en"])
 });
 
 export const refreshInputSchema = z.object({
@@ -36,7 +42,13 @@ export const refreshInputSchema = z.object({
 });
 
 export const updateMeInputSchema = z.object({
-  fullName: z.string().min(2).optional()
+  fullName: z.string().min(2).optional(),
+  city: z.string().min(2).max(120).nullable().optional(),
+  avatarMediaId: z.string().nullable().optional(),
+  preferredContactChannel: clientContactChannelSchema.optional(),
+  pushOptIn: z.boolean().optional(),
+  marketingOptIn: z.boolean().optional(),
+  preferredLanguage: z.enum(["fr", "en"]).optional()
 });
 
 const serviceCreateInputSchema = z.object({

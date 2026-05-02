@@ -36,7 +36,9 @@ class SupportPage extends StatelessWidget {
         children: [
           Text(
             'Contactez-nous',
-            style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTextStyles.labelSm.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
           SizedBox(height: 12.h),
           _SupportTile(
@@ -65,7 +67,9 @@ class SupportPage extends StatelessWidget {
           SizedBox(height: 32.h),
           Text(
             'Questions fréquentes',
-            style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTextStyles.labelSm.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
           SizedBox(height: 12.h),
           _FaqTile(
@@ -130,12 +134,18 @@ class _SupportTile extends StatelessWidget {
                   SizedBox(height: 2.h),
                   Text(
                     subtitle,
-                    style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14.r, color: AppColors.outline),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14.r,
+              color: AppColors.outline,
+            ),
           ],
         ),
       ),
@@ -181,7 +191,9 @@ class _FaqTileState extends State<_FaqTile> {
                   child: Text(
                     widget.q,
                     style: AppTextStyles.labelLg.copyWith(
-                      color: _expanded ? AppColors.primary : AppColors.onSurface,
+                      color: _expanded
+                          ? AppColors.primary
+                          : AppColors.onSurface,
                     ),
                   ),
                 ),

@@ -56,9 +56,30 @@
           </div>
 
           <div class="mt-6">
-            <button @click="loginWithOTP" class="btn-secondary w-full py-3 ring-0 border">
-              Code OTP par SMS
+            <button @click="toggleOtpMode" class="btn-secondary w-full py-3 ring-0 border">
+              {{ showOtpForm ? "Masquer OTP" : "Code OTP par SMS" }}
             </button>
+          </div>
+
+          <div v-if="showOtpForm" class="mt-4 space-y-3 rounded-2xl border border-outline-variant/50 bg-neutral-bg/40 p-4">
+            <div>
+              <label for="otp-phone" class="section-label mb-2 block">Téléphone</label>
+              <input id="otp-phone" v-model="otpPhone" type="tel" class="input-shell" placeholder="+221771234567" />
+            </div>
+
+            <div class="flex gap-2">
+              <button @click="requestOtpCode" :disabled="otpLoading" class="btn-secondary flex-1 py-2 ring-0 border disabled:opacity-60">
+                {{ otpLoading ? "Envoi..." : otpRequested ? "Renvoyer code" : "Recevoir code" }}
+              </button>
+            </div>
+
+            <div v-if="otpRequested">
+              <label for="otp-code" class="section-label mb-2 block">Code OTP</label>
+              <input id="otp-code" v-model="otpCode" type="text" maxlength="6" class="input-shell" placeholder="123456" />
+              <button @click="verifyOtpLogin" :disabled="otpLoading" class="btn-primary mt-3 w-full py-2 disabled:opacity-60">
+                {{ otpLoading ? "Vérification..." : "Se connecter par OTP" }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -72,30 +93,90 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { useProAuthStore } from "@/stores/proAuth";
+import { getErrorMessage } from "@/lib/errors";
+import { requestProOtp } from "@/lib/pro-api";
 
 const router = useRouter();
+const route = useRoute();
 const auth = useProAuthStore();
 
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
+const showOtpForm = ref(false);
+const otpPhone = ref("");
+const otpCode = ref("");
+const otpRequested = ref(false);
+const otpLoading = ref(false);
 
 async function handleLogin() {
+  if (!email.value.trim() || !password.value) {
+    toast.error("Email et mot de passe sont requis.");
+    return;
+  }
+
   loading.value = true;
-  // Mock login
-  setTimeout(async () => {
+  try {
+    await auth.login(email.value.trim(), password.value);
+    toast.success(`Bienvenue ${auth.currentUser?.fullName ?? ""}`.trim());
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/pro/calendar";
+    await router.push(redirect);
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Connexion impossible pour le moment."));
+  } finally {
     loading.value = false;
-    await auth.login("salon_owner");
-    toast.success("Bienvenue Marie !");
-    router.push("/pro/calendar");
-  }, 1000);
+  }
 }
 
-function loginWithOTP() {
-  toast.info("Le login par OTP n'est pas encore disponible dans cette démo.");
+function toggleOtpMode() {
+  showOtpForm.value = !showOtpForm.value;
+  if (showOtpForm.value && !otpPhone.value && email.value.includes("77")) {
+    otpPhone.value = email.value.trim();
+  }
 }
+
+async function requestOtpCode() {
+  if (!otpPhone.value.trim()) {
+    toast.error("Le numéro de téléphone est requis.");
+    return;
+  }
+  otpLoading.value = true;
+  try {
+    await requestProOtp({ phone: otpPhone.value.trim() });
+    otpRequested.value = true;
+    toast.success("Code OTP envoyé.");
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Envoi OTP impossible pour le moment."));
+  } finally {
+    otpLoading.value = false;
+  }
+}
+
+async function verifyOtpLogin() {
+  if (!otpPhone.value.trim() || otpCode.value.trim().length !== 6) {
+    toast.error("Téléphone et code OTP à 6 chiffres requis.");
+    return;
+  }
+  otpLoading.value = true;
+  try {
+    await auth.loginWithOtp(otpPhone.value.trim(), otpCode.value.trim());
+    toast.success(`Bienvenue ${auth.currentUser?.fullName ?? ""}`.trim());
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/pro/calendar";
+    await router.push(redirect);
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Connexion OTP impossible pour le moment."));
+  } finally {
+    otpLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  if (typeof route.query.email === "string") {
+    email.value = route.query.email;
+  }
+});
 </script>

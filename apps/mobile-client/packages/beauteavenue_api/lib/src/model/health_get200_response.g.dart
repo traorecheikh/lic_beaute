@@ -11,12 +11,15 @@ class _$HealthGet200Response extends HealthGet200Response {
   final String status;
   @override
   final DateTime timestamp;
+  @override
+  final HealthGet200ResponseDatabase database;
 
   factory _$HealthGet200Response(
           [void Function(HealthGet200ResponseBuilder)? updates]) =>
       (HealthGet200ResponseBuilder()..update(updates))._build();
 
-  _$HealthGet200Response._({required this.status, required this.timestamp})
+  _$HealthGet200Response._(
+      {required this.status, required this.timestamp, required this.database})
       : super._();
   @override
   HealthGet200Response rebuild(
@@ -32,7 +35,8 @@ class _$HealthGet200Response extends HealthGet200Response {
     if (identical(other, this)) return true;
     return other is HealthGet200Response &&
         status == other.status &&
-        timestamp == other.timestamp;
+        timestamp == other.timestamp &&
+        database == other.database;
   }
 
   @override
@@ -40,6 +44,7 @@ class _$HealthGet200Response extends HealthGet200Response {
     var _$hash = 0;
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, timestamp.hashCode);
+    _$hash = $jc(_$hash, database.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -48,7 +53,8 @@ class _$HealthGet200Response extends HealthGet200Response {
   String toString() {
     return (newBuiltValueToStringHelper(r'HealthGet200Response')
           ..add('status', status)
-          ..add('timestamp', timestamp))
+          ..add('timestamp', timestamp)
+          ..add('database', database))
         .toString();
   }
 }
@@ -65,6 +71,12 @@ class HealthGet200ResponseBuilder
   DateTime? get timestamp => _$this._timestamp;
   set timestamp(DateTime? timestamp) => _$this._timestamp = timestamp;
 
+  HealthGet200ResponseDatabaseBuilder? _database;
+  HealthGet200ResponseDatabaseBuilder get database =>
+      _$this._database ??= HealthGet200ResponseDatabaseBuilder();
+  set database(HealthGet200ResponseDatabaseBuilder? database) =>
+      _$this._database = database;
+
   HealthGet200ResponseBuilder() {
     HealthGet200Response._defaults(this);
   }
@@ -74,6 +86,7 @@ class HealthGet200ResponseBuilder
     if ($v != null) {
       _status = $v.status;
       _timestamp = $v.timestamp;
+      _database = $v.database.toBuilder();
       _$v = null;
     }
     return this;
@@ -93,13 +106,27 @@ class HealthGet200ResponseBuilder
   HealthGet200Response build() => _build();
 
   _$HealthGet200Response _build() {
-    final _$result = _$v ??
-        _$HealthGet200Response._(
-          status: BuiltValueNullFieldError.checkNotNull(
-              status, r'HealthGet200Response', 'status'),
-          timestamp: BuiltValueNullFieldError.checkNotNull(
-              timestamp, r'HealthGet200Response', 'timestamp'),
-        );
+    _$HealthGet200Response _$result;
+    try {
+      _$result = _$v ??
+          _$HealthGet200Response._(
+            status: BuiltValueNullFieldError.checkNotNull(
+                status, r'HealthGet200Response', 'status'),
+            timestamp: BuiltValueNullFieldError.checkNotNull(
+                timestamp, r'HealthGet200Response', 'timestamp'),
+            database: database.build(),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'database';
+        database.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'HealthGet200Response', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

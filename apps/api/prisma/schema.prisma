@@ -84,28 +84,57 @@ enum SettlementEventType {
   refunded
 }
 
+enum ClientContactChannel {
+  phone
+  sms
+  whatsapp
+}
+
+enum ClientBenefitKind {
+  membership
+  package
+}
+
+enum ClientBenefitStatus {
+  active
+  paused
+  expired
+  exhausted
+  cancelled
+}
+
+enum VoucherRedemptionStatus {
+  active
+  used
+  expired
+}
+
 // ─── Core models ─────────────────────────────────────────────────────────────
 
 model User {
-  id            String         @id @default(cuid())
-  fullName      String
-  email         String?        @unique
-  phone         String?        @unique
-  passwordHash  String?
-  role          Role
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  salonId       String?
-  salon         Salon?         @relation(fields: [salonId], references: [id], onDelete: SetNull)
-  sessions      Session[]
-  bookings      Booking[]
-  notifications Notification[]
-  employees     Employee[]
-  favorites     Favorite[]
-  reviewsAsClient  Review[]    @relation("ReviewClient")
-  reviewResponses  Review[]    @relation("ReviewResponder")
-  pushTokens    PushToken[]
-  bookingEvents BookingEvent[]
+  id                  String         @id @default(cuid())
+  fullName            String
+  email               String?        @unique
+  phone               String?        @unique
+  passwordHash        String?
+  role                Role
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  salonId             String?
+  salon               Salon?         @relation(fields: [salonId], references: [id], onDelete: SetNull)
+  sessions            Session[]
+  bookings            Booking[]
+  notifications       Notification[]
+  employees           Employee[]
+  favorites           Favorite[]
+  reviewsAsClient     Review[]       @relation("ReviewClient")
+  reviewResponses     Review[]       @relation("ReviewResponder")
+  pushTokens          PushToken[]
+  bookingEvents       BookingEvent[]
+  clientProfile       ClientProfile?
+  paymentMethods      ClientPaymentMethod[]
+  clientBenefits      ClientBenefit[]
+  voucherRedemptions  ClientVoucherRedemption[]
   blockedSlotsCreated BlockedSlot[] @relation("BlockedSlotCreator")
 }
 
@@ -123,6 +152,7 @@ model Salon {
   id                     String              @id @default(cuid())
   name                   String
   category               String
+  logoUrl                String?
   description            String
   city                   String
   neighborhood           String?
@@ -138,6 +168,8 @@ model Salon {
   depositPercentDefault  Float?
   isVisibleInMarketplace Boolean             @default(false)
   canReceiveBookings     Boolean             @default(false)
+  prestigeScore          Float?
+  isPrestige             Boolean             @default(false)
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
   staffMembers           User[]
@@ -151,12 +183,15 @@ model Salon {
   salonHours             SalonHours[]
   favorites              Favorite[]
   reviews                Review[]
+  clientBenefits         ClientBenefit[]
+  vouchers               VoucherDefinition[]
 }
 
 model Service {
   id                  String              @id @default(cuid())
   salonId             String
   name                String
+  category            String              @default("general")
   durationMinutes     Int
   priceXof            Int
   depositMode         String              @default("none")
@@ -360,6 +395,8 @@ model Employee {
   salonId           String
   userId            String
   displayName       String
+  avatarUrl         String?
+  description       String?
   isActive          Boolean             @default(true)
   schedulingEnabled Boolean             @default(true)
   createdAt         DateTime            @default(now())
@@ -489,4 +526,86 @@ model SettlementEvent {
   createdAt         DateTime            @default(now())
   booking           Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   payment           Payment?            @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+}
+
+model ClientProfile {
+  id                      String               @id @default(cuid())
+  userId                  String               @unique
+  city                    String?
+  avatarMediaId           String?              @unique
+  avatarUrl               String?
+  preferredContactChannel ClientContactChannel @default(phone)
+  pushOptIn               Boolean              @default(true)
+  marketingOptIn          Boolean              @default(false)
+  preferredLanguage       String               @default("fr")
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  user                    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClientPaymentMethod {
+  id             String          @id @default(cuid())
+  userId         String
+  provider       PaymentProvider
+  phoneNumber    String
+  label          String?
+  isDefault      Boolean         @default(false)
+  lastUsedAt     DateTime?
+  idempotencyKey String?         @unique
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, provider])
+}
+
+model ClientBenefit {
+  id            String              @id @default(cuid())
+  userId        String
+  salonId       String
+  kind          ClientBenefitKind
+  name          String
+  status        ClientBenefitStatus @default(active)
+  remainingUses Int?
+  expiresAt     DateTime?
+  billingDate   DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon         Salon               @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model VoucherDefinition {
+  id             String                  @id @default(cuid())
+  salonId        String?
+  code           String                  @unique
+  title          String
+  description    String?
+  discountLabel  String
+  expiresAt      DateTime?
+  isActive       Boolean                 @default(true)
+  maxRedemptions Int?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  salon          Salon?                  @relation(fields: [salonId], references: [id], onDelete: SetNull)
+  redemptions    ClientVoucherRedemption[]
+}
+
+model ClientVoucherRedemption {
+  id         String                  @id @default(cuid())
+  userId     String
+  voucherId  String
+  status     VoucherRedemptionStatus @default(active)
+  redeemedAt DateTime                @default(now())
+  usedAt     DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucher    VoucherDefinition       @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, voucherId])
+  @@index([userId, status])
 }

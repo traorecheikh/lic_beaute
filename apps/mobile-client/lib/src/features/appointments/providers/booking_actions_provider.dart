@@ -25,9 +25,13 @@ class BookingActions {
     required String time,
   }) async {
     final dio = _ref.read(dioProvider);
+    final startsAt = DateTime.parse(
+      '$date'
+      'T$time:00',
+    ).toIso8601String();
     await dio.post(
       '/api/v1/bookings/$bookingId/reschedule',
-      data: {'date': date, 'time': time},
+      data: {'startsAt': startsAt},
     );
     _ref.invalidate(bookingsListProvider);
     _ref.invalidate(bookingDetailProvider(bookingId));

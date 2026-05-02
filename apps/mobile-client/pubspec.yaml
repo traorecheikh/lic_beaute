@@ -21,6 +21,7 @@ dependencies:
 
   # HTTP
   dio: ^5.7.0
+  pretty_dio_logger: ^1.4.0
 
   # Responsive design (.r .sp .w .h)
   flutter_screenutil: ^5.9.3
@@ -65,6 +66,7 @@ dependencies:
   # JSON serialization (used by generated models)
   json_annotation: ^4.9.0
   freezed_annotation: ^3.0.0
+  built_value: ^8.12.5
 
   # Typography — Google Fonts (DM Sans + Cormorant Garamond)
   google_fonts: ^6.2.1
@@ -84,6 +86,11 @@ dependencies:
 
   # Temp file path for share image
   path_provider: ^2.1.4
+
+  # Device location for proximity search
+  geolocator: ^13.0.2
+  permission_handler: ^11.3.1
+  image_picker: ^1.1.2
 
 
 dev_dependencies:

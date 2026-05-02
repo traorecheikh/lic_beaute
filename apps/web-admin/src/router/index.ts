@@ -60,6 +60,12 @@ const router = createRouter({
           component: () => import("@/views/ProClientsPage.vue")
         },
         {
+          path: "vouchers",
+          name: "pro-vouchers",
+          component: () => import("@/views/ProVouchersPage.vue"),
+          meta: { requiresAuth: true, roles: ["salon_owner"] }
+        },
+        {
           path: "analytics",
           name: "pro-analytics",
           component: () => import("@/views/ProAnalyticsPage.vue")
@@ -147,7 +153,7 @@ const router = createRouter({
           component: () => import("@/views/AuditPage.vue")
         },
         {
-          path: "audit/:id",
+          path: "audit/:auditId",
           name: "admin-audit-detail",
           component: () => import("@/views/AuditDetailPage.vue")
         },

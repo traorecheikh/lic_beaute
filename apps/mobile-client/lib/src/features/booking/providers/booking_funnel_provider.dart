@@ -13,6 +13,7 @@ class BookingFunnelState {
     this.employeeName,
     this.slotDate,
     this.slotTime,
+    this.slotStartsAtIso,
     this.depositAmount,
   });
 
@@ -25,13 +26,11 @@ class BookingFunnelState {
   final String? employeeName;
   final String? slotDate;
   final String? slotTime;
+  final String? slotStartsAtIso;
   final int? depositAmount;
 
   bool get canReview =>
-      salonId != null &&
-      serviceId != null &&
-      slotDate != null &&
-      slotTime != null;
+      salonId != null && serviceId != null && slotStartsAtIso != null;
 
   BookingFunnelState copyWith({
     String? salonId,
@@ -43,6 +42,7 @@ class BookingFunnelState {
     String? employeeName,
     String? slotDate,
     String? slotTime,
+    String? slotStartsAtIso,
     int? depositAmount,
     bool clearEmployee = false,
     bool clearSlot = false,
@@ -58,6 +58,9 @@ class BookingFunnelState {
       employeeName: clearEmployee ? null : (employeeName ?? this.employeeName),
       slotDate: clearSlot ? null : (slotDate ?? this.slotDate),
       slotTime: clearSlot ? null : (slotTime ?? this.slotTime),
+      slotStartsAtIso: clearSlot
+          ? null
+          : (slotStartsAtIso ?? this.slotStartsAtIso),
       depositAmount: depositAmount ?? this.depositAmount,
     );
   }
@@ -94,8 +97,20 @@ class BookingFunnelNotifier extends StateNotifier<BookingFunnelState> {
     );
   }
 
-  void selectSlot({required String date, required String time}) {
-    state = state.copyWith(slotDate: date, slotTime: time);
+  void selectSlot({required String startsAtIso, String? employeeId}) {
+    final startsAt = DateTime.parse(startsAtIso).toLocal();
+    final y = startsAt.year.toString().padLeft(4, '0');
+    final m = startsAt.month.toString().padLeft(2, '0');
+    final d = startsAt.day.toString().padLeft(2, '0');
+    final hh = startsAt.hour.toString().padLeft(2, '0');
+    final mm = startsAt.minute.toString().padLeft(2, '0');
+
+    state = state.copyWith(
+      slotDate: '$y-$m-$d',
+      slotTime: '$hh:$mm',
+      slotStartsAtIso: startsAtIso,
+      employeeId: employeeId,
+    );
   }
 
   void setDepositAmount(int amount) {
@@ -109,4 +124,5 @@ class BookingFunnelNotifier extends StateNotifier<BookingFunnelState> {
 
 final bookingFunnelProvider =
     StateNotifierProvider<BookingFunnelNotifier, BookingFunnelState>(
-        (ref) => BookingFunnelNotifier());
+      (ref) => BookingFunnelNotifier(),
+    );

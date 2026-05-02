@@ -48,7 +48,7 @@ import 'package:beauteavenue_api/beauteavenue_api.dart';
 
 
 final api = BeauteavenueApi().getAdminApi();
-final String auditId = auditId_example; // String | 
+final String auditId = auditId_example; // String | Audit identifier
 
 try {
     final response = await api.apiV1AdminAuditAuditIdGet(auditId);
@@ -80,10 +80,49 @@ Class | Method | HTTP request | Description
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthLogoutPost**](doc/AuthApi.md#apiv1authlogoutpost) | **POST** /api/v1/auth/logout | Logout current session
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthOtpRequestPost**](doc/AuthApi.md#apiv1authotprequestpost) | **POST** /api/v1/auth/otp/request | Request an OTP code
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthOtpVerifyPost**](doc/AuthApi.md#apiv1authotpverifypost) | **POST** /api/v1/auth/otp/verify | Verify OTP
+[*AuthApi*](doc/AuthApi.md) | [**apiV1AuthRefreshPost**](doc/AuthApi.md#apiv1authrefreshpost) | **POST** /api/v1/auth/refresh | Refresh access token
+[*AuthApi*](doc/AuthApi.md) | [**apiV1AuthRegisterPost**](doc/AuthApi.md#apiv1authregisterpost) | **POST** /api/v1/auth/register | Register client or salon owner
 [*AuthApi*](doc/AuthApi.md) | [**apiV1MeGet**](doc/AuthApi.md#apiv1meget) | **GET** /api/v1/me | Current user
+[*AuthApi*](doc/AuthApi.md) | [**apiV1MePatch**](doc/AuthApi.md#apiv1mepatch) | **PATCH** /api/v1/me | Update current user
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsGet**](doc/BookingsApi.md#apiv1bookingsget) | **GET** /api/v1/bookings | List bookings
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsPost**](doc/BookingsApi.md#apiv1bookingspost) | **POST** /api/v1/bookings | Create booking
 [*HealthApi*](doc/HealthApi.md) | [**healthGet**](doc/HealthApi.md#healthget) | **GET** /health | Healthcheck
+[*ProApi*](doc/ProApi.md) | [**apiV1ProAnalyticsGet**](doc/ProApi.md#apiv1proanalyticsget) | **GET** /api/v1/pro/analytics | Get salon analytics
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsGet**](doc/ProApi.md#apiv1problockedslotsget) | **GET** /api/v1/pro/blocked-slots | List blocked slots
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsPost**](doc/ProApi.md#apiv1problockedslotspost) | **POST** /api/v1/pro/blocked-slots | Create blocked slot
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsSlotIdDelete**](doc/ProApi.md#apiv1problockedslotsslotiddelete) | **DELETE** /api/v1/pro/blocked-slots/{slotId} | Delete blocked slot
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsBookingIdAcceptPost**](doc/ProApi.md#apiv1probookingsbookingidacceptpost) | **POST** /api/v1/pro/bookings/{bookingId}/accept | Accept booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsBookingIdCompletePost**](doc/ProApi.md#apiv1probookingsbookingidcompletepost) | **POST** /api/v1/pro/bookings/{bookingId}/complete | Complete booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsBookingIdGet**](doc/ProApi.md#apiv1probookingsbookingidget) | **GET** /api/v1/pro/bookings/{bookingId} | Get booking detail
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsBookingIdRejectPost**](doc/ProApi.md#apiv1probookingsbookingidrejectpost) | **POST** /api/v1/pro/bookings/{bookingId}/reject | Reject booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsBookingIdStartPost**](doc/ProApi.md#apiv1probookingsbookingidstartpost) | **POST** /api/v1/pro/bookings/{bookingId}/start | Start booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsGet**](doc/ProApi.md#apiv1probookingsget) | **GET** /api/v1/pro/bookings | List pro bookings
+[*ProApi*](doc/ProApi.md) | [**apiV1ProBookingsManualPost**](doc/ProApi.md#apiv1probookingsmanualpost) | **POST** /api/v1/pro/bookings/manual | Create manual booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProCheckoutBookingIdCompletePost**](doc/ProApi.md#apiv1procheckoutbookingidcompletepost) | **POST** /api/v1/pro/checkout/{bookingId}/complete | Complete checkout for a booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProCheckoutBookingIdGet**](doc/ProApi.md#apiv1procheckoutbookingidget) | **GET** /api/v1/pro/checkout/{bookingId} | Get checkout details for a booking
+[*ProApi*](doc/ProApi.md) | [**apiV1ProClientsClientIdGet**](doc/ProApi.md#apiv1proclientsclientidget) | **GET** /api/v1/pro/clients/{clientId} | Get salon client detail
+[*ProApi*](doc/ProApi.md) | [**apiV1ProClientsGet**](doc/ProApi.md#apiv1proclientsget) | **GET** /api/v1/pro/clients | List salon clients
+[*ProApi*](doc/ProApi.md) | [**apiV1ProDashboardGet**](doc/ProApi.md#apiv1prodashboardget) | **GET** /api/v1/pro/dashboard | Salon operational dashboard
+[*ProApi*](doc/ProApi.md) | [**apiV1ProHoursGet**](doc/ProApi.md#apiv1prohoursget) | **GET** /api/v1/pro/hours | List opening hours
+[*ProApi*](doc/ProApi.md) | [**apiV1ProHoursPut**](doc/ProApi.md#apiv1prohoursput) | **PUT** /api/v1/pro/hours | Update opening hours
+[*ProApi*](doc/ProApi.md) | [**apiV1ProInvoicesGet**](doc/ProApi.md#apiv1proinvoicesget) | **GET** /api/v1/pro/invoices | List subscription invoices
+[*ProApi*](doc/ProApi.md) | [**apiV1ProInvoicesInvoiceIdPdfGet**](doc/ProApi.md#apiv1proinvoicesinvoiceidpdfget) | **GET** /api/v1/pro/invoices/{invoiceId}/pdf | Download subscription invoice PDF
+[*ProApi*](doc/ProApi.md) | [**apiV1ProPayoutsGet**](doc/ProApi.md#apiv1propayoutsget) | **GET** /api/v1/pro/payouts | List settlement and payout events
+[*ProApi*](doc/ProApi.md) | [**apiV1ProReviewsGet**](doc/ProApi.md#apiv1proreviewsget) | **GET** /api/v1/pro/reviews | List salon reviews
+[*ProApi*](doc/ProApi.md) | [**apiV1ProReviewsReviewIdResponsePost**](doc/ProApi.md#apiv1proreviewsreviewidresponsepost) | **POST** /api/v1/pro/reviews/{reviewId}/response | Respond to a review
+[*ProApi*](doc/ProApi.md) | [**apiV1ProSalonGet**](doc/ProApi.md#apiv1prosalonget) | **GET** /api/v1/pro/salon | Get owned salon profile
+[*ProApi*](doc/ProApi.md) | [**apiV1ProSalonPatch**](doc/ProApi.md#apiv1prosalonpatch) | **PATCH** /api/v1/pro/salon | Update owned salon profile
+[*ProApi*](doc/ProApi.md) | [**apiV1ProServicesGet**](doc/ProApi.md#apiv1proservicesget) | **GET** /api/v1/pro/services | List salon services
+[*ProApi*](doc/ProApi.md) | [**apiV1ProServicesPost**](doc/ProApi.md#apiv1proservicespost) | **POST** /api/v1/pro/services | Create salon service
+[*ProApi*](doc/ProApi.md) | [**apiV1ProServicesServiceIdDelete**](doc/ProApi.md#apiv1proservicesserviceiddelete) | **DELETE** /api/v1/pro/services/{serviceId} | Archive salon service
+[*ProApi*](doc/ProApi.md) | [**apiV1ProServicesServiceIdPatch**](doc/ProApi.md#apiv1proservicesserviceidpatch) | **PATCH** /api/v1/pro/services/{serviceId} | Update salon service
+[*ProApi*](doc/ProApi.md) | [**apiV1ProStaffEmployeeIdDelete**](doc/ProApi.md#apiv1prostaffemployeeiddelete) | **DELETE** /api/v1/pro/staff/{employeeId} | Archive salon staff
+[*ProApi*](doc/ProApi.md) | [**apiV1ProStaffEmployeeIdPatch**](doc/ProApi.md#apiv1prostaffemployeeidpatch) | **PATCH** /api/v1/pro/staff/{employeeId} | Update salon staff
+[*ProApi*](doc/ProApi.md) | [**apiV1ProStaffGet**](doc/ProApi.md#apiv1prostaffget) | **GET** /api/v1/pro/staff | List salon staff
+[*ProApi*](doc/ProApi.md) | [**apiV1ProStaffPost**](doc/ProApi.md#apiv1prostaffpost) | **POST** /api/v1/pro/staff | Create salon staff
+[*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionCheckoutPost**](doc/ProApi.md#apiv1prosubscriptioncheckoutpost) | **POST** /api/v1/pro/subscription/checkout | Initiate premium subscription checkout
+[*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionGet**](doc/ProApi.md#apiv1prosubscriptionget) | **GET** /api/v1/pro/subscription | Get subscription details
+[*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionPatch**](doc/ProApi.md#apiv1prosubscriptionpatch) | **PATCH** /api/v1/pro/subscription | Update subscription settings
 [*SalonsApi*](doc/SalonsApi.md) | [**apiV1SalonsGet**](doc/SalonsApi.md#apiv1salonsget) | **GET** /api/v1/salons | List salons
 [*SalonsApi*](doc/SalonsApi.md) | [**apiV1SalonsIdGet**](doc/SalonsApi.md#apiv1salonsidget) | **GET** /api/v1/salons/{id} | Salon details
 
@@ -127,16 +166,70 @@ Class | Method | HTTP request | Description
  - [BookingSummaryListResponse](doc/BookingSummaryListResponse.md)
  - [BookingSummaryListResponseItemsInner](doc/BookingSummaryListResponseItemsInner.md)
  - [CurrentUser](doc/CurrentUser.md)
+ - [DeletedResponse](doc/DeletedResponse.md)
  - [EmailLoginInput](doc/EmailLoginInput.md)
  - [HealthGet200Response](doc/HealthGet200Response.md)
+ - [HealthGet200ResponseDatabase](doc/HealthGet200ResponseDatabase.md)
  - [LogoutResponse](doc/LogoutResponse.md)
+ - [OtpAcceptedResponse](doc/OtpAcceptedResponse.md)
  - [OtpRequestInput](doc/OtpRequestInput.md)
  - [OtpVerifyInput](doc/OtpVerifyInput.md)
+ - [ProAnalytics](doc/ProAnalytics.md)
+ - [ProAnalyticsTopServicesInner](doc/ProAnalyticsTopServicesInner.md)
+ - [ProBlockedSlot](doc/ProBlockedSlot.md)
+ - [ProBlockedSlotCreateInput](doc/ProBlockedSlotCreateInput.md)
+ - [ProBookingDetail](doc/ProBookingDetail.md)
+ - [ProBookingFullDetail](doc/ProBookingFullDetail.md)
+ - [ProBookingFullDetailEventsInner](doc/ProBookingFullDetailEventsInner.md)
+ - [ProBookingFullDetailPaymentsInner](doc/ProBookingFullDetailPaymentsInner.md)
+ - [ProBookingStatusUpdate](doc/ProBookingStatusUpdate.md)
+ - [ProCheckoutCompleteInput](doc/ProCheckoutCompleteInput.md)
+ - [ProCheckoutCompleteResult](doc/ProCheckoutCompleteResult.md)
+ - [ProCheckoutDetails](doc/ProCheckoutDetails.md)
+ - [ProCheckoutDetailsLineItemsInner](doc/ProCheckoutDetailsLineItemsInner.md)
+ - [ProClientDetail](doc/ProClientDetail.md)
+ - [ProClientDetailRecentBookingsInner](doc/ProClientDetailRecentBookingsInner.md)
+ - [ProClientSummary](doc/ProClientSummary.md)
+ - [ProDashboard](doc/ProDashboard.md)
+ - [ProInvoice](doc/ProInvoice.md)
+ - [ProManualBookingCreated](doc/ProManualBookingCreated.md)
+ - [ProManualBookingInput](doc/ProManualBookingInput.md)
+ - [ProPayoutEvent](doc/ProPayoutEvent.md)
+ - [ProReview](doc/ProReview.md)
+ - [ProReviewResponseInput](doc/ProReviewResponseInput.md)
+ - [ProSalonHour](doc/ProSalonHour.md)
+ - [ProSalonProfile](doc/ProSalonProfile.md)
+ - [ProSalonProfileHoursInner](doc/ProSalonProfileHoursInner.md)
+ - [ProSalonUpdateInput](doc/ProSalonUpdateInput.md)
+ - [ProSalonUpdateInputTeamDisplay](doc/ProSalonUpdateInputTeamDisplay.md)
+ - [ProService](doc/ProService.md)
+ - [ProServiceCreateInput](doc/ProServiceCreateInput.md)
+ - [ProServiceUpdateInput](doc/ProServiceUpdateInput.md)
+ - [ProStaffCreateInput](doc/ProStaffCreateInput.md)
+ - [ProStaffMember](doc/ProStaffMember.md)
+ - [ProStaffUpdateInput](doc/ProStaffUpdateInput.md)
+ - [ProSubscription](doc/ProSubscription.md)
+ - [ProSubscriptionBillingMethod](doc/ProSubscriptionBillingMethod.md)
+ - [ProSubscriptionCheckoutInput](doc/ProSubscriptionCheckoutInput.md)
+ - [ProSubscriptionCheckoutResult](doc/ProSubscriptionCheckoutResult.md)
+ - [ProSubscriptionUpdateInput](doc/ProSubscriptionUpdateInput.md)
+ - [ProSubscriptionUpdateInputBillingMethod](doc/ProSubscriptionUpdateInputBillingMethod.md)
+ - [RefreshInput](doc/RefreshInput.md)
+ - [RegisterInput](doc/RegisterInput.md)
+ - [RegisterInputAnyOf](doc/RegisterInputAnyOf.md)
+ - [RegisterInputAnyOf1](doc/RegisterInputAnyOf1.md)
+ - [RegisterInputAnyOf1HoursInner](doc/RegisterInputAnyOf1HoursInner.md)
+ - [RegisterInputAnyOf1Salon](doc/RegisterInputAnyOf1Salon.md)
+ - [RegisterInputAnyOf1ServicesInner](doc/RegisterInputAnyOf1ServicesInner.md)
  - [SalonDetail](doc/SalonDetail.md)
  - [SalonDetailServicesInner](doc/SalonDetailServicesInner.md)
+ - [SalonDetailStaffInner](doc/SalonDetailStaffInner.md)
+ - [SalonDetailTeamDisplay](doc/SalonDetailTeamDisplay.md)
  - [SalonSummary](doc/SalonSummary.md)
  - [SalonSummaryListResponse](doc/SalonSummaryListResponse.md)
  - [SalonSummaryListResponseItemsInner](doc/SalonSummaryListResponseItemsInner.md)
+ - [UpdateMeInput](doc/UpdateMeInput.md)
+ - [UpdatedResponse](doc/UpdatedResponse.md)
 
 
 ## Documentation For Authorization

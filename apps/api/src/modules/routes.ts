@@ -5,6 +5,7 @@ import { AdminController } from "./admin.js";
 import { AuthController } from "./auth.js";
 import { BookingController } from "./bookings.js";
 import { CatalogController } from "./catalog.js";
+import { ClientAccountController } from "./client-account.js";
 import { MediaController } from "./media.js";
 import { NotificationController } from "./notifications.js";
 import { PaymentController } from "./payments.js";
@@ -14,6 +15,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   const auth = new AuthController();
   const catalog = new CatalogController();
   const bookings = new BookingController();
+  const clientAccounts = new ClientAccountController();
   const admin = new AdminController();
   const pro = new ProController();
   const payments = new PaymentController();
@@ -40,6 +42,15 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
   app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));
+  app.get("/api/v1/metadata/profile-options", (req, rep) => clientAccounts.profileOptions(req, rep));
+  app.get("/api/v1/me/payment-methods", (req, rep) => clientAccounts.listPaymentMethods(req, rep));
+  app.post("/api/v1/me/payment-methods", (req, rep) => clientAccounts.createPaymentMethod(req, rep));
+  app.patch("/api/v1/me/payment-methods/:paymentMethodId", (req, rep) => clientAccounts.updatePaymentMethod(req, rep));
+  app.delete("/api/v1/me/payment-methods/:paymentMethodId", (req, rep) => clientAccounts.deletePaymentMethod(req, rep));
+  app.post("/api/v1/me/payment-methods/:paymentMethodId/default", (req, rep) => clientAccounts.setDefaultPaymentMethod(req, rep));
+  app.get("/api/v1/me/benefits", (req, rep) => clientAccounts.listBenefits(req, rep));
+  app.get("/api/v1/me/vouchers", (req, rep) => clientAccounts.listVouchers(req, rep));
+  app.post("/api/v1/me/vouchers/redeem", (req, rep) => clientAccounts.redeemVoucher(req, rep));
 
   // ── Catalog ───────────────────────────────────────────────────────────────
   app.get("/api/v1/salons", (req, rep) => catalog.list(req, rep));
@@ -92,6 +103,12 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/pro/bookings/:bookingId/reject", (req, rep) => pro.rejectBooking(req, rep));
   app.post("/api/v1/pro/bookings/:bookingId/start", (req, rep) => pro.startBooking(req, rep));
   app.post("/api/v1/pro/bookings/:bookingId/complete", (req, rep) => pro.completeBooking(req, rep));
+  app.get("/api/v1/pro/clients", (req, rep) => pro.listClients(req, rep));
+  app.get("/api/v1/pro/clients/:clientId", (req, rep) => pro.getClient(req, rep));
+  app.post("/api/v1/pro/clients/benefits", (req, rep) => clientAccounts.createBenefitForClient(req, rep));
+  app.post("/api/v1/pro/vouchers", (req, rep) => clientAccounts.createVoucherDefinition(req, rep));
+  app.get("/api/v1/pro/checkout/:bookingId", (req, rep) => pro.getCheckout(req, rep));
+  app.post("/api/v1/pro/checkout/:bookingId/complete", (req, rep) => pro.completeCheckout(req, rep));
   app.get("/api/v1/pro/reviews", (req, rep) => pro.listReviews(req, rep));
   app.post("/api/v1/pro/reviews/:reviewId/response", (req, rep) => pro.respondToReview(req, rep));
   app.get("/api/v1/pro/analytics", (req, rep) => pro.analytics(req, rep));
@@ -100,10 +117,12 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/pro/subscription/checkout", (req, rep) => pro.subscriptionCheckout(req, rep));
   app.get("/api/v1/pro/payouts", (req, rep) => pro.listPayouts(req, rep));
   app.get("/api/v1/pro/invoices", (req, rep) => pro.listInvoices(req, rep));
+  app.get("/api/v1/pro/invoices/:invoiceId/pdf", (req, rep) => pro.downloadInvoicePdf(req, rep));
 
   // ── Notifications ─────────────────────────────────────────────────────────
   app.get("/api/v1/notifications", (req, rep) => notifications.list(req, rep));
   app.post("/api/v1/notifications/:id/read", (req, rep) => notifications.markRead(req, rep));
+  app.post("/api/v1/notifications/read-all", (req, rep) => notifications.markAllRead(req, rep));
   app.post("/api/v1/push-tokens", (req, rep) => notifications.registerPushToken(req, rep));
   app.delete("/api/v1/push-tokens/:tokenId", (req, rep) => notifications.revokePushToken(req, rep));
 

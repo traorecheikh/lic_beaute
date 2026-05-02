@@ -12,12 +12,16 @@
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
           <span class="px-3 py-1 rounded-full bg-primary text-[10px] font-bold uppercase tracking-widest mb-4 inline-block">Plan Actuel</span>
-          <h2 class="text-4xl font-display mb-2">Beauté Avenue Premium</h2>
-          <p class="text-white/60 text-sm">Prochaine facture le 15 août 2026 • 15 000 FCFA / mois</p>
+          <h2 class="text-4xl font-display mb-2">{{ currentPlanLabel }}</h2>
+          <p class="text-white/60 text-sm">{{ subscriptionDescription }}</p>
         </div>
         <div class="flex gap-3">
-          <button class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-6">Gérer</button>
-          <button class="btn-gold px-6">Améliorer</button>
+          <button :disabled="toggleMutation.isPending.value" @click="toggleAutoRenew" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-6 disabled:opacity-60">
+            {{ toggleMutation.isPending.value ? "..." : "Gérer" }}
+          </button>
+          <button :disabled="checkoutMutation.isPending.value" @click="upgradePlan" class="btn-gold px-6 disabled:opacity-60">
+            {{ checkoutMutation.isPending.value ? "..." : "Améliorer" }}
+          </button>
         </div>
       </div>
     </div>
@@ -45,14 +49,14 @@
               <tr v-for="invoice in invoices" :key="invoice.id" class="hover:bg-neutral-bg/30 transition-colors">
                 <td class="px-8 py-4">
                   <p class="row-primary">{{ invoice.date }}</p>
-                  <p class="row-meta">{{ invoice.id }}</p>
+                  <p class="row-meta">{{ invoice.invoiceNumber }}</p>
                 </td>
                 <td class="px-8 py-4">
-                  <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider">Payé</span>
+                  <span :class="invoice.statusClass">{{ invoice.statusLabel }}</span>
                 </td>
-                <td class="px-8 py-4 text-sm font-bold text-espresso">{{ invoice.amount }} FCFA</td>
+                <td class="px-8 py-4 text-sm font-bold text-espresso">{{ invoice.amountLabel }}</td>
                 <td class="px-8 py-4 text-right">
-                  <button class="p-2 hover:bg-white rounded-full text-cocoa/60 hover:text-primary transition shadow-sm">
+                  <button @click="openInvoice(invoice)" class="p-2 hover:bg-white rounded-full text-cocoa/60 hover:text-primary transition shadow-sm">
                     <ArrowDownTrayIcon class="w-4 h-4" />
                   </button>
                 </td>
@@ -66,33 +70,184 @@
       <div class="space-y-8">
         <section class="panel-clean p-6">
           <h2 class="section-label mb-6">Mode de paiement</h2>
-          <div class="flex items-center gap-4 mb-6">
+          <div v-if="billingMethod" class="flex items-center gap-4 mb-6">
             <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center p-2 border border-orange-100">
               <img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Orange_logo.svg" class="w-full h-auto" />
             </div>
             <div>
-              <p class="text-sm font-bold text-espresso">Orange Money</p>
-              <p class="text-xs text-cocoa/40">77 *** 45 67</p>
+              <p class="text-sm font-bold text-espresso">{{ providerLabelMap[billingMethod.provider] }}</p>
+              <p class="text-xs text-cocoa/40">{{ billingMethod.accountNumberMasked }}</p>
             </div>
           </div>
-          <button class="btn-secondary w-full py-2 text-[10px] ring-0 border">Modifier</button>
+          <p v-else class="row-meta mb-6">Aucun mode de paiement configuré.</p>
+          <button @click="openPaymentMethodModal" class="btn-secondary w-full py-2 text-[10px] ring-0 border">
+            {{ billingMethod ? "Modifier" : "Configurer" }}
+          </button>
         </section>
 
         <section class="panel-clean p-6 bg-primary/5 border-primary/10">
           <h2 class="section-label mb-4 text-primary">Besoin d'aide ?</h2>
           <p class="text-xs text-cocoa/60 leading-relaxed mb-4">Une question sur votre facture ou votre abonnement ?</p>
-          <button class="text-xs font-bold text-primary uppercase tracking-widest hover:underline">Contacter le support</button>
+          <button @click="contactSupport" class="text-xs font-bold text-primary uppercase tracking-widest hover:underline">Contacter le support</button>
         </section>
       </div>
     </div>
+
+    <Modal
+      :show="showPaymentMethodModal"
+      title="Mode de paiement"
+      subtitle="Ce mode sera utilisé pour vos flux d'abonnement."
+      max-width="md"
+      @close="closePaymentMethodModal"
+    >
+      <div class="space-y-4">
+        <div>
+          <label class="section-label mb-2 block">Fournisseur</label>
+          <select v-model="paymentMethodForm.provider" class="input-shell">
+            <option value="orange_money">Orange Money</option>
+            <option value="wave">Wave</option>
+          </select>
+        </div>
+        <div>
+          <label class="section-label mb-2 block">Numéro de compte</label>
+          <input
+            v-model="paymentMethodForm.accountNumber"
+            class="input-shell"
+            placeholder="77 123 45 67"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex items-center justify-between gap-2">
+          <button
+            v-if="billingMethod"
+            type="button"
+            class="btn-secondary"
+            :disabled="clearPaymentMethodMutation.isPending.value"
+            @click="clearPaymentMethod"
+          >
+            Supprimer
+          </button>
+          <span v-else></span>
+          <div class="flex items-center gap-2">
+            <button type="button" class="btn-secondary" @click="closePaymentMethodModal">Annuler</button>
+            <button
+              type="button"
+              class="btn-primary"
+              :disabled="paymentMethodMutation.isPending.value"
+              @click="savePaymentMethod"
+            >
+              {{ paymentMethodMutation.isPending.value ? "Enregistrement..." : "Enregistrer" }}
+            </button>
+          </div>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, reactive, ref } from "vue";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import dayjs from "dayjs";
+import { formatMoneyXof } from "@beauteavenue/shared-ts";
 import { 
   CheckCircleIcon, 
   ArrowDownTrayIcon 
 } from "@heroicons/vue/24/outline";
+import {
+  checkoutProSubscription,
+  downloadProInvoicePdf,
+  fetchProInvoices,
+  fetchProSubscription,
+  updateProSubscription
+} from "@/lib/pro-api";
+import { useProAuthStore } from "@/stores/proAuth";
+import { getErrorMessage } from "@/lib/errors";
+import { toast } from "vue-sonner";
+import Modal from "@/components/Modal.vue";
+
+const auth = useProAuthStore();
+const queryClient = useQueryClient();
+const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3000";
+const showPaymentMethodModal = ref(false);
+const paymentMethodForm = reactive({
+  provider: "orange_money" as "orange_money" | "wave",
+  accountNumber: ""
+});
+
+const providerLabelMap: Record<"orange_money" | "wave", string> = {
+  orange_money: "Orange Money",
+  wave: "Wave"
+};
+
+const subscriptionQuery = useQuery({
+  queryKey: ["pro-subscription"],
+  queryFn: () => fetchProSubscription(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+});
+
+const invoicesQuery = useQuery({
+  queryKey: ["pro-invoices"],
+  queryFn: () => fetchProInvoices(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+});
+
+const toggleMutation = useMutation({
+  mutationFn: (autoRenew: boolean) => updateProSubscription(auth.accessToken ?? "", { autoRenew }),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    toast.success("Paramètres d'abonnement mis à jour.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Mise à jour impossible pour le moment."));
+  }
+});
+
+const paymentMethodMutation = useMutation({
+  mutationFn: () =>
+    updateProSubscription(auth.accessToken ?? "", {
+      billingMethod: {
+        provider: paymentMethodForm.provider,
+        accountNumber: paymentMethodForm.accountNumber.trim()
+      }
+    }),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    toast.success("Mode de paiement mis à jour.");
+    closePaymentMethodModal();
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Mise à jour impossible pour le moment."));
+  }
+});
+
+const clearPaymentMethodMutation = useMutation({
+  mutationFn: () => updateProSubscription(auth.accessToken ?? "", { billingMethod: null }),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    toast.success("Mode de paiement supprimé.");
+    closePaymentMethodModal();
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Suppression impossible pour le moment."));
+  }
+});
+
+const checkoutMutation = useMutation({
+  mutationFn: () =>
+    checkoutProSubscription(auth.accessToken ?? "", {
+      action: subscriptionQuery.data.value?.tier === "premium" ? "renewal" : "upgrade",
+      provider: "wave"
+    }),
+  onSuccess: (result) => {
+    window.open(result.redirectUrl, "_blank", "noopener,noreferrer");
+    toast.success("Redirection vers le paiement.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Paiement impossible pour le moment."));
+  }
+});
 
 const benefits = [
   "Agenda illimité",
@@ -105,10 +260,102 @@ const benefits = [
   "Badge 'Vérifié' sur l'app"
 ];
 
-const invoices = [
-  { id: "INV-2026-004", date: "15 Juillet 2026", amount: "15 000" },
-  { id: "INV-2026-003", date: "15 Juin 2026", amount: "15 000" },
-  { id: "INV-2026-002", date: "15 Mai 2026", amount: "15 000" },
-  { id: "INV-2026-001", date: "15 Avril 2026", amount: "15 000" }
-];
+const currentPlanLabel = computed(() => {
+  const tier = subscriptionQuery.data.value?.tier ?? "standard";
+  return tier === "premium" ? "Beauté Avenue Premium" : "Beauté Avenue Standard";
+});
+
+const subscriptionDescription = computed(() => {
+  const sub = subscriptionQuery.data.value;
+  if (!sub) return "Chargement de l'abonnement...";
+  const renewDate = sub.renewsAt ? dayjs(sub.renewsAt).format("DD MMMM YYYY") : "date non définie";
+  const autoRenewLabel = sub.autoRenew ? "renouvellement auto actif" : "renouvellement auto désactivé";
+  return `Prochaine échéance le ${renewDate} • ${autoRenewLabel}`;
+});
+
+const billingMethod = computed(() => subscriptionQuery.data.value?.billingMethod ?? null);
+
+const invoices = computed(() => {
+  return (invoicesQuery.data.value ?? []).map((invoice) => ({
+    id: invoice.id,
+    invoiceNumber: invoice.invoiceNumber,
+    pdfUrl: invoice.pdfUrl,
+    amountXof: invoice.amountXof,
+    createdAt: invoice.createdAt,
+    date: dayjs(invoice.createdAt).format("DD MMMM YYYY"),
+    amountLabel: formatMoneyXof(invoice.amountXof),
+    statusLabel: invoice.status === "paid" ? "Payé" : invoice.status,
+    statusClass: invoice.status === "paid"
+      ? "px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider"
+      : "px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider"
+  }));
+});
+
+function toggleAutoRenew() {
+  const current = subscriptionQuery.data.value?.autoRenew;
+  if (current === undefined) return;
+  toggleMutation.mutate(!current);
+}
+
+function upgradePlan() {
+  checkoutMutation.mutate();
+}
+
+async function openInvoice(invoice: (typeof invoices.value)[number]) {
+  if (!invoice.pdfUrl) {
+    toast.error("Lien de facture indisponible.");
+    return;
+  }
+
+  if (invoice.pdfUrl.startsWith("/api/v1/pro/invoices/")) {
+    try {
+      const blob = await downloadProInvoicePdf(auth.accessToken ?? "", invoice.id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${invoice.invoiceNumber}.pdf`;
+      anchor.rel = "noopener";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+      toast.success(`Facture ${invoice.invoiceNumber} téléchargée.`);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Téléchargement de facture impossible."));
+    }
+    return;
+  }
+
+  const target = invoice.pdfUrl.startsWith("http") ? invoice.pdfUrl : `${apiBaseUrl}${invoice.pdfUrl}`;
+  window.open(target, "_blank", "noopener,noreferrer");
+  toast.success(`Facture ${invoice.invoiceNumber} ouverte.`);
+}
+
+function openPaymentMethodModal() {
+  paymentMethodForm.provider = billingMethod.value?.provider ?? "orange_money";
+  paymentMethodForm.accountNumber = "";
+  showPaymentMethodModal.value = true;
+}
+
+function closePaymentMethodModal() {
+  showPaymentMethodModal.value = false;
+}
+
+function savePaymentMethod() {
+  if (!paymentMethodForm.accountNumber.trim()) {
+    toast.error("Le numéro de compte est requis.");
+    return;
+  }
+  paymentMethodMutation.mutate();
+}
+
+function clearPaymentMethod() {
+  clearPaymentMethodMutation.mutate();
+}
+
+function contactSupport() {
+  const subject = encodeURIComponent("Support abonnement Beauté Avenue");
+  const body = encodeURIComponent("Bonjour,\nJ'ai besoin d'aide concernant mon abonnement/facturation.\nMerci.");
+  window.open(`mailto:support@beauteavenue.com?subject=${subject}&body=${body}`, "_blank", "noopener,noreferrer");
+}
 </script>

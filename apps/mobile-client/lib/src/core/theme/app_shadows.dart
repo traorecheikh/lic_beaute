@@ -4,12 +4,12 @@ import 'app_colors.dart';
 abstract final class AppShadows {
   static List<BoxShadow> get card => [
     BoxShadow(
-      color: const Color(0xFF1A1614).withOpacity(0.06),
+      color: const Color(0xFF1A1614).withValues(alpha: 0.06),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: const Color(0xFF1A1614).withOpacity(0.03),
+      color: const Color(0xFF1A1614).withValues(alpha: 0.03),
       blurRadius: 4,
       offset: const Offset(0, 1),
     ),
@@ -17,12 +17,12 @@ abstract final class AppShadows {
 
   static List<BoxShadow> get nav => [
     BoxShadow(
-      color: const Color(0xFF1A1614).withOpacity(0.10),
+      color: const Color(0xFF1A1614).withValues(alpha: 0.10),
       blurRadius: 24,
       offset: const Offset(0, -4),
     ),
     BoxShadow(
-      color: const Color(0xFF1A1614).withOpacity(0.04),
+      color: const Color(0xFF1A1614).withValues(alpha: 0.04),
       blurRadius: 8,
       offset: const Offset(0, -1),
     ),
@@ -30,7 +30,7 @@ abstract final class AppShadows {
 
   static List<BoxShadow> get button => [
     BoxShadow(
-      color: AppColors.primary.withOpacity(0.28),
+      color: AppColors.primary.withValues(alpha: 0.28),
       blurRadius: 16,
       offset: const Offset(0, 6),
     ),
@@ -38,7 +38,7 @@ abstract final class AppShadows {
 
   static List<BoxShadow> get sheet => [
     BoxShadow(
-      color: const Color(0xFF1A1614).withOpacity(0.12),
+      color: const Color(0xFF1A1614).withValues(alpha: 0.12),
       blurRadius: 40,
       offset: const Offset(0, -8),
     ),

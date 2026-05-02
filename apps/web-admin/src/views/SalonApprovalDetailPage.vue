@@ -15,8 +15,8 @@
       <p class="text-[10px] font-mono font-bold text-espresso/40 bg-white px-2 py-0.5 rounded border border-outline-variant">{{ salonId.substring(0, 8) }}</p>
 
       <RouterLink 
-        v-if="salonQuery.data.value.approvalStatus === 'approved'"
-        :to="`/admin/subscriptions/${salonQuery.data.value.id}`" 
+        v-if="salonQuery.data.value?.approvalStatus === 'approved'"
+        :to="`/admin/subscriptions/${salonQuery.data.value?.id ?? ''}`" 
         class="ml-4 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
       >
         Voir l'abonnement →

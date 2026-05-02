@@ -1,0 +1,16 @@
+# beauteavenue_api.model.AdminSalonQueueResponse
+
+## Load the model package
+```dart
+import 'package:beauteavenue_api/api.dart';
+```
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**items** | [**BuiltList&lt;AdminSalonQueueResponseItemsInner&gt;**](AdminSalonQueueResponseItemsInner.md) |  | 
+**total** | **int** |  | 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

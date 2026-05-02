@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/network/connectivity_provider.dart';
 import '../../../core/session/session_store.dart';
+import '../../../core/constants/storage_keys.dart';
+import '../../../core/storage/cached_fetch.dart';
+import '../../../core/sync/app_outbox.dart';
 
 @immutable
 class NotificationItem {
@@ -20,18 +24,18 @@ class NotificationItem {
   final String createdAt;
 
   static NotificationItem fromJson(Map<String, dynamic> json) {
+    final readAt = json['readAt'] as String?;
     return NotificationItem(
       id: json['id'] as String,
       title: json['title'] as String,
       body: json['body'] as String,
-      isRead: json['isRead'] as bool? ?? false,
+      isRead: readAt != null,
       createdAt: json['createdAt'] as String,
     );
   }
 }
 
-class NotificationsNotifier
-    extends AsyncNotifier<List<NotificationItem>> {
+class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
   @override
   Future<List<NotificationItem>> build() async {
     final session = ref.watch(sessionProvider);
@@ -40,43 +44,56 @@ class NotificationsNotifier
   }
 
   Future<List<NotificationItem>> _fetch() async {
-    final dio = ref.read(dioProvider);
-    final response =
-        await dio.get<Map<String, dynamic>>('/api/v1/notifications');
-    final items = (response.data?['items'] as List<dynamic>?) ?? [];
-    return items
-        .cast<Map<String, dynamic>>()
-        .map(NotificationItem.fromJson)
-        .toList();
+    return fetchCachedItemList(
+      dio: ref.read(dioProvider),
+      path: '/api/v1/notifications',
+      boxName: StorageKeys.notificationBox,
+      cacheKey: StorageKeys.notificationsList,
+      fromJson: NotificationItem.fromJson,
+      fallbackOnAnyError: true,
+    );
   }
 
   Future<void> markRead(String notificationId) async {
+    if (!ref.read(isOnlineProvider)) {
+      await ref
+          .read(outboxProvider.notifier)
+          .enqueue(
+            type: 'notification_read',
+            payload: {'notificationId': notificationId},
+          );
+      ref.invalidateSelf();
+      return;
+    }
     final dio = ref.read(dioProvider);
-    await dio.patch('/api/v1/notifications/$notificationId/read');
+    await dio.post('/api/v1/notifications/$notificationId/read');
     ref.invalidateSelf();
   }
 
   Future<void> markAllRead() async {
-    final current = state.valueOrNull ?? [];
-    if (current.isEmpty) return;
+    if (!ref.read(isOnlineProvider)) {
+      await ref
+          .read(outboxProvider.notifier)
+          .enqueue(type: 'notifications_read_all', payload: const {});
+      ref.invalidateSelf();
+      return;
+    }
     final dio = ref.read(dioProvider);
-    await Future.wait(
-      current
-          .where((n) => !n.isRead)
-          .map((n) => dio.patch('/api/v1/notifications/${n.id}/read')),
-    );
+    await dio.post('/api/v1/notifications/read-all');
     ref.invalidateSelf();
   }
 }
 
 final notificationsProvider =
     AsyncNotifierProvider<NotificationsNotifier, List<NotificationItem>>(
-        NotificationsNotifier.new);
+      NotificationsNotifier.new,
+    );
 
 final unreadCountProvider = Provider<int>((ref) {
   return ref
-      .watch(notificationsProvider)
-      .valueOrNull
-      ?.where((n) => !n.isRead)
-      .length ?? 0;
+          .watch(notificationsProvider)
+          .valueOrNull
+          ?.where((n) => !n.isRead)
+          .length ??
+      0;
 });

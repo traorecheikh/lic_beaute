@@ -17,15 +17,16 @@ import '../features/booking/pages/payment_handoff_page.dart';
 import '../features/booking/pages/service_selection_page.dart';
 import '../features/booking/pages/slot_selection_page.dart';
 import '../features/booking/pages/staff_selection_page.dart';
+import '../core/location/location_permission_page.dart';
 import '../features/discovery/pages/favorites_page.dart';
 import '../features/discovery/pages/home_page.dart';
 import '../features/discovery/pages/salon_detail_page.dart';
 import '../features/discovery/pages/salons_list_page.dart';
 import '../features/discovery/pages/search_page.dart';
 import '../features/notifications/pages/notifications_page.dart';
+import '../features/profile/pages/notification_preferences_page.dart';
 import '../features/profile/pages/profile_page.dart';
 import '../features/profile/pages/edit_profile_page.dart';
-import '../features/profile/pages/addresses_page.dart';
 import '../features/profile/pages/payment_methods_page.dart';
 import '../features/profile/pages/vouchers_page.dart';
 import '../features/profile/pages/memberships_page.dart';
@@ -48,6 +49,9 @@ abstract final class AppRoutes {
   static const search = '/search';
   static const salonsNearby = '/salons-nearby';
   static const salonsPrestige = '/salons-prestige';
+  static const salonsTopRated = '/salons-top-rated';
+  static const salonsTrending = '/salons-trending';
+  static const locationPermission = '/location-permission';
   static const favorites = '/favorites';
   static const salonDetail = '/salons/:salonId';
   static const bookingService = '/booking/service';
@@ -60,9 +64,9 @@ abstract final class AppRoutes {
   static const bookingDetail = '/bookings/:bookingId';
   static const bookingManage = '/bookings/:bookingId/manage';
   static const notifications = '/notifications';
+  static const notificationPreferences = '/profile/notification-preferences';
   static const profile = '/profile';
   static const profileEdit = '/profile/edit';
-  static const profileAddresses = '/profile/addresses';
   static const profilePayments = '/profile/payment-methods';
   static const profileVouchers = '/profile/vouchers';
   static const profileMemberships = '/profile/memberships';
@@ -188,8 +192,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, __) => const EditProfilePage(),
               ),
               GoRoute(
-                path: 'addresses',
-                builder: (_, __) => const AddressesPage(),
+                path: 'notification-preferences',
+                builder: (_, __) => const NotificationPreferencesPage(),
               ),
               GoRoute(
                 path: 'payment-methods',
@@ -222,6 +226,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.salonsPrestige,
         builder: (_, __) =>
             const SalonsListPage(filter: SalonListFilter.prestige),
+      ),
+      GoRoute(
+        path: AppRoutes.salonsTopRated,
+        builder: (_, __) =>
+            const SalonsListPage(filter: SalonListFilter.topRated),
+      ),
+      GoRoute(
+        path: AppRoutes.salonsTrending,
+        builder: (_, __) =>
+            const SalonsListPage(filter: SalonListFilter.trending),
+      ),
+      GoRoute(
+        path: AppRoutes.locationPermission,
+        builder: (_, __) => const LocationPermissionPage(),
       ),
 
       // ── Salon detail (outside shell so it can be reached from booking funnel)

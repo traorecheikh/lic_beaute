@@ -28,6 +28,28 @@ function generateOtpCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+async function serializeCurrentUser(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { clientProfile: true }
+  });
+  if (!user) return null;
+  return currentUserSchema.parse({
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email ?? null,
+    phone: user.phone ?? null,
+    role: user.role,
+    salonId: user.salonId ?? null,
+    city: user.clientProfile?.city ?? null,
+    avatarUrl: user.clientProfile?.avatarUrl ?? null,
+    preferredContactChannel: user.clientProfile?.preferredContactChannel ?? "phone",
+    pushOptIn: user.clientProfile?.pushOptIn ?? true,
+    marketingOptIn: user.clientProfile?.marketingOptIn ?? false,
+    preferredLanguage: user.clientProfile?.preferredLanguage === "en" ? "en" : "fr"
+  });
+}
+
 export class AuthController {
   async register(request: FastifyRequest, reply: FastifyReply) {
     const body = registerInputSchema.parse(request.body);
@@ -178,6 +200,19 @@ export class AuthController {
 
   async requestOtp(request: FastifyRequest, reply: FastifyReply) {
     const body = otpRequestSchema.parse(request.body);
+    const existingUser = await prisma.user.findUnique({
+      where: { phone: body.phone }
+    });
+    if (existingUser && existingUser.role !== "client") {
+      fail(
+        reply,
+        403,
+        "client_role_required",
+        "Ce numéro est lié à un compte professionnel. Connectez-vous avec un compte client."
+      );
+      return;
+    }
+
     const code = generateOtpCode();
     otpStore.set(body.phone, { code, expiresAt: Date.now() + 10 * 60 * 1000 });
     await otpAdapter.send(body.phone, code);
@@ -198,6 +233,15 @@ export class AuthController {
     otpStore.delete(body.phone);
 
     let user = await prisma.user.findUnique({ where: { phone: body.phone } });
+    if (user && user.role !== "client") {
+      fail(
+        reply,
+        403,
+        "client_role_required",
+        "Ce numéro est lié à un compte professionnel. Connectez-vous avec un compte client."
+      );
+      return;
+    }
     if (!user) {
       user = await prisma.user.create({
         data: { fullName: body.phone, phone: body.phone, role: "client" }
@@ -275,19 +319,12 @@ export class AuthController {
   async me(request: FastifyRequest, reply: FastifyReply) {
     try {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
-      const user = await prisma.user.findUnique({ where: { id: session.sub } });
+      const user = await serializeCurrentUser(session.sub);
       if (!user) {
         fail(reply, 404, "user_not_found", "Utilisateur introuvable.");
         return;
       }
-      ok(reply, currentUserSchema.parse({
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email ?? null,
-        phone: user.phone ?? null,
-        role: user.role,
-        salonId: user.salonId ?? null
-      }));
+      ok(reply, user);
     } catch (error) {
       if (error instanceof HttpAuthError) {
         fail(reply, error.statusCode, error.code, error.message);
@@ -302,18 +339,56 @@ export class AuthController {
     try {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
       const body = updateMeInputSchema.parse(request.body);
-      const user = await prisma.user.update({
-        where: { id: session.sub },
-        data: { fullName: body.fullName }
+      const media = body.avatarMediaId
+        ? await prisma.mediaAsset.findUnique({ where: { id: body.avatarMediaId } })
+        : null;
+
+      if (body.avatarMediaId && (!media || media.deletedAt || media.ownerType !== "user" || media.ownerId !== session.sub)) {
+        fail(reply, 422, "invalid_avatar", "Avatar invalide.");
+        return;
+      }
+
+      await prisma.$transaction(async (tx) => {
+        if (body.fullName !== undefined) {
+          await tx.user.update({
+            where: { id: session.sub },
+            data: { fullName: body.fullName }
+          });
+        }
+
+        if (
+          body.city !== undefined ||
+          body.avatarMediaId !== undefined ||
+          body.preferredContactChannel !== undefined ||
+          body.pushOptIn !== undefined ||
+          body.marketingOptIn !== undefined ||
+          body.preferredLanguage !== undefined
+        ) {
+          await tx.clientProfile.upsert({
+            where: { userId: session.sub },
+            update: {
+              city: body.city === undefined ? undefined : body.city,
+              avatarMediaId: body.avatarMediaId === undefined ? undefined : body.avatarMediaId,
+              avatarUrl: body.avatarMediaId === undefined ? undefined : (media?.publicUrl ?? null),
+              preferredContactChannel: body.preferredContactChannel,
+              pushOptIn: body.pushOptIn,
+              marketingOptIn: body.marketingOptIn,
+              preferredLanguage: body.preferredLanguage
+            },
+            create: {
+              userId: session.sub,
+              city: body.city ?? null,
+              avatarMediaId: body.avatarMediaId ?? null,
+              avatarUrl: media?.publicUrl ?? null,
+              preferredContactChannel: body.preferredContactChannel ?? "phone",
+              pushOptIn: body.pushOptIn ?? true,
+              marketingOptIn: body.marketingOptIn ?? false,
+              preferredLanguage: body.preferredLanguage ?? "fr"
+            }
+          });
+        }
       });
-      ok(reply, currentUserSchema.parse({
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email ?? null,
-        phone: user.phone ?? null,
-        role: user.role,
-        salonId: user.salonId ?? null
-      }));
+      ok(reply, await serializeCurrentUser(session.sub));
     } catch (error) {
       if (error instanceof HttpAuthError) {
         fail(reply, error.statusCode, error.code, error.message);

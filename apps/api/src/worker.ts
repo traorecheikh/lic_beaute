@@ -108,6 +108,52 @@ async function handleJob(job: Job): Promise<void> {
       break;
     }
 
+    case "prestige_score_refresh": {
+      const salons = await prisma.salon.findMany({
+        where: { approvalStatus: "approved", isVisibleInMarketplace: true },
+        select: {
+          id: true,
+          averageRating: true,
+          subscriptionTier: true,
+          canReceiveBookings: true,
+          _count: { select: { reviews: true, gallery: true } }
+        }
+      });
+
+      const THRESHOLD = 0.3;
+      const updates = salons.map((s) => {
+        const ratingScore = (s.averageRating * Math.log(s._count.reviews + 1)) / 15;
+        const availScore = s.canReceiveBookings ? 1 : 0;
+        const photoScore = Math.min(s._count.gallery, 10) / 10;
+        const premiumBonus = s.subscriptionTier === "premium" ? 1 : 0;
+
+        const score =
+          0.45 * ratingScore +
+          0.25 * availScore +
+          0.15 * photoScore +
+          0.15 * premiumBonus;
+
+        return prisma.salon.update({
+          where: { id: s.id },
+          data: {
+            prestigeScore: Math.round(score * 1000) / 1000,
+            isPrestige: s.subscriptionTier === "premium" && score >= THRESHOLD
+          }
+        });
+      });
+
+      await prisma.$transaction(updates);
+      logger.info("[WORKER] prestige_score_refresh: updated", { count: salons.length });
+
+      // Re-enqueue for next midnight UTC
+      const nextMidnight = new Date();
+      nextMidnight.setUTCHours(24, 0, 0, 0);
+      await prisma.job.create({
+        data: { queue: "default", type: "prestige_score_refresh", payloadJson: "{}", runAfter: nextMidnight }
+      });
+      break;
+    }
+
     default:
       logger.warn("[WORKER] unknown job type", { jobType: job.type });
   }
@@ -142,7 +188,23 @@ async function pollJobs() {
   }
 }
 
+async function ensureNightlyPrestigeJob() {
+  const existing = await prisma.job.findFirst({
+    where: { type: "prestige_score_refresh", status: "pending" }
+  });
+  if (!existing) {
+    const nextMidnight = new Date();
+    nextMidnight.setUTCHours(24, 0, 0, 0);
+    await prisma.job.create({
+      data: { queue: "default", type: "prestige_score_refresh", payloadJson: "{}", runAfter: nextMidnight }
+    });
+    logger.info("[WORKER] Scheduled nightly prestige_score_refresh", { runAfter: nextMidnight });
+  }
+}
+
 logger.info("Worker started", { pollIntervalMs: config.workerPollIntervalMs });
+
+void ensureNightlyPrestigeJob();
 
 setInterval(() => {
   void pollJobs();

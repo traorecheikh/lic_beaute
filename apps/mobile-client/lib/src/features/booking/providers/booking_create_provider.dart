@@ -1,4 +1,5 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client_provider.dart';
@@ -18,13 +19,15 @@ class BookingCreateNotifier extends AsyncNotifier<BookingSummary?> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final api = ref.read(apiClientProvider).getBookingsApi();
-      final startsAt = DateTime.parse('${funnel.slotDate!}T${funnel.slotTime!}:00');
+      final startsAt = DateTime.parse(funnel.slotStartsAtIso!);
       final response = await api.apiV1BookingsPost(
-        bookingCreateInput: BookingCreateInput((b) => b
-          ..salonId = funnel.salonId!
-          ..serviceId = funnel.serviceId!
-          ..employeeId = funnel.employeeId
-          ..startsAt = startsAt),
+        bookingCreateInput: BookingCreateInput(
+          (b) => b
+            ..salonId = funnel.salonId!
+            ..serviceId = funnel.serviceId!
+            ..employeeId = funnel.employeeId
+            ..startsAt = startsAt,
+        ),
       );
       return response.data;
     });
@@ -34,7 +37,8 @@ class BookingCreateNotifier extends AsyncNotifier<BookingSummary?> {
 
 final bookingCreateProvider =
     AsyncNotifierProvider<BookingCreateNotifier, BookingSummary?>(
-        BookingCreateNotifier.new);
+      BookingCreateNotifier.new,
+    );
 
 // ── Initiate deposit payment ──────────────────────────────────────────────
 
@@ -42,20 +46,67 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   @override
   Future<Map<String, dynamic>?> build() async => null;
 
-  Future<String?> initiate({required String bookingId}) async {
+  Future<String?> initiate({
+    required String bookingId,
+    required String provider,
+  }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final dio = ref.read(dioProvider);
       final response = await dio.post<Map<String, dynamic>>(
         '/api/v1/payments/deposits/initiate',
-        data: {'bookingId': bookingId},
+        data: {'bookingId': bookingId, 'provider': provider},
       );
       return response.data;
     });
-    return state.valueOrNull?['paymentUrl'] as String?;
+    return state.valueOrNull?['redirectUrl'] as String?;
   }
 }
 
 final paymentInitiateProvider =
     AsyncNotifierProvider<PaymentInitiateNotifier, Map<String, dynamic>?>(
-        PaymentInitiateNotifier.new);
+      PaymentInitiateNotifier.new,
+    );
+
+String bookingCreateErrorMessage(Object? error) {
+  if (error is DioException) {
+    final statusCode = error.response?.statusCode;
+    final apiMessage = _extractApiMessage(error.response?.data);
+
+    if (statusCode == 401 || statusCode == 403) {
+      return 'Votre session a expiré. Reconnectez-vous pour continuer.';
+    }
+    if (apiMessage != null) {
+      return apiMessage;
+    }
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'La connexion est trop lente. Réessayez.';
+      case DioExceptionType.connectionError:
+        return 'Connexion indisponible. Vérifiez votre réseau puis réessayez.';
+      case DioExceptionType.badResponse:
+        if (statusCode != null && statusCode >= 500) {
+          return 'Nos services rencontrent un problème temporaire.';
+        }
+        break;
+      case DioExceptionType.cancel:
+      case DioExceptionType.badCertificate:
+      case DioExceptionType.unknown:
+        break;
+    }
+  }
+
+  return 'Impossible de confirmer la réservation pour le moment.';
+}
+
+String? _extractApiMessage(Object? data) {
+  if (data is Map<String, dynamic>) {
+    final message = data['message'];
+    if (message is String && message.trim().isNotEmpty) {
+      return message.trim();
+    }
+  }
+  return null;
+}

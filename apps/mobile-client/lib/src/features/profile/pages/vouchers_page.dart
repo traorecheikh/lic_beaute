@@ -1,22 +1,29 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../models/account_models.dart';
+import '../providers/vouchers_provider.dart';
 
-class VouchersPage extends StatefulWidget {
+class VouchersPage extends ConsumerStatefulWidget {
   const VouchersPage({super.key});
 
   @override
-  State<VouchersPage> createState() => _VouchersPageState();
+  ConsumerState<VouchersPage> createState() => _VouchersPageState();
 }
 
-class _VouchersPageState extends State<VouchersPage> {
+class _VouchersPageState extends ConsumerState<VouchersPage> {
   final _codeCtrl = TextEditingController();
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -24,141 +31,235 @@ class _VouchersPageState extends State<VouchersPage> {
     super.dispose();
   }
 
-  void _applyCode() {
-    final code = _codeCtrl.text.trim().toUpperCase();
-    if (code.isEmpty) {
-      AppSnackbar.error(context, 'Veuillez entrer un code promo.');
-      return;
-    }
-    AppHaptics.medium();
-    // Simulate validation
-    if (code == 'WELCOME10' || code == 'SUMMER25') {
-      AppSnackbar.error(context, 'Ce code est déjà appliqué à votre compte.');
-    } else {
-      AppSnackbar.error(context, 'Code promo invalide ou expiré.');
-    }
-    _codeCtrl.clear();
-  }
-
-  void _copyCode(BuildContext context, String code) {
-    AppHaptics.select();
-    Clipboard.setData(ClipboardData(text: code));
-    AppSnackbar.success(context, 'Code "$code" copié dans le presse-papiers.');
-  }
-
-  static const _vouchers = [
-    _Voucher(
-      title: 'Réduction de Bienvenue',
-      code: 'WELCOME10',
-      discount: '-10%',
-      expiry: 'Expire le 31/12/2026',
-      isPrimary: true,
-    ),
-    _Voucher(
-      title: 'Fidélité Été',
-      code: 'SUMMER25',
-      discount: '2 500 XOF',
-      expiry: 'Expire le 31/08/2026',
-      isPrimary: false,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final vouchersAsync = ref.watch(vouchersProvider);
+
     return Scaffold(
       backgroundColor: AppColors.neutral,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: Text('Mes Bons & Codes', style: AppTextStyles.headlineSm),
+        title: Text('Mes bons et codes', style: AppTextStyles.headlineSm),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
+      body: Column(
         children: [
-          Text(
-            'Codes actifs',
-            style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
-          ),
-          SizedBox(height: 12.h),
-          ..._vouchers.map((v) => Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
-            child: _VoucherCard(
-              voucher: v,
-              onCopy: () => _copyCode(context, v.code),
-            ),
-          )),
-          SizedBox(height: 24.h),
-          Text(
-            'Ajouter un code promo',
-            style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant),
-          ),
-          SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20.r),
-              boxShadow: AppShadows.card,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _codeCtrl,
-                    textCapitalization: TextCapitalization.characters,
-                    style: AppTextStyles.labelLg.copyWith(letterSpacing: 1.5),
-                    decoration: InputDecoration(
-                      hintText: 'CODE PROMO',
-                      hintStyle: AppTextStyles.bodyMd.copyWith(
-                        color: AppColors.outline,
-                        letterSpacing: 1,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
+          Expanded(
+            child: RefreshIndicator.adaptive(
+              color: AppColors.primary,
+              onRefresh: () => ref.refresh(vouchersProvider.future),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 24.h),
+                children: [
+                  Text(
+                    'Codes enregistrés',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
                     ),
-                    onSubmitted: (_) => _applyCode(),
                   ),
-                ),
-                SizedBox(width: 12.w),
-                ElevatedButton(
-                  onPressed: _applyCode,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(80.w, 44.h),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  SizedBox(height: 12.h),
+                  ...vouchersAsync.when(
+                    loading: () => const [
+                      Center(child: CircularProgressIndicator()),
+                    ],
+                    error: (error, _) => [
+                      AppErrorState(
+                        title: 'Impossible de charger vos codes',
+                        message: error.toString(),
+                        onRetry: () => ref.refresh(vouchersProvider.future),
+                      ),
+                    ],
+                    data: (vouchers) {
+                      if (vouchers.isEmpty) {
+                        return [
+                          Container(
+                            padding: EdgeInsets.all(20.r),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: AppColors.outlineVariant,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.card_giftcard_outlined,
+                                  size: 32.r,
+                                  color: AppColors.primary,
+                                ),
+                                SizedBox(height: 10.h),
+                                Text(
+                                  'Aucun code enregistré',
+                                  style: AppTextStyles.labelLg,
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  'Entrez un code ci-dessous pour le sauvegarder.',
+                                  style: AppTextStyles.bodySm.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ];
+                      }
+                      return [
+                        for (var i = 0; i < vouchers.length; i++) ...[
+                          if (i > 0) SizedBox(height: 12.h),
+                          _VoucherCard(
+                            voucher: vouchers[i],
+                            onCopy: () => _copyCode(context, vouchers[i].code),
+                          ),
+                        ],
+                      ];
+                    },
                   ),
-                  child: const Text('Appliquer'),
-                ),
-              ],
+                ],
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Ajouter un code promo',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20.r),
+                        boxShadow: AppShadows.card,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _codeCtrl,
+                              textCapitalization: TextCapitalization.characters,
+                              style: AppTextStyles.labelLg.copyWith(
+                                letterSpacing: 1.5,
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: 'CODE PROMO',
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                filled: false,
+                              ),
+                              onSubmitted: (_) => _applyCode(),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          ElevatedButton(
+                            onPressed: _submitting ? null : _applyCode,
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: Size(0, 56.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 18.w,
+                                vertical: 16.h,
+                              ),
+                            ),
+                            child: _submitting
+                                ? SizedBox(
+                                    width: 18.r,
+                                    height: 18.r,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Appliquer'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  Future<void> _applyCode() async {
+    final code = _codeCtrl.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      AppSnackbar.error(context, 'Veuillez entrer un code promo.');
+      return;
+    }
+    AppHaptics.medium();
+    setState(() => _submitting = true);
+    try {
+      await ref.read(vouchersProvider.notifier).redeem(code);
+      if (!mounted) return;
+      AppSnackbar.success(context, 'Code ajouté à votre compte.');
+      _codeCtrl.clear();
+    } on DioException catch (error) {
+      if (!mounted) return;
+      final data = error.response?.data;
+      final message = data is Map<String, dynamic>
+          ? data['message'] as String? ?? 'Code promo invalide.'
+          : 'Code promo invalide.';
+      AppSnackbar.error(context, message);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  void _copyCode(BuildContext context, String code) {
+    AppHaptics.select();
+    Clipboard.setData(ClipboardData(text: code));
+    AppSnackbar.success(context, 'Code "$code" copié.');
+  }
 }
 
 class _VoucherCard extends StatelessWidget {
   const _VoucherCard({required this.voucher, required this.onCopy});
-  final _Voucher voucher;
+
+  final VoucherRecord voucher;
   final VoidCallback onCopy;
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = voucher.isPrimary ? AppColors.primary : AppColors.secondary;
+    final formatter = DateFormat('dd/MM/yyyy');
+    final background = voucher.status == 'active'
+        ? AppColors.primary
+        : voucher.status == 'used'
+        ? AppColors.secondary
+        : AppColors.surfaceVariant;
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [bgColor, bgColor.withAlpha(204)],
+          colors: [background, background.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
-            color: bgColor.withAlpha(76),
+            color: background.withValues(alpha: 0.28),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -176,49 +277,48 @@ class _VoucherCard extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  voucher.discount,
+                  voucher.discountLabel,
                   style: AppTextStyles.headlineMd.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(height: 12.h),
-                GestureDetector(
-                  onTap: onCopy,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          voucher.code,
-                          style: AppTextStyles.labelLg.copyWith(
-                            color: Colors.white,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        const Icon(Icons.copy_rounded, color: Colors.white70, size: 14),
-                      ],
-                    ),
+                Text(
+                  voucher.code,
+                  style: AppTextStyles.labelLg.copyWith(
+                    color: Colors.white,
+                    letterSpacing: 2,
                   ),
                 ),
+                SizedBox(height: 8.h),
+                Text(
+                  voucher.expiresAt == null
+                      ? 'Sans date limite'
+                      : 'Expire le ${formatter.format(voucher.expiresAt!)}',
+                  style: AppTextStyles.bodySm.copyWith(color: Colors.white70),
+                ),
+                if (voucher.salonName != null) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    voucher.salonName!,
+                    style: AppTextStyles.bodySm.copyWith(color: Colors.white70),
+                  ),
+                ],
               ],
             ),
           ),
           Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 48),
-              SizedBox(height: 6.h),
-              Text(
-                voucher.expiry,
-                style: AppTextStyles.bodySm.copyWith(color: Colors.white70, fontSize: 10.sp),
+              TextButton(
+                onPressed: onCopy,
+                child: Text(
+                  'Copier',
+                  style: AppTextStyles.labelMd.copyWith(color: Colors.white),
+                ),
               ),
+              _StatusBadge(status: voucher.status),
             ],
           ),
         ],
@@ -227,14 +327,28 @@ class _VoucherCard extends StatelessWidget {
   }
 }
 
-class _Voucher {
-  const _Voucher({
-    required this.title,
-    required this.code,
-    required this.discount,
-    required this.expiry,
-    required this.isPrimary,
-  });
-  final String title, code, discount, expiry;
-  final bool isPrimary;
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = switch (status) {
+      'used' => 'Utilisé',
+      'expired' => 'Expiré',
+      _ => 'Actif',
+    };
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSm.copyWith(color: Colors.white),
+      ),
+    );
+  }
 }

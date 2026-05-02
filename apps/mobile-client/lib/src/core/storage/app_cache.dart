@@ -11,6 +11,7 @@ class AppCache {
       Hive.openBox<dynamic>(StorageKeys.notificationBox),
       Hive.openBox<dynamic>(StorageKeys.profileBox),
       Hive.openBox<dynamic>(StorageKeys.settingsBox),
+      Hive.openBox<dynamic>(StorageKeys.outboxBox),
     ]);
   }
 
@@ -20,8 +21,8 @@ class AppCache {
       Hive.box<dynamic>(StorageKeys.bookingCacheBox);
   static Box<dynamic> get notifications =>
       Hive.box<dynamic>(StorageKeys.notificationBox);
-  static Box<dynamic> get profile =>
-      Hive.box<dynamic>(StorageKeys.profileBox);
+  static Box<dynamic> get profile => Hive.box<dynamic>(StorageKeys.profileBox);
   static Box<dynamic> get settings =>
       Hive.box<dynamic>(StorageKeys.settingsBox);
+  static Box<dynamic> get outbox => Hive.box<dynamic>(StorageKeys.outboxBox);
 }

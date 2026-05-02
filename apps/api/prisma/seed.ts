@@ -1,7 +1,16 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role, SalonApprovalStatus, SubscriptionTier, SubscriptionStatus, PaymentProvider, PaymentStatus, BlockedSlotScope } from "@prisma/client";
 import argon2 from "argon2";
+import dotenv from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const prisma = new PrismaClient();
+
+const seedDir = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(seedDir, "../../../.env") });
+
+// Set DEV_TEST_PHONE in .env to seed full demo data for your OTP dev account.
+const DEV_TEST_PHONE = process.env.DEV_TEST_PHONE ?? null;
 
 async function hash(password: string) {
   return argon2.hash(password);
@@ -15,54 +24,90 @@ function daysFromNow(n: number) {
   return new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 }
 
-function hoursAgo(n: number) {
-  return new Date(Date.now() - n * 60 * 60 * 1000);
+type SeedBenefitTemplate = {
+  salonId: string;
+  kind: "membership" | "package";
+  name: string;
+  remainingUses: number;
+  daysUntilExpiry: number;
+  billingDays: number | null;
+};
+
+type SeedVoucherAssignment = {
+  voucherId: string;
+  expiresAt: Date | null;
+  status: "active" | "used";
+};
+
+const FIRST_NAMES = ["Aminata", "Fatou", "Rokhaya", "Mariama", "Sokhna", "Ndèye", "Coumba", "Aïssatou", "Khady", "Binta", "Penda", "Astou", "Mame", "Seynabou", "Awa", "Oumy", "Ramata", "Adama", "Fama", "Isseu"];
+const LAST_NAMES = ["Sow", "Ba", "Ndiaye", "Diallo", "Mbaye", "Diop", "Sarr", "Camara", "Fall", "Traoré", "Koné", "Niane", "Gueye", "Faye", "Sy", "Kane", "Thiam", "Diagne", "Seck", "Mbacké"];
+
+function getRandomName() {
+  return `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]}`;
 }
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("🌱 Seeding database with fully expanded platform data...");
+  let devTestUserId: string | null = null;
 
   // ── Admin ──────────────────────────────────────────────────────────────────
   const adminPassword = await hash("admin1234");
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "admin@beauteavenue.local" },
     update: { passwordHash: adminPassword },
     create: {
       fullName: "Cheikh Platform",
       email: "admin@beauteavenue.local",
       passwordHash: adminPassword,
-      role: "platform_admin"
+      role: Role.platform_admin
     }
   });
-  console.log(`  ✓ Admin: ${admin.email}`);
 
-  // ── Clients (8 varied profiles) ────────────────────────────────────────────
+  // ── Clients (30 profiles) ──────────────────────────────────────────────────
   const clientPassword = await hash("client1234");
-  const clients = await Promise.all(
-    [
-      { fullName: "Aminata Sow",      email: "aminata@example.sn",   phone: "+221770001111" },
-      { fullName: "Fatou Ba",         email: "fatou@example.sn",     phone: "+221770002222" },
-      { fullName: "Rokhaya Ndiaye",   email: "rokhaya@example.sn",   phone: "+221770003333" },
-      { fullName: "Mariama Diallo",   email: "mariama@example.sn",   phone: "+221770004444" },
-      { fullName: "Sokhna Mbaye",     email: "sokhna@example.sn",    phone: "+221770005555" },
-      { fullName: "Ndèye Diop",       email: "ndeye@example.sn",     phone: "+221770006666" },
-      { fullName: "Coumba Sarr",      email: "coumba@example.sn",    phone: "+221770007777" },
-      { fullName: "Aïssatou Camara",  email: "aissatou@example.sn",  phone: "+221770008888" }
-    ].map((c) =>
-      prisma.user.upsert({
-        where: { email: c.email },
-        update: {},
-        create: { ...c, passwordHash: clientPassword, role: "client" }
-      })
-    )
-  );
+  const clients = [];
+  for (let i = 0; i < 30; i++) {
+    const email = `client${i + 1}@example.sn`;
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        fullName: getRandomName(),
+        email,
+        phone: `+22177${(1000000 + i).toString().slice(1)}`,
+        passwordHash: clientPassword,
+        role: Role.client
+      }
+    });
+    clients.push(user);
+  }
   console.log(`  ✓ Clients: ${clients.length}`);
 
-  // ── Salons (10 salons across all categories and cities) ────────────────────
+  for (const [index, client] of clients.entries()) {
+    await prisma.clientProfile.upsert({
+      where: { userId: client.id },
+      update: {
+        city: index % 3 == 0 ? "Dakar" : index % 3 == 1 ? "Pikine" : "Thiès",
+        preferredContactChannel: index % 2 == 0 ? "phone" : "whatsapp",
+        pushOptIn: true,
+        marketingOptIn: index % 4 == 0,
+        preferredLanguage: "fr"
+      },
+      create: {
+        userId: client.id,
+        city: index % 3 == 0 ? "Dakar" : index % 3 == 1 ? "Pikine" : "Thiès",
+        preferredContactChannel: index % 2 == 0 ? "phone" : "whatsapp",
+        pushOptIn: true,
+        marketingOptIn: index % 4 == 0,
+        preferredLanguage: "fr"
+      }
+    });
+  }
+
+  // ── Salons ─────────────────────────────────────────────────────────────────
   const salonPassword = await hash("salon1234");
 
   const salonsData = [
-    // 0 ── APPROVED PREMIUM ──────────────────────────────────────────────────
     {
       salon: {
         name: "Dione Signature",
@@ -70,41 +115,23 @@ async function main() {
         description: "Salon premium coiffure et coloration rapide. Spécialiste balayage et soins kératine.",
         city: "Dakar",
         address: "Mermoz, Dakar",
-        approvalStatus: "approved" as const,
-        subscriptionTier: "premium" as const,
-        subscriptionIntentTier: "premium" as const,
-        latestAdminNote: "Salon validé et en ligne.",
-        submittedAt: new Date("2026-03-10T10:00:00Z")
+        latitude: 14.7189,
+        longitude: -17.4795,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.premium,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
       },
       owner: { fullName: "Aïda Dione", email: "aida@dionesignature.sn", phone: "+221776667788" },
-      staff: [],
+      staffCount: 4,
       services: [
         { name: "Brushing", durationMinutes: 45, priceXof: 12000, depositMode: "fixed", depositAmountXof: 3000 },
         { name: "Balayage", durationMinutes: 120, priceXof: 45000, depositMode: "fixed", depositAmountXof: 10000 },
-        { name: "Soin kératine", durationMinutes: 90, priceXof: 35000, depositMode: "percentage", depositPercent: 30 }
+        { name: "Soin kératine", durationMinutes: 90, priceXof: 35000, depositMode: "percentage", depositPercent: 30 },
+        { name: "Coupe & Coiffage", durationMinutes: 60, priceXof: 15000, depositMode: "none" }
       ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "received" },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "received" }
-      ],
-      gallery: [
-        "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800",
-        "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800",
-        "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800"
-      ],
-      subscription: {
-        tier: "premium" as const,
-        status: "active" as const,
-        billingProvider: "wave" as const,
-        autoRenew: true,
-        isComplimentary: false,
-        startedAt: new Date("2026-03-15T00:00:00Z"),
-        renewedAt: new Date("2026-04-15T00:00:00Z"),
-        expiresAt: new Date("2026-06-15T00:00:00Z")
-      }
+      subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active }
     },
-    // 1 ── APPROVED STANDARD ──────────────────────────────────────────────────
     {
       salon: {
         name: "Studio Kadija",
@@ -112,42 +139,22 @@ async function main() {
         description: "Studio manucure et pédicure haut de gamme. Pose gel, semi-permanent, nail art.",
         city: "Dakar",
         address: "Plateau, Dakar",
-        approvalStatus: "approved" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "standard" as const,
-        latestAdminNote: "Approuvé. Standard actif.",
-        submittedAt: new Date("2026-03-20T09:00:00Z")
+        latitude: 14.6931,
+        longitude: -17.4467,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.standard,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
       },
       owner: { fullName: "Kadija Fall", email: "kadija@studiokadija.sn", phone: "+221771234567" },
-      staff: [
-        { fullName: "Rouba Diallo", email: "rouba@studiokadija.sn", phone: "+221771234568" }
-      ],
+      staffCount: 3,
       services: [
         { name: "Pose gel", durationMinutes: 75, priceXof: 18000, depositMode: "none" },
         { name: "Semi-permanent", durationMinutes: 60, priceXof: 12000, depositMode: "none" },
         { name: "Nail art", durationMinutes: 30, priceXof: 8000, depositMode: "none" }
       ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "received" },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "received" }
-      ],
-      gallery: [
-        "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800",
-        "https://images.unsplash.com/photo-1604654894610-df63bc536372?w=800"
-      ],
-      subscription: {
-        tier: "standard" as const,
-        status: "active" as const,
-        billingProvider: null,
-        autoRenew: false,
-        isComplimentary: false,
-        startedAt: new Date("2026-03-25T00:00:00Z"),
-        renewedAt: null,
-        expiresAt: null
-      }
+      subscription: { tier: SubscriptionTier.standard, status: SubscriptionStatus.active }
     },
-    // 2 ── APPROVED COMPLIMENTARY PREMIUM ─────────────────────────────────────
     {
       salon: {
         name: "Maison Lumière",
@@ -155,42 +162,21 @@ async function main() {
         description: "Institut de beauté bien-être. Hammam, soins corps, massages relaxants.",
         city: "Dakar",
         address: "Almadies, Dakar",
-        approvalStatus: "approved" as const,
-        subscriptionTier: "premium" as const,
-        subscriptionIntentTier: "premium" as const,
-        latestAdminNote: "Premium offert suite à partenariat presse.",
-        submittedAt: new Date("2026-04-01T08:00:00Z")
+        latitude: 14.7455,
+        longitude: -17.5125,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.premium,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
       },
       owner: { fullName: "Binta Traoré", email: "binta@maisonlumiere.sn", phone: "+221772345678" },
-      staff: [
-        { fullName: "Marième Koné", email: "marieme@maisonlumiere.sn", phone: "+221772345679" }
-      ],
+      staffCount: 5,
       services: [
         { name: "Hammam express", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 5000 },
-        { name: "Massage relaxant", durationMinutes: 90, priceXof: 30000, depositMode: "fixed", depositAmountXof: 8000 },
-        { name: "Gommage corps", durationMinutes: 45, priceXof: 15000, depositMode: "none" }
+        { name: "Massage relaxant", durationMinutes: 90, priceXof: 30000, depositMode: "fixed", depositAmountXof: 8000 }
       ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "received" },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "received" }
-      ],
-      gallery: [
-        "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800",
-        "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=800"
-      ],
-      subscription: {
-        tier: "premium" as const,
-        status: "active" as const,
-        billingProvider: null,
-        autoRenew: false,
-        isComplimentary: true,
-        startedAt: new Date("2026-04-05T00:00:00Z"),
-        renewedAt: null,
-        expiresAt: new Date("2026-10-05T00:00:00Z")
-      }
+      subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active, isComplimentary: true }
     },
-    // 3 ── APPROVED PREMIUM - Saint-Louis ─────────────────────────────────────
     {
       salon: {
         name: "Éclat Visage",
@@ -198,236 +184,98 @@ async function main() {
         description: "Institut spécialisé soins du visage. Hydratation, anti-âge, peeling professionnel.",
         city: "Saint-Louis",
         address: "Île de Saint-Louis",
-        approvalStatus: "approved" as const,
-        subscriptionTier: "premium" as const,
-        subscriptionIntentTier: "premium" as const,
-        latestAdminNote: "Dossier complet, approuvé en 48h.",
-        submittedAt: new Date("2026-02-15T11:00:00Z")
+        latitude: 16.0179,
+        longitude: -16.4896,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.premium,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
       },
       owner: { fullName: "Aïssatou Niane", email: "aissatou@eclatvisage.sn", phone: "+221773456789" },
-      staff: [],
+      staffCount: 2,
       services: [
         { name: "Soin hydratant", durationMinutes: 60, priceXof: 22000, depositMode: "fixed", depositAmountXof: 5000 },
-        { name: "Peeling doux", durationMinutes: 45, priceXof: 18000, depositMode: "none" },
-        { name: "Masque anti-âge", durationMinutes: 75, priceXof: 28000, depositMode: "fixed", depositAmountXof: 7000 }
+        { name: "Peeling doux", durationMinutes: 45, priceXof: 18000, depositMode: "none" }
       ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "received" },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "received" },
-        { label: "Extrait RCCM", status: "received" }
-      ],
-      gallery: [
-        "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800",
-        "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=800"
-      ],
-      subscription: {
-        tier: "premium" as const,
-        status: "active" as const,
-        billingProvider: "wave" as const,
-        autoRenew: true,
-        isComplimentary: false,
-        startedAt: new Date("2026-02-20T00:00:00Z"),
-        renewedAt: new Date("2026-04-20T00:00:00Z"),
-        expiresAt: new Date("2026-06-20T00:00:00Z")
-      }
+      subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active }
     },
-    // 4 ── APPROVED STANDARD PAST_DUE - Épilation - Dakar ────────────────────
     {
       salon: {
         name: "Épil Express",
         category: "Épilation",
-        description: "Centre d'épilation rapide. Laser, cire, fils. Sans rendez-vous bienvenu.",
+        description: "Centre d'épilation rapide. Laser, cire, fils.",
         city: "Dakar",
         address: "Liberté 6, Dakar",
-        approvalStatus: "approved" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "standard" as const,
-        latestAdminNote: "Approuvé. Renouvellement en attente.",
-        submittedAt: new Date("2026-01-12T09:00:00Z")
+        latitude: 14.6978,
+        longitude: -17.4543,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.standard,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
       },
       owner: { fullName: "Seynabou Diallo", email: "seynabou@epilexpress.sn", phone: "+221774567890" },
-      staff: [],
+      staffCount: 3,
       services: [
-        { name: "Épilation jambes complètes", durationMinutes: 40, priceXof: 10000, depositMode: "none" },
-        { name: "Épilation aisselles", durationMinutes: 15, priceXof: 4000, depositMode: "none" },
-        { name: "Épilation sourcils", durationMinutes: 10, priceXof: 2500, depositMode: "none" }
+        { name: "Épilation jambes", durationMinutes: 40, priceXof: 10000, depositMode: "none" }
       ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "received" },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "received" }
-      ],
-      gallery: [],
-      subscription: {
-        tier: "standard" as const,
-        status: "past_due" as const,
-        billingProvider: "orange_money" as const,
-        autoRenew: true,
-        isComplimentary: false,
-        startedAt: new Date("2026-01-20T00:00:00Z"),
-        renewedAt: null,
-        expiresAt: new Date("2026-04-20T00:00:00Z")
-      }
+      subscription: { tier: SubscriptionTier.standard, status: SubscriptionStatus.past_due }
     },
-    // 5 ── APPROVED STANDARD - Maquillage - Dakar ─────────────────────────────
     {
       salon: {
-        name: "Dya Beauty Studio",
-        category: "Maquillage",
-        description: "Studio maquillage professionnel. Mariages, événements, shooting photo.",
-        city: "Dakar",
-        address: "Sacré-Cœur 3, Dakar",
-        approvalStatus: "approved" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "premium" as const,
-        latestAdminNote: "Approuvé standard. Souhaite upgrade premium.",
-        submittedAt: new Date("2026-03-05T13:00:00Z")
-      },
-      owner: { fullName: "Dya Sarr", email: "dya@dyabeauty.sn", phone: "+221775678901" },
-      staff: [],
-      services: [
-        { name: "Maquillage mariée", durationMinutes: 120, priceXof: 60000, depositMode: "fixed", depositAmountXof: 15000 },
-        { name: "Maquillage soirée", durationMinutes: 60, priceXof: 25000, depositMode: "fixed", depositAmountXof: 5000 },
-        { name: "Maquillage naturel", durationMinutes: 45, priceXof: 15000, depositMode: "none" }
-      ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "received" },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "received" }
-      ],
-      gallery: [
-        "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800"
-      ],
-      subscription: {
-        tier: "standard" as const,
-        status: "active" as const,
-        billingProvider: "wave" as const,
-        autoRenew: true,
-        isComplimentary: false,
-        startedAt: new Date("2026-03-10T00:00:00Z"),
-        renewedAt: null,
-        expiresAt: null
-      }
-    },
-    // 6 ── PENDING REVIEW - Spa - Thiès ───────────────────────────────────────
-    {
-      salon: {
-        name: "Hammam Oasis",
-        category: "Spa & Bien-être",
-        description: "Hammam traditionnel et massages thérapeutiques. Cadre zen au cœur de Thiès.",
-        city: "Thiès",
-        address: "Thiès Centre",
-        approvalStatus: "pending_review" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "premium" as const,
-        latestAdminNote: null,
-        submittedAt: new Date("2026-04-25T10:00:00Z")
-      },
-      owner: { fullName: "Ibou Ndiaye", email: "ibou@hammamoasis.sn", phone: "+221776789012" },
-      staff: [],
-      services: [
-        { name: "Hammam 45min", durationMinutes: 45, priceXof: 12000, depositMode: "none" },
-        { name: "Massage suédois", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 5000 }
-      ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "missing", note: "En attente de transmission." },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "missing", note: "RIB ou numéro marchand requis." }
-      ],
-      gallery: [],
-      subscription: null
-    },
-    // 7 ── PENDING REVIEW - Massage - Mbour ───────────────────────────────────
-    {
-      salon: {
-        name: "Maison Kinka",
-        category: "Spa & Bien-être",
-        description: "Salon axé soins visage, spa express et rituels premium.",
-        city: "Dakar",
-        address: "Route des Almadies, Dakar",
-        approvalStatus: "pending_review" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "premium" as const,
-        latestAdminNote: null,
-        submittedAt: new Date("2026-04-24T09:30:00Z")
-      },
-      owner: { fullName: "Mame Diop", email: "mame@maisonkinka.sn", phone: "+221771112233" },
-      staff: [],
-      services: [
-        { name: "Soin visage", durationMinutes: 60, priceXof: 25000, depositMode: "fixed", depositAmountXof: 5000 },
-        { name: "Massage express", durationMinutes: 30, priceXof: 15000, depositMode: "none" }
-      ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "missing", note: "Document demandé le 24 avril." },
-        { label: "Coordonnées de versement (RIB / Wave)", status: "missing", note: "RIB ou numéro marchand requis." }
-      ],
-      gallery: [],
-      subscription: null
-    },
-    // 8 ── NEEDS INFO - Ongles ─────────────────────────────────────────────────
-    {
-      salon: {
-        name: "Atelier Nafi",
-        category: "Ongles",
-        description: "Studio manucure avec demande forte sur forfaits mariage.",
-        city: "Dakar",
-        address: "Ngor, Dakar",
-        approvalStatus: "needs_info" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "standard" as const,
-        latestAdminNote: "Document flou — nouvelle version requise.",
-        submittedAt: new Date("2026-04-22T14:00:00Z")
-      },
-      owner: { fullName: "Nafissatou Faye", email: "nafi@ateliernafi.sn", phone: "+221772224455" },
-      staff: [],
-      services: [
-        { name: "Pose gel", durationMinutes: 75, priceXof: 18000, depositMode: "none" },
-        { name: "Nail art mariage", durationMinutes: 90, priceXof: 25000, depositMode: "fixed", depositAmountXof: 6000 }
-      ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "invalid", note: "Document flou ou illisible." }
-      ],
-      gallery: ["https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800"],
-      subscription: null
-    },
-    // 9 ── REJECTED - Coiffure - Thiès ────────────────────────────────────────
-    {
-      salon: {
-        name: "Beauty Flash",
+        name: "Ndiambour Beauty",
         category: "Coiffure",
-        description: "Salon mobile sans adresse fixe.",
-        city: "Thiès",
-        address: "Thiès Centre",
-        approvalStatus: "rejected" as const,
-        subscriptionTier: "standard" as const,
-        subscriptionIntentTier: "standard" as const,
-        latestAdminNote: "Adresse non vérifiable. Salon mobile non éligible.",
-        submittedAt: new Date("2026-04-10T11:00:00Z")
+        description: "Salon de coiffure afro et lissages. Tresses, tissages, soins capillaires naturels.",
+        city: "Pikine",
+        address: "Pikine Nord, Dakar",
+        latitude: 14.7650,
+        longitude: -17.3958,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.premium,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
       },
-      owner: { fullName: "Omar Gueye", email: "omar@beautyflash.sn", phone: "+221773334455" },
-      staff: [],
+      owner: { fullName: "Rokhaya Ndiaye", email: "rokhaya@ndiambourbeauty.sn", phone: "+221775110001" },
+      staffCount: 3,
       services: [
-        { name: "Coupe homme", durationMinutes: 30, priceXof: 3000, depositMode: "none" }
+        { name: "Tresses collées", durationMinutes: 120, priceXof: 15000, depositMode: "fixed", depositAmountXof: 4000 },
+        { name: "Tissage brésilien", durationMinutes: 90, priceXof: 25000, depositMode: "fixed", depositAmountXof: 6000 },
+        { name: "Soin capillaire", durationMinutes: 60, priceXof: 12000, depositMode: "none" },
+        { name: "Lissage kératine", durationMinutes: 150, priceXof: 40000, depositMode: "percentage", depositPercent: 30 }
       ],
-      documents: [
-        { label: "Pièce d'identité gérante", status: "received" },
-        { label: "Contrat de bail / Titre de propriété", status: "invalid", note: "Adresse non vérifiable." }
+      subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active }
+    },
+    {
+      salon: {
+        name: "Keur Beauté",
+        category: "Esthétique",
+        description: "Institut polyvalent épilation, soins visage et maquillage. Proche marché de Thiaroye.",
+        city: "Pikine",
+        address: "Thiaroye, Pikine",
+        latitude: 14.7530,
+        longitude: -17.3810,
+        approvalStatus: SalonApprovalStatus.approved,
+        subscriptionTier: SubscriptionTier.standard,
+        isVisibleInMarketplace: true,
+        canReceiveBookings: true
+      },
+      owner: { fullName: "Fatou Mbaye", email: "fatou@keurbeaute.sn", phone: "+221776110002" },
+      staffCount: 2,
+      services: [
+        { name: "Épilation sourcils", durationMinutes: 20, priceXof: 3000, depositMode: "none" },
+        { name: "Soin visage express", durationMinutes: 45, priceXof: 10000, depositMode: "none" },
+        { name: "Maquillage occasion", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 5000 }
       ],
-      gallery: [],
-      subscription: null
+      subscription: { tier: SubscriptionTier.standard, status: SubscriptionStatus.active }
     }
   ];
 
-  const createdSalons: Array<{ id: string; name: string; subscriptionId: string | null }> = [];
+  const createdSalons = [];
 
   for (const data of salonsData) {
     const owner = await prisma.user.upsert({
       where: { email: data.owner.email },
-      update: {},
-      create: { ...data.owner, passwordHash: salonPassword, role: "salon_owner" }
+      update: { role: Role.salon_owner },
+      create: { ...data.owner, passwordHash: salonPassword, role: Role.salon_owner }
     });
 
     const salon = await prisma.salon.upsert({
@@ -438,401 +286,506 @@ async function main() {
 
     await prisma.user.update({ where: { id: owner.id }, data: { salonId: salon.id } });
 
-    // Staff members
-    for (const s of data.staff) {
+    // Employee record for owner
+    const ownerEmployee = await prisma.employee.upsert({
+      where: { salonId_userId: { salonId: salon.id, userId: owner.id } },
+      update: { isActive: true, schedulingEnabled: true },
+      create: { salonId: salon.id, userId: owner.id, displayName: owner.fullName }
+    });
+
+    const employees = [ownerEmployee];
+    for (let i = 0; i < data.staffCount; i++) {
+      const staffEmail = `${salon.name.toLowerCase().replace(/ /g, ".")}@staff${i}.sn`;
       const staffUser = await prisma.user.upsert({
-        where: { email: s.email },
-        update: {},
-        create: { ...s, passwordHash: salonPassword, role: "salon_staff", salonId: salon.id }
+        where: { email: staffEmail },
+        update: { salonId: salon.id, role: Role.salon_staff },
+        create: {
+          fullName: getRandomName(),
+          email: staffEmail,
+          passwordHash: salonPassword,
+          role: Role.salon_staff,
+          salonId: salon.id
+        }
       });
-      await prisma.salon.update({
-        where: { id: salon.id },
-        data: { staffMembers: { connect: { id: staffUser.id } } }
+      const emp = await prisma.employee.upsert({
+        where: { salonId_userId: { salonId: salon.id, userId: staffUser.id } },
+        update: { isActive: true, schedulingEnabled: true },
+        create: { salonId: salon.id, userId: staffUser.id, displayName: staffUser.fullName }
       });
+      employees.push(emp);
     }
 
     // Services
     await prisma.service.deleteMany({ where: { salonId: salon.id } });
-    await prisma.service.createMany({ data: data.services.map((s) => ({ salonId: salon.id, ...s })) });
-
-    // Documents
-    await prisma.salonDocument.deleteMany({ where: { salonId: salon.id } });
-    await prisma.salonDocument.createMany({ data: data.documents.map((d) => ({ salonId: salon.id, ...d })) });
-
-    // Gallery
-    await prisma.salonGalleryImage.deleteMany({ where: { salonId: salon.id } });
-    if (data.gallery.length > 0) {
-      await prisma.salonGalleryImage.createMany({
-        data: data.gallery.map((url, i) => ({ salonId: salon.id, url, position: i }))
-      });
+    const services = [];
+    for (const sData of data.services) {
+      const svc = await prisma.service.create({ data: { ...sData, salonId: salon.id } });
+      services.push(svc);
     }
 
-    // Subscription
-    let subscriptionId: string | null = null;
+    // Specialties
+    for (const emp of employees) {
+      for (const svc of services) {
+        if (Math.random() > 0.2) {
+          await prisma.employeeSpecialty.upsert({
+            where: { employeeId_serviceId: { employeeId: emp.id, serviceId: svc.id } },
+            update: {},
+            create: { employeeId: emp.id, serviceId: svc.id }
+          });
+        }
+      }
+    }
 
+    // Hours
+    await prisma.salonHours.deleteMany({ where: { salonId: salon.id } });
+    await prisma.salonHours.createMany({
+      data: [1, 2, 3, 4, 5, 6].map(day => ({
+        salonId: salon.id, dayOfWeek: day, isOpen: true, opensAt: "08:30", closesAt: "19:30"
+      }))
+    });
+
+    // Sub
     if (data.subscription) {
-      const existing = await prisma.subscription.findUnique({ where: { salonId: salon.id } });
-      const subscription = existing
-        ? await prisma.subscription.update({ where: { id: existing.id }, data: data.subscription })
-        : await prisma.subscription.create({ data: { salonId: salon.id, ...data.subscription } });
-
-      subscriptionId = subscription.id;
-
-      if (!existing) {
-        if (data.subscription.tier === "premium" && !data.subscription.isComplimentary) {
-          await prisma.subscriptionEvent.create({
-            data: {
-              subscriptionId: subscription.id,
-              eventType: "subscription_created",
-              summary: "Abonnement Premium activé.",
-              actorName: owner.fullName,
-              source: "owner",
-              payloadPreview: null
-            }
-          });
-          await prisma.subscriptionEvent.create({
-            data: {
-              subscriptionId: subscription.id,
-              eventType: "renewal_paid",
-              summary: "Renouvellement Wave confirmé.",
-              actorName: "Wave webhook",
-              source: "provider",
-              payloadPreview: "provider_tx=wave_sub_001"
-            }
-          });
-          await prisma.billingInvoice.create({
-            data: {
-              subscriptionId: subscription.id,
-              invoiceNumber: `BA-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`,
-              amountXof: 25000,
-              status: "paid",
-              pdfUrl: ""
-            }
-          });
-        }
-
-        if (data.subscription.tier === "standard" && data.subscription.status === "active") {
-          await prisma.subscriptionEvent.create({
-            data: {
-              subscriptionId: subscription.id,
-              eventType: "subscription_created",
-              summary: "Abonnement Standard activé.",
-              actorName: owner.fullName,
-              source: "owner",
-              payloadPreview: null
-            }
-          });
-          await prisma.billingInvoice.create({
-            data: {
-              subscriptionId: subscription.id,
-              invoiceNumber: `BA-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`,
-              amountXof: 15000,
-              status: "paid",
-              pdfUrl: ""
-            }
-          });
-        }
-
-        if (data.subscription.status === "past_due") {
-          await prisma.subscriptionEvent.create({
-            data: {
-              subscriptionId: subscription.id,
-              eventType: "payment_failed",
-              summary: "Échec de renouvellement Orange Money — solde insuffisant.",
-              actorName: "Orange Money webhook",
-              source: "provider",
-              payloadPreview: "error_code=insufficient_funds"
-            }
-          });
-          await prisma.billingInvoice.create({
-            data: {
-              subscriptionId: subscription.id,
-              invoiceNumber: `BA-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`,
-              amountXof: 15000,
-              status: "failed",
-              pdfUrl: ""
-            }
-          });
-        }
-
-        if (data.subscription.isComplimentary) {
-          await prisma.subscriptionEvent.create({
-            data: {
-              subscriptionId: subscription.id,
-              eventType: "grant_complimentary_premium",
-              summary: "Premium offert — geste commercial partenariat presse.",
-              actorName: "Cheikh Platform",
-              source: "admin",
-              payloadPreview: null
-            }
-          });
-          await prisma.billingInvoice.create({
-            data: {
-              subscriptionId: subscription.id,
-              invoiceNumber: `BA-${new Date().getFullYear()}-COMP-001`,
-              amountXof: 0,
-              status: "comped",
-              pdfUrl: ""
-            }
-          });
-        }
-      }
-    }
-
-    createdSalons.push({ id: salon.id, name: salon.name, subscriptionId });
-    console.log(`  ✓ Salon: ${salon.name} (${data.salon.approvalStatus})`);
-  }
-
-  // ── Bookings: 30-day history + future bookings, varied statuses ────────────
-  const approvedSalonIndices = [0, 1, 2, 3, 4, 5]; // first 6 are approved
-  const approvedSalons = approvedSalonIndices.map(i => createdSalons[i]).filter(Boolean);
-
-  // Delete existing bookings to avoid duplicates on re-seed
-  for (const s of approvedSalons) {
-    await prisma.booking.deleteMany({ where: { salonId: s.id } });
-  }
-
-  let bookingCount = 0;
-  const bookingsForPayment: Array<{ id: string; amountXof: number; provider: "wave" | "orange_money"; createdAt: Date }> = [];
-
-  // Historical bookings (30 days ago → yesterday) — completed + cancelled
-  const historicalSlots = [
-    { daysBack: 29, clientIdx: 0, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 28, clientIdx: 1, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 27, clientIdx: 2, salonIdx: 2, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const },
-    { daysBack: 26, clientIdx: 3, salonIdx: 3, status: "cancelled" as const, paymentStatus: "refunded" as const, provider: "wave" as const },
-    { daysBack: 25, clientIdx: 4, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 24, clientIdx: 5, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 23, clientIdx: 6, salonIdx: 2, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 22, clientIdx: 7, salonIdx: 3, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const },
-    { daysBack: 21, clientIdx: 0, salonIdx: 4, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 20, clientIdx: 1, salonIdx: 5, status: "cancelled" as const, paymentStatus: "failed" as const, provider: "wave" as const },
-    { daysBack: 18, clientIdx: 2, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 17, clientIdx: 3, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const },
-    { daysBack: 16, clientIdx: 4, salonIdx: 2, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 15, clientIdx: 5, salonIdx: 3, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 14, clientIdx: 6, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 13, clientIdx: 7, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 12, clientIdx: 0, salonIdx: 2, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const },
-    { daysBack: 11, clientIdx: 1, salonIdx: 3, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 10, clientIdx: 2, salonIdx: 4, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 9,  clientIdx: 3, salonIdx: 5, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 8,  clientIdx: 4, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 7,  clientIdx: 5, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const },
-    { daysBack: 6,  clientIdx: 6, salonIdx: 2, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 5,  clientIdx: 7, salonIdx: 3, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 4,  clientIdx: 0, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 3,  clientIdx: 1, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 2,  clientIdx: 2, salonIdx: 2, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const },
-    { daysBack: 1,  clientIdx: 3, salonIdx: 3, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const },
-  ];
-
-  for (const slot of historicalSlots) {
-    const salon = approvedSalons[slot.salonIdx];
-    if (!salon) continue;
-    const service = await prisma.service.findFirst({ where: { salonId: salon.id } });
-    if (!service) continue;
-    const client = clients[slot.clientIdx];
-    const startsAt = new Date(daysAgo(slot.daysBack).setHours(10, 0, 0, 0));
-    const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
-    const booking = await prisma.booking.create({
-      data: {
-        clientId: client.id,
-        salonId: salon.id,
-        serviceId: service.id,
-        startsAt,
-        endsAt,
-        status: slot.status,
-        depositAmountXof: service.depositAmountXof ?? 2000,
-        depositPaymentStatus: slot.paymentStatus,
-        paymentProvider: slot.provider,
-        createdAt: daysAgo(slot.daysBack)
-      }
-    });
-    if (slot.paymentStatus === "succeeded") {
-      bookingsForPayment.push({
-        id: booking.id,
-        amountXof: service.depositAmountXof ?? 2000,
-        provider: slot.provider,
-        createdAt: daysAgo(slot.daysBack)
+      await prisma.subscription.upsert({
+        where: { salonId: salon.id },
+        update: data.subscription,
+        create: { ...data.subscription, salonId: salon.id }
       });
     }
-    bookingCount++;
-  }
 
-  // Today's bookings — mix of in_progress and completed
-  const todaySlots = [
-    { clientIdx: 0, salonIdx: 0, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const, hoursBack: 6 },
-    { clientIdx: 1, salonIdx: 1, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const, hoursBack: 5 },
-    { clientIdx: 4, salonIdx: 2, status: "in_progress" as const, paymentStatus: "succeeded" as const, provider: "orange_money" as const, hoursBack: 1 },
-    { clientIdx: 5, salonIdx: 3, status: "completed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const, hoursBack: 4 },
-  ];
-
-  for (const slot of todaySlots) {
-    const salon = approvedSalons[slot.salonIdx];
-    if (!salon) continue;
-    const service = await prisma.service.findFirst({ where: { salonId: salon.id } });
-    if (!service) continue;
-    const client = clients[slot.clientIdx];
-    const startsAt = hoursAgo(slot.hoursBack);
-    const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
-    const booking = await prisma.booking.create({
-      data: {
-        clientId: client.id,
-        salonId: salon.id,
-        serviceId: service.id,
-        startsAt,
-        endsAt,
-        status: slot.status,
-        depositAmountXof: service.depositAmountXof ?? 2000,
-        depositPaymentStatus: slot.paymentStatus,
-        paymentProvider: slot.provider
-      }
-    });
-    if (slot.paymentStatus === "succeeded") {
-      bookingsForPayment.push({ id: booking.id, amountXof: service.depositAmountXof ?? 2000, provider: slot.provider, createdAt: new Date() });
+    // Gallery photos for premium salons
+    if (data.salon.subscriptionTier === SubscriptionTier.premium) {
+      await prisma.salonGalleryImage.deleteMany({ where: { salonId: salon.id } });
+      const galleryUrls = [
+        `https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800`,
+        `https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=800`,
+        `https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=800`,
+        `https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=80&w=800`,
+        `https://images.unsplash.com/photo-1559599101-f09722fb4948?q=80&w=800`,
+        `https://images.unsplash.com/photo-1612817288484-6f916006741a?q=80&w=800`,
+      ];
+      await prisma.salonGalleryImage.createMany({
+        data: galleryUrls.map((url, i) => ({ salonId: salon.id, url, position: i }))
+      });
     }
-    bookingCount++;
+
+    createdSalons.push({ salon, employees, services, owner });
+    console.log(`  ✓ Salon: ${salon.name} (Team: ${employees.length})`);
   }
 
-  // Future bookings — confirmed and pending
-  const futureSlots = [
-    { clientIdx: 2, salonIdx: 0, status: "confirmed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const, daysForward: 1 },
-    { clientIdx: 3, salonIdx: 1, status: "confirmed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const, daysForward: 2 },
-    { clientIdx: 6, salonIdx: 2, status: "pending" as const, paymentStatus: "pending" as const, provider: "wave" as const, daysForward: 3 },
-    { clientIdx: 7, salonIdx: 3, status: "pending" as const, paymentStatus: "pending" as const, provider: "orange_money" as const, daysForward: 4 },
-    { clientIdx: 0, salonIdx: 4, status: "confirmed" as const, paymentStatus: "succeeded" as const, provider: "wave" as const, daysForward: 5 },
-    { clientIdx: 1, salonIdx: 5, status: "pending" as const, paymentStatus: "pending" as const, provider: "wave" as const, daysForward: 7 },
-  ];
-
-  for (const slot of futureSlots) {
-    const salon = approvedSalons[slot.salonIdx];
-    if (!salon) continue;
-    const service = await prisma.service.findFirst({ where: { salonId: salon.id } });
-    if (!service) continue;
-    const client = clients[slot.clientIdx];
-    const startsAt = new Date(daysFromNow(slot.daysForward).setHours(10, 0, 0, 0));
-    const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
-    await prisma.booking.create({
+  for (const [index, client] of clients.entries()) {
+    await prisma.clientPaymentMethod.deleteMany({ where: { userId: client.id } });
+    await prisma.clientPaymentMethod.create({
       data: {
-        clientId: client.id,
-        salonId: salon.id,
-        serviceId: service.id,
-        startsAt,
-        endsAt,
-        status: slot.status,
-        depositAmountXof: service.depositAmountXof ?? 2000,
-        depositPaymentStatus: slot.paymentStatus,
-        paymentProvider: slot.provider
-      }
-    });
-    bookingCount++;
-  }
-
-  console.log(`  ✓ Bookings: ${bookingCount}`);
-
-  // ── Payments (linked to succeeded bookings) ────────────────────────────────
-  await prisma.payment.deleteMany({
-    where: { bookingId: { in: bookingsForPayment.map(b => b.id) } }
-  });
-
-  for (const b of bookingsForPayment) {
-    await prisma.payment.create({
-      data: {
-        bookingId: b.id,
-        provider: b.provider,
-        status: "succeeded",
-        amountXof: b.amountXof,
-        providerTxId: `tx_${Math.random().toString(36).slice(2, 10)}`,
-        idempotencyKey: `idem_${b.id}`,
-        createdAt: b.createdAt
+        userId: client.id,
+        provider: index % 2 == 0 ? PaymentProvider.wave : PaymentProvider.orange_money,
+        phoneNumber: client.phone ?? `+221770000${index.toString().padLeft(2, "0")}`,
+        label: "Personnel",
+        isDefault: true
       }
     });
   }
-  console.log(`  ✓ Payments: ${bookingsForPayment.length}`);
 
-  // ── Notifications ──────────────────────────────────────────────────────────
-  const notifData = [
-    { userId: clients[0].id, title: "Réservation confirmée", body: "Votre réservation chez Dione Signature est confirmée pour demain à 10h.", channel: "push" },
-    { userId: clients[1].id, title: "Rappel — dans 24h", body: "Rappel : votre rendez-vous chez Studio Kadija est demain.", channel: "push" },
-    { userId: clients[2].id, title: "Acompte reçu", body: "Votre acompte de 5 000 F CFA a été confirmé.", channel: "push" },
-    { userId: clients[3].id, title: "Avis post-visite", body: "Comment s'est passée votre visite chez Maison Lumière ?", channel: "push" },
-    { userId: clients[4].id, title: "Réservation annulée", body: "Votre réservation a été annulée. Remboursement en cours.", channel: "push" },
-  ];
+  // Test credentials: client1@example.sn … client5@example.sn / client1234
+  const demoClients = clients.slice(0, 5).filter(Boolean);
+  if (demoClients.length > 0) {
+    await prisma.clientBenefit.deleteMany({
+      where: { userId: { in: demoClients.map((c) => c.id) } }
+    });
 
-  for (const n of notifData) {
-    await prisma.notification.create({ data: n });
+    const maisonLumiere = createdSalons.find((entry) => entry.salon.name === "Maison Lumière")?.salon;
+    const ndiambourBeauty = createdSalons.find((entry) => entry.salon.name === "Ndiambour Beauty")?.salon;
+    const dioneSignature = createdSalons.find((entry) => entry.salon.name === "Dione Signature")?.salon;
+
+    const benefitTemplates = [
+      maisonLumiere && { salonId: maisonLumiere.id, kind: "membership", name: "Pass Bien-être", remainingUses: 4, daysUntilExpiry: 45, billingDays: 30 },
+      ndiambourBeauty && { salonId: ndiambourBeauty.id, kind: "package", name: "Pack Tresses 3 séances", remainingUses: 2, daysUntilExpiry: 60, billingDays: null },
+      dioneSignature && { salonId: dioneSignature.id, kind: "membership", name: "Abonnement Éclat", remainingUses: 6, daysUntilExpiry: 90, billingDays: 30 },
+      maisonLumiere && { salonId: maisonLumiere.id, kind: "package", name: "Forfait Soin Visage", remainingUses: 3, daysUntilExpiry: 30, billingDays: null },
+      ndiambourBeauty && { salonId: ndiambourBeauty.id, kind: "membership", name: "Pass VIP Manucure", remainingUses: 8, daysUntilExpiry: 120, billingDays: 30 },
+    ].filter(Boolean) as SeedBenefitTemplate[];
+
+    for (const [idx, client] of demoClients.entries()) {
+      const template = benefitTemplates[idx % benefitTemplates.length];
+      if (!template) continue;
+      await prisma.clientBenefit.create({
+        data: {
+          userId: client.id,
+          salonId: template.salonId,
+          kind: template.kind,
+          name: template.name,
+          status: "active",
+          remainingUses: template.remainingUses,
+          expiresAt: daysFromNow(template.daysUntilExpiry),
+          billingDate: template.billingDays ? daysFromNow(template.billingDays) : null
+        }
+      });
+    }
+
+    await prisma.voucherDefinition.deleteMany({
+      where: { code: { in: ["WELCOME10", "SUMMER25", "MAISONVIP"] } }
+    });
+
+    const welcomeVoucher = await prisma.voucherDefinition.create({
+      data: {
+        code: "WELCOME10",
+        title: "Réduction de bienvenue",
+        description: "Valable sur votre prochaine réservation",
+        discountLabel: "-10%",
+        isActive: true,
+        maxRedemptions: 500
+      }
+    });
+
+    const summerVoucher = await prisma.voucherDefinition.create({
+      data: {
+        code: "SUMMER25",
+        title: "Fidélité été",
+        description: "Réduction fixe sur les soins sélectionnés",
+        discountLabel: "2 500 XOF",
+        isActive: true,
+        expiresAt: daysFromNow(90),
+        maxRedemptions: 250
+      }
+    });
+
+    let maisonVoucher: { id: string; expiresAt: Date | null } | null = null;
+    if (maisonLumiere) {
+      maisonVoucher = await prisma.voucherDefinition.create({
+        data: {
+          salonId: maisonLumiere.id,
+          code: "MAISONVIP",
+          title: "Invité Maison Lumière",
+          description: "Accès privilégié aux soins premium",
+          discountLabel: "-15%",
+          isActive: true,
+          expiresAt: daysFromNow(40),
+          maxRedemptions: 50
+        }
+      });
+    }
+
+    await prisma.clientVoucherRedemption.deleteMany({
+      where: { userId: { in: demoClients.map((c) => c.id) } }
+    });
+
+    const voucherAssignments = [
+      { voucherId: welcomeVoucher.id, expiresAt: welcomeVoucher.expiresAt, status: "active" as const },
+      { voucherId: summerVoucher.id, expiresAt: summerVoucher.expiresAt, status: "active" as const },
+      maisonVoucher && { voucherId: maisonVoucher.id, expiresAt: maisonVoucher.expiresAt, status: "active" as const },
+      { voucherId: welcomeVoucher.id, expiresAt: welcomeVoucher.expiresAt, status: "used" as const },
+      { voucherId: summerVoucher.id, expiresAt: summerVoucher.expiresAt, status: "active" as const },
+    ].filter(Boolean) as SeedVoucherAssignment[];
+
+    for (const [idx, client] of demoClients.entries()) {
+      const assignment = voucherAssignments[idx % voucherAssignments.length];
+      if (!assignment) continue;
+      await prisma.clientVoucherRedemption.create({
+        data: {
+          userId: client.id,
+          voucherId: assignment.voucherId,
+          status: assignment.status,
+          usedAt: assignment.status === "used" ? daysAgo(2) : null,
+          expiresAt: assignment.expiresAt
+        }
+      });
+    }
+
+    await prisma.notification.deleteMany({
+      where: { userId: { in: demoClients.map((c) => c.id) } }
+    });
+    for (const client of demoClients) {
+      await prisma.notification.createMany({
+        data: [
+          {
+            userId: client.id,
+            title: "Rappel de rendez-vous",
+            body: "Votre rendez-vous commence demain à 10h chez Maison Lumière.",
+            channel: "push"
+          },
+          {
+            userId: client.id,
+            title: "Code disponible",
+            body: "Votre code WELCOME10 est prêt à être utilisé.",
+            channel: "push",
+            readAt: daysAgo(1)
+          }
+        ]
+      });
+    }
   }
-  console.log(`  ✓ Notifications: ${notifData.length}`);
 
-  // ── Audit log ──────────────────────────────────────────────────────────────
-  const dioneId = createdSalons[0].id;
-  const studioKadijaId = createdSalons[1].id;
-  const maisonLumiereId = createdSalons[2].id;
-  const eclatVisageId = createdSalons[3].id;
-  const epilExpressId = createdSalons[4].id;
-  const atelierNafiId = createdSalons[8].id;
-  const beautyFlashId = createdSalons[9].id;
+  // ── Dev test account (set DEV_TEST_PHONE in .env) ─────────────────────────
+  if (DEV_TEST_PHONE) {
+    const maisonLumiere = createdSalons.find((e) => e.salon.name === "Maison Lumière")?.salon;
+    const ndiambourBeauty = createdSalons.find((entry) => entry.salon.name === "Ndiambour Beauty")?.salon;
+    const dioneSignature = createdSalons.find((entry) => entry.salon.name === "Dione Signature")?.salon;
+    let devUser = await prisma.user.findUnique({ where: { phone: DEV_TEST_PHONE } });
+    if (!devUser) {
+      devUser = await prisma.user.create({
+        data: { fullName: "Dev Testeur", phone: DEV_TEST_PHONE, role: "client" }
+      });
+    }
+    await prisma.clientProfile.upsert({
+      where: { userId: devUser.id },
+      update: { city: "Dakar", pushOptIn: true, marketingOptIn: true, preferredLanguage: "fr" },
+      create: { userId: devUser.id, city: "Dakar", pushOptIn: true, marketingOptIn: true, preferredLanguage: "fr", preferredContactChannel: "phone" }
+    });
+    await prisma.clientBenefit.deleteMany({ where: { userId: devUser.id } });
 
-  const dioneSubId = createdSalons[0].subscriptionId!;
-  const maisonLumiereSubId = createdSalons[2].subscriptionId!;
-  const epilExpressSubId = createdSalons[4].subscriptionId!;
-  const eclatVisageSubId = createdSalons[3].subscriptionId!;
+    const devBenefitTemplates = [
+      maisonLumiere && { salonId: maisonLumiere.id, kind: "membership", name: "Pass Bien-être", remainingUses: 4, daysUntilExpiry: 45, billingDays: 30 },
+      ndiambourBeauty && { salonId: ndiambourBeauty.id, kind: "package", name: "Pack Tresses 3 séances", remainingUses: 2, daysUntilExpiry: 60, billingDays: null },
+      dioneSignature && { salonId: dioneSignature.id, kind: "membership", name: "Abonnement Éclat", remainingUses: 6, daysUntilExpiry: 90, billingDays: 30 },
+    ].filter(Boolean) as SeedBenefitTemplate[];
 
-  const auditEntries = [
-    // Salon approvals
-    { id: `${dioneId}-salon.approved`, action: "salon.approved", summary: "Salon Dione Signature approuvé.", entityType: "salon", entityId: dioneId, actorName: "Cheikh Platform", severity: "info", payloadJson: JSON.stringify({ approvalStatus: "approved" }), relatedLinksJson: JSON.stringify([{ label: "Dione Signature", href: `/admin/salons/${dioneId}` }]), createdAt: new Date("2026-03-10T10:30:00Z") },
-    { id: `${studioKadijaId}-salon.approved`, action: "salon.approved", summary: "Studio Kadija approuvé.", entityType: "salon", entityId: studioKadijaId, actorName: "Cheikh Platform", severity: "info", payloadJson: JSON.stringify({ approvalStatus: "approved" }), relatedLinksJson: JSON.stringify([{ label: "Studio Kadija", href: `/admin/salons/${studioKadijaId}` }]), createdAt: new Date("2026-03-20T14:00:00Z") },
-    { id: `${eclatVisageId}-salon.approved`, action: "salon.approved", summary: "Éclat Visage approuvé — dossier complet.", entityType: "salon", entityId: eclatVisageId, actorName: "Cheikh Platform", severity: "info", payloadJson: JSON.stringify({ approvalStatus: "approved" }), relatedLinksJson: JSON.stringify([{ label: "Éclat Visage", href: `/admin/salons/${eclatVisageId}` }]), createdAt: new Date("2026-02-17T09:00:00Z") },
-    // Needs info
-    { id: `${atelierNafiId}-salon.request_info`, action: "salon.request_info", summary: "Informations complémentaires demandées à Atelier Nafi.", entityType: "salon", entityId: atelierNafiId, actorName: "Cheikh Platform", severity: "warning", payloadJson: JSON.stringify({ reason: "Document de bail flou — nouvelle version requise." }), relatedLinksJson: JSON.stringify([{ label: "Atelier Nafi", href: `/admin/salons/${atelierNafiId}` }]), createdAt: new Date("2026-04-22T14:30:00Z") },
-    // Rejection
-    { id: `${beautyFlashId}-salon.rejected`, action: "salon.rejected", summary: "Salon Beauty Flash rejeté — adresse non vérifiable.", entityType: "salon", entityId: beautyFlashId, actorName: "Cheikh Platform", severity: "warning", payloadJson: JSON.stringify({ reason: "Adresse non vérifiable. Salon mobile non éligible." }), relatedLinksJson: JSON.stringify([{ label: "Beauty Flash", href: `/admin/salons/${beautyFlashId}` }]), createdAt: new Date("2026-04-10T11:45:00Z") },
-    // Subscription events
-    { id: `${maisonLumiereSubId}-subscription.grant_complimentary_premium`, action: "subscription.grant_complimentary_premium", summary: "Premium offert — geste commercial Maison Lumière.", entityType: "subscription", entityId: maisonLumiereSubId, actorName: "Cheikh Platform", severity: "warning", payloadJson: JSON.stringify({ action: "grant_complimentary_premium", reason: "Partenariat presse" }), relatedLinksJson: JSON.stringify([{ label: "Maison Lumière", href: `/admin/subscriptions/${maisonLumiereSubId}` }]), createdAt: new Date("2026-04-05T09:00:00Z") },
-    { id: `${dioneSubId}-subscription.renewal_paid`, action: "subscription.renewal_paid", summary: "Renouvellement premium confirmé pour Dione Signature.", entityType: "subscription", entityId: dioneSubId, actorName: "Wave webhook", severity: "info", payloadJson: JSON.stringify({ invoice: "BA-2026-0001" }), relatedLinksJson: JSON.stringify([{ label: "Dione Signature", href: `/admin/subscriptions/${dioneSubId}` }]), createdAt: new Date("2026-04-15T08:16:00Z") },
-    { id: `${eclatVisageSubId}-subscription.renewal_paid`, action: "subscription.renewal_paid", summary: "Renouvellement premium confirmé pour Éclat Visage.", entityType: "subscription", entityId: eclatVisageSubId, actorName: "Wave webhook", severity: "info", payloadJson: JSON.stringify({ invoice: "BA-2026-0042" }), relatedLinksJson: JSON.stringify([{ label: "Éclat Visage", href: `/admin/subscriptions/${eclatVisageSubId}` }]), createdAt: new Date("2026-04-20T07:44:00Z") },
-    { id: `${epilExpressSubId}-subscription.payment_failed`, action: "subscription.payment_failed", summary: "Échec renouvellement Épil Express — solde insuffisant.", entityType: "subscription", entityId: epilExpressSubId, actorName: "Orange Money webhook", severity: "critical", payloadJson: JSON.stringify({ error: "insufficient_funds", provider: "orange_money" }), relatedLinksJson: JSON.stringify([{ label: "Épil Express", href: `/admin/subscriptions/${epilExpressSubId}` }]), createdAt: new Date("2026-04-20T10:00:00Z") },
-    // Config changes
-    { id: "config.commission_rate-2026-03", action: "config.setting_updated", summary: "Taux de commission mis à jour : 4% → 5%.", entityType: "config", entityId: "commission_rate_percent", actorName: "Cheikh Platform", severity: "warning", payloadJson: JSON.stringify({ key: "commission_rate_percent", old: "4", new: "5" }), relatedLinksJson: JSON.stringify([]), createdAt: new Date("2026-03-01T09:00:00Z") },
-    { id: "config.categories-esthetique-2026-04", action: "config.category_upserted", summary: "Catégorie Esthétique ajoutée à la plateforme.", entityType: "config", entityId: "esthetique", actorName: "Cheikh Platform", severity: "info", payloadJson: JSON.stringify({ name: "Esthétique", slug: "esthetique" }), relatedLinksJson: JSON.stringify([]), createdAt: new Date("2026-04-01T10:00:00Z") },
-  ];
+    for (const template of devBenefitTemplates) {
+      await prisma.clientBenefit.create({
+        data: {
+          userId: devUser.id,
+          salonId: template.salonId,
+          kind: template.kind,
+          name: template.name,
+          status: "active",
+          remainingUses: template.remainingUses,
+          expiresAt: daysFromNow(template.daysUntilExpiry),
+          billingDate: template.billingDays ? daysFromNow(template.billingDays) : null
+        }
+      });
+    }
 
-  await prisma.auditLog.deleteMany({
-    where: { id: { in: auditEntries.map(e => e.id) } }
-  });
+    await prisma.clientVoucherRedemption.deleteMany({ where: { userId: devUser.id } });
+    const devVouchers = await prisma.voucherDefinition.findMany({
+      where: { code: { in: ["WELCOME10", "SUMMER25", "MAISONVIP"] } },
+      orderBy: { code: "asc" }
+    });
+    const devVoucherByCode = new Map(devVouchers.map((voucher) => [voucher.code, voucher]));
+    const devVoucherAssignments = [
+      devVoucherByCode.get("WELCOME10") && {
+        voucherId: devVoucherByCode.get("WELCOME10")!.id,
+        expiresAt: devVoucherByCode.get("WELCOME10")!.expiresAt,
+        status: "active" as const
+      },
+      devVoucherByCode.get("SUMMER25") && {
+        voucherId: devVoucherByCode.get("SUMMER25")!.id,
+        expiresAt: devVoucherByCode.get("SUMMER25")!.expiresAt,
+        status: "active" as const
+      },
+      devVoucherByCode.get("MAISONVIP") && {
+        voucherId: devVoucherByCode.get("MAISONVIP")!.id,
+        expiresAt: devVoucherByCode.get("MAISONVIP")!.expiresAt,
+        status: "active" as const
+      }
+    ].filter(Boolean) as SeedVoucherAssignment[];
 
-  for (const entry of auditEntries) {
-    const { id, ...data } = entry;
-    await prisma.auditLog.upsert({
-      where: { id },
-      update: data,
-      create: entry
+    for (const assignment of devVoucherAssignments) {
+      await prisma.clientVoucherRedemption.upsert({
+        where: { userId_voucherId: { userId: devUser.id, voucherId: assignment.voucherId } },
+        update: {},
+        create: {
+          userId: devUser.id,
+          voucherId: assignment.voucherId,
+          status: assignment.status,
+          expiresAt: assignment.expiresAt
+        }
+      });
+    }
+    devTestUserId = devUser.id;
+    console.log(`  ✓ Dev test account seeded for ${DEV_TEST_PHONE}`);
+  }
+
+  // Bookings & Activity
+  console.log("  ⌛ Generating deep activity (bookings, reviews, blocks)...");
+  for (const entry of createdSalons) {
+    const { salon, employees, services, owner } = entry;
+    
+    // Cleanup existing to avoid clutter on repeat runs
+    await prisma.booking.deleteMany({ where: { salonId: salon.id } });
+    await prisma.blockedSlot.deleteMany({ where: { salonId: salon.id } });
+
+    // Historical
+    for (let d = 45; d >= 1; d--) {
+      const count = Math.floor(Math.random() * 4) + 1;
+      for (let i = 0; i < count; i++) {
+        const client = clients[Math.floor(Math.random() * clients.length)];
+        const employee = employees[Math.floor(Math.random() * employees.length)];
+        const service = services[Math.floor(Math.random() * services.length)];
+        const startsAt = new Date(daysAgo(d).setHours(9 + Math.floor(Math.random() * 8), 0, 0, 0));
+        const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
+
+        const booking = await prisma.booking.create({
+          data: {
+            clientId: client.id,
+            salonId: salon.id,
+            serviceId: service.id,
+            employeeId: employee.id,
+            startsAt,
+            endsAt,
+            status: "completed",
+            depositAmountXof: service.depositAmountXof ?? 0,
+            depositPaymentStatus: "succeeded",
+            paymentProvider: PaymentProvider.wave,
+            createdAt: daysAgo(d + 1)
+          }
+        });
+
+        if (Math.random() > 0.6) {
+          await prisma.review.upsert({
+            where: { bookingId: booking.id },
+            update: {},
+            create: {
+              bookingId: booking.id,
+              salonId: salon.id,
+              clientId: client.id,
+              rating: 4 + Math.floor(Math.random() * 2),
+              comment: "Excellent service.",
+              createdAt: new Date(startsAt.getTime() + 2 * 60 * 60 * 1000)
+            }
+          });
+        }
+      }
+
+      // Breaks
+      for (const emp of employees) {
+        await prisma.blockedSlot.create({
+          data: {
+            salonId: salon.id,
+            employeeId: emp.id,
+            startsAt: new Date(daysAgo(d).setHours(13, 0, 0, 0)),
+            endsAt: new Date(daysAgo(d).setHours(14, 0, 0, 0)),
+            reason: "Pause",
+            scope: BlockedSlotScope.employee,
+            createdByUserId: owner.id
+          }
+        });
+      }
+    }
+
+    // Future
+    for (let d = 0; d < 14; d++) {
+      const count = Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i++) {
+        const client = clients[Math.floor(Math.random() * clients.length)];
+        const employee = employees[Math.floor(Math.random() * employees.length)];
+        const service = services[Math.floor(Math.random() * services.length)];
+        const startsAt = new Date(daysFromNow(d).setHours(10 + Math.floor(Math.random() * 6), 0, 0, 0));
+        const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
+
+        await prisma.booking.create({
+          data: {
+            clientId: client.id,
+            salonId: salon.id,
+            serviceId: service.id,
+            employeeId: employee.id,
+            startsAt,
+            endsAt,
+            status: "confirmed",
+            depositAmountXof: service.depositAmountXof ?? 0,
+            depositPaymentStatus: "succeeded",
+            paymentProvider: PaymentProvider.wave
+          }
+        });
+      }
+    }
+  }
+
+  if (devTestUserId) {
+    await prisma.booking.deleteMany({
+      where: {
+        clientId: devTestUserId,
+        source: "dev_seed",
+      }
+    });
+
+    const devBookingTargets = [
+      {
+        salonName: "Maison Lumière",
+        serviceName: "Massage relaxant",
+        startsAt: new Date(daysAgo(7).setHours(11, 0, 0, 0)),
+        status: "completed" as const,
+      },
+      {
+        salonName: "Dione Signature",
+        serviceName: "Brushing",
+        startsAt: new Date(daysFromNow(1).setHours(10, 0, 0, 0)),
+        status: "confirmed" as const,
+      },
+      {
+        salonName: "Ndiambour Beauty",
+        serviceName: "Soin capillaire",
+        startsAt: new Date(daysFromNow(5).setHours(15, 0, 0, 0)),
+        status: "confirmed" as const,
+      },
+    ];
+
+    for (const target of devBookingTargets) {
+      const salonEntry = createdSalons.find((entry) => entry.salon.name === target.salonName);
+      const service = salonEntry?.services.find((item) => item.name === target.serviceName);
+      const employee = salonEntry?.employees[0] ?? null;
+
+      if (!salonEntry || !service) continue;
+
+      const endsAt = new Date(target.startsAt.getTime() + service.durationMinutes * 60 * 1000);
+
+      await prisma.booking.create({
+        data: {
+          clientId: devTestUserId,
+          salonId: salonEntry.salon.id,
+          serviceId: service.id,
+          employeeId: employee?.id ?? null,
+          startsAt: target.startsAt,
+          endsAt,
+          status: target.status,
+          source: "dev_seed",
+          depositAmountXof: service.depositAmountXof ?? 0,
+          depositPaymentStatus: "succeeded",
+          paymentProvider: PaymentProvider.wave,
+          createdAt: target.status === "completed" ? daysAgo(8) : new Date(),
+        }
+      });
+    }
+  }
+
+  // ── Post-seed: average ratings + prestige scores ──────────────────────────
+  for (const { salon } of createdSalons) {
+    const reviews = await prisma.review.findMany({ where: { salonId: salon.id }, select: { rating: true } });
+    const averageRating = reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+    await prisma.salon.update({ where: { id: salon.id }, data: { averageRating } });
+
+    const fresh = await prisma.salon.findUniqueOrThrow({
+      where: { id: salon.id },
+      select: { subscriptionTier: true, canReceiveBookings: true, _count: { select: { reviews: true, gallery: true } } }
+    });
+
+    const THRESHOLD = 0.3;
+    const ratingScore = (averageRating * Math.log(fresh._count.reviews + 1)) / 15;
+    const availScore = fresh.canReceiveBookings ? 1 : 0;
+    const photoScore = Math.min(fresh._count.gallery, 10) / 10;
+    const premiumBonus = fresh.subscriptionTier === "premium" ? 1 : 0;
+    const prestigeScore = 0.45 * ratingScore + 0.25 * availScore + 0.15 * photoScore + 0.15 * premiumBonus;
+
+    await prisma.salon.update({
+      where: { id: salon.id },
+      data: {
+        prestigeScore: Math.round(prestigeScore * 1000) / 1000,
+        isPrestige: fresh.subscriptionTier === "premium" && prestigeScore >= THRESHOLD
+      }
     });
   }
-  console.log(`  ✓ Audit log: ${auditEntries.length} entries`);
+  console.log("  ✓ Prestige scores computed");
 
-  // ── Platform Configuration ─────────────────────────────────────────────────
+  // ── Platform Settings ──────────────────────────────────────────────────────
   const platformSettings = [
-    { group: "pricing", key: "commission_rate_percent", value: "5", description: "Commission plateforme par transaction (%)" },
-    { group: "pricing", key: "subscription_standard_price_xof", value: "15000", description: "Prix abonnement Standard (F CFA / mois)" },
-    { group: "pricing", key: "subscription_premium_price_xof", value: "25000", description: "Prix abonnement Premium (F CFA / mois)" },
-    { group: "pricing", key: "deposit_minimum_xof", value: "2000", description: "Acompte minimum par réservation (F CFA)" },
-    { group: "pricing", key: "cancellation_window_hours", value: "24", description: "Délai d'annulation sans frais (heures)" },
-    { group: "general", key: "support_email", value: "support@beauteavenue.sn", description: "Email support client" },
-    { group: "general", key: "support_phone", value: "+221338001234", description: "Téléphone support" },
-    { group: "general", key: "booking_advance_days_max", value: "30", description: "Délai max de réservation à l'avance (jours)" },
-    { group: "general", key: "salon_approval_sla_days", value: "3", description: "SLA validation dossier (jours ouvrés)" },
+    { group: "pricing", key: "commission_rate_percent", value: "5", description: "Commission" },
+    { group: "pricing", key: "subscription_standard_price_xof", value: "15000", description: "Standard Price" },
+    { group: "pricing", key: "subscription_premium_price_xof", value: "25000", description: "Premium Price" },
   ];
-
   for (const s of platformSettings) {
-    await prisma.platformSetting.upsert({
-      where: { key: s.key },
-      update: { group: s.group, description: s.description },
-      create: s
-    });
+    await prisma.platformSetting.upsert({ where: { key: s.key }, update: s, create: s });
   }
-  console.log(`  ✓ Platform settings: ${platformSettings.length}`);
 
   const salonCategories = [
     { name: "Coiffure", slug: "coiffure" },
@@ -840,84 +793,22 @@ async function main() {
     { name: "Spa & Bien-être", slug: "spa" },
     { name: "Esthétique", slug: "esthetique" },
     { name: "Maquillage", slug: "maquillage" },
-    { name: "Soins visage", slug: "soins-visage" },
-    { name: "Épilation", slug: "epilation" },
-    { name: "Massage", slug: "massage" },
   ];
-
   for (const c of salonCategories) {
-    await prisma.platformSalonCategory.upsert({
-      where: { slug: c.slug },
-      update: { name: c.name },
-      create: { ...c, enabled: true }
-    });
+    await prisma.platformSalonCategory.upsert({ where: { slug: c.slug }, update: c, create: { ...c, enabled: true } });
   }
-  console.log(`  ✓ Salon categories: ${salonCategories.length}`);
 
-  const requiredDocuments = [
-    { label: "Pièce d'identité gérante", slug: "piece-identite", type: "any", isRequired: true },
-    { label: "Contrat de bail / Titre de propriété", slug: "contrat-bail", type: "pdf", isRequired: true },
-    { label: "Coordonnées de versement (RIB / Wave)", slug: "coordonnees-versement", type: "any", isRequired: true },
-    { label: "Extrait RCCM", slug: "rccm", type: "pdf", isRequired: false },
-    { label: "Numéro NINEA", slug: "ninea", type: "any", isRequired: false },
-  ];
-
-  for (const d of requiredDocuments) {
-    await prisma.platformRequiredDocument.upsert({
-      where: { slug: d.slug },
-      update: { label: d.label, type: d.type, isRequired: d.isRequired },
-      create: { ...d, enabled: true }
-    });
-  }
-  console.log(`  ✓ Required documents: ${requiredDocuments.length}`);
-
-  // ── Test fixtures — predictable IDs required by app.test.ts ──────────────
-  // ON UPDATE CASCADE propagates the PK change to all FK columns automatically.
-
-  // 1. Maison Kinka → id used by the "approves a salon" test
-  await prisma.$executeRaw`
-    UPDATE "Salon" SET id = 'salon-maison-kinka'
-    WHERE name = 'Maison Kinka' AND id != 'salon-maison-kinka'
-  `;
-
-  // 2. Dione Signature subscription → id used by subscription detail test
-  await prisma.$executeRaw`
-    UPDATE "Subscription" SET id = 'sub-dione-signature'
-    WHERE "salonId" = (SELECT id FROM "Salon" WHERE name = 'Dione Signature')
-      AND id != 'sub-dione-signature'
-  `;
-
-  // 3. Atelier Nafi subscription → id used by the grant_complimentary_premium test
-  //    Atelier Nafi has no subscription in its seed block — create or pin it here.
-  const atelierNafiSalon = await prisma.salon.findFirst({ where: { name: "Atelier Nafi" } });
-  if (atelierNafiSalon) {
-    const existingSub = await prisma.subscription.findUnique({ where: { salonId: atelierNafiSalon.id } });
-    if (!existingSub) {
-      await prisma.subscription.create({
-        data: {
-          id: "sub-atelier-nafi",
-          salonId: atelierNafiSalon.id,
-          tier: "standard",
-          status: "active",
-          autoRenew: false,
-          isComplimentary: false
-        }
-      });
-    } else if (existingSub.id !== "sub-atelier-nafi") {
-      await prisma.$executeRaw`
-        UPDATE "Subscription" SET id = 'sub-atelier-nafi'
-        WHERE id = ${existingSub.id}
-      `;
+  // ── Test fixtures — predictable IDs ────────────────────────────────────────
+  // Avoid pins that conflict with existing data or just check existence
+  const maisonLumiere = await prisma.salon.findFirst({ where: { name: "Maison Lumière" } });
+  if (maisonLumiere) {
+    const existing = await prisma.salon.findUnique({ where: { id: "salon-maison-kinka" } });
+    if (!existing) {
+       await prisma.$executeRaw`UPDATE "Salon" SET id = 'salon-maison-kinka' WHERE id = ${maisonLumiere.id}`;
     }
   }
-  console.log("  ✓ Test fixtures pinned (salon-maison-kinka, sub-dione-signature, sub-atelier-nafi)");
-
-  console.log("\n✅ Seed complete.\n");
-  console.log("  Admin:        admin@beauteavenue.local / admin1234");
-  console.log("  Salon owner:  aida@dionesignature.sn / salon1234");
-  console.log("  Client:       aminata@example.sn / client1234\n");
+  
+  console.log("\n✅ Fully expanded platform seed complete.\n");
 }
 
-main()
-  .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+main().catch(e => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

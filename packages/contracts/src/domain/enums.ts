@@ -38,6 +38,16 @@ export const notificationTypeSchema = z.enum([
   "salon_approved"
 ]);
 export const paymentProviderSchema = z.enum(["wave", "orange_money"]);
+export const clientContactChannelSchema = z.enum(["phone", "sms", "whatsapp"]);
+export const clientBenefitKindSchema = z.enum(["membership", "package"]);
+export const clientBenefitStatusSchema = z.enum([
+  "active",
+  "paused",
+  "expired",
+  "exhausted",
+  "cancelled"
+]);
+export const voucherRedemptionStatusSchema = z.enum(["active", "used", "expired"]);
 
 export type Role = z.infer<typeof roleSchema>;
 export type SalonApprovalStatus = z.infer<typeof salonApprovalStatusSchema>;
@@ -47,3 +57,7 @@ export type SubscriptionTier = z.infer<typeof subscriptionTierSchema>;
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type PaymentProvider = z.infer<typeof paymentProviderSchema>;
+export type ClientContactChannel = z.infer<typeof clientContactChannelSchema>;
+export type ClientBenefitKind = z.infer<typeof clientBenefitKindSchema>;
+export type ClientBenefitStatus = z.infer<typeof clientBenefitStatusSchema>;
+export type VoucherRedemptionStatus = z.infer<typeof voucherRedemptionStatusSchema>;

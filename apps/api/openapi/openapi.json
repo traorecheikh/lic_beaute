@@ -35,6 +35,186 @@
         ],
         "additionalProperties": false
       },
+      "RegisterInput": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "client"
+                ]
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 2
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "phone": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 20
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8
+              }
+            },
+            "required": [
+              "type",
+              "fullName",
+              "password"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "salon_owner"
+                ]
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 2
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "phone": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 20
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8
+              },
+              "salon": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "category",
+                  "city",
+                  "address"
+                ],
+                "additionalProperties": false
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "durationMinutes": {
+                      "type": "integer",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "priceXof": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "depositMode": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "fixed",
+                        "percent"
+                      ]
+                    },
+                    "depositAmountXof": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "depositPercent": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 100
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "durationMinutes",
+                    "priceXof",
+                    "depositMode"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "hours": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dayOfWeek": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 6
+                    },
+                    "isOpen": {
+                      "type": "boolean"
+                    },
+                    "opensAt": {
+                      "type": "string"
+                    },
+                    "closesAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "dayOfWeek",
+                    "isOpen"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 7,
+                "maxItems": 7
+              }
+            },
+            "required": [
+              "type",
+              "fullName",
+              "email",
+              "phone",
+              "password",
+              "salon",
+              "services",
+              "hours"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
       "EmailLoginInput": {
         "type": "object",
         "properties": {
@@ -87,6 +267,59 @@
         ],
         "additionalProperties": false
       },
+      "RefreshInput": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateMeInput": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "city": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120,
+            "nullable": true
+          },
+          "avatarMediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredContactChannel": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "sms",
+              "whatsapp"
+            ]
+          },
+          "pushOptIn": {
+            "type": "boolean"
+          },
+          "marketingOptIn": {
+            "type": "boolean"
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "AuthSession": {
         "type": "object",
         "properties": {
@@ -121,6 +354,26 @@
         ],
         "additionalProperties": false
       },
+      "OtpAcceptedResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "channel",
+          "destination"
+        ],
+        "additionalProperties": false
+      },
       "CurrentUser": {
         "type": "object",
         "properties": {
@@ -151,6 +404,35 @@
           "salonId": {
             "type": "string",
             "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredContactChannel": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "sms",
+              "whatsapp"
+            ]
+          },
+          "pushOptIn": {
+            "type": "boolean"
+          },
+          "marketingOptIn": {
+            "type": "boolean"
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en"
+            ]
           }
         },
         "required": [
@@ -159,7 +441,374 @@
           "email",
           "phone",
           "role",
-          "salonId"
+          "salonId",
+          "city",
+          "avatarUrl",
+          "preferredContactChannel",
+          "pushOptIn",
+          "marketingOptIn",
+          "preferredLanguage"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileOptions": {
+        "type": "object",
+        "properties": {
+          "cities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "fr",
+                "en"
+              ]
+            }
+          },
+          "contactChannels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "phone",
+                "sms",
+                "whatsapp"
+              ]
+            }
+          },
+          "paymentProviders": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "wave",
+                "orange_money"
+              ]
+            }
+          }
+        },
+        "required": [
+          "cities",
+          "languages",
+          "contactChannels",
+          "paymentProviders"
+        ],
+        "additionalProperties": false
+      },
+      "ClientPaymentMethod": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "wave",
+              "orange_money"
+            ]
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "phoneNumber",
+          "label",
+          "isDefault",
+          "lastUsedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ClientPaymentMethodCreateInput": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "wave",
+              "orange_money"
+            ]
+          },
+          "phoneNumber": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "nullable": true
+          }
+        },
+        "required": [
+          "provider",
+          "phoneNumber"
+        ],
+        "additionalProperties": false
+      },
+      "ClientPaymentMethodUpdateInput": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClientBenefit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "membership",
+              "package"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "expired",
+              "exhausted",
+              "cancelled"
+            ]
+          },
+          "remainingUses": {
+            "type": "integer",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "billingDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "salonId": {
+            "type": "string"
+          },
+          "salonName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "status",
+          "remainingUses",
+          "expiresAt",
+          "billingDate",
+          "salonId",
+          "salonName",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "ClientVoucher": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "discountLabel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "used",
+              "expired"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "redeemedAt": {
+            "type": "string"
+          },
+          "usedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "salonId": {
+            "type": "string",
+            "nullable": true
+          },
+          "salonName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "title",
+          "description",
+          "discountLabel",
+          "status",
+          "expiresAt",
+          "redeemedAt",
+          "usedAt",
+          "salonId",
+          "salonName"
+        ],
+        "additionalProperties": false
+      },
+      "RedeemVoucherInput": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "ProClientBenefitCreateInput": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "membership",
+              "package"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "remainingUses": {
+            "type": "integer",
+            "minimum": 0,
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "billingDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "clientId",
+          "kind",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "ProVoucherCreateInput": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64
+          },
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 240,
+            "nullable": true
+          },
+          "discountLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "maxRedemptions": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "minimum": 0,
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "title",
+          "discountLabel"
         ],
         "additionalProperties": false
       },
@@ -174,6 +823,10 @@
           },
           "category": {
             "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
           },
           "city": {
             "type": "string"
@@ -204,19 +857,34 @@
           },
           "featured": {
             "type": "boolean"
+          },
+          "isPrestige": {
+            "type": "boolean"
+          },
+          "prestigeScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "distanceKm": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
           "id",
           "name",
           "category",
+          "logoUrl",
           "city",
           "neighborhood",
           "averageRating",
           "latitude",
           "longitude",
           "subscriptionTier",
-          "featured"
+          "featured",
+          "isPrestige",
+          "prestigeScore",
+          "distanceKm"
         ],
         "additionalProperties": false
       },
@@ -236,6 +904,10 @@
                 },
                 "category": {
                   "type": "string"
+                },
+                "logoUrl": {
+                  "type": "string",
+                  "nullable": true
                 },
                 "city": {
                   "type": "string"
@@ -266,19 +938,34 @@
                 },
                 "featured": {
                   "type": "boolean"
+                },
+                "isPrestige": {
+                  "type": "boolean"
+                },
+                "prestigeScore": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "distanceKm": {
+                  "type": "number",
+                  "nullable": true
                 }
               },
               "required": [
                 "id",
                 "name",
                 "category",
+                "logoUrl",
                 "city",
                 "neighborhood",
                 "averageRating",
                 "latitude",
                 "longitude",
                 "subscriptionTier",
-                "featured"
+                "featured",
+                "isPrestige",
+                "prestigeScore",
+                "distanceKm"
               ],
               "additionalProperties": false
             }
@@ -305,6 +992,10 @@
           },
           "category": {
             "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
           },
           "city": {
             "type": "string"
@@ -336,6 +1027,17 @@
           "featured": {
             "type": "boolean"
           },
+          "isPrestige": {
+            "type": "boolean"
+          },
+          "prestigeScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "distanceKm": {
+            "type": "number",
+            "nullable": true
+          },
           "description": {
             "type": "string"
           },
@@ -360,6 +1062,9 @@
                 "name": {
                   "type": "string"
                 },
+                "category": {
+                  "type": "string"
+                },
                 "durationMinutes": {
                   "type": "integer",
                   "exclusiveMinimum": true,
@@ -378,9 +1083,62 @@
               "required": [
                 "id",
                 "name",
+                "category",
                 "durationMinutes",
                 "priceXof",
                 "depositRequiredXof"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "teamDisplay": {
+            "type": "object",
+            "properties": {
+              "showPhotos": {
+                "type": "boolean"
+              },
+              "showDescriptions": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "showPhotos",
+              "showDescriptions"
+            ],
+            "additionalProperties": false
+          },
+          "staff": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "avatarUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "serviceIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "displayName",
+                "avatarUrl",
+                "description",
+                "serviceIds"
               ],
               "additionalProperties": false
             }
@@ -390,6 +1148,7 @@
           "id",
           "name",
           "category",
+          "logoUrl",
           "city",
           "neighborhood",
           "averageRating",
@@ -397,10 +1156,15 @@
           "longitude",
           "subscriptionTier",
           "featured",
+          "isPrestige",
+          "prestigeScore",
+          "distanceKm",
           "description",
           "address",
           "gallery",
-          "services"
+          "services",
+          "teamDisplay",
+          "staff"
         ],
         "additionalProperties": false
       },
@@ -1723,6 +2487,1572 @@
           "relatedLinks"
         ],
         "additionalProperties": false
+      },
+      "ProDashboard": {
+        "type": "object",
+        "properties": {
+          "pendingBookingCount": {
+            "type": "integer"
+          },
+          "todayBookingCount": {
+            "type": "integer"
+          },
+          "totalRevenueXof": {
+            "type": "integer",
+            "nullable": true
+          }
+        },
+        "required": [
+          "pendingBookingCount",
+          "todayBookingCount",
+          "totalRevenueXof"
+        ],
+        "additionalProperties": false
+      },
+      "ProSalonProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "instagram": {
+            "type": "string",
+            "nullable": true
+          },
+          "averageRating": {
+            "type": "number"
+          },
+          "subscriptionTier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
+            ]
+          },
+          "isVisibleInMarketplace": {
+            "type": "boolean"
+          },
+          "canReceiveBookings": {
+            "type": "boolean"
+          },
+          "teamDisplay": {
+            "type": "object",
+            "properties": {
+              "showPhotos": {
+                "type": "boolean"
+              },
+              "showDescriptions": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "showPhotos",
+              "showDescriptions"
+            ],
+            "additionalProperties": false
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hours": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dayOfWeek": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "isOpen": {
+                  "type": "boolean"
+                },
+                "opensAt": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "closesAt": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "dayOfWeek",
+                "isOpen",
+                "opensAt",
+                "closesAt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "logoUrl",
+          "description",
+          "city",
+          "address",
+          "neighborhood",
+          "latitude",
+          "longitude",
+          "phone",
+          "instagram",
+          "averageRating",
+          "subscriptionTier",
+          "isVisibleInMarketplace",
+          "canReceiveBookings",
+          "teamDisplay",
+          "gallery",
+          "hours"
+        ],
+        "additionalProperties": false
+      },
+      "ProSalonUpdateInput": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "nullable": true
+          },
+          "teamDisplay": {
+            "type": "object",
+            "properties": {
+              "showPhotos": {
+                "type": "boolean"
+              },
+              "showDescriptions": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "nullable": true
+          },
+          "instagram": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "priceXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depositMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "fixed",
+              "percent"
+            ]
+          },
+          "depositAmountXof": {
+            "type": "integer",
+            "minimum": 0,
+            "nullable": true
+          },
+          "depositPercent": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "displayOrder": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "durationMinutes",
+          "priceXof",
+          "depositMode",
+          "depositAmountXof",
+          "depositPercent",
+          "isActive",
+          "displayOrder"
+        ],
+        "additionalProperties": false
+      },
+      "ProServiceCreateInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "priceXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depositMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "fixed",
+              "percent"
+            ]
+          },
+          "depositAmountXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depositPercent": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "name",
+          "durationMinutes",
+          "priceXof",
+          "depositMode"
+        ],
+        "additionalProperties": false
+      },
+      "ProServiceUpdateInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "priceXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depositMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "fixed",
+              "percent"
+            ]
+          },
+          "depositAmountXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depositPercent": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProStaffMember": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "schedulingEnabled": {
+            "type": "boolean"
+          },
+          "serviceIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "displayName",
+          "avatarUrl",
+          "description",
+          "isActive",
+          "schedulingEnabled",
+          "serviceIds"
+        ],
+        "additionalProperties": false
+      },
+      "ProStaffCreateInput": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20
+          },
+          "fullName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "avatarUrl": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 240,
+            "nullable": true
+          },
+          "serviceIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "phone",
+          "fullName"
+        ],
+        "additionalProperties": false
+      },
+      "ProStaffUpdateInput": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 240,
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "schedulingEnabled": {
+            "type": "boolean"
+          },
+          "serviceIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProSalonHour": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "isOpen": {
+            "type": "boolean"
+          },
+          "opensAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "closesAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "isOpen",
+          "opensAt",
+          "closesAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProHoursUpdateInput": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "dayOfWeek": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "isOpen": {
+              "type": "boolean"
+            },
+            "opensAt": {
+              "type": "string",
+              "nullable": true
+            },
+            "closesAt": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "required": [
+            "dayOfWeek",
+            "isOpen",
+            "opensAt",
+            "closesAt"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 7,
+        "maxItems": 7
+      },
+      "ProBlockedSlot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "salon",
+              "employee"
+            ]
+          },
+          "employeeId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "startsAt",
+          "endsAt",
+          "reason",
+          "scope",
+          "employeeId"
+        ],
+        "additionalProperties": false
+      },
+      "ProBlockedSlotCreateInput": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "salon",
+              "employee"
+            ],
+            "default": "salon"
+          },
+          "employeeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "startsAt",
+          "endsAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProBookingDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "salonId": {
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "employeeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "employeeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "depositAmountXof": {
+            "type": "number",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "salonId",
+          "serviceId",
+          "serviceName",
+          "employeeId",
+          "employeeName",
+          "clientId",
+          "clientName",
+          "clientPhone",
+          "startsAt",
+          "endsAt",
+          "status",
+          "source",
+          "depositAmountXof",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProBookingFullDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "salonId": {
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "employeeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "employeeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "depositAmountXof": {
+            "type": "number",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "amountXof": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "status",
+                "amountXof",
+                "provider"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "eventType": {
+                  "type": "string"
+                },
+                "fromStatus": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "toStatus": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "eventType",
+                "fromStatus",
+                "toStatus",
+                "createdAt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "salonId",
+          "serviceId",
+          "serviceName",
+          "employeeId",
+          "employeeName",
+          "clientId",
+          "clientName",
+          "clientPhone",
+          "startsAt",
+          "endsAt",
+          "status",
+          "source",
+          "depositAmountXof",
+          "createdAt",
+          "payments",
+          "events"
+        ],
+        "additionalProperties": false
+      },
+      "ProBookingStatusUpdate": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "ProManualBookingInput": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "employeeId": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "clientPhone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceId",
+          "startsAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProManualBookingCreated": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "startsAt",
+          "endsAt",
+          "status",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "ProClientSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "visitCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalSpentXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastVisitAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "phone",
+          "email",
+          "visitCount",
+          "totalSpentXof",
+          "lastVisitAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProClientDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "visitCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalSpentXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastVisitAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "recentBookings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "bookingId": {
+                  "type": "string"
+                },
+                "startsAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "serviceName": {
+                  "type": "string"
+                },
+                "amountXof": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "in_progress",
+                    "completed",
+                    "cancelled"
+                  ]
+                }
+              },
+              "required": [
+                "bookingId",
+                "startsAt",
+                "serviceName",
+                "amountXof",
+                "status"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "phone",
+          "email",
+          "visitCount",
+          "totalSpentXof",
+          "lastVisitAt",
+          "recentBookings"
+        ],
+        "additionalProperties": false
+      },
+      "ProCheckoutDetails": {
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "clientName": {
+            "type": "string",
+            "nullable": true
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "staffName": {
+            "type": "string",
+            "nullable": true
+          },
+          "subtotalXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depositPaidXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "balanceXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lineItems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "amountXof": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "name",
+                "amountXof"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "bookingId",
+          "status",
+          "clientName",
+          "serviceName",
+          "startsAt",
+          "staffName",
+          "subtotalXof",
+          "depositPaidXof",
+          "balanceXof",
+          "lineItems"
+        ],
+        "additionalProperties": false
+      },
+      "ProCheckoutCompleteInput": {
+        "type": "object",
+        "properties": {
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "wave",
+              "orange_money",
+              "other"
+            ]
+          },
+          "lineItems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "amountXof": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "name",
+                "amountXof"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "discountXof": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        },
+        "required": [
+          "paymentMethod",
+          "lineItems"
+        ],
+        "additionalProperties": false
+      },
+      "ProCheckoutCompleteResult": {
+        "type": "object",
+        "properties": {
+          "completed": {
+            "type": "boolean"
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "chargedXof": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "completed",
+          "bookingId",
+          "status",
+          "chargedXof"
+        ],
+        "additionalProperties": false
+      },
+      "ProReview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "responseText": {
+            "type": "string",
+            "nullable": true
+          },
+          "responseAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "comment",
+          "createdAt",
+          "responseText",
+          "responseAt",
+          "clientId"
+        ],
+        "additionalProperties": false
+      },
+      "ProReviewResponseInput": {
+        "type": "object",
+        "properties": {
+          "responseText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "responseText"
+        ],
+        "additionalProperties": false
+      },
+      "ProAnalytics": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "bookingCount": {
+            "type": "integer"
+          },
+          "completedCount": {
+            "type": "integer"
+          },
+          "occupancyPercent": {
+            "type": "number"
+          },
+          "totalRevenueXof": {
+            "type": "integer"
+          },
+          "topServices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "serviceId": {
+                  "type": "string"
+                },
+                "serviceName": {
+                  "type": "string"
+                },
+                "bookingCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "serviceId",
+                "serviceName",
+                "bookingCount"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "period",
+          "bookingCount",
+          "completedCount",
+          "occupancyPercent",
+          "totalRevenueXof",
+          "topServices"
+        ],
+        "additionalProperties": false
+      },
+      "ProSubscription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inactive",
+              "active",
+              "past_due",
+              "cancelled",
+              "expired",
+              "paused"
+            ]
+          },
+          "renewsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "isComplimentary": {
+            "type": "boolean"
+          },
+          "autoRenew": {
+            "type": "boolean"
+          },
+          "billingMethod": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "wave",
+                  "orange_money"
+                ]
+              },
+              "accountNumberMasked": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider",
+              "accountNumberMasked"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "tier",
+          "status",
+          "renewsAt",
+          "expiresAt",
+          "isComplimentary",
+          "autoRenew",
+          "billingMethod"
+        ],
+        "additionalProperties": false
+      },
+      "ProSubscriptionUpdateInput": {
+        "type": "object",
+        "properties": {
+          "autoRenew": {
+            "type": "boolean"
+          },
+          "billingMethod": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "wave",
+                  "orange_money"
+                ]
+              },
+              "accountNumber": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 20
+              }
+            },
+            "required": [
+              "provider",
+              "accountNumber"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProSubscriptionCheckoutInput": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "upgrade",
+              "renewal"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "wave",
+              "orange_money"
+            ],
+            "default": "wave"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "ProSubscriptionCheckoutResult": {
+        "type": "object",
+        "properties": {
+          "redirectUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "chargeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "redirectUrl",
+          "chargeId"
+        ],
+        "additionalProperties": false
+      },
+      "ProPayoutEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "amountXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "bookingId",
+          "eventType",
+          "amountXof",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProInvoice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "amountXof": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pdfUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "invoiceNumber",
+          "amountXof",
+          "status",
+          "createdAt",
+          "pdfUrl"
+        ],
+        "additionalProperties": false
+      },
+      "UpdatedResponse": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "updated"
+        ],
+        "additionalProperties": false
+      },
+      "DeletedResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "additionalProperties": false
       }
     }
   },
@@ -1747,12 +4077,67 @@
                     "timestamp": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "database": {
+                      "type": "object",
+                      "properties": {
+                        "driver": {
+                          "type": "string"
+                        },
+                        "mode": {
+                          "type": "string"
+                        },
+                        "attempts": {
+                          "type": "integer"
+                        }
+                      }
                     }
                   },
                   "required": [
                     "status",
-                    "timestamp"
+                    "timestamp",
+                    "database"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register client or salon owner",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Authenticated session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -1787,7 +4172,7 @@
               }
             }
           },
-          "400": {
+          "401": {
             "description": "Invalid credentials",
             "content": {
               "application/json": {
@@ -1818,7 +4203,14 @@
         },
         "responses": {
           "202": {
-            "description": "OTP request accepted"
+            "description": "OTP request accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpAcceptedResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1853,17 +4245,62 @@
         }
       }
     },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refreshed session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/logout": {
       "post": {
         "tags": [
           "auth"
         ],
         "summary": "Logout current session",
-        "security": [
-          {
-            "bearerAuth": []
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshInput"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Session revoked",
@@ -1875,7 +4312,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/me": {
@@ -1884,11 +4326,6 @@
           "auth"
         ],
         "summary": "Current user",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Authenticated user",
@@ -1900,7 +4337,526 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update current user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUser"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/metadata/profile-options": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Profile dropdown and preference options",
+        "responses": {
+          "200": {
+            "description": "Profile options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOptions"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/payment-methods": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List saved payment methods",
+        "responses": {
+          "200": {
+            "description": "Payment methods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "provider": {
+                            "type": "string",
+                            "enum": [
+                              "wave",
+                              "orange_money"
+                            ]
+                          },
+                          "phoneNumber": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
+                          "lastUsedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "provider",
+                          "phoneNumber",
+                          "label",
+                          "isDefault",
+                          "lastUsedAt",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Create a saved payment method",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientPaymentMethodCreateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created payment method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientPaymentMethod"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/payment-methods/{paymentMethodId}": {
+      "patch": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update a saved payment method",
+        "parameters": [
+          {
+            "name": "paymentMethodId",
+            "in": "path",
+            "required": true,
+            "description": "Payment method identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientPaymentMethodUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated payment method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientPaymentMethod"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Delete a saved payment method",
+        "parameters": [
+          {
+            "name": "paymentMethodId",
+            "in": "path",
+            "required": true,
+            "description": "Payment method identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted payment method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/payment-methods/{paymentMethodId}/default": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Set the default saved payment method",
+        "parameters": [
+          {
+            "name": "paymentMethodId",
+            "in": "path",
+            "required": true,
+            "description": "Payment method identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default payment method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientPaymentMethod"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/benefits": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List client memberships and packages",
+        "responses": {
+          "200": {
+            "description": "Benefits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "membership",
+                              "package"
+                            ]
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "paused",
+                              "expired",
+                              "exhausted",
+                              "cancelled"
+                            ]
+                          },
+                          "remainingUses": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "billingDate": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "salonId": {
+                            "type": "string"
+                          },
+                          "salonName": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "name",
+                          "status",
+                          "remainingUses",
+                          "expiresAt",
+                          "billingDate",
+                          "salonId",
+                          "salonName",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/vouchers": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List redeemed vouchers",
+        "responses": {
+          "200": {
+            "description": "Vouchers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "discountLabel": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "used",
+                              "expired"
+                            ]
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "redeemedAt": {
+                            "type": "string"
+                          },
+                          "usedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "salonId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "salonName": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "code",
+                          "title",
+                          "description",
+                          "discountLabel",
+                          "status",
+                          "expiresAt",
+                          "redeemedAt",
+                          "usedAt",
+                          "salonId",
+                          "salonName"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/vouchers/redeem": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Redeem a voucher code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemVoucherInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Redeemed voucher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientVoucher"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/salons": {
@@ -1909,6 +4865,77 @@
           "salons"
         ],
         "summary": "List salons",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nearby",
+                "rating",
+                "trending"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Salon list",
@@ -1934,6 +4961,7 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "Salon identifier",
             "schema": {
               "type": "string"
             }
@@ -1969,11 +4997,6 @@
           "bookings"
         ],
         "summary": "List bookings",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Booking list",
@@ -1985,18 +5008,18 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
         "tags": [
           "bookings"
         ],
         "summary": "Create booking",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2018,7 +5041,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/dashboard": {
@@ -2027,11 +5055,6 @@
           "admin"
         ],
         "summary": "Admin dashboard",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Admin KPI dashboard",
@@ -2042,18 +5065,13 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/salons/pending": {
@@ -2062,11 +5080,6 @@
           "admin"
         ],
         "summary": "List pending salon approvals",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "search",
@@ -2112,7 +5125,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/salons/{salonId}": {
@@ -2121,16 +5139,12 @@
           "admin"
         ],
         "summary": "Salon approval detail",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "salonId",
             "in": "path",
             "required": true,
+            "description": "Salon identifier",
             "schema": {
               "type": "string"
             }
@@ -2157,7 +5171,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/salons/{salonId}/approve": {
@@ -2166,16 +5185,12 @@
           "admin"
         ],
         "summary": "Approve salon listing",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "salonId",
             "in": "path",
             "required": true,
+            "description": "Salon identifier",
             "schema": {
               "type": "string"
             }
@@ -2192,7 +5207,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/salons/{salonId}/reject": {
@@ -2201,16 +5221,12 @@
           "admin"
         ],
         "summary": "Reject salon listing",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "salonId",
             "in": "path",
             "required": true,
+            "description": "Salon identifier",
             "schema": {
               "type": "string"
             }
@@ -2237,7 +5253,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/salons/{salonId}/request-info": {
@@ -2246,16 +5267,12 @@
           "admin"
         ],
         "summary": "Request more information for salon listing",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "salonId",
             "in": "path",
             "required": true,
+            "description": "Salon identifier",
             "schema": {
               "type": "string"
             }
@@ -2273,7 +5290,7 @@
         },
         "responses": {
           "200": {
-            "description": "Salon updated to needs_info",
+            "description": "Salon moved to needs_info",
             "content": {
               "application/json": {
                 "schema": {
@@ -2282,7 +5299,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/subscriptions": {
@@ -2291,11 +5313,6 @@
           "admin"
         ],
         "summary": "List subscription lifecycles",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "search",
@@ -2333,7 +5350,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/subscriptions/{subscriptionId}": {
@@ -2342,16 +5364,12 @@
           "admin"
         ],
         "summary": "Subscription detail",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "subscriptionId",
             "in": "path",
             "required": true,
+            "description": "Subscription identifier",
             "schema": {
               "type": "string"
             }
@@ -2378,7 +5396,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/subscriptions/{subscriptionId}/override": {
@@ -2387,16 +5410,12 @@
           "admin"
         ],
         "summary": "Apply admin subscription override",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "subscriptionId",
             "in": "path",
             "required": true,
+            "description": "Subscription identifier",
             "schema": {
               "type": "string"
             }
@@ -2422,18 +5441,13 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Subscription not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/audit": {
@@ -2442,11 +5456,6 @@
           "admin"
         ],
         "summary": "List admin audit events",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "actor",
@@ -2484,7 +5493,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/audit/{auditId}": {
@@ -2493,16 +5507,12 @@
           "admin"
         ],
         "summary": "Audit event detail",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "auditId",
             "in": "path",
             "required": true,
+            "description": "Audit identifier",
             "schema": {
               "type": "string"
             }
@@ -2529,7 +5539,1534 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/dashboard": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Salon operational dashboard",
+        "responses": {
+          "200": {
+            "description": "Pro dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProDashboard"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/salon": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Get owned salon profile",
+        "responses": {
+          "200": {
+            "description": "Salon profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProSalonProfile"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Update owned salon profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProSalonUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated salon profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProSalonProfile"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/services": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List salon services",
+        "responses": {
+          "200": {
+            "description": "Service list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProService"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Create salon service",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProServiceCreateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProService"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/services/{serviceId}": {
+      "patch": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Update salon service",
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "description": "Service identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProServiceUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProService"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Archive salon service",
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "description": "Service identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/staff": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List salon staff",
+        "responses": {
+          "200": {
+            "description": "Staff list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProStaffMember"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Create salon staff",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProStaffCreateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created staff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProStaffMember"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/staff/{employeeId}": {
+      "patch": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Update salon staff",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "in": "path",
+            "required": true,
+            "description": "Employee identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProStaffUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated staff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Archive salon staff",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "in": "path",
+            "required": true,
+            "description": "Employee identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/hours": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List opening hours",
+        "responses": {
+          "200": {
+            "description": "Hours list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProSalonHour"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Update opening hours",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProHoursUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/blocked-slots": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List blocked slots",
+        "responses": {
+          "200": {
+            "description": "Blocked slot list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProBlockedSlot"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Create blocked slot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProBlockedSlotCreateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created blocked slot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProBlockedSlot"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/blocked-slots/{slotId}": {
+      "delete": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Delete blocked slot",
+        "parameters": [
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "description": "Blocked slot identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List pro bookings",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProBookingDetail"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings/manual": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Create manual booking",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProManualBookingInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created manual booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProManualBookingCreated"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings/{bookingId}": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Get booking detail",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProBookingFullDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings/{bookingId}/accept": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Accept booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated booking status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProBookingStatusUpdate"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings/{bookingId}/reject": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Reject booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated booking status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProBookingStatusUpdate"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings/{bookingId}/start": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Start booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated booking status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProBookingStatusUpdate"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/bookings/{bookingId}/complete": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Complete booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated booking status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProBookingStatusUpdate"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/clients": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List salon clients",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProClientSummary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/clients/{clientId}": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Get salon client detail",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "description": "Client identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProClientDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/clients/benefits": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Assign a membership or package to a client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProClientBenefitCreateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created client benefit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientBenefit"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/vouchers": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Create a voucher code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProVoucherCreateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created voucher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "discountLabel": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "maxRedemptions": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "title",
+                    "description",
+                    "discountLabel",
+                    "expiresAt",
+                    "maxRedemptions"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/checkout/{bookingId}": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Get checkout details for a booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checkout details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProCheckoutDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/checkout/{bookingId}/complete": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Complete checkout for a booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProCheckoutCompleteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProCheckoutCompleteResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/reviews": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List salon reviews",
+        "responses": {
+          "200": {
+            "description": "Review list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProReview"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/reviews/{reviewId}/response": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Respond to a review",
+        "parameters": [
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "description": "Review identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProReviewResponseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/analytics": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Get salon analytics",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProAnalytics"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/subscription": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Get subscription details",
+        "responses": {
+          "200": {
+            "description": "Subscription details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProSubscription"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Update subscription settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProSubscriptionUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/subscription/checkout": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Initiate premium subscription checkout",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProSubscriptionCheckoutInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout initialization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProSubscriptionCheckoutResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/payouts": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List settlement and payout events",
+        "responses": {
+          "200": {
+            "description": "Payout events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProPayoutEvent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/invoices": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List subscription invoices",
+        "responses": {
+          "200": {
+            "description": "Invoice list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProInvoice"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pro/invoices/{invoiceId}/pdf": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Download subscription invoice PDF",
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "in": "path",
+            "required": true,
+            "description": "Invoice identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF binary stream",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invoice not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "List notifications",
+        "responses": {
+          "200": {
+            "description": "Notification list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "channel": {
+                            "type": "string"
+                          },
+                          "readAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "body",
+                          "channel",
+                          "readAt",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "unreadCount": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total",
+                    "unreadCount"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}/read": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Mark one notification as read",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Notification identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "read": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "read"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Mark all notifications as read",
+        "responses": {
+          "200": {
+            "description": "Notifications updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     }
   }

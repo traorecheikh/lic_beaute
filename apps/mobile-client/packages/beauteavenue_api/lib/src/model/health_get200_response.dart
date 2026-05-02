@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:beauteavenue_api/src/model/health_get200_response_database.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -11,30 +12,41 @@ part 'health_get200_response.g.dart';
 /// HealthGet200Response
 ///
 /// Properties:
-/// * [status] 
-/// * [timestamp] 
+/// * [status]
+/// * [timestamp]
+/// * [database]
 @BuiltValue()
-abstract class HealthGet200Response implements Built<HealthGet200Response, HealthGet200ResponseBuilder> {
+abstract class HealthGet200Response
+    implements Built<HealthGet200Response, HealthGet200ResponseBuilder> {
   @BuiltValueField(wireName: r'status')
   String get status;
 
   @BuiltValueField(wireName: r'timestamp')
   DateTime get timestamp;
 
+  @BuiltValueField(wireName: r'database')
+  HealthGet200ResponseDatabase get database;
+
   HealthGet200Response._();
 
-  factory HealthGet200Response([void updates(HealthGet200ResponseBuilder b)]) = _$HealthGet200Response;
+  factory HealthGet200Response([void updates(HealthGet200ResponseBuilder b)]) =
+      _$HealthGet200Response;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(HealthGet200ResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<HealthGet200Response> get serializer => _$HealthGet200ResponseSerializer();
+  static Serializer<HealthGet200Response> get serializer =>
+      _$HealthGet200ResponseSerializer();
 }
 
-class _$HealthGet200ResponseSerializer implements PrimitiveSerializer<HealthGet200Response> {
+class _$HealthGet200ResponseSerializer
+    implements PrimitiveSerializer<HealthGet200Response> {
   @override
-  final Iterable<Type> types = const [HealthGet200Response, _$HealthGet200Response];
+  final Iterable<Type> types = const [
+    HealthGet200Response,
+    _$HealthGet200Response
+  ];
 
   @override
   final String wireName = r'HealthGet200Response';
@@ -54,6 +66,11 @@ class _$HealthGet200ResponseSerializer implements PrimitiveSerializer<HealthGet2
       object.timestamp,
       specifiedType: const FullType(DateTime),
     );
+    yield r'database';
+    yield serializers.serialize(
+      object.database,
+      specifiedType: const FullType(HealthGet200ResponseDatabase),
+    );
   }
 
   @override
@@ -62,7 +79,9 @@ class _$HealthGet200ResponseSerializer implements PrimitiveSerializer<HealthGet2
     HealthGet200Response object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -90,6 +109,13 @@ class _$HealthGet200ResponseSerializer implements PrimitiveSerializer<HealthGet2
             specifiedType: const FullType(DateTime),
           ) as DateTime;
           result.timestamp = valueDes;
+          break;
+        case r'database':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(HealthGet200ResponseDatabase),
+          ) as HealthGet200ResponseDatabase;
+          result.database.replace(valueDes);
           break;
         default:
           unhandled.add(key);
@@ -119,4 +145,3 @@ class _$HealthGet200ResponseSerializer implements PrimitiveSerializer<HealthGet2
     return result.build();
   }
 }
-

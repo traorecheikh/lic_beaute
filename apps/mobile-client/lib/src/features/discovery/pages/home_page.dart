@@ -1,26 +1,28 @@
 import 'dart:ui';
+import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/location/location_service.dart';
+import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../router/app_router.dart';
+import '../providers/salon_list_provider.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   final _scrollCtrl = ScrollController();
-  // 0 = fully expanded (white icons on image), 1 = fully collapsed (dark icons on bg)
   double _collapseRatio = 0.0;
   static const _heroHeight = 320.0;
   static const _appBarCollapsedHeight = 56.0;
@@ -46,27 +48,120 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // Interpolate color based on collapse
   Color _iconColor(Color onExpanded, Color onCollapsed) =>
       Color.lerp(onExpanded, onCollapsed, _collapseRatio)!;
 
   @override
   Widget build(BuildContext context) {
+    final nearbyAsync = ref.watch(nearbyProvider);
+    final topRatedAsync = ref.watch(topRatedProvider);
+    final trendingAsync = ref.watch(trendingProvider);
+    final prestigeAsync = ref.watch(prestigeProvider);
+    final bannerDismissed = ref.watch(locationBannerDismissedProvider);
+    final locationStatus = ref.watch(locationStatusProvider);
+
+    final hasNearby = nearbyAsync.valueOrNull?.isNotEmpty == true;
+    final locationPending = nearbyAsync.isLoading; // show section header while GPS resolves
+
+    // Only show banner when permission is definitively denied (not on GPS timeout or empty results)
+    final permDenied = locationStatus.valueOrNull == LocationStatus.denied ||
+        locationStatus.valueOrNull == LocationStatus.deniedForever;
+    final showBanner = !bannerDismissed && !locationStatus.isLoading && permDenied;
+
+    Future<void> refreshAll() async {
+      ref.invalidate(locationStatusProvider);
+      ref.invalidate(locationProvider);
+      ref.invalidate(nearbyProvider);
+      ref.invalidate(topRatedProvider);
+      ref.invalidate(trendingProvider);
+      ref.invalidate(prestigeProvider);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.neutral,
-      body: CustomScrollView(
-        controller: _scrollCtrl,
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildAppBar(),
-          _SearchBarSliver(),
-          _CategoriesSliver(),
-          _SectionHeaderSliver(title: 'Près de vous', action: 'Tout voir', onAction: () => context.push(AppRoutes.salonsNearby)),
-          _SalonListSliver(),
-          _SectionHeaderSliver(title: 'Adresses prestige', action: 'Tout voir', onAction: () => context.push(AppRoutes.salonsPrestige)),
-          _FeaturedSalonSliver(),
-          SliverPadding(padding: EdgeInsets.only(bottom: 100.h)),
-        ],
+      body: RefreshIndicator.adaptive(
+        color: AppColors.primary,
+        onRefresh: refreshAll,
+        child: CustomScrollView(
+          controller: _scrollCtrl,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            _buildAppBar(),
+            _SearchBarSliver(),
+            _CategoriesSliver(),
+
+            // Location permission banner
+            if (showBanner)
+              SliverToBoxAdapter(
+                child: _LocationBanner(
+                  onDismiss: () =>
+                      ref.read(locationBannerDismissedProvider.notifier).state =
+                          true,
+                  onEnable: () async {
+                    final granted = await context.push<bool>(
+                      AppRoutes.locationPermission,
+                    );
+                    if (granted == true) {
+                      ref.invalidate(nearbyProvider);
+                    }
+                    ref.read(locationBannerDismissedProvider.notifier).state =
+                        true;
+                  },
+                ),
+              ),
+
+            // Nearby — only when location is available or loading
+            if (hasNearby || locationPending) ...[
+              _SectionHeaderSliver(
+                title: 'Près de vous',
+                action: 'Tout voir',
+                onAction: () => context.push(AppRoutes.salonsNearby),
+              ),
+              _SalonListSliver(
+                salonsAsync: nearbyAsync,
+                take: 3,
+                showDistance: true,
+                onRetry: refreshAll,
+              ),
+            ],
+
+            // Prestige — always #2 (or #1 when no nearby)
+            if (prestigeAsync.valueOrNull?.isNotEmpty == true ||
+                prestigeAsync.isLoading) ...[
+              _SectionHeaderSliver(
+                title: 'Adresses prestige',
+                action: 'Tout voir',
+                onAction: () => context.push(AppRoutes.salonsPrestige),
+              ),
+              _FeaturedSalonSliver(salonsAsync: prestigeAsync),
+            ],
+
+            // Top-rated — always visible
+            _SectionHeaderSliver(
+              title: 'Les mieux notés',
+              action: 'Tout voir',
+              onAction: () => context.push(AppRoutes.salonsTopRated),
+            ),
+            _SalonListSliver(
+              salonsAsync: topRatedAsync,
+              take: 3,
+              showDistance: false,
+              onRetry: refreshAll,
+            ),
+
+            // Trending — horizontal carousel (distinct card style)
+            _SectionHeaderSliver(
+              title: 'Tendance',
+              action: 'Tout voir',
+              onAction: () => context.push(AppRoutes.salonsTrending),
+            ),
+            _TrendingSalonSliver(salonsAsync: trendingAsync),
+
+            SliverPadding(padding: EdgeInsets.only(bottom: 100.h)),
+          ],
+        ),
       ),
     );
   }
@@ -75,8 +170,11 @@ class _HomePageState extends State<HomePage> {
     final iconOnExpanded = Colors.white;
     final iconOnCollapsed = AppColors.onSurface;
     final adaptiveIconColor = _iconColor(iconOnExpanded, iconOnCollapsed);
-    final appBarBg = Color.lerp(Colors.transparent, AppColors.surface, _collapseRatio)!;
-    final titleOpacity = _collapseRatio;
+    final appBarBg = Color.lerp(
+      Colors.transparent,
+      AppColors.surface,
+      _collapseRatio,
+    )!;
 
     return SliverAppBar(
       expandedHeight: _heroHeight.h,
@@ -85,13 +183,12 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: appBarBg,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      // Logo — white backdrop ring fades away as page collapses
       leading: Padding(
         padding: EdgeInsets.all(10.r),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity((1 - _collapseRatio) * 0.18),
+            color: Colors.white.withValues(alpha: (1 - _collapseRatio) * 0.18),
             shape: BoxShape.circle,
           ),
           child: Image.asset('assets/logo.png', fit: BoxFit.contain),
@@ -108,9 +205,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
-      // Title slides in as we collapse
       title: Opacity(
-        opacity: titleOpacity,
+        opacity: _collapseRatio,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -130,10 +226,10 @@ class _HomePageState extends State<HomePage> {
             fit: StackFit.expand,
             children: [
               CachedNetworkImage(
-                imageUrl: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=1200',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=1200',
                 fit: BoxFit.cover,
               ),
-              // Progressive dark gradient — ensures text is ALWAYS readable
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -141,15 +237,14 @@ class _HomePageState extends State<HomePage> {
                     end: Alignment.bottomCenter,
                     stops: const [0.0, 0.35, 0.65, 1.0],
                     colors: [
-                      Colors.black.withOpacity(0.42),
+                      Colors.black.withValues(alpha: 0.42),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.50),
-                      Colors.black.withOpacity(0.80),
+                      Colors.black.withValues(alpha: 0.50),
+                      Colors.black.withValues(alpha: 0.80),
                     ],
                   ),
                 ),
               ),
-              // Hero text
               Positioned(
                 bottom: 52.h,
                 left: 24.w,
@@ -171,14 +266,16 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white,
                         height: 1.1,
                         shadows: [
-                          Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 8),
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              // Rounded scoop transition
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -187,7 +284,9 @@ class _HomePageState extends State<HomePage> {
                   height: 32.r,
                   decoration: BoxDecoration(
                     color: AppColors.neutral,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28.r),
+                    ),
                   ),
                 ),
               ),
@@ -200,7 +299,71 @@ class _HomePageState extends State<HomePage> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Adaptive icon button (glass bg when over image, plain when collapsed)
+// Location permission banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LocationBanner extends StatelessWidget {
+  const _LocationBanner({required this.onDismiss, required this.onEnable});
+  final VoidCallback onDismiss;
+  final VoidCallback onEnable;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 4.h),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            AppIcon('map-pin', size: 18, color: AppColors.primary),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                'Activez la localisation pour voir les salons près de vous',
+                style: AppTextStyles.bodySm.copyWith(color: AppColors.primary),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            GestureDetector(
+              onTap: onEnable,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  'Activer',
+                  style: AppTextStyles.labelSm.copyWith(
+                    color: Colors.white,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 6.w),
+            GestureDetector(
+              onTap: onDismiss,
+              child: AppIcon(
+                'close',
+                size: 16,
+                color: AppColors.primary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Adaptive icon button
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AdaptiveIconButton extends StatelessWidget {
@@ -225,10 +388,12 @@ class _AdaptiveIconButton extends StatelessWidget {
         width: 38.r,
         height: 38.r,
         decoration: BoxDecoration(
-          color: hasBg ? Colors.white.withOpacity(0.2) : Colors.transparent,
+          color: hasBg
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.transparent,
           shape: BoxShape.circle,
           border: hasBg
-              ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+              ? Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1)
               : null,
         ),
         child: Center(child: AppIcon(icon, size: 20, color: color)),
@@ -263,11 +428,16 @@ class _SearchBarSliver extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Salon, prestation, quartier...',
-                    style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+                    style: AppTextStyles.bodyMd.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primaryLight,
                     borderRadius: BorderRadius.circular(12.r),
@@ -277,9 +447,13 @@ class _SearchBarSliver extends StatelessWidget {
                     children: [
                       AppIcon('filter', size: 14, color: AppColors.primary),
                       SizedBox(width: 4.w),
-                      Text('Filtrer',
-                          style: AppTextStyles.labelSm.copyWith(
-                              color: AppColors.primary, fontSize: 11.sp)),
+                      Text(
+                        'Filtrer',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 11.sp,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -338,12 +512,22 @@ class _CategoriesSliverState extends State<_CategoriesSliver> {
                 ),
                 child: Row(
                   children: [
-                    AppIcon(cat.icon, size: 14,
-                        color: isActive ? AppColors.surface : AppColors.onSurfaceVariant),
+                    AppIcon(
+                      cat.icon,
+                      size: 14,
+                      color: isActive
+                          ? AppColors.surface
+                          : AppColors.onSurfaceVariant,
+                    ),
                     SizedBox(width: 6.w),
-                    Text(cat.label,
-                        style: AppTextStyles.labelMd.copyWith(
-                            color: isActive ? AppColors.surface : AppColors.onSurface)),
+                    Text(
+                      cat.label,
+                      style: AppTextStyles.labelMd.copyWith(
+                        color: isActive
+                            ? AppColors.surface
+                            : AppColors.onSurface,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -365,8 +549,11 @@ class _Category {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionHeaderSliver extends StatelessWidget {
-  const _SectionHeaderSliver(
-      {required this.title, required this.action, required this.onAction});
+  const _SectionHeaderSliver({
+    required this.title,
+    required this.action,
+    required this.onAction,
+  });
   final String title, action;
   final VoidCallback onAction;
 
@@ -381,8 +568,10 @@ class _SectionHeaderSliver extends StatelessWidget {
             Text(title, style: AppTextStyles.headlineMd),
             GestureDetector(
               onTap: onAction,
-              child: Text(action,
-                  style: AppTextStyles.labelMd.copyWith(color: AppColors.primary)),
+              child: Text(
+                action,
+                style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
+              ),
             ),
           ],
         ),
@@ -392,51 +581,90 @@ class _SectionHeaderSliver extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Nearby list
+// Generic salon list sliver (nearby / top-rated / trending)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SalonListSliver extends StatelessWidget {
+  const _SalonListSliver({
+    required this.salonsAsync,
+    required this.take,
+    required this.showDistance,
+    required this.onRetry,
+  });
+
+  final AsyncValue<List<SalonSummaryListResponseItemsInner>?> salonsAsync;
+  final int take;
+  final bool showDistance;
+  final Future<void> Function() onRetry;
+
   @override
   Widget build(BuildContext context) {
-    return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      sliver: SliverList.separated(
-        itemCount: 3,
-        separatorBuilder: (_, __) => SizedBox(height: 12.h),
-        itemBuilder: (context, i) => RepaintBoundary(
-          child: _SalonListCard(
-            name: i == 0 ? 'Maison Kinka' : i == 1 ? 'Studio Élégance' : 'Belle & Co',
-            category: i == 0 ? 'Coiffure & Spa' : i == 1 ? 'Esthétique' : 'Ongles & Beauté',
-            location: 'Almadies, Dakar',
-            rating: i == 0 ? '4.9' : i == 1 ? '4.7' : '4.8',
-            reviews: i == 0 ? '128' : i == 1 ? '94' : '76',
-            imageUrl: i == 0
-                ? 'https://images.unsplash.com/photo-1600948836101-f9ff15e720f7?q=80&w=600'
-                : 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=600',
-            onTap: () => context.push(AppRoutes.salon('$i')),
+    return salonsAsync.when(
+      loading: () => SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 24.h),
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (error, _) => SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 8.h),
+          child: AppErrorState(
+            error: error,
+            fallbackTitle: 'Impossible de charger les salons',
+            serverTitle: 'Le catalogue est indisponible',
+            onRetry: onRetry,
+            compact: true,
           ),
         ),
       ),
+      data: (list) {
+        final items = (list ?? []).take(take).toList();
+        if (items.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text('Aucun salon trouvé.'),
+            ),
+          );
+        }
+        return SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          sliver: SliverList.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, __) => SizedBox(height: 12.h),
+            itemBuilder: (context, i) {
+              final salon = items[i];
+              return RepaintBoundary(
+                child: _SalonListCard(
+                  salon: salon,
+                  showDistance: showDistance,
+                  onTap: () => context.push(AppRoutes.salon(salon.id)),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
 
 class _SalonListCard extends StatelessWidget {
   const _SalonListCard({
-    required this.name,
-    required this.category,
-    required this.location,
-    required this.rating,
-    required this.reviews,
-    required this.imageUrl,
+    required this.salon,
+    required this.showDistance,
     required this.onTap,
   });
 
-  final String name, category, location, rating, reviews, imageUrl;
+  final SalonSummaryListResponseItemsInner salon;
+  final bool showDistance;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final badge = showDistance ? distanceBadge(salon) : null;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -448,9 +676,13 @@ class _SalonListCard extends StatelessWidget {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
+              borderRadius: BorderRadius.horizontal(
+                left: Radius.circular(20.r),
+              ),
               child: CachedNetworkImage(
-                imageUrl: imageUrl,
+                imageUrl:
+                    salon.logoUrl ??
+                    'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=600',
                 width: 96.w,
                 height: 96.w,
                 fit: BoxFit.cover,
@@ -463,33 +695,56 @@ class _SalonListCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(category.toUpperCase(), style: AppTextStyles.overline),
+                    Text(
+                      salon.category.toUpperCase(),
+                      style: AppTextStyles.overline,
+                    ),
                     SizedBox(height: 2.h),
-                    Text(name, style: AppTextStyles.headlineSm),
+                    Text(salon.name, style: AppTextStyles.headlineSm),
                     SizedBox(height: 6.h),
-                    Row(children: [
-                      AppIcon('map-pin', size: 12, color: AppColors.onSurfaceVariant),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                          child: Text(location,
-                              style: AppTextStyles.bodySm,
-                              overflow: TextOverflow.ellipsis)),
-                    ]),
+                    Row(
+                      children: [
+                        AppIcon(
+                          'map-pin',
+                          size: 12,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        SizedBox(width: 3.w),
+                        Expanded(
+                          child: Text(
+                            '${salon.neighborhood ?? ''} ${salon.city}'.trim(),
+                            style: AppTextStyles.bodySm,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: 4.h),
-                    Row(children: [
-                      AppIcon('star', size: 13, color: AppColors.secondary),
-                      SizedBox(width: 3.w),
-                      Text(rating, style: AppTextStyles.labelMd),
-                      SizedBox(width: 4.w),
-                      Text('($reviews)', style: AppTextStyles.bodySm),
-                    ]),
+                    Row(
+                      children: [
+                        AppIcon('star', size: 13, color: AppColors.secondary),
+                        SizedBox(width: 3.w),
+                        Text(
+                          salon.averageRating.toStringAsFixed(1),
+                          style: AppTextStyles.labelMd,
+                        ),
+                        if (badge != null) ...[
+                          SizedBox(width: 10.w),
+                          _DistancePill(label: badge),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
             Padding(
               padding: EdgeInsets.only(right: 16.w),
-              child: AppIcon('chevron-right', size: 18, color: AppColors.outline),
+              child: AppIcon(
+                'chevron-right',
+                size: 18,
+                color: AppColors.outline,
+              ),
             ),
           ],
         ),
@@ -498,36 +753,80 @@ class _SalonListCard extends StatelessWidget {
   }
 }
 
+class _DistancePill extends StatelessWidget {
+  const _DistancePill({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIcon('map-pin', size: 10, color: AppColors.primary),
+          SizedBox(width: 3.w),
+          Text(
+            label,
+            style: AppTextStyles.labelSm.copyWith(
+              color: AppColors.primary,
+              fontSize: 10.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Featured horizontal
+// Prestige horizontal carousel
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _FeaturedSalonSliver extends StatelessWidget {
+  const _FeaturedSalonSliver({required this.salonsAsync});
+
+  final AsyncValue<List<SalonSummaryListResponseItemsInner>> salonsAsync;
+
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 280.h,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          itemCount: 3,
-          separatorBuilder: (_, __) => SizedBox(width: 14.w),
-          itemBuilder: (context, i) => RepaintBoundary(
-            child: _FeaturedCard(
-              name: i == 0 ? 'Maison Kinka' : i == 1 ? 'Le Loft Dakar' : 'Salon Prestige',
-              tag: i == 0 ? 'Coup de cœur' : i == 1 ? 'Nouveau' : 'Premium',
-              imageUrl: i == 0
-                  ? 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800'
-                  : 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=800',
-              rating: i == 0 ? '4.9' : '4.8',
-              price: 'À partir de 5 000 XOF',
-              onTap: () => context.push(AppRoutes.salon('$i')),
+    return salonsAsync.when(
+      loading: () => SliverToBoxAdapter(child: SizedBox(height: 280.h)),
+      error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      data: (items) {
+        if (items.isEmpty) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+        return SliverToBoxAdapter(
+          child: SizedBox(
+            height: 280.h,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => SizedBox(width: 14.w),
+              itemBuilder: (context, i) {
+                final salon = items[i];
+                return RepaintBoundary(
+                  child: _FeaturedCard(
+                    name: salon.name,
+                    imageUrl:
+                        salon.logoUrl ??
+                        'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800',
+                    rating: salon.averageRating.toStringAsFixed(1),
+                    onTap: () => context.push(AppRoutes.salon(salon.id)),
+                  ),
+                );
+              },
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -535,14 +834,12 @@ class _FeaturedSalonSliver extends StatelessWidget {
 class _FeaturedCard extends StatelessWidget {
   const _FeaturedCard({
     required this.name,
-    required this.tag,
     required this.imageUrl,
     required this.rating,
-    required this.price,
     required this.onTap,
   });
 
-  final String name, tag, imageUrl, rating, price;
+  final String name, imageUrl, rating;
   final VoidCallback onTap;
 
   @override
@@ -560,40 +857,64 @@ class _FeaturedCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(20.r),
-                    child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
-                  ),
-                  Positioned(
-                    top: 12.h, left: 12.w,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Text(tag,
-                          style: AppTextStyles.labelSm.copyWith(fontSize: 10.sp)),
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   Positioned(
-                    top: 12.h, right: 12.w,
+                    top: 12.h,
+                    left: 12.w,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 5.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Text(
+                        'Prestige',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: Colors.white,
+                          fontSize: 10.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12.h,
+                    right: 12.w,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10.r),
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 5.h,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.25),
+                            color: Colors.black.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(10.r),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              AppIcon('star', size: 11, color: AppColors.secondary),
+                              AppIcon(
+                                'star',
+                                size: 11,
+                                color: AppColors.secondary,
+                              ),
                               SizedBox(width: 3.w),
-                              Text(rating,
-                                  style: AppTextStyles.labelSm.copyWith(
-                                      color: Colors.white, fontSize: 11.sp)),
+                              Text(
+                                rating,
+                                style: AppTextStyles.labelSm.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 11.sp,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -601,16 +922,23 @@ class _FeaturedCard extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    bottom: 12.h, right: 12.w,
+                    bottom: 12.h,
+                    right: 12.w,
                     child: Container(
-                      width: 34.r, height: 34.r,
+                      width: 34.r,
+                      height: 34.r,
                       decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: AppShadows.sm),
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: AppShadows.sm,
+                      ),
                       child: Center(
-                          child: AppIcon('heart', size: 16,
-                              color: AppColors.onSurfaceVariant)),
+                        child: AppIcon(
+                          'heart',
+                          size: 16,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -619,8 +947,170 @@ class _FeaturedCard extends StatelessWidget {
             SizedBox(height: 10.h),
             Text(name, style: AppTextStyles.headlineSm),
             SizedBox(height: 3.h),
-            Text(price, style: AppTextStyles.bodySm),
+            Text('Prestige', style: AppTextStyles.bodySm),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Trending horizontal carousel (compact landscape cards)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TrendingSalonSliver extends StatelessWidget {
+  const _TrendingSalonSliver({required this.salonsAsync});
+
+  final AsyncValue<List<SalonSummaryListResponseItemsInner>> salonsAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    return salonsAsync.when(
+      loading: () => SliverToBoxAdapter(child: SizedBox(height: 170.h)),
+      error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      data: (items) {
+        if (items.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+        return SliverToBoxAdapter(
+          child: SizedBox(
+            height: 170.h,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => SizedBox(width: 12.w),
+              itemBuilder: (context, i) {
+                final salon = items[i];
+                return RepaintBoundary(
+                  child: _TrendingCard(
+                    salon: salon,
+                    rank: i + 1,
+                    onTap: () => context.push(AppRoutes.salon(salon.id)),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TrendingCard extends StatelessWidget {
+  const _TrendingCard({
+    required this.salon,
+    required this.rank,
+    required this.onTap,
+  });
+
+  final SalonSummaryListResponseItemsInner salon;
+  final int rank;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 260.w,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(18.r),
+            boxShadow: AppShadows.card,
+          ),
+          child: Row(
+            children: [
+              // Image — square left panel
+              ClipRRect(
+                borderRadius: BorderRadius.horizontal(left: Radius.circular(18.r)),
+                child: Stack(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: salon.logoUrl ??
+                          'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=600',
+                      width: 110.w,
+                      height: 170.h,
+                      fit: BoxFit.cover,
+                    ),
+                    // Rank badge
+                    Positioned(
+                      top: 10.h,
+                      left: 10.w,
+                      child: Container(
+                        width: 28.r,
+                        height: 28.r,
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '#$rank',
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Info — right panel
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        salon.category.toUpperCase(),
+                        style: AppTextStyles.overline,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        salon.name,
+                        style: AppTextStyles.headlineSm,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 6.h),
+                      Row(
+                        children: [
+                          AppIcon('map-pin', size: 11, color: AppColors.onSurfaceVariant),
+                          SizedBox(width: 3.w),
+                          Expanded(
+                            child: Text(
+                              '${salon.neighborhood ?? ''} ${salon.city}'.trim(),
+                              style: AppTextStyles.bodySm,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          AppIcon('star', size: 12, color: AppColors.secondary),
+                          SizedBox(width: 3.w),
+                          Text(
+                            salon.averageRating.toStringAsFixed(1),
+                            style: AppTextStyles.labelMd,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/storage_keys.dart';
+import '../network/connectivity_provider.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage.dart';
 
@@ -49,20 +50,20 @@ class SessionState {
 
 // ── Providers ─────────────────────────────────────────────────────────────
 
-final secureStorageProvider = Provider<SecureStorage>(
-  (ref) => SecureStorage(),
-);
+final secureStorageProvider = Provider<SecureStorage>((ref) => SecureStorage());
 
 final dioProvider = Provider<Dio>((ref) {
   final storage = ref.watch(secureStorageProvider);
-  return createDio(storage);
+  final dio = createDio(storage);
+  final reachability = ref.read(networkReachabilityProvider.notifier);
+  dio.interceptors.add(_ReachabilityInterceptor(reachability));
+  return dio;
 });
 
-final sessionProvider =
-    StateNotifierProvider<SessionNotifier, SessionState>((ref) {
-  return SessionNotifier(
-    storage: ref.watch(secureStorageProvider),
-  );
+final sessionProvider = StateNotifierProvider<SessionNotifier, SessionState>((
+  ref,
+) {
+  return SessionNotifier(storage: ref.watch(secureStorageProvider));
 });
 
 // ── Notifier ──────────────────────────────────────────────────────────────
@@ -75,10 +76,10 @@ class SessionNotifier extends StateNotifier<SessionState> {
   Future<void> restore() async {
     state = state.copyWith(isRestoring: true);
     try {
-      final access  = await storage.read(StorageKeys.accessToken);
+      final access = await storage.read(StorageKeys.accessToken);
       final refresh = await storage.read(StorageKeys.refreshToken);
-      final userId  = await storage.read(StorageKeys.userId);
-      final role    = await storage.read(StorageKeys.userRole);
+      final userId = await storage.read(StorageKeys.userId);
+      final role = await storage.read(StorageKeys.userRole);
 
       if (access != null && userId != null) {
         state = SessionState(
@@ -117,5 +118,37 @@ class SessionNotifier extends StateNotifier<SessionState> {
   Future<void> logout() async {
     await storage.deleteAll();
     state = const SessionState();
+  }
+}
+
+class _ReachabilityInterceptor extends Interceptor {
+  _ReachabilityInterceptor(this._reachability);
+
+  final NetworkReachabilityNotifier _reachability;
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    _reachability.markReachable();
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    switch (err.type) {
+      case DioExceptionType.connectionError:
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        _reachability.markConnectionFailure();
+        break;
+      case DioExceptionType.badResponse:
+        _reachability.markReachable();
+        break;
+      case DioExceptionType.cancel:
+      case DioExceptionType.badCertificate:
+      case DioExceptionType.unknown:
+        break;
+    }
+    handler.next(err);
   }
 }

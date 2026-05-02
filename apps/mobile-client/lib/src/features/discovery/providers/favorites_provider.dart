@@ -62,12 +62,14 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
       }
     } catch (_) {
       // Roll back optimistic update on failure
-      state = state.copyWith(salonIds: isFav ? {...updated, salonId} : (updated..remove(salonId)));
+      state = state.copyWith(
+        salonIds: isFav ? {...updated, salonId} : (updated..remove(salonId)),
+      );
     }
   }
 }
 
 final favoritesProvider =
     StateNotifierProvider<FavoritesNotifier, FavoritesState>((ref) {
-  return FavoritesNotifier(ref);
-});
+      return FavoritesNotifier(ref);
+    });

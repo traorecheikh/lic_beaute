@@ -56,6 +56,20 @@ export class NotificationController {
     }
   }
 
+  async markAllRead(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      await prisma.notification.updateMany({
+        where: { userId: session.sub, readAt: null },
+        data: { readAt: new Date() }
+      });
+      ok(reply, { updated: true });
+    } catch (error) {
+      if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      fail(reply, 500, "internal_error", "Erreur interne.");
+    }
+  }
+
   async registerPushToken(request: FastifyRequest, reply: FastifyReply) {
     try {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);

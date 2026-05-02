@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../constants/storage_keys.dart';
 import '../env/app_env.dart';
@@ -18,7 +19,16 @@ Dio createDio(SecureStorage secureStorage) {
   dio.interceptors.addAll([
     _AuthInterceptor(secureStorage: secureStorage, dio: dio),
     if (kDebugMode)
-      LogInterceptor(requestBody: true, responseBody: true, logPrint: (o) => debugPrint(o.toString())),
+      PrettyDioLogger(
+        requestHeader: false,
+        requestBody: true,
+        responseHeader: false,
+        responseBody: true,
+        error: true,
+        compact: true,
+        maxWidth: 120,
+        logPrint: (o) => debugPrint(o.toString()),
+      ),
   ]);
 
   return dio;
@@ -31,7 +41,8 @@ class _AuthInterceptor extends Interceptor {
   final Dio dio;
 
   bool _isRefreshing = false;
-  final List<({RequestOptions options, ErrorInterceptorHandler handler})> _queue = [];
+  final List<({RequestOptions options, ErrorInterceptorHandler handler})>
+  _queue = [];
 
   @override
   Future<void> onRequest(
@@ -55,7 +66,8 @@ class _AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode != 401 || _isAuthPath(err.requestOptions.path)) {
+    if (err.response?.statusCode != 401 ||
+        _isAuthPath(err.requestOptions.path)) {
       handler.next(err);
       return;
     }

@@ -14,6 +14,10 @@ export class MediaController {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
       const data = await request.file();
       if (!data) { fail(reply, 400, "no_file", "Aucun fichier reçu."); return; }
+      if (!data.mimetype.startsWith("image/")) {
+        fail(reply, 422, "invalid_media_type", "Seules les images sont acceptées.");
+        return;
+      }
 
       const ext = extname(data.filename) || ".bin";
       const objectKey = `uploads/${randomUUID()}${ext}`;

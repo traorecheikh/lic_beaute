@@ -91,14 +91,14 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceVariant,
+        fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg.r),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: AppColors.outlineVariant),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg.r),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: AppColors.outlineVariant),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg.r),
@@ -113,7 +113,9 @@ abstract final class AppTheme {
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
-        hintStyle: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        hintStyle: AppTextStyles.bodyMd.copyWith(
+          color: AppColors.onSurfaceVariant,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.neutral,
@@ -147,7 +149,9 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.onSurface,
-        contentTextStyle: AppTextStyles.bodyMd.copyWith(color: AppColors.surface),
+        contentTextStyle: AppTextStyles.bodyMd.copyWith(
+          color: AppColors.surface,
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg.r),
@@ -194,8 +198,13 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTextStyles.headlineMd.copyWith(color: AppColors.darkOnSurface),
-        iconTheme: const IconThemeData(color: AppColors.darkOnSurface, size: 22),
+        titleTextStyle: AppTextStyles.headlineMd.copyWith(
+          color: AppColors.darkOnSurface,
+        ),
+        iconTheme: const IconThemeData(
+          color: AppColors.darkOnSurface,
+          size: 22,
+        ),
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       cardTheme: CardThemeData(

@@ -12,21 +12,22 @@ part 'booking_summary.g.dart';
 /// BookingSummary
 ///
 /// Properties:
-/// * [id] 
-/// * [salonId] 
-/// * [salonName] 
-/// * [serviceId] 
-/// * [serviceName] 
-/// * [startsAt] 
-/// * [endsAt] 
-/// * [status] 
-/// * [source_] 
-/// * [depositAmountXof] 
-/// * [depositPaymentStatus] 
-/// * [paymentProvider] 
-/// * [paymentId] 
+/// * [id]
+/// * [salonId]
+/// * [salonName]
+/// * [serviceId]
+/// * [serviceName]
+/// * [startsAt]
+/// * [endsAt]
+/// * [status]
+/// * [source_]
+/// * [depositAmountXof]
+/// * [depositPaymentStatus]
+/// * [paymentProvider]
+/// * [paymentId]
 @BuiltValue()
-abstract class BookingSummary implements Built<BookingSummary, BookingSummaryBuilder> {
+abstract class BookingSummary
+    implements Built<BookingSummary, BookingSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -71,16 +72,19 @@ abstract class BookingSummary implements Built<BookingSummary, BookingSummaryBui
 
   BookingSummary._();
 
-  factory BookingSummary([void updates(BookingSummaryBuilder b)]) = _$BookingSummary;
+  factory BookingSummary([void updates(BookingSummaryBuilder b)]) =
+      _$BookingSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BookingSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BookingSummary> get serializer => _$BookingSummarySerializer();
+  static Serializer<BookingSummary> get serializer =>
+      _$BookingSummarySerializer();
 }
 
-class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> {
+class _$BookingSummarySerializer
+    implements PrimitiveSerializer<BookingSummary> {
   @override
   final Iterable<Type> types = const [BookingSummary, _$BookingSummary];
 
@@ -148,15 +152,20 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
       specifiedType: const FullType(BookingSummaryDepositPaymentStatusEnum),
     );
     yield r'paymentProvider';
-    yield object.paymentProvider == null ? null : serializers.serialize(
-      object.paymentProvider,
-      specifiedType: const FullType.nullable(BookingSummaryPaymentProviderEnum),
-    );
+    yield object.paymentProvider == null
+        ? null
+        : serializers.serialize(
+            object.paymentProvider,
+            specifiedType:
+                const FullType.nullable(BookingSummaryPaymentProviderEnum),
+          );
     yield r'paymentId';
-    yield object.paymentId == null ? null : serializers.serialize(
-      object.paymentId,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.paymentId == null
+        ? null
+        : serializers.serialize(
+            object.paymentId,
+            specifiedType: const FullType.nullable(String),
+          );
   }
 
   @override
@@ -165,7 +174,9 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
     BookingSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -253,14 +264,16 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
         case r'depositPaymentStatus':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BookingSummaryDepositPaymentStatusEnum),
+            specifiedType:
+                const FullType(BookingSummaryDepositPaymentStatusEnum),
           ) as BookingSummaryDepositPaymentStatusEnum;
           result.depositPaymentStatus = valueDes;
           break;
         case r'paymentProvider':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BookingSummaryPaymentProviderEnum),
+            specifiedType:
+                const FullType.nullable(BookingSummaryPaymentProviderEnum),
           ) as BookingSummaryPaymentProviderEnum?;
           if (valueDes == null) continue;
           result.paymentProvider = valueDes;
@@ -303,59 +316,76 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
 }
 
 class BookingSummaryStatusEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'pending')
-  static const BookingSummaryStatusEnum pending = _$bookingSummaryStatusEnum_pending;
+  static const BookingSummaryStatusEnum pending =
+      _$bookingSummaryStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const BookingSummaryStatusEnum confirmed = _$bookingSummaryStatusEnum_confirmed;
+  static const BookingSummaryStatusEnum confirmed =
+      _$bookingSummaryStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const BookingSummaryStatusEnum inProgress = _$bookingSummaryStatusEnum_inProgress;
+  static const BookingSummaryStatusEnum inProgress =
+      _$bookingSummaryStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const BookingSummaryStatusEnum completed = _$bookingSummaryStatusEnum_completed;
+  static const BookingSummaryStatusEnum completed =
+      _$bookingSummaryStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const BookingSummaryStatusEnum cancelled = _$bookingSummaryStatusEnum_cancelled;
+  static const BookingSummaryStatusEnum cancelled =
+      _$bookingSummaryStatusEnum_cancelled;
 
-  static Serializer<BookingSummaryStatusEnum> get serializer => _$bookingSummaryStatusEnumSerializer;
+  static Serializer<BookingSummaryStatusEnum> get serializer =>
+      _$bookingSummaryStatusEnumSerializer;
 
-  const BookingSummaryStatusEnum._(String name): super(name);
+  const BookingSummaryStatusEnum._(String name) : super(name);
 
-  static BuiltSet<BookingSummaryStatusEnum> get values => _$bookingSummaryStatusEnumValues;
-  static BookingSummaryStatusEnum valueOf(String name) => _$bookingSummaryStatusEnumValueOf(name);
+  static BuiltSet<BookingSummaryStatusEnum> get values =>
+      _$bookingSummaryStatusEnumValues;
+  static BookingSummaryStatusEnum valueOf(String name) =>
+      _$bookingSummaryStatusEnumValueOf(name);
 }
 
 class BookingSummaryDepositPaymentStatusEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'pending')
-  static const BookingSummaryDepositPaymentStatusEnum pending = _$bookingSummaryDepositPaymentStatusEnum_pending;
+  static const BookingSummaryDepositPaymentStatusEnum pending =
+      _$bookingSummaryDepositPaymentStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'authorized')
-  static const BookingSummaryDepositPaymentStatusEnum authorized = _$bookingSummaryDepositPaymentStatusEnum_authorized;
+  static const BookingSummaryDepositPaymentStatusEnum authorized =
+      _$bookingSummaryDepositPaymentStatusEnum_authorized;
   @BuiltValueEnumConst(wireName: r'succeeded')
-  static const BookingSummaryDepositPaymentStatusEnum succeeded = _$bookingSummaryDepositPaymentStatusEnum_succeeded;
+  static const BookingSummaryDepositPaymentStatusEnum succeeded =
+      _$bookingSummaryDepositPaymentStatusEnum_succeeded;
   @BuiltValueEnumConst(wireName: r'failed')
-  static const BookingSummaryDepositPaymentStatusEnum failed = _$bookingSummaryDepositPaymentStatusEnum_failed;
+  static const BookingSummaryDepositPaymentStatusEnum failed =
+      _$bookingSummaryDepositPaymentStatusEnum_failed;
   @BuiltValueEnumConst(wireName: r'refunded')
-  static const BookingSummaryDepositPaymentStatusEnum refunded = _$bookingSummaryDepositPaymentStatusEnum_refunded;
+  static const BookingSummaryDepositPaymentStatusEnum refunded =
+      _$bookingSummaryDepositPaymentStatusEnum_refunded;
 
-  static Serializer<BookingSummaryDepositPaymentStatusEnum> get serializer => _$bookingSummaryDepositPaymentStatusEnumSerializer;
+  static Serializer<BookingSummaryDepositPaymentStatusEnum> get serializer =>
+      _$bookingSummaryDepositPaymentStatusEnumSerializer;
 
-  const BookingSummaryDepositPaymentStatusEnum._(String name): super(name);
+  const BookingSummaryDepositPaymentStatusEnum._(String name) : super(name);
 
-  static BuiltSet<BookingSummaryDepositPaymentStatusEnum> get values => _$bookingSummaryDepositPaymentStatusEnumValues;
-  static BookingSummaryDepositPaymentStatusEnum valueOf(String name) => _$bookingSummaryDepositPaymentStatusEnumValueOf(name);
+  static BuiltSet<BookingSummaryDepositPaymentStatusEnum> get values =>
+      _$bookingSummaryDepositPaymentStatusEnumValues;
+  static BookingSummaryDepositPaymentStatusEnum valueOf(String name) =>
+      _$bookingSummaryDepositPaymentStatusEnumValueOf(name);
 }
 
 class BookingSummaryPaymentProviderEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'wave')
-  static const BookingSummaryPaymentProviderEnum wave = _$bookingSummaryPaymentProviderEnum_wave;
+  static const BookingSummaryPaymentProviderEnum wave =
+      _$bookingSummaryPaymentProviderEnum_wave;
   @BuiltValueEnumConst(wireName: r'orange_money')
-  static const BookingSummaryPaymentProviderEnum orangeMoney = _$bookingSummaryPaymentProviderEnum_orangeMoney;
+  static const BookingSummaryPaymentProviderEnum orangeMoney =
+      _$bookingSummaryPaymentProviderEnum_orangeMoney;
 
-  static Serializer<BookingSummaryPaymentProviderEnum> get serializer => _$bookingSummaryPaymentProviderEnumSerializer;
+  static Serializer<BookingSummaryPaymentProviderEnum> get serializer =>
+      _$bookingSummaryPaymentProviderEnumSerializer;
 
-  const BookingSummaryPaymentProviderEnum._(String name): super(name);
+  const BookingSummaryPaymentProviderEnum._(String name) : super(name);
 
-  static BuiltSet<BookingSummaryPaymentProviderEnum> get values => _$bookingSummaryPaymentProviderEnumValues;
-  static BookingSummaryPaymentProviderEnum valueOf(String name) => _$bookingSummaryPaymentProviderEnumValueOf(name);
+  static BuiltSet<BookingSummaryPaymentProviderEnum> get values =>
+      _$bookingSummaryPaymentProviderEnumValues;
+  static BookingSummaryPaymentProviderEnum valueOf(String name) =>
+      _$bookingSummaryPaymentProviderEnumValueOf(name);
 }
-

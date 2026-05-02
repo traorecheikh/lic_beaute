@@ -4,14 +4,12 @@
 
 import 'dart:async';
 
-import 'package:built_value/json_object.dart';
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 
 import 'package:beauteavenue_api/src/model/health_get200_response.dart';
 
 class HealthApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -19,7 +17,7 @@ class HealthApi {
   const HealthApi(this._dio, this._serializers);
 
   /// Healthcheck
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -31,7 +29,7 @@ class HealthApi {
   ///
   /// Returns a [Future] containing a [Response] with a [HealthGet200Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<HealthGet200Response>> healthGet({ 
+  Future<Response<HealthGet200Response>> healthGet({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -64,11 +62,12 @@ class HealthApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(HealthGet200Response),
-      ) as HealthGet200Response;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(HealthGet200Response),
+            ) as HealthGet200Response;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -90,5 +89,4 @@ class HealthApi {
       extra: _response.extra,
     );
   }
-
 }

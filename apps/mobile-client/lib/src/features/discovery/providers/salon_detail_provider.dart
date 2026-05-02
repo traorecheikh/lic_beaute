@@ -1,29 +1,110 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'package:built_value/serializer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/storage_keys.dart';
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/storage/app_model_cache.dart';
 import '../../../core/session/session_store.dart';
+import 'cached_resource.dart';
 
-final salonDetailProvider =
-    FutureProvider.family<SalonDetail?, String>((ref, salonId) async {
+final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
+  ref,
+  salonId,
+) async {
   final api = ref.read(apiClientProvider).getSalonsApi();
-  final response = await api.apiV1SalonsIdGet(id: salonId);
-  return response.data;
+  final cacheKey = '${StorageKeys.salonDetailKeyPrefix}$salonId';
+  try {
+    final response = await api.apiV1SalonsIdGet(id: salonId);
+    final data = response.data;
+    if (data != null) {
+      await AppModelCache.putModel<SalonDetail>(
+        StorageKeys.salonCacheBox,
+        cacheKey,
+        data,
+        const FullType(SalonDetail),
+      );
+    }
+    return data;
+  } catch (_) {
+    final cached = AppModelCache.getModel<SalonDetail>(
+      StorageKeys.salonCacheBox,
+      cacheKey,
+      const FullType(SalonDetail),
+    );
+    if (cached != null) {
+      return cached;
+    }
+    rethrow;
+  }
 });
+
+final salonDetailResourceProvider =
+    FutureProvider.family<CachedResource<SalonDetail>, String>((
+      ref,
+      salonId,
+    ) async {
+      final api = ref.read(apiClientProvider).getSalonsApi();
+      final cacheKey = '${StorageKeys.salonDetailKeyPrefix}$salonId';
+      try {
+        final response = await api.apiV1SalonsIdGet(id: salonId);
+        final data = response.data;
+        DateTime? cachedAt;
+        if (data != null) {
+          await AppModelCache.putModel<SalonDetail>(
+            StorageKeys.salonCacheBox,
+            cacheKey,
+            data,
+            const FullType(SalonDetail),
+          );
+          cachedAt = AppModelCache.getCachedAt(
+            StorageKeys.salonCacheBox,
+            cacheKey,
+          );
+        }
+        return CachedResource(data: data, isStale: false, cachedAt: cachedAt);
+      } catch (_) {
+        final cached = AppModelCache.getModel<SalonDetail>(
+          StorageKeys.salonCacheBox,
+          cacheKey,
+          const FullType(SalonDetail),
+        );
+        if (cached != null) {
+          return CachedResource(
+            data: cached,
+            isStale: true,
+            cachedAt: AppModelCache.getCachedAt(
+              StorageKeys.salonCacheBox,
+              cacheKey,
+            ),
+          );
+        }
+        rethrow;
+      }
+    });
 
 final salonAvailabilityProvider =
-    FutureProvider.family<List<dynamic>, ({String salonId, String date})>(
-        (ref, params) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get<List<dynamic>>(
-    '/api/v1/salons/${params.salonId}/availability',
-    queryParameters: {'date': params.date},
-  );
-  return response.data ?? [];
-});
+    FutureProvider.family<
+      List<dynamic>,
+      ({String salonId, String date, String serviceId, String? employeeId})
+    >((ref, params) async {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get<List<dynamic>>(
+        '/api/v1/salons/${params.salonId}/availability',
+        queryParameters: {
+          'date': params.date,
+          'serviceId': params.serviceId,
+          if (params.employeeId != null && params.employeeId!.isNotEmpty)
+            'employeeId': params.employeeId,
+        },
+      );
+      return response.data ?? [];
+    });
 
-final salonReviewsProvider =
-    FutureProvider.family<List<dynamic>, String>((ref, salonId) async {
+final salonReviewsProvider = FutureProvider.family<List<dynamic>, String>((
+  ref,
+  salonId,
+) async {
   final dio = ref.read(dioProvider);
   final response = await dio.get<Map<String, dynamic>>(
     '/api/v1/salons/$salonId/reviews',

@@ -9,7 +9,12 @@ abstract final class AppSnackbar {
   /// Green success toast
   static void success(BuildContext context, String message) {
     AppHaptics.medium();
-    _show(context, message, AppColors.success, Icons.check_circle_outline_rounded);
+    _show(
+      context,
+      message,
+      AppColors.success,
+      Icons.check_circle_outline_rounded,
+    );
   }
 
   /// Red error toast
@@ -21,7 +26,12 @@ abstract final class AppSnackbar {
   /// Neutral info toast
   static void info(BuildContext context, String message) {
     AppHaptics.light();
-    _show(context, message, AppColors.onSurfaceVariant, Icons.info_outline_rounded);
+    _show(
+      context,
+      message,
+      AppColors.onSurfaceVariant,
+      Icons.info_outline_rounded,
+    );
   }
 
   /// Destructive confirmation bottom sheet — returns true if confirmed
@@ -51,7 +61,9 @@ abstract final class AppSnackbar {
               SizedBox(height: 8.h),
               Text(
                 body,
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
               SizedBox(height: 24.h),
               SizedBox(
@@ -84,7 +96,12 @@ abstract final class AppSnackbar {
     return result ?? false;
   }
 
-  static void _show(BuildContext context, String message, Color color, IconData icon) {
+  static void _show(
+    BuildContext context,
+    String message,
+    Color color,
+    IconData icon,
+  ) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -92,7 +109,9 @@ abstract final class AppSnackbar {
         margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         backgroundColor: AppColors.onSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.r),
+        ),
         duration: const Duration(seconds: 3),
         content: Row(
           children: [

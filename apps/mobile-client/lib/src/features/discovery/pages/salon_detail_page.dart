@@ -1,513 +1,488 @@
-import 'dart:ui';
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_share.dart';
+import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/salon_map_card.dart';
-import '../../booking/widgets/service_selection_sheet.dart';
+import '../../booking/widgets/booking_funnel_sheet.dart';
+import '../providers/favorites_provider.dart';
+import '../providers/salon_detail_provider.dart';
+import '../widgets/stale_data_notice.dart';
 
-class SalonDetailPage extends StatefulWidget {
+class SalonDetailPage extends ConsumerStatefulWidget {
   const SalonDetailPage({required this.salonId, super.key});
 
   final String salonId;
 
   @override
-  State<SalonDetailPage> createState() => _SalonDetailPageState();
+  ConsumerState<SalonDetailPage> createState() => _SalonDetailPageState();
 }
 
-class _SalonDetailPageState extends State<SalonDetailPage> {
-  bool _isFavorite = false;
+class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
+  final _heroCtrl = PageController();
+  int _heroPage = 0;
 
-  // TODO: replace with salon.gallery from API response
-  static const _mockGallery = [
-    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800',
-    'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=800',
-    'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800',
-    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=80&w=800',
-    'https://images.unsplash.com/photo-1470259078422-826894b933aa?q=80&w=800',
-  ];
+  @override
+  void dispose() {
+    _heroCtrl.dispose();
+    super.dispose();
+  }
 
-  void _showBookingSheet() {
+  void _showBookingSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
-      builder: (_) => ServiceSelectionSheet(salonId: widget.salonId),
+      builder: (_) => BookingFunnelSheet(salonId: widget.salonId),
+    );
+  }
+
+  void _openGallery(BuildContext context, List<String> images, int index) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (_, __, ___) =>
+            _GalleryViewer(images: images, initialIndex: index),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 220),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final detailAsync = ref.watch(salonDetailResourceProvider(widget.salonId));
+    final favorites = ref.watch(favoritesProvider);
+    final isFavorite = favorites.contains(widget.salonId);
+    Future<void> refreshSalon() =>
+        ref.refresh(salonDetailResourceProvider(widget.salonId).future);
+
     return Scaffold(
       backgroundColor: AppColors.neutral,
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              _buildAppBar(),
-              SliverToBoxAdapter(
-                child: _buildContent(),
-              ),
-            ],
-          ),
-          // Bottom CTA
-          Positioned(
-            left: 0, right: 0, bottom: 0,
-            child: _BottomCta(onBook: _showBookingSheet),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 360.h,
-      pinned: true,
-      backgroundColor: AppColors.neutral,
-      elevation: 0,
-      leading: Padding(
-        padding: EdgeInsets.all(8.r),
-        child: _CircleIconBtn(
-          icon: 'arrow-left',
-          onTap: () => Navigator.of(context).pop(),
-        ),
-      ),
-      actions: [
-        Padding(
-          padding: EdgeInsets.only(right: 8.w),
-          child: _CircleIconBtn(
-            icon: 'share',
-            onTap: () {
-              AppHaptics.light();
-              AppShare.text(
-                '✨ Découvrez Maison Kinka sur Beauté Avenue !\n'
-                '📍 Almadies, Dakar\n'
-                '⭐ 4.9 · 128 avis\n\n'
-                'Réservez sur Beauté Avenue 💅',
-              );
-            },
+      body: detailAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Padding(
+          padding: EdgeInsets.all(24.r),
+          child: AppErrorState(
+            error: error,
+            fallbackTitle: 'Impossible de charger le salon',
+            serverTitle: 'La fiche salon est indisponible',
+            onRetry: refreshSalon,
           ),
         ),
-        Padding(
-          padding: EdgeInsets.only(right: 16.w),
-          child: _CircleIconBtn(
-            icon: _isFavorite ? 'heart-filled' : 'heart',
-            iconColor: _isFavorite ? AppColors.primary : null,
-            onTap: () => setState(() => _isFavorite = !_isFavorite),
-          ),
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            CachedNetworkImage(
-              imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1000',
-              fit: BoxFit.cover,
-            ),
-            // Bottom fade into page
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.5, 1.0],
-                  colors: [Colors.transparent, AppColors.neutral],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+        data: (resource) {
+          final salon = resource.data;
+          if (salon == null) {
+            return const Center(child: Text('Salon introuvable.'));
+          }
 
-  Widget _buildContent() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 120.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Category chip
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryContainer,
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Text(
-              'COIFFURE & SPA',
-              style: AppTextStyles.overline.copyWith(
-                color: AppColors.onSecondaryContainer,
-              ),
-            ),
-          ),
-          SizedBox(height: 10.h),
+          final galleryList = salon.gallery.toList();
+          final images = galleryList.isNotEmpty
+              ? galleryList
+              : (salon.logoUrl != null && salon.logoUrl!.isNotEmpty
+                    ? [salon.logoUrl!]
+                    : <String>[]);
 
-          // Name
-          Text('Maison Kinka', style: AppTextStyles.displaySm),
-          SizedBox(height: 8.h),
-
-          // Rating + location row
-          Row(
+          return Stack(
             children: [
-              AppIcon('star', size: 15, color: AppColors.secondary),
-              SizedBox(width: 4.w),
-              Text('4.9', style: AppTextStyles.labelLg),
-              Text(' · 128 avis', style: AppTextStyles.bodySm),
-              SizedBox(width: 12.w),
-              AppIcon('map-pin', size: 13, color: AppColors.onSurfaceVariant),
-              SizedBox(width: 3.w),
-              Expanded(
-                child: Text(
-                  'Almadies, Dakar',
-                  style: AppTextStyles.bodySm,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-
-          // Quick stats
-          _QuickStats(),
-          SizedBox(height: 24.h),
-
-          // About
-          Text('À propos', style: AppTextStyles.headlineMd),
-          SizedBox(height: 10.h),
-          Text(
-            'Une expérience de beauté unique au cœur de Dakar. Maison Kinka allie artisanat traditionnel et techniques modernes pour sublimer votre éclat naturel dans un cadre architectural et apaisant.',
-            style: AppTextStyles.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
-              height: 1.6,
-            ),
-          ),
-          SizedBox(height: 24.h),
-
-          // Hours section
-          Text('Horaires', style: AppTextStyles.headlineMd),
-          SizedBox(height: 12.h),
-          _HoursCard(),
-          SizedBox(height: 24.h),
-
-          // Photo gallery — replace with salon.gallery from API response
-          if (_mockGallery.isNotEmpty) ...[
-            Text('Photos', style: AppTextStyles.headlineMd),
-            SizedBox(height: 12.h),
-            _GalleryStrip(photos: _mockGallery),
-            SizedBox(height: 24.h),
-          ],
-
-          // Popular services
-          Text('Prestations populaires', style: AppTextStyles.headlineMd),
-          SizedBox(height: 12.h),
-          _ServicesPreview(),
-          SizedBox(height: 24.h),
-
-          // Location map
-          Text('Localisation', style: AppTextStyles.headlineMd),
-          SizedBox(height: 12.h),
-          SalonMapCard(
-            latitude: 14.7445,
-            longitude: -17.4677,
-            salonName: 'Maison Kinka',
-            address: 'Rue 12, Almadies, Dakar',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _QuickStats extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final stats = [
-      _Stat('128', 'Avis', 'star'),
-      _Stat('6', 'Stylistes', 'user'),
-      _Stat('3.2 km', 'Distance', 'map-pin'),
-    ];
-
-    return Row(
-      children: stats.map((s) {
-        return Expanded(
-          child: Container(
-            margin: EdgeInsets.only(right: s != stats.last ? 10.w : 0),
-            padding: EdgeInsets.symmetric(vertical: 14.h),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: AppShadows.card,
-            ),
-            child: Column(
-              children: [
-                AppIcon(s.icon, size: 18, color: AppColors.primary),
-                SizedBox(height: 6.h),
-                Text(s.value, style: AppTextStyles.labelLg),
-                Text(s.label, style: AppTextStyles.bodyXs),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _Stat {
-  const _Stat(this.value, this.label, this.icon);
-  final String value, label, icon;
-}
-
-class _HoursCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final hours = [
-      ('Lundi – Vendredi', '09:00 – 19:00', true),
-      ('Samedi', '10:00 – 18:00', true),
-      ('Dimanche', 'Fermé', false),
-    ];
-
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: AppShadows.card,
-      ),
-      child: Column(
-        children: hours.map((h) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 6.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(h.$1, style: AppTextStyles.bodyMd),
-                Text(
-                  h.$2,
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: h.$3 ? AppColors.onSurface : AppColors.error,
-                    fontWeight: h.$3 ? FontWeight.w500 : FontWeight.w400,
+              RefreshIndicator.adaptive(
+                color: AppColors.primary,
+                onRefresh: refreshSalon,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
+                  slivers: [
+                    if (resource.isStale && resource.cachedAt != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+                          child: StaleDataNotice(cachedAt: resource.cachedAt!),
+                        ),
+                      ),
 
-class _ServicesPreview extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    const services = [
-      ('Shampoing + Brushing', '45 min', '7 500 XOF'),
-      ('Soin Visage Hydratant', '60 min', '15 000 XOF'),
-      ('Manucure Complète', '45 min', '5 000 XOF'),
-    ];
-
-    return Column(
-      children: services.map((s) {
-        return Container(
-          margin: EdgeInsets.only(bottom: 10.h),
-          padding: EdgeInsets.all(16.r),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: AppShadows.card,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.$1, style: AppTextStyles.labelLg),
-                    SizedBox(height: 3.h),
-                    Row(
-                      children: [
-                        AppIcon('clock', size: 12, color: AppColors.onSurfaceVariant),
-                        SizedBox(width: 3.w),
-                        Text(s.$2, style: AppTextStyles.bodySm),
+                    // ── Swipeable hero ───────────────────────────────────────
+                    SliverAppBar(
+                      expandedHeight: 300.h,
+                      pinned: true,
+                      backgroundColor: AppColors.neutral,
+                      elevation: 0,
+                      leading: _CircleBtn(
+                        icon: 'arrow-left',
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                      actions: [
+                        _CircleBtn(
+                          icon: 'share',
+                          onTap: () {
+                            AppHaptics.light();
+                            AppShare.text(
+                              'Découvrez ${salon.name} sur Beauté Avenue.\n${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
+                            );
+                          },
+                        ),
+                        SizedBox(width: 6.w),
+                        _CircleBtn(
+                          icon: isFavorite ? 'heart-filled' : 'heart',
+                          iconColor: isFavorite ? AppColors.primary : null,
+                          onTap: () {
+                            AppHaptics.light();
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .toggle(widget.salonId);
+                          },
+                        ),
+                        SizedBox(width: 12.w),
                       ],
+                      flexibleSpace: FlexibleSpaceBar(
+                        collapseMode: CollapseMode.pin,
+                        background: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Swipeable photo strip
+                            if (images.isEmpty)
+                              Container(color: AppColors.surfaceVariant)
+                            else
+                              PageView.builder(
+                                controller: _heroCtrl,
+                                onPageChanged: (i) =>
+                                    setState(() => _heroPage = i),
+                                itemCount: images.length,
+                                itemBuilder: (_, i) => CachedNetworkImage(
+                                  imageUrl: images[i],
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+
+                            // Bottom gradient → bleeds into rounded card
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: 100.h,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      AppColors.neutral.withValues(alpha: 0.85),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Page dots
+                            if (images.length > 1)
+                              Positioned(
+                                bottom: 44.h,
+                                left: 0,
+                                right: 0,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                    images.length,
+                                    (i) => AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 220,
+                                      ),
+                                      width: i == _heroPage ? 20.w : 5.w,
+                                      height: 4.h,
+                                      margin: EdgeInsets.symmetric(
+                                        horizontal: 2.w,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: i == _heroPage
+                                            ? Colors.white
+                                            : Colors.white.withValues(
+                                                alpha: 0.45,
+                                              ),
+                                        borderRadius: BorderRadius.circular(
+                                          2.r,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // Photo count badge (tappable → viewer)
+                            if (images.length > 1)
+                              Positioned(
+                                bottom: 48.h,
+                                right: 16.w,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _openGallery(context, images, _heroPage),
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10.w,
+                                      vertical: 5.h,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(20.r),
+                                    ),
+                                    child: Text(
+                                      '${_heroPage + 1} / ${images.length}',
+                                      style: AppTextStyles.bodyXs.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // ── Content card ─────────────────────────────────────────
+                    SliverToBoxAdapter(
+                      child: Transform.translate(
+                        offset: Offset(0, -32.h),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.neutral,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(32.r),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Handle
+                              Center(
+                                child: Container(
+                                  width: 36.w,
+                                  height: 4.h,
+                                  margin: EdgeInsets.only(
+                                    top: 12.h,
+                                    bottom: 20.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.outline,
+                                    borderRadius: BorderRadius.circular(2.r),
+                                  ),
+                                ),
+                              ),
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Category chip
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 5.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.secondaryContainer,
+                                        borderRadius: BorderRadius.circular(
+                                          10.r,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        salon.category.toUpperCase(),
+                                        style: AppTextStyles.overline.copyWith(
+                                          color: AppColors.onSecondaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 10.h),
+
+                                    // Name
+                                    Text(
+                                      salon.name,
+                                      style: AppTextStyles.displaySm,
+                                    ),
+                                    SizedBox(height: 10.h),
+
+                                    // Rating + location
+                                    Row(
+                                      children: [
+                                        AppIcon(
+                                          'star',
+                                          size: 14,
+                                          color: AppColors.secondary,
+                                        ),
+                                        SizedBox(width: 4.w),
+                                        Text(
+                                          salon.averageRating.toStringAsFixed(
+                                            1,
+                                          ),
+                                          style: AppTextStyles.labelMd.copyWith(
+                                            color: AppColors.onSurface,
+                                          ),
+                                        ),
+                                        SizedBox(width: 14.w),
+                                        AppIcon(
+                                          'map-pin',
+                                          size: 13,
+                                          color: AppColors.onSurfaceVariant,
+                                        ),
+                                        SizedBox(width: 4.w),
+                                        Expanded(
+                                          child: Text(
+                                            '${salon.neighborhood ?? ''} ${salon.city}'
+                                                .trim(),
+                                            style: AppTextStyles.bodySm,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 18.h),
+
+                                    // Inline stats — no Material cards
+                                    _InlineStats(
+                                      staffCount: salon.staff.length,
+                                      servicesCount: salon.services.length,
+                                    ),
+                                    SizedBox(height: 24.h),
+
+                                    // About
+                                    _SectionLabel('À propos'),
+                                    SizedBox(height: 10.h),
+                                    Text(
+                                      salon.description,
+                                      style: AppTextStyles.bodyMd.copyWith(
+                                        color: AppColors.onSurfaceVariant,
+                                        height: 1.65,
+                                      ),
+                                    ),
+                                    SizedBox(height: 28.h),
+                                  ],
+                                ),
+                              ),
+
+                              // ── Gallery strip ────────────────────────────
+                              if (images.isNotEmpty) ...[
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 24.w,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      _SectionLabel('Photos'),
+                                      const Spacer(),
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _openGallery(context, images, 0),
+                                        child: Text(
+                                          'Voir tout',
+                                          style: AppTextStyles.bodySm.copyWith(
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+                                SizedBox(
+                                  height: 120.h,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 24.w,
+                                    ),
+                                    itemCount: images.length,
+                                    separatorBuilder: (_, __) =>
+                                        SizedBox(width: 10.w),
+                                    itemBuilder: (_, i) => GestureDetector(
+                                      onTap: () =>
+                                          _openGallery(context, images, i),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          18.r,
+                                        ),
+                                        child: CachedNetworkImage(
+                                          imageUrl: images[i],
+                                          width: 160.w,
+                                          height: 120.h,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 32.h),
+                              ],
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Services
+                                    _SectionLabel('Prestations populaires'),
+                                    SizedBox(height: 12.h),
+                                    ...salon.services
+                                        .take(5)
+                                        .map(
+                                          (s) => _ServiceRow(
+                                            name: s.name,
+                                            duration:
+                                                '${s.durationMinutes} min',
+                                            price: '${s.priceXof.toInt()} XOF',
+                                          ),
+                                        ),
+                                    SizedBox(height: 28.h),
+
+                                    // Map
+                                    _SectionLabel('Localisation'),
+                                    SizedBox(height: 12.h),
+                                    SalonMapCard(
+                                      latitude:
+                                          salon.latitude?.toDouble() ?? 14.7167,
+                                      longitude:
+                                          salon.longitude?.toDouble() ??
+                                          -17.4677,
+                                      salonName: salon.name,
+                                      address: salon.address,
+                                    ),
+                                    SizedBox(height: 120.h),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              Text(s.$3, style: AppTextStyles.priceMd),
-              SizedBox(width: 10.w),
-              Container(
-                width: 30.r,
-                height: 30.r,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Center(
-                  child: AppIcon('add', size: 16, color: AppColors.primary),
+
+              // ── Sticky CTA ────────────────────────────────────────────────
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _BottomCta(
+                  price: salon.services.isNotEmpty
+                      ? 'À partir de ${salon.services.first.priceXof.toInt()} XOF'
+                      : null,
+                  onBook: () => _showBookingSheet(context),
                 ),
               ),
             ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _BottomCta extends StatelessWidget {
-  const _BottomCta({required this.onBook});
-
-  final VoidCallback onBook;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.neutral.withOpacity(0),
-            AppColors.neutral,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: ElevatedButton(
-          onPressed: onBook,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.onSurface,
-            foregroundColor: AppColors.surface,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppIcon('calendar', size: 18, color: AppColors.surface),
-              SizedBox(width: 10.w),
-              Text('Réserver · À partir de 5 000 XOF'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CircleIconBtn extends StatelessWidget {
-  const _CircleIconBtn({
-    required this.icon,
-    required this.onTap,
-    this.iconColor,
-  });
-
-  final String icon;
-  final VoidCallback onTap;
-  final Color? iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: 38.r,
-            height: 38.r,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: AppIcon(
-                icon,
-                size: 17,
-                color: iconColor ?? AppColors.onSurface,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _GalleryStrip extends StatelessWidget {
-  const _GalleryStrip({required this.photos});
-
-  final List<String> photos;
-
-  @override
-  Widget build(BuildContext context) {
-    if (photos.isEmpty) return const SizedBox.shrink();
-    return SizedBox(
-      height: 110.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
-        itemCount: photos.length,
-        separatorBuilder: (_, __) => SizedBox(width: 10.w),
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              AppHaptics.light();
-              Navigator.of(context).push(
-                PageRouteBuilder(
-                  opaque: false,
-                  barrierColor: Colors.black87,
-                  barrierDismissible: true,
-                  pageBuilder: (_, __, ___) => _GalleryViewer(
-                    photos: photos,
-                    initialIndex: index,
-                  ),
-                ),
-              );
-            },
-            child: Hero(
-              tag: 'gallery_$index',
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14.r),
-                child: CachedNetworkImage(
-                  imageUrl: photos[index],
-                  width: 110.r,
-                  height: 110.h,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) => Container(
-                    color: AppColors.surfaceVariant,
-                    width: 110.r,
-                    height: 110.h,
-                  ),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surfaceVariant,
-                    width: 110.r,
-                    height: 110.h,
-                    child: Center(
-                      child: AppIcon('image', size: 24, color: AppColors.onSurfaceVariant),
-                    ),
-                  ),
-                ),
-              ),
-            ),
           );
         },
       ),
@@ -515,9 +490,11 @@ class _GalleryStrip extends StatelessWidget {
   }
 }
 
+// ─── Gallery viewer ───────────────────────────────────────────────────────────
+
 class _GalleryViewer extends StatefulWidget {
-  const _GalleryViewer({required this.photos, required this.initialIndex});
-  final List<String> photos;
+  const _GalleryViewer({required this.images, required this.initialIndex});
+  final List<String> images;
   final int initialIndex;
 
   @override
@@ -525,123 +502,306 @@ class _GalleryViewer extends StatefulWidget {
 }
 
 class _GalleryViewerState extends State<_GalleryViewer> {
-  late final PageController _controller;
+  late final PageController _ctrl;
   late int _current;
 
   @override
   void initState() {
     super.initState();
     _current = widget.initialIndex;
-    _controller = PageController(initialPage: widget.initialIndex);
+    _ctrl = PageController(initialPage: widget.initialIndex);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final topPad = MediaQuery.of(context).padding.top;
+    final botPad = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(color: Colors.black87),
-          ),
           PageView.builder(
-            controller: _controller,
-            itemCount: widget.photos.length,
+            controller: _ctrl,
             onPageChanged: (i) => setState(() => _current = i),
-            itemBuilder: (context, index) {
-              return Center(
-                child: Hero(
-                  tag: 'gallery_$index',
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: CachedNetworkImage(
-                        imageUrl: widget.photos[index],
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+            itemCount: widget.images.length,
+            itemBuilder: (_, i) => InteractiveViewer(
+              child: CachedNetworkImage(
+                imageUrl: widget.images[i],
+                fit: BoxFit.contain,
+                placeholder: (_, __) => const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white38,
+                    strokeWidth: 2,
                   ),
                 ),
-              );
-            },
-          ),
-          // Dot indicators
-          Positioned(
-            bottom: 48.h,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.photos.length, (i) {
-                final active = i == _current;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: EdgeInsets.symmetric(horizontal: 3.w),
-                  width: active ? 20.w : 6.w,
-                  height: 6.h,
-                  decoration: BoxDecoration(
-                    color: active ? Colors.white : Colors.white38,
-                    borderRadius: BorderRadius.circular(3.r),
-                  ),
-                );
-              }),
+              ),
             ),
           ),
+
           // Close button
           Positioned(
-            top: 0,
+            top: topPad + 10,
+            right: 16,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+
+          // Counter
+          Positioned(
+            top: topPad + 16,
+            left: 0,
             right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(12.r),
-                child: GestureDetector(
-                  onTap: () {
-                    AppHaptics.light();
-                    Navigator.of(context).pop();
-                  },
-                  child: Container(
-                    width: 36.r,
-                    height: 36.r,
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close, color: Colors.white, size: 18),
-                  ),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_current + 1} / ${widget.images.length}',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ),
             ),
           ),
-          // Counter badge
-          Positioned(
-            top: 0,
-            left: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(12.r),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    '${_current + 1} / ${widget.photos.length}',
-                    style: TextStyle(color: Colors.white, fontSize: 12.sp),
+
+          // Bottom dots
+          if (widget.images.length > 1)
+            Positioned(
+              bottom: botPad + 24,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  widget.images.length,
+                  (i) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: i == _current ? 18 : 5,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: i == _current
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(text, style: AppTextStyles.headlineSm);
+}
+
+class _InlineStats extends StatelessWidget {
+  const _InlineStats({required this.staffCount, required this.servicesCount});
+
+  final int staffCount;
+  final int servicesCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        AppIcon('sparkle', size: 13, color: AppColors.primary),
+        SizedBox(width: 5.w),
+        Text(
+          '$servicesCount prestation${servicesCount > 1 ? 's' : ''}',
+          style: AppTextStyles.bodyMd,
+        ),
+        SizedBox(width: 12.w),
+        Container(
+          width: 3.r,
+          height: 3.r,
+          decoration: BoxDecoration(
+            color: AppColors.outline,
+            shape: BoxShape.circle,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        AppIcon('user', size: 13, color: AppColors.primary),
+        SizedBox(width: 5.w),
+        Text(
+          '$staffCount spécialiste${staffCount > 1 ? 's' : ''}',
+          style: AppTextStyles.bodyMd,
+        ),
+      ],
+    );
+  }
+}
+
+class _ServiceRow extends StatelessWidget {
+  const _ServiceRow({
+    required this.name,
+    required this.duration,
+    required this.price,
+  });
+
+  final String name, duration, price;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 1.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: AppTextStyles.labelLg),
+                SizedBox(height: 2.h),
+                Text(
+                  duration,
+                  style: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            price,
+            style: AppTextStyles.priceMd.copyWith(color: AppColors.primary),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CircleBtn extends StatelessWidget {
+  const _CircleBtn({required this.icon, required this.onTap, this.iconColor});
+
+  final String icon;
+  final VoidCallback onTap;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(8.r),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 36.r,
+          height: 36.r,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.88),
+            shape: BoxShape.circle,
+            boxShadow: AppShadows.sm,
+          ),
+          child: Center(
+            child: AppIcon(
+              icon,
+              size: 18,
+              color: iconColor ?? AppColors.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomCta extends StatelessWidget {
+  const _BottomCta({required this.onBook, this.price});
+
+  final VoidCallback onBook;
+  final String? price;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.onSurface.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            if (price != null) ...[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Dès', style: AppTextStyles.bodyXs),
+                    Text(
+                      price!,
+                      style: AppTextStyles.labelLg.copyWith(
+                        color: AppColors.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              SizedBox(
+                width: 180.w,
+                height: 52.h,
+                child: ElevatedButton(
+                  onPressed: onBook,
+                  child: const Text('Réserver'),
+                ),
+              ),
+            ] else
+              SizedBox(
+                width: double.infinity,
+                height: 52.h,
+                child: ElevatedButton(
+                  onPressed: onBook,
+                  child: const Text('Choisir une prestation'),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

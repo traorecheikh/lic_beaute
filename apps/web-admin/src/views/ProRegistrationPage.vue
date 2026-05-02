@@ -174,6 +174,8 @@ import {
   PlusIcon,
   BuildingStorefrontIcon
 } from "@heroicons/vue/24/outline";
+import { getErrorMessage } from "@/lib/errors";
+import { registerProOwner } from "@/lib/pro-api";
 
 const router = useRouter();
 const currentStep = ref(1);
@@ -182,6 +184,15 @@ const loading = ref(false);
 const categories = ["Coiffure", "Barbershop", "Esthétique", "Ongles", "Spa", "Maquillage"];
 const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];
 const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+const dayOfWeekByLabel: Record<string, number> = {
+  Lundi: 1,
+  Mardi: 2,
+  Mercredi: 3,
+  Jeudi: 4,
+  Vendredi: 5,
+  Samedi: 6,
+  Dimanche: 0
+};
 
 const form = reactive({
   fullName: "",
@@ -210,12 +221,67 @@ function removeService(index: number) {
 }
 
 async function submitRegistration() {
+  const email = form.email.trim();
+  const phone = form.phone.replace(/\s+/g, "");
+  const fullName = form.fullName.trim();
+  const salonName = form.salonName.trim();
+
+  if (!fullName || !email || !phone || !form.password || !salonName || !form.category || !form.city || !form.address.trim()) {
+    toast.error("Veuillez compléter tous les champs obligatoires.");
+    return;
+  }
+
+  const validServices = form.services
+    .map((service) => ({
+      name: service.name.trim(),
+      durationMinutes: Number(service.duration),
+      priceXof: Number(service.price)
+    }))
+    .filter((service) => service.name && service.durationMinutes > 0 && service.priceXof >= 0);
+
+  if (validServices.length === 0) {
+    toast.error("Ajoutez au moins une prestation valide.");
+    return;
+  }
+
   loading.value = true;
-  // Mock API call
-  setTimeout(() => {
+  try {
+    await registerProOwner({
+      type: "salon_owner",
+      fullName,
+      email,
+      phone,
+      password: form.password,
+      salon: {
+        name: salonName,
+        category: form.category,
+        city: form.city,
+        address: form.address.trim(),
+        description: ""
+      },
+      services: validServices.map((service) => ({
+        name: service.name,
+        durationMinutes: service.durationMinutes,
+        priceXof: service.priceXof,
+        depositMode: "none" as const
+      })),
+      hours: days.map((day) => ({
+        dayOfWeek: dayOfWeekByLabel[day],
+        isOpen: Boolean(form.hours[day].open),
+        opensAt: form.hours[day].open ? form.hours[day].start : undefined,
+        closesAt: form.hours[day].open ? form.hours[day].end : undefined
+      }))
+    });
+
+    toast.success("Salon créé avec succès ! Vous pouvez maintenant vous connecter.");
+    await router.push({
+      path: "/pro/login",
+      query: { email }
+    });
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Inscription impossible pour le moment."));
+  } finally {
     loading.value = false;
-    toast.success("Salon créé avec succès ! En attente de validation.");
-    router.push("/pro/login");
-  }, 1500);
+  }
 }
 </script>

@@ -11,8 +11,8 @@ part 'api_error.g.dart';
 /// ApiError
 ///
 /// Properties:
-/// * [code] 
-/// * [message] 
+/// * [code]
+/// * [message]
 @BuiltValue()
 abstract class ApiError implements Built<ApiError, ApiErrorBuilder> {
   @BuiltValueField(wireName: r'code')
@@ -62,7 +62,9 @@ class _$ApiErrorSerializer implements PrimitiveSerializer<ApiError> {
     ApiError object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +121,3 @@ class _$ApiErrorSerializer implements PrimitiveSerializer<ApiError> {
     return result.build();
   }
 }
-

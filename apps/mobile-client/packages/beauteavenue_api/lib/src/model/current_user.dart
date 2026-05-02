@@ -12,12 +12,12 @@ part 'current_user.g.dart';
 /// CurrentUser
 ///
 /// Properties:
-/// * [id] 
-/// * [fullName] 
-/// * [email] 
-/// * [phone] 
-/// * [role] 
-/// * [salonId] 
+/// * [id]
+/// * [fullName]
+/// * [email]
+/// * [phone]
+/// * [role]
+/// * [salonId]
 @BuiltValue()
 abstract class CurrentUser implements Built<CurrentUser, CurrentUserBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -73,25 +73,31 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
       specifiedType: const FullType(String),
     );
     yield r'email';
-    yield object.email == null ? null : serializers.serialize(
-      object.email,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.email == null
+        ? null
+        : serializers.serialize(
+            object.email,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'phone';
-    yield object.phone == null ? null : serializers.serialize(
-      object.phone,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.phone == null
+        ? null
+        : serializers.serialize(
+            object.phone,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'role';
     yield serializers.serialize(
       object.role,
       specifiedType: const FullType(CurrentUserRoleEnum),
     );
     yield r'salonId';
-    yield object.salonId == null ? null : serializers.serialize(
-      object.salonId,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.salonId == null
+        ? null
+        : serializers.serialize(
+            object.salonId,
+            specifiedType: const FullType.nullable(String),
+          );
   }
 
   @override
@@ -100,7 +106,9 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
     CurrentUser object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -190,21 +198,25 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
 }
 
 class CurrentUserRoleEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'client')
   static const CurrentUserRoleEnum client = _$currentUserRoleEnum_client;
   @BuiltValueEnumConst(wireName: r'salon_staff')
-  static const CurrentUserRoleEnum salonStaff = _$currentUserRoleEnum_salonStaff;
+  static const CurrentUserRoleEnum salonStaff =
+      _$currentUserRoleEnum_salonStaff;
   @BuiltValueEnumConst(wireName: r'salon_owner')
-  static const CurrentUserRoleEnum salonOwner = _$currentUserRoleEnum_salonOwner;
+  static const CurrentUserRoleEnum salonOwner =
+      _$currentUserRoleEnum_salonOwner;
   @BuiltValueEnumConst(wireName: r'platform_admin')
-  static const CurrentUserRoleEnum platformAdmin = _$currentUserRoleEnum_platformAdmin;
+  static const CurrentUserRoleEnum platformAdmin =
+      _$currentUserRoleEnum_platformAdmin;
 
-  static Serializer<CurrentUserRoleEnum> get serializer => _$currentUserRoleEnumSerializer;
+  static Serializer<CurrentUserRoleEnum> get serializer =>
+      _$currentUserRoleEnumSerializer;
 
-  const CurrentUserRoleEnum._(String name): super(name);
+  const CurrentUserRoleEnum._(String name) : super(name);
 
-  static BuiltSet<CurrentUserRoleEnum> get values => _$currentUserRoleEnumValues;
-  static CurrentUserRoleEnum valueOf(String name) => _$currentUserRoleEnumValueOf(name);
+  static BuiltSet<CurrentUserRoleEnum> get values =>
+      _$currentUserRoleEnumValues;
+  static CurrentUserRoleEnum valueOf(String name) =>
+      _$currentUserRoleEnumValueOf(name);
 }
-

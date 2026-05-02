@@ -4,6 +4,7 @@ export * from "./domain/booking.js";
 export * from "./domain/config.js";
 export * from "./domain/enums.js";
 export * from "./domain/payment.js";
+export * from "./domain/profile.js";
 export * from "./domain/pro.js";
 export * from "./domain/review.js";
 export * from "./domain/salon.js";

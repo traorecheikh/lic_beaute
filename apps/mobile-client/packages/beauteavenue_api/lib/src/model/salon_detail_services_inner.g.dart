@@ -12,6 +12,8 @@ class _$SalonDetailServicesInner extends SalonDetailServicesInner {
   @override
   final String name;
   @override
+  final String category;
+  @override
   final int durationMinutes;
   @override
   final num priceXof;
@@ -25,6 +27,7 @@ class _$SalonDetailServicesInner extends SalonDetailServicesInner {
   _$SalonDetailServicesInner._(
       {required this.id,
       required this.name,
+      required this.category,
       required this.durationMinutes,
       required this.priceXof,
       this.depositRequiredXof})
@@ -44,6 +47,7 @@ class _$SalonDetailServicesInner extends SalonDetailServicesInner {
     return other is SalonDetailServicesInner &&
         id == other.id &&
         name == other.name &&
+        category == other.category &&
         durationMinutes == other.durationMinutes &&
         priceXof == other.priceXof &&
         depositRequiredXof == other.depositRequiredXof;
@@ -54,6 +58,7 @@ class _$SalonDetailServicesInner extends SalonDetailServicesInner {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, durationMinutes.hashCode);
     _$hash = $jc(_$hash, priceXof.hashCode);
     _$hash = $jc(_$hash, depositRequiredXof.hashCode);
@@ -66,6 +71,7 @@ class _$SalonDetailServicesInner extends SalonDetailServicesInner {
     return (newBuiltValueToStringHelper(r'SalonDetailServicesInner')
           ..add('id', id)
           ..add('name', name)
+          ..add('category', category)
           ..add('durationMinutes', durationMinutes)
           ..add('priceXof', priceXof)
           ..add('depositRequiredXof', depositRequiredXof))
@@ -85,6 +91,10 @@ class SalonDetailServicesInnerBuilder
   String? _name;
   String? get name => _$this._name;
   set name(String? name) => _$this._name = name;
+
+  String? _category;
+  String? get category => _$this._category;
+  set category(String? category) => _$this._category = category;
 
   int? _durationMinutes;
   int? get durationMinutes => _$this._durationMinutes;
@@ -109,6 +119,7 @@ class SalonDetailServicesInnerBuilder
     if ($v != null) {
       _id = $v.id;
       _name = $v.name;
+      _category = $v.category;
       _durationMinutes = $v.durationMinutes;
       _priceXof = $v.priceXof;
       _depositRequiredXof = $v.depositRequiredXof;
@@ -137,6 +148,8 @@ class SalonDetailServicesInnerBuilder
               id, r'SalonDetailServicesInner', 'id'),
           name: BuiltValueNullFieldError.checkNotNull(
               name, r'SalonDetailServicesInner', 'name'),
+          category: BuiltValueNullFieldError.checkNotNull(
+              category, r'SalonDetailServicesInner', 'category'),
           durationMinutes: BuiltValueNullFieldError.checkNotNull(
               durationMinutes, r'SalonDetailServicesInner', 'durationMinutes'),
           priceXof: BuiltValueNullFieldError.checkNotNull(

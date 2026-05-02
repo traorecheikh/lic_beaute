@@ -81,6 +81,8 @@ class _$SalonSummaryListResponseItemsInner
   @override
   final String category;
   @override
+  final String? logoUrl;
+  @override
   final String city;
   @override
   final String? neighborhood;
@@ -94,6 +96,12 @@ class _$SalonSummaryListResponseItemsInner
   final SalonSummaryListResponseItemsInnerSubscriptionTierEnum subscriptionTier;
   @override
   final bool featured;
+  @override
+  final bool isPrestige;
+  @override
+  final num? prestigeScore;
+  @override
+  final num? distanceKm;
 
   factory _$SalonSummaryListResponseItemsInner(
           [void Function(SalonSummaryListResponseItemsInnerBuilder)?
@@ -104,13 +112,17 @@ class _$SalonSummaryListResponseItemsInner
       {required this.id,
       required this.name,
       required this.category,
+      this.logoUrl,
       required this.city,
       this.neighborhood,
       required this.averageRating,
       this.latitude,
       this.longitude,
       required this.subscriptionTier,
-      required this.featured})
+      required this.featured,
+      required this.isPrestige,
+      this.prestigeScore,
+      this.distanceKm})
       : super._();
   @override
   SalonSummaryListResponseItemsInner rebuild(
@@ -128,13 +140,17 @@ class _$SalonSummaryListResponseItemsInner
         id == other.id &&
         name == other.name &&
         category == other.category &&
+        logoUrl == other.logoUrl &&
         city == other.city &&
         neighborhood == other.neighborhood &&
         averageRating == other.averageRating &&
         latitude == other.latitude &&
         longitude == other.longitude &&
         subscriptionTier == other.subscriptionTier &&
-        featured == other.featured;
+        featured == other.featured &&
+        isPrestige == other.isPrestige &&
+        prestigeScore == other.prestigeScore &&
+        distanceKm == other.distanceKm;
   }
 
   @override
@@ -143,6 +159,7 @@ class _$SalonSummaryListResponseItemsInner
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, category.hashCode);
+    _$hash = $jc(_$hash, logoUrl.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
     _$hash = $jc(_$hash, neighborhood.hashCode);
     _$hash = $jc(_$hash, averageRating.hashCode);
@@ -150,6 +167,9 @@ class _$SalonSummaryListResponseItemsInner
     _$hash = $jc(_$hash, longitude.hashCode);
     _$hash = $jc(_$hash, subscriptionTier.hashCode);
     _$hash = $jc(_$hash, featured.hashCode);
+    _$hash = $jc(_$hash, isPrestige.hashCode);
+    _$hash = $jc(_$hash, prestigeScore.hashCode);
+    _$hash = $jc(_$hash, distanceKm.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -160,13 +180,17 @@ class _$SalonSummaryListResponseItemsInner
           ..add('id', id)
           ..add('name', name)
           ..add('category', category)
+          ..add('logoUrl', logoUrl)
           ..add('city', city)
           ..add('neighborhood', neighborhood)
           ..add('averageRating', averageRating)
           ..add('latitude', latitude)
           ..add('longitude', longitude)
           ..add('subscriptionTier', subscriptionTier)
-          ..add('featured', featured))
+          ..add('featured', featured)
+          ..add('isPrestige', isPrestige)
+          ..add('prestigeScore', prestigeScore)
+          ..add('distanceKm', distanceKm))
         .toString();
   }
 }
@@ -188,6 +212,10 @@ class SalonSummaryListResponseItemsInnerBuilder
   String? _category;
   String? get category => _$this._category;
   set category(String? category) => _$this._category = category;
+
+  String? _logoUrl;
+  String? get logoUrl => _$this._logoUrl;
+  set logoUrl(String? logoUrl) => _$this._logoUrl = logoUrl;
 
   String? _city;
   String? get city => _$this._city;
@@ -222,6 +250,19 @@ class SalonSummaryListResponseItemsInnerBuilder
   bool? get featured => _$this._featured;
   set featured(bool? featured) => _$this._featured = featured;
 
+  bool? _isPrestige;
+  bool? get isPrestige => _$this._isPrestige;
+  set isPrestige(bool? isPrestige) => _$this._isPrestige = isPrestige;
+
+  num? _prestigeScore;
+  num? get prestigeScore => _$this._prestigeScore;
+  set prestigeScore(num? prestigeScore) =>
+      _$this._prestigeScore = prestigeScore;
+
+  num? _distanceKm;
+  num? get distanceKm => _$this._distanceKm;
+  set distanceKm(num? distanceKm) => _$this._distanceKm = distanceKm;
+
   SalonSummaryListResponseItemsInnerBuilder() {
     SalonSummaryListResponseItemsInner._defaults(this);
   }
@@ -232,6 +273,7 @@ class SalonSummaryListResponseItemsInnerBuilder
       _id = $v.id;
       _name = $v.name;
       _category = $v.category;
+      _logoUrl = $v.logoUrl;
       _city = $v.city;
       _neighborhood = $v.neighborhood;
       _averageRating = $v.averageRating;
@@ -239,6 +281,9 @@ class SalonSummaryListResponseItemsInnerBuilder
       _longitude = $v.longitude;
       _subscriptionTier = $v.subscriptionTier;
       _featured = $v.featured;
+      _isPrestige = $v.isPrestige;
+      _prestigeScore = $v.prestigeScore;
+      _distanceKm = $v.distanceKm;
       _$v = null;
     }
     return this;
@@ -267,6 +312,7 @@ class SalonSummaryListResponseItemsInnerBuilder
               name, r'SalonSummaryListResponseItemsInner', 'name'),
           category: BuiltValueNullFieldError.checkNotNull(
               category, r'SalonSummaryListResponseItemsInner', 'category'),
+          logoUrl: logoUrl,
           city: BuiltValueNullFieldError.checkNotNull(
               city, r'SalonSummaryListResponseItemsInner', 'city'),
           neighborhood: neighborhood,
@@ -280,6 +326,10 @@ class SalonSummaryListResponseItemsInnerBuilder
               'subscriptionTier'),
           featured: BuiltValueNullFieldError.checkNotNull(
               featured, r'SalonSummaryListResponseItemsInner', 'featured'),
+          isPrestige: BuiltValueNullFieldError.checkNotNull(
+              isPrestige, r'SalonSummaryListResponseItemsInner', 'isPrestige'),
+          prestigeScore: prestigeScore,
+          distanceKm: distanceKm,
         );
     replace(_$result);
     return _$result;

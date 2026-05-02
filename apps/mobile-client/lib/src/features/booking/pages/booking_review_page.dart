@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,13 +7,18 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
+import '../providers/booking_create_provider.dart';
+import '../providers/booking_funnel_provider.dart';
 
-class BookingReviewPage extends StatelessWidget {
+class BookingReviewPage extends ConsumerWidget {
   const BookingReviewPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final funnel = ref.watch(bookingFunnelProvider);
+
     return Scaffold(
       backgroundColor: AppColors.neutral,
       appBar: AppBar(
@@ -26,7 +32,7 @@ class BookingReviewPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Étape 3 sur 4',
+              'Étape 4 sur 4',
               style: AppTextStyles.bodySm.copyWith(color: AppColors.primary),
             ),
             Text('Confirmation', style: AppTextStyles.headlineMd),
@@ -38,11 +44,11 @@ class BookingReviewPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _StepBar(current: 3),
+            _StepBar(current: 4),
             SizedBox(height: 24.h),
-            _SummaryCard(),
+            _SummaryCard(funnel: funnel),
             SizedBox(height: 16.h),
-            _PriceCard(),
+            _PriceCard(funnel: funnel),
             SizedBox(height: 16.h),
             _CancellationCard(),
           ],
@@ -52,8 +58,6 @@ class BookingReviewPage extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _StepBar extends StatelessWidget {
   const _StepBar({required this.current});
@@ -79,8 +83,16 @@ class _StepBar extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.funnel});
+
+  final BookingFunnelState funnel;
+
   @override
   Widget build(BuildContext context) {
+    final slotText = funnel.slotDate != null && funnel.slotTime != null
+        ? '${funnel.slotDate} · ${funnel.slotTime}'
+        : 'Créneau non défini';
+
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
@@ -91,41 +103,21 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48.r,
-                height: 48.r,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Center(
-                  child: AppIcon('sparkle', size: 24, color: AppColors.primary),
-                ),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Maison Kinka", style: AppTextStyles.labelLg),
-                    Text(
-                      "Dakar, Point E",
-                      style: AppTextStyles.bodySm.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Text('Résumé', style: AppTextStyles.labelLg),
+          SizedBox(height: 16.h),
+          _SummaryRow(
+            icon: 'sparkle',
+            label: funnel.serviceName ?? 'Prestation',
           ),
-          SizedBox(height: 20.h),
-          _SummaryRow(icon: 'sparkle', label: 'Shampoing + Brushing'),
-          _SummaryRow(icon: 'calendar', label: 'Samedi 12 Juin · 14:30'),
-          _SummaryRow(icon: 'user', label: 'Marie Ndiaye'),
-          _SummaryRow(icon: 'clock', label: '45 min'),
+          _SummaryRow(icon: 'calendar', label: slotText),
+          _SummaryRow(
+            icon: 'user',
+            label: funnel.employeeName ?? 'Premier disponible',
+          ),
+          _SummaryRow(
+            icon: 'clock',
+            label: '${funnel.serviceDurationMinutes ?? 0} min',
+          ),
         ],
       ),
     );
@@ -153,8 +145,16 @@ class _SummaryRow extends StatelessWidget {
 }
 
 class _PriceCard extends StatelessWidget {
+  const _PriceCard({required this.funnel});
+
+  final BookingFunnelState funnel;
+
   @override
   Widget build(BuildContext context) {
+    final total = funnel.servicePrice ?? 0;
+    final deposit = funnel.depositAmount ?? 0;
+    final remaining = total - deposit;
+
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
@@ -167,27 +167,38 @@ class _PriceCard extends StatelessWidget {
         children: [
           Text('Détails du paiement', style: AppTextStyles.labelMd),
           SizedBox(height: 16.h),
-          _PriceRow('Prestation', '15 000 XOF'),
+          _PriceRow('Prestation', _xof(total)),
           Divider(color: AppColors.outlineVariant, height: 24.h),
           _PriceRow(
-            'Acompte à payer maintenant (20%)',
-            '3 000 XOF',
+            'Acompte à payer maintenant',
+            _xof(deposit),
             highlight: true,
           ),
           SizedBox(height: 6.h),
           _PriceRow(
             'Reste à payer sur place',
-            '12 000 XOF',
+            _xof(remaining < 0 ? 0 : remaining),
             muted: true,
           ),
         ],
       ),
     );
   }
+
+  String _xof(int amount) {
+    final thousands = amount ~/ 1000;
+    final remainder = amount % 1000;
+    return remainder == 0 ? '$thousands 000 XOF' : '$amount XOF';
+  }
 }
 
 class _PriceRow extends StatelessWidget {
-  const _PriceRow(this.label, this.value, {this.highlight = false, this.muted = false});
+  const _PriceRow(
+    this.label,
+    this.value, {
+    this.highlight = false,
+    this.muted = false,
+  });
   final String label;
   final String value;
   final bool highlight;
@@ -198,8 +209,8 @@ class _PriceRow extends StatelessWidget {
     final color = highlight
         ? AppColors.primary
         : muted
-            ? AppColors.onSurfaceVariant
-            : AppColors.onSurface;
+        ? AppColors.onSurfaceVariant
+        : AppColors.onSurface;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -212,10 +223,11 @@ class _PriceRow extends StatelessWidget {
         ),
         Text(
           value,
-          style: (highlight ? AppTextStyles.priceMd : AppTextStyles.bodyMd).copyWith(
-            color: color,
-            fontWeight: highlight ? FontWeight.w700 : null,
-          ),
+          style: (highlight ? AppTextStyles.priceMd : AppTextStyles.bodyMd)
+              .copyWith(
+                color: color,
+                fontWeight: highlight ? FontWeight.w700 : null,
+              ),
         ),
       ],
     );
@@ -234,22 +246,18 @@ class _CancellationCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 18.r, color: AppColors.onSurfaceVariant),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18.r,
+            color: AppColors.onSurfaceVariant,
+          ),
           SizedBox(width: 10.w),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Politique d'annulation",
-                  style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurface),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  "Annulation gratuite jusqu'à 24h avant le rendez-vous. L'acompte n'est pas remboursable en cas d'annulation tardive.",
-                  style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
-                ),
-              ],
+            child: Text(
+              "Annulation gratuite jusqu'à 24h avant le rendez-vous.",
+              style: AppTextStyles.bodySm.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -258,9 +266,12 @@ class _CancellationCard extends StatelessWidget {
   }
 }
 
-class _ConfirmBar extends StatelessWidget {
+class _ConfirmBar extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final createState = ref.watch(bookingCreateProvider);
+    final loading = createState.isLoading;
+
     return Container(
       color: AppColors.surface,
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
@@ -272,15 +283,38 @@ class _ConfirmBar extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () =>
-                    context.push(AppRoutes.paymentHandoff('new-booking-123')),
-                child: const Text('Confirmer et payer l\'acompte'),
+                onPressed: loading
+                    ? null
+                    : () async {
+                        final booking = await ref
+                            .read(bookingCreateProvider.notifier)
+                            .create();
+                        if (!context.mounted) return;
+                        if (booking == null) {
+                          AppSnackbar.error(
+                            context,
+                            bookingCreateErrorMessage(
+                              ref.read(bookingCreateProvider).error,
+                            ),
+                          );
+                          return;
+                        }
+                        ref
+                            .read(bookingFunnelProvider.notifier)
+                            .setDepositAmount(booking.depositAmountXof.toInt());
+                        context.push(AppRoutes.success(booking.id));
+                      },
+                child: loading
+                    ? const CircularProgressIndicator()
+                    : const Text('Confirmer la réservation'),
               ),
             ),
             SizedBox(height: 8.h),
             Text(
-              'Vous serez redirigé vers le paiement sécurisé',
-              style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+              'Paiement sera activé dans une prochaine étape.',
+              style: AppTextStyles.bodySm.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 4.h),

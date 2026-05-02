@@ -1,0 +1,210 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+
+/// Rounded filled text field with editorial label and proper border states
+/// (enabled → focused → error → focused+error). Uses OutlineInputBorder so
+/// the entire border updates on focus — no partial-highlight animation.
+class EditorialField extends StatefulWidget {
+  const EditorialField({
+    super.key,
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+    this.obscureText = false,
+    this.prefixText,
+    this.textAlign = TextAlign.start,
+    this.style,
+    this.suffixBuilder,
+    this.errorText,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final String? prefixText;
+  final TextAlign textAlign;
+  final TextStyle? style;
+  final Widget Function(bool focused)? suffixBuilder;
+  final String? errorText;
+
+  @override
+  State<EditorialField> createState() => _EditorialFieldState();
+}
+
+class _EditorialFieldState extends State<EditorialField> {
+  final _focus = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() => setState(() => _focused = _focus.hasFocus));
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: AppTextStyles.labelSm.copyWith(
+            color: hasError
+                ? AppColors.error
+                : _focused
+                ? AppColors.primary
+                : AppColors.onSurfaceVariant,
+            letterSpacing: 1.5,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: TextField(
+                focusNode: _focus,
+                controller: widget.controller,
+                keyboardType: widget.keyboardType,
+                obscureText: widget.obscureText,
+                textAlign: widget.textAlign,
+                style:
+                    widget.style ??
+                    AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
+                decoration: InputDecoration(
+                  isDense: true,
+                  prefixText: widget.prefixText,
+                  prefixStyle: AppTextStyles.bodyLg.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide(
+                      color: AppColors.outline.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(
+                      color: AppColors.error,
+                      width: 1.2,
+                    ),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(
+                      color: AppColors.error,
+                      width: 1.8,
+                    ),
+                  ),
+                  // Pass errorText to TextField so border states trigger automatically
+                  errorText: hasError ? widget.errorText : null,
+                  errorStyle: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.error,
+                    height: 1.4,
+                  ),
+                  hintStyle: AppTextStyles.bodyLg.copyWith(
+                    color: AppColors.outline,
+                  ),
+                ),
+              ),
+            ),
+            if (widget.suffixBuilder != null) ...[
+              SizedBox(width: 8.w),
+              widget.suffixBuilder!(_focused),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Primary action button for auth flows — pill shape + warm shadow,
+/// with loading spinner that maintains button size.
+class AuthPrimaryButton extends StatelessWidget {
+  const AuthPrimaryButton({
+    super.key,
+    required this.label,
+    required this.loading,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool loading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: loading ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: double.infinity,
+        height: 56.h,
+        decoration: BoxDecoration(
+          color: loading ? AppColors.outline : AppColors.primary,
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: loading
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.30),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+        ),
+        child: Center(
+          child: loading
+              ? SizedBox(
+                  width: 22.r,
+                  height: 22.r,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  label,
+                  style: AppTextStyles.labelLg.copyWith(
+                    color: Colors.white,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}

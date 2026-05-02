@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../network/app_network_error.dart';
+import '../network/connectivity_provider.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+
+class AppErrorState extends ConsumerStatefulWidget {
+  const AppErrorState({
+    this.error,
+    this.fallbackTitle,
+    this.title,
+    this.message,
+    this.offlineTitle,
+    this.serverTitle,
+    this.onRetry,
+    this.compact = false,
+    super.key,
+  });
+
+  final Object? error;
+  final String? fallbackTitle;
+  final String? title;
+  final String? message;
+  final String? offlineTitle;
+  final String? serverTitle;
+  final Future<void> Function()? onRetry;
+  final bool compact;
+
+  @override
+  ConsumerState<AppErrorState> createState() => _AppErrorStateState();
+}
+
+class _AppErrorStateState extends ConsumerState<AppErrorState> {
+  bool _retrying = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnline = ref.watch(isOnlineProvider);
+    final resolved = widget.error == null
+        ? null
+        : resolveAppNetworkError(
+            widget.error!,
+            isOnline: isOnline,
+            offlineTitle: widget.offlineTitle ?? 'Connexion indisponible',
+            serverTitle:
+                widget.serverTitle ?? 'Service momentanément indisponible',
+            fallbackTitle: widget.fallbackTitle ?? 'Une erreur est survenue',
+          );
+    final title = widget.title ?? resolved?.title ?? 'Une erreur est survenue';
+    final message = widget.message ?? resolved?.message ?? 'Réessayez.';
+    final type = resolved?.type ?? AppNetworkErrorType.unknown;
+
+    return Center(
+      child: Container(
+        width: widget.compact ? double.infinity : 320.w,
+        padding: EdgeInsets.symmetric(
+          horizontal: 20.w,
+          vertical: widget.compact ? 18.h : 24.h,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24.r),
+          border: Border.all(color: AppColors.outlineVariant),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52.r,
+              height: 52.r,
+              decoration: BoxDecoration(
+                color: _iconBackground(type),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(_iconData(type), color: _iconColor(type), size: 24.r),
+            ),
+            SizedBox(height: 14.h),
+            Text(
+              title,
+              style: AppTextStyles.headlineSm,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              message,
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (widget.onRetry != null) ...[
+              SizedBox(height: 18.h),
+              SizedBox(
+                width: widget.compact ? double.infinity : 180.w,
+                child: FilledButton(
+                  onPressed: _retrying ? null : _handleRetry,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: _retrying
+                      ? SizedBox(
+                          width: 18.r,
+                          height: 18.r,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text('Réessayer'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _iconBackground(AppNetworkErrorType type) {
+    switch (type) {
+      case AppNetworkErrorType.offline:
+      case AppNetworkErrorType.timeout:
+        return AppColors.secondaryContainer;
+      case AppNetworkErrorType.server:
+      case AppNetworkErrorType.unauthorized:
+      case AppNetworkErrorType.unknown:
+        return AppColors.errorContainer;
+    }
+  }
+
+  Color _iconColor(AppNetworkErrorType type) {
+    switch (type) {
+      case AppNetworkErrorType.offline:
+      case AppNetworkErrorType.timeout:
+        return AppColors.secondary;
+      case AppNetworkErrorType.server:
+      case AppNetworkErrorType.unauthorized:
+      case AppNetworkErrorType.unknown:
+        return AppColors.error;
+    }
+  }
+
+  IconData _iconData(AppNetworkErrorType type) {
+    switch (type) {
+      case AppNetworkErrorType.offline:
+        return Icons.wifi_off_rounded;
+      case AppNetworkErrorType.timeout:
+        return Icons.schedule_rounded;
+      case AppNetworkErrorType.server:
+        return Icons.cloud_off_rounded;
+      case AppNetworkErrorType.unauthorized:
+        return Icons.lock_outline_rounded;
+      case AppNetworkErrorType.unknown:
+        return Icons.error_outline_rounded;
+    }
+  }
+
+  Future<void> _handleRetry() async {
+    final retry = widget.onRetry;
+    if (retry == null || _retrying) return;
+    setState(() => _retrying = true);
+    try {
+      await retry();
+    } finally {
+      if (mounted) {
+        setState(() => _retrying = false);
+      }
+    }
+  }
+}

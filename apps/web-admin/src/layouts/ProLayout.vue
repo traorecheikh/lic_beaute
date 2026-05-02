@@ -8,7 +8,7 @@
             <img src="/logo.png" alt="Beauté Avenue" class="h-8 w-auto object-contain" />
             <div class="hidden sm:block">
               <p class="text-sm font-bold tracking-tight text-espresso font-display">
-                {{ auth.currentUser?.salonName ?? "Mon Salon" }}
+                {{ auth.salonName ?? "Mon Salon" }}
               </p>
             </div>
           </RouterLink>
@@ -35,10 +35,10 @@
 
         <!-- Right: Actions + User -->
         <div class="flex items-center gap-3 shrink-0">
-          <button class="p-2 text-cocoa/60 hover:text-espresso transition">
+          <button @click="callSupport" class="p-2 text-cocoa/60 hover:text-espresso transition">
             <PhoneIcon class="w-5 h-5" />
           </button>
-          <button class="p-2 text-cocoa/60 hover:text-espresso transition relative">
+          <button @click="openInbox" class="p-2 text-cocoa/60 hover:text-espresso transition relative">
             <BellIcon class="w-5 h-5" />
             <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
           </button>
@@ -51,10 +51,10 @@
               <p class="text-[11px] font-semibold text-cocoa/40 uppercase tracking-wider">{{ auth.currentUser?.role === 'salon_owner' ? 'Propriétaire' : 'Staff' }}</p>
             </div>
             
-            <Menu as="div" class="relative">
-              <MenuButton class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-container text-[12px] font-bold text-on-secondary-container ring-1 ring-secondary/20 overflow-hidden">
+            <div ref="menuRoot" class="relative">
+              <button @click="menuOpen = !menuOpen" class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-container text-[12px] font-bold text-on-secondary-container ring-1 ring-secondary/20 overflow-hidden">
                 {{ userInitials }}
-              </MenuButton>
+              </button>
               <transition
                 enter-active-class="transition duration-100 ease-out"
                 enter-from-class="transform scale-95 opacity-0"
@@ -63,43 +63,36 @@
                 leave-from-class="transform scale-100 opacity-100"
                 leave-to-class="transform scale-95 opacity-0"
               >
-                <MenuItems class="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-surface p-2 shadow-xl ring-1 ring-outline-variant focus:outline-none">
+                <div v-if="menuOpen" class="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-surface p-2 shadow-xl ring-1 ring-outline-variant focus:outline-none">
                   <div class="px-3 py-2 border-b border-outline-variant mb-2">
                     <p class="text-xs font-bold text-espresso">{{ auth.currentUser?.fullName }}</p>
                     <p class="text-[10px] text-cocoa/60">{{ auth.currentUser?.email }}</p>
                   </div>
                   
-                  <MenuItem v-for="item in dropdownItems" :key="item.to" v-slot="{ active }">
+                  <template v-for="item in dropdownItems" :key="item.to">
                     <RouterLink
                       v-if="!item.ownerOnly || auth.isOwner"
                       :to="item.to"
-                      :class="[
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
-                        active ? 'bg-neutral-bg text-espresso' : 'text-cocoa/60'
-                      ]"
+                      @click="menuOpen = false"
+                      class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-cocoa/60 transition hover:bg-neutral-bg hover:text-espresso"
                     >
                       <component :is="item.icon" class="w-4 h-4" />
                       {{ item.label }}
                     </RouterLink>
-                  </MenuItem>
+                  </template>
 
                   <div class="mt-2 pt-2 border-t border-outline-variant">
-                    <MenuItem v-slot="{ active }">
-                      <button
-                        @click="handleLogout"
-                        :class="[
-                          'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-error transition',
-                          active ? 'bg-error/5' : ''
-                        ]"
-                      >
-                        <ArrowRightOnRectangleIcon class="w-4 h-4" />
-                        Déconnexion
-                      </button>
-                    </MenuItem>
+                    <button
+                      @click="handleLogout"
+                      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-error transition hover:bg-error/5"
+                    >
+                      <ArrowRightOnRectangleIcon class="w-4 h-4" />
+                      Déconnexion
+                    </button>
                   </div>
-                </MenuItems>
+                </div>
               </transition>
-            </Menu>
+            </div>
           </div>
         </div>
       </div>
@@ -126,25 +119,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
-import { 
-  CalendarIcon, 
-  UsersIcon, 
-  BanknotesIcon, 
-  InboxIcon, 
-  ChartBarIcon, 
+import {
+  CalendarIcon,
+  UsersIcon,
+  BanknotesIcon,
+  InboxIcon,
+  ChartBarIcon,
   Squares2X2Icon,
   PhoneIcon,
   BellIcon,
   UserIcon,
-  Cog6ToothIcon,
   UserGroupIcon,
   ClockIcon,
   CreditCardIcon,
   ArrowRightOnRectangleIcon,
-  BuildingStorefrontIcon
+  BuildingStorefrontIcon,
+  TicketIcon
 } from "@heroicons/vue/24/outline";
 
 import { useProAuthStore } from "@/stores/proAuth";
@@ -152,6 +144,8 @@ import { useProAuthStore } from "@/stores/proAuth";
 const auth = useProAuthStore();
 const route = useRoute();
 const router = useRouter();
+const menuOpen = ref(false);
+const menuRoot = ref<HTMLElement | null>(null);
 
 const centerNavItems = [
   { label: "Agenda", to: "/pro/calendar", icon: CalendarIcon },
@@ -160,6 +154,7 @@ const centerNavItems = [
   { label: "Inbox", to: "/pro/bookings/inbox", icon: InboxIcon },
   { label: "Rapports", to: "/pro/analytics", icon: ChartBarIcon, ownerOnly: true },
   { label: "Services", to: "/pro/salon/services", icon: Squares2X2Icon, ownerOnly: true },
+  { label: "Codes Promo", to: "/pro/vouchers", icon: TicketIcon, ownerOnly: true },
 ];
 
 const dropdownItems = [
@@ -181,9 +176,40 @@ function isNavItemActive(path: string) {
 }
 
 async function handleLogout() {
+  menuOpen.value = false;
   await auth.logout();
   router.push("/pro/login");
 }
+
+function handleDocumentClick(event: MouseEvent) {
+  if (!menuOpen.value || !menuRoot.value) return;
+  if (!menuRoot.value.contains(event.target as Node)) {
+    menuOpen.value = false;
+  }
+}
+
+function callSupport() {
+  window.open("tel:+221338671010", "_self");
+}
+
+function openInbox() {
+  void router.push("/pro/bookings/inbox");
+}
+
+onMounted(() => {
+  document.addEventListener("click", handleDocumentClick);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocumentClick);
+});
+
+watch(
+  () => route.fullPath,
+  () => {
+    menuOpen.value = false;
+  }
+);
 </script>
 
 <style scoped>

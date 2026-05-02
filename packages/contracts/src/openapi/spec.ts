@@ -19,13 +19,70 @@ import {
   currentUserSchema,
   emailLoginSchema,
   otpRequestSchema,
-  otpVerifySchema
+  otpVerifySchema,
+  refreshInputSchema,
+  registerInputSchema,
+  updateMeInputSchema
 } from "../domain/auth.js";
 import { bookingCreateSchema, bookingSummarySchema } from "../domain/booking.js";
+import {
+  clientBenefitSchema,
+  clientPaymentMethodCreateSchema,
+  clientPaymentMethodSchema,
+  clientPaymentMethodUpdateSchema,
+  clientVoucherSchema,
+  profileOptionsSchema,
+  proClientBenefitCreateSchema,
+  proVoucherCreateSchema,
+  redeemVoucherInputSchema
+} from "../domain/profile.js";
+import {
+  proAnalyticsSchema,
+  proBlockedSlotCreateInputSchema,
+  proBlockedSlotSchema,
+  proBookingDetailSchema,
+  proBookingFullDetailSchema,
+  proBookingStatusUpdateSchema,
+  proCheckoutCompleteInputSchema,
+  proCheckoutCompleteResultSchema,
+  proCheckoutDetailsSchema,
+  proClientDetailSchema,
+  proClientSummarySchema,
+  proDashboardSchema,
+  proHoursUpdateInputSchema,
+  proInvoiceSchema,
+  proManualBookingCreatedSchema,
+  proManualBookingInputSchema,
+  proPayoutEventSchema,
+  proReviewSchema,
+  proReviewResponseInputSchema,
+  proSalonHourSchema,
+  proSalonProfileSchema,
+  proSalonUpdateInputSchema,
+  proServiceCreateInputSchema,
+  proServiceSchema,
+  proServiceUpdateInputSchema,
+  proStaffCreateInputSchema,
+  proStaffMemberSchema,
+  proStaffUpdateInputSchema,
+  proSubscriptionCheckoutInputSchema,
+  proSubscriptionCheckoutResultSchema,
+  proSubscriptionSchema,
+  proSubscriptionUpdateInputSchema
+} from "../domain/pro.js";
 import { salonDetailSchema, salonSummarySchema } from "../domain/salon.js";
 import { apiErrorSchema, paginatedResponse } from "../http/common.js";
 
 type JsonSchema = Record<string, unknown>;
+
+type Operation = {
+  tags: string[];
+  summary: string;
+  security?: Array<Record<string, string[]>>;
+  parameters?: Array<Record<string, unknown>>;
+  requestBody?: Record<string, unknown>;
+  responses: Record<string, unknown>;
+};
 
 const toOpenApiSchema = (schema: Parameters<typeof zodToJsonSchema>[0], name?: string): JsonSchema => {
   const result = zodToJsonSchema(schema, {
@@ -33,19 +90,43 @@ const toOpenApiSchema = (schema: Parameters<typeof zodToJsonSchema>[0], name?: s
     target: "openApi3",
     $refStrategy: "none"
   }) as Record<string, unknown>;
-  // zodToJsonSchema with a name wraps output in { $ref: "#/definitions/<name>", definitions: { <name>: schema } }
-  // Unwrap it so components/schemas entries are plain schema objects (not $refs to nowhere)
+
   if (name && result.$ref === `#/definitions/${name}` && result.definitions) {
     const defs = result.definitions as Record<string, JsonSchema>;
     if (defs[name]) return defs[name];
   }
+
   return result as JsonSchema;
 };
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 
-const logoutResponseSchema = z.object({
-  revoked: z.boolean()
+const withBearer = (operation: Operation): Operation => ({
+  ...operation,
+  security: [{ bearerAuth: [] }]
+});
+
+const pathParam = (name: string, description: string) => ({
+  name,
+  in: "path",
+  required: true,
+  description,
+  schema: { type: "string" }
+});
+
+const queryParam = (name: string, type: "string" | "integer" = "string") => ({
+  name,
+  in: "query",
+  required: false,
+  schema: type === "integer" ? { type: "integer" } : { type: "string" }
+});
+
+const deletedResponseSchema = z.object({ deleted: z.boolean() });
+const updatedResponseSchema = z.object({ updated: z.boolean() });
+const acceptedOtpResponseSchema = z.object({
+  accepted: z.boolean(),
+  channel: z.string(),
+  destination: z.string()
 });
 
 const adminSalonQueueResponseSchema = paginatedResponse(adminSalonQueueItemSchema);
@@ -62,18 +143,35 @@ const adminSubscriptionListResponseSchema = z.object({
 
 const schemaEntries = {
   ApiError: apiErrorSchema,
+
+  RegisterInput: registerInputSchema,
   EmailLoginInput: emailLoginSchema,
   OtpRequestInput: otpRequestSchema,
   OtpVerifyInput: otpVerifySchema,
+  RefreshInput: refreshInputSchema,
+  UpdateMeInput: updateMeInputSchema,
   AuthSession: authSessionSchema,
-  LogoutResponse: logoutResponseSchema,
+  LogoutResponse: z.object({ revoked: z.boolean() }),
+  OtpAcceptedResponse: acceptedOtpResponseSchema,
   CurrentUser: currentUserSchema,
+  ProfileOptions: profileOptionsSchema,
+  ClientPaymentMethod: clientPaymentMethodSchema,
+  ClientPaymentMethodCreateInput: clientPaymentMethodCreateSchema,
+  ClientPaymentMethodUpdateInput: clientPaymentMethodUpdateSchema,
+  ClientBenefit: clientBenefitSchema,
+  ClientVoucher: clientVoucherSchema,
+  RedeemVoucherInput: redeemVoucherInputSchema,
+  ProClientBenefitCreateInput: proClientBenefitCreateSchema,
+  ProVoucherCreateInput: proVoucherCreateSchema,
+
   SalonSummary: salonSummarySchema,
   SalonSummaryListResponse: paginatedResponse(salonSummarySchema),
   SalonDetail: salonDetailSchema,
+
   BookingCreateInput: bookingCreateSchema,
   BookingSummary: bookingSummarySchema,
   BookingSummaryListResponse: paginatedResponse(bookingSummarySchema),
+
   AdminDashboard: adminDashboardSchema,
   AdminSalonQueueFilters: adminSalonQueueFiltersSchema,
   AdminSalonQueueItem: adminSalonQueueItemSchema,
@@ -87,7 +185,43 @@ const schemaEntries = {
   AdminAuditFilters: adminAuditFiltersSchema,
   AdminAuditSummary: adminAuditSummarySchema,
   AdminAuditSummaryListResponse: adminAuditSummaryListResponseSchema,
-  AdminAuditDetail: adminAuditDetailSchema
+  AdminAuditDetail: adminAuditDetailSchema,
+
+  ProDashboard: proDashboardSchema,
+  ProSalonProfile: proSalonProfileSchema,
+  ProSalonUpdateInput: proSalonUpdateInputSchema,
+  ProService: proServiceSchema,
+  ProServiceCreateInput: proServiceCreateInputSchema,
+  ProServiceUpdateInput: proServiceUpdateInputSchema,
+  ProStaffMember: proStaffMemberSchema,
+  ProStaffCreateInput: proStaffCreateInputSchema,
+  ProStaffUpdateInput: proStaffUpdateInputSchema,
+  ProSalonHour: proSalonHourSchema,
+  ProHoursUpdateInput: proHoursUpdateInputSchema,
+  ProBlockedSlot: proBlockedSlotSchema,
+  ProBlockedSlotCreateInput: proBlockedSlotCreateInputSchema,
+  ProBookingDetail: proBookingDetailSchema,
+  ProBookingFullDetail: proBookingFullDetailSchema,
+  ProBookingStatusUpdate: proBookingStatusUpdateSchema,
+  ProManualBookingInput: proManualBookingInputSchema,
+  ProManualBookingCreated: proManualBookingCreatedSchema,
+  ProClientSummary: proClientSummarySchema,
+  ProClientDetail: proClientDetailSchema,
+  ProCheckoutDetails: proCheckoutDetailsSchema,
+  ProCheckoutCompleteInput: proCheckoutCompleteInputSchema,
+  ProCheckoutCompleteResult: proCheckoutCompleteResultSchema,
+  ProReview: proReviewSchema,
+  ProReviewResponseInput: proReviewResponseInputSchema,
+  ProAnalytics: proAnalyticsSchema,
+  ProSubscription: proSubscriptionSchema,
+  ProSubscriptionUpdateInput: proSubscriptionUpdateInputSchema,
+  ProSubscriptionCheckoutInput: proSubscriptionCheckoutInputSchema,
+  ProSubscriptionCheckoutResult: proSubscriptionCheckoutResultSchema,
+  ProPayoutEvent: proPayoutEventSchema,
+  ProInvoice: proInvoiceSchema,
+
+  UpdatedResponse: updatedResponseSchema,
+  DeletedResponse: deletedResponseSchema
 } as const;
 
 const componentsSchemas = Object.fromEntries(
@@ -126,10 +260,51 @@ export const openApiSpec = {
                   type: "object",
                   properties: {
                     status: { type: "string" },
-                    timestamp: { type: "string", format: "date-time" }
+                    timestamp: { type: "string", format: "date-time" },
+                    database: {
+                      type: "object",
+                      properties: {
+                        driver: { type: "string" },
+                        mode: { type: "string" },
+                        attempts: { type: "integer" }
+                      }
+                    }
                   },
-                  required: ["status", "timestamp"]
+                  required: ["status", "timestamp", "database"]
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v1/auth/register": {
+      post: {
+        tags: ["auth"],
+        summary: "Register client or salon owner",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("RegisterInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Authenticated session",
+            content: {
+              "application/json": {
+                schema: ref("AuthSession")
+              }
+            }
+          },
+          409: {
+            description: "Duplicate account",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
               }
             }
           }
@@ -157,7 +332,7 @@ export const openApiSpec = {
               }
             }
           },
-          400: {
+          401: {
             description: "Invalid credentials",
             content: {
               "application/json": {
@@ -182,7 +357,12 @@ export const openApiSpec = {
         },
         responses: {
           202: {
-            description: "OTP request accepted"
+            description: "OTP request accepted",
+            content: {
+              "application/json": {
+                schema: ref("OtpAcceptedResponse")
+              }
+            }
           }
         }
       }
@@ -211,11 +391,50 @@ export const openApiSpec = {
         }
       }
     },
-    "/api/v1/auth/logout": {
+    "/api/v1/auth/refresh": {
       post: {
         tags: ["auth"],
+        summary: "Refresh access token",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("RefreshInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Refreshed session",
+            content: {
+              "application/json": {
+                schema: ref("AuthSession")
+              }
+            }
+          },
+          401: {
+            description: "Session expired",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      post: withBearer({
+        tags: ["auth"],
         summary: "Logout current session",
-        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: ref("RefreshInput")
+            }
+          }
+        },
         responses: {
           200: {
             description: "Session revoked",
@@ -226,13 +445,12 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/me": {
-      get: {
+      get: withBearer({
         tags: ["auth"],
         summary: "Current user",
-        security: [{ bearerAuth: [] }],
         responses: {
           200: {
             description: "Authenticated user",
@@ -243,12 +461,212 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      }),
+      patch: withBearer({
+        tags: ["auth"],
+        summary: "Update current user",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("UpdateMeInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Updated user",
+            content: {
+              "application/json": {
+                schema: ref("CurrentUser")
+              }
+            }
+          }
+        }
+      })
     },
+    "/api/v1/metadata/profile-options": {
+      get: withBearer({
+        tags: ["auth"],
+        summary: "Profile dropdown and preference options",
+        responses: {
+          200: {
+            description: "Profile options",
+            content: {
+              "application/json": {
+                schema: ref("ProfileOptions")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/payment-methods": {
+      get: withBearer({
+        tags: ["auth"],
+        summary: "List saved payment methods",
+        responses: {
+          200: {
+            description: "Payment methods",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ items: z.array(clientPaymentMethodSchema) }))
+              }
+            }
+          }
+        }
+      }),
+      post: withBearer({
+        tags: ["auth"],
+        summary: "Create a saved payment method",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ClientPaymentMethodCreateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created payment method",
+            content: {
+              "application/json": {
+                schema: ref("ClientPaymentMethod")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/payment-methods/{paymentMethodId}": {
+      patch: withBearer({
+        tags: ["auth"],
+        summary: "Update a saved payment method",
+        parameters: [pathParam("paymentMethodId", "Payment method identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ClientPaymentMethodUpdateInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Updated payment method",
+            content: {
+              "application/json": {
+                schema: ref("ClientPaymentMethod")
+              }
+            }
+          }
+        }
+      }),
+      delete: withBearer({
+        tags: ["auth"],
+        summary: "Delete a saved payment method",
+        parameters: [pathParam("paymentMethodId", "Payment method identifier")],
+        responses: {
+          200: {
+            description: "Deleted payment method",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/payment-methods/{paymentMethodId}/default": {
+      post: withBearer({
+        tags: ["auth"],
+        summary: "Set the default saved payment method",
+        parameters: [pathParam("paymentMethodId", "Payment method identifier")],
+        responses: {
+          200: {
+            description: "Default payment method",
+            content: {
+              "application/json": {
+                schema: ref("ClientPaymentMethod")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/benefits": {
+      get: withBearer({
+        tags: ["auth"],
+        summary: "List client memberships and packages",
+        responses: {
+          200: {
+            description: "Benefits",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ items: z.array(clientBenefitSchema) }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/vouchers": {
+      get: withBearer({
+        tags: ["auth"],
+        summary: "List redeemed vouchers",
+        responses: {
+          200: {
+            description: "Vouchers",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ items: z.array(clientVoucherSchema) }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/vouchers/redeem": {
+      post: withBearer({
+        tags: ["auth"],
+        summary: "Redeem a voucher code",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("RedeemVoucherInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Redeemed voucher",
+            content: {
+              "application/json": {
+                schema: ref("ClientVoucher")
+              }
+            }
+          }
+        }
+      })
+    },
+
     "/api/v1/salons": {
       get: {
         tags: ["salons"],
         summary: "List salons",
+        parameters: [
+          queryParam("city"),
+          queryParam("category"),
+          queryParam("search"),
+          queryParam("page"),
+          queryParam("pageSize"),
+          { name: "lat", in: "query", required: false, schema: { type: "number" } },
+          { name: "lng", in: "query", required: false, schema: { type: "number" } },
+          { name: "sort", in: "query", required: false, schema: { type: "string", enum: ["nearby", "rating", "trending"] } }
+        ],
         responses: {
           200: {
             description: "Salon list",
@@ -265,14 +683,7 @@ export const openApiSpec = {
       get: {
         tags: ["salons"],
         summary: "Salon details",
-        parameters: [
-          {
-            name: "id",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("id", "Salon identifier")],
         responses: {
           200: {
             description: "Salon detail",
@@ -293,11 +704,11 @@ export const openApiSpec = {
         }
       }
     },
+
     "/api/v1/bookings": {
-      get: {
+      get: withBearer({
         tags: ["bookings"],
         summary: "List bookings",
-        security: [{ bearerAuth: [] }],
         responses: {
           200: {
             description: "Booking list",
@@ -308,11 +719,10 @@ export const openApiSpec = {
             }
           }
         }
-      },
-      post: {
+      }),
+      post: withBearer({
         tags: ["bookings"],
         summary: "Create booking",
-        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -331,13 +741,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
+
     "/api/v1/admin/dashboard": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "Admin dashboard",
-        security: [{ bearerAuth: [] }],
         responses: {
           200: {
             description: "Admin KPI dashboard",
@@ -346,29 +756,15 @@ export const openApiSpec = {
                 schema: ref("AdminDashboard")
               }
             }
-          },
-          401: {
-            description: "Unauthorized",
-            content: {
-              "application/json": {
-                schema: ref("ApiError")
-              }
-            }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/salons/pending": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "List pending salon approvals",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: "search", in: "query", required: false, schema: { type: "string" } },
-          { name: "category", in: "query", required: false, schema: { type: "string" } },
-          { name: "city", in: "query", required: false, schema: { type: "string" } },
-          { name: "status", in: "query", required: false, schema: { type: "string" } }
-        ],
+        parameters: [queryParam("search"), queryParam("category"), queryParam("city"), queryParam("status")],
         responses: {
           200: {
             description: "Pending salon queue",
@@ -379,21 +775,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/salons/{salonId}": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "Salon approval detail",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "salonId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("salonId", "Salon identifier")],
         responses: {
           200: {
             description: "Salon approval detail",
@@ -412,21 +800,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/salons/{salonId}/approve": {
-      post: {
+      post: withBearer({
         tags: ["admin"],
         summary: "Approve salon listing",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "salonId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("salonId", "Salon identifier")],
         responses: {
           200: {
             description: "Approved salon",
@@ -437,21 +817,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/salons/{salonId}/reject": {
-      post: {
+      post: withBearer({
         tags: ["admin"],
         summary: "Reject salon listing",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "salonId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("salonId", "Salon identifier")],
         requestBody: {
           required: true,
           content: {
@@ -470,21 +842,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/salons/{salonId}/request-info": {
-      post: {
+      post: withBearer({
         tags: ["admin"],
         summary: "Request more information for salon listing",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "salonId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("salonId", "Salon identifier")],
         requestBody: {
           required: true,
           content: {
@@ -495,7 +859,7 @@ export const openApiSpec = {
         },
         responses: {
           200: {
-            description: "Salon updated to needs_info",
+            description: "Salon moved to needs_info",
             content: {
               "application/json": {
                 schema: ref("AdminSalonDetail")
@@ -503,18 +867,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/subscriptions": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "List subscription lifecycles",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: "search", in: "query", required: false, schema: { type: "string" } },
-          { name: "tier", in: "query", required: false, schema: { type: "string" } },
-          { name: "status", in: "query", required: false, schema: { type: "string" } }
-        ],
+        parameters: [queryParam("search"), queryParam("tier"), queryParam("status")],
         responses: {
           200: {
             description: "Subscription list",
@@ -525,21 +884,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/subscriptions/{subscriptionId}": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "Subscription detail",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "subscriptionId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("subscriptionId", "Subscription identifier")],
         responses: {
           200: {
             description: "Subscription detail",
@@ -558,21 +909,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/subscriptions/{subscriptionId}/override": {
-      post: {
+      post: withBearer({
         tags: ["admin"],
         summary: "Apply admin subscription override",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "subscriptionId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("subscriptionId", "Subscription identifier")],
         requestBody: {
           required: true,
           content: {
@@ -589,28 +932,15 @@ export const openApiSpec = {
                 schema: ref("AdminSubscriptionDetail")
               }
             }
-          },
-          404: {
-            description: "Subscription not found",
-            content: {
-              "application/json": {
-                schema: ref("ApiError")
-              }
-            }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/audit": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "List admin audit events",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: "actor", in: "query", required: false, schema: { type: "string" } },
-          { name: "entityType", in: "query", required: false, schema: { type: "string" } },
-          { name: "action", in: "query", required: false, schema: { type: "string" } }
-        ],
+        parameters: [queryParam("actor"), queryParam("entityType"), queryParam("action")],
         responses: {
           200: {
             description: "Audit event list",
@@ -621,21 +951,13 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
     },
     "/api/v1/admin/audit/{auditId}": {
-      get: {
+      get: withBearer({
         tags: ["admin"],
         summary: "Audit event detail",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            name: "auditId",
-            in: "path",
-            required: true,
-            schema: { type: "string" }
-          }
-        ],
+        parameters: [pathParam("auditId", "Audit identifier")],
         responses: {
           200: {
             description: "Audit event detail",
@@ -654,7 +976,841 @@ export const openApiSpec = {
             }
           }
         }
-      }
+      })
+    },
+
+    "/api/v1/pro/dashboard": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Salon operational dashboard",
+        responses: {
+          200: {
+            description: "Pro dashboard",
+            content: {
+              "application/json": {
+                schema: ref("ProDashboard")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/salon": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Get owned salon profile",
+        responses: {
+          200: {
+            description: "Salon profile",
+            content: {
+              "application/json": {
+                schema: ref("ProSalonProfile")
+              }
+            }
+          }
+        }
+      }),
+      patch: withBearer({
+        tags: ["pro"],
+        summary: "Update owned salon profile",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProSalonUpdateInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Updated salon profile",
+            content: {
+              "application/json": {
+                schema: ref("ProSalonProfile")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/services": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List salon services",
+        responses: {
+          200: {
+            description: "Service list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProService")
+                }
+              }
+            }
+          }
+        }
+      }),
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Create salon service",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProServiceCreateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created service",
+            content: {
+              "application/json": {
+                schema: ref("ProService")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/services/{serviceId}": {
+      patch: withBearer({
+        tags: ["pro"],
+        summary: "Update salon service",
+        parameters: [pathParam("serviceId", "Service identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProServiceUpdateInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Updated service",
+            content: {
+              "application/json": {
+                schema: ref("ProService")
+              }
+            }
+          }
+        }
+      }),
+      delete: withBearer({
+        tags: ["pro"],
+        summary: "Archive salon service",
+        parameters: [pathParam("serviceId", "Service identifier")],
+        responses: {
+          200: {
+            description: "Deletion result",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/staff": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List salon staff",
+        responses: {
+          200: {
+            description: "Staff list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProStaffMember")
+                }
+              }
+            }
+          }
+        }
+      }),
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Create salon staff",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProStaffCreateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created staff",
+            content: {
+              "application/json": {
+                schema: ref("ProStaffMember")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/staff/{employeeId}": {
+      patch: withBearer({
+        tags: ["pro"],
+        summary: "Update salon staff",
+        parameters: [pathParam("employeeId", "Employee identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProStaffUpdateInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Updated staff",
+            content: {
+              "application/json": {
+                schema: ref("UpdatedResponse")
+              }
+            }
+          }
+        }
+      }),
+      delete: withBearer({
+        tags: ["pro"],
+        summary: "Archive salon staff",
+        parameters: [pathParam("employeeId", "Employee identifier")],
+        responses: {
+          200: {
+            description: "Deletion result",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/hours": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List opening hours",
+        responses: {
+          200: {
+            description: "Hours list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProSalonHour")
+                }
+              }
+            }
+          }
+        }
+      }),
+      put: withBearer({
+        tags: ["pro"],
+        summary: "Update opening hours",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProHoursUpdateInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Update result",
+            content: {
+              "application/json": {
+                schema: ref("UpdatedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/blocked-slots": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List blocked slots",
+        responses: {
+          200: {
+            description: "Blocked slot list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProBlockedSlot")
+                }
+              }
+            }
+          }
+        }
+      }),
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Create blocked slot",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProBlockedSlotCreateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created blocked slot",
+            content: {
+              "application/json": {
+                schema: ref("ProBlockedSlot")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/blocked-slots/{slotId}": {
+      delete: withBearer({
+        tags: ["pro"],
+        summary: "Delete blocked slot",
+        parameters: [pathParam("slotId", "Blocked slot identifier")],
+        responses: {
+          200: {
+            description: "Deletion result",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List pro bookings",
+        parameters: [queryParam("status"), queryParam("date"), queryParam("page", "integer"), queryParam("pageSize", "integer")],
+        responses: {
+          200: {
+            description: "Booking list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProBookingDetail")
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings/manual": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Create manual booking",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProManualBookingInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created manual booking",
+            content: {
+              "application/json": {
+                schema: ref("ProManualBookingCreated")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings/{bookingId}": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Get booking detail",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Booking detail",
+            content: {
+              "application/json": {
+                schema: ref("ProBookingFullDetail")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings/{bookingId}/accept": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Accept booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Updated booking status",
+            content: {
+              "application/json": {
+                schema: ref("ProBookingStatusUpdate")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings/{bookingId}/reject": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Reject booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Updated booking status",
+            content: {
+              "application/json": {
+                schema: ref("ProBookingStatusUpdate")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings/{bookingId}/start": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Start booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Updated booking status",
+            content: {
+              "application/json": {
+                schema: ref("ProBookingStatusUpdate")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/bookings/{bookingId}/complete": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Complete booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Updated booking status",
+            content: {
+              "application/json": {
+                schema: ref("ProBookingStatusUpdate")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/clients": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List salon clients",
+        parameters: [queryParam("search")],
+        responses: {
+          200: {
+            description: "Client list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProClientSummary")
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/clients/{clientId}": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Get salon client detail",
+        parameters: [pathParam("clientId", "Client identifier")],
+        responses: {
+          200: {
+            description: "Client detail",
+            content: {
+              "application/json": {
+                schema: ref("ProClientDetail")
+              }
+            }
+          },
+          404: {
+            description: "Client not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/clients/benefits": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Assign a membership or package to a client",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProClientBenefitCreateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created client benefit",
+            content: {
+              "application/json": {
+                schema: ref("ClientBenefit")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/vouchers": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Create a voucher code",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProVoucherCreateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created voucher",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({
+                  id: z.string(),
+                  code: z.string(),
+                  title: z.string(),
+                  description: z.string().nullable(),
+                  discountLabel: z.string(),
+                  expiresAt: z.string().nullable(),
+                  maxRedemptions: z.number().int().nullable()
+                }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/checkout/{bookingId}": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Get checkout details for a booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Checkout details",
+            content: {
+              "application/json": {
+                schema: ref("ProCheckoutDetails")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/checkout/{bookingId}/complete": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Complete checkout for a booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProCheckoutCompleteInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Checkout result",
+            content: {
+              "application/json": {
+                schema: ref("ProCheckoutCompleteResult")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/reviews": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List salon reviews",
+        responses: {
+          200: {
+            description: "Review list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProReview")
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/reviews/{reviewId}/response": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Respond to a review",
+        parameters: [pathParam("reviewId", "Review identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProReviewResponseInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Update result",
+            content: {
+              "application/json": {
+                schema: ref("UpdatedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/analytics": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Get salon analytics",
+        parameters: [queryParam("period")],
+        responses: {
+          200: {
+            description: "Analytics snapshot",
+            content: {
+              "application/json": {
+                schema: ref("ProAnalytics")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/subscription": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Get subscription details",
+        responses: {
+          200: {
+            description: "Subscription details",
+            content: {
+              "application/json": {
+                schema: ref("ProSubscription")
+              }
+            }
+          }
+        }
+      }),
+      patch: withBearer({
+        tags: ["pro"],
+        summary: "Update subscription settings",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProSubscriptionUpdateInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Update result",
+            content: {
+              "application/json": {
+                schema: ref("UpdatedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/subscription/checkout": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Initiate premium subscription checkout",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProSubscriptionCheckoutInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Checkout initialization",
+            content: {
+              "application/json": {
+                schema: ref("ProSubscriptionCheckoutResult")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/payouts": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List settlement and payout events",
+        responses: {
+          200: {
+            description: "Payout events",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProPayoutEvent")
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/invoices": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "List subscription invoices",
+        responses: {
+          200: {
+            description: "Invoice list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: ref("ProInvoice")
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/pro/invoices/{invoiceId}/pdf": {
+      get: withBearer({
+        tags: ["pro"],
+        summary: "Download subscription invoice PDF",
+        parameters: [pathParam("invoiceId", "Invoice identifier")],
+        responses: {
+          200: {
+            description: "PDF binary stream",
+            content: {
+              "application/pdf": {
+                schema: { type: "string", format: "binary" }
+              }
+            }
+          },
+          404: {
+            description: "Invoice not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/notifications": {
+      get: withBearer({
+        tags: ["notifications"],
+        summary: "List notifications",
+        responses: {
+          200: {
+            description: "Notification list",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({
+                  items: z.array(z.object({
+                    id: z.string(),
+                    title: z.string(),
+                    body: z.string(),
+                    channel: z.string(),
+                    readAt: z.string().nullable(),
+                    createdAt: z.string()
+                  })),
+                  total: z.number().int(),
+                  unreadCount: z.number().int()
+                }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/notifications/{id}/read": {
+      post: withBearer({
+        tags: ["notifications"],
+        summary: "Mark one notification as read",
+        parameters: [pathParam("id", "Notification identifier")],
+        responses: {
+          200: {
+            description: "Notification updated",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ read: z.boolean() }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/notifications/read-all": {
+      post: withBearer({
+        tags: ["notifications"],
+        summary: "Mark all notifications as read",
+        responses: {
+          200: {
+            description: "Notifications updated",
+            content: {
+              "application/json": {
+                schema: ref("UpdatedResponse")
+              }
+            }
+          }
+        }
+      })
     }
   }
 };

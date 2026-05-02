@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_text_styles.dart';
 
 class BookingManagePage extends StatelessWidget {
@@ -9,8 +8,6 @@ class BookingManagePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -80,7 +77,9 @@ class BookingManagePage extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: isDestructive ? colorScheme.errorContainer : colorScheme.surfaceVariant,
+                color: isDestructive
+                    ? colorScheme.errorContainer
+                    : colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: Icon(
@@ -94,9 +93,19 @@ class BookingManagePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    title,
+                    style: AppTextStyles.bodyLg.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   SizedBox(height: 4.h),
-                  Text(subtitle, style: AppTextStyles.bodySm.copyWith(color: colorScheme.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
