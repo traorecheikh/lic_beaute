@@ -92,8 +92,8 @@ final notificationsProvider =
 final unreadCountProvider = Provider<int>((ref) {
   return ref
           .watch(notificationsProvider)
-          .valueOrNull
-          ?.where((n) => !n.isRead)
+          .asData?.value
+          .where((n) => !n.isRead)
           .length ??
       0;
 });
