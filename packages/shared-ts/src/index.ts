@@ -9,7 +9,7 @@ export const bookingStatuses = [
   "cancelled"
 ] as const;
 
-export const paymentProviders = ["wave", "orange_money"] as const;
+export const paymentProviders = ["paytech"] as const;
 
 export function formatMoneyXof(amount: number) {
   return new Intl.NumberFormat("fr-SN", {
@@ -18,4 +18,3 @@ export function formatMoneyXof(amount: number) {
     maximumFractionDigits: 0
   }).format(amount);
 }
-
