@@ -38,7 +38,7 @@ function normalizePhoneNumber(phoneNumber: string) {
 
 function serializePaymentMethod(method: {
   id: string;
-  provider: "wave" | "orange_money";
+  provider: "paytech" | "manual";
   phoneNumber: string;
   label: string | null;
   isDefault: boolean;
@@ -48,7 +48,8 @@ function serializePaymentMethod(method: {
 }) {
   return clientPaymentMethodSchema.parse({
     id: method.id,
-    provider: paymentProviderSchema.parse(method.provider),
+    // Client methods must remain gateway-backed; treat legacy/manual rows as non-selectable paytech.
+    provider: paymentProviderSchema.parse(method.provider === "manual" ? "paytech" : method.provider),
     phoneNumber: method.phoneNumber,
     label: method.label,
     isDefault: method.isDefault,
@@ -122,7 +123,7 @@ export class ClientAccountController {
       cities: SENEGAL_CITIES,
       languages: ["fr", "en"],
       contactChannels: ["phone", "sms", "whatsapp"],
-      paymentProviders: ["wave", "orange_money"]
+      paymentProviders: ["paytech"]
     }));
   }
 
