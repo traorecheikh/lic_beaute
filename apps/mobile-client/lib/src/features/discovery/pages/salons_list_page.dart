@@ -5,11 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
-import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../router/app_router.dart';
 import '../providers/salon_list_provider.dart';
@@ -67,21 +65,15 @@ class SalonsListPage extends ConsumerWidget {
               context.push(AppRoutes.search);
             },
           ),
-          SizedBox(width: 4.w),
+          gapW4,
         ],
       ),
-      body: salonsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Padding(
-          padding: EdgeInsets.all(24.r),
-          child: AppErrorState(
-            error: error,
-            fallbackTitle: 'Impossible de charger les salons',
-            serverTitle: 'Le catalogue est indisponible',
-            onRetry: refresh,
-          ),
-        ),
-        data: (items) {
+      body: AppAsyncView(
+        value: salonsAsync,
+        errorTitle: 'Impossible de charger les salons',
+        serverTitle: 'Le catalogue est indisponible',
+        onRetry: refresh,
+        builder: (items) {
           return RefreshIndicator.adaptive(
             color: AppColors.primary,
             onRefresh: refresh,
@@ -177,7 +169,7 @@ class _SalonCard extends StatelessWidget {
                       child: Text(
                         'Prestige',
                         style: AppTextStyles.labelSm.copyWith(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 9.sp,
                         ),
                       ),
@@ -215,7 +207,7 @@ class _SalonCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4.h),
+                    gapH4,
                     Row(
                       children: [
                         AppIcon('star', size: 13, color: AppColors.secondary),
