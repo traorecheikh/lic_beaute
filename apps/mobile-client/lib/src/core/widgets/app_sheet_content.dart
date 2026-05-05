@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 /// Standard bottom-sheet body with title, body text, and two action buttons.
 ///
@@ -39,14 +38,14 @@ class AppSheetContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: AppTextStyles.headlineMd),
-            SizedBox(height: 8.h),
+            gapH8,
             Text(
               body,
               style: AppTextStyles.bodyMd.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
             ),
-            SizedBox(height: 24.h),
+            gapH24,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -54,7 +53,7 @@ class AppSheetContent extends StatelessWidget {
                 style: destructive
                     ? ElevatedButton.styleFrom(
                         backgroundColor: AppColors.error,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.white,
                       )
                     : null,
                 child: Text(confirmLabel),
