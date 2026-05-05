@@ -223,7 +223,7 @@ export const proSubscriptionSchema = z.object({
   autoRenew: z.boolean(),
   billingMethod: z
     .object({
-      provider: z.enum(["wave", "orange_money"]),
+      provider: z.enum(["paytech", "manual"]),
       accountNumberMasked: z.string()
     })
     .nullable()
@@ -234,7 +234,7 @@ export const proSubscriptionUpdateInputSchema = z
     autoRenew: z.boolean().optional(),
     billingMethod: z
       .object({
-        provider: z.enum(["wave", "orange_money"]),
+        provider: z.enum(["paytech", "manual"]),
         accountNumber: z.string().trim().min(8).max(20)
       })
       .nullable()
@@ -252,7 +252,7 @@ export const proSubscriptionUpdateInputSchema = z
 
 export const proSubscriptionCheckoutInputSchema = z.object({
   action: z.enum(["upgrade", "renewal"]),
-  provider: z.enum(["wave", "orange_money"]).default("wave")
+  provider: z.enum(["paytech", "manual"]).default("paytech")
 });
 
 export const proSubscriptionCheckoutResultSchema = z.object({
@@ -322,7 +322,7 @@ export const proCheckoutDetailsSchema = z.object({
 });
 
 export const proCheckoutCompleteInputSchema = z.object({
-  paymentMethod: z.enum(["cash", "wave", "orange_money", "other"]),
+  paymentMethod: z.enum(["cash", "paytech", "other"]),
   lineItems: z.array(proCheckoutLineItemSchema).min(1),
   discountXof: z.number().int().nonnegative().default(0)
 });
