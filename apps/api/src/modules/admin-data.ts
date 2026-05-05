@@ -681,9 +681,8 @@ export async function getAuditDetail(auditId: string): Promise<AdminAuditDetail 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 const HIDDEN_SETTING_KEYS = new Set([
-  "wave_api_key",
-  "wave_merchant_id",
-  "orange_money_merchant_id",
+  "paytech_api_key",
+  "paytech_api_secret",
   "platform_name"
 ]);
 
