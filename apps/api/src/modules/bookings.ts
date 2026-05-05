@@ -9,7 +9,12 @@ import { computeAvailableSlots } from "../lib/availability.js";
 import { fail, ok } from "../lib/http.js";
 import { prisma } from "../lib/prisma.js";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver);
+const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+  paytechApiKey: config.paytechApiKey,
+  paytechApiSecret: config.paytechApiSecret,
+  paytechEnv: config.paytechEnv,
+  baseOrigin: config.webOrigin
+});
 
 function calcDepositAmount(service: {
   depositMode: string;
@@ -147,7 +152,7 @@ export class BookingController {
         const payment = await tx.payment.create({
           data: {
             bookingId: booking.id,
-            provider: body.provider ?? "wave",
+            provider: body.provider ?? "paytech",
             status: "pending",
             amountXof: depositAmountXof,
             idempotencyKey: `booking-${booking.id}-deposit`
