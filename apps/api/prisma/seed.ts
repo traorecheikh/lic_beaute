@@ -378,7 +378,7 @@ async function main() {
     await prisma.clientPaymentMethod.create({
       data: {
         userId: client.id,
-        provider: index % 2 == 0 ? PaymentProvider.wave : PaymentProvider.orange_money,
+        provider: PaymentProvider.paytech,
         phoneNumber: client.phone ?? `+221770000${index.toString().padLeft(2, "0")}`,
         label: "Personnel",
         isDefault: true
@@ -624,7 +624,7 @@ async function main() {
             status: "completed",
             depositAmountXof: service.depositAmountXof ?? 0,
             depositPaymentStatus: "succeeded",
-            paymentProvider: PaymentProvider.wave,
+            paymentProvider: PaymentProvider.paytech,
             createdAt: daysAgo(d + 1)
           }
         });
@@ -682,7 +682,7 @@ async function main() {
             status: "confirmed",
             depositAmountXof: service.depositAmountXof ?? 0,
             depositPaymentStatus: "succeeded",
-            paymentProvider: PaymentProvider.wave
+            paymentProvider: PaymentProvider.paytech
           }
         });
       }
@@ -739,7 +739,7 @@ async function main() {
           source: "dev_seed",
           depositAmountXof: service.depositAmountXof ?? 0,
           depositPaymentStatus: "succeeded",
-          paymentProvider: PaymentProvider.wave,
+          paymentProvider: PaymentProvider.paytech,
           createdAt: target.status === "completed" ? daysAgo(8) : new Date(),
         }
       });
