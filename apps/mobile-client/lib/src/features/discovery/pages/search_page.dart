@@ -1,18 +1,18 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/app_error_state.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_icon_box.dart';
+import '../../../core/widgets/app_salon_list_view.dart';
 import '../../../router/app_router.dart';
 import '../providers/salon_list_provider.dart';
-import '../widgets/stale_data_notice.dart';
+import '../widgets/empty_search_state.dart';
+import '../widgets/salon_list_card.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -61,20 +61,15 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 children: [
                   GestureDetector(
                     onTap: () => context.pop(),
-                    child: Container(
-                      width: 40.r,
-                      height: 40.r,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        shape: BoxShape.circle,
-                        boxShadow: AppShadows.sm,
-                      ),
-                      child: Center(
-                        child: AppIcon(
-                          'arrow-left',
-                          size: 18,
-                          color: AppColors.onSurface,
-                        ),
+                    child: AppIconBox(
+                      circle: true,
+                      size: 40.r,
+                      color: AppColors.surface,
+                      shadow: AppShadows.sm,
+                      child: AppIcon(
+                        'arrow-left',
+                        size: 18,
+                        color: AppColors.onSurface,
                       ),
                     ),
                   ),
@@ -132,7 +127,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 ),
                               ),
                             ),
-                          SizedBox(width: 4.w),
+                          gapW4,
                         ],
                       ),
                     ),
@@ -141,7 +136,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
             ),
           ),
-          SizedBox(height: 12.h),
+          gapH12,
 
           // Category chips
           salonsAsync.maybeWhen(
@@ -159,7 +154,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
-                  separatorBuilder: (_, __) => SizedBox(width: 8.w),
+                  separatorBuilder: (_, __) => gapW8,
                   itemBuilder: (_, i) {
                     final cat = categories[i];
                     final active = _activeCategory == cat;
@@ -180,7 +175,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         child: Text(
                           cat,
                           style: AppTextStyles.labelMd.copyWith(
-                            color: active ? Colors.white : AppColors.onSurface,
+                            color: active ? AppColors.white : AppColors.onSurface,
                           ),
                         ),
                       ),
@@ -191,22 +186,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             },
             orElse: () => const SizedBox.shrink(),
           ),
-          SizedBox(height: 12.h),
+          gapH12,
 
           // Results
           Expanded(
-            child: salonsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Padding(
-                padding: EdgeInsets.all(24.r),
-                child: AppErrorState(
-                  error: error,
-                  fallbackTitle: 'Impossible de charger les salons',
-                  serverTitle: 'La recherche est indisponible',
-                  onRetry: refreshSalons,
-                ),
-              ),
-              data: (resource) {
+            child: AppAsyncView(
+              value: salonsAsync,
+              errorTitle: 'Impossible de charger les salons',
+              serverTitle: 'La recherche est indisponible',
+              onRetry: refreshSalons,
+              builder: (resource) {
                 final all =
                     resource.data?.items.toList() ??
                     const <SalonSummaryListResponseItemsInner>[];
@@ -226,182 +215,41 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 return RefreshIndicator.adaptive(
                   color: AppColors.primary,
                   onRefresh: refreshSalons,
-                  child: ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
+                  child: AppSalonListView(
+                    items: results,
+                    isStale: resource.isStale,
+                    cachedAt: resource.cachedAt,
+                    emptyState: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.55,
+                      child: const Center(
+                        child: EmptySearchState(
+                          icon: 'search',
+                          title: 'Aucun résultat',
+                          subtitle:
+                              'Essayez un autre terme ou une autre catégorie.',
+                        ),
+                      ),
                     ),
-                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 120.h),
-                    itemCount: results.isEmpty
-                        ? 1
-                        : results.length +
-                              (resource.isStale && resource.cachedAt != null
-                                  ? 1
-                                  : 0),
-                    separatorBuilder: (_, __) => SizedBox(height: 10.h),
-                    itemBuilder: (_, i) {
-                      if (resource.isStale && resource.cachedAt != null) {
-                        if (i == 0) {
-                          return StaleDataNotice(cachedAt: resource.cachedAt!);
-                        }
-                        i -= 1;
-                      }
-                      if (results.isEmpty) {
-                        return SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.55,
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                AppIcon(
-                                  'search',
-                                  size: 36,
-                                  color: AppColors.outline,
-                                ),
-                                SizedBox(height: 12.h),
-                                Text(
-                                  'Aucun résultat',
-                                  style: AppTextStyles.headlineSm,
-                                ),
-                                SizedBox(height: 6.h),
-                                Text(
-                                  'Essayez un autre terme ou une autre catégorie.',
-                                  style: AppTextStyles.bodyMd.copyWith(
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                      final salon = results[i];
-                      return _SearchResultCard(
-                        name: salon.name,
-                        category: salon.category,
-                        location: '${salon.neighborhood ?? ''} ${salon.city}'
-                            .trim(),
-                        rating: salon.averageRating.toStringAsFixed(1),
-                        imageUrl: salon.logoUrl ?? '',
-                        onTap: () => context.push(AppRoutes.salon(salon.id)),
-                      );
-                    },
+                    itemBuilder: (context, i, salon) => SalonListCard(
+                      salon: salon,
+                      onTap: () => context.push(AppRoutes.salon(salon.id)),
+                      height: 88.h,
+                      radius: 18.r,
+                      trailing: Padding(
+                        padding: EdgeInsets.only(right: 14.w),
+                        child: AppIcon(
+                          'chevron-right',
+                          size: 16,
+                          color: AppColors.outline,
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SearchResultCard extends StatelessWidget {
-  const _SearchResultCard({
-    required this.name,
-    required this.category,
-    required this.location,
-    required this.rating,
-    required this.imageUrl,
-    required this.onTap,
-  });
-
-  final String name, category, location, rating, imageUrl;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 88.h,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18.r),
-          boxShadow: AppShadows.card,
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.horizontal(
-                left: Radius.circular(18.r),
-              ),
-              child: imageUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      width: 88.r,
-                      height: 88.h,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 88.r,
-                      height: 88.h,
-                      color: AppColors.primaryLight,
-                      child: Center(
-                        child: AppIcon(
-                          'sparkle',
-                          size: 24,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 12.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: AppTextStyles.labelLg,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 3.h),
-                    Text(
-                      category,
-                      style: AppTextStyles.bodySm,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        AppIcon(
-                          'map-pin',
-                          size: 11,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        SizedBox(width: 3.w),
-                        Expanded(
-                          child: Text(
-                            location,
-                            style: AppTextStyles.bodyXs,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        AppIcon('star', size: 11, color: AppColors.secondary),
-                        SizedBox(width: 3.w),
-                        Text(rating, style: AppTextStyles.labelSm),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 14.w),
-              child: AppIcon(
-                'chevron-right',
-                size: 16,
-                color: AppColors.outline,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
