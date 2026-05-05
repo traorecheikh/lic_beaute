@@ -53,7 +53,7 @@ final bookingsListProvider =
       }
     });
 
-final bookingDetailProvider = FutureProvider.family<Map<String, dynamic>?, String>((
+final bookingDetailProvider = FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((
   ref,
   bookingId,
 ) async {
@@ -62,7 +62,7 @@ final bookingDetailProvider = FutureProvider.family<Map<String, dynamic>?, Strin
 });
 
 final bookingDetailResourceProvider =
-    FutureProvider.family<CachedResource<Map<String, dynamic>>, String>((
+    FutureProvider.autoDispose.family<CachedResource<Map<String, dynamic>>, String>((
       ref,
       bookingId,
     ) async {
