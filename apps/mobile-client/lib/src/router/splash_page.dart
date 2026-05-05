@@ -4,8 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/session/session_store.dart';
-import '../core/theme/app_colors.dart';
-import '../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'app_router.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
@@ -107,7 +106,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         Text(
                           'Beauté Avenue',
                           style: AppTextStyles.displaySm.copyWith(
-                            color: Colors.white,
+                            color: AppColors.white,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -115,7 +114,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         Text(
                           'L\'excellence à votre portée',
                           style: AppTextStyles.bodyMd.copyWith(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: AppColors.white.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
