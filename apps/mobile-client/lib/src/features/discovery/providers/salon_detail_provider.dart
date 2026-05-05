@@ -8,15 +8,16 @@ import '../../../core/storage/app_model_cache.dart';
 import '../../../core/session/session_store.dart';
 import 'cached_resource.dart';
 
-final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
-  ref,
-  salonId,
+Future<CachedResource<SalonDetail>> _fetchSalonDetail(
+  Ref ref,
+  String salonId,
 ) async {
   final api = ref.read(apiClientProvider).getSalonsApi();
   final cacheKey = '${StorageKeys.salonDetailKeyPrefix}$salonId';
   try {
     final response = await api.apiV1SalonsIdGet(id: salonId);
     final data = response.data;
+    DateTime? cachedAt;
     if (data != null) {
       await AppModelCache.putModel<SalonDetail>(
         StorageKeys.salonCacheBox,
@@ -24,8 +25,9 @@ final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
         data,
         const FullType(SalonDetail),
       );
+      cachedAt = AppModelCache.getCachedAt(StorageKeys.salonCacheBox, cacheKey);
     }
-    return data;
+    return CachedResource(data: data, isStale: false, cachedAt: cachedAt);
   } catch (_) {
     final cached = AppModelCache.getModel<SalonDetail>(
       StorageKeys.salonCacheBox,
@@ -33,10 +35,22 @@ final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
       const FullType(SalonDetail),
     );
     if (cached != null) {
-      return cached;
+      return CachedResource(
+        data: cached,
+        isStale: true,
+        cachedAt: AppModelCache.getCachedAt(StorageKeys.salonCacheBox, cacheKey),
+      );
     }
     rethrow;
   }
+}
+
+final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
+  ref,
+  salonId,
+) async {
+  final resource = await _fetchSalonDetail(ref, salonId);
+  return resource.data;
 });
 
 final salonDetailResourceProvider =
@@ -44,43 +58,7 @@ final salonDetailResourceProvider =
       ref,
       salonId,
     ) async {
-      final api = ref.read(apiClientProvider).getSalonsApi();
-      final cacheKey = '${StorageKeys.salonDetailKeyPrefix}$salonId';
-      try {
-        final response = await api.apiV1SalonsIdGet(id: salonId);
-        final data = response.data;
-        DateTime? cachedAt;
-        if (data != null) {
-          await AppModelCache.putModel<SalonDetail>(
-            StorageKeys.salonCacheBox,
-            cacheKey,
-            data,
-            const FullType(SalonDetail),
-          );
-          cachedAt = AppModelCache.getCachedAt(
-            StorageKeys.salonCacheBox,
-            cacheKey,
-          );
-        }
-        return CachedResource(data: data, isStale: false, cachedAt: cachedAt);
-      } catch (_) {
-        final cached = AppModelCache.getModel<SalonDetail>(
-          StorageKeys.salonCacheBox,
-          cacheKey,
-          const FullType(SalonDetail),
-        );
-        if (cached != null) {
-          return CachedResource(
-            data: cached,
-            isStale: true,
-            cachedAt: AppModelCache.getCachedAt(
-              StorageKeys.salonCacheBox,
-              cacheKey,
-            ),
-          );
-        }
-        rethrow;
-      }
+      return _fetchSalonDetail(ref, salonId);
     });
 
 final salonAvailabilityProvider =
