@@ -67,7 +67,7 @@ AppNetworkError resolveAppNetworkError(
             message: 'Nos services rencontrent un problème temporaire.',
           );
         }
-        final apiMessage = _extractApiMessage(error.response?.data);
+        final apiMessage = extractApiMessage(error.response?.data);
         return AppNetworkError(
           type: AppNetworkErrorType.unknown,
           title: fallbackTitle,
@@ -96,7 +96,7 @@ AppNetworkError resolveAppNetworkError(
   );
 }
 
-String? _extractApiMessage(Object? data) {
+String? extractApiMessage(Object? data) {
   if (data is Map<String, dynamic>) {
     final message = data['message'];
     if (message is String && message.trim().isNotEmpty) {
