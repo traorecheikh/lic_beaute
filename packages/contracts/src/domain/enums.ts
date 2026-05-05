@@ -37,7 +37,7 @@ export const notificationTypeSchema = z.enum([
   "payment_received",
   "salon_approved"
 ]);
-export const paymentProviderSchema = z.enum(["wave", "orange_money"]);
+export const paymentProviderSchema = z.enum(["paytech"]);
 export const clientContactChannelSchema = z.enum(["phone", "sms", "whatsapp"]);
 export const clientBenefitKindSchema = z.enum(["membership", "package"]);
 export const clientBenefitStatusSchema = z.enum([
