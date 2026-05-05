@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/app_error_state.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../features/discovery/providers/salon_detail_provider.dart';
 import '../../../router/app_router.dart';
 import '../providers/booking_funnel_provider.dart';
+import '../widgets/funnel_step_bar.dart';
 
 class SlotSelectionPage extends ConsumerStatefulWidget {
   const SlotSelectionPage({
@@ -34,27 +33,24 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
 
   static const _weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+  ({String salonId, String date, String serviceId, String? employeeId})
+  get _availabilityParams => (
+    salonId: widget.salonId,
+    date: _ymd(_selected),
+    serviceId: widget.serviceId,
+    employeeId: widget.employeeId?.isEmpty == true ? null : widget.employeeId,
+  );
+
   Future<void> _refreshCurrentAvailability() async {
-    final params = (
-      salonId: widget.salonId,
-      date: _ymd(_selected),
-      serviceId: widget.serviceId,
-      employeeId: widget.employeeId?.isEmpty == true ? null : widget.employeeId,
-    );
+    final params = _availabilityParams;
     ref.invalidate(salonAvailabilityProvider(params));
     await ref.read(salonAvailabilityProvider(params).future);
   }
 
   @override
   Widget build(BuildContext context) {
-    final availabilityParams = (
-      salonId: widget.salonId,
-      date: _ymd(_selected),
-      serviceId: widget.serviceId,
-      employeeId: widget.employeeId?.isEmpty == true ? null : widget.employeeId,
-    );
     final availabilityAsync = ref.watch(
-      salonAvailabilityProvider(availabilityParams),
+      salonAvailabilityProvider(_availabilityParams),
     );
 
     return Scaffold(
@@ -64,15 +60,11 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
           icon: AppIcon('arrow-left', size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Étape 3 sur 4',
-              style: AppTextStyles.overline.copyWith(color: AppColors.primary),
-            ),
-            Text('Choisir un créneau', style: AppTextStyles.headlineMd),
-          ],
+        title: const FunnelStepTitle(
+          step: 3,
+          total: 4,
+          title: 'Choisir un créneau',
+          separator: 'sur',
         ),
       ),
       body: Column(
@@ -80,18 +72,12 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
         children: [
           _buildDateStrip(),
           Expanded(
-            child: availabilityAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Padding(
-                padding: EdgeInsets.all(24.r),
-                child: AppErrorState(
-                  error: error,
-                  fallbackTitle: 'Impossible de charger les disponibilités',
-                  serverTitle: 'Les disponibilités sont indisponibles',
-                  onRetry: _refreshCurrentAvailability,
-                ),
-              ),
-              data: (slots) => _buildSlotGrid(slots),
+            child: AppAsyncView(
+              value: availabilityAsync,
+              errorTitle: 'Impossible de charger les disponibilités',
+              serverTitle: 'Les disponibilités sont indisponibles',
+              onRetry: _refreshCurrentAvailability,
+              builder: _buildSlotGrid,
             ),
           ),
         ],
@@ -115,8 +101,8 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('Confirmer · ${_selectedSlotLabel()}'),
-                SizedBox(width: 8.w),
-                AppIcon('chevron-right', size: 16, color: Colors.white),
+                gapW8,
+                AppIcon('chevron-right', size: 16, color: AppColors.white),
               ],
             ),
           ),
@@ -253,7 +239,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
                 child: Text(
                   slot,
                   style: AppTextStyles.labelMd.copyWith(
-                    color: isSelected ? Colors.white : AppColors.onSurface,
+                    color: isSelected ? AppColors.white : AppColors.onSurface,
                   ),
                 ),
               ),
