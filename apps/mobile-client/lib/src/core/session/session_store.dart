@@ -60,21 +60,19 @@ final dioProvider = Provider<Dio>((ref) {
   return dio;
 });
 
-final sessionProvider = StateNotifierProvider<SessionNotifier, SessionState>((
-  ref,
-) {
-  return SessionNotifier(storage: ref.watch(secureStorageProvider));
-});
+final sessionProvider = NotifierProvider<SessionNotifier, SessionState>(
+  SessionNotifier.new,
+);
 
 // ── Notifier ──────────────────────────────────────────────────────────────
 
-class SessionNotifier extends StateNotifier<SessionState> {
-  SessionNotifier({required this.storage}) : super(const SessionState());
-
-  final SecureStorage storage;
+class SessionNotifier extends Notifier<SessionState> {
+  @override
+  SessionState build() => const SessionState();
 
   Future<void> restore() async {
     state = state.copyWith(isRestoring: true);
+    final storage = ref.read(secureStorageProvider);
     try {
       final access = await storage.read(StorageKeys.accessToken);
       final refresh = await storage.read(StorageKeys.refreshToken);
@@ -102,6 +100,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
     required String userId,
     String? role,
   }) async {
+    final storage = ref.read(secureStorageProvider);
     await storage.write(StorageKeys.accessToken, accessToken);
     await storage.write(StorageKeys.refreshToken, refreshToken);
     await storage.write(StorageKeys.userId, userId);
@@ -116,6 +115,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
   }
 
   Future<void> logout() async {
+    final storage = ref.read(secureStorageProvider);
     await storage.deleteAll();
     state = const SessionState();
   }
