@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../models/account_models.dart';
 import '../providers/benefits_provider.dart';
+import '../widgets/profile_card_shell.dart';
 
 class MembershipsPage extends ConsumerWidget {
   const MembershipsPage({super.key});
@@ -84,16 +84,8 @@ class _BenefitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final formatter = DateFormat('dd/MM/yyyy');
     final isActive = benefit.status == 'active';
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: AppShadows.card,
-        border: isActive
-            ? Border.all(color: AppColors.primary, width: 1.5)
-            : Border.all(color: AppColors.outlineVariant),
-      ),
+    return ProfileCardShell(
+      highlighted: isActive,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -114,7 +106,16 @@ class _BenefitCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _StatusPill(status: benefit.status),
+              Builder(builder: (_) {
+                final (label, color) = switch (benefit.status) {
+                  'paused' => ('En pause', AppColors.secondary),
+                  'expired' => ('Expiré', AppColors.outline),
+                  'exhausted' => ('Épuisé', AppColors.outline),
+                  'cancelled' => ('Annulé', AppColors.error),
+                  _ => ('Actif', AppColors.primary),
+                };
+                return AppBadge(label: label, color: color);
+              }),
             ],
           ),
           SizedBox(height: 10.h),
@@ -123,14 +124,14 @@ class _BenefitCard extends StatelessWidget {
             style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
           ),
           if (benefit.remainingUses != null) ...[
-            SizedBox(height: 12.h),
+            gapH12,
             Text(
               '${benefit.remainingUses} utilisation(s) restante(s)',
               style: AppTextStyles.bodyMd,
             ),
           ],
           if (benefit.expiresAt != null) ...[
-            SizedBox(height: 8.h),
+            gapH8,
             Text(
               'Expire le ${formatter.format(benefit.expiresAt!)}',
               style: AppTextStyles.bodySm.copyWith(
@@ -139,7 +140,7 @@ class _BenefitCard extends StatelessWidget {
             ),
           ],
           if (benefit.billingDate != null) ...[
-            SizedBox(height: 4.h),
+            gapH4,
             Text(
               'Échéance ${formatter.format(benefit.billingDate!)}',
               style: AppTextStyles.bodySm.copyWith(
@@ -153,27 +154,3 @@ class _BenefitCard extends StatelessWidget {
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      'paused' => ('En pause', AppColors.secondary),
-      'expired' => ('Expiré', AppColors.outline),
-      'exhausted' => ('Épuisé', AppColors.outline),
-      'cancelled' => ('Annulé', AppColors.error),
-      _ => ('Actif', AppColors.primary),
-    };
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Text(label, style: AppTextStyles.labelSm.copyWith(color: color)),
-    );
-  }
-}
