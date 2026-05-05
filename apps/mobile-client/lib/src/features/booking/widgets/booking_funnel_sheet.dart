@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../router/app_router.dart';
@@ -140,7 +138,7 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
             children: [
               _Handle(),
               _Header(step: _step, onBack: _back),
-              SizedBox(height: 4.h),
+              gapH4,
               Expanded(
                 child: PageView(
                   controller: _pageCtrl,
@@ -347,7 +345,7 @@ class _Cta extends StatelessWidget {
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                      valueColor: AlwaysStoppedAnimation(AppColors.white),
                     ),
                   )
                 : Text(label),
@@ -582,7 +580,7 @@ class _SlotStep extends ConsumerWidget {
                         _kWeekDays[date.weekday - 1],
                         style: AppTextStyles.bodyXs.copyWith(
                           color: isSelected
-                              ? Colors.white.withValues(alpha: 0.75)
+                              ? AppColors.white.withValues(alpha: 0.75)
                               : AppColors.onSurfaceVariant,
                         ),
                       ),
@@ -591,7 +589,7 @@ class _SlotStep extends ConsumerWidget {
                         '${date.day}',
                         style: AppTextStyles.labelLg.copyWith(
                           color: isSelected
-                              ? Colors.white
+                              ? AppColors.white
                               : AppColors.onSurface,
                         ),
                       ),
@@ -622,12 +620,12 @@ class _SlotStep extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AppIcon('calendar', size: 32, color: AppColors.outline),
-                      SizedBox(height: 12.h),
+                      gapH12,
                       Text(
                         'Aucun créneau ce jour',
                         style: AppTextStyles.headlineSm,
                       ),
-                      SizedBox(height: 4.h),
+                      gapH4,
                       Text(
                         'Essayez une autre date.',
                         style: AppTextStyles.bodyMd.copyWith(
@@ -699,7 +697,7 @@ class _SlotStep extends ConsumerWidget {
                                   label,
                                   style: AppTextStyles.labelMd.copyWith(
                                     color: isSelected
-                                        ? Colors.white
+                                        ? AppColors.white
                                         : AppColors.onSurface,
                                   ),
                                 ),
@@ -751,7 +749,7 @@ class _SlotStep extends ConsumerWidget {
                                       letterSpacing: 1.2,
                                     ),
                                   ),
-                                  SizedBox(height: 12.h),
+                                  gapH12,
                                   GridView.count(
                                     shrinkWrap: true,
                                     physics:
@@ -794,7 +792,7 @@ class _SlotStep extends ConsumerWidget {
                                               style: AppTextStyles.headlineSm
                                                   .copyWith(
                                                     color: isSelected
-                                                        ? Colors.white
+                                                        ? AppColors.white
                                                         : AppColors.onSurface,
                                                   ),
                                             ),
@@ -874,7 +872,7 @@ class _ReviewStep extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Résumé', style: AppTextStyles.labelLg),
-              SizedBox(height: 16.h),
+              gapH16,
               _ReviewRow(icon: 'sparkle', label: funnel.serviceName ?? '—'),
               _ReviewRow(icon: 'calendar', label: slotText),
               _ReviewRow(
@@ -888,7 +886,7 @@ class _ReviewStep extends ConsumerWidget {
             ],
           ),
         ),
-        SizedBox(height: 12.h),
+        gapH12,
         // Price card
         Container(
           padding: EdgeInsets.all(20.r),
@@ -909,12 +907,12 @@ class _ReviewStep extends ConsumerWidget {
                 '$deposit XOF',
                 highlight: true,
               ),
-              SizedBox(height: 4.h),
+              gapH4,
               _PriceLine('Reste sur place', '$remaining XOF', muted: true),
             ],
           ),
         ),
-        SizedBox(height: 12.h),
+        gapH12,
         // Cancellation note
         Container(
           padding: EdgeInsets.all(14.r),
@@ -930,7 +928,7 @@ class _ReviewStep extends ConsumerWidget {
                 size: 16.r,
                 color: AppColors.onSurfaceVariant,
               ),
-              SizedBox(width: 8.w),
+              gapW8,
               Expanded(
                 child: Text(
                   "Annulation gratuite jusqu'à 24h avant le rendez-vous.",
@@ -1058,7 +1056,7 @@ class _ServiceCard extends StatelessWidget {
               height: 22.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected ? AppColors.primary : Colors.transparent,
+                color: selected ? AppColors.primary : AppColors.transparent,
                 border: Border.all(
                   color: selected ? AppColors.primary : AppColors.outline,
                   width: 1.5,
@@ -1066,11 +1064,11 @@ class _ServiceCard extends StatelessWidget {
               ),
               child: selected
                   ? Center(
-                      child: Icon(Icons.check, color: Colors.white, size: 13.r),
+                      child: Icon(Icons.check, color: AppColors.white, size: 13.r),
                     )
                   : null,
             ),
-            SizedBox(width: 12.w),
+            gapW12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1207,7 +1205,7 @@ class _StaffCard extends StatelessWidget {
               height: 22.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected ? AppColors.primary : Colors.transparent,
+                color: selected ? AppColors.primary : AppColors.transparent,
                 border: Border.all(
                   color: selected ? AppColors.primary : AppColors.outline,
                   width: 1.5,
@@ -1215,7 +1213,7 @@ class _StaffCard extends StatelessWidget {
               ),
               child: selected
                   ? Center(
-                      child: Icon(Icons.check, color: Colors.white, size: 13.r),
+                      child: Icon(Icons.check, color: AppColors.white, size: 13.r),
                     )
                   : null,
             ),
