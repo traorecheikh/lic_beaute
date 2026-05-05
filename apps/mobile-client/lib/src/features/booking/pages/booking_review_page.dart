@@ -3,14 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../profile/widgets/profile_card_shell.dart';
+import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../providers/booking_create_provider.dart';
 import '../providers/booking_funnel_provider.dart';
+import '../utils/booking_format.dart';
+import '../widgets/funnel_step_bar.dart';
 
 class BookingReviewPage extends ConsumerWidget {
   const BookingReviewPage({super.key});
@@ -24,19 +27,12 @@ class BookingReviewPage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        leading: IconButton(
-          icon: AppIcon('arrow-left', size: 22, color: AppColors.onSurface),
-          onPressed: () => context.pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Étape 4 sur 4',
-              style: AppTextStyles.bodySm.copyWith(color: AppColors.primary),
-            ),
-            Text('Confirmation', style: AppTextStyles.headlineMd),
-          ],
+        leading: const AppBackButton(),
+        title: const FunnelStepTitle(
+          step: 4,
+          total: 4,
+          title: 'Confirmation',
+          separator: 'sur',
         ),
       ),
       body: SingleChildScrollView(
@@ -45,11 +41,11 @@ class BookingReviewPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _StepBar(current: 4),
-            SizedBox(height: 24.h),
+            gapH24,
             _SummaryCard(funnel: funnel),
-            SizedBox(height: 16.h),
+            gapH16,
             _PriceCard(funnel: funnel),
-            SizedBox(height: 16.h),
+            gapH16,
             _CancellationCard(),
           ],
         ),
@@ -93,18 +89,12 @@ class _SummaryCard extends StatelessWidget {
         ? '${funnel.slotDate} · ${funnel.slotTime}'
         : 'Créneau non défini';
 
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: AppShadows.card,
-      ),
+    return ProfileCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Résumé', style: AppTextStyles.labelLg),
-          SizedBox(height: 16.h),
+          gapH16,
           _SummaryRow(
             icon: 'sparkle',
             label: funnel.serviceName ?? 'Prestation',
@@ -155,29 +145,23 @@ class _PriceCard extends StatelessWidget {
     final deposit = funnel.depositAmount ?? 0;
     final remaining = total - deposit;
 
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: AppShadows.card,
-      ),
+    return ProfileCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Détails du paiement', style: AppTextStyles.labelMd),
-          SizedBox(height: 16.h),
-          _PriceRow('Prestation', _xof(total)),
+          gapH16,
+          _PriceRow('Prestation', xof(total)),
           Divider(color: AppColors.outlineVariant, height: 24.h),
           _PriceRow(
             'Acompte à payer maintenant',
-            _xof(deposit),
+            xof(deposit),
             highlight: true,
           ),
           SizedBox(height: 6.h),
           _PriceRow(
             'Reste à payer sur place',
-            _xof(remaining < 0 ? 0 : remaining),
+            xof(remaining < 0 ? 0 : remaining),
             muted: true,
           ),
         ],
@@ -185,11 +169,6 @@ class _PriceCard extends StatelessWidget {
     );
   }
 
-  String _xof(int amount) {
-    final thousands = amount ~/ 1000;
-    final remainder = amount % 1000;
-    return remainder == 0 ? '$thousands 000 XOF' : '$amount XOF';
-  }
 }
 
 class _PriceRow extends StatelessWidget {
@@ -272,54 +251,50 @@ class _ConfirmBar extends ConsumerWidget {
     final createState = ref.watch(bookingCreateProvider);
     final loading = createState.isLoading;
 
-    return Container(
-      color: AppColors.surface,
+    return AppBottomBar(
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        final booking = await ref
-                            .read(bookingCreateProvider.notifier)
-                            .create();
-                        if (!context.mounted) return;
-                        if (booking == null) {
-                          AppSnackbar.error(
-                            context,
-                            bookingCreateErrorMessage(
-                              ref.read(bookingCreateProvider).error,
-                            ),
-                          );
-                          return;
-                        }
-                        ref
-                            .read(bookingFunnelProvider.notifier)
-                            .setDepositAmount(booking.depositAmountXof.toInt());
-                        context.push(AppRoutes.success(booking.id));
-                      },
-                child: loading
-                    ? const CircularProgressIndicator()
-                    : const Text('Confirmer la réservation'),
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: loading
+                  ? null
+                  : () async {
+                      final booking = await ref
+                          .read(bookingCreateProvider.notifier)
+                          .create();
+                      if (!context.mounted) return;
+                      if (booking == null) {
+                        AppSnackbar.error(
+                          context,
+                          bookingCreateErrorMessage(
+                            ref.read(bookingCreateProvider).error,
+                          ),
+                        );
+                        return;
+                      }
+                      ref
+                          .read(bookingFunnelProvider.notifier)
+                          .setDepositAmount(booking.depositAmountXof.toInt());
+                      context.push(AppRoutes.success(booking.id));
+                    },
+              child: loading
+                  ? const CircularProgressIndicator()
+                  : const Text('Confirmer la réservation'),
             ),
-            SizedBox(height: 8.h),
-            Text(
-              'Paiement sera activé dans une prochaine étape.',
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          gapH8,
+          Text(
+            'Paiement sera activé dans une prochaine étape.',
+            style: AppTextStyles.bodySm.copyWith(
+              color: AppColors.onSurfaceVariant,
             ),
-            SizedBox(height: 4.h),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+          gapH4,
+        ],
       ),
     );
   }
