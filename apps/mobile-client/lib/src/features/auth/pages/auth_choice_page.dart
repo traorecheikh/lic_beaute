@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../router/app_router.dart';
 
 class AuthChoicePage extends StatelessWidget {
@@ -62,7 +61,7 @@ class AuthChoicePage extends StatelessWidget {
                       child: const Text('Commencer'),
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  gapH12,
                   SizedBox(
                     width: double.infinity,
                     height: 56.h,
@@ -87,7 +86,7 @@ class AuthChoicePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16.h),
+                  gapH16,
                 ],
               ),
             ),
