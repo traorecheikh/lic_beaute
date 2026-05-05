@@ -9,7 +9,12 @@ import { fail, ok } from "../lib/http.js";
 import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/prisma.js";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver);
+const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+  paytechApiKey: config.paytechApiKey,
+  paytechApiSecret: config.paytechApiSecret,
+  paytechEnv: config.paytechEnv,
+  baseOrigin: config.webOrigin
+});
 
 export class PaymentController {
   async initiate(request: FastifyRequest, reply: FastifyReply) {
@@ -35,7 +40,11 @@ export class PaymentController {
 
       await prisma.payment.update({
         where: { id: payment.id },
-        data: { provider: body.provider, providerTxId: result.providerRef }
+        data: {
+          provider: body.provider,
+          providerTxId: result.providerRef,
+          webhookSignature: this._extractCheckoutToken(result.redirectUrl)
+        }
       });
 
       ok(reply, {
@@ -70,22 +79,54 @@ export class PaymentController {
     }
   }
 
-  async webhookWave(request: FastifyRequest, reply: FastifyReply) {
-    await this._handleWebhook(request, reply, "x-wave-signature");
+  async webhookPayTech(request: FastifyRequest, reply: FastifyReply) {
+    await this._handleWebhook(request, reply);
   }
 
-  async webhookOrangeMoney(request: FastifyRequest, reply: FastifyReply) {
-    await this._handleWebhook(request, reply, "x-orangemoney-signature");
-  }
+  async reconcile(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const params = request.params as { paymentId: string };
+      const payment = await prisma.payment.findUnique({
+        where: { id: params.paymentId },
+        include: { booking: true }
+      });
+      if (!payment) { fail(reply, 404, "payment_not_found", "Paiement introuvable."); return; }
+      if (session.role === "client" && payment.booking.clientId !== session.sub) {
+        fail(reply, 403, "forbidden", "Accès interdit.");
+        return;
+      }
+      if (!payment.webhookSignature) {
+        fail(reply, 422, "missing_provider_token", "Token fournisseur manquant pour la réconciliation.");
+        return;
+      }
 
-  private async _handleWebhook(request: FastifyRequest, reply: FastifyReply, signatureHeader: string) {
-    const rawBody = JSON.stringify(request.body);
-    const signature = (request.headers[signatureHeader] as string) ?? "";
+      const remoteStatus = await paymentAdapter.fetchPaymentStatus({ providerToken: payment.webhookSignature });
+      await this._applyPaymentStatus(payment, remoteStatus, JSON.stringify({
+        source: "reconcile",
+        paymentId: payment.id,
+        providerToken: payment.webhookSignature
+      }));
 
-    if (!paymentAdapter.verifyWebhookSignature(rawBody, signature)) {
-      fail(reply, 401, "invalid_signature", "Signature invalide.");
-      return;
+      const refreshed = await prisma.payment.findUnique({ where: { id: payment.id } });
+      if (!refreshed) { fail(reply, 404, "payment_not_found", "Paiement introuvable."); return; }
+      ok(reply, {
+        id: refreshed.id,
+        status: refreshed.status,
+        amountXof: refreshed.amountXof,
+        provider: refreshed.provider,
+        providerTxId: refreshed.providerTxId,
+        createdAt: refreshed.createdAt.toISOString()
+      });
+    } catch (error) {
+      if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      logger.error("Payment reconcile error", { error: String(error) });
+      fail(reply, 500, "internal_error", "Erreur interne.");
     }
+  }
+
+  private async _handleWebhook(request: FastifyRequest, reply: FastifyReply) {
+    const rawBody = JSON.stringify(request.body);
 
     let event: ReturnType<typeof paymentAdapter.parseWebhook>;
     try {
@@ -95,58 +136,22 @@ export class PaymentController {
       return;
     }
 
-    const payment = await prisma.payment.findFirst({
-      where: { providerTxId: event.providerRef },
-      include: { booking: true }
-    });
+    const paymentIdFromMetadata = typeof event.metadata.paymentId === "string" ? event.metadata.paymentId : null;
+    const payment = paymentIdFromMetadata
+      ? await prisma.payment.findUnique({
+          where: { id: paymentIdFromMetadata },
+          include: { booking: true }
+        })
+      : await prisma.payment.findFirst({
+          where: { providerTxId: event.providerRef },
+          include: { booking: true }
+        });
     if (!payment) {
       ok(reply, { received: true });
       return;
     }
 
-    // Idempotency: already processed
-    if (payment.status === "succeeded") {
-      ok(reply, { received: true });
-      return;
-    }
-
-    const newStatus = paymentAdapter.normalizeStatus(event.providerRef ? event.status : payment.status);
-
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: { status: newStatus, providerTxId: event.providerRef }
-      });
-
-      if (newStatus === "succeeded") {
-        await tx.booking.update({
-          where: { id: payment.bookingId },
-          data: { depositPaymentStatus: "succeeded" }
-        });
-
-        await tx.settlementEvent.create({
-          data: {
-            bookingId: payment.bookingId,
-            paymentId: payment.id,
-            eventType: "held",
-            amountXof: payment.amountXof,
-            providerReference: event.providerRef
-          }
-        });
-      }
-
-      await tx.auditLog.create({
-        data: {
-          action: "payment_webhook",
-          summary: `Payment ${payment.id} → ${newStatus}`,
-          entityType: "Payment",
-          entityId: payment.id,
-          actorName: "webhook",
-          severity: "info",
-          payloadJson: rawBody
-        }
-      });
-    });
+    await this._applyPaymentStatus(payment, event.status, rawBody, event.providerRef);
 
     ok(reply, { received: true });
   }
@@ -189,5 +194,83 @@ export class PaymentController {
       logger.error("Payment error", { error: String(error) });
       fail(reply, 500, "internal_error", "Erreur interne.");
     }
+  }
+
+  private _extractCheckoutToken(redirectUrl: string): string | null {
+    try {
+      const url = new URL(redirectUrl);
+      const segments = url.pathname.split("/").filter(Boolean);
+      const token = segments[segments.length - 1];
+      return token?.trim().length ? token : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async _applyPaymentStatus(
+    payment: {
+      id: string;
+      bookingId: string;
+      amountXof: number;
+      status: string;
+    },
+    newStatus: "pending" | "authorized" | "succeeded" | "failed" | "refunded",
+    payloadJson: string,
+    providerRefOverride?: string
+  ) {
+    if (payment.status === newStatus) return;
+    if (payment.status === "refunded") return;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: newStatus,
+          providerTxId: providerRefOverride ?? undefined
+        }
+      });
+
+      if (newStatus === "succeeded") {
+        await tx.booking.update({
+          where: { id: payment.bookingId },
+          data: { depositPaymentStatus: "succeeded" }
+        });
+
+        const existingSettlement = await tx.settlementEvent.findFirst({
+          where: {
+            paymentId: payment.id,
+            eventType: "held"
+          }
+        });
+        if (!existingSettlement) {
+          await tx.settlementEvent.create({
+            data: {
+              bookingId: payment.bookingId,
+              paymentId: payment.id,
+              eventType: "held",
+              amountXof: payment.amountXof,
+              providerReference: providerRefOverride
+            }
+          });
+        }
+      } else if (newStatus === "failed" || newStatus === "refunded") {
+        await tx.booking.update({
+          where: { id: payment.bookingId },
+          data: { depositPaymentStatus: newStatus }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: "payment_webhook",
+          summary: `Payment ${payment.id} → ${newStatus}`,
+          entityType: "Payment",
+          entityId: payment.id,
+          actorName: "webhook",
+          severity: "info",
+          payloadJson
+        }
+      });
+    });
   }
 }
