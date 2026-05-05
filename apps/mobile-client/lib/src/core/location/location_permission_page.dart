@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
-import '../theme/app_shadows.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'location_service.dart';
 
 class LocationPermissionPage extends ConsumerWidget {
@@ -16,7 +14,7 @@ class LocationPermissionPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.neutral,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: AppColors.onSurface),
@@ -48,7 +46,7 @@ class LocationPermissionPage extends ConsumerWidget {
                 ),
               ),
 
-              SizedBox(height: 32.h),
+              gapH32,
 
               Text(
                 'Salons près de vous',
@@ -58,7 +56,7 @@ class LocationPermissionPage extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
 
-              SizedBox(height: 16.h),
+              gapH16,
 
               Text(
                 'Activez la localisation pour découvrir les salons dans un rayon de 5 km autour de vous, avec la distance affichée sur chaque carte.',
@@ -110,7 +108,7 @@ class LocationPermissionPage extends ConsumerWidget {
               // CTA
               _LocationPermissionButton(),
 
-              SizedBox(height: 12.h),
+              gapH12,
 
               TextButton(
                 onPressed: () => context.pop(),
@@ -122,7 +120,7 @@ class LocationPermissionPage extends ConsumerWidget {
                 ),
               ),
 
-              SizedBox(height: 16.h),
+              gapH16,
             ],
           ),
         ),
