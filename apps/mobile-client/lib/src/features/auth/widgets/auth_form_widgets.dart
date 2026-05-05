@@ -1,8 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_back_button.dart';
+
+/// Shared scaffold for auth pages: neutral background, transparent AppBar with
+/// a back button, scrollable body with the standard header block
+/// (title + subtitle) followed by [body].
+///
+/// The [leading] parameter allows overriding the default [AppBackButton] — e.g.
+/// when the back button needs custom [onPressed] logic.
+class AuthPageScaffold extends StatelessWidget {
+  const AuthPageScaffold({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.body,
+    this.leading,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget body;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.neutral,
+      appBar: AppBar(
+        backgroundColor: AppColors.transparent,
+        elevation: 0,
+        leading: leading ?? const AppBackButton(),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 28.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            gapH16,
+            Text(title, style: AppTextStyles.displayMd),
+            gapH8,
+            Text(
+              subtitle,
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            SizedBox(height: 48.h),
+            body,
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 /// Rounded filled text field with editorial label and proper border states
 /// (enabled → focused → error → focused+error). Uses OutlineInputBorder so
@@ -140,7 +192,7 @@ class _EditorialFieldState extends State<EditorialField> {
               ),
             ),
             if (widget.suffixBuilder != null) ...[
-              SizedBox(width: 8.w),
+              gapW8,
               widget.suffixBuilder!(_focused),
             ],
           ],
@@ -192,13 +244,13 @@ class AuthPrimaryButton extends StatelessWidget {
                   height: 22.r,
                   child: const CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
                   ),
                 )
               : Text(
                   label,
                   style: AppTextStyles.labelLg.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w700,
                   ),
