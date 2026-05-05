@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_shadows.dart';
-import '../theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 /// A fully custom dropdown that matches the app's design language.
 /// Opens a themed bottom sheet — no Material DropdownButton, no Cupertino picker.
@@ -166,7 +164,7 @@ class _AppDropdownSheet<T> extends StatelessWidget {
                       children: [
                         if (itemLeading != null) ...[
                           itemLeading!(item),
-                          SizedBox(width: 12.w),
+                          gapW12,
                         ],
                         Expanded(
                           child: Text(
