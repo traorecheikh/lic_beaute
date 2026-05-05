@@ -1,0 +1,1490 @@
+{
+	"info": {
+		"_postman_id": "40870405-c274-4b89-a3f7-d025c5d88752",
+		"name": "PayTech x DOC",
+		"description": "For success operation check that sucess field is strictly equal `true` or `1`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "499289",
+		"_collection_link": "https://intech-card.postman.co/workspace/37d16ee8-2a6b-4461-a384-d68269cc27f4/collection/499289-40870405-c274-4b89-a3f7-d025c5d88752?action=share&source=collection_link&creator=499289"
+	},
+	"item": [
+		{
+			"name": "Payment success Notification",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type_event\": \"sale_complete\",\n    \"custom_field\": \"some_serialized_string_data_data_will_be_returned_in_callback\",\n    \"ref_command\": \"5e4e4f297fa21\",\n    \"item_name\": \"Paper Cup\",\n    \"item_price\": 55000,\n    \"currency\": \"xof\",\n    \"command_name\": \"Paiement Paper Cup Gold via Paytech\",\n    \"token\": \"4fe7bb6bedbd94689e89\",\n    \"env\": \"prod\",\n    \"payment_method\": \"Orange Money\",\n    \"client_phone\": \"\",\n    \"api_key_sha256\": \"dacbde6382f4bf6ecf4dcec0624712abec1c02b7e5514dad23fdf1242c70d9b5\",\n    \"api_secret_sha256\": \"91b1ae073d5edd8f3d71ac2fb88c90018c70c9b30993513de15b1757958ab0d3\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://mydomaine.com/api/payment_success_ipn_callback",
+					"protocol": "http",
+					"host": [
+						"mydomaine",
+						"com"
+					],
+					"path": [
+						"api",
+						"payment_success_ipn_callback"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transfer Notification Success",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type_event\": \"transfer_success\",\n    \"created_at\": \"2024-03-28T02:08:40.000Z\",\n    \"external_id\": \"UALI2QV4WGSULNQ8\",\n    \"token_transfer\": null,\n    \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n    \"amount\": 500,\n    \"amount_xof\": 500,\n    \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n    \"service_name\": \"Wave Senegal\",\n    \"state\": \"failed\",\n    \"destination_number\": \"772457199\",\n    \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n    \"failed_at\": null,\n    \"fee_percent\": 1,\n    \"rejected_at\": \"2024-03-28T03:37:43.000Z\",\n    \"api_key_sha256\": \"4dad282f4bf6ecf4dcec3c70d9b5dacbde6fdf124230624712abec1c02b7e551\",\n    \"api_secret_sha256\": \"b175778c90018c70c9b30993591b1ae0dd8f3d71ac2fb813de153d5e958ab0d3\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://mydomaine.com/api/transfer_success_ipn_callback",
+					"protocol": "http",
+					"host": [
+						"mydomaine",
+						"com"
+					],
+					"path": [
+						"api",
+						"transfer_success_ipn_callback"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Transfer Notification Success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_event\": \"transfer_success\",\n    \"created_at\": \"2024-03-28T02:08:40.000Z\",\n    \"external_id\": \"UALI2QV4WGSULNQ8\",\n    \"token_transfer\": null,\n    \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n    \"amount\": 500,\n    \"amount_xof\": 500,\n    \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n    \"service_name\": \"Wave Senegal\",\n    \"state\": \"failed\",\n    \"destination_number\": \"772457199\",\n    \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n    \"failed_at\": null,\n    \"fee_percent\": 1,\n    \"rejected_at\": \"2024-03-28T03:37:43.000Z\",\n    \"api_key_sha256\": \"4bf6ecf4dc1c02b7e5514dad282f42c70d9b5ad282f42c70d9b5\",\n    \"api_secret_sha256\": \"53d5edd8f3d71ac2f91b1ae078c90018c70c9b30993513de1b8b1757958ab0d3\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://mydomaine.com/api/transfer_success_ipn_callback",
+							"protocol": "http",
+							"host": [
+								"mydomaine",
+								"com"
+							],
+							"path": [
+								"api",
+								"transfer_success_ipn_callback"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "x-content-security-policy",
+							"value": "frame-ancestors 'self' *.specless.io *.specless.tech http://*.seo.aws.about.com https://*.seo.aws.about.com http://*.dotdash.com https://*.dotdash.com *.mydomaine.com"
+						},
+						{
+							"key": "content-security-policy",
+							"value": "frame-ancestors 'self' *.specless.io *.specless.tech http://*.seo.aws.about.com https://*.seo.aws.about.com http://*.dotdash.com https://*.dotdash.com *.mydomaine.com"
+						},
+						{
+							"key": "link",
+							"value": "<//www.mydomaine.com/static/1.307.0/cache/eNqNUu2SwyAIfKFzfCZOacIVISOmnbunP9N08tE4TX8pyy7gorcChYJPIIXRBzM_IfjljwlK0KEbGAL2yhHzQpplv4x20GkaVFCKeYj2IN4ooq7SldCxfgP7iEaduB6htthHLZXAjboKqni70uCY5LreThS76q4mjkirwkVzqvOiYAZ2hpBD_xKeNP4Z03PU5dZSGIaJXjuOzBYyoriEZnURDeiNqRfVUt2cjxbvTrHDaUa8G2OpLDdDR-TNjrfL0EDVjcnTx_dYws9WspEfkJMKvWb6UylP-T78bPioJYL1bhS6YbbNO5qZf8P6Qp8.min.css>; rel=preload; as=style; nopush, <//www.mydomaine.com/static/fonts/Renner-it-Medium.woff2>; rel=preload; as=font; type=\"font/woff2\"; crossorigin; nopush, <//www.mydomaine.com/static/fonts/CrimsonText-Regular.woff2>; rel=preload; as=font; type=\"font/woff2\"; crossorigin; nopush, <//www.googletagmanager.com/gtm.js?id=GTM-5P3SZGS>; rel=preload; as=script; nopush, <//www.googletagmanager.com/gtag/js?id=G-T8CJ9FL22K&l=dataLayer&cx=c>; rel=preload; as=script; nopush, <//securepubads.g.doubleclick.net/tag/js/gpt.js>; rel=preload; as=script; nopush, <//www.mydomaine.com/static/1.307.0/cache/eNp9kX2KwyAQxS9U8Q4LS_8tJRdQM7FTPybomJKefk0pJV2GgIi-91OfM7qyYXQ6mcwRtKM0U4bMVUezUmN9r30odwMXTvobvm_Qc634hE5QntD_R967iLZ-4dJVZEYYBcMRBRSPNMaILHtTVkf2SOnQP18GQV0gj1Q03wpxlwSiQGcaDMW4gNkLROoLZQuYMBP2Qn-QLRVU9AfBd-1xtUyvSXhibrY2KxjX4UdQeQt7Zfu7wD7PLrJZrfTZ2XhQC8Lj4-0Cek6v7kV0QfG7Hn-8Cuq6.min.js>; rel=preload; as=script; nopush; group=top, <//www.mydomaine.com/static/1.307.0/cache/eNp9kIsOwyAIRX9oxG-iFls2ihvSvb5-rl2W7tEmxnDlHrwaiqNzDAOqC4WXEm5K2Nd1Gsluu_Bpqo3RWdiZCjQji8OFvYdV91ALOKOyCEKJlkW-XTEPx6ykXgKrkylKaCmRPfmpMGo3oFgsTdtKioUVU6rh0QmE9QBGF2OfL1ppbQyj6xyW7zMzfdvP4XvAguwkN9MjC3cKPWFbM3yof1TKNlSWlAwFCqHF_ks-AIb5s0k.min.js>; rel=preload; as=script; nopush; group=bottom"
+						},
+						{
+							"key": "x-abt-application-version",
+							"value": "1.307.0"
+						},
+						{
+							"key": "set-cookie",
+							"value": "TMog=n03787c015dce400a8c5f3fab5935fa9d20; Path=/; Domain=.mydomaine.com; Expires=Wed, 14-May-2092 23:39:22 GMT; Max-Age=2147483647"
+						},
+						{
+							"key": "set-cookie",
+							"value": "globalTI_SID=6ff448ee-62b7-44b8-aa44-b723cc2d356c; Path=/; Domain=.mydomaine.com; Expires=Sun, 26-Apr-2026 20:25:15 GMT; Max-Age=63072000"
+						},
+						{
+							"key": "set-cookie",
+							"value": "Mint=n03787c015dce400a8c5f3fab5935fa9d20; Path=/; Domain=.mydomaine.com; Expires=Fri, 26-Apr-2024 20:55:15 GMT; Max-Age=1800"
+						},
+						{
+							"key": "set-cookie",
+							"value": "pc=1; Path=/; Domain=.mydomaine.com; Expires=Fri, 26-Apr-2024 20:55:15 GMT; Max-Age=1800"
+						},
+						{
+							"key": "referrer-policy",
+							"value": "no-referrer-when-downgrade"
+						},
+						{
+							"key": "strict-transport-security",
+							"value": "max-age=15552000"
+						},
+						{
+							"key": "expires",
+							"value": "Thu, 01 Jan 1970 00:00:00 GMT"
+						},
+						{
+							"key": "x-content-type-options",
+							"value": "nosniff"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "cache-control",
+							"value": "no-cache"
+						},
+						{
+							"key": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"key": "Via",
+							"value": "1.1 varnish, 1.1 varnish"
+						},
+						{
+							"key": "NEL",
+							"value": "{\"report_to\":\"network-errors\",\"max_age\":2592000,\"success_fraction\":0,\"failure_fraction\":1.0, \"include_subdomains\": true}"
+						},
+						{
+							"key": "Report-To",
+							"value": "{\"group\":\"network-errors\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://r.3gl.net/hawklogserver/2027/re.p\"}]}"
+						},
+						{
+							"key": "Date",
+							"value": "Fri, 26 Apr 2024 20:25:15 GMT"
+						},
+						{
+							"key": "X-Served-By",
+							"value": "cache-iad-kiad7000027-IAD, cache-iad-kiad7000027-IAD, cache-mad22059-MAD"
+						},
+						{
+							"key": "X-Cache",
+							"value": "MISS, MISS"
+						},
+						{
+							"key": "X-Cache-Hits",
+							"value": "0, 0"
+						},
+						{
+							"key": "alt-svc",
+							"value": "h3=\":443\";ma=86400,h3-29=\":443\";ma=86400,h3-27=\":443\";ma=86400"
+						},
+						{
+							"key": "transfer-encoding",
+							"value": "chunked"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"type_event\": \"transfer_success\",\n    \"created_at\": \"2024-03-28T02:08:40.000Z\",\n    \"external_id\": \"UALI2QV4WGSULNQ8\",\n    \"token_transfer\": null,\n    \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n    \"amount\": 500,\n    \"amount_xof\": 500,\n    \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n    \"service_name\": \"Wave Senegal\",\n    \"state\": \"failed\",\n    \"destination_number\": \"772457199\",\n    \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n    \"failed_at\": null,\n    \"fee_percent\": 1,\n    \"rejected_at\": \"2024-03-28T03:37:43.000Z\",\n    \"api_key_sha256\": \"538c70c9b30993513de1b8b1757958ab0d3\",\n    \"api_secret_sha256\": \"91b1ae078c9001d5edd8f3d71ac2f91b1ae078c9001f3d71ac2fb8b1757958ab0d3\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Transfer Notification Failed",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type_event\": \"transfer_failed\",\n    \"api_key_sha256\": \"4bf6ecf4dcec3fdf1242c7dacbde630624712abec1c02b7e5514dad282f0d9b5\",\n    \"api_secret_sha256\": \"153d5edd8f3d71ac2fb8b1757958ab91b1ae078c90018c70c9b30993513de0d3\",\n    \"created_at\": \"2024-03-28T02:08:40.000Z\",\n    \"external_id\":\"UALI2QV4WGSULNQ8\",\n    \"token_transfer\": null,\n    \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n    \"amount\": 500,\n    \"amount_xof\": 500,\n    \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n    \"service_name\": \"Wave Senegal\",\n    \"state\": \"failed\",\n    \"destination_number\": \"772457199\",\n    \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n    \"failed_at\": null,\n    \"fee_percent\": 1,\n    \"rejected_at\": \"2024-03-28T03:37:43.000Z\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://mydomaine.com/api/transfer_success_ipn_callback",
+					"protocol": "http",
+					"host": [
+						"mydomaine",
+						"com"
+					],
+					"path": [
+						"api",
+						"transfer_success_ipn_callback"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Transfer Notification Failed",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_event\": \"transfer_failed\",\n    \"api_key_sha256\": \"dacbde630624712abec1c02b7e5514dad282f4bf6ecf4dcec3fdf1242c70d9b5\",\n    \"api_secret_sha256\": \"91b1ae078c90018c70c9b30993513de153d5edd8f3d71ac2fb8b1757958ab0d3\",\n    \"created_at\": \"2024-03-28T02:08:40.000Z\",\n    \"external_id\":\"UALI2QV4WGSULNQ8\",\n    \"token_transfer\": null,\n    \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n    \"amount\": 500,\n    \"amount_xof\": 500,\n    \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n    \"service_name\": \"Wave Senegal\",\n    \"state\": \"failed\",\n    \"destination_number\": \"772457199\",\n    \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n    \"failed_at\": null,\n    \"fee_percent\": 1,\n    \"rejected_at\": \"2024-03-28T03:37:43.000Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://mydomaine.com/api/transfer_success_ipn_callback",
+							"protocol": "http",
+							"host": [
+								"mydomaine",
+								"com"
+							],
+							"path": [
+								"api",
+								"transfer_success_ipn_callback"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "x-content-security-policy",
+							"value": "frame-ancestors 'self' *.specless.io *.specless.tech http://*.seo.aws.about.com https://*.seo.aws.about.com http://*.dotdash.com https://*.dotdash.com *.mydomaine.com"
+						},
+						{
+							"key": "content-security-policy",
+							"value": "frame-ancestors 'self' *.specless.io *.specless.tech http://*.seo.aws.about.com https://*.seo.aws.about.com http://*.dotdash.com https://*.dotdash.com *.mydomaine.com"
+						},
+						{
+							"key": "link",
+							"value": "<//www.mydomaine.com/static/1.307.0/cache/eNqNUu2SwyAIfKFzfCZOacIVISOmnbunP9N08tE4TX8pyy7gorcChYJPIIXRBzM_IfjljwlK0KEbGAL2yhHzQpplv4x20GkaVFCKeYj2IN4ooq7SldCxfgP7iEaduB6htthHLZXAjboKqni70uCY5LreThS76q4mjkirwkVzqvOiYAZ2hpBD_xKeNP4Z03PU5dZSGIaJXjuOzBYyoriEZnURDeiNqRfVUt2cjxbvTrHDaUa8G2OpLDdDR-TNjrfL0EDVjcnTx_dYws9WspEfkJMKvWb6UylP-T78bPioJYL1bhS6YbbNO5qZf8P6Qp8.min.css>; rel=preload; as=style; nopush, <//www.mydomaine.com/static/fonts/Renner-it-Medium.woff2>; rel=preload; as=font; type=\"font/woff2\"; crossorigin; nopush, <//www.mydomaine.com/static/fonts/CrimsonText-Regular.woff2>; rel=preload; as=font; type=\"font/woff2\"; crossorigin; nopush, <//www.googletagmanager.com/gtm.js?id=GTM-5P3SZGS>; rel=preload; as=script; nopush, <//www.googletagmanager.com/gtag/js?id=G-T8CJ9FL22K&l=dataLayer&cx=c>; rel=preload; as=script; nopush, <//securepubads.g.doubleclick.net/tag/js/gpt.js>; rel=preload; as=script; nopush, <//www.mydomaine.com/static/1.307.0/cache/eNp9kX2KwyAQxS9U8Q4LS_8tJRdQM7FTPybomJKefk0pJV2GgIi-91OfM7qyYXQ6mcwRtKM0U4bMVUezUmN9r30odwMXTvobvm_Qc634hE5QntD_R967iLZ-4dJVZEYYBcMRBRSPNMaILHtTVkf2SOnQP18GQV0gj1Q03wpxlwSiQGcaDMW4gNkLROoLZQuYMBP2Qn-QLRVU9AfBd-1xtUyvSXhibrY2KxjX4UdQeQt7Zfu7wD7PLrJZrfTZ2XhQC8Lj4-0Cek6v7kV0QfG7Hn-8Cuq6.min.js>; rel=preload; as=script; nopush; group=top, <//www.mydomaine.com/static/1.307.0/cache/eNp9kIsOwyAIRX9oxG-iFls2ihvSvb5-rl2W7tEmxnDlHrwaiqNzDAOqC4WXEm5K2Nd1Gsluu_Bpqo3RWdiZCjQji8OFvYdV91ALOKOyCEKJlkW-XTEPx6ykXgKrkylKaCmRPfmpMGo3oFgsTdtKioUVU6rh0QmE9QBGF2OfL1ppbQyj6xyW7zMzfdvP4XvAguwkN9MjC3cKPWFbM3yof1TKNlSWlAwFCqHF_ks-AIb5s0k.min.js>; rel=preload; as=script; nopush; group=bottom"
+						},
+						{
+							"key": "x-abt-application-version",
+							"value": "1.307.0"
+						},
+						{
+							"key": "set-cookie",
+							"value": "Mint=n03787c015dce400a8c5f3fab5935fa9d20; Path=/; Domain=.mydomaine.com; Expires=Fri, 26-Apr-2024 20:55:38 GMT; Max-Age=1800"
+						},
+						{
+							"key": "set-cookie",
+							"value": "pc=2; Path=/; Domain=.mydomaine.com; Expires=Fri, 26-Apr-2024 20:55:38 GMT; Max-Age=1800"
+						},
+						{
+							"key": "referrer-policy",
+							"value": "no-referrer-when-downgrade"
+						},
+						{
+							"key": "strict-transport-security",
+							"value": "max-age=15552000"
+						},
+						{
+							"key": "expires",
+							"value": "Thu, 01 Jan 1970 00:00:00 GMT"
+						},
+						{
+							"key": "x-content-type-options",
+							"value": "nosniff"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "cache-control",
+							"value": "no-cache"
+						},
+						{
+							"key": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"key": "Via",
+							"value": "1.1 varnish, 1.1 varnish"
+						},
+						{
+							"key": "NEL",
+							"value": "{\"report_to\":\"network-errors\",\"max_age\":2592000,\"success_fraction\":0,\"failure_fraction\":1.0, \"include_subdomains\": true}"
+						},
+						{
+							"key": "Report-To",
+							"value": "{\"group\":\"network-errors\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://r.3gl.net/hawklogserver/2027/re.p\"}]}"
+						},
+						{
+							"key": "Date",
+							"value": "Fri, 26 Apr 2024 20:25:38 GMT"
+						},
+						{
+							"key": "X-Served-By",
+							"value": "cache-iad-kiad7000092-IAD, cache-iad-kiad7000092-IAD, cache-mad22059-MAD"
+						},
+						{
+							"key": "X-Cache",
+							"value": "MISS, MISS"
+						},
+						{
+							"key": "X-Cache-Hits",
+							"value": "0, 0"
+						},
+						{
+							"key": "alt-svc",
+							"value": "h3=\":443\";ma=86400,h3-29=\":443\";ma=86400,h3-27=\":443\";ma=86400"
+						},
+						{
+							"key": "transfer-encoding",
+							"value": "chunked"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"type_event\": \"transfer_failed\",\n    \"api_key_sha256\": \"d282f4bf6ecf4dcec3fdf1242cdacbde630624712abec1c02b7e5514da70d9b5\",\n    \"api_secret_sha256\": \"91ac2fb8b1757951b1ae078c90018c70c9b30993513de153d5edd8f3d78ab0d3\",\n    \"created_at\": \"2024-03-28T02:08:40.000Z\",\n    \"external_id\":\"UALI2QV4WGSULNQ8\",\n    \"token_transfer\": null,\n    \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n    \"amount\": 500,\n    \"amount_xof\": 500,\n    \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n    \"service_name\": \"Wave Senegal\",\n    \"state\": \"failed\",\n    \"destination_number\": \"772457199\",\n    \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n    \"failed_at\": null,\n    \"fee_percent\": 1,\n    \"rejected_at\": \"2024-03-28T03:37:43.000Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Request Payment Link",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"item_name\": \"Business plane ticket Paris-Dakar\",\n    \"item_price\": 500,\n    \"currency\": \"XOF\",\n    \"ref_command\": \"QO33IXSVTHSK48LD9GHRV3Q2LDUQ0FMP9F2EV2OFU8WV2K2VBZFEsD5R0QXCO79\",\n    \"command_name\": \"Purchase of three Paris Dakar business plane tickets for John Mcarty\",\n    \"target_payment\": \"Orange Money\",\n\n    \"ipn_url\": \"https://partner-domaine.com/api/payment_success_ipn_callback\",\n    \"refund_notif_url\": \"https://partner-domaine.com/api/payment_refund_ipn_callback\",\n\n\n    \"success_url\": \"https://partner-domaine.com/payment_success?transactionId=aaaa&some_field1=value1&some_field2=value2\",\n    \"cancel_url\": \"https://partner-domaine.com/payment_canceled?transactionId=aaaa&some_field1=value1&some_field2=value2\",\n\n    \"custom_field\": \"some_serialized_string_data_data_will_be_returned_in_callback\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://paytech.sn/api/payment/request-payment",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"payment",
+						"request-payment"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Sample Request Payment Response",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "API_KEY",
+								"value": "XXXXXX",
+								"type": "text"
+							},
+							{
+								"key": "API_SECRET",
+								"value": "XXXXXX",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_name\": \"Business plane ticket Paris-Dakar\",\n    \"item_price\": 500,\n    \"currency\": \"XOF\",\n    \"ref_command\": \"RV3Q2LDUQ0FMP9F2EV2OFU8WV2K2VBZFED5R0QQO33IXSVTHSK48LD9GHXCO79\",\n    \"command_name\": \"Purchase of three Paris Dakar business plane tickets for John Mcarty\",\n    \"target_payment\": \"Mtn Money BJ, Moov Money BJ\",\n\n    \"ipn_url\": \"https://partner-domaine.com/api/payment_success_ipn_callback\",\n\n\n    \"success_url\": \"https://partner-domaine.com/payment_success?transactionId=aaaa&some_field1=value1&some_field2=value2\",\n    \"cancel_url\": \"https://partner-domaine.com/payment_canceled?transactionId=aaaa&some_field1=value1&some_field2=value2\",\n\n    \"custom_field\": \"some_serialized_string_data_data_will_be_returned_in_callback\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://paytech.sn/api/payment/request-payment",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"payment",
+								"request-payment"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Date",
+							"value": "Thu, 20 Jan 2022 23:08:37 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "Apache"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": 1,\n    \"token\": \"40j515fgrkynl56hi\",\n    \"redirect_url\": \"https://paytech.sn/payment/checkout/40j515fgrkynl56hi\",\n    \"redirectUrl\": \"https://paytech.sn/payment/checkout/40j515fgrkynl56hi\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Send Money",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": 120,\n    \"destination_number\": \"772457199\",\n    \"service\": \"Orange Money Senegal\",\n    \"callback_url\": \"https://webhook.site/590c7575-c3c4-4abc-b753-4bd4fbe090e7\",\n    \"external_id\": \"UASGSssxxxsssUSsLSQNLId2QddddVidjk4WQ8\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://paytech.sn/api/transfer/transferFund",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"transfer",
+						"transferFund"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Send Money",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "API_KEY",
+								"value": "XXXXXX",
+								"type": "text"
+							},
+							{
+								"key": "API_SECRET",
+								"value": "XXXXXX",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 200,\n    \"destination_number\": \"94512412\",\n    \"service\": \"Moov Money BJ\",\n    \"callback_url\": \"https://secure-3ds.intech.sn/ping\",\n    \"external_id\": \"UALI2QV4WGSULNQ8\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://paytech.sn/api/transfer/transferFund",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"transfer",
+								"transferFund"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 17 Apr 2024 02:33:06 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						},
+						{
+							"key": "Content-Length",
+							"value": "422"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": 1,\n    \"message\": \"Votre transfer est en cours de traitement\",\n    \"transfer\": {\n        \"created_at\": \"2024-04-17T02:33:05.000Z\",\n        \"token_transfer\": \"J70WHGCSLV37738Z\",\n        \"id_transfer\": \"PYT-DEPOT-J70WHGCSLV37738Y\",\n        \"amount\": 200,\n        \"amount_xof\": 200,\n        \"service_items_id\": \"MOOV_BJ_API_CASH_IN\",\n        \"service_name\": \"Moov Money BJ\",\n        \"state\": \"pending\",\n        \"destination_number\": \"94512412\",\n        \"validate_at\": null,\n        \"failed_at\": null,\n        \"fee_percent\": 1,\n        \"rejected_at\": null\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Send SMS",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"destination_number\": \"+221772457199\",\n    \"sms_content\": \"Hiii broski\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://paytech.sn/api/sms/sms_api",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"sms",
+						"sms_api"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Send Sms success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "API_KEY",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "API_SECRET",
+								"value": "{{api_secret}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"destination_number\": \"+221772457199\",\n    \"sms_content\": \"Hiii broski\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://paytech.sn/api/sms/sms_api",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"sms",
+								"sms_api"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 18 Dec 2024 16:24:09 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Content-Length",
+							"value": "155"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Vary",
+							"value": "Accept-Encoding"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Content-Security-Policy",
+							"value": "default-src 'none'"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Votre message a Ã©tÃ© envoye avec success vers +221772457199\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Transfer status",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://paytech.sn/api/transfer/get-status?id_transfer=PYT-DEPOT-2QV4WGSULUALINQ8",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"transfer",
+						"get-status"
+					],
+					"query": [
+						{
+							"key": "id_transfer",
+							"value": "PYT-DEPOT-2QV4WGSULUALINQ8"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Get Transfer status",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "API_KEY",
+								"value": "XXXXXX",
+								"type": "text"
+							},
+							{
+								"key": "API_SECRET",
+								"value": "XXXXXX",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://paytech.sn/api/transfer/get-status?id_transfer=PYT-DEPOT-2QV4WGSULUALINQ8",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"transfer",
+								"get-status"
+							],
+							"query": [
+								{
+									"key": "id_transfer",
+									"value": "PYT-DEPOT-2QV4WGSULUALINQ8"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 17 Apr 2024 01:59:35 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						},
+						{
+							"key": "Content-Length",
+							"value": "397"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": 1,\n    \"transfer\": {\n        \"created_at\": \"2024-03-28T02:08:40.000Z\",\n        \"token_transfer\": null,\n        \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n        \"amount\": 500,\n        \"amount_xof\": 500,\n        \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n        \"service_name\": \"Wave Senegal\",\n        \"state\": \"failed\",\n        \"destination_number\": \"772457199\",\n        \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n        \"failed_at\": null,\n        \"fee_percent\": 1,\n        \"rejected_at\": \"2024-03-28T03:37:43.000Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Payment status",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://paytech.sn/api/payment/get-status?token_payment=40j515fgrkynl56hi",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"payment",
+						"get-status"
+					],
+					"query": [
+						{
+							"key": "token_payment",
+							"value": "40j515fgrkynl56hi"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Transfer History",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://paytech.sn/api/transfer/get-history?start_date=2024-01-20&end_date=2024-05-20&page=1&search_phone=&status_in=pending,failed,success",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"transfer",
+						"get-history"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "2024-01-20"
+						},
+						{
+							"key": "end_date",
+							"value": "2024-05-20"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "search_phone",
+							"value": ""
+						},
+						{
+							"key": "status_in",
+							"value": "pending,failed,success"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Get Transfer History",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "API_KEY",
+								"value": "XXXXXX",
+								"type": "text"
+							},
+							{
+								"key": "API_SECRET",
+								"value": "XXXXXX",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://paytech.sn/api/transfer/get-history?start_date=2024-01-20&end_date=2024-05-20&page=1&search_phone&status_in=pending,failed,success",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"transfer",
+								"get-history"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-01-20"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-05-20"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "search_phone",
+									"value": null
+								},
+								{
+									"key": "status_in",
+									"value": "pending,failed,success"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 17 Apr 2024 01:55:23 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						},
+						{
+							"key": "Content-Length",
+							"value": "6903"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": 1,\n    \"page\": 1,\n    \"start_date\": \"2024-01-20 00:00:00\",\n    \"end_date\": \"2024-05-20 23:59:59\",\n    \"status_in\": [\n        \"pending\",\n        \"failed\",\n        \"success\"\n    ],\n    \"search_phone\": \"\",\n    \"max_per_page\": 300,\n    \"more_data\": false,\n    \"transfers_count\": 22,\n    \"transfers\": [\n        {\n            \"created_at\": \"2024-03-28T02:08:40.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"PYT-DEPOT-2QV4WGSULUALINQ8\",\n            \"amount\": 500,\n            \"amount_xof\": 500,\n            \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": \"2024-03-28T03:37:12.000Z\",\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": \"2024-03-28T03:37:43.000Z\"\n        },\n        {\n            \"created_at\": \"2024-03-28T02:08:13.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"PYT-DEPOT-2QV4WGRSLUALI2PL\",\n            \"amount\": 500,\n            \"amount_xof\": 500,\n            \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T02:07:23.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"PYT-DEPOT-2QV4WGPHLUALH0E1\",\n            \"amount\": 500,\n            \"amount_xof\": 500,\n            \"service_items_id\": \"WAVE_SN_API_CASH_IN\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:41:35.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 230,\n            \"amount_xof\": 230,\n            \"service_items_id\": \"ORANGE_SN_API_CASH_IN\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:39:19.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 310,\n            \"amount_xof\": 310,\n            \"service_items_id\": \"ORANGE_SN_API_CASH_IN\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:35:36.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 310,\n            \"amount_xof\": 310,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:35:13.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 310,\n            \"amount_xof\": 310,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:34:41.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 200,\n            \"amount_xof\": 200,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:33:44.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 200,\n            \"amount_xof\": 200,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:32:11.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 200,\n            \"amount_xof\": 200,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:30:12.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 200,\n            \"amount_xof\": 200,\n            \"service_items_id\": \"not_null\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:26:35.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 300,\n            \"amount_xof\": 300,\n            \"service_items_id\": \"not_null\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:23:52.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 100,\n            \"amount_xof\": 100,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:22:07.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 10000,\n            \"amount_xof\": 10000,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:21:09.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 2000,\n            \"amount_xof\": 2000,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:19:09.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 2000,\n            \"amount_xof\": 2000,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T01:17:35.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 2000,\n            \"amount_xof\": 2000,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T00:56:41.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 1000,\n            \"amount_xof\": 1000,\n            \"service_items_id\": \"not_null\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"failed\",\n            \"destination_number\": \"777677199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T00:54:22.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 2000,\n            \"amount_xof\": 2000,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T00:50:24.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 1500,\n            \"amount_xof\": 1500,\n            \"service_items_id\": \"not_null\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T00:45:15.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 1000,\n            \"amount_xof\": 1000,\n            \"service_items_id\": \"not_null\",\n            \"service_name\": \"Wave Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": 1,\n            \"rejected_at\": null\n        },\n        {\n            \"created_at\": \"2024-03-28T00:26:12.000Z\",\n            \"token_transfer\": null,\n            \"id_transfer\": \"\",\n            \"amount\": 2000,\n            \"amount_xof\": 2000,\n            \"service_items_id\": \"52\",\n            \"service_name\": \"Orange Money Senegal\",\n            \"state\": \"pending\",\n            \"destination_number\": \"772457199\",\n            \"validate_at\": null,\n            \"failed_at\": null,\n            \"fee_percent\": null,\n            \"rejected_at\": null\n        }\n    ]\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Account Info",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"accept": true,
+					"connection": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					},
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://paytech.sn/api/transfer/get-account-info",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"transfer",
+						"get-account-info"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Get Account Info",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "API_KEY",
+								"value": "XXXXXX",
+								"type": "text"
+							},
+							{
+								"key": "API_SECRET",
+								"value": "XXXXXX",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://paytech.sn/api/transfer/get-account-info",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"transfer",
+								"get-account-info"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 16 Apr 2024 23:40:48 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						},
+						{
+							"key": "Content-Length",
+							"value": "154"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": 1,\n    \"accountInfo\": {\n        \"solde\": 585213.6,\n        \"hold_amount\": 0,\n        \"fee\": 5852.13,\n        \"totalTransferable\": 585213.6,\n        \"transferableDispo\": 579361.46\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Do Refund",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "API_SECRET",
+						"value": "{{api_secret}}",
+						"type": "text"
+					},
+					{
+						"key": "API_KEY",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ref_command",
+							"value": "5e4e4f297fa21",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://paytech.sn/api/payment/refund-payment",
+					"protocol": "https",
+					"host": [
+						"paytech",
+						"sn"
+					],
+					"path": [
+						"api",
+						"payment",
+						"refund-payment"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Do Refund",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "API_SECRET",
+								"value": "XXXX",
+								"type": "text"
+							},
+							{
+								"key": "API_KEY",
+								"value": "XXXX",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "ref_command",
+									"value": "5e4e4f297fa21",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://paytech.sn/api/payment/refund-payment",
+							"protocol": "https",
+							"host": [
+								"paytech",
+								"sn"
+							],
+							"path": [
+								"api",
+								"payment",
+								"refund-payment"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 20 Nov 2024 14:02:09 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "128"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "X-DNS-Prefetch-Control",
+							"value": "off"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains; preload"
+						},
+						{
+							"key": "X-Download-Options",
+							"value": "noopen"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"80-gfHRw0NFFYQGyQUMWOyhlXXcD48\""
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": -1,\n    \"message\": \" Le vendeur n'existe pas ou cle api invalide\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Refund Notification",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type_event\": \"refund_complete\",\n    \"custom_field\": \" { \\\"item_id\\\": 1 }\",\n    \"ref_command\": \"5e4e4f297fa21\",\n    \"item_name\": \"Paper Cup\",\n    \"item_price\": 55000,\n    \"currency\": \"xof\",\n    \"command_name\": \"Paiement Paper Cup Gold via Paytech\",\n    \"token\": \"4fe7bb6bedbd94689e89\",\n    \"env\": \"prod\",\n    \"payment_method\": \"Orange Money\",\n    \"client_phone\": \"\",\n    \"api_key_sha256\": \"bf6ecf4dcec3fdf1242dacbde630624712abec1c02b7e5514dad282f4c70d9b5\",\n    \"api_secret_sha256\": \"993513de153d5e91b1ae078c90018c70c9b30dd8f3d71ac2fb8b1757958ab0d3\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://mydomaine.com/api/refund_callbback",
+					"protocol": "http",
+					"host": [
+						"mydomaine",
+						"com"
+					],
+					"path": [
+						"api",
+						"refund_callbback"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TARGET PAYMENT LIST",
+			"request": {
+				"method": "VIEW",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    \"Orange Money\",\n    \"Orange Money CI\",\n    \"Orange Money ML\",\n    \"Mtn Money CI\",\n    \"Moov Money CI\",\n    \"Moov Money ML\",\n    \"Wave\",\n    \"Wave CI\",\n    \"Wizall\",\n    \"Carte Bancaire\",\n    \"Emoney\",\n    \"Tigo Cash\",\n    \"Free Money\",\n    \"Moov Money BJ\",\n    \"Mtn Money BJ\"\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "api_secret",
+			"value": "xxxx",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "xxxx",
+			"type": "string"
+		}
+	]
+}
