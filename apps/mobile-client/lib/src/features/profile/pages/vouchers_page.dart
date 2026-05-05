@@ -5,10 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../models/account_models.dart';
@@ -61,7 +60,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  gapH12,
                   ...vouchersAsync.when(
                     loading: () => const [
                       Center(child: CircularProgressIndicator()),
@@ -98,7 +97,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                                   style: AppTextStyles.labelLg,
                                   textAlign: TextAlign.center,
                                 ),
-                                SizedBox(height: 4.h),
+                                gapH4,
                                 Text(
                                   'Entrez un code ci-dessous pour le sauvegarder.',
                                   style: AppTextStyles.bodySm.copyWith(
@@ -113,7 +112,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                       }
                       return [
                         for (var i = 0; i < vouchers.length; i++) ...[
-                          if (i > 0) SizedBox(height: 12.h),
+                          if (i > 0) gapH12,
                           _VoucherCard(
                             voucher: vouchers[i],
                             onCopy: () => _copyCode(context, vouchers[i].code),
@@ -140,7 +139,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  gapH12,
                   SizedBox(
                     width: double.infinity,
                     child: Container(
@@ -169,7 +168,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                               onSubmitted: (_) => _applyCode(),
                             ),
                           ),
-                          SizedBox(width: 12.w),
+                          gapW12,
                           ElevatedButton(
                             onPressed: _submitting ? null : _applyCode,
                             style: ElevatedButton.styleFrom(
@@ -215,13 +214,8 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
       if (!mounted) return;
       AppSnackbar.success(context, 'Code ajouté à votre compte.');
       _codeCtrl.clear();
-    } on DioException catch (error) {
-      if (!mounted) return;
-      final data = error.response?.data;
-      final message = data is Map<String, dynamic>
-          ? data['message'] as String? ?? 'Code promo invalide.'
-          : 'Code promo invalide.';
-      AppSnackbar.error(context, message);
+    } catch (error) {
+      await context.handleHttpError(error, 'Code promo invalide.');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -273,36 +267,36 @@ class _VoucherCard extends StatelessWidget {
               children: [
                 Text(
                   voucher.title,
-                  style: AppTextStyles.bodySm.copyWith(color: Colors.white70),
+                  style: AppTextStyles.bodySm.copyWith(color: AppColors.white70),
                 ),
-                SizedBox(height: 4.h),
+                gapH4,
                 Text(
                   voucher.discountLabel,
                   style: AppTextStyles.headlineMd.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 12.h),
+                gapH12,
                 Text(
                   voucher.code,
                   style: AppTextStyles.labelLg.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     letterSpacing: 2,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                gapH8,
                 Text(
                   voucher.expiresAt == null
                       ? 'Sans date limite'
                       : 'Expire le ${formatter.format(voucher.expiresAt!)}',
-                  style: AppTextStyles.bodySm.copyWith(color: Colors.white70),
+                  style: AppTextStyles.bodySm.copyWith(color: AppColors.white70),
                 ),
                 if (voucher.salonName != null) ...[
-                  SizedBox(height: 4.h),
+                  gapH4,
                   Text(
                     voucher.salonName!,
-                    style: AppTextStyles.bodySm.copyWith(color: Colors.white70),
+                    style: AppTextStyles.bodySm.copyWith(color: AppColors.white70),
                   ),
                 ],
               ],
@@ -315,7 +309,7 @@ class _VoucherCard extends StatelessWidget {
                 onPressed: onCopy,
                 child: Text(
                   'Copier',
-                  style: AppTextStyles.labelMd.copyWith(color: Colors.white),
+                  style: AppTextStyles.labelMd.copyWith(color: AppColors.white),
                 ),
               ),
               _StatusBadge(status: voucher.status),
@@ -342,12 +336,12 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: AppColors.white.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
         label,
-        style: AppTextStyles.labelSm.copyWith(color: Colors.white),
+        style: AppTextStyles.labelSm.copyWith(color: AppColors.white),
       ),
     );
   }
