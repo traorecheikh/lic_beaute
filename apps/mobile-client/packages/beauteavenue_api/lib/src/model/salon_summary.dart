@@ -353,3 +353,7 @@ class SalonSummarySubscriptionTierEnum extends EnumClass {
   static SalonSummarySubscriptionTierEnum valueOf(String name) =>
       _$salonSummarySubscriptionTierEnumValueOf(name);
 }
+
+extension SalonSummaryExtension on SalonSummary {
+  String get formattedLocation => '${neighborhood ?? ''} $city'.trim();
+}
