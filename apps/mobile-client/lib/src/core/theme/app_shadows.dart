@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 abstract final class AppShadows {
   static List<BoxShadow> get card => [
