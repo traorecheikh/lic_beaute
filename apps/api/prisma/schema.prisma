@@ -54,8 +54,8 @@ enum SubscriptionStatus {
 }
 
 enum PaymentProvider {
-  wave
-  orange_money
+  paytech
+  manual
 }
 
 enum BlockedSlotScope {
@@ -236,7 +236,7 @@ model Booking {
 model Payment {
   id               String            @id @default(cuid())
   bookingId        String
-  provider         PaymentProvider   @default(wave)
+  provider         PaymentProvider   @default(paytech)
   status           PaymentStatus     @default(pending)
   amountXof        Int
   providerTxId     String?
