@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -23,7 +22,7 @@ class AboutPage extends StatelessWidget {
           children: [
             // Logo + app name
             Image.asset('assets/logo.png', width: 80.r, height: 80.r),
-            SizedBox(height: 16.h),
+            gapH16,
             Text(
               'Beauté Avenue',
               style: AppTextStyles.displaySm.copyWith(height: 1.1),
@@ -35,7 +34,7 @@ class AboutPage extends StatelessWidget {
                 color: AppColors.onSurfaceVariant,
               ),
             ),
-            SizedBox(height: 4.h),
+            gapH4,
             Text(
               'Version 1.0.0',
               style: AppTextStyles.bodySm.copyWith(color: AppColors.outline),
@@ -46,19 +45,19 @@ class AboutPage extends StatelessWidget {
               body:
                   "Beauté Avenue connecte les clients sénégalais aux meilleurs salons de beauté de leur quartier. Réservez en quelques secondes, payez en toute sécurité avec Wave ou Orange Money, et profitez d'une expérience beauté sans stress.",
             ),
-            SizedBox(height: 12.h),
+            gapH12,
             _InfoCard(
               title: 'Qui sommes-nous ?',
               body:
                   "Nous sommes une startup basée à Dakar, fondée par des passionnés de beauté et de technologie. Notre ambition : digitaliser l'expérience beauté en Afrique de l'Ouest, en partant du Sénégal.",
             ),
-            SizedBox(height: 12.h),
+            gapH12,
             _InfoCard(
               title: 'Contactez-nous',
               body:
                   "contact@beauteavenue.sn\n+221 77 000 00 00\nDakar, Sénégal",
             ),
-            SizedBox(height: 32.h),
+            gapH32,
             Text(
               '© 2025 Beauté Avenue. Tous droits réservés.',
               style: AppTextStyles.bodySm.copyWith(color: AppColors.outline),
@@ -90,7 +89,7 @@ class _InfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: AppTextStyles.labelMd),
-          SizedBox(height: 8.h),
+          gapH8,
           Text(
             body,
             style: AppTextStyles.bodyMd.copyWith(
