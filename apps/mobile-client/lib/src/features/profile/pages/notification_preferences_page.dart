@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_tile.dart';
 import '../providers/profile_provider.dart';
 
 class NotificationPreferencesPage extends ConsumerWidget {
@@ -149,42 +149,14 @@ class _PrefTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      child: Row(
-        children: [
-          Container(
-            width: 38.r,
-            height: 38.r,
-            decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(icon, size: 20.r, color: AppColors.primary),
-          ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.labelLg),
-                SizedBox(height: 2.h),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.bodySm.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Switch.adaptive(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: AppColors.primary,
-          ),
-        ],
+    return AppTile(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      trailing: Switch.adaptive(
+        value: value,
+        onChanged: onChanged,
+        activeTrackColor: AppColors.primary,
       ),
     );
   }
