@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../widgets/faq_tile.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
@@ -56,79 +56,8 @@ class FaqPage extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
         itemCount: _faqs.length,
         separatorBuilder: (_, __) => SizedBox(height: 10.h),
-        itemBuilder: (_, i) => _FaqTile(item: _faqs[i]),
-      ),
-    );
-  }
-}
-
-class _FaqTile extends StatefulWidget {
-  const _FaqTile({required this.item});
-  final _FaqItem item;
-
-  @override
-  State<_FaqTile> createState() => _FaqTileState();
-}
-
-class _FaqTileState extends State<_FaqTile> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        padding: EdgeInsets.all(18.r),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color: _expanded ? AppColors.primary : AppColors.outlineVariant,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.item.q,
-                    style: AppTextStyles.labelLg.copyWith(
-                      color: _expanded
-                          ? AppColors.primary
-                          : AppColors.onSurface,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                AnimatedRotation(
-                  turns: _expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 220),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 22.r,
-                    color: _expanded
-                        ? AppColors.primary
-                        : AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            if (_expanded) ...[
-              SizedBox(height: 12.h),
-              Text(
-                widget.item.a,
-                style: AppTextStyles.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                  height: 1.55,
-                ),
-              ),
-            ],
-          ],
-        ),
+        itemBuilder: (_, i) =>
+            FaqTile(question: _faqs[i].q, answer: _faqs[i].a),
       ),
     );
   }
