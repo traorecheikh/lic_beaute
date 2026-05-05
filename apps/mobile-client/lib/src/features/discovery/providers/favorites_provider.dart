@@ -1,7 +1,23 @@
+import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:built_value/serializer.dart';
 
 import '../../../core/session/session_store.dart';
+import 'cached_resource.dart';
+
+final favoritesListProvider = FutureProvider<CachedResource<List<SalonSummary>>>((ref) async {
+  final dio = ref.read(dioProvider);
+  final response = await dio.get<Map<String, dynamic>>('/api/v1/favorites');
+  final itemsJson = (response.data?['items'] as List<dynamic>?) ?? [];
+  final items = itemsJson.map((json) {
+    return standardSerializers.deserialize(
+      json,
+      specifiedType: const FullType(SalonSummary),
+    ) as SalonSummary;
+  }).toList();
+  return CachedResource(data: items, isStale: false);
+});
 
 @immutable
 class FavoritesState {
@@ -20,17 +36,17 @@ class FavoritesState {
   }
 }
 
-class FavoritesNotifier extends StateNotifier<FavoritesState> {
-  FavoritesNotifier(this._ref) : super(const FavoritesState()) {
+class FavoritesNotifier extends Notifier<FavoritesState> {
+  @override
+  FavoritesState build() {
     _load();
+    return const FavoritesState();
   }
-
-  final Ref _ref;
 
   Future<void> _load() async {
     state = state.copyWith(loading: true);
     try {
-      final dio = _ref.read(dioProvider);
+      final dio = ref.read(dioProvider);
       final response = await dio.get<Map<String, dynamic>>('/api/v1/favorites');
       final items = (response.data?['items'] as List<dynamic>?) ?? [];
       final ids = items
@@ -54,7 +70,7 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
     state = state.copyWith(salonIds: updated);
 
     try {
-      final dio = _ref.read(dioProvider);
+      final dio = ref.read(dioProvider);
       if (isFav) {
         await dio.delete('/api/v1/favorites/$salonId');
       } else {
@@ -70,6 +86,4 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
 }
 
 final favoritesProvider =
-    StateNotifierProvider<FavoritesNotifier, FavoritesState>((ref) {
-      return FavoritesNotifier(ref);
-    });
+    NotifierProvider<FavoritesNotifier, FavoritesState>(FavoritesNotifier.new);
