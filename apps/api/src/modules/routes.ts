@@ -75,8 +75,8 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   // ── Payments ──────────────────────────────────────────────────────────────
   app.post("/api/v1/payments/deposits/initiate", (req, rep) => payments.initiate(req, rep));
   app.get("/api/v1/payments/:paymentId", (req, rep) => payments.status(req, rep));
-  app.post("/api/v1/payments/webhooks/wave", (req, rep) => payments.webhookWave(req, rep));
-  app.post("/api/v1/payments/webhooks/orange-money", (req, rep) => payments.webhookOrangeMoney(req, rep));
+  app.post("/api/v1/payments/:paymentId/reconcile", (req, rep) => payments.reconcile(req, rep));
+  app.post("/api/v1/payments/webhooks/paytech", (req, rep) => payments.webhookPayTech(req, rep));
   app.post("/api/v1/payments/:paymentId/refund", (req, rep) => payments.refund(req, rep));
 
   // ── Pro ───────────────────────────────────────────────────────────────────
