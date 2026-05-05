@@ -259,7 +259,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.bookingStaff,
         builder: (_, state) => StaffSelectionPage(
-          serviceId: state.uri.queryParameters['serviceId'] ?? '',
           salonId: state.uri.queryParameters['salonId'] ?? '',
         ),
       ),
