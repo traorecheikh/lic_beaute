@@ -4,7 +4,12 @@ import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
 import { sendNotification } from "./modules/notifications.js";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver);
+const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+  paytechApiKey: config.paytechApiKey,
+  paytechApiSecret: config.paytechApiSecret,
+  paytechEnv: config.paytechEnv,
+  baseOrigin: config.webOrigin
+});
 
 type Job = {
   id: string;
