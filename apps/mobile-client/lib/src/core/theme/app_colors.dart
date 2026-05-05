@@ -80,4 +80,12 @@ abstract final class AppColors {
     Color(0xFF1A1614),
     Color(0xFF2D1520),
   ];
+
+  static const white = Color(0xFFFFFFFF);
+  static const black = Color(0xFF000000);
+  static const transparent = Color(0x00000000);
+
+  static const white70 = Color(0xB2FFFFFF);
+  static const black54 = Color(0x8A000000);
+  static const white38 = Color(0x61FFFFFF);
 }
