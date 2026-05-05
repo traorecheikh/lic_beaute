@@ -1,11 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../utils/app_haptics.dart';
 import '../widgets/app_snackbar.dart';
 
@@ -25,14 +26,24 @@ class SalonMapCard extends StatelessWidget {
 
   Future<void> _openMaps(BuildContext context) async {
     AppHaptics.light();
-    // Universal deep-link: opens Google Maps on Android, Apple Maps on iOS
-    final uri = Uri.parse(
-      'https://maps.google.com/?q=${Uri.encodeComponent(salonName)}'
-      '@$latitude,$longitude',
-    );
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (context.mounted) {
-        AppSnackbar.error(context, "Impossible d'ouvrir l'application Maps.");
+
+    final String googleUrl =
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    final String appleUrl = 'https://maps.apple.com/?q=$latitude,$longitude';
+
+    if (Platform.isIOS) {
+      if (await canLaunchUrl(Uri.parse(appleUrl))) {
+        await launchUrl(Uri.parse(appleUrl), mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(Uri.parse(googleUrl), mode: LaunchMode.externalApplication);
+      }
+    } else {
+      // Android: use geo: intent to allow picker
+      final Uri geoUri = Uri.parse('geo:$latitude,$longitude?q=$latitude,$longitude($salonName)');
+      if (await canLaunchUrl(geoUri)) {
+        await launchUrl(geoUri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(Uri.parse(googleUrl), mode: LaunchMode.externalApplication);
       }
     }
   }
@@ -73,7 +84,7 @@ class SalonMapCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2.5),
+                            border: Border.all(color: AppColors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.primary.withAlpha(100),
@@ -84,7 +95,7 @@ class SalonMapCard extends StatelessWidget {
                           ),
                           child: const Icon(
                             Icons.storefront_rounded,
-                            color: Colors.white,
+                            color: AppColors.white,
                             size: 18,
                           ),
                         ),
@@ -105,7 +116,7 @@ class SalonMapCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black.withAlpha(180), Colors.transparent],
+                    colors: [AppColors.black.withAlpha(180), AppColors.transparent],
                   ),
                 ),
                 child: Row(
@@ -113,14 +124,14 @@ class SalonMapCard extends StatelessWidget {
                     const Icon(
                       Icons.map_rounded,
                       size: 14,
-                      color: Colors.white70,
+                      color: AppColors.white70,
                     ),
                     SizedBox(width: 6.w),
                     Expanded(
                       child: Text(
                         address,
                         style: AppTextStyles.bodySm.copyWith(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 11.sp,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -129,7 +140,7 @@ class SalonMapCard extends StatelessWidget {
                     Text(
                       'Ouvrir →',
                       style: AppTextStyles.labelSm.copyWith(
-                        color: Colors.white70,
+                        color: AppColors.white70,
                         fontSize: 10.sp,
                       ),
                     ),
