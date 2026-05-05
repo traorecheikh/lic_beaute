@@ -69,7 +69,7 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
       if (marketingOptIn != null) 'marketingOptIn': marketingOptIn,
       if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
     };
-    final previous = state.valueOrNull;
+    final previous = state.asData?.value;
     if (previous != null) {
       final next = previous.copyWith(
         fullName: fullName,
@@ -87,7 +87,11 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
       );
       state = AsyncData(next);
     }
+    await _updateAndSync(payload);
+  }
 
+  Future<void> _updateAndSync(Map<String, dynamic> payload) async {
+    final previous = state.asData?.value;
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
       await ref.read(outboxProvider.notifier).clearByTypePrefix('profile_');
@@ -125,22 +129,13 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
   }
 
   Future<void> uploadAvatar(File file) async {
-    final previous = state.valueOrNull;
+    final previous = state.asData?.value;
     if (previous != null) {
       state = AsyncData(previous.copyWith(pendingSync: true));
     }
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      await ref
-          .read(outboxProvider.notifier)
-          .clearByTypePrefix('profile_avatar_');
-      await ref
-          .read(outboxProvider.notifier)
-          .enqueue(
-            type: 'profile_avatar_upload',
-            payload: const {},
-            localFilePath: file.path,
-          );
+      await _enqueueAvatarUpload(file.path);
       return;
     }
 
@@ -159,19 +154,7 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
       if (mediaId == null) {
         throw StateError('Upload avatar impossible');
       }
-      final response = await dio.patch<Map<String, dynamic>>(
-        '/api/v1/me',
-        data: {'avatarMediaId': mediaId},
-      );
-      final data = response.data;
-      if (data != null) {
-        await AppModelCache.putMap(
-          StorageKeys.profileBox,
-          StorageKeys.currentUser,
-          data,
-        );
-        state = AsyncData(ClientAccountProfile.fromJson(data));
-      }
+      await _updateAndSync({'avatarMediaId': mediaId});
     } on DioException catch (error) {
       final isRecoverable =
           error.type == DioExceptionType.connectionError ||
@@ -179,17 +162,19 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
           error.type == DioExceptionType.sendTimeout ||
           error.type == DioExceptionType.receiveTimeout;
       if (!isRecoverable) rethrow;
-      await ref
-          .read(outboxProvider.notifier)
-          .clearByTypePrefix('profile_avatar_');
-      await ref
-          .read(outboxProvider.notifier)
-          .enqueue(
-            type: 'profile_avatar_upload',
-            payload: const {},
-            localFilePath: file.path,
-          );
+      await _enqueueAvatarUpload(file.path);
     }
+  }
+
+  Future<void> _enqueueAvatarUpload(String filePath) async {
+    await ref
+        .read(outboxProvider.notifier)
+        .clearByTypePrefix('profile_avatar_');
+    await ref.read(outboxProvider.notifier).enqueue(
+      type: 'profile_avatar_upload',
+      payload: const {},
+      localFilePath: filePath,
+    );
   }
 }
 
