@@ -5,9 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_shadows.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -60,12 +58,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     final bannerDismissed = ref.watch(locationBannerDismissedProvider);
     final locationStatus = ref.watch(locationStatusProvider);
 
-    final hasNearby = nearbyAsync.valueOrNull?.isNotEmpty == true;
+    final hasNearby = nearbyAsync.asData?.value?.isNotEmpty == true;
     final locationPending = nearbyAsync.isLoading; // show section header while GPS resolves
 
     // Only show banner when permission is definitively denied (not on GPS timeout or empty results)
-    final permDenied = locationStatus.valueOrNull == LocationStatus.denied ||
-        locationStatus.valueOrNull == LocationStatus.deniedForever;
+    final permDenied = locationStatus.asData?.value == LocationStatus.denied ||
+        locationStatus.asData?.value == LocationStatus.deniedForever;
     final showBanner = !bannerDismissed && !locationStatus.isLoading && permDenied;
 
     Future<void> refreshAll() async {
@@ -97,8 +95,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               SliverToBoxAdapter(
                 child: _LocationBanner(
                   onDismiss: () =>
-                      ref.read(locationBannerDismissedProvider.notifier).state =
-                          true,
+                      ref.read(locationBannerDismissedProvider.notifier).dismiss(),
                   onEnable: () async {
                     final granted = await context.push<bool>(
                       AppRoutes.locationPermission,
@@ -106,8 +103,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     if (granted == true) {
                       ref.invalidate(nearbyProvider);
                     }
-                    ref.read(locationBannerDismissedProvider.notifier).state =
-                        true;
+                    ref.read(locationBannerDismissedProvider.notifier).dismiss();
                   },
                 ),
               ),
@@ -128,7 +124,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ],
 
             // Prestige — always #2 (or #1 when no nearby)
-            if (prestigeAsync.valueOrNull?.isNotEmpty == true ||
+            if (prestigeAsync.asData?.value.isNotEmpty == true ||
                 prestigeAsync.isLoading) ...[
               _SectionHeaderSliver(
                 title: 'Adresses prestige',
@@ -167,11 +163,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildAppBar() {
-    final iconOnExpanded = Colors.white;
+    final iconOnExpanded = AppColors.white;
     final iconOnCollapsed = AppColors.onSurface;
     final adaptiveIconColor = _iconColor(iconOnExpanded, iconOnCollapsed);
     final appBarBg = Color.lerp(
-      Colors.transparent,
+      AppColors.transparent,
       AppColors.surface,
       _collapseRatio,
     )!;
@@ -182,13 +178,13 @@ class _HomePageState extends ConsumerState<HomePage> {
       pinned: true,
       backgroundColor: appBarBg,
       elevation: 0,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: AppColors.transparent,
       leading: Padding(
         padding: EdgeInsets.all(10.r),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: (1 - _collapseRatio) * 0.18),
+            color: AppColors.white.withValues(alpha: (1 - _collapseRatio) * 0.18),
             shape: BoxShape.circle,
           ),
           child: Image.asset('assets/logo.png', fit: BoxFit.contain),
@@ -237,10 +233,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     end: Alignment.bottomCenter,
                     stops: const [0.0, 0.35, 0.65, 1.0],
                     colors: [
-                      Colors.black.withValues(alpha: 0.42),
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.50),
-                      Colors.black.withValues(alpha: 0.80),
+                      AppColors.black.withValues(alpha: 0.42),
+                      AppColors.transparent,
+                      AppColors.black.withValues(alpha: 0.50),
+                      AppColors.black.withValues(alpha: 0.80),
                     ],
                   ),
                 ),
@@ -259,15 +255,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                         letterSpacing: 2,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    gapH4,
                     Text(
                       'Bonne journée,\nque désirez-vous ?',
                       style: AppTextStyles.displaySm.copyWith(
-                        color: Colors.white,
+                        color: AppColors.white,
                         height: 1.1,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withValues(alpha: 0.3),
+                            color: AppColors.black.withValues(alpha: 0.3),
                             blurRadius: 8,
                           ),
                         ],
@@ -328,7 +324,7 @@ class _LocationBanner extends StatelessWidget {
                 style: AppTextStyles.bodySm.copyWith(color: AppColors.primary),
               ),
             ),
-            SizedBox(width: 8.w),
+            gapW8,
             GestureDetector(
               onTap: onEnable,
               child: Container(
@@ -340,7 +336,7 @@ class _LocationBanner extends StatelessWidget {
                 child: Text(
                   'Activer',
                   style: AppTextStyles.labelSm.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontSize: 11.sp,
                   ),
                 ),
@@ -389,11 +385,11 @@ class _AdaptiveIconButton extends StatelessWidget {
         height: 38.r,
         decoration: BoxDecoration(
           color: hasBg
-              ? Colors.white.withValues(alpha: 0.2)
-              : Colors.transparent,
+              ? AppColors.white.withValues(alpha: 0.2)
+              : AppColors.transparent,
           shape: BoxShape.circle,
           border: hasBg
-              ? Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1)
+              ? Border.all(color: AppColors.white.withValues(alpha: 0.3), width: 1)
               : null,
         ),
         child: Center(child: AppIcon(icon, size: 20, color: color)),
@@ -424,7 +420,7 @@ class _SearchBarSliver extends StatelessWidget {
             child: Row(
               children: [
                 AppIcon('search', size: 20, color: AppColors.onSurfaceVariant),
-                SizedBox(width: 12.w),
+                gapW12,
                 Expanded(
                   child: Text(
                     'Salon, prestation, quartier...',
@@ -446,7 +442,7 @@ class _SearchBarSliver extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AppIcon('filter', size: 14, color: AppColors.primary),
-                      SizedBox(width: 4.w),
+                      gapW4,
                       Text(
                         'Filtrer',
                         style: AppTextStyles.labelSm.copyWith(
@@ -496,7 +492,7 @@ class _CategoriesSliverState extends State<_CategoriesSliver> {
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           itemCount: _categories.length,
-          separatorBuilder: (_, __) => SizedBox(width: 8.w),
+          separatorBuilder: (_, __) => gapW8,
           itemBuilder: (_, i) {
             final cat = _categories[i];
             final isActive = i == _selected;
@@ -632,7 +628,7 @@ class _SalonListSliver extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           sliver: SliverList.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => SizedBox(height: 12.h),
+            separatorBuilder: (_, __) => gapH12,
             itemBuilder: (context, i) {
               final salon = items[i];
               return RepaintBoundary(
@@ -719,7 +715,7 @@ class _SalonListCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4.h),
+                    gapH4,
                     Row(
                       children: [
                         AppIcon('star', size: 13, color: AppColors.secondary),
@@ -877,7 +873,7 @@ class _FeaturedCard extends StatelessWidget {
                       child: Text(
                         'Prestige',
                         style: AppTextStyles.labelSm.copyWith(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 10.sp,
                         ),
                       ),
@@ -896,7 +892,7 @@ class _FeaturedCard extends StatelessWidget {
                             vertical: 5.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.25),
+                            color: AppColors.black.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(10.r),
                           ),
                           child: Row(
@@ -911,7 +907,7 @@ class _FeaturedCard extends StatelessWidget {
                               Text(
                                 rating,
                                 style: AppTextStyles.labelSm.copyWith(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   fontSize: 11.sp,
                                 ),
                               ),
@@ -928,7 +924,7 @@ class _FeaturedCard extends StatelessWidget {
                       width: 34.r,
                       height: 34.r,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         shape: BoxShape.circle,
                         boxShadow: AppShadows.sm,
                       ),
@@ -979,7 +975,7 @@ class _TrendingSalonSliver extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               itemCount: items.length,
-              separatorBuilder: (_, __) => SizedBox(width: 12.w),
+              separatorBuilder: (_, __) => gapW12,
               itemBuilder: (context, i) {
                 final salon = items[i];
                 return RepaintBoundary(
@@ -1050,7 +1046,7 @@ class _TrendingCard extends StatelessWidget {
                           child: Text(
                             '#$rank',
                             style: AppTextStyles.labelSm.copyWith(
-                              color: Colors.white,
+                              color: AppColors.white,
                               fontSize: 10.sp,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1073,7 +1069,7 @@ class _TrendingCard extends StatelessWidget {
                         salon.category.toUpperCase(),
                         style: AppTextStyles.overline,
                       ),
-                      SizedBox(height: 4.h),
+                      gapH4,
                       Text(
                         salon.name,
                         style: AppTextStyles.headlineSm,
@@ -1094,7 +1090,7 @@ class _TrendingCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8.h),
+                      gapH8,
                       Row(
                         children: [
                           AppIcon('star', size: 12, color: AppColors.secondary),
