@@ -174,6 +174,17 @@ abstract final class AppTheme {
     );
   }
 
+  static ButtonStyle stateButtonStyle(BuildContext context) {
+    return FilledButton.styleFrom(
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 14.h),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+    );
+  }
+
   static ThemeData get dark {
     return light.copyWith(
       colorScheme: const ColorScheme.dark(
