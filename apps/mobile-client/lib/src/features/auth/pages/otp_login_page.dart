@@ -1,15 +1,16 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
+import '../utils/auth_router_helper.dart';
+import '../utils/auth_errors.dart';
 import '../widgets/auth_form_widgets.dart';
 
 class OtpLoginPage extends ConsumerStatefulWidget {
@@ -34,96 +35,72 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new,
-            size: 20.w,
-            color: AppColors.onSurface,
-          ),
-          onPressed: () {
-            if (_codeSent) {
-              setState(() => _codeSent = false);
-            } else {
-              context.pop();
-            }
-          },
-        ),
+    return AuthPageScaffold(
+      title: _codeSent ? 'Vérification' : 'Inscription',
+      subtitle: _codeSent
+          ? 'Code envoyé au +221 ${_phoneController.text}'
+          : 'Nous vous enverrons un code par SMS.',
+      leading: AppBackButton(
+        onPressed: () {
+          if (_codeSent) {
+            setState(() => _codeSent = false);
+          } else {
+            context.pop();
+          }
+        },
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 28.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 16.h),
-            Text(
-              _codeSent ? 'Vérification' : 'Inscription',
-              style: AppTextStyles.displayMd,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!_codeSent) ...[
+            EditorialField(
+              label: 'NUMÉRO DE TÉLÉPHONE',
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              prefixText: '+221 ',
             ),
-            SizedBox(height: 8.h),
-            Text(
-              _codeSent
-                  ? 'Code envoyé au +221 ${_phoneController.text}'
-                  : 'Nous vous enverrons un code par SMS.',
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+            SizedBox(height: 48.h),
+            AuthPrimaryButton(
+              label: 'RECEVOIR LE CODE',
+              loading: _submitting,
+              onTap: _requestCode,
+            ),
+          ] else ...[
+            EditorialField(
+              label: 'CODE À 6 CHIFFRES',
+              controller: _otpController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.headlineLg.copyWith(
+                letterSpacing: 12.w,
+                color: AppColors.onSurface,
               ),
             ),
             SizedBox(height: 48.h),
-            if (!_codeSent) ...[
-              EditorialField(
-                label: 'NUMÉRO DE TÉLÉPHONE',
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                prefixText: '+221 ',
-              ),
-              SizedBox(height: 48.h),
-              AuthPrimaryButton(
-                label: 'RECEVOIR LE CODE',
-                loading: _submitting,
-                onTap: _requestCode,
-              ),
-            ] else ...[
-              EditorialField(
-                label: 'CODE À 6 CHIFFRES',
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.headlineLg.copyWith(
-                  letterSpacing: 12.w,
-                  color: AppColors.onSurface,
-                ),
-              ),
-              SizedBox(height: 48.h),
-              AuthPrimaryButton(
-                label: 'VÉRIFIER LE CODE',
-                loading: _submitting,
-                onTap: _verifyCode,
-              ),
-              SizedBox(height: 24.h),
-              Center(
-                child: GestureDetector(
-                  onTap: () => setState(() => _codeSent = false),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
-                    child: Text(
-                      'Modifier le numéro',
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                        decoration: TextDecoration.underline,
-                        decorationColor: AppColors.onSurfaceVariant,
-                      ),
+            AuthPrimaryButton(
+              label: 'VÉRIFIER LE CODE',
+              loading: _submitting,
+              onTap: _verifyCode,
+            ),
+            gapH24,
+            Center(
+              child: GestureDetector(
+                onTap: () => setState(() => _codeSent = false),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Text(
+                    'Modifier le numéro',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.onSurfaceVariant,
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -139,28 +116,17 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     }
     AppHaptics.light();
     setState(() => _submitting = true);
-    try {
-      await ref.read(authActionsProvider).requestOtp(phone: phone);
-      if (!mounted) return;
-      setState(() => _codeSent = true);
-      AppSnackbar.success(context, 'Code OTP envoyé.');
-    } on DioException catch (error) {
-      if (!mounted) return;
-      final message = (error.response?.data is Map<String, dynamic>)
-          ? ((error.response!.data as Map<String, dynamic>)['message']
-                    as String? ??
-                'Envoi OTP impossible.')
-          : 'Envoi OTP impossible.';
-      AppSnackbar.error(context, message);
-    } on ClientOnlyAuthException catch (error) {
-      if (!mounted) return;
-      AppSnackbar.error(context, error.message);
-    } catch (_) {
-      if (!mounted) return;
-      AppSnackbar.error(context, 'Envoi OTP impossible.');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
+    await handleAuthAction(
+      context,
+      () async {
+        await ref.read(authActionsProvider).requestOtp(phone: phone);
+        if (!mounted) return;
+        setState(() => _codeSent = true);
+        AppSnackbar.success(context, 'Code OTP envoyé.');
+      },
+      fallback: 'Envoi OTP impossible.',
+    );
+    if (mounted) setState(() => _submitting = false);
   }
 
   Future<void> _verifyCode() async {
@@ -176,29 +142,19 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     }
     AppHaptics.light();
     setState(() => _submitting = true);
-    try {
-      await ref.read(authActionsProvider).verifyOtp(phone: phone, code: code);
-      final user = await ref.read(currentUserProvider.future);
-      if (!mounted) return;
-      final needsBootstrap = (user?.fullName ?? '').trim().isEmpty;
-      context.go(needsBootstrap ? AppRoutes.profileBootstrap : AppRoutes.home);
-    } on DioException catch (error) {
-      if (!mounted) return;
-      final message = (error.response?.data is Map<String, dynamic>)
-          ? ((error.response!.data as Map<String, dynamic>)['message']
-                    as String? ??
-                'Vérification OTP impossible.')
-          : 'Vérification OTP impossible.';
-      AppSnackbar.error(context, message);
-    } on ClientOnlyAuthException catch (error) {
-      if (!mounted) return;
-      AppSnackbar.error(context, error.message);
-    } catch (_) {
-      if (!mounted) return;
-      AppSnackbar.error(context, 'Vérification OTP impossible.');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
+    await handleAuthAction(
+      context,
+      () async {
+        await ref
+            .read(authActionsProvider)
+            .verifyOtp(phone: phone, code: code);
+        if (!context.mounted) return;
+        await navigateAfterAuth(context, ref);
+        },
+
+      fallback: 'Vérification OTP impossible.',
+    );
+    if (mounted) setState(() => _submitting = false);
   }
 
   String? _normalizeSenegalPhone(String raw) {
