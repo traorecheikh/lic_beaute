@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client_provider.dart';
+import '../../../core/network/app_network_error.dart';
 import '../../../core/session/session_store.dart';
 import 'booking_funnel_provider.dart';
 
@@ -31,7 +32,7 @@ class BookingCreateNotifier extends AsyncNotifier<BookingSummary?> {
       );
       return response.data;
     });
-    return state.valueOrNull;
+    return state.asData?.value;
   }
 }
 
@@ -59,7 +60,7 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
       );
       return response.data;
     });
-    return state.valueOrNull?['redirectUrl'] as String?;
+    return state.asData?.value?['redirectUrl'] as String?;
   }
 }
 
@@ -71,7 +72,7 @@ final paymentInitiateProvider =
 String bookingCreateErrorMessage(Object? error) {
   if (error is DioException) {
     final statusCode = error.response?.statusCode;
-    final apiMessage = _extractApiMessage(error.response?.data);
+    final apiMessage = extractApiMessage(error.response?.data);
 
     if (statusCode == 401 || statusCode == 403) {
       return 'Votre session a expiré. Reconnectez-vous pour continuer.';
@@ -99,14 +100,4 @@ String bookingCreateErrorMessage(Object? error) {
   }
 
   return 'Impossible de confirmer la réservation pour le moment.';
-}
-
-String? _extractApiMessage(Object? data) {
-  if (data is Map<String, dynamic>) {
-    final message = data['message'];
-    if (message is String && message.trim().isNotEmpty) {
-      return message.trim();
-    }
-  }
-  return null;
 }
