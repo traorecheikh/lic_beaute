@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 class PhoneCountry {
   const PhoneCountry({
@@ -81,7 +80,7 @@ class AppPhoneField extends StatelessWidget {
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-              SizedBox(width: 8.w),
+              gapW8,
               Container(width: 1, height: 18.h, color: AppColors.outlineVariant),
             ],
           ),
