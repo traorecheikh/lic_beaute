@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
+import '../widgets/profile_card_shell.dart';
 
 class AddressesPage extends StatefulWidget {
   const AddressesPage({super.key});
@@ -62,11 +62,9 @@ class _AddressesPageState extends State<AddressesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
+      appBar: const AppTopBar(
+        title: 'Mes Adresses',
         backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('Mes Adresses', style: AppTextStyles.headlineSm),
-        centerTitle: true,
       ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
@@ -81,7 +79,7 @@ class _AddressesPageState extends State<AddressesPage> {
               ),
             ),
           ),
-          SizedBox(height: 8.h),
+          gapH8,
           GestureDetector(
             onTap: _addAddress,
             child: Container(
@@ -95,7 +93,7 @@ class _AddressesPageState extends State<AddressesPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.add_rounded, size: 20.r, color: AppColors.primary),
-                  SizedBox(width: 8.w),
+                  gapW8,
                   Text(
                     'Ajouter une adresse',
                     style: AppTextStyles.labelLg.copyWith(
@@ -125,16 +123,9 @@ class _AddressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ProfileCardShell(
+      highlighted: address.isDefault,
       padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: AppShadows.card,
-        border: address.isDefault
-            ? Border.all(color: AppColors.primary, width: 1.5)
-            : Border.all(color: AppColors.outlineVariant),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -147,7 +138,7 @@ class _AddressCard extends StatelessWidget {
                 size: 18.r,
                 color: AppColors.onSurfaceVariant,
               ),
-              SizedBox(width: 8.w),
+              gapW8,
               Text(address.title, style: AppTextStyles.labelLg),
               const Spacer(),
               if (address.isDefault)
@@ -167,7 +158,7 @@ class _AddressCard extends StatelessWidget {
                 ),
             ],
           ),
-          SizedBox(height: 8.h),
+          gapH8,
           Text(
             address.address,
             style: AppTextStyles.bodyMd.copyWith(
