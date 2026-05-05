@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import {
-  paymentProviderSchema,
   salonApprovalStatusSchema,
   subscriptionStatusSchema,
   subscriptionTierSchema
@@ -121,7 +120,7 @@ export const adminSubscriptionSummarySchema = z.object({
   salonName: z.string(),
   tier: subscriptionTierSchema,
   status: subscriptionStatusSchema,
-  billingProvider: paymentProviderSchema.nullable(),
+  billingProvider: z.enum(["paytech", "manual"]).nullable(),
   expiresAt: z.string().datetime().nullable(),
   autoRenew: z.boolean(),
   isComplimentary: z.boolean()
