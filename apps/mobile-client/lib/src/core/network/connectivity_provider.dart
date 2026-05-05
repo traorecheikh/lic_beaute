@@ -6,7 +6,7 @@ final connectivityProvider = StreamProvider<List<ConnectivityResult>>((ref) {
 });
 
 final connectivityHintProvider = Provider<bool>((ref) {
-  final result = ref.watch(connectivityProvider).valueOrNull;
+  final result = ref.watch(connectivityProvider).asData?.value;
   if (result == null) return true;
   return result.any((r) => r != ConnectivityResult.none);
 });
@@ -33,8 +33,9 @@ class NetworkReachabilityState {
 }
 
 class NetworkReachabilityNotifier
-    extends StateNotifier<NetworkReachabilityState> {
-  NetworkReachabilityNotifier() : super(const NetworkReachabilityState());
+    extends Notifier<NetworkReachabilityState> {
+  @override
+  NetworkReachabilityState build() => const NetworkReachabilityState();
 
   void markReachable() {
     state = state.copyWith(lastReachableAt: DateTime.now());
@@ -46,10 +47,10 @@ class NetworkReachabilityNotifier
 }
 
 final networkReachabilityProvider =
-    StateNotifierProvider<
+    NotifierProvider<
       NetworkReachabilityNotifier,
       NetworkReachabilityState
-    >((ref) => NetworkReachabilityNotifier());
+    >(NetworkReachabilityNotifier.new);
 
 final isOnlineProvider = Provider<bool>((ref) {
   final connectivityHint = ref.watch(connectivityHintProvider);
