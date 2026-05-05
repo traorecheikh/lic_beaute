@@ -6,9 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/app_http_error_handler.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_city_dropdown.dart';
 import '../../../core/widgets/app_error_state.dart';
+
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../providers/profile_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
@@ -42,25 +50,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final optionsAsync = ref.watch(profileOptionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Modifier mon profil', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
-      body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorState(
-          title: 'Impossible de charger le profil',
-          message: error.toString(),
-          onRetry: () => ref.refresh(profileProvider.future),
-        ),
-        data: (profile) {
-          if (profile == null) {
-            return AppErrorState(
-              title: 'Profil indisponible',
-              message: 'Connectez-vous pour continuer.',
-              onRetry: () => ref.refresh(profileProvider.future),
-            );
-          }
+      appBar: const AppTopBar(title: 'Modifier mon profil'),
+      body: AppAsyncView(
+        value: profileAsync,
+        onRetry: () => ref.refresh(profileProvider.future),
+        errorTitle: 'Impossible de charger le profil',
+        builder: (profile) {
+          if (profile == null) return const SizedBox.shrink();
           if (!_didSeedControllers) {
             _didSeedControllers = true;
             _fullNameController.text = profile.fullName;
@@ -137,24 +133,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 16.h),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedCity,
-                      decoration: const InputDecoration(labelText: 'Ville'),
-                      items: options.cities
-                          .map(
-                            (city) => DropdownMenuItem(
-                              value: city,
-                              child: Text(city),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) =>
-                          setState(() => _selectedCity = value),
+                    gapH16,
+                    AppCityDropdown(
+                      value: _selectedCity,
+                      cities: options.cities,
+                      onChanged: (value) => setState(() => _selectedCity = value),
                     ),
+                    gapH16,
+
                     SizedBox(height: 16.h),
                     DropdownButtonFormField<String>(
-                      initialValue: _contactChannel,
+                      value: _contactChannel,
                       decoration: const InputDecoration(
                         labelText: 'Canal de contact préféré',
                       ),
@@ -251,16 +240,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       await ref.read(profileProvider.notifier).uploadAvatar(File(image.path));
       if (!mounted) return;
       AppSnackbar.success(context, 'Photo de profil mise à jour.');
-    } on DioException catch (error) {
-      if (!mounted) return;
-      final data = error.response?.data;
-      final message = data is Map<String, dynamic>
-          ? data['message'] as String? ?? 'Upload impossible.'
-          : 'Upload impossible.';
-      AppSnackbar.error(context, message);
     } catch (error) {
-      if (!mounted) return;
-      AppSnackbar.error(context, error.toString());
+      await context.handleHttpError(error, 'Upload impossible.');
     } finally {
       if (mounted) {
         setState(() => _uploadingAvatar = false);
@@ -285,16 +266,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (!mounted) return;
       AppSnackbar.success(context, 'Profil enregistré.');
       Navigator.of(context).pop();
-    } on DioException catch (error) {
-      if (!mounted) return;
-      final data = error.response?.data;
-      final message = data is Map<String, dynamic>
-          ? data['message'] as String? ?? 'Enregistrement impossible.'
-          : 'Enregistrement impossible.';
-      AppSnackbar.error(context, message);
-    } catch (_) {
-      if (!mounted) return;
-      AppSnackbar.error(context, 'Enregistrement impossible.');
+    } catch (error) {
+      await context.handleHttpError(error, 'Enregistrement impossible.');
     } finally {
       if (mounted) {
         setState(() => _saving = false);
