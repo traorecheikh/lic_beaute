@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
-import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_booking_async_scaffold.dart';
+import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_icon_box.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
+import '../../discovery/providers/cached_resource.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
 import '../providers/booking_actions_provider.dart';
 import '../providers/bookings_list_provider.dart';
@@ -27,185 +28,112 @@ class BookingDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailAsync = ref.watch(bookingDetailResourceProvider(bookingId));
-    Future<void> refreshBooking() =>
-        ref.refresh(bookingDetailResourceProvider(bookingId).future);
+    return AppBookingAsyncScaffold<Map<String, dynamic>>(
+      bookingId: bookingId,
+      provider: bookingDetailResourceProvider,
+      errorTitle: 'Impossible de charger le rendez-vous',
+      serverTitle: 'Le détail du rendez-vous est indisponible',
+      sliverBuilder: (resource) {
+        return [
+          if (resource.isStale && resource.cachedAt != null)
+            AppSliverStaleNotice(cachedAt: resource.cachedAt!),
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Padding(
-          padding: EdgeInsets.all(24.r),
-          child: AppErrorState(
-            error: error,
-            fallbackTitle: 'Impossible de charger le rendez-vous',
-            serverTitle: 'Le détail du rendez-vous est indisponible',
-            onRetry: refreshBooking,
+          // Header with status color accent
+          SliverToBoxAdapter(
+            child: _DetailHeader(
+              salonName: resource.salonName,
+              status: resource.status,
+              isPast: isPast,
+            ),
           ),
-        ),
-        data: (resource) {
-          final detail = resource.data;
-          if (detail == null) {
-            return const Center(child: Text('Rendez-vous introuvable.'));
-          }
 
-          final salonName = (detail['salonName'] as String?) ?? 'Salon';
-          final serviceName = (detail['serviceName'] as String?) ?? 'Service';
-          final employeeName =
-              (detail['employeeName'] as String?) ?? 'Prestataire';
-          final statusRaw = (detail['status'] as String?) ?? 'pending';
-          final startsAtRaw = (detail['startsAt'] as String?) ?? '';
-          final depositXof = (detail['depositAmountXof'] as num?)?.toInt();
-          final priceXof = (detail['totalAmountXof'] as num?)?.toInt();
-          final startsAt = DateTime.tryParse(startsAtRaw)?.toLocal();
-
-          return Stack(
-            children: [
-              RefreshIndicator.adaptive(
-                color: AppColors.primary,
-                onRefresh: refreshBooking,
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  slivers: [
-                    if (resource.isStale && resource.cachedAt != null)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
-                          child: StaleDataNotice(cachedAt: resource.cachedAt!),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 140.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 20.h),
+                  // Date & time card
+                  if (resource.startsAt != null)
+                    _InfoCard(
+                      rows: [
+                        _InfoRow(
+                          icon: 'calendar',
+                          label: 'Date',
+                          value: resource.fullFormattedDate,
                         ),
-                      ),
-                    // Header with status color accent
-                    SliverToBoxAdapter(
-                      child: _DetailHeader(
-                        salonName: salonName,
-                        status: statusRaw,
-                        isPast: isPast,
-                      ),
+                        _InfoRow(
+                          icon: 'clock',
+                          label: 'Heure',
+                          value: resource.formattedTime,
+                        ),
+                      ],
                     ),
-
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 140.h),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 20.h),
-                            // Date & time card
-                            if (startsAt != null)
-                              _InfoCard(
-                                rows: [
-                                  _InfoRow(
-                                    icon: 'calendar',
-                                    label: 'Date',
-                                    value: _formatDate(startsAt),
-                                  ),
-                                  _InfoRow(
-                                    icon: 'clock',
-                                    label: 'Heure',
-                                    value: _formatTime(startsAt),
-                                  ),
-                                ],
-                              ),
-                            SizedBox(height: 12.h),
-                            // Service & staff card
-                            _InfoCard(
-                              rows: [
-                                _InfoRow(
-                                  icon: 'sparkle',
-                                  label: 'Prestation',
-                                  value: serviceName,
-                                ),
-                                _InfoRow(
-                                  icon: 'user',
-                                  label: 'Prestataire',
-                                  value: employeeName,
-                                ),
-                              ],
-                            ),
-                            // Price card
-                            if (priceXof != null || depositXof != null) ...[
-                              SizedBox(height: 12.h),
-                              _InfoCard(
-                                rows: [
-                                  if (priceXof != null)
-                                    _InfoRow(
-                                      icon: 'star',
-                                      label: 'Total',
-                                      value: '$priceXof XOF',
-                                      valueStyle: AppTextStyles.priceMd
-                                          .copyWith(color: AppColors.onSurface),
-                                    ),
-                                  if (depositXof != null)
-                                    _InfoRow(
-                                      icon: 'check',
-                                      label: 'Acompte',
-                                      value: '$depositXof XOF',
-                                      valueStyle: AppTextStyles.priceMd
-                                          .copyWith(color: AppColors.success),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
+                  gapH12,
+                  // Service & staff card
+                  _InfoCard(
+                    rows: [
+                      _InfoRow(
+                        icon: 'sparkle',
+                        label: 'Prestation',
+                        value: resource.serviceName,
                       ),
+                      _InfoRow(
+                        icon: 'user',
+                        label: 'Prestataire',
+                        value: resource.employeeName,
+                      ),
+                    ],
+                  ),
+                  // Price card
+                  if (resource.priceXof != null || resource.depositXof != null) ...[
+                    gapH12,
+                    _InfoCard(
+                      rows: [
+                        if (resource.priceXof != null)
+                          _InfoRow(
+                            icon: 'star',
+                            label: 'Total',
+                            value: '${resource.priceXof} XOF',
+                            valueStyle: AppTextStyles.priceMd
+                                .copyWith(color: AppColors.onSurface),
+                          ),
+                        if (resource.depositXof != null)
+                          _InfoRow(
+                            icon: 'check',
+                            label: 'Acompte',
+                            value: '${resource.depositXof} XOF',
+                            valueStyle: AppTextStyles.priceMd
+                                .copyWith(color: AppColors.success),
+                          ),
+                      ],
                     ),
                   ],
-                ),
+                ],
               ),
-
-              // Bottom action bar
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _ActionBar(
-                  bookingId: bookingId,
-                  isPast: isPast,
-                  status: statusRaw,
-                  ref: ref,
-                  context: context,
-                ),
-              ),
-            ],
+            ),
+          ),
+        ];
+      },
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, _) {
+          // Access status from provider to avoid duplication in build method
+          final detailAsync = ref.watch(bookingDetailResourceProvider(bookingId));
+          return detailAsync.maybeWhen(
+            data: (res) => _ActionBar(
+              bookingId: bookingId,
+              isPast: isPast,
+              status: res.status,
+              ref: ref,
+              context: context,
+            ),
+            orElse: () => const SizedBox.shrink(),
           );
         },
       ),
     );
   }
-
-  static String _formatDate(DateTime dt) {
-    const months = [
-      'jan',
-      'fév',
-      'mar',
-      'avr',
-      'mai',
-      'jun',
-      'jul',
-      'aoû',
-      'sep',
-      'oct',
-      'nov',
-      'déc',
-    ];
-    const days = [
-      'Lundi',
-      'Mardi',
-      'Mercredi',
-      'Jeudi',
-      'Vendredi',
-      'Samedi',
-      'Dimanche',
-    ];
-    return '${days[dt.weekday - 1]} ${dt.day} ${months[dt.month - 1]} ${dt.year}';
-  }
-
-  static String _formatTime(DateTime dt) =>
-      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -243,20 +171,13 @@ class _DetailHeader extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 36.r,
-                      height: 36.r,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        shape: BoxShape.circle,
-                        boxShadow: AppShadows.sm,
-                      ),
-                      child: Center(
-                        child: AppIcon(
-                          'arrow-left',
-                          size: 18,
-                          color: AppColors.onSurface,
-                        ),
+                    child: AppIconBox(
+                      circle: true,
+                      color: AppColors.surface.withValues(alpha: 0.8),
+                      child: AppIcon(
+                        'arrow-left',
+                        size: 18,
+                        color: AppColors.onSurface,
                       ),
                     ),
                   ),
@@ -287,7 +208,7 @@ class _DetailHeader extends StatelessWidget {
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-              SizedBox(height: 4.h),
+              gapH4,
               Text(salonName, style: AppTextStyles.displaySm),
             ],
           ),
@@ -369,17 +290,7 @@ class _InfoRow extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 14.h),
       child: Row(
         children: [
-          Container(
-            width: 36.r,
-            height: 36.r,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Center(
-              child: AppIcon(icon, size: 16, color: AppColors.primary),
-            ),
-          ),
+          AppIconBox(child: AppIcon(icon, size: 16, color: AppColors.primary)),
           SizedBox(width: 14.w),
           Text(label, style: AppTextStyles.bodySm),
           const Spacer(),
@@ -408,23 +319,10 @@ class _ActionBar extends StatelessWidget {
   Widget build(BuildContext _) {
     final isCancelled = status == 'cancelled' || status == 'completed';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    return AppBottomBar(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
             if (isPast) ...[
               SizedBox(
                 width: double.infinity,
@@ -488,10 +386,9 @@ class _ActionBar extends StatelessWidget {
                 ),
               ),
             ],
-            SizedBox(height: 8.h),
+            gapH8,
           ],
         ),
-      ),
     );
   }
 }
