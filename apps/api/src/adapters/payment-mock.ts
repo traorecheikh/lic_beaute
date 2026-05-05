@@ -35,6 +35,10 @@ export class MockPaymentAdapter implements PaymentAdapter {
     return { refundRef: `mock-refund-${params.providerRef}` };
   }
 
+  async fetchPaymentStatus(_params: { providerToken: string }): Promise<PaymentStatus> {
+    return "succeeded";
+  }
+
   normalizeStatus(providerStatus: string): PaymentStatus {
     return providerStatus as PaymentStatus;
   }
