@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../core/constants/app_strings.dart';
 import '../core/session/session_store.dart';
-import '../core/theme/app_colors.dart';
-import '../core/theme/app_shadows.dart';
-import '../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../core/widgets/app_icon.dart';
+import '../core/widgets/app_sheet.dart';
+import '../core/widgets/app_sheet_content.dart';
 import 'app_router.dart';
 
 class ShellScaffold extends ConsumerWidget {
@@ -70,13 +70,8 @@ class ShellScaffold extends ConsumerWidget {
   }
 
   Future<void> _showAuthSheet(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-      ),
+    return AppSheet.show<void>(
+      context,
       builder: (ctx) => _AuthPromptSheet(
         onLogin: () {
           Navigator.of(ctx).pop();
@@ -153,7 +148,7 @@ class _NavItem extends StatelessWidget {
         curve: Curves.easeOutCubic,
         margin: EdgeInsets.all(6.r),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primaryLight : Colors.transparent,
+          color: isActive ? AppColors.primaryLight : AppColors.transparent,
           borderRadius: BorderRadius.circular(26.r),
         ),
         child: Column(
@@ -194,41 +189,13 @@ class _AuthPromptSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 24.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Connexion requise', style: AppTextStyles.headlineMd),
-            SizedBox(height: 8.h),
-            Text(
-              'Connectez-vous pour accéder à vos rendez-vous et à votre profil.',
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-            SizedBox(height: 24.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onLogin,
-                child: const Text('Se connecter'),
-              ),
-            ),
-            SizedBox(height: 10.h),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: onDismiss,
-                child: const Text('Plus tard'),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppSheetContent(
+      title: 'Connexion requise',
+      body: 'Connectez-vous pour accéder à vos rendez-vous et à votre profil.',
+      confirmLabel: 'Se connecter',
+      cancelLabel: 'Plus tard',
+      onConfirm: onLogin,
+      onCancel: onDismiss,
     );
   }
 }
