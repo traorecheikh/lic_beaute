@@ -26,5 +26,9 @@ export interface PaymentAdapter {
     reason: string;
   }): Promise<{ refundRef: string }>;
 
+  fetchPaymentStatus(params: {
+    providerToken: string;
+  }): Promise<PaymentStatus>;
+
   normalizeStatus(providerStatus: string): PaymentStatus;
 }
