@@ -6,8 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 abstract final class AppShare {
   /// Share plain text (salon link, booking ref, etc.)
@@ -93,7 +92,7 @@ class BookingShareCard extends StatelessWidget {
                     Text(
                       'Beauté Avenue',
                       style: AppTextStyles.labelMd.copyWith(
-                        color: Colors.white,
+                        color: AppColors.white,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -103,7 +102,7 @@ class BookingShareCard extends StatelessWidget {
                 Text(
                   salonName,
                   style: AppTextStyles.displaySm.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontSize: 22,
                     height: 1.1,
                   ),
@@ -111,7 +110,7 @@ class BookingShareCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   service,
-                  style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
+                  style: AppTextStyles.bodyMd.copyWith(color: AppColors.white70),
                 ),
               ],
             ),
