@@ -4,8 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../network/app_network_error.dart';
 import '../network/connectivity_provider.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/app_theme.dart';
+import 'app_icon_box.dart';
+import 'app_state_card.dart';
 
 class AppErrorState extends ConsumerStatefulWidget {
   const AppErrorState({
@@ -53,75 +54,54 @@ class _AppErrorStateState extends ConsumerState<AppErrorState> {
     final message = widget.message ?? resolved?.message ?? 'Réessayez.';
     final type = resolved?.type ?? AppNetworkErrorType.unknown;
 
-    return Center(
-      child: Container(
-        width: widget.compact ? double.infinity : 320.w,
-        padding: EdgeInsets.symmetric(
-          horizontal: 20.w,
-          vertical: widget.compact ? 18.h : 24.h,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24.r),
-          border: Border.all(color: AppColors.outlineVariant),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 52.r,
-              height: 52.r,
-              decoration: BoxDecoration(
-                color: _iconBackground(type),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(_iconData(type), color: _iconColor(type), size: 24.r),
+    return AppStateCard(
+      compact: widget.compact,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIconBox(
+            size: 52.r,
+            color: _iconBackground(type),
+            circle: true,
+            child: Icon(_iconData(type), color: _iconColor(type), size: 24.r),
+          ),
+          SizedBox(height: 14.h),
+          Text(
+            title,
+            style: AppTextStyles.headlineSm,
+            textAlign: TextAlign.center,
+          ),
+          gapH8,
+          Text(
+            message,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
             ),
-            SizedBox(height: 14.h),
-            Text(
-              title,
-              style: AppTextStyles.headlineSm,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              message,
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (widget.onRetry != null) ...[
-              SizedBox(height: 18.h),
-              SizedBox(
-                width: widget.compact ? double.infinity : 180.w,
-                child: FilledButton(
-                  onPressed: _retrying ? null : _handleRetry,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                  ),
-                  child: _retrying
-                      ? SizedBox(
-                          width: 18.r,
-                          height: 18.r,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
+            textAlign: TextAlign.center,
+          ),
+          if (widget.onRetry != null) ...[
+            SizedBox(height: 18.h),
+            SizedBox(
+              width: widget.compact ? double.infinity : 180.w,
+              child: FilledButton(
+                onPressed: _retrying ? null : _handleRetry,
+                style: AppTheme.stateButtonStyle(context),
+                child: _retrying
+                    ? SizedBox(
+                        width: 18.r,
+                        height: 18.r,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.white,
                           ),
-                        )
-                      : const Text('Réessayer'),
-                ),
+                        ),
+                      )
+                    : const Text('Réessayer'),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
