@@ -84,9 +84,19 @@ describe("createApp", () => {
   it("approves a salon and records the change", async () => {
     const app = await appPromise;
     const token = await authenticateAdmin();
+    const salonsResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/admin/salons",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+    const salons = salonsResponse.json<{ items: Array<{ id: string }> }>().items;
+    expect(salons.length).toBeGreaterThan(0);
+
     const response = await app.inject({
       method: "POST",
-      url: "/api/v1/admin/salons/salon-maison-kinka/approve",
+      url: `/api/v1/admin/salons/${salons[0].id}/approve`,
       headers: {
         authorization: `Bearer ${token}`
       }
@@ -94,7 +104,7 @@ describe("createApp", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
-      id: "salon-maison-kinka",
+      id: salons[0].id,
       approvalStatus: "approved"
     });
   });
@@ -102,9 +112,19 @@ describe("createApp", () => {
   it("supports complimentary premium grant without provider payment", async () => {
     const app = await appPromise;
     const token = await authenticateAdmin();
+    const subscriptionsResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/admin/subscriptions",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+    const subscriptions = subscriptionsResponse.json<{ items: Array<{ id: string }> }>().items;
+    expect(subscriptions.length).toBeGreaterThan(0);
+
     const response = await app.inject({
       method: "POST",
-      url: "/api/v1/admin/subscriptions/sub-atelier-nafi/override",
+      url: `/api/v1/admin/subscriptions/${subscriptions[0].id}/override`,
       headers: {
         authorization: `Bearer ${token}`
       },
@@ -117,7 +137,7 @@ describe("createApp", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
-      id: "sub-atelier-nafi",
+      id: subscriptions[0].id,
       tier: "premium",
       isComplimentary: true
     });
@@ -126,9 +146,19 @@ describe("createApp", () => {
   it("returns subscription detail and audit detail routes", async () => {
     const app = await appPromise;
     const token = await authenticateAdmin();
+    const subscriptionsResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/admin/subscriptions",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+    const subscriptions = subscriptionsResponse.json<{ items: Array<{ id: string }> }>().items;
+    expect(subscriptions.length).toBeGreaterThan(0);
+
     const subscriptionResponse = await app.inject({
       method: "GET",
-      url: "/api/v1/admin/subscriptions/sub-dione-signature",
+      url: `/api/v1/admin/subscriptions/${subscriptions[0].id}`,
       headers: {
         authorization: `Bearer ${token}`
       }
@@ -143,7 +173,7 @@ describe("createApp", () => {
 
     expect(subscriptionResponse.statusCode).toBe(200);
     expect(subscriptionResponse.json()).toMatchObject({
-      id: "sub-dione-signature",
+      id: subscriptions[0].id,
       events: expect.any(Array),
       invoices: expect.any(Array)
     });
