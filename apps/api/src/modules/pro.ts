@@ -24,7 +24,12 @@ import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/prisma.js";
 import { getProAnalytics, getProDashboard } from "./pro-data.js";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver);
+const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+  paytechApiKey: config.paytechApiKey,
+  paytechApiSecret: config.paytechApiSecret,
+  paytechEnv: config.paytechEnv,
+  baseOrigin: config.webOrigin
+});
 
 function salonPublicPhoneKey(salonId: string) {
   return `salon:${salonId}:public_phone`;
@@ -1187,7 +1192,7 @@ export class ProController {
       const settingMap = toSettingMap(settings);
       const rawProvider = settingMap[salonBillingProviderKey(salonId)];
       const provider =
-        rawProvider === "wave" || rawProvider === "orange_money"
+        rawProvider === "paytech" || rawProvider === "manual"
           ? rawProvider
           : sub.billingProvider;
       const accountNumber = settingMap[salonBillingAccountKey(salonId)];
@@ -1353,13 +1358,9 @@ export class ProController {
         timeStyle: "short"
       }).format(invoice.createdAt);
       const amountLabel = new Intl.NumberFormat("fr-FR").format(invoice.amountXof);
-      const billingProvider = providerSetting?.value ?? sub.billingProvider ?? "manuel";
+      const billingProvider = providerSetting?.value ?? sub.billingProvider ?? "manual";
       const providerLabel =
-        billingProvider === "wave"
-          ? "Wave"
-          : billingProvider === "orange_money"
-            ? "Orange Money"
-            : "Manuel";
+        billingProvider === "paytech" ? "PayTech" : "Manuel";
       const pdf = buildInvoicePdfBuffer({
         invoiceNumber: invoice.invoiceNumber,
         issuedAt,
