@@ -751,13 +751,7 @@ class _BottomCta extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        boxShadow: AppShadows.nav,
       ),
       padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
       child: SafeArea(
