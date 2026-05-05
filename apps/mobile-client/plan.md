@@ -89,9 +89,39 @@ Target files:
 Actions:
 - Extract common async loading/error/success transitions into shared helpers.
 - Reuse shared mapping/filter helpers where provider transforms are duplicated.
+## UI Primitives & Micro-Duplication Cleanup (added)
+
+### 1. The Layout Primitives (Spacing & Padding)
+- **Problem:** `SizedBox(height: ...)` and `SizedBox(width: ...)` are used hundreds of times with hardcoded values. `EdgeInsets` are also hardcoded.
+- **Goal:** Replace with semantic gap widgets and standard padding tokens.
+- **Action:** 
+    - Introduce `Gap` extension or constants in `app_spacing.dart` (e.g., `16.gapH`, `8.gapW` or `AppSpacing.gapH16`).
+    - Standardize padding via `AppPadding` constants.
+
+### 2. The Button Library (`AppButton`)
+- **Problem:** `ElevatedButton`, `TextButton`, and `OutlinedButton` are used raw, repeating styling logic.
+- **Goal:** Centralize into a single `AppButton` widget with named constructors.
+- **Action:** Create `lib/src/core/widgets/app_button.dart` supporting `.primary()`, `.secondary()`, `.outline()`, and `.text()`.
+
+### 3. The Input Library (`AppTextField` enhancement)
+- **Problem:** `TextField` and `TextFormField` are reinvented in multiple pages (e.g., `edit_profile_page.dart`).
+- **Goal:** Standardize all text inputs through `AppTextField`.
+- **Action:** Enhance `AppTextField` to support password toggles, search icons, and validation states; replace all raw inputs.
+
+### 4. The Top Bar (`AppTopBar`)
+- **Problem:** `AppBar` is used 24 times, usually repeating the same transparent background, elevation 0, and back button logic.
+- **Goal:** Create a unified `AppTopBar` or standardize via `AppBarTheme`.
+
+### 5. Color & Style De-hardcoding
+- **Problem:** `Colors.white`, `Colors.transparent`, and `Colors.black` are used directly instead of semantic tokens.
+- **Goal:** 100% theme-driven UI.
+
+## Phases
 
 ### Phase 2 — Global reusable widget primitives
 Target files:
+- `lib/src/core/widgets/app_button.dart` (New)
+- `lib/src/core/widgets/app_top_bar.dart` (New)
 - `lib/src/core/widgets/app_empty_state.dart`
 - `lib/src/core/widgets/app_error_state.dart`
 - `lib/src/core/widgets/app_connectivity_banner.dart`
@@ -100,17 +130,20 @@ Target files:
 - `lib/src/core/widgets/app_snackbar.dart`
 
 Actions:
+- Implement `AppButton` and `AppTopBar`.
 - Consolidate repeated status layouts and action rows.
 - Standardize scaffold/snackbar/action composition APIs.
 
 ### Phase 3 — Style tokenization and hardcoded value cleanup
 Primary targets:
+- `lib/src/core/theme/app_spacing.dart` (Add Gap extensions/constants)
+- `lib/src/core/theme/app_padding.dart` (New)
 - `lib/src/features/**/pages/*.dart` (high-duplication files first)
 - `lib/src/features/**/widgets/*.dart`
 - `lib/src/core/widgets/*.dart`
-- `lib/src/core/theme/**`
 
 Actions:
+- Replace `SizedBox` with `Gap` equivalents.
 - Replace hardcoded colors with theme/token references.
 - Replace repeated magic size/spacing/typography values with shared constants.
 - Normalize repeated inline text styles to reusable style helpers.
