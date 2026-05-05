@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 class LegalPage extends StatelessWidget {
   const LegalPage({super.key});
@@ -23,7 +23,7 @@ class LegalPage extends StatelessWidget {
           _buildLegalTile(context, 'Politique de Confidentialité'),
           _buildLegalTile(context, 'Mentions Légales'),
           _buildLegalTile(context, 'Gestion des Cookies'),
-          SizedBox(height: 32.h),
+          gapH32,
           Center(
             child: Column(
               children: [
@@ -36,7 +36,7 @@ class LegalPage extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                 ),
-                SizedBox(height: 16.h),
+                gapH16,
                 Text(
                   'Beauté Avenue SARL',
                   style: AppTextStyles.bodyMd.copyWith(
@@ -44,7 +44,7 @@ class LegalPage extends StatelessWidget {
                   ),
                 ),
                 Text('Dakar, Sénégal', style: AppTextStyles.bodySm),
-                SizedBox(height: 8.h),
+                gapH8,
                 Text(
                   '© 2026 Tous droits réservés',
                   style: AppTextStyles.bodyXs.copyWith(color: Colors.grey),
