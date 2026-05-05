@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../utils/app_haptics.dart';
+import 'app_sheet.dart';
+import 'app_sheet_content.dart';
 
 abstract final class AppSnackbar {
   /// Green success toast
@@ -42,55 +43,18 @@ abstract final class AppSnackbar {
     required String confirmLabel,
   }) async {
     AppHaptics.heavy();
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-      ),
-      builder: (ctx) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTextStyles.headlineMd),
-              SizedBox(height: 8.h),
-              Text(
-                body,
-                style: AppTextStyles.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    AppHaptics.heavy();
-                    Navigator.of(ctx).pop(true);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.error,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(confirmLabel),
-                ),
-              ),
-              SizedBox(height: 10.h),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Annuler'),
-                ),
-              ),
-            ],
-          ),
-        ),
+    final result = await AppSheet.show<bool>(
+      context,
+      builder: (ctx) => AppSheetContent(
+        title: title,
+        body: body,
+        confirmLabel: confirmLabel,
+        destructive: true,
+        onConfirm: () {
+          AppHaptics.heavy();
+          Navigator.of(ctx).pop(true);
+        },
+        onCancel: () => Navigator.of(ctx).pop(false),
       ),
     );
     return result ?? false;
@@ -120,7 +84,7 @@ abstract final class AppSnackbar {
             Expanded(
               child: Text(
                 message,
-                style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.white),
               ),
             ),
           ],
