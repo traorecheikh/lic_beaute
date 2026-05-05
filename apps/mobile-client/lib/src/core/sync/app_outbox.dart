@@ -66,10 +66,10 @@ class OutboxEntry {
   }
 }
 
-class OutboxNotifier extends StateNotifier<List<OutboxEntry>> {
-  OutboxNotifier(this._ref) : super(_restoreEntries());
+class OutboxNotifier extends Notifier<List<OutboxEntry>> {
+  @override
+  List<OutboxEntry> build() => _restoreEntries();
 
-  final Ref _ref;
   bool _isFlushing = false;
 
   static List<OutboxEntry> _restoreEntries() {
@@ -117,7 +117,7 @@ class OutboxNotifier extends StateNotifier<List<OutboxEntry>> {
     if (_isFlushing || state.isEmpty) return;
     _isFlushing = true;
     try {
-      final dio = _ref.read(dioProvider);
+      final dio = ref.read(dioProvider);
       final current = [...state];
       for (final entry in current) {
         try {
@@ -252,8 +252,8 @@ class OutboxNotifier extends StateNotifier<List<OutboxEntry>> {
   }
 }
 
-final outboxProvider = StateNotifierProvider<OutboxNotifier, List<OutboxEntry>>(
-  (ref) => OutboxNotifier(ref),
+final outboxProvider = NotifierProvider<OutboxNotifier, List<OutboxEntry>>(
+  OutboxNotifier.new,
 );
 
 final pendingSyncCountProvider = Provider<int>((ref) {
