@@ -1,8 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+
+/// A sliver version of [StaleDataNotice] — renders the notice inside a
+/// [SliverToBoxAdapter] with the standard padding, so pages can drop it
+/// into a [CustomScrollView] slivers list without boilerplate.
+class AppSliverStaleNotice extends StatelessWidget {
+  const AppSliverStaleNotice({required this.cachedAt, super.key});
+
+  final DateTime cachedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+        child: StaleDataNotice(cachedAt: cachedAt),
+      ),
+    );
+  }
+}
 
 class StaleDataNotice extends StatelessWidget {
   const StaleDataNotice({required this.cachedAt, super.key});
@@ -21,7 +39,7 @@ class StaleDataNotice extends StatelessWidget {
       child: Row(
         children: [
           const Icon(Icons.history_rounded, size: 16, color: Color(0xFF92600A)),
-          SizedBox(width: 8.w),
+          gapW8,
           Expanded(
             child: Text(
               'Mode hors ligne · Dernière mise à jour ${_relativeLabel(cachedAt)}',
