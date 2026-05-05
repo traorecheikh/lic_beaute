@@ -22,6 +22,9 @@ export const paymentStatusResponseSchema = z.object({
   createdAt: z.string().datetime()
 });
 
+export const paymentReconcileResponseSchema = paymentStatusResponseSchema;
+
 export type PaymentInitiateInput = z.infer<typeof paymentInitiateInputSchema>;
 export type PaymentInitiateResponse = z.infer<typeof paymentInitiateResponseSchema>;
 export type PaymentStatusResponse = z.infer<typeof paymentStatusResponseSchema>;
+export type PaymentReconcileResponse = z.infer<typeof paymentReconcileResponseSchema>;
