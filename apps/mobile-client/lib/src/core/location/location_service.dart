@@ -6,6 +6,13 @@ import 'package:geolocator/geolocator.dart';
 
 enum LocationStatus { granted, denied, deniedForever, serviceDisabled }
 
+LocationStatus _mapPermission(LocationPermission perm) => switch (perm) {
+  LocationPermission.always => LocationStatus.granted,
+  LocationPermission.whileInUse => LocationStatus.granted,
+  LocationPermission.deniedForever => LocationStatus.deniedForever,
+  _ => LocationStatus.denied,
+};
+
 final locationStatusProvider = FutureProvider.autoDispose<LocationStatus>((ref) async {
   final serviceEnabled = await Geolocator.isLocationServiceEnabled();
   debugPrint('[Location] service enabled: $serviceEnabled');
@@ -16,12 +23,7 @@ final locationStatusProvider = FutureProvider.autoDispose<LocationStatus>((ref) 
 
   final perm = await Geolocator.checkPermission();
   debugPrint('[Location] permission: $perm');
-  final status = switch (perm) {
-    LocationPermission.always => LocationStatus.granted,
-    LocationPermission.whileInUse => LocationStatus.granted,
-    LocationPermission.deniedForever => LocationStatus.deniedForever,
-    _ => LocationStatus.denied,
-  };
+  final status = _mapPermission(perm);
   debugPrint('[Location] → status: $status');
   return status;
 });
@@ -44,7 +46,7 @@ final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
             timeLimit: const Duration(seconds: 8),
             forceLocationManager: true,
           )
-        : const LocationSettings(
+        : LocationSettings(
             accuracy: LocationAccuracy.medium,
             timeLimit: const Duration(seconds: 8),
           );
@@ -58,19 +60,24 @@ final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
 });
 
 // Session-level: whether banner has been dismissed this session
-final locationBannerDismissedProvider = StateProvider<bool>((ref) => false);
+class LocationBannerDismissedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void dismiss() => state = true;
+}
+
+final locationBannerDismissedProvider =
+    NotifierProvider<LocationBannerDismissedNotifier, bool>(
+      LocationBannerDismissedNotifier.new,
+    );
 
 Future<LocationStatus> requestLocationPermission() async {
   final serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) return LocationStatus.serviceDisabled;
 
   final perm = await Geolocator.requestPermission();
-  return switch (perm) {
-    LocationPermission.always => LocationStatus.granted,
-    LocationPermission.whileInUse => LocationStatus.granted,
-    LocationPermission.deniedForever => LocationStatus.deniedForever,
-    _ => LocationStatus.denied,
-  };
+  return _mapPermission(perm);
 }
 
 Future<void> openLocationSettings() => Geolocator.openLocationSettings();
