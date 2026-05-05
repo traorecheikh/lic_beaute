@@ -66,8 +66,9 @@ class BookingFunnelState {
   }
 }
 
-class BookingFunnelNotifier extends StateNotifier<BookingFunnelState> {
-  BookingFunnelNotifier() : super(const BookingFunnelState());
+class BookingFunnelNotifier extends Notifier<BookingFunnelState> {
+  @override
+  BookingFunnelState build() => const BookingFunnelState();
 
   void startFunnel(String salonId) {
     state = BookingFunnelState(salonId: salonId);
@@ -123,6 +124,6 @@ class BookingFunnelNotifier extends StateNotifier<BookingFunnelState> {
 }
 
 final bookingFunnelProvider =
-    StateNotifierProvider<BookingFunnelNotifier, BookingFunnelState>(
-      (ref) => BookingFunnelNotifier(),
+    NotifierProvider<BookingFunnelNotifier, BookingFunnelState>(
+      BookingFunnelNotifier.new,
     );
