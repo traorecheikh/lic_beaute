@@ -8,8 +8,9 @@ import '../../../core/sync/app_outbox.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
-import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_resource_view.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../providers/profile_provider.dart';
 
@@ -23,21 +24,12 @@ class ProfilePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.neutral,
-      body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorState(
-          title: 'Impossible de charger le profil',
-          message: error.toString(),
-          onRetry: () => ref.refresh(profileProvider.future),
-        ),
-        data: (profile) {
-          if (profile == null) {
-            return AppErrorState(
-              title: 'Profil indisponible',
-              message: 'Connectez-vous pour accéder à votre compte.',
-              onRetry: () => ref.refresh(profileProvider.future),
-            );
-          }
+      body: AppResourceView(
+        value: profileAsync,
+        onRetry: () => ref.refresh(profileProvider.future),
+        errorTitle: 'Impossible de charger le profil',
+        emptyMessage: 'Connectez-vous pour accéder à votre compte.',
+        builder: (profile) {
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -53,7 +45,7 @@ class ProfilePage extends ConsumerWidget {
                           CircleAvatar(
                             radius: 40.r,
                             backgroundColor: AppColors.primaryLight,
-                            backgroundImage: profile.avatarUrl != null
+                            backgroundImage: profile!.avatarUrl != null
                                 ? NetworkImage(profile.avatarUrl!)
                                 : null,
                             child: profile.avatarUrl == null
