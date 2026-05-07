@@ -12,16 +12,15 @@ part 'pro_service_create_input.g.dart';
 /// ProServiceCreateInput
 ///
 /// Properties:
-/// * [name]
-/// * [category]
-/// * [durationMinutes]
-/// * [priceXof]
-/// * [depositMode]
-/// * [depositAmountXof]
-/// * [depositPercent]
+/// * [name] 
+/// * [category] 
+/// * [durationMinutes] 
+/// * [priceXof] 
+/// * [depositMode] 
+/// * [depositAmountXof] 
+/// * [depositPercent] 
 @BuiltValue()
-abstract class ProServiceCreateInput
-    implements Built<ProServiceCreateInput, ProServiceCreateInputBuilder> {
+abstract class ProServiceCreateInput implements Built<ProServiceCreateInput, ProServiceCreateInputBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -46,24 +45,18 @@ abstract class ProServiceCreateInput
 
   ProServiceCreateInput._();
 
-  factory ProServiceCreateInput(
-      [void updates(ProServiceCreateInputBuilder b)]) = _$ProServiceCreateInput;
+  factory ProServiceCreateInput([void updates(ProServiceCreateInputBuilder b)]) = _$ProServiceCreateInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProServiceCreateInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProServiceCreateInput> get serializer =>
-      _$ProServiceCreateInputSerializer();
+  static Serializer<ProServiceCreateInput> get serializer => _$ProServiceCreateInputSerializer();
 }
 
-class _$ProServiceCreateInputSerializer
-    implements PrimitiveSerializer<ProServiceCreateInput> {
+class _$ProServiceCreateInputSerializer implements PrimitiveSerializer<ProServiceCreateInput> {
   @override
-  final Iterable<Type> types = const [
-    ProServiceCreateInput,
-    _$ProServiceCreateInput
-  ];
+  final Iterable<Type> types = const [ProServiceCreateInput, _$ProServiceCreateInput];
 
   @override
   final String wireName = r'ProServiceCreateInput';
@@ -122,9 +115,7 @@ class _$ProServiceCreateInputSerializer
     ProServiceCreateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -218,23 +209,19 @@ class _$ProServiceCreateInputSerializer
 }
 
 class ProServiceCreateInputDepositModeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'none')
-  static const ProServiceCreateInputDepositModeEnum none =
-      _$proServiceCreateInputDepositModeEnum_none;
+  static const ProServiceCreateInputDepositModeEnum none = _$proServiceCreateInputDepositModeEnum_none;
   @BuiltValueEnumConst(wireName: r'fixed')
-  static const ProServiceCreateInputDepositModeEnum fixed =
-      _$proServiceCreateInputDepositModeEnum_fixed;
+  static const ProServiceCreateInputDepositModeEnum fixed = _$proServiceCreateInputDepositModeEnum_fixed;
   @BuiltValueEnumConst(wireName: r'percent')
-  static const ProServiceCreateInputDepositModeEnum percent =
-      _$proServiceCreateInputDepositModeEnum_percent;
+  static const ProServiceCreateInputDepositModeEnum percent = _$proServiceCreateInputDepositModeEnum_percent;
 
-  static Serializer<ProServiceCreateInputDepositModeEnum> get serializer =>
-      _$proServiceCreateInputDepositModeEnumSerializer;
+  static Serializer<ProServiceCreateInputDepositModeEnum> get serializer => _$proServiceCreateInputDepositModeEnumSerializer;
 
-  const ProServiceCreateInputDepositModeEnum._(String name) : super(name);
+  const ProServiceCreateInputDepositModeEnum._(String name): super(name);
 
-  static BuiltSet<ProServiceCreateInputDepositModeEnum> get values =>
-      _$proServiceCreateInputDepositModeEnumValues;
-  static ProServiceCreateInputDepositModeEnum valueOf(String name) =>
-      _$proServiceCreateInputDepositModeEnumValueOf(name);
+  static BuiltSet<ProServiceCreateInputDepositModeEnum> get values => _$proServiceCreateInputDepositModeEnumValues;
+  static ProServiceCreateInputDepositModeEnum valueOf(String name) => _$proServiceCreateInputDepositModeEnumValueOf(name);
 }
+

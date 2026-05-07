@@ -13,21 +13,20 @@ part 'pro_salon_update_input.g.dart';
 /// ProSalonUpdateInput
 ///
 /// Properties:
-/// * [category]
-/// * [logoUrl]
-/// * [description]
-/// * [city]
-/// * [address]
-/// * [neighborhood]
-/// * [latitude]
-/// * [longitude]
-/// * [teamDisplay]
-/// * [phone]
-/// * [instagram]
-/// * [gallery]
+/// * [category] 
+/// * [logoUrl] 
+/// * [description] 
+/// * [city] 
+/// * [address] 
+/// * [neighborhood] 
+/// * [latitude] 
+/// * [longitude] 
+/// * [teamDisplay] 
+/// * [phone] 
+/// * [instagram] 
+/// * [gallery] 
 @BuiltValue()
-abstract class ProSalonUpdateInput
-    implements Built<ProSalonUpdateInput, ProSalonUpdateInputBuilder> {
+abstract class ProSalonUpdateInput implements Built<ProSalonUpdateInput, ProSalonUpdateInputBuilder> {
   @BuiltValueField(wireName: r'category')
   String? get category;
 
@@ -66,24 +65,18 @@ abstract class ProSalonUpdateInput
 
   ProSalonUpdateInput._();
 
-  factory ProSalonUpdateInput([void updates(ProSalonUpdateInputBuilder b)]) =
-      _$ProSalonUpdateInput;
+  factory ProSalonUpdateInput([void updates(ProSalonUpdateInputBuilder b)]) = _$ProSalonUpdateInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSalonUpdateInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSalonUpdateInput> get serializer =>
-      _$ProSalonUpdateInputSerializer();
+  static Serializer<ProSalonUpdateInput> get serializer => _$ProSalonUpdateInputSerializer();
 }
 
-class _$ProSalonUpdateInputSerializer
-    implements PrimitiveSerializer<ProSalonUpdateInput> {
+class _$ProSalonUpdateInputSerializer implements PrimitiveSerializer<ProSalonUpdateInput> {
   @override
-  final Iterable<Type> types = const [
-    ProSalonUpdateInput,
-    _$ProSalonUpdateInput
-  ];
+  final Iterable<Type> types = const [ProSalonUpdateInput, _$ProSalonUpdateInput];
 
   @override
   final String wireName = r'ProSalonUpdateInput';
@@ -185,9 +178,7 @@ class _$ProSalonUpdateInputSerializer
     ProSalonUpdateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -320,3 +311,4 @@ class _$ProSalonUpdateInputSerializer
     return result.build();
   }
 }
+

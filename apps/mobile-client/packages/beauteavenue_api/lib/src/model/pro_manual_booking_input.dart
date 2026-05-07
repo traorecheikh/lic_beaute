@@ -11,15 +11,14 @@ part 'pro_manual_booking_input.g.dart';
 /// ProManualBookingInput
 ///
 /// Properties:
-/// * [clientId]
-/// * [serviceId]
-/// * [employeeId]
-/// * [startsAt]
-/// * [clientName]
-/// * [clientPhone]
+/// * [clientId] 
+/// * [serviceId] 
+/// * [employeeId] 
+/// * [startsAt] 
+/// * [clientName] 
+/// * [clientPhone] 
 @BuiltValue()
-abstract class ProManualBookingInput
-    implements Built<ProManualBookingInput, ProManualBookingInputBuilder> {
+abstract class ProManualBookingInput implements Built<ProManualBookingInput, ProManualBookingInputBuilder> {
   @BuiltValueField(wireName: r'clientId')
   String? get clientId;
 
@@ -40,24 +39,18 @@ abstract class ProManualBookingInput
 
   ProManualBookingInput._();
 
-  factory ProManualBookingInput(
-      [void updates(ProManualBookingInputBuilder b)]) = _$ProManualBookingInput;
+  factory ProManualBookingInput([void updates(ProManualBookingInputBuilder b)]) = _$ProManualBookingInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProManualBookingInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProManualBookingInput> get serializer =>
-      _$ProManualBookingInputSerializer();
+  static Serializer<ProManualBookingInput> get serializer => _$ProManualBookingInputSerializer();
 }
 
-class _$ProManualBookingInputSerializer
-    implements PrimitiveSerializer<ProManualBookingInput> {
+class _$ProManualBookingInputSerializer implements PrimitiveSerializer<ProManualBookingInput> {
   @override
-  final Iterable<Type> types = const [
-    ProManualBookingInput,
-    _$ProManualBookingInput
-  ];
+  final Iterable<Type> types = const [ProManualBookingInput, _$ProManualBookingInput];
 
   @override
   final String wireName = r'ProManualBookingInput';
@@ -113,9 +106,7 @@ class _$ProManualBookingInputSerializer
     ProManualBookingInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -200,3 +191,4 @@ class _$ProManualBookingInputSerializer
     return result.build();
   }
 }
+

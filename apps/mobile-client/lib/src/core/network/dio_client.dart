@@ -6,7 +6,10 @@ import '../constants/storage_keys.dart';
 import '../env/app_env.dart';
 import '../storage/secure_storage.dart';
 
-Dio createDio(SecureStorage secureStorage) {
+Dio createDio(
+  SecureStorage secureStorage, {
+  Future<void> Function()? onSessionCleared,
+}) {
   final dio = Dio(
     BaseOptions(
       baseUrl: AppEnv.apiBaseUrl,
@@ -17,7 +20,11 @@ Dio createDio(SecureStorage secureStorage) {
   );
 
   dio.interceptors.addAll([
-    _AuthInterceptor(secureStorage: secureStorage, dio: dio),
+    _AuthInterceptor(
+      secureStorage: secureStorage,
+      dio: dio,
+      onSessionCleared: onSessionCleared,
+    ),
     if (kDebugMode)
       PrettyDioLogger(
         requestHeader: false,
@@ -35,10 +42,15 @@ Dio createDio(SecureStorage secureStorage) {
 }
 
 class _AuthInterceptor extends Interceptor {
-  _AuthInterceptor({required this.secureStorage, required this.dio});
+  _AuthInterceptor({
+    required this.secureStorage,
+    required this.dio,
+    this.onSessionCleared,
+  });
 
   final SecureStorage secureStorage;
   final Dio dio;
+  final Future<void> Function()? onSessionCleared;
 
   bool _isRefreshing = false;
   final List<({RequestOptions options, ErrorInterceptorHandler handler})>
@@ -129,6 +141,9 @@ class _AuthInterceptor extends Interceptor {
     await secureStorage.delete(StorageKeys.accessToken);
     await secureStorage.delete(StorageKeys.refreshToken);
     await secureStorage.delete(StorageKeys.userId);
+    if (onSessionCleared != null) {
+      await onSessionCleared!();
+    }
   }
 
   bool _isAuthPath(String path) =>

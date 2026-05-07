@@ -11,11 +11,10 @@ part 'otp_verify_input.g.dart';
 /// OtpVerifyInput
 ///
 /// Properties:
-/// * [phone]
-/// * [code]
+/// * [phone] 
+/// * [code] 
 @BuiltValue()
-abstract class OtpVerifyInput
-    implements Built<OtpVerifyInput, OtpVerifyInputBuilder> {
+abstract class OtpVerifyInput implements Built<OtpVerifyInput, OtpVerifyInputBuilder> {
   @BuiltValueField(wireName: r'phone')
   String get phone;
 
@@ -24,19 +23,16 @@ abstract class OtpVerifyInput
 
   OtpVerifyInput._();
 
-  factory OtpVerifyInput([void updates(OtpVerifyInputBuilder b)]) =
-      _$OtpVerifyInput;
+  factory OtpVerifyInput([void updates(OtpVerifyInputBuilder b)]) = _$OtpVerifyInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OtpVerifyInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OtpVerifyInput> get serializer =>
-      _$OtpVerifyInputSerializer();
+  static Serializer<OtpVerifyInput> get serializer => _$OtpVerifyInputSerializer();
 }
 
-class _$OtpVerifyInputSerializer
-    implements PrimitiveSerializer<OtpVerifyInput> {
+class _$OtpVerifyInputSerializer implements PrimitiveSerializer<OtpVerifyInput> {
   @override
   final Iterable<Type> types = const [OtpVerifyInput, _$OtpVerifyInput];
 
@@ -66,9 +62,7 @@ class _$OtpVerifyInputSerializer
     OtpVerifyInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -125,3 +119,4 @@ class _$OtpVerifyInputSerializer
     return result.build();
   }
 }
+

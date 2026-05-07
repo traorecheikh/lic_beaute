@@ -492,7 +492,7 @@ class _CategoriesSliverState extends State<_CategoriesSliver> {
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           itemCount: _categories.length,
-          separatorBuilder: (_, __) => gapW8,
+          separatorBuilder: (_, _) => gapW8,
           itemBuilder: (_, i) {
             final cat = _categories[i];
             final isActive = i == _selected;
@@ -628,7 +628,7 @@ class _SalonListSliver extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           sliver: SliverList.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => gapH12,
+            separatorBuilder: (_, _) => gapH12,
             itemBuilder: (context, i) {
               final salon = items[i];
               return RepaintBoundary(
@@ -792,7 +792,7 @@ class _FeaturedSalonSliver extends StatelessWidget {
   Widget build(BuildContext context) {
     return salonsAsync.when(
       loading: () => SliverToBoxAdapter(child: SizedBox(height: 280.h)),
-      error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
       data: (items) {
         if (items.isEmpty) {
           return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -805,7 +805,7 @@ class _FeaturedSalonSliver extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               itemCount: items.length,
-              separatorBuilder: (_, __) => SizedBox(width: 14.w),
+              separatorBuilder: (_, _) => SizedBox(width: 14.w),
               itemBuilder: (context, i) {
                 final salon = items[i];
                 return RepaintBoundary(
@@ -964,7 +964,7 @@ class _TrendingSalonSliver extends StatelessWidget {
   Widget build(BuildContext context) {
     return salonsAsync.when(
       loading: () => SliverToBoxAdapter(child: SizedBox(height: 170.h)),
-      error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
       data: (items) {
         if (items.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
         return SliverToBoxAdapter(
@@ -975,7 +975,7 @@ class _TrendingSalonSliver extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               itemCount: items.length,
-              separatorBuilder: (_, __) => gapW12,
+              separatorBuilder: (_, _) => gapW12,
               itemBuilder: (context, i) {
                 final salon = items[i];
                 return RepaintBoundary(

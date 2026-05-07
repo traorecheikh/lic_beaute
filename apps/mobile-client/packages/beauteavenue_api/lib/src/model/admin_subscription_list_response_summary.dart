@@ -11,14 +11,11 @@ part 'admin_subscription_list_response_summary.g.dart';
 /// AdminSubscriptionListResponseSummary
 ///
 /// Properties:
-/// * [premiumCount]
-/// * [standardCount]
-/// * [pausedCount]
+/// * [premiumCount] 
+/// * [standardCount] 
+/// * [pausedCount] 
 @BuiltValue()
-abstract class AdminSubscriptionListResponseSummary
-    implements
-        Built<AdminSubscriptionListResponseSummary,
-            AdminSubscriptionListResponseSummaryBuilder> {
+abstract class AdminSubscriptionListResponseSummary implements Built<AdminSubscriptionListResponseSummary, AdminSubscriptionListResponseSummaryBuilder> {
   @BuiltValueField(wireName: r'premiumCount')
   int get premiumCount;
 
@@ -30,25 +27,18 @@ abstract class AdminSubscriptionListResponseSummary
 
   AdminSubscriptionListResponseSummary._();
 
-  factory AdminSubscriptionListResponseSummary(
-          [void updates(AdminSubscriptionListResponseSummaryBuilder b)]) =
-      _$AdminSubscriptionListResponseSummary;
+  factory AdminSubscriptionListResponseSummary([void updates(AdminSubscriptionListResponseSummaryBuilder b)]) = _$AdminSubscriptionListResponseSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionListResponseSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionListResponseSummary> get serializer =>
-      _$AdminSubscriptionListResponseSummarySerializer();
+  static Serializer<AdminSubscriptionListResponseSummary> get serializer => _$AdminSubscriptionListResponseSummarySerializer();
 }
 
-class _$AdminSubscriptionListResponseSummarySerializer
-    implements PrimitiveSerializer<AdminSubscriptionListResponseSummary> {
+class _$AdminSubscriptionListResponseSummarySerializer implements PrimitiveSerializer<AdminSubscriptionListResponseSummary> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionListResponseSummary,
-    _$AdminSubscriptionListResponseSummary
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionListResponseSummary, _$AdminSubscriptionListResponseSummary];
 
   @override
   final String wireName = r'AdminSubscriptionListResponseSummary';
@@ -81,9 +71,7 @@ class _$AdminSubscriptionListResponseSummarySerializer
     AdminSubscriptionListResponseSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -147,3 +135,4 @@ class _$AdminSubscriptionListResponseSummarySerializer
     return result.build();
   }
 }
+

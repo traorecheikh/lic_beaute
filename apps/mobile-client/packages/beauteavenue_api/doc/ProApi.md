@@ -22,6 +22,7 @@ Method | HTTP request | Description
 [**apiV1ProBookingsManualPost**](ProApi.md#apiv1probookingsmanualpost) | **POST** /api/v1/pro/bookings/manual | Create manual booking
 [**apiV1ProCheckoutBookingIdCompletePost**](ProApi.md#apiv1procheckoutbookingidcompletepost) | **POST** /api/v1/pro/checkout/{bookingId}/complete | Complete checkout for a booking
 [**apiV1ProCheckoutBookingIdGet**](ProApi.md#apiv1procheckoutbookingidget) | **GET** /api/v1/pro/checkout/{bookingId} | Get checkout details for a booking
+[**apiV1ProClientsBenefitsPost**](ProApi.md#apiv1proclientsbenefitspost) | **POST** /api/v1/pro/clients/benefits | Assign a membership or package to a client
 [**apiV1ProClientsClientIdGet**](ProApi.md#apiv1proclientsclientidget) | **GET** /api/v1/pro/clients/{clientId} | Get salon client detail
 [**apiV1ProClientsGet**](ProApi.md#apiv1proclientsget) | **GET** /api/v1/pro/clients | List salon clients
 [**apiV1ProDashboardGet**](ProApi.md#apiv1prodashboardget) | **GET** /api/v1/pro/dashboard | Salon operational dashboard
@@ -45,6 +46,7 @@ Method | HTTP request | Description
 [**apiV1ProSubscriptionCheckoutPost**](ProApi.md#apiv1prosubscriptioncheckoutpost) | **POST** /api/v1/pro/subscription/checkout | Initiate premium subscription checkout
 [**apiV1ProSubscriptionGet**](ProApi.md#apiv1prosubscriptionget) | **GET** /api/v1/pro/subscription | Get subscription details
 [**apiV1ProSubscriptionPatch**](ProApi.md#apiv1prosubscriptionpatch) | **PATCH** /api/v1/pro/subscription | Update subscription settings
+[**apiV1ProVouchersPost**](ProApi.md#apiv1provoucherspost) | **POST** /api/v1/pro/vouchers | Create a voucher code
 
 
 # **apiV1ProAnalyticsGet**
@@ -580,6 +582,47 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiV1ProClientsBenefitsPost**
+> ClientBenefit apiV1ProClientsBenefitsPost(proClientBenefitCreateInput)
+
+Assign a membership or package to a client
+
+### Example
+```dart
+import 'package:beauteavenue_api/api.dart';
+
+final api = BeauteavenueApi().getProApi();
+final ProClientBenefitCreateInput proClientBenefitCreateInput = ; // ProClientBenefitCreateInput | 
+
+try {
+    final response = api.apiV1ProClientsBenefitsPost(proClientBenefitCreateInput);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ProApi->apiV1ProClientsBenefitsPost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **proClientBenefitCreateInput** | [**ProClientBenefitCreateInput**](ProClientBenefitCreateInput.md)|  | 
+
+### Return type
+
+[**ClientBenefit**](ClientBenefit.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -1485,6 +1528,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**UpdatedResponse**](UpdatedResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiV1ProVouchersPost**
+> ApiV1ProVouchersPost201Response apiV1ProVouchersPost(proVoucherCreateInput)
+
+Create a voucher code
+
+### Example
+```dart
+import 'package:beauteavenue_api/api.dart';
+
+final api = BeauteavenueApi().getProApi();
+final ProVoucherCreateInput proVoucherCreateInput = ; // ProVoucherCreateInput | 
+
+try {
+    final response = api.apiV1ProVouchersPost(proVoucherCreateInput);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ProApi->apiV1ProVouchersPost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **proVoucherCreateInput** | [**ProVoucherCreateInput**](ProVoucherCreateInput.md)|  | 
+
+### Return type
+
+[**ApiV1ProVouchersPost201Response**](ApiV1ProVouchersPost201Response.md)
 
 ### Authorization
 

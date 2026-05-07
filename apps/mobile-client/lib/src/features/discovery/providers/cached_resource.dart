@@ -11,16 +11,34 @@ class CachedResource<T> {
 }
 
 extension BookingMapExtension on CachedResource<Map<String, dynamic>> {
+  String get salonId => (data?['salonId'] as String?) ?? '';
+  String get serviceId => (data?['serviceId'] as String?) ?? '';
   String get salonName => (data?['salonName'] as String?) ?? 'Salon';
   String get serviceName => (data?['serviceName'] as String?) ?? 'Prestation';
-  String get employeeName => (data?['employeeName'] as String?) ?? 'Peu importe';
+  String get employeeName =>
+      (data?['employeeName'] as String?) ?? 'Peu importe';
   String get status => (data?['status'] as String?) ?? 'pending';
+  String get depositPaymentStatus =>
+      (data?['depositPaymentStatus'] as String?) ?? 'pending';
   int? get priceXof => (data?['totalAmountXof'] as num?)?.toInt();
   int? get depositXof => (data?['depositAmountXof'] as num?)?.toInt();
-  DateTime? get startsAt => data?['startsAt'] == null ? null : DateTime.tryParse(data?['startsAt'] as String)?.toLocal();
+  DateTime? get startsAt => data?['startsAt'] == null
+      ? null
+      : DateTime.tryParse(data?['startsAt'] as String)?.toLocal();
 
   List<String> get _months => const [
-    'jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc',
+    'jan',
+    'fév',
+    'mar',
+    'avr',
+    'mai',
+    'jun',
+    'jul',
+    'aoû',
+    'sep',
+    'oct',
+    'nov',
+    'déc',
   ];
 
   String get formattedDate {
@@ -33,7 +51,13 @@ extension BookingMapExtension on CachedResource<Map<String, dynamic>> {
     final dt = startsAt;
     if (dt == null) return '';
     const days = [
-      'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche',
+      'Lundi',
+      'Mardi',
+      'Mercredi',
+      'Jeudi',
+      'Vendredi',
+      'Samedi',
+      'Dimanche',
     ];
     return '${days[dt.weekday - 1]} ${dt.day} ${_months[dt.month - 1]} ${dt.year}';
   }

@@ -11,14 +11,11 @@ part 'health_get200_response_database.g.dart';
 /// HealthGet200ResponseDatabase
 ///
 /// Properties:
-/// * [driver]
-/// * [mode]
-/// * [attempts]
+/// * [driver] 
+/// * [mode] 
+/// * [attempts] 
 @BuiltValue()
-abstract class HealthGet200ResponseDatabase
-    implements
-        Built<HealthGet200ResponseDatabase,
-            HealthGet200ResponseDatabaseBuilder> {
+abstract class HealthGet200ResponseDatabase implements Built<HealthGet200ResponseDatabase, HealthGet200ResponseDatabaseBuilder> {
   @BuiltValueField(wireName: r'driver')
   String? get driver;
 
@@ -30,25 +27,18 @@ abstract class HealthGet200ResponseDatabase
 
   HealthGet200ResponseDatabase._();
 
-  factory HealthGet200ResponseDatabase(
-          [void updates(HealthGet200ResponseDatabaseBuilder b)]) =
-      _$HealthGet200ResponseDatabase;
+  factory HealthGet200ResponseDatabase([void updates(HealthGet200ResponseDatabaseBuilder b)]) = _$HealthGet200ResponseDatabase;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(HealthGet200ResponseDatabaseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<HealthGet200ResponseDatabase> get serializer =>
-      _$HealthGet200ResponseDatabaseSerializer();
+  static Serializer<HealthGet200ResponseDatabase> get serializer => _$HealthGet200ResponseDatabaseSerializer();
 }
 
-class _$HealthGet200ResponseDatabaseSerializer
-    implements PrimitiveSerializer<HealthGet200ResponseDatabase> {
+class _$HealthGet200ResponseDatabaseSerializer implements PrimitiveSerializer<HealthGet200ResponseDatabase> {
   @override
-  final Iterable<Type> types = const [
-    HealthGet200ResponseDatabase,
-    _$HealthGet200ResponseDatabase
-  ];
+  final Iterable<Type> types = const [HealthGet200ResponseDatabase, _$HealthGet200ResponseDatabase];
 
   @override
   final String wireName = r'HealthGet200ResponseDatabase';
@@ -87,9 +77,7 @@ class _$HealthGet200ResponseDatabaseSerializer
     HealthGet200ResponseDatabase object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -153,3 +141,4 @@ class _$HealthGet200ResponseDatabaseSerializer
     return result.build();
   }
 }
+

@@ -88,19 +88,14 @@ final BuiltSet<BookingSummaryDepositPaymentStatusEnum>
 ]);
 
 const BookingSummaryPaymentProviderEnum
-    _$bookingSummaryPaymentProviderEnum_wave =
-    const BookingSummaryPaymentProviderEnum._('wave');
-const BookingSummaryPaymentProviderEnum
-    _$bookingSummaryPaymentProviderEnum_orangeMoney =
-    const BookingSummaryPaymentProviderEnum._('orangeMoney');
+    _$bookingSummaryPaymentProviderEnum_intech =
+    const BookingSummaryPaymentProviderEnum._('intech');
 
 BookingSummaryPaymentProviderEnum _$bookingSummaryPaymentProviderEnumValueOf(
     String name) {
   switch (name) {
-    case 'wave':
-      return _$bookingSummaryPaymentProviderEnum_wave;
-    case 'orangeMoney':
-      return _$bookingSummaryPaymentProviderEnum_orangeMoney;
+    case 'intech':
+      return _$bookingSummaryPaymentProviderEnum_intech;
     default:
       throw ArgumentError(name);
   }
@@ -109,8 +104,7 @@ BookingSummaryPaymentProviderEnum _$bookingSummaryPaymentProviderEnumValueOf(
 final BuiltSet<BookingSummaryPaymentProviderEnum>
     _$bookingSummaryPaymentProviderEnumValues = BuiltSet<
         BookingSummaryPaymentProviderEnum>(const <BookingSummaryPaymentProviderEnum>[
-  _$bookingSummaryPaymentProviderEnum_wave,
-  _$bookingSummaryPaymentProviderEnum_orangeMoney,
+  _$bookingSummaryPaymentProviderEnum_intech,
 ]);
 
 Serializer<BookingSummaryStatusEnum> _$bookingSummaryStatusEnumSerializer =
@@ -198,12 +192,10 @@ class _$BookingSummaryDepositPaymentStatusEnumSerializer
 class _$BookingSummaryPaymentProviderEnumSerializer
     implements PrimitiveSerializer<BookingSummaryPaymentProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'wave': 'wave',
-    'orangeMoney': 'orange_money',
+    'intech': 'intech',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'wave': 'wave',
-    'orange_money': 'orangeMoney',
+    'intech': 'intech',
   };
 
   @override

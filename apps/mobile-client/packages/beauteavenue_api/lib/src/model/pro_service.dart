@@ -12,16 +12,16 @@ part 'pro_service.g.dart';
 /// ProService
 ///
 /// Properties:
-/// * [id]
-/// * [name]
-/// * [category]
-/// * [durationMinutes]
-/// * [priceXof]
-/// * [depositMode]
-/// * [depositAmountXof]
-/// * [depositPercent]
-/// * [isActive]
-/// * [displayOrder]
+/// * [id] 
+/// * [name] 
+/// * [category] 
+/// * [durationMinutes] 
+/// * [priceXof] 
+/// * [depositMode] 
+/// * [depositAmountXof] 
+/// * [depositPercent] 
+/// * [isActive] 
+/// * [displayOrder] 
 @BuiltValue()
 abstract class ProService implements Built<ProService, ProServiceBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -109,19 +109,15 @@ class _$ProServiceSerializer implements PrimitiveSerializer<ProService> {
       specifiedType: const FullType(ProServiceDepositModeEnum),
     );
     yield r'depositAmountXof';
-    yield object.depositAmountXof == null
-        ? null
-        : serializers.serialize(
-            object.depositAmountXof,
-            specifiedType: const FullType.nullable(int),
-          );
+    yield object.depositAmountXof == null ? null : serializers.serialize(
+      object.depositAmountXof,
+      specifiedType: const FullType.nullable(int),
+    );
     yield r'depositPercent';
-    yield object.depositPercent == null
-        ? null
-        : serializers.serialize(
-            object.depositPercent,
-            specifiedType: const FullType.nullable(int),
-          );
+    yield object.depositPercent == null ? null : serializers.serialize(
+      object.depositPercent,
+      specifiedType: const FullType.nullable(int),
+    );
     yield r'isActive';
     yield serializers.serialize(
       object.isActive,
@@ -140,9 +136,7 @@ class _$ProServiceSerializer implements PrimitiveSerializer<ProService> {
     ProService object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -259,23 +253,19 @@ class _$ProServiceSerializer implements PrimitiveSerializer<ProService> {
 }
 
 class ProServiceDepositModeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'none')
-  static const ProServiceDepositModeEnum none =
-      _$proServiceDepositModeEnum_none;
+  static const ProServiceDepositModeEnum none = _$proServiceDepositModeEnum_none;
   @BuiltValueEnumConst(wireName: r'fixed')
-  static const ProServiceDepositModeEnum fixed =
-      _$proServiceDepositModeEnum_fixed;
+  static const ProServiceDepositModeEnum fixed = _$proServiceDepositModeEnum_fixed;
   @BuiltValueEnumConst(wireName: r'percent')
-  static const ProServiceDepositModeEnum percent =
-      _$proServiceDepositModeEnum_percent;
+  static const ProServiceDepositModeEnum percent = _$proServiceDepositModeEnum_percent;
 
-  static Serializer<ProServiceDepositModeEnum> get serializer =>
-      _$proServiceDepositModeEnumSerializer;
+  static Serializer<ProServiceDepositModeEnum> get serializer => _$proServiceDepositModeEnumSerializer;
 
-  const ProServiceDepositModeEnum._(String name) : super(name);
+  const ProServiceDepositModeEnum._(String name): super(name);
 
-  static BuiltSet<ProServiceDepositModeEnum> get values =>
-      _$proServiceDepositModeEnumValues;
-  static ProServiceDepositModeEnum valueOf(String name) =>
-      _$proServiceDepositModeEnumValueOf(name);
+  static BuiltSet<ProServiceDepositModeEnum> get values => _$proServiceDepositModeEnumValues;
+  static ProServiceDepositModeEnum valueOf(String name) => _$proServiceDepositModeEnumValueOf(name);
 }
+

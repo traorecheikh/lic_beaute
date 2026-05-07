@@ -83,7 +83,7 @@ class SalonsListPage extends ConsumerWidget {
               ),
               padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 40.h),
               itemCount: items.isEmpty ? 1 : items.length,
-              separatorBuilder: (_, __) => SizedBox(height: 14.h),
+              separatorBuilder: (_, _) => SizedBox(height: 14.h),
               itemBuilder: (context, i) {
                 if (items.isEmpty) {
                   return SizedBox(
@@ -140,7 +140,7 @@ class _SalonCard extends StatelessWidget {
                           width: 100.r,
                           height: 100.r,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) =>
+                          placeholder: (_, _) =>
                               Container(color: AppColors.surfaceVariant),
                         )
                       : Container(

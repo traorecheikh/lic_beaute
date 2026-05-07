@@ -12,15 +12,12 @@ part 'admin_salon_detail_documents_inner.g.dart';
 /// AdminSalonDetailDocumentsInner
 ///
 /// Properties:
-/// * [label]
-/// * [status]
-/// * [note]
-/// * [fileUrl]
+/// * [label] 
+/// * [status] 
+/// * [note] 
+/// * [fileUrl] 
 @BuiltValue()
-abstract class AdminSalonDetailDocumentsInner
-    implements
-        Built<AdminSalonDetailDocumentsInner,
-            AdminSalonDetailDocumentsInnerBuilder> {
+abstract class AdminSalonDetailDocumentsInner implements Built<AdminSalonDetailDocumentsInner, AdminSalonDetailDocumentsInnerBuilder> {
   @BuiltValueField(wireName: r'label')
   String get label;
 
@@ -36,25 +33,18 @@ abstract class AdminSalonDetailDocumentsInner
 
   AdminSalonDetailDocumentsInner._();
 
-  factory AdminSalonDetailDocumentsInner(
-          [void updates(AdminSalonDetailDocumentsInnerBuilder b)]) =
-      _$AdminSalonDetailDocumentsInner;
+  factory AdminSalonDetailDocumentsInner([void updates(AdminSalonDetailDocumentsInnerBuilder b)]) = _$AdminSalonDetailDocumentsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonDetailDocumentsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonDetailDocumentsInner> get serializer =>
-      _$AdminSalonDetailDocumentsInnerSerializer();
+  static Serializer<AdminSalonDetailDocumentsInner> get serializer => _$AdminSalonDetailDocumentsInnerSerializer();
 }
 
-class _$AdminSalonDetailDocumentsInnerSerializer
-    implements PrimitiveSerializer<AdminSalonDetailDocumentsInner> {
+class _$AdminSalonDetailDocumentsInnerSerializer implements PrimitiveSerializer<AdminSalonDetailDocumentsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonDetailDocumentsInner,
-    _$AdminSalonDetailDocumentsInner
-  ];
+  final Iterable<Type> types = const [AdminSalonDetailDocumentsInner, _$AdminSalonDetailDocumentsInner];
 
   @override
   final String wireName = r'AdminSalonDetailDocumentsInner';
@@ -75,19 +65,15 @@ class _$AdminSalonDetailDocumentsInnerSerializer
       specifiedType: const FullType(AdminSalonDetailDocumentsInnerStatusEnum),
     );
     yield r'note';
-    yield object.note == null
-        ? null
-        : serializers.serialize(
-            object.note,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.note == null ? null : serializers.serialize(
+      object.note,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'fileUrl';
-    yield object.fileUrl == null
-        ? null
-        : serializers.serialize(
-            object.fileUrl,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.fileUrl == null ? null : serializers.serialize(
+      object.fileUrl,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -96,9 +82,7 @@ class _$AdminSalonDetailDocumentsInnerSerializer
     AdminSalonDetailDocumentsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -123,8 +107,7 @@ class _$AdminSalonDetailDocumentsInnerSerializer
         case r'status':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminSalonDetailDocumentsInnerStatusEnum),
+            specifiedType: const FullType(AdminSalonDetailDocumentsInnerStatusEnum),
           ) as AdminSalonDetailDocumentsInnerStatusEnum;
           result.status = valueDes;
           break;
@@ -174,23 +157,19 @@ class _$AdminSalonDetailDocumentsInnerSerializer
 }
 
 class AdminSalonDetailDocumentsInnerStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'received')
-  static const AdminSalonDetailDocumentsInnerStatusEnum received =
-      _$adminSalonDetailDocumentsInnerStatusEnum_received;
+  static const AdminSalonDetailDocumentsInnerStatusEnum received = _$adminSalonDetailDocumentsInnerStatusEnum_received;
   @BuiltValueEnumConst(wireName: r'missing')
-  static const AdminSalonDetailDocumentsInnerStatusEnum missing =
-      _$adminSalonDetailDocumentsInnerStatusEnum_missing;
+  static const AdminSalonDetailDocumentsInnerStatusEnum missing = _$adminSalonDetailDocumentsInnerStatusEnum_missing;
   @BuiltValueEnumConst(wireName: r'invalid')
-  static const AdminSalonDetailDocumentsInnerStatusEnum invalid =
-      _$adminSalonDetailDocumentsInnerStatusEnum_invalid;
+  static const AdminSalonDetailDocumentsInnerStatusEnum invalid = _$adminSalonDetailDocumentsInnerStatusEnum_invalid;
 
-  static Serializer<AdminSalonDetailDocumentsInnerStatusEnum> get serializer =>
-      _$adminSalonDetailDocumentsInnerStatusEnumSerializer;
+  static Serializer<AdminSalonDetailDocumentsInnerStatusEnum> get serializer => _$adminSalonDetailDocumentsInnerStatusEnumSerializer;
 
-  const AdminSalonDetailDocumentsInnerStatusEnum._(String name) : super(name);
+  const AdminSalonDetailDocumentsInnerStatusEnum._(String name): super(name);
 
-  static BuiltSet<AdminSalonDetailDocumentsInnerStatusEnum> get values =>
-      _$adminSalonDetailDocumentsInnerStatusEnumValues;
-  static AdminSalonDetailDocumentsInnerStatusEnum valueOf(String name) =>
-      _$adminSalonDetailDocumentsInnerStatusEnumValueOf(name);
+  static BuiltSet<AdminSalonDetailDocumentsInnerStatusEnum> get values => _$adminSalonDetailDocumentsInnerStatusEnumValues;
+  static AdminSalonDetailDocumentsInnerStatusEnum valueOf(String name) => _$adminSalonDetailDocumentsInnerStatusEnumValueOf(name);
 }
+

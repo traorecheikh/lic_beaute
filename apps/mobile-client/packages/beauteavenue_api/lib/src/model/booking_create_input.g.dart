@@ -6,19 +6,14 @@ part of 'booking_create_input.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
-const BookingCreateInputProviderEnum _$bookingCreateInputProviderEnum_wave =
-    const BookingCreateInputProviderEnum._('wave');
-const BookingCreateInputProviderEnum
-    _$bookingCreateInputProviderEnum_orangeMoney =
-    const BookingCreateInputProviderEnum._('orangeMoney');
+const BookingCreateInputProviderEnum _$bookingCreateInputProviderEnum_intech =
+    const BookingCreateInputProviderEnum._('intech');
 
 BookingCreateInputProviderEnum _$bookingCreateInputProviderEnumValueOf(
     String name) {
   switch (name) {
-    case 'wave':
-      return _$bookingCreateInputProviderEnum_wave;
-    case 'orangeMoney':
-      return _$bookingCreateInputProviderEnum_orangeMoney;
+    case 'intech':
+      return _$bookingCreateInputProviderEnum_intech;
     default:
       throw ArgumentError(name);
   }
@@ -27,23 +22,53 @@ BookingCreateInputProviderEnum _$bookingCreateInputProviderEnumValueOf(
 final BuiltSet<BookingCreateInputProviderEnum>
     _$bookingCreateInputProviderEnumValues = BuiltSet<
         BookingCreateInputProviderEnum>(const <BookingCreateInputProviderEnum>[
-  _$bookingCreateInputProviderEnum_wave,
-  _$bookingCreateInputProviderEnum_orangeMoney,
+  _$bookingCreateInputProviderEnum_intech,
+]);
+
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_wave =
+    const BookingCreateInputChannelEnum._('wave');
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_orangeMoney =
+    const BookingCreateInputChannelEnum._('orangeMoney');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_freeMoney =
+    const BookingCreateInputChannelEnum._('freeMoney');
+
+BookingCreateInputChannelEnum _$bookingCreateInputChannelEnumValueOf(
+    String name) {
+  switch (name) {
+    case 'wave':
+      return _$bookingCreateInputChannelEnum_wave;
+    case 'orangeMoney':
+      return _$bookingCreateInputChannelEnum_orangeMoney;
+    case 'freeMoney':
+      return _$bookingCreateInputChannelEnum_freeMoney;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<BookingCreateInputChannelEnum>
+    _$bookingCreateInputChannelEnumValues = BuiltSet<
+        BookingCreateInputChannelEnum>(const <BookingCreateInputChannelEnum>[
+  _$bookingCreateInputChannelEnum_wave,
+  _$bookingCreateInputChannelEnum_orangeMoney,
+  _$bookingCreateInputChannelEnum_freeMoney,
 ]);
 
 Serializer<BookingCreateInputProviderEnum>
     _$bookingCreateInputProviderEnumSerializer =
     _$BookingCreateInputProviderEnumSerializer();
+Serializer<BookingCreateInputChannelEnum>
+    _$bookingCreateInputChannelEnumSerializer =
+    _$BookingCreateInputChannelEnumSerializer();
 
 class _$BookingCreateInputProviderEnumSerializer
     implements PrimitiveSerializer<BookingCreateInputProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'wave': 'wave',
-    'orangeMoney': 'orange_money',
+    'intech': 'intech',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'wave': 'wave',
-    'orange_money': 'orangeMoney',
+    'intech': 'intech',
   };
 
   @override
@@ -65,6 +90,38 @@ class _$BookingCreateInputProviderEnumSerializer
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 
+class _$BookingCreateInputChannelEnumSerializer
+    implements PrimitiveSerializer<BookingCreateInputChannelEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'wave': 'wave',
+    'orangeMoney': 'orange_money',
+    'freeMoney': 'free_money',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'wave': 'wave',
+    'orange_money': 'orangeMoney',
+    'free_money': 'freeMoney',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[BookingCreateInputChannelEnum];
+  @override
+  final String wireName = 'BookingCreateInputChannelEnum';
+
+  @override
+  Object serialize(
+          Serializers serializers, BookingCreateInputChannelEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  BookingCreateInputChannelEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      BookingCreateInputChannelEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
 class _$BookingCreateInput extends BookingCreateInput {
   @override
   final String salonId;
@@ -78,6 +135,8 @@ class _$BookingCreateInput extends BookingCreateInput {
   final String? clientNote;
   @override
   final BookingCreateInputProviderEnum? provider;
+  @override
+  final BookingCreateInputChannelEnum? channel;
 
   factory _$BookingCreateInput(
           [void Function(BookingCreateInputBuilder)? updates]) =>
@@ -89,7 +148,8 @@ class _$BookingCreateInput extends BookingCreateInput {
       this.employeeId,
       required this.startsAt,
       this.clientNote,
-      this.provider})
+      this.provider,
+      this.channel})
       : super._();
   @override
   BookingCreateInput rebuild(
@@ -109,7 +169,8 @@ class _$BookingCreateInput extends BookingCreateInput {
         employeeId == other.employeeId &&
         startsAt == other.startsAt &&
         clientNote == other.clientNote &&
-        provider == other.provider;
+        provider == other.provider &&
+        channel == other.channel;
   }
 
   @override
@@ -121,6 +182,7 @@ class _$BookingCreateInput extends BookingCreateInput {
     _$hash = $jc(_$hash, startsAt.hashCode);
     _$hash = $jc(_$hash, clientNote.hashCode);
     _$hash = $jc(_$hash, provider.hashCode);
+    _$hash = $jc(_$hash, channel.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -133,7 +195,8 @@ class _$BookingCreateInput extends BookingCreateInput {
           ..add('employeeId', employeeId)
           ..add('startsAt', startsAt)
           ..add('clientNote', clientNote)
-          ..add('provider', provider))
+          ..add('provider', provider)
+          ..add('channel', channel))
         .toString();
   }
 }
@@ -167,6 +230,11 @@ class BookingCreateInputBuilder
   set provider(BookingCreateInputProviderEnum? provider) =>
       _$this._provider = provider;
 
+  BookingCreateInputChannelEnum? _channel;
+  BookingCreateInputChannelEnum? get channel => _$this._channel;
+  set channel(BookingCreateInputChannelEnum? channel) =>
+      _$this._channel = channel;
+
   BookingCreateInputBuilder() {
     BookingCreateInput._defaults(this);
   }
@@ -180,6 +248,7 @@ class BookingCreateInputBuilder
       _startsAt = $v.startsAt;
       _clientNote = $v.clientNote;
       _provider = $v.provider;
+      _channel = $v.channel;
       _$v = null;
     }
     return this;
@@ -210,6 +279,7 @@ class BookingCreateInputBuilder
               startsAt, r'BookingCreateInput', 'startsAt'),
           clientNote: clientNote,
           provider: provider,
+          channel: channel,
         );
     replace(_$result);
     return _$result;

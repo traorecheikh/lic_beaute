@@ -5,6 +5,9 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../services/media_upload_service.dart';
 
 import '../constants/storage_keys.dart';
 import '../session/session_store.dart';
@@ -200,17 +203,11 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
         if (path == null || !File(path).existsSync()) {
           throw StateError('Avatar file unavailable');
         }
-        final fileName = path.split(Platform.pathSeparator).last;
-        final upload = await dio.post<Map<String, dynamic>>(
-          '/api/v1/media/upload',
-          data: FormData.fromMap({
-            'file': await MultipartFile.fromFile(path, filename: fileName),
-          }),
+        final mediaId = await MediaUploadService(dio).uploadSalonImage(
+          salonId: '',
+          file: XFile(path),
+          purpose: 'avatar',
         );
-        final mediaId = upload.data?['id'] as String?;
-        if (mediaId == null) {
-          throw StateError('Missing uploaded media id');
-        }
         await dio.patch('/api/v1/me', data: {'avatarMediaId': mediaId});
         return;
       default:

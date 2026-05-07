@@ -223,7 +223,7 @@ export const proSubscriptionSchema = z.object({
   autoRenew: z.boolean(),
   billingMethod: z
     .object({
-      provider: z.enum(["paytech", "manual"]),
+      provider: z.enum(["intech", "manual"]),
       accountNumberMasked: z.string()
     })
     .nullable()
@@ -234,7 +234,7 @@ export const proSubscriptionUpdateInputSchema = z
     autoRenew: z.boolean().optional(),
     billingMethod: z
       .object({
-        provider: z.enum(["paytech", "manual"]),
+        provider: z.enum(["intech", "manual"]),
         accountNumber: z.string().trim().min(8).max(20)
       })
       .nullable()
@@ -252,7 +252,7 @@ export const proSubscriptionUpdateInputSchema = z
 
 export const proSubscriptionCheckoutInputSchema = z.object({
   action: z.enum(["upgrade", "renewal"]),
-  provider: z.enum(["paytech", "manual"]).default("paytech")
+  provider: z.enum(["intech", "manual"]).default("intech")
 });
 
 export const proSubscriptionCheckoutResultSchema = z.object({
@@ -322,7 +322,7 @@ export const proCheckoutDetailsSchema = z.object({
 });
 
 export const proCheckoutCompleteInputSchema = z.object({
-  paymentMethod: z.enum(["cash", "paytech", "other"]),
+  paymentMethod: z.enum(["cash", "intech", "other"]),
   lineItems: z.array(proCheckoutLineItemSchema).min(1),
   discountXof: z.number().int().nonnegative().default(0)
 });
@@ -370,6 +370,8 @@ export const proReviewSchema = reviewSchema.extend({
 
 // ─── Exports ─────────────────────────────────────────────────────────────────
 
+export type ProSalonHour = z.infer<typeof proSalonHourSchema>;
+export type ProTeamDisplay = z.infer<typeof proTeamDisplaySchema>;
 export type ProSalonProfile = z.infer<typeof proSalonProfileSchema>;
 export type ProSalonUpdateInput = z.infer<typeof proSalonUpdateInputSchema>;
 export type ProService = z.infer<typeof proServiceSchema>;
@@ -378,13 +380,32 @@ export type ProServiceUpdateInput = z.infer<typeof proServiceUpdateInputSchema>;
 export type ProStaffMember = z.infer<typeof proStaffMemberSchema>;
 export type ProStaffCreateInput = z.infer<typeof proStaffCreateInputSchema>;
 export type ProStaffUpdateInput = z.infer<typeof proStaffUpdateInputSchema>;
+export type ProHoursUpdateInput = z.infer<typeof proHoursUpdateInputSchema>;
 export type ProBlockedSlot = z.infer<typeof proBlockedSlotSchema>;
 export type ProBlockedSlotCreateInput = z.infer<typeof proBlockedSlotCreateInputSchema>;
 export type ProBookingDetail = z.infer<typeof proBookingDetailSchema>;
+export type ProBookingPayment = z.infer<typeof proBookingPaymentSchema>;
+export type ProBookingEvent = z.infer<typeof proBookingEventSchema>;
 export type ProBookingFullDetail = z.infer<typeof proBookingFullDetailSchema>;
+export type ProBookingStatusUpdateInput = z.infer<typeof proBookingStatusUpdateSchema>;
 export type ProManualBookingInput = z.infer<typeof proManualBookingInputSchema>;
+export type ProManualBookingCreated = z.infer<typeof proManualBookingCreatedSchema>;
+export type ProTopService = z.infer<typeof proTopServiceSchema>;
 export type ProAnalytics = z.infer<typeof proAnalyticsSchema>;
 export type ProSubscription = z.infer<typeof proSubscriptionSchema>;
+export type ProSubscriptionUpdateInput = z.infer<typeof proSubscriptionUpdateInputSchema>;
+export type ProSubscriptionCheckoutInput = z.infer<typeof proSubscriptionCheckoutInputSchema>;
+export type ProSubscriptionCheckoutResult = z.infer<typeof proSubscriptionCheckoutResultSchema>;
+export type ProInvoice = z.infer<typeof proInvoiceSchema>;
+export type ProPayoutEvent = z.infer<typeof proPayoutEventSchema>;
+export type ProClientSummary = z.infer<typeof proClientSummarySchema>;
+export type ProClientDetail = z.infer<typeof proClientDetailSchema>;
+export type ProCheckoutLineItem = z.infer<typeof proCheckoutLineItemSchema>;
+export type ProCheckoutDetails = z.infer<typeof proCheckoutDetailsSchema>;
+export type ProCheckoutCompleteInput = z.infer<typeof proCheckoutCompleteInputSchema>;
+export type ProCheckoutCompleteResult = z.infer<typeof proCheckoutCompleteResultSchema>;
 export type AvailabilitySlot = z.infer<typeof availabilitySlotSchema>;
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
 export type ProDashboard = z.infer<typeof proDashboardSchema>;
+export type ProReviewResponseInput = z.infer<typeof proReviewResponseInputSchema>;
+export type ProReviewBody = z.infer<typeof proReviewSchema>;

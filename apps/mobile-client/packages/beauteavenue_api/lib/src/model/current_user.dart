@@ -12,12 +12,18 @@ part 'current_user.g.dart';
 /// CurrentUser
 ///
 /// Properties:
-/// * [id]
-/// * [fullName]
-/// * [email]
-/// * [phone]
-/// * [role]
-/// * [salonId]
+/// * [id] 
+/// * [fullName] 
+/// * [email] 
+/// * [phone] 
+/// * [role] 
+/// * [salonId] 
+/// * [city] 
+/// * [avatarUrl] 
+/// * [preferredContactChannel] 
+/// * [pushOptIn] 
+/// * [marketingOptIn] 
+/// * [preferredLanguage] 
 @BuiltValue()
 abstract class CurrentUser implements Built<CurrentUser, CurrentUserBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -38,6 +44,26 @@ abstract class CurrentUser implements Built<CurrentUser, CurrentUserBuilder> {
 
   @BuiltValueField(wireName: r'salonId')
   String? get salonId;
+
+  @BuiltValueField(wireName: r'city')
+  String? get city;
+
+  @BuiltValueField(wireName: r'avatarUrl')
+  String? get avatarUrl;
+
+  @BuiltValueField(wireName: r'preferredContactChannel')
+  CurrentUserPreferredContactChannelEnum get preferredContactChannel;
+  // enum preferredContactChannelEnum {  phone,  sms,  };
+
+  @BuiltValueField(wireName: r'pushOptIn')
+  bool get pushOptIn;
+
+  @BuiltValueField(wireName: r'marketingOptIn')
+  bool get marketingOptIn;
+
+  @BuiltValueField(wireName: r'preferredLanguage')
+  CurrentUserPreferredLanguageEnum get preferredLanguage;
+  // enum preferredLanguageEnum {  fr,  en,  };
 
   CurrentUser._();
 
@@ -73,31 +99,55 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
       specifiedType: const FullType(String),
     );
     yield r'email';
-    yield object.email == null
-        ? null
-        : serializers.serialize(
-            object.email,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.email == null ? null : serializers.serialize(
+      object.email,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'phone';
-    yield object.phone == null
-        ? null
-        : serializers.serialize(
-            object.phone,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.phone == null ? null : serializers.serialize(
+      object.phone,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'role';
     yield serializers.serialize(
       object.role,
       specifiedType: const FullType(CurrentUserRoleEnum),
     );
     yield r'salonId';
-    yield object.salonId == null
-        ? null
-        : serializers.serialize(
-            object.salonId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.salonId == null ? null : serializers.serialize(
+      object.salonId,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'city';
+    yield object.city == null ? null : serializers.serialize(
+      object.city,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'avatarUrl';
+    yield object.avatarUrl == null ? null : serializers.serialize(
+      object.avatarUrl,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'preferredContactChannel';
+    yield serializers.serialize(
+      object.preferredContactChannel,
+      specifiedType: const FullType(CurrentUserPreferredContactChannelEnum),
+    );
+    yield r'pushOptIn';
+    yield serializers.serialize(
+      object.pushOptIn,
+      specifiedType: const FullType(bool),
+    );
+    yield r'marketingOptIn';
+    yield serializers.serialize(
+      object.marketingOptIn,
+      specifiedType: const FullType(bool),
+    );
+    yield r'preferredLanguage';
+    yield serializers.serialize(
+      object.preferredLanguage,
+      specifiedType: const FullType(CurrentUserPreferredLanguageEnum),
+    );
   }
 
   @override
@@ -106,9 +156,7 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
     CurrentUser object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -168,6 +216,50 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
           if (valueDes == null) continue;
           result.salonId = valueDes;
           break;
+        case r'city':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.city = valueDes;
+          break;
+        case r'avatarUrl':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.avatarUrl = valueDes;
+          break;
+        case r'preferredContactChannel':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(CurrentUserPreferredContactChannelEnum),
+          ) as CurrentUserPreferredContactChannelEnum;
+          result.preferredContactChannel = valueDes;
+          break;
+        case r'pushOptIn':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.pushOptIn = valueDes;
+          break;
+        case r'marketingOptIn':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.marketingOptIn = valueDes;
+          break;
+        case r'preferredLanguage':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(CurrentUserPreferredLanguageEnum),
+          ) as CurrentUserPreferredLanguageEnum;
+          result.preferredLanguage = valueDes;
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -198,25 +290,51 @@ class _$CurrentUserSerializer implements PrimitiveSerializer<CurrentUser> {
 }
 
 class CurrentUserRoleEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'client')
   static const CurrentUserRoleEnum client = _$currentUserRoleEnum_client;
   @BuiltValueEnumConst(wireName: r'salon_staff')
-  static const CurrentUserRoleEnum salonStaff =
-      _$currentUserRoleEnum_salonStaff;
+  static const CurrentUserRoleEnum salonStaff = _$currentUserRoleEnum_salonStaff;
   @BuiltValueEnumConst(wireName: r'salon_owner')
-  static const CurrentUserRoleEnum salonOwner =
-      _$currentUserRoleEnum_salonOwner;
+  static const CurrentUserRoleEnum salonOwner = _$currentUserRoleEnum_salonOwner;
   @BuiltValueEnumConst(wireName: r'platform_admin')
-  static const CurrentUserRoleEnum platformAdmin =
-      _$currentUserRoleEnum_platformAdmin;
+  static const CurrentUserRoleEnum platformAdmin = _$currentUserRoleEnum_platformAdmin;
 
-  static Serializer<CurrentUserRoleEnum> get serializer =>
-      _$currentUserRoleEnumSerializer;
+  static Serializer<CurrentUserRoleEnum> get serializer => _$currentUserRoleEnumSerializer;
 
-  const CurrentUserRoleEnum._(String name) : super(name);
+  const CurrentUserRoleEnum._(String name): super(name);
 
-  static BuiltSet<CurrentUserRoleEnum> get values =>
-      _$currentUserRoleEnumValues;
-  static CurrentUserRoleEnum valueOf(String name) =>
-      _$currentUserRoleEnumValueOf(name);
+  static BuiltSet<CurrentUserRoleEnum> get values => _$currentUserRoleEnumValues;
+  static CurrentUserRoleEnum valueOf(String name) => _$currentUserRoleEnumValueOf(name);
 }
+
+class CurrentUserPreferredContactChannelEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'phone')
+  static const CurrentUserPreferredContactChannelEnum phone = _$currentUserPreferredContactChannelEnum_phone;
+  @BuiltValueEnumConst(wireName: r'sms')
+  static const CurrentUserPreferredContactChannelEnum sms = _$currentUserPreferredContactChannelEnum_sms;
+
+  static Serializer<CurrentUserPreferredContactChannelEnum> get serializer => _$currentUserPreferredContactChannelEnumSerializer;
+
+  const CurrentUserPreferredContactChannelEnum._(String name): super(name);
+
+  static BuiltSet<CurrentUserPreferredContactChannelEnum> get values => _$currentUserPreferredContactChannelEnumValues;
+  static CurrentUserPreferredContactChannelEnum valueOf(String name) => _$currentUserPreferredContactChannelEnumValueOf(name);
+}
+
+class CurrentUserPreferredLanguageEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'fr')
+  static const CurrentUserPreferredLanguageEnum fr = _$currentUserPreferredLanguageEnum_fr;
+  @BuiltValueEnumConst(wireName: r'en')
+  static const CurrentUserPreferredLanguageEnum en = _$currentUserPreferredLanguageEnum_en;
+
+  static Serializer<CurrentUserPreferredLanguageEnum> get serializer => _$currentUserPreferredLanguageEnumSerializer;
+
+  const CurrentUserPreferredLanguageEnum._(String name): super(name);
+
+  static BuiltSet<CurrentUserPreferredLanguageEnum> get values => _$currentUserPreferredLanguageEnumValues;
+  static CurrentUserPreferredLanguageEnum valueOf(String name) => _$currentUserPreferredLanguageEnumValueOf(name);
+}
+

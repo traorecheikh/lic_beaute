@@ -11,12 +11,11 @@ part 'admin_salon_detail_owner.g.dart';
 /// AdminSalonDetailOwner
 ///
 /// Properties:
-/// * [fullName]
-/// * [email]
-/// * [phone]
+/// * [fullName] 
+/// * [email] 
+/// * [phone] 
 @BuiltValue()
-abstract class AdminSalonDetailOwner
-    implements Built<AdminSalonDetailOwner, AdminSalonDetailOwnerBuilder> {
+abstract class AdminSalonDetailOwner implements Built<AdminSalonDetailOwner, AdminSalonDetailOwnerBuilder> {
   @BuiltValueField(wireName: r'fullName')
   String get fullName;
 
@@ -28,24 +27,18 @@ abstract class AdminSalonDetailOwner
 
   AdminSalonDetailOwner._();
 
-  factory AdminSalonDetailOwner(
-      [void updates(AdminSalonDetailOwnerBuilder b)]) = _$AdminSalonDetailOwner;
+  factory AdminSalonDetailOwner([void updates(AdminSalonDetailOwnerBuilder b)]) = _$AdminSalonDetailOwner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonDetailOwnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonDetailOwner> get serializer =>
-      _$AdminSalonDetailOwnerSerializer();
+  static Serializer<AdminSalonDetailOwner> get serializer => _$AdminSalonDetailOwnerSerializer();
 }
 
-class _$AdminSalonDetailOwnerSerializer
-    implements PrimitiveSerializer<AdminSalonDetailOwner> {
+class _$AdminSalonDetailOwnerSerializer implements PrimitiveSerializer<AdminSalonDetailOwner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonDetailOwner,
-    _$AdminSalonDetailOwner
-  ];
+  final Iterable<Type> types = const [AdminSalonDetailOwner, _$AdminSalonDetailOwner];
 
   @override
   final String wireName = r'AdminSalonDetailOwner';
@@ -78,9 +71,7 @@ class _$AdminSalonDetailOwnerSerializer
     AdminSalonDetailOwner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -144,3 +135,4 @@ class _$AdminSalonDetailOwnerSerializer
     return result.build();
   }
 }
+

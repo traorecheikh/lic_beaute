@@ -11,16 +11,15 @@ part 'pro_client_summary.g.dart';
 /// ProClientSummary
 ///
 /// Properties:
-/// * [id]
-/// * [fullName]
-/// * [phone]
-/// * [email]
-/// * [visitCount]
-/// * [totalSpentXof]
-/// * [lastVisitAt]
+/// * [id] 
+/// * [fullName] 
+/// * [phone] 
+/// * [email] 
+/// * [visitCount] 
+/// * [totalSpentXof] 
+/// * [lastVisitAt] 
 @BuiltValue()
-abstract class ProClientSummary
-    implements Built<ProClientSummary, ProClientSummaryBuilder> {
+abstract class ProClientSummary implements Built<ProClientSummary, ProClientSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -44,19 +43,16 @@ abstract class ProClientSummary
 
   ProClientSummary._();
 
-  factory ProClientSummary([void updates(ProClientSummaryBuilder b)]) =
-      _$ProClientSummary;
+  factory ProClientSummary([void updates(ProClientSummaryBuilder b)]) = _$ProClientSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProClientSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProClientSummary> get serializer =>
-      _$ProClientSummarySerializer();
+  static Serializer<ProClientSummary> get serializer => _$ProClientSummarySerializer();
 }
 
-class _$ProClientSummarySerializer
-    implements PrimitiveSerializer<ProClientSummary> {
+class _$ProClientSummarySerializer implements PrimitiveSerializer<ProClientSummary> {
   @override
   final Iterable<Type> types = const [ProClientSummary, _$ProClientSummary];
 
@@ -79,19 +75,15 @@ class _$ProClientSummarySerializer
       specifiedType: const FullType(String),
     );
     yield r'phone';
-    yield object.phone == null
-        ? null
-        : serializers.serialize(
-            object.phone,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.phone == null ? null : serializers.serialize(
+      object.phone,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'email';
-    yield object.email == null
-        ? null
-        : serializers.serialize(
-            object.email,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.email == null ? null : serializers.serialize(
+      object.email,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'visitCount';
     yield serializers.serialize(
       object.visitCount,
@@ -103,12 +95,10 @@ class _$ProClientSummarySerializer
       specifiedType: const FullType(int),
     );
     yield r'lastVisitAt';
-    yield object.lastVisitAt == null
-        ? null
-        : serializers.serialize(
-            object.lastVisitAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.lastVisitAt == null ? null : serializers.serialize(
+      object.lastVisitAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
   }
 
   @override
@@ -117,9 +107,7 @@ class _$ProClientSummarySerializer
     ProClientSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -214,3 +202,4 @@ class _$ProClientSummarySerializer
     return result.build();
   }
 }
+

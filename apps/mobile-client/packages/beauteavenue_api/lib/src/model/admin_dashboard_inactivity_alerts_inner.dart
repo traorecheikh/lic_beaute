@@ -12,16 +12,13 @@ part 'admin_dashboard_inactivity_alerts_inner.g.dart';
 /// AdminDashboardInactivityAlertsInner
 ///
 /// Properties:
-/// * [salonId]
-/// * [salonName]
-/// * [daysWithoutBookings]
-/// * [city]
-/// * [status]
+/// * [salonId] 
+/// * [salonName] 
+/// * [daysWithoutBookings] 
+/// * [city] 
+/// * [status] 
 @BuiltValue()
-abstract class AdminDashboardInactivityAlertsInner
-    implements
-        Built<AdminDashboardInactivityAlertsInner,
-            AdminDashboardInactivityAlertsInnerBuilder> {
+abstract class AdminDashboardInactivityAlertsInner implements Built<AdminDashboardInactivityAlertsInner, AdminDashboardInactivityAlertsInnerBuilder> {
   @BuiltValueField(wireName: r'salonId')
   String get salonId;
 
@@ -40,25 +37,18 @@ abstract class AdminDashboardInactivityAlertsInner
 
   AdminDashboardInactivityAlertsInner._();
 
-  factory AdminDashboardInactivityAlertsInner(
-          [void updates(AdminDashboardInactivityAlertsInnerBuilder b)]) =
-      _$AdminDashboardInactivityAlertsInner;
+  factory AdminDashboardInactivityAlertsInner([void updates(AdminDashboardInactivityAlertsInnerBuilder b)]) = _$AdminDashboardInactivityAlertsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminDashboardInactivityAlertsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminDashboardInactivityAlertsInner> get serializer =>
-      _$AdminDashboardInactivityAlertsInnerSerializer();
+  static Serializer<AdminDashboardInactivityAlertsInner> get serializer => _$AdminDashboardInactivityAlertsInnerSerializer();
 }
 
-class _$AdminDashboardInactivityAlertsInnerSerializer
-    implements PrimitiveSerializer<AdminDashboardInactivityAlertsInner> {
+class _$AdminDashboardInactivityAlertsInnerSerializer implements PrimitiveSerializer<AdminDashboardInactivityAlertsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminDashboardInactivityAlertsInner,
-    _$AdminDashboardInactivityAlertsInner
-  ];
+  final Iterable<Type> types = const [AdminDashboardInactivityAlertsInner, _$AdminDashboardInactivityAlertsInner];
 
   @override
   final String wireName = r'AdminDashboardInactivityAlertsInner';
@@ -91,8 +81,7 @@ class _$AdminDashboardInactivityAlertsInnerSerializer
     yield r'status';
     yield serializers.serialize(
       object.status,
-      specifiedType:
-          const FullType(AdminDashboardInactivityAlertsInnerStatusEnum),
+      specifiedType: const FullType(AdminDashboardInactivityAlertsInnerStatusEnum),
     );
   }
 
@@ -102,9 +91,7 @@ class _$AdminDashboardInactivityAlertsInnerSerializer
     AdminDashboardInactivityAlertsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -150,8 +137,7 @@ class _$AdminDashboardInactivityAlertsInnerSerializer
         case r'status':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminDashboardInactivityAlertsInnerStatusEnum),
+            specifiedType: const FullType(AdminDashboardInactivityAlertsInnerStatusEnum),
           ) as AdminDashboardInactivityAlertsInnerStatusEnum;
           result.status = valueDes;
           break;
@@ -185,28 +171,21 @@ class _$AdminDashboardInactivityAlertsInnerSerializer
 }
 
 class AdminDashboardInactivityAlertsInnerStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending_review')
-  static const AdminDashboardInactivityAlertsInnerStatusEnum pendingReview =
-      _$adminDashboardInactivityAlertsInnerStatusEnum_pendingReview;
+  static const AdminDashboardInactivityAlertsInnerStatusEnum pendingReview = _$adminDashboardInactivityAlertsInnerStatusEnum_pendingReview;
   @BuiltValueEnumConst(wireName: r'needs_info')
-  static const AdminDashboardInactivityAlertsInnerStatusEnum needsInfo =
-      _$adminDashboardInactivityAlertsInnerStatusEnum_needsInfo;
+  static const AdminDashboardInactivityAlertsInnerStatusEnum needsInfo = _$adminDashboardInactivityAlertsInnerStatusEnum_needsInfo;
   @BuiltValueEnumConst(wireName: r'approved')
-  static const AdminDashboardInactivityAlertsInnerStatusEnum approved =
-      _$adminDashboardInactivityAlertsInnerStatusEnum_approved;
+  static const AdminDashboardInactivityAlertsInnerStatusEnum approved = _$adminDashboardInactivityAlertsInnerStatusEnum_approved;
   @BuiltValueEnumConst(wireName: r'rejected')
-  static const AdminDashboardInactivityAlertsInnerStatusEnum rejected =
-      _$adminDashboardInactivityAlertsInnerStatusEnum_rejected;
+  static const AdminDashboardInactivityAlertsInnerStatusEnum rejected = _$adminDashboardInactivityAlertsInnerStatusEnum_rejected;
 
-  static Serializer<AdminDashboardInactivityAlertsInnerStatusEnum>
-      get serializer =>
-          _$adminDashboardInactivityAlertsInnerStatusEnumSerializer;
+  static Serializer<AdminDashboardInactivityAlertsInnerStatusEnum> get serializer => _$adminDashboardInactivityAlertsInnerStatusEnumSerializer;
 
-  const AdminDashboardInactivityAlertsInnerStatusEnum._(String name)
-      : super(name);
+  const AdminDashboardInactivityAlertsInnerStatusEnum._(String name): super(name);
 
-  static BuiltSet<AdminDashboardInactivityAlertsInnerStatusEnum> get values =>
-      _$adminDashboardInactivityAlertsInnerStatusEnumValues;
-  static AdminDashboardInactivityAlertsInnerStatusEnum valueOf(String name) =>
-      _$adminDashboardInactivityAlertsInnerStatusEnumValueOf(name);
+  static BuiltSet<AdminDashboardInactivityAlertsInnerStatusEnum> get values => _$adminDashboardInactivityAlertsInnerStatusEnumValues;
+  static AdminDashboardInactivityAlertsInnerStatusEnum valueOf(String name) => _$adminDashboardInactivityAlertsInnerStatusEnumValueOf(name);
 }
+

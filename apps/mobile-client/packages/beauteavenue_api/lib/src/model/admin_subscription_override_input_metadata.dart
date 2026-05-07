@@ -11,13 +11,10 @@ part 'admin_subscription_override_input_metadata.g.dart';
 /// AdminSubscriptionOverrideInputMetadata
 ///
 /// Properties:
-/// * [internalTicket]
-/// * [subscriptionChargeId]
+/// * [internalTicket] 
+/// * [subscriptionChargeId] 
 @BuiltValue()
-abstract class AdminSubscriptionOverrideInputMetadata
-    implements
-        Built<AdminSubscriptionOverrideInputMetadata,
-            AdminSubscriptionOverrideInputMetadataBuilder> {
+abstract class AdminSubscriptionOverrideInputMetadata implements Built<AdminSubscriptionOverrideInputMetadata, AdminSubscriptionOverrideInputMetadataBuilder> {
   @BuiltValueField(wireName: r'internalTicket')
   String? get internalTicket;
 
@@ -26,25 +23,18 @@ abstract class AdminSubscriptionOverrideInputMetadata
 
   AdminSubscriptionOverrideInputMetadata._();
 
-  factory AdminSubscriptionOverrideInputMetadata(
-          [void updates(AdminSubscriptionOverrideInputMetadataBuilder b)]) =
-      _$AdminSubscriptionOverrideInputMetadata;
+  factory AdminSubscriptionOverrideInputMetadata([void updates(AdminSubscriptionOverrideInputMetadataBuilder b)]) = _$AdminSubscriptionOverrideInputMetadata;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionOverrideInputMetadataBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionOverrideInputMetadata> get serializer =>
-      _$AdminSubscriptionOverrideInputMetadataSerializer();
+  static Serializer<AdminSubscriptionOverrideInputMetadata> get serializer => _$AdminSubscriptionOverrideInputMetadataSerializer();
 }
 
-class _$AdminSubscriptionOverrideInputMetadataSerializer
-    implements PrimitiveSerializer<AdminSubscriptionOverrideInputMetadata> {
+class _$AdminSubscriptionOverrideInputMetadataSerializer implements PrimitiveSerializer<AdminSubscriptionOverrideInputMetadata> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionOverrideInputMetadata,
-    _$AdminSubscriptionOverrideInputMetadata
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionOverrideInputMetadata, _$AdminSubscriptionOverrideInputMetadata];
 
   @override
   final String wireName = r'AdminSubscriptionOverrideInputMetadata';
@@ -76,9 +66,7 @@ class _$AdminSubscriptionOverrideInputMetadataSerializer
     AdminSubscriptionOverrideInputMetadata object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -135,3 +123,4 @@ class _$AdminSubscriptionOverrideInputMetadataSerializer
     return result.build();
   }
 }
+

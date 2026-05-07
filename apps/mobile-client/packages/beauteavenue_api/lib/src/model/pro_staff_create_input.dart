@@ -12,14 +12,13 @@ part 'pro_staff_create_input.g.dart';
 /// ProStaffCreateInput
 ///
 /// Properties:
-/// * [phone]
-/// * [fullName]
-/// * [avatarUrl]
-/// * [description]
-/// * [serviceIds]
+/// * [phone] 
+/// * [fullName] 
+/// * [avatarUrl] 
+/// * [description] 
+/// * [serviceIds] 
 @BuiltValue()
-abstract class ProStaffCreateInput
-    implements Built<ProStaffCreateInput, ProStaffCreateInputBuilder> {
+abstract class ProStaffCreateInput implements Built<ProStaffCreateInput, ProStaffCreateInputBuilder> {
   @BuiltValueField(wireName: r'phone')
   String get phone;
 
@@ -37,25 +36,19 @@ abstract class ProStaffCreateInput
 
   ProStaffCreateInput._();
 
-  factory ProStaffCreateInput([void updates(ProStaffCreateInputBuilder b)]) =
-      _$ProStaffCreateInput;
+  factory ProStaffCreateInput([void updates(ProStaffCreateInputBuilder b)]) = _$ProStaffCreateInput;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(ProStaffCreateInputBuilder b) =>
-      b..serviceIds = ListBuilder();
+  static void _defaults(ProStaffCreateInputBuilder b) => b
+      ..serviceIds = ListBuilder();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProStaffCreateInput> get serializer =>
-      _$ProStaffCreateInputSerializer();
+  static Serializer<ProStaffCreateInput> get serializer => _$ProStaffCreateInputSerializer();
 }
 
-class _$ProStaffCreateInputSerializer
-    implements PrimitiveSerializer<ProStaffCreateInput> {
+class _$ProStaffCreateInputSerializer implements PrimitiveSerializer<ProStaffCreateInput> {
   @override
-  final Iterable<Type> types = const [
-    ProStaffCreateInput,
-    _$ProStaffCreateInput
-  ];
+  final Iterable<Type> types = const [ProStaffCreateInput, _$ProStaffCreateInput];
 
   @override
   final String wireName = r'ProStaffCreateInput';
@@ -104,9 +97,7 @@ class _$ProStaffCreateInputSerializer
     ProStaffCreateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -186,3 +177,4 @@ class _$ProStaffCreateInputSerializer
     return result.build();
   }
 }
+

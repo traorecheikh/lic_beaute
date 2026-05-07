@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -11,7 +12,8 @@ import '../../../core/utils/app_share.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/salon_map_card.dart';
-import '../../booking/widgets/booking_funnel_sheet.dart';
+import '../../../router/app_router.dart';
+import '../../booking/providers/booking_funnel_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/salon_detail_provider.dart';
 import '../widgets/stale_data_notice.dart';
@@ -36,13 +38,8 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
   }
 
   void _showBookingSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      builder: (_) => BookingFunnelSheet(salonId: widget.salonId),
-    );
+    ref.read(bookingFunnelProvider.notifier).reset();
+    context.push('${AppRoutes.bookingService}?salonId=${widget.salonId}');
   }
 
   void _openGallery(BuildContext context, List<String> images, int index) {
@@ -50,9 +47,9 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
-        pageBuilder: (_, __, ___) =>
+        pageBuilder: (_, _, _) =>
             _GalleryViewer(images: images, initialIndex: index),
-        transitionsBuilder: (_, anim, __, child) =>
+        transitionsBuilder: (_, anim, _, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 220),
       ),
@@ -403,7 +400,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                       horizontal: 24.w,
                                     ),
                                     itemCount: images.length,
-                                    separatorBuilder: (_, __) =>
+                                    separatorBuilder: (_, _) =>
                                         SizedBox(width: 10.w),
                                     itemBuilder: (_, i) => GestureDetector(
                                       onTap: () =>
@@ -412,11 +409,14 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                         borderRadius: BorderRadius.circular(
                                           18.r,
                                         ),
-                                        child: CachedNetworkImage(
-                                          imageUrl: images[i],
-                                          width: 160.w,
-                                          height: 120.h,
-                                          fit: BoxFit.cover,
+                                        child: Hero(
+                                          tag: 'salon_image_strip_${images[i]}',
+                                          child: CachedNetworkImage(
+                                            imageUrl: images[i],
+                                            width: 160.w,
+                                            height: 120.h,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -472,9 +472,9 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
 
               // ── Sticky CTA ────────────────────────────────────────────────
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
+                left: 24.w,
+                right: 24.w,
+                bottom: 32.h,
                 child: _BottomCta(
                   price: salon.services.isNotEmpty
                       ? 'À partir de ${salon.services.first.priceXof.toInt()} XOF'
@@ -535,7 +535,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
               child: CachedNetworkImage(
                 imageUrl: widget.images[i],
                 fit: BoxFit.contain,
-                placeholder: (_, __) => const Center(
+                placeholder: (_, _) => const Center(
                   child: CircularProgressIndicator(
                     color: Colors.white38,
                     strokeWidth: 2,
@@ -747,55 +747,28 @@ class _BottomCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        boxShadow: AppShadows.nav,
-      ),
-      padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            if (price != null) ...[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Dès', style: AppTextStyles.bodyXs),
-                    Text(
-                      price!,
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: AppColors.primary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 16.w),
-              SizedBox(
-                width: 180.w,
-                height: 52.h,
-                child: ElevatedButton(
-                  onPressed: onBook,
-                  child: const Text('Réserver'),
-                ),
-              ),
-            ] else
-              SizedBox(
-                width: double.infinity,
-                height: 52.h,
-                child: ElevatedButton(
-                  onPressed: onBook,
-                  child: const Text('Choisir une prestation'),
-                ),
-              ),
-          ],
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.onSurface,
+        foregroundColor: AppColors.surface,
+        elevation: 4,
+        shadowColor: AppColors.onSurface.withValues(alpha: 0.3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100.r),
         ),
+        padding: EdgeInsets.symmetric(vertical: 16.h),
+      ),
+      onPressed: onBook,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AppIcon('calendar', color: AppColors.surface, size: 18),
+          SizedBox(width: 8.w),
+          Text(
+            price != null ? 'Réserver · $price' : 'Choisir une prestation',
+            style: AppTextStyles.labelLg.copyWith(color: AppColors.surface),
+          ),
+        ],
       ),
     );
   }

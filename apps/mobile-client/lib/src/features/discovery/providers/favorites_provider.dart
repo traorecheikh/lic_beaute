@@ -6,18 +6,20 @@ import 'package:built_value/serializer.dart';
 import '../../../core/session/session_store.dart';
 import 'cached_resource.dart';
 
-final favoritesListProvider = FutureProvider<CachedResource<List<SalonSummary>>>((ref) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get<Map<String, dynamic>>('/api/v1/favorites');
-  final itemsJson = (response.data?['items'] as List<dynamic>?) ?? [];
-  final items = itemsJson.map((json) {
-    return standardSerializers.deserialize(
-      json,
-      specifiedType: const FullType(SalonSummary),
-    ) as SalonSummary;
-  }).toList();
-  return CachedResource(data: items, isStale: false);
-});
+final favoritesListProvider =
+    FutureProvider<CachedResource<List<SalonSummary>>>((ref) async {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get<Map<String, dynamic>>('/api/v1/favorites');
+      final itemsJson = (response.data?['items'] as List<dynamic>?) ?? [];
+      final items = itemsJson.map((json) {
+        return standardSerializers.deserialize(
+              json,
+              specifiedType: const FullType(SalonSummary),
+            )
+            as SalonSummary;
+      }).toList();
+      return CachedResource(data: items, isStale: false);
+    });
 
 @immutable
 class FavoritesState {
@@ -72,10 +74,17 @@ class FavoritesNotifier extends Notifier<FavoritesState> {
     try {
       final dio = ref.read(dioProvider);
       if (isFav) {
-        await dio.delete('/api/v1/favorites/$salonId');
+        await dio.delete(
+          '/api/v1/favorites/$salonId',
+          data: const <String, dynamic>{},
+        );
       } else {
-        await dio.post('/api/v1/favorites/$salonId');
+        await dio.post(
+          '/api/v1/favorites/$salonId',
+          data: const <String, dynamic>{},
+        );
       }
+      ref.invalidate(favoritesListProvider);
     } catch (_) {
       // Roll back optimistic update on failure
       state = state.copyWith(
@@ -85,5 +94,6 @@ class FavoritesNotifier extends Notifier<FavoritesState> {
   }
 }
 
-final favoritesProvider =
-    NotifierProvider<FavoritesNotifier, FavoritesState>(FavoritesNotifier.new);
+final favoritesProvider = NotifierProvider<FavoritesNotifier, FavoritesState>(
+  FavoritesNotifier.new,
+);

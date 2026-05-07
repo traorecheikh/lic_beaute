@@ -99,5 +99,7 @@ class AuthActions {
       userId: user.id,
       role: user.role.name,
     );
+
+    _ref.read(fcmRegistrationServiceProvider).register();
   }
 }

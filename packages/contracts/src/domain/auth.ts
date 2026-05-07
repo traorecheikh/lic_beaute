@@ -48,7 +48,9 @@ export const updateMeInputSchema = z.object({
   preferredContactChannel: clientContactChannelSchema.optional(),
   pushOptIn: z.boolean().optional(),
   marketingOptIn: z.boolean().optional(),
-  preferredLanguage: z.enum(["fr", "en"]).optional()
+  preferredLanguage: z.enum(["fr", "en"]).optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(8).optional()
 });
 
 const serviceCreateInputSchema = z.object({

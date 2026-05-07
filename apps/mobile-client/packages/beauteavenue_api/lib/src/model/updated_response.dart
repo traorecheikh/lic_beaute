@@ -11,28 +11,24 @@ part 'updated_response.g.dart';
 /// UpdatedResponse
 ///
 /// Properties:
-/// * [updated]
+/// * [updated] 
 @BuiltValue()
-abstract class UpdatedResponse
-    implements Built<UpdatedResponse, UpdatedResponseBuilder> {
+abstract class UpdatedResponse implements Built<UpdatedResponse, UpdatedResponseBuilder> {
   @BuiltValueField(wireName: r'updated')
   bool get updated;
 
   UpdatedResponse._();
 
-  factory UpdatedResponse([void updates(UpdatedResponseBuilder b)]) =
-      _$UpdatedResponse;
+  factory UpdatedResponse([void updates(UpdatedResponseBuilder b)]) = _$UpdatedResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UpdatedResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UpdatedResponse> get serializer =>
-      _$UpdatedResponseSerializer();
+  static Serializer<UpdatedResponse> get serializer => _$UpdatedResponseSerializer();
 }
 
-class _$UpdatedResponseSerializer
-    implements PrimitiveSerializer<UpdatedResponse> {
+class _$UpdatedResponseSerializer implements PrimitiveSerializer<UpdatedResponse> {
   @override
   final Iterable<Type> types = const [UpdatedResponse, _$UpdatedResponse];
 
@@ -57,9 +53,7 @@ class _$UpdatedResponseSerializer
     UpdatedResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -109,3 +103,4 @@ class _$UpdatedResponseSerializer
     return result.build();
   }
 }
+

@@ -12,18 +12,15 @@ part 'admin_subscription_detail_events_inner.g.dart';
 /// AdminSubscriptionDetailEventsInner
 ///
 /// Properties:
-/// * [id]
-/// * [eventType]
-/// * [summary]
-/// * [createdAt]
-/// * [actorName]
-/// * [source_]
-/// * [payloadPreview]
+/// * [id] 
+/// * [eventType] 
+/// * [summary] 
+/// * [createdAt] 
+/// * [actorName] 
+/// * [source_] 
+/// * [payloadPreview] 
 @BuiltValue()
-abstract class AdminSubscriptionDetailEventsInner
-    implements
-        Built<AdminSubscriptionDetailEventsInner,
-            AdminSubscriptionDetailEventsInnerBuilder> {
+abstract class AdminSubscriptionDetailEventsInner implements Built<AdminSubscriptionDetailEventsInner, AdminSubscriptionDetailEventsInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -48,25 +45,18 @@ abstract class AdminSubscriptionDetailEventsInner
 
   AdminSubscriptionDetailEventsInner._();
 
-  factory AdminSubscriptionDetailEventsInner(
-          [void updates(AdminSubscriptionDetailEventsInnerBuilder b)]) =
-      _$AdminSubscriptionDetailEventsInner;
+  factory AdminSubscriptionDetailEventsInner([void updates(AdminSubscriptionDetailEventsInnerBuilder b)]) = _$AdminSubscriptionDetailEventsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionDetailEventsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionDetailEventsInner> get serializer =>
-      _$AdminSubscriptionDetailEventsInnerSerializer();
+  static Serializer<AdminSubscriptionDetailEventsInner> get serializer => _$AdminSubscriptionDetailEventsInnerSerializer();
 }
 
-class _$AdminSubscriptionDetailEventsInnerSerializer
-    implements PrimitiveSerializer<AdminSubscriptionDetailEventsInner> {
+class _$AdminSubscriptionDetailEventsInnerSerializer implements PrimitiveSerializer<AdminSubscriptionDetailEventsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionDetailEventsInner,
-    _$AdminSubscriptionDetailEventsInner
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionDetailEventsInner, _$AdminSubscriptionDetailEventsInner];
 
   @override
   final String wireName = r'AdminSubscriptionDetailEventsInner';
@@ -104,16 +94,13 @@ class _$AdminSubscriptionDetailEventsInnerSerializer
     yield r'source';
     yield serializers.serialize(
       object.source_,
-      specifiedType:
-          const FullType(AdminSubscriptionDetailEventsInnerSource_Enum),
+      specifiedType: const FullType(AdminSubscriptionDetailEventsInnerSource_Enum),
     );
     yield r'payloadPreview';
-    yield object.payloadPreview == null
-        ? null
-        : serializers.serialize(
-            object.payloadPreview,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.payloadPreview == null ? null : serializers.serialize(
+      object.payloadPreview,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -122,9 +109,7 @@ class _$AdminSubscriptionDetailEventsInnerSerializer
     AdminSubscriptionDetailEventsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -177,8 +162,7 @@ class _$AdminSubscriptionDetailEventsInnerSerializer
         case r'source':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminSubscriptionDetailEventsInnerSource_Enum),
+            specifiedType: const FullType(AdminSubscriptionDetailEventsInnerSource_Enum),
           ) as AdminSubscriptionDetailEventsInnerSource_Enum;
           result.source_ = valueDes;
           break;
@@ -220,25 +204,19 @@ class _$AdminSubscriptionDetailEventsInnerSerializer
 }
 
 class AdminSubscriptionDetailEventsInnerSource_Enum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'provider')
-  static const AdminSubscriptionDetailEventsInnerSource_Enum provider =
-      _$adminSubscriptionDetailEventsInnerSourceEnum_provider;
+  static const AdminSubscriptionDetailEventsInnerSource_Enum provider = _$adminSubscriptionDetailEventsInnerSourceEnum_provider;
   @BuiltValueEnumConst(wireName: r'admin')
-  static const AdminSubscriptionDetailEventsInnerSource_Enum admin =
-      _$adminSubscriptionDetailEventsInnerSourceEnum_admin;
+  static const AdminSubscriptionDetailEventsInnerSource_Enum admin = _$adminSubscriptionDetailEventsInnerSourceEnum_admin;
   @BuiltValueEnumConst(wireName: r'system')
-  static const AdminSubscriptionDetailEventsInnerSource_Enum system =
-      _$adminSubscriptionDetailEventsInnerSourceEnum_system;
+  static const AdminSubscriptionDetailEventsInnerSource_Enum system = _$adminSubscriptionDetailEventsInnerSourceEnum_system;
 
-  static Serializer<AdminSubscriptionDetailEventsInnerSource_Enum>
-      get serializer =>
-          _$adminSubscriptionDetailEventsInnerSourceEnumSerializer;
+  static Serializer<AdminSubscriptionDetailEventsInnerSource_Enum> get serializer => _$adminSubscriptionDetailEventsInnerSourceEnumSerializer;
 
-  const AdminSubscriptionDetailEventsInnerSource_Enum._(String name)
-      : super(name);
+  const AdminSubscriptionDetailEventsInnerSource_Enum._(String name): super(name);
 
-  static BuiltSet<AdminSubscriptionDetailEventsInnerSource_Enum> get values =>
-      _$adminSubscriptionDetailEventsInnerSourceEnumValues;
-  static AdminSubscriptionDetailEventsInnerSource_Enum valueOf(String name) =>
-      _$adminSubscriptionDetailEventsInnerSourceEnumValueOf(name);
+  static BuiltSet<AdminSubscriptionDetailEventsInnerSource_Enum> get values => _$adminSubscriptionDetailEventsInnerSourceEnumValues;
+  static AdminSubscriptionDetailEventsInnerSource_Enum valueOf(String name) => _$adminSubscriptionDetailEventsInnerSourceEnumValueOf(name);
 }
+

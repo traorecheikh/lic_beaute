@@ -11,9 +11,9 @@ part 'auth_session.g.dart';
 /// AuthSession
 ///
 /// Properties:
-/// * [accessToken]
-/// * [refreshToken]
-/// * [expiresInSeconds]
+/// * [accessToken] 
+/// * [refreshToken] 
+/// * [expiresInSeconds] 
 @BuiltValue()
 abstract class AuthSession implements Built<AuthSession, AuthSessionBuilder> {
   @BuiltValueField(wireName: r'accessToken')
@@ -71,9 +71,7 @@ class _$AuthSessionSerializer implements PrimitiveSerializer<AuthSession> {
     AuthSession object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -137,3 +135,4 @@ class _$AuthSessionSerializer implements PrimitiveSerializer<AuthSession> {
     return result.build();
   }
 }
+

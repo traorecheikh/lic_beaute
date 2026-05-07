@@ -11,12 +11,11 @@ part 'otp_accepted_response.g.dart';
 /// OtpAcceptedResponse
 ///
 /// Properties:
-/// * [accepted]
-/// * [channel]
-/// * [destination]
+/// * [accepted] 
+/// * [channel] 
+/// * [destination] 
 @BuiltValue()
-abstract class OtpAcceptedResponse
-    implements Built<OtpAcceptedResponse, OtpAcceptedResponseBuilder> {
+abstract class OtpAcceptedResponse implements Built<OtpAcceptedResponse, OtpAcceptedResponseBuilder> {
   @BuiltValueField(wireName: r'accepted')
   bool get accepted;
 
@@ -28,24 +27,18 @@ abstract class OtpAcceptedResponse
 
   OtpAcceptedResponse._();
 
-  factory OtpAcceptedResponse([void updates(OtpAcceptedResponseBuilder b)]) =
-      _$OtpAcceptedResponse;
+  factory OtpAcceptedResponse([void updates(OtpAcceptedResponseBuilder b)]) = _$OtpAcceptedResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OtpAcceptedResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OtpAcceptedResponse> get serializer =>
-      _$OtpAcceptedResponseSerializer();
+  static Serializer<OtpAcceptedResponse> get serializer => _$OtpAcceptedResponseSerializer();
 }
 
-class _$OtpAcceptedResponseSerializer
-    implements PrimitiveSerializer<OtpAcceptedResponse> {
+class _$OtpAcceptedResponseSerializer implements PrimitiveSerializer<OtpAcceptedResponse> {
   @override
-  final Iterable<Type> types = const [
-    OtpAcceptedResponse,
-    _$OtpAcceptedResponse
-  ];
+  final Iterable<Type> types = const [OtpAcceptedResponse, _$OtpAcceptedResponse];
 
   @override
   final String wireName = r'OtpAcceptedResponse';
@@ -78,9 +71,7 @@ class _$OtpAcceptedResponseSerializer
     OtpAcceptedResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -144,3 +135,4 @@ class _$OtpAcceptedResponseSerializer
     return result.build();
   }
 }
+

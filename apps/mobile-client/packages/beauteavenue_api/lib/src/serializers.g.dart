@@ -65,9 +65,38 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AdminSubscriptionSummaryStatusEnum.serializer)
       ..add(AdminSubscriptionSummaryTierEnum.serializer)
       ..add(ApiError.serializer)
+      ..add(ApiV1BookingsBookingIdReviewPost201Response.serializer)
+      ..add(ApiV1BookingsBookingIdReviewPostRequest.serializer)
+      ..add(ApiV1MeAddressesAddressIdPatchRequest.serializer)
+      ..add(ApiV1MeAddressesGet200Response.serializer)
+      ..add(ApiV1MeAddressesGet200ResponseItemsInner.serializer)
+      ..add(ApiV1MeAddressesPostRequest.serializer)
+      ..add(ApiV1MeBenefitsGet200Response.serializer)
+      ..add(ApiV1MeBenefitsGet200ResponseItemsInner.serializer)
+      ..add(ApiV1MeBenefitsGet200ResponseItemsInnerKindEnum.serializer)
+      ..add(ApiV1MeBenefitsGet200ResponseItemsInnerStatusEnum.serializer)
+      ..add(ApiV1MePaymentMethodsGet200Response.serializer)
+      ..add(ApiV1MePaymentMethodsGet200ResponseItemsInner.serializer)
+      ..add(
+          ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum.serializer)
+      ..add(ApiV1MeVouchersGet200Response.serializer)
+      ..add(ApiV1MeVouchersGet200ResponseItemsInner.serializer)
+      ..add(ApiV1MeVouchersGet200ResponseItemsInnerStatusEnum.serializer)
+      ..add(ApiV1MediaMediaIdCompletePost200Response.serializer)
+      ..add(ApiV1MediaUploadIntentPost201Response.serializer)
+      ..add(ApiV1MediaUploadIntentPostRequest.serializer)
+      ..add(ApiV1MediaUploadIntentPostRequestPurposeEnum.serializer)
+      ..add(ApiV1NotificationsGet200Response.serializer)
+      ..add(ApiV1NotificationsGet200ResponseItemsInner.serializer)
+      ..add(ApiV1NotificationsIdReadPost200Response.serializer)
+      ..add(ApiV1PaymentsWebhooksIntechPost200Response.serializer)
+      ..add(ApiV1ProVouchersPost201Response.serializer)
+      ..add(ApiV1PushTokensPost201Response.serializer)
       ..add(AuthSession.serializer)
       ..add(BookingCreateInput.serializer)
+      ..add(BookingCreateInputChannelEnum.serializer)
       ..add(BookingCreateInputProviderEnum.serializer)
+      ..add(BookingRescheduleInput.serializer)
       ..add(BookingSummary.serializer)
       ..add(BookingSummaryDepositPaymentStatusEnum.serializer)
       ..add(BookingSummaryListResponse.serializer)
@@ -78,16 +107,45 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(BookingSummaryListResponseItemsInnerStatusEnum.serializer)
       ..add(BookingSummaryPaymentProviderEnum.serializer)
       ..add(BookingSummaryStatusEnum.serializer)
+      ..add(ClientBenefit.serializer)
+      ..add(ClientBenefitKindEnum.serializer)
+      ..add(ClientBenefitStatusEnum.serializer)
+      ..add(ClientPaymentMethod.serializer)
+      ..add(ClientPaymentMethodCreateInput.serializer)
+      ..add(ClientPaymentMethodCreateInputProviderEnum.serializer)
+      ..add(ClientPaymentMethodProviderEnum.serializer)
+      ..add(ClientPaymentMethodUpdateInput.serializer)
+      ..add(ClientVoucher.serializer)
+      ..add(ClientVoucherStatusEnum.serializer)
       ..add(CurrentUser.serializer)
+      ..add(CurrentUserPreferredContactChannelEnum.serializer)
+      ..add(CurrentUserPreferredLanguageEnum.serializer)
       ..add(CurrentUserRoleEnum.serializer)
       ..add(DeletedResponse.serializer)
       ..add(EmailLoginInput.serializer)
+      ..add(FavoriteItem.serializer)
+      ..add(FavoriteItemSubscriptionTierEnum.serializer)
+      ..add(FavoriteListResponse.serializer)
       ..add(HealthGet200Response.serializer)
       ..add(HealthGet200ResponseDatabase.serializer)
       ..add(LogoutResponse.serializer)
+      ..add(MediaAsset.serializer)
+      ..add(MediaUploadResponse.serializer)
       ..add(OtpAcceptedResponse.serializer)
       ..add(OtpRequestInput.serializer)
       ..add(OtpVerifyInput.serializer)
+      ..add(PaymentInitiateInput.serializer)
+      ..add(PaymentInitiateInputChannelEnum.serializer)
+      ..add(PaymentInitiateInputProviderEnum.serializer)
+      ..add(PaymentInitiateResponse.serializer)
+      ..add(PaymentReconcileResponse.serializer)
+      ..add(PaymentReconcileResponseProviderEnum.serializer)
+      ..add(PaymentReconcileResponseStatusEnum.serializer)
+      ..add(PaymentStatusResponse.serializer)
+      ..add(PaymentStatusResponseProviderEnum.serializer)
+      ..add(PaymentStatusResponseStatusEnum.serializer)
+      ..add(PaymentWebhookBody.serializer)
+      ..add(PaymentWebhookBodyAmount.serializer)
       ..add(ProAnalytics.serializer)
       ..add(ProAnalyticsTopServicesInner.serializer)
       ..add(ProBlockedSlot.serializer)
@@ -109,6 +167,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProCheckoutDetails.serializer)
       ..add(ProCheckoutDetailsLineItemsInner.serializer)
       ..add(ProCheckoutDetailsStatusEnum.serializer)
+      ..add(ProClientBenefitCreateInput.serializer)
+      ..add(ProClientBenefitCreateInputKindEnum.serializer)
       ..add(ProClientDetail.serializer)
       ..add(ProClientDetailRecentBookingsInner.serializer)
       ..add(ProClientDetailRecentBookingsInnerStatusEnum.serializer)
@@ -148,6 +208,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProSubscriptionUpdateInput.serializer)
       ..add(ProSubscriptionUpdateInputBillingMethod.serializer)
       ..add(ProSubscriptionUpdateInputBillingMethodProviderEnum.serializer)
+      ..add(ProVoucherCreateInput.serializer)
+      ..add(ProfileOptions.serializer)
+      ..add(ProfileOptionsContactChannelsEnum.serializer)
+      ..add(ProfileOptionsLanguagesEnum.serializer)
+      ..add(ProfileOptionsPaymentProvidersEnum.serializer)
+      ..add(PushTokenInput.serializer)
+      ..add(PushTokenInputPlatformEnum.serializer)
+      ..add(RedeemVoucherInput.serializer)
       ..add(RefreshInput.serializer)
       ..add(RegisterInput.serializer)
       ..add(RegisterInputAnyOf.serializer)
@@ -169,6 +237,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SalonSummaryListResponseItemsInnerSubscriptionTierEnum.serializer)
       ..add(SalonSummarySubscriptionTierEnum.serializer)
       ..add(UpdateMeInput.serializer)
+      ..add(UpdateMeInputPreferredContactChannelEnum.serializer)
+      ..add(UpdateMeInputPreferredLanguageEnum.serializer)
       ..add(UpdatedResponse.serializer)
       ..addBuilderFactory(
           const FullType(BuiltList,
@@ -212,6 +282,28 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<AdminSubscriptionListResponseItemsInner>())
       ..addBuilderFactory(
           const FullType(BuiltList,
+              const [const FullType(ApiV1MeAddressesGet200ResponseItemsInner)]),
+          () => ListBuilder<ApiV1MeAddressesGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ApiV1MeBenefitsGet200ResponseItemsInner)]),
+          () => ListBuilder<ApiV1MeBenefitsGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(ApiV1MePaymentMethodsGet200ResponseItemsInner)
+          ]),
+          () => ListBuilder<ApiV1MePaymentMethodsGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ApiV1MeVouchersGet200ResponseItemsInner)]),
+          () => ListBuilder<ApiV1MeVouchersGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(ApiV1NotificationsGet200ResponseItemsInner)
+          ]),
+          () => ListBuilder<ApiV1NotificationsGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
               const [const FullType(BookingSummaryListResponseItemsInner)]),
           () => ListBuilder<BookingSummaryListResponseItemsInner>())
       ..addBuilderFactory(
@@ -251,6 +343,10 @@ Serializers _$serializers = (Serializers().toBuilder()
               const [const FullType(SalonSummaryListResponseItemsInner)]),
           () => ListBuilder<SalonSummaryListResponseItemsInner>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SalonSummaryListResponseItemsInner)]),
+          () => ListBuilder<SalonSummaryListResponseItemsInner>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
       ..addBuilderFactory(
@@ -278,6 +374,21 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(ProSalonProfileHoursInner)]),
           () => ListBuilder<ProSalonProfileHoursInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ProfileOptionsLanguagesEnum)]),
+          () => ListBuilder<ProfileOptionsLanguagesEnum>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ProfileOptionsContactChannelsEnum)]),
+          () => ListBuilder<ProfileOptionsContactChannelsEnum>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ProfileOptionsPaymentProvidersEnum)]),
+          () => ListBuilder<ProfileOptionsPaymentProvidersEnum>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())

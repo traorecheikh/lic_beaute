@@ -11,34 +11,26 @@ part 'admin_salon_decision_input.g.dart';
 /// AdminSalonDecisionInput
 ///
 /// Properties:
-/// * [reason]
+/// * [reason] 
 @BuiltValue()
-abstract class AdminSalonDecisionInput
-    implements Built<AdminSalonDecisionInput, AdminSalonDecisionInputBuilder> {
+abstract class AdminSalonDecisionInput implements Built<AdminSalonDecisionInput, AdminSalonDecisionInputBuilder> {
   @BuiltValueField(wireName: r'reason')
   String get reason;
 
   AdminSalonDecisionInput._();
 
-  factory AdminSalonDecisionInput(
-          [void updates(AdminSalonDecisionInputBuilder b)]) =
-      _$AdminSalonDecisionInput;
+  factory AdminSalonDecisionInput([void updates(AdminSalonDecisionInputBuilder b)]) = _$AdminSalonDecisionInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonDecisionInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonDecisionInput> get serializer =>
-      _$AdminSalonDecisionInputSerializer();
+  static Serializer<AdminSalonDecisionInput> get serializer => _$AdminSalonDecisionInputSerializer();
 }
 
-class _$AdminSalonDecisionInputSerializer
-    implements PrimitiveSerializer<AdminSalonDecisionInput> {
+class _$AdminSalonDecisionInputSerializer implements PrimitiveSerializer<AdminSalonDecisionInput> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonDecisionInput,
-    _$AdminSalonDecisionInput
-  ];
+  final Iterable<Type> types = const [AdminSalonDecisionInput, _$AdminSalonDecisionInput];
 
   @override
   final String wireName = r'AdminSalonDecisionInput';
@@ -61,9 +53,7 @@ class _$AdminSalonDecisionInputSerializer
     AdminSalonDecisionInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -113,3 +103,4 @@ class _$AdminSalonDecisionInputSerializer
     return result.build();
   }
 }
+

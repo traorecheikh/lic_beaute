@@ -136,7 +136,7 @@ class _AppDropdownSheet<T> extends StatelessWidget {
               shrinkWrap: true,
               padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
               itemCount: items.length,
-              separatorBuilder: (_, __) => SizedBox(height: 6.h),
+              separatorBuilder: (_, _) => SizedBox(height: 6.h),
               itemBuilder: (_, i) {
                 final item = items[i];
                 final isSelected = item == value;

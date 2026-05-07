@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,13 +9,11 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_city_dropdown.dart';
 import '../../../core/widgets/app_error_state.dart';
 
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../providers/profile_provider.dart';
 
@@ -31,6 +29,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _fullNameController = TextEditingController();
   bool _saving = false;
   bool _uploadingAvatar = false;
+  String? _localAvatarPath;
   String? _selectedCity;
   String _contactChannel = 'phone';
   String _language = 'fr';
@@ -57,6 +56,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         errorTitle: 'Impossible de charger le profil',
         builder: (profile) {
           if (profile == null) return const SizedBox.shrink();
+          final avatarUrl = profile.avatarUrl;
+          final hasRemoteAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
           if (!_didSeedControllers) {
             _didSeedControllers = true;
             _fullNameController.text = profile.fullName;
@@ -84,10 +85,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         children: [
                           CircleAvatar(
                             radius: 50.r,
-                            backgroundImage: profile.avatarUrl != null
-                                ? NetworkImage(profile.avatarUrl!)
-                                : null,
-                            child: profile.avatarUrl == null
+                            backgroundImage: _localAvatarPath != null
+                                ? FileImage(File(_localAvatarPath!))
+                                : (hasRemoteAvatar
+                                      ? CachedNetworkImageProvider(avatarUrl)
+                                      : null),
+                            child:
+                                (_localAvatarPath == null && !hasRemoteAvatar)
                                 ? Icon(Icons.person_outline, size: 44.r)
                                 : null,
                           ),
@@ -137,13 +141,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     AppCityDropdown(
                       value: _selectedCity,
                       cities: options.cities,
-                      onChanged: (value) => setState(() => _selectedCity = value),
+                      onChanged: (value) =>
+                          setState(() => _selectedCity = value),
                     ),
                     gapH16,
 
                     SizedBox(height: 16.h),
                     DropdownButtonFormField<String>(
-                      value: _contactChannel,
+                      initialValue: _contactChannel,
                       decoration: const InputDecoration(
                         labelText: 'Canal de contact préféré',
                       ),
@@ -192,15 +197,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       value: _pushOptIn,
                       onChanged: (value) => setState(() => _pushOptIn = value),
                     ),
-                    SwitchListTile.adaptive(
-                      title: const Text('Offres et nouveautés'),
-                      subtitle: const Text(
-                        'Recevoir les offres promotionnelles',
-                      ),
-                      value: _marketingOptIn,
-                      onChanged: (value) =>
-                          setState(() => _marketingOptIn = value),
-                    ),
+                    // Promos hidden —
+                    // SwitchListTile.adaptive(
+                    //   title: const Text('Offres et nouveautés'),
+                    //   subtitle: const Text(
+                    //     'Recevoir les offres promotionnelles',
+                    //   ),
+                    //   value: _marketingOptIn,
+                    //   onChanged: (value) =>
+                    //       setState(() => _marketingOptIn = value),
+                    // ),
                     SizedBox(height: 36.h),
                     SizedBox(
                       width: double.infinity,
@@ -235,6 +241,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       imageQuality: 88,
     );
     if (image == null || !mounted) return;
+    setState(() => _localAvatarPath = image.path);
     setState(() => _uploadingAvatar = true);
     try {
       await ref.read(profileProvider.notifier).uploadAvatar(File(image.path));
@@ -279,8 +286,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     switch (channel) {
       case 'sms':
         return 'SMS';
-      case 'whatsapp':
-        return 'WhatsApp';
       default:
         return 'Téléphone';
     }

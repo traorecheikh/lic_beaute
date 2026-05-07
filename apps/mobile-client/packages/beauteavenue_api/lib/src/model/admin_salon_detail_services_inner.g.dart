@@ -13,8 +13,8 @@ const AdminSalonDetailServicesInnerDepositModeEnum
     _$adminSalonDetailServicesInnerDepositModeEnum_fixed =
     const AdminSalonDetailServicesInnerDepositModeEnum._('fixed');
 const AdminSalonDetailServicesInnerDepositModeEnum
-    _$adminSalonDetailServicesInnerDepositModeEnum_percentage =
-    const AdminSalonDetailServicesInnerDepositModeEnum._('percentage');
+    _$adminSalonDetailServicesInnerDepositModeEnum_percent =
+    const AdminSalonDetailServicesInnerDepositModeEnum._('percent');
 
 AdminSalonDetailServicesInnerDepositModeEnum
     _$adminSalonDetailServicesInnerDepositModeEnumValueOf(String name) {
@@ -23,8 +23,8 @@ AdminSalonDetailServicesInnerDepositModeEnum
       return _$adminSalonDetailServicesInnerDepositModeEnum_none;
     case 'fixed':
       return _$adminSalonDetailServicesInnerDepositModeEnum_fixed;
-    case 'percentage':
-      return _$adminSalonDetailServicesInnerDepositModeEnum_percentage;
+    case 'percent':
+      return _$adminSalonDetailServicesInnerDepositModeEnum_percent;
     default:
       throw ArgumentError(name);
   }
@@ -35,7 +35,7 @@ final BuiltSet<AdminSalonDetailServicesInnerDepositModeEnum>
         AdminSalonDetailServicesInnerDepositModeEnum>(const <AdminSalonDetailServicesInnerDepositModeEnum>[
   _$adminSalonDetailServicesInnerDepositModeEnum_none,
   _$adminSalonDetailServicesInnerDepositModeEnum_fixed,
-  _$adminSalonDetailServicesInnerDepositModeEnum_percentage,
+  _$adminSalonDetailServicesInnerDepositModeEnum_percent,
 ]);
 
 Serializer<AdminSalonDetailServicesInnerDepositModeEnum>
@@ -48,12 +48,12 @@ class _$AdminSalonDetailServicesInnerDepositModeEnumSerializer
   static const Map<String, Object> _toWire = const <String, Object>{
     'none': 'none',
     'fixed': 'fixed',
-    'percentage': 'percentage',
+    'percent': 'percent',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'none': 'none',
     'fixed': 'fixed',
-    'percentage': 'percentage',
+    'percent': 'percent',
   };
 
   @override

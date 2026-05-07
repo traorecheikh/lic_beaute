@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,7 +65,7 @@ class NotificationsPage extends ConsumerWidget {
             onRefresh: () => ref.refresh(notificationsProvider.future),
             child: ListView.separated(
               itemCount: items.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   Divider(height: 1, color: colorScheme.outlineVariant),
               itemBuilder: (context, index) {
                 final item = items[index];
@@ -79,6 +78,7 @@ class NotificationsPage extends ConsumerWidget {
                                 .read(notificationsProvider.notifier)
                                 .markRead(item.id);
                           } catch (error) {
+                            if (!context.mounted) return;
                             await context.handleHttpError(
                               error,
                               'Mise à jour impossible.',

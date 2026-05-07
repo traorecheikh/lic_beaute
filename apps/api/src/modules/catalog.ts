@@ -1,9 +1,10 @@
+import { Prisma } from "@prisma/client";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { availabilityQuerySchema } from "@beauteavenue/contracts";
 
 import { HttpAuthError, requireRole } from "../lib/auth.js";
-import { computeAvailableSlots } from "../lib/availability.js";
+import { fetchAndComputeAvailableSlots } from "../lib/availability.js";
 import { fail, ok } from "../lib/http.js";
 import { prisma } from "../lib/prisma.js";
 
@@ -34,18 +35,19 @@ export class CatalogController {
       lat?: string;
       lng?: string;
       sort?: string;
+      minPrice?: string;
+      maxPrice?: string;
     };
     const page = Math.max(0, parseInt(q.page ?? "0", 10));
     const pageSize = Math.min(50, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
     const lat = q.lat != null ? parseFloat(q.lat) : null;
     const lng = q.lng != null ? parseFloat(q.lng) : null;
     const sort = q.sort ?? "rating";
+    const minPrice = q.minPrice != null ? parseInt(q.minPrice, 10) : null;
+    const maxPrice = q.maxPrice != null ? parseInt(q.maxPrice, 10) : null;
 
     // ── Nearby: Haversine raw SQL, 5 km hard filter ──────────────────────────
     if (sort === "nearby" && lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
-      const cityFilter = q.city ? `AND city = '${q.city.replace(/'/g, "''")}'` : "";
-      const categoryFilter = q.category ? `AND category = '${q.category.replace(/'/g, "''")}'` : "";
-
       type NearbyRow = {
         id: string; name: string; category: string; logoUrl: string | null;
         city: string; neighborhood: string | null; averageRating: number;
@@ -54,29 +56,39 @@ export class CatalogController {
         distance_km: number; total_count: bigint;
       };
 
-      const rows = await prisma.$queryRaw<NearbyRow[]>`
-        SELECT id, name, category, "logoUrl", city, neighborhood,
-               "averageRating", latitude, longitude, "subscriptionTier",
-               "isPrestige", "prestigeScore",
+      const cityParam = q.city ?? null;
+      const categoryParam = q.category ?? null;
+      const searchParam = q.search ?? null;
+
+      const rows = await prisma.$queryRaw<NearbyRow[]>(Prisma.sql`
+        SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
+               s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+               s."isPrestige", s."prestigeScore",
                6371 * acos(LEAST(1.0,
-                 cos(radians(${lat})) * cos(radians(latitude)) *
-                 cos(radians(longitude) - radians(${lng})) +
-                 sin(radians(${lat})) * sin(radians(latitude))
+                 cos(radians(${lat})) * cos(radians(s.latitude)) *
+                 cos(radians(s.longitude) - radians(${lng})) +
+                 sin(radians(${lat})) * sin(radians(s.latitude))
                )) AS distance_km,
                COUNT(*) OVER() AS total_count
-        FROM "Salon"
-        WHERE "approvalStatus" = 'approved'
-          AND "isVisibleInMarketplace" = true
-          AND latitude IS NOT NULL
-          AND longitude IS NOT NULL
+        FROM "Salon" s
+        ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
+        WHERE s."approvalStatus" = 'approved'
+          AND s."isVisibleInMarketplace" = true
+          AND s.latitude IS NOT NULL
+          AND s.longitude IS NOT NULL
+          ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
+          ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}` : Prisma.empty}
+          ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}` : Prisma.empty}
+          ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}` : Prisma.empty}
+          ${searchParam ? Prisma.sql`AND (s.name ILIKE ${"%" + searchParam + "%"} OR EXISTS (SELECT 1 FROM "Service" svc WHERE svc."salonId" = s.id AND svc."isActive" = true AND svc.name ILIKE ${"%" + searchParam + "%"}))` : Prisma.empty}
           AND 6371 * acos(LEAST(1.0,
-                cos(radians(${lat})) * cos(radians(latitude)) *
-                cos(radians(longitude) - radians(${lng})) +
-                sin(radians(${lat})) * sin(radians(latitude))
+                cos(radians(${lat})) * cos(radians(s.latitude)) *
+                cos(radians(s.longitude) - radians(${lng})) +
+                sin(radians(${lat})) * sin(radians(s.latitude))
               )) <= 5
         ORDER BY distance_km ASC
         LIMIT ${pageSize} OFFSET ${page * pageSize}
-      `;
+      `);
 
       const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
       return ok(reply, {
@@ -104,21 +116,31 @@ export class CatalogController {
         booking_count: bigint; total_count: bigint;
       };
 
-      const rows = await prisma.$queryRaw<TrendingRow[]>`
-        SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
+      const cityParam = q.city ?? null;
+      const categoryParam = q.category ?? null;
+      const searchParam = q.search ?? null;
+
+      const rows = await prisma.$queryRaw<TrendingRow[]>(Prisma.sql`
+        SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
                s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore",
                COUNT(b.id) AS booking_count,
                COUNT(*) OVER() AS total_count
         FROM "Salon" s
+        ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
         LEFT JOIN "Booking" b ON b."salonId" = s.id
           AND b."createdAt" > NOW() - INTERVAL '30 days'
         WHERE s."approvalStatus" = 'approved'
           AND s."isVisibleInMarketplace" = true
+          ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
+          ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}` : Prisma.empty}
+          ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}` : Prisma.empty}
+          ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}` : Prisma.empty}
+          ${searchParam ? Prisma.sql`AND (s.name ILIKE ${"%" + searchParam + "%"} OR EXISTS (SELECT 1 FROM "Service" svc WHERE svc."salonId" = s.id AND svc."isActive" = true AND svc.name ILIKE ${"%" + searchParam + "%"}))` : Prisma.empty}
         GROUP BY s.id
         ORDER BY booking_count DESC, s."averageRating" DESC
         LIMIT ${pageSize} OFFSET ${page * pageSize}
-      `;
+      `);
 
       const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
       return ok(reply, {
@@ -142,12 +164,34 @@ export class CatalogController {
       isVisibleInMarketplace: true,
       ...(q.city && { city: q.city }),
       ...(q.category && { category: q.category }),
-      ...(q.search && { name: { contains: q.search, mode: "insensitive" as const } })
+      ...((minPrice != null || maxPrice != null) && {
+        services: {
+          some: {
+            isActive: true,
+            ...(minPrice != null && { priceXof: { gte: minPrice } }),
+            ...(maxPrice != null && { priceXof: { lte: maxPrice } })
+          }
+        }
+      })
     };
+
+    const whereWithSearch = q.search
+      ? {
+          AND: [
+            where,
+            {
+              OR: [
+                { name: { contains: q.search, mode: "insensitive" as const } },
+                { services: { some: { name: { contains: q.search, mode: "insensitive" as const }, isActive: true } } }
+              ]
+            }
+          ]
+        }
+      : where;
 
     const [items, total] = await Promise.all([
       prisma.salon.findMany({
-        where,
+        where: whereWithSearch,
         select: {
           id: true, name: true, category: true, logoUrl: true, city: true,
           neighborhood: true, averageRating: true, latitude: true, longitude: true,
@@ -157,7 +201,7 @@ export class CatalogController {
         take: pageSize,
         skip: page * pageSize
       }),
-      prisma.salon.count({ where })
+      prisma.salon.count({ where: whereWithSearch })
     ]);
 
     ok(reply, {
@@ -174,7 +218,7 @@ export class CatalogController {
     const params = request.params as { id: string };
 
     const salon = await prisma.salon.findFirst({
-      where: { id: params.id, approvalStatus: "approved" },
+      where: { id: params.id, approvalStatus: "approved", isVisibleInMarketplace: true },
       include: {
         services: { where: { isActive: true }, orderBy: { displayOrder: "asc" } },
         gallery: { orderBy: { position: "asc" } },
@@ -248,7 +292,7 @@ export class CatalogController {
     const query = availabilityQuerySchema.parse(request.query);
 
     const salon = await prisma.salon.findFirst({
-      where: { id: params.id, approvalStatus: "approved" }
+      where: { id: params.id, approvalStatus: "approved", isVisibleInMarketplace: true, canReceiveBookings: true }
     });
     if (!salon) {
       fail(reply, 404, "salon_not_found", "Salon introuvable.");
@@ -264,52 +308,12 @@ export class CatalogController {
     }
 
     const date = new Date(query.date + "T00:00:00");
-    const dayOfWeek = date.getDay();
-    const nextDay = new Date(date);
-    nextDay.setDate(nextDay.getDate() + 1);
 
-    const [salonHour, blockedSlots, existingBookings, employees] = await Promise.all([
-      prisma.salonHours.findUnique({ where: { salonId_dayOfWeek: { salonId: params.id, dayOfWeek } } }),
-      prisma.blockedSlot.findMany({
-        where: { salonId: params.id, startsAt: { lt: nextDay }, endsAt: { gt: date } }
-      }),
-      prisma.booking.findMany({
-        where: {
-          salonId: params.id,
-          status: { notIn: ["cancelled"] },
-          startsAt: { lt: nextDay },
-          endsAt: { gt: date }
-        },
-        select: { startsAt: true, endsAt: true, employeeId: true }
-      }),
-      prisma.employee.findMany({
-        where: {
-          salonId: params.id,
-          isActive: true,
-          schedulingEnabled: true,
-          ...(query.employeeId && { id: query.employeeId })
-        }
-      })
-    ]);
-
-    if (!salonHour) {
-      ok(reply, []);
-      return;
-    }
-
-    const slots = computeAvailableSlots({
-      hours: { isOpen: salonHour.isOpen, opensAt: salonHour.opensAt, closesAt: salonHour.closesAt },
-      service: { durationMinutes: service.durationMinutes },
+    const slots = await fetchAndComputeAvailableSlots(prisma, {
+      salonId: params.id,
       date,
-      blockedSlots: blockedSlots.map((b) => ({
-        startsAt: b.startsAt,
-        endsAt: b.endsAt,
-        scope: b.scope as "salon" | "employee",
-        employeeId: b.employeeId
-      })),
-      existingBookings,
-      employees,
-      requestedEmployeeId: query.employeeId
+      durationMinutes: service.durationMinutes,
+      employeeId: query.employeeId
     });
 
     ok(reply, slots);
@@ -320,6 +324,15 @@ export class CatalogController {
     const q = request.query as { page?: string; pageSize?: string };
     const page = Math.max(0, parseInt(q.page ?? "0", 10));
     const pageSize = Math.min(50, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
+
+    const salon = await prisma.salon.findFirst({
+      where: { id: params.id, approvalStatus: "approved", isVisibleInMarketplace: true },
+      select: { id: true }
+    });
+    if (!salon) {
+      fail(reply, 404, "salon_not_found", "Salon introuvable.");
+      return;
+    }
 
     const [reviews, total] = await Promise.all([
       prisma.review.findMany({
@@ -339,7 +352,7 @@ export class CatalogController {
         comment: r.comment,
         createdAt: r.createdAt.toISOString(),
         responseText: r.responseText,
-        responseAt: r.updatedAt.toISOString()
+        responseAt: r.responseText ? r.updatedAt.toISOString() : null
       })),
       total
     });
@@ -410,11 +423,11 @@ export class CatalogController {
         },
         orderBy: { createdAt: "desc" }
       });
-      ok(reply, favorites.map((f) => ({
+      ok(reply, { items: favorites.map((f) => ({
         ...f.salon,
         featured: f.salon.subscriptionTier === "premium",
         distanceKm: null
-      })));
+      })) });
     } catch (error) {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
       fail(reply, 500, "internal_error", "Erreur interne.");

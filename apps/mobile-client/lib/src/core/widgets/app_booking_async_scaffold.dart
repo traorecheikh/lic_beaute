@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
 import 'app_async_view.dart';
-import 'app_sliver_back_button.dart';
-import '../../features/discovery/widgets/stale_data_notice.dart';
 import '../../features/discovery/providers/cached_resource.dart';
 
 class AppBookingAsyncScaffold<T> extends ConsumerWidget {
@@ -37,49 +35,53 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.neutral,
       bottomNavigationBar: bottomNavigationBar,
-      body: AppAsyncView<CachedResource<T>>(
-        value: detailAsync,
-        errorTitle: errorTitle,
-        serverTitle: serverTitle,
-        onRetry: refresh,
-        builder: (resource) {
-          if (resource.data == null) {
-            return const Center(child: Text('Indisponible'));
-          }
-          return RefreshIndicator.adaptive(
-            color: AppColors.primary,
-            onRefresh: refresh,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              slivers: [
-                if (pageTitle != null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(pageTitle!, style: AppTextStyles.displaySm),
-                          if (pageSubtitle != null) ...[
-                            gapH4,
-                            Text(
-                              pageSubtitle!,
-                              style: AppTextStyles.bodyMd.copyWith(
-                                color: AppColors.onSurfaceVariant,
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: AppAsyncView<CachedResource<T>>(
+          value: detailAsync,
+          errorTitle: errorTitle,
+          serverTitle: serverTitle,
+          onRetry: refresh,
+          builder: (resource) {
+            if (resource.data == null) {
+              return const Center(child: Text('Indisponible'));
+            }
+            return RefreshIndicator.adaptive(
+              color: AppColors.primary,
+              onRefresh: refresh,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                slivers: [
+                  if (pageTitle != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(pageTitle!, style: AppTextStyles.displaySm),
+                            if (pageSubtitle != null) ...[
+                              gapH4,
+                              Text(
+                                pageSubtitle!,
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: AppColors.onSurfaceVariant,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ...sliverBuilder(resource),
-              ],
-            ),
-          );
-        },
+                  ...sliverBuilder(resource),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

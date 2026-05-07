@@ -4,8 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../widgets/slot_variants.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_snackbar.dart';
+import '../../../features/appointments/providers/booking_actions_provider.dart';
 import '../../../features/discovery/providers/salon_detail_provider.dart';
 import '../../../router/app_router.dart';
 import '../providers/booking_funnel_provider.dart';
@@ -16,12 +19,15 @@ class SlotSelectionPage extends ConsumerStatefulWidget {
     required this.serviceId,
     required this.salonId,
     this.employeeId,
+    this.rescheduleBookingId,
     super.key,
   });
 
   final String serviceId;
   final String salonId;
   final String? employeeId;
+  // When set, the confirm action calls reschedule API instead of navigating to review.
+  final String? rescheduleBookingId;
 
   @override
   ConsumerState<SlotSelectionPage> createState() => _SlotSelectionPageState();
@@ -30,6 +36,8 @@ class SlotSelectionPage extends ConsumerStatefulWidget {
 class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
   DateTime _selected = DateTime.now().add(const Duration(days: 1));
   Map<String, dynamic>? _selectedSlot;
+  bool _isRescheduling = false;
+  SlotVariant _variant = SlotVariant.v1BlockFilter;
 
   static const _weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -49,6 +57,34 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.serviceId.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.neutral,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: AppIcon('arrow-left', size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const FunnelStepTitle(
+            step: 3,
+            total: 4,
+            title: 'Choisir un créneau',
+            separator: 'sur',
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Text(
+              'Prestation manquante. Reprenez la réservation depuis la sélection des services.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+            ),
+          ),
+        ),
+      );
+    }
+
     final availabilityAsync = ref.watch(
       salonAvailabilityProvider(_availabilityParams),
     );
@@ -71,6 +107,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDateStrip(),
+          _buildVariantSwitcher(),
           Expanded(
             child: AppAsyncView(
               value: availabilityAsync,
@@ -86,29 +123,63 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 12.h),
           child: ElevatedButton(
-            onPressed: _selectedSlot == null
-                ? null
-                : () {
-                    ref
-                        .read(bookingFunnelProvider.notifier)
-                        .selectSlot(
-                          startsAtIso: _selectedSlot!['startsAt'] as String,
-                          employeeId: _selectedSlot!['employeeId'] as String?,
-                        );
-                    context.push(AppRoutes.bookingReview);
-                  },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Confirmer · ${_selectedSlotLabel()}'),
-                gapW8,
-                AppIcon('chevron-right', size: 16, color: AppColors.white),
-              ],
-            ),
+            onPressed: _selectedSlot == null ? null : _onConfirm,
+            child: _isRescheduling
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(widget.rescheduleBookingId != null
+                          ? 'Déplacer au ${_selectedSlotLabel()}'
+                          : 'Confirmer · ${_selectedSlotLabel()}'),
+                      gapW8,
+                      AppIcon('chevron-right', size: 16, color: AppColors.white),
+                    ],
+                  ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _onConfirm() async {
+    final slot = _selectedSlot;
+    if (slot == null) return;
+    final rescheduleId = widget.rescheduleBookingId;
+
+    if (rescheduleId != null) {
+      setState(() => _isRescheduling = true);
+      try {
+        final startsAt = DateTime.parse(slot['startsAt'] as String).toLocal();
+        final date = _ymd(startsAt);
+        final hh = startsAt.hour.toString().padLeft(2, '0');
+        final mm = startsAt.minute.toString().padLeft(2, '0');
+        await ref.read(bookingActionsProvider).reschedule(
+          bookingId: rescheduleId,
+          date: date,
+          time: '$hh:$mm',
+        );
+        if (!mounted) return;
+        AppSnackbar.success(context, 'Rendez-vous déplacé avec succès.');
+        context.pop();
+        context.pop();
+      } catch (_) {
+        if (!mounted) return;
+        AppSnackbar.error(context, 'Impossible de déplacer le rendez-vous.');
+      } finally {
+        if (mounted) setState(() => _isRescheduling = false);
+      }
+    } else {
+      ref.read(bookingFunnelProvider.notifier).selectSlot(
+        startsAtIso: slot['startsAt'] as String,
+        employeeId: slot['employeeId'] as String?,
+      );
+      context.push(AppRoutes.bookingReview);
+    }
   }
 
   String _ymd(DateTime date) {
@@ -176,77 +247,108 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
     );
   }
 
+  Widget _buildVariantSwitcher() {
+    final idx = SlotVariant.values.indexOf(_variant);
+    return Container(
+      margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: AppColors.outlineVariant),
+        boxShadow: AppShadows.sm,
+      ),
+      child: Row(children: [
+        _variantNavBtn(Icons.chevron_left,
+            () => setState(() => _variant = _variant.prev)),
+        Expanded(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(
+              _variant.label,
+              style: AppTextStyles.labelMd.copyWith(color: AppColors.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              '${idx + 1} / ${SlotVariant.values.length}',
+              style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ]),
+        ),
+        _variantNavBtn(Icons.chevron_right,
+            () => setState(() => _variant = _variant.next)),
+      ]),
+    );
+  }
+
+  Widget _variantNavBtn(IconData icon, VoidCallback onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 36.w,
+          height: 36.w,
+          decoration: BoxDecoration(
+            color: AppColors.neutral,
+            borderRadius: BorderRadius.circular(18.r),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
+      );
+
+  void _skipToNextDay() {
+    setState(() {
+      _selectedSlot = null;
+      _selected = _selected.add(const Duration(days: 1));
+    });
+  }
+
   Widget _buildSlotGrid(List<dynamic> slots) {
     if (slots.isEmpty) {
-      return RefreshIndicator.adaptive(
-        color: AppColors.primary,
-        onRefresh: _refreshCurrentAvailability,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.45,
-              child: const Center(
-                child: Text('Aucun créneau disponible ce jour.'),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.22),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.event_busy_outlined,
+                      size: 48.r, color: AppColors.outlineVariant),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Salon fermé ce jour',
+                    style: AppTextStyles.headlineSm,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Aucun créneau disponible pour la date sélectionnée.',
+                    style: AppTextStyles.bodySm
+                        .copyWith(color: AppColors.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24.h),
+                  OutlinedButton.icon(
+                    onPressed: _skipToNextDay,
+                    icon: const Icon(Icons.arrow_forward),
+                    label: const Text('Essayer le lendemain'),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
-    return RefreshIndicator.adaptive(
-      color: AppColors.primary,
-      onRefresh: _refreshCurrentAvailability,
-      child: GridView.builder(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          childAspectRatio: 2.4,
-          crossAxisSpacing: 10.w,
-          mainAxisSpacing: 10.h,
-        ),
-        itemCount: slots.length,
-        itemBuilder: (_, i) {
-          final item = slots[i] as Map<String, dynamic>;
-          final startsAt = DateTime.parse(item['startsAt'] as String).toLocal();
-          final hh = startsAt.hour.toString().padLeft(2, '0');
-          final mm = startsAt.minute.toString().padLeft(2, '0');
-          final slot = '$hh:$mm';
-          final isSelected = _selectedSlot?['startsAt'] == item['startsAt'];
-
-          return GestureDetector(
-            onTap: () => setState(() => _selectedSlot = item),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surface,
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.outlineVariant,
-                  width: isSelected ? 1.5 : 1,
-                ),
-                boxShadow: isSelected ? null : AppShadows.sm,
-              ),
-              child: Center(
-                child: Text(
-                  slot,
-                  style: AppTextStyles.labelMd.copyWith(
-                    color: isSelected ? AppColors.white : AppColors.onSurface,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    final typed = slots.whereType<Map<String, dynamic>>().toList();
+    return buildSlotVariant(
+      variant: _variant,
+      slots: typed,
+      selected: _selectedSlot,
+      onSelect: (s) => setState(() => _selectedSlot = s),
+      variantKey: ValueKey('${_ymd(_selected)}-${_variant.name}'),
     );
   }
 

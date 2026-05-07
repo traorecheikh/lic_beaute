@@ -12,16 +12,13 @@ part 'pro_client_detail_recent_bookings_inner.g.dart';
 /// ProClientDetailRecentBookingsInner
 ///
 /// Properties:
-/// * [bookingId]
-/// * [startsAt]
-/// * [serviceName]
-/// * [amountXof]
-/// * [status]
+/// * [bookingId] 
+/// * [startsAt] 
+/// * [serviceName] 
+/// * [amountXof] 
+/// * [status] 
 @BuiltValue()
-abstract class ProClientDetailRecentBookingsInner
-    implements
-        Built<ProClientDetailRecentBookingsInner,
-            ProClientDetailRecentBookingsInnerBuilder> {
+abstract class ProClientDetailRecentBookingsInner implements Built<ProClientDetailRecentBookingsInner, ProClientDetailRecentBookingsInnerBuilder> {
   @BuiltValueField(wireName: r'bookingId')
   String get bookingId;
 
@@ -40,25 +37,18 @@ abstract class ProClientDetailRecentBookingsInner
 
   ProClientDetailRecentBookingsInner._();
 
-  factory ProClientDetailRecentBookingsInner(
-          [void updates(ProClientDetailRecentBookingsInnerBuilder b)]) =
-      _$ProClientDetailRecentBookingsInner;
+  factory ProClientDetailRecentBookingsInner([void updates(ProClientDetailRecentBookingsInnerBuilder b)]) = _$ProClientDetailRecentBookingsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProClientDetailRecentBookingsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProClientDetailRecentBookingsInner> get serializer =>
-      _$ProClientDetailRecentBookingsInnerSerializer();
+  static Serializer<ProClientDetailRecentBookingsInner> get serializer => _$ProClientDetailRecentBookingsInnerSerializer();
 }
 
-class _$ProClientDetailRecentBookingsInnerSerializer
-    implements PrimitiveSerializer<ProClientDetailRecentBookingsInner> {
+class _$ProClientDetailRecentBookingsInnerSerializer implements PrimitiveSerializer<ProClientDetailRecentBookingsInner> {
   @override
-  final Iterable<Type> types = const [
-    ProClientDetailRecentBookingsInner,
-    _$ProClientDetailRecentBookingsInner
-  ];
+  final Iterable<Type> types = const [ProClientDetailRecentBookingsInner, _$ProClientDetailRecentBookingsInner];
 
   @override
   final String wireName = r'ProClientDetailRecentBookingsInner';
@@ -91,8 +81,7 @@ class _$ProClientDetailRecentBookingsInnerSerializer
     yield r'status';
     yield serializers.serialize(
       object.status,
-      specifiedType:
-          const FullType(ProClientDetailRecentBookingsInnerStatusEnum),
+      specifiedType: const FullType(ProClientDetailRecentBookingsInnerStatusEnum),
     );
   }
 
@@ -102,9 +91,7 @@ class _$ProClientDetailRecentBookingsInnerSerializer
     ProClientDetailRecentBookingsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -150,8 +137,7 @@ class _$ProClientDetailRecentBookingsInnerSerializer
         case r'status':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(ProClientDetailRecentBookingsInnerStatusEnum),
+            specifiedType: const FullType(ProClientDetailRecentBookingsInnerStatusEnum),
           ) as ProClientDetailRecentBookingsInnerStatusEnum;
           result.status = valueDes;
           break;
@@ -185,31 +171,23 @@ class _$ProClientDetailRecentBookingsInnerSerializer
 }
 
 class ProClientDetailRecentBookingsInnerStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const ProClientDetailRecentBookingsInnerStatusEnum pending =
-      _$proClientDetailRecentBookingsInnerStatusEnum_pending;
+  static const ProClientDetailRecentBookingsInnerStatusEnum pending = _$proClientDetailRecentBookingsInnerStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const ProClientDetailRecentBookingsInnerStatusEnum confirmed =
-      _$proClientDetailRecentBookingsInnerStatusEnum_confirmed;
+  static const ProClientDetailRecentBookingsInnerStatusEnum confirmed = _$proClientDetailRecentBookingsInnerStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const ProClientDetailRecentBookingsInnerStatusEnum inProgress =
-      _$proClientDetailRecentBookingsInnerStatusEnum_inProgress;
+  static const ProClientDetailRecentBookingsInnerStatusEnum inProgress = _$proClientDetailRecentBookingsInnerStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const ProClientDetailRecentBookingsInnerStatusEnum completed =
-      _$proClientDetailRecentBookingsInnerStatusEnum_completed;
+  static const ProClientDetailRecentBookingsInnerStatusEnum completed = _$proClientDetailRecentBookingsInnerStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProClientDetailRecentBookingsInnerStatusEnum cancelled =
-      _$proClientDetailRecentBookingsInnerStatusEnum_cancelled;
+  static const ProClientDetailRecentBookingsInnerStatusEnum cancelled = _$proClientDetailRecentBookingsInnerStatusEnum_cancelled;
 
-  static Serializer<ProClientDetailRecentBookingsInnerStatusEnum>
-      get serializer =>
-          _$proClientDetailRecentBookingsInnerStatusEnumSerializer;
+  static Serializer<ProClientDetailRecentBookingsInnerStatusEnum> get serializer => _$proClientDetailRecentBookingsInnerStatusEnumSerializer;
 
-  const ProClientDetailRecentBookingsInnerStatusEnum._(String name)
-      : super(name);
+  const ProClientDetailRecentBookingsInnerStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProClientDetailRecentBookingsInnerStatusEnum> get values =>
-      _$proClientDetailRecentBookingsInnerStatusEnumValues;
-  static ProClientDetailRecentBookingsInnerStatusEnum valueOf(String name) =>
-      _$proClientDetailRecentBookingsInnerStatusEnumValueOf(name);
+  static BuiltSet<ProClientDetailRecentBookingsInnerStatusEnum> get values => _$proClientDetailRecentBookingsInnerStatusEnumValues;
+  static ProClientDetailRecentBookingsInnerStatusEnum valueOf(String name) => _$proClientDetailRecentBookingsInnerStatusEnumValueOf(name);
 }
+

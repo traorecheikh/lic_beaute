@@ -1,6 +1,9 @@
 import { createApp } from "./app.js";
-import { config } from "./config.js";
+import { config, validateConfig } from "./config.js";
 import { resolveDatabaseRuntime } from "./lib/database-runtime.js";
+import "./lib/push.js";
+
+validateConfig();
 
 const databaseRuntime = await resolveDatabaseRuntime({
   nodeEnv: config.nodeEnv,
@@ -42,3 +45,20 @@ try {
   );
   process.exit(1);
 }
+
+async function shutdown(signal: string) {
+  app.log.info({ signal }, "Shutting down");
+  try {
+    await app.close();
+  } catch (err) {
+    app.log.error({ error: err instanceof Error ? err.message : "unknown" }, "Error closing server");
+  }
+  try {
+    const { prisma } = await import("./lib/prisma.js");
+    await prisma.$disconnect();
+  } catch {}
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

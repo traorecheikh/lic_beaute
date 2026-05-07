@@ -11,13 +11,12 @@ part 'admin_dashboard_kpis_inner.g.dart';
 /// AdminDashboardKpisInner
 ///
 /// Properties:
-/// * [label]
-/// * [value]
-/// * [displayValue]
-/// * [note]
+/// * [label] 
+/// * [value] 
+/// * [displayValue] 
+/// * [note] 
 @BuiltValue()
-abstract class AdminDashboardKpisInner
-    implements Built<AdminDashboardKpisInner, AdminDashboardKpisInnerBuilder> {
+abstract class AdminDashboardKpisInner implements Built<AdminDashboardKpisInner, AdminDashboardKpisInnerBuilder> {
   @BuiltValueField(wireName: r'label')
   String get label;
 
@@ -32,25 +31,18 @@ abstract class AdminDashboardKpisInner
 
   AdminDashboardKpisInner._();
 
-  factory AdminDashboardKpisInner(
-          [void updates(AdminDashboardKpisInnerBuilder b)]) =
-      _$AdminDashboardKpisInner;
+  factory AdminDashboardKpisInner([void updates(AdminDashboardKpisInnerBuilder b)]) = _$AdminDashboardKpisInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminDashboardKpisInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminDashboardKpisInner> get serializer =>
-      _$AdminDashboardKpisInnerSerializer();
+  static Serializer<AdminDashboardKpisInner> get serializer => _$AdminDashboardKpisInnerSerializer();
 }
 
-class _$AdminDashboardKpisInnerSerializer
-    implements PrimitiveSerializer<AdminDashboardKpisInner> {
+class _$AdminDashboardKpisInnerSerializer implements PrimitiveSerializer<AdminDashboardKpisInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminDashboardKpisInner,
-    _$AdminDashboardKpisInner
-  ];
+  final Iterable<Type> types = const [AdminDashboardKpisInner, _$AdminDashboardKpisInner];
 
   @override
   final String wireName = r'AdminDashboardKpisInner';
@@ -88,9 +80,7 @@ class _$AdminDashboardKpisInnerSerializer
     AdminDashboardKpisInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -161,3 +151,4 @@ class _$AdminDashboardKpisInnerSerializer
     return result.build();
   }
 }
+

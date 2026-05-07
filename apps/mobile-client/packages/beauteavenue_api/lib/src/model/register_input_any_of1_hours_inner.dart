@@ -11,15 +11,12 @@ part 'register_input_any_of1_hours_inner.g.dart';
 /// RegisterInputAnyOf1HoursInner
 ///
 /// Properties:
-/// * [dayOfWeek]
-/// * [isOpen]
-/// * [opensAt]
-/// * [closesAt]
+/// * [dayOfWeek] 
+/// * [isOpen] 
+/// * [opensAt] 
+/// * [closesAt] 
 @BuiltValue()
-abstract class RegisterInputAnyOf1HoursInner
-    implements
-        Built<RegisterInputAnyOf1HoursInner,
-            RegisterInputAnyOf1HoursInnerBuilder> {
+abstract class RegisterInputAnyOf1HoursInner implements Built<RegisterInputAnyOf1HoursInner, RegisterInputAnyOf1HoursInnerBuilder> {
   @BuiltValueField(wireName: r'dayOfWeek')
   int get dayOfWeek;
 
@@ -34,25 +31,18 @@ abstract class RegisterInputAnyOf1HoursInner
 
   RegisterInputAnyOf1HoursInner._();
 
-  factory RegisterInputAnyOf1HoursInner(
-          [void updates(RegisterInputAnyOf1HoursInnerBuilder b)]) =
-      _$RegisterInputAnyOf1HoursInner;
+  factory RegisterInputAnyOf1HoursInner([void updates(RegisterInputAnyOf1HoursInnerBuilder b)]) = _$RegisterInputAnyOf1HoursInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RegisterInputAnyOf1HoursInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RegisterInputAnyOf1HoursInner> get serializer =>
-      _$RegisterInputAnyOf1HoursInnerSerializer();
+  static Serializer<RegisterInputAnyOf1HoursInner> get serializer => _$RegisterInputAnyOf1HoursInnerSerializer();
 }
 
-class _$RegisterInputAnyOf1HoursInnerSerializer
-    implements PrimitiveSerializer<RegisterInputAnyOf1HoursInner> {
+class _$RegisterInputAnyOf1HoursInnerSerializer implements PrimitiveSerializer<RegisterInputAnyOf1HoursInner> {
   @override
-  final Iterable<Type> types = const [
-    RegisterInputAnyOf1HoursInner,
-    _$RegisterInputAnyOf1HoursInner
-  ];
+  final Iterable<Type> types = const [RegisterInputAnyOf1HoursInner, _$RegisterInputAnyOf1HoursInner];
 
   @override
   final String wireName = r'RegisterInputAnyOf1HoursInner';
@@ -94,9 +84,7 @@ class _$RegisterInputAnyOf1HoursInnerSerializer
     RegisterInputAnyOf1HoursInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -167,3 +155,4 @@ class _$RegisterInputAnyOf1HoursInnerSerializer
     return result.build();
   }
 }
+

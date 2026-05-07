@@ -12,17 +12,14 @@ part 'admin_subscription_detail_invoices_inner.g.dart';
 /// AdminSubscriptionDetailInvoicesInner
 ///
 /// Properties:
-/// * [id]
-/// * [invoiceNumber]
-/// * [amountXof]
-/// * [status]
-/// * [createdAt]
-/// * [pdfUrl]
+/// * [id] 
+/// * [invoiceNumber] 
+/// * [amountXof] 
+/// * [status] 
+/// * [createdAt] 
+/// * [pdfUrl] 
 @BuiltValue()
-abstract class AdminSubscriptionDetailInvoicesInner
-    implements
-        Built<AdminSubscriptionDetailInvoicesInner,
-            AdminSubscriptionDetailInvoicesInnerBuilder> {
+abstract class AdminSubscriptionDetailInvoicesInner implements Built<AdminSubscriptionDetailInvoicesInner, AdminSubscriptionDetailInvoicesInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -44,25 +41,18 @@ abstract class AdminSubscriptionDetailInvoicesInner
 
   AdminSubscriptionDetailInvoicesInner._();
 
-  factory AdminSubscriptionDetailInvoicesInner(
-          [void updates(AdminSubscriptionDetailInvoicesInnerBuilder b)]) =
-      _$AdminSubscriptionDetailInvoicesInner;
+  factory AdminSubscriptionDetailInvoicesInner([void updates(AdminSubscriptionDetailInvoicesInnerBuilder b)]) = _$AdminSubscriptionDetailInvoicesInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionDetailInvoicesInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionDetailInvoicesInner> get serializer =>
-      _$AdminSubscriptionDetailInvoicesInnerSerializer();
+  static Serializer<AdminSubscriptionDetailInvoicesInner> get serializer => _$AdminSubscriptionDetailInvoicesInnerSerializer();
 }
 
-class _$AdminSubscriptionDetailInvoicesInnerSerializer
-    implements PrimitiveSerializer<AdminSubscriptionDetailInvoicesInner> {
+class _$AdminSubscriptionDetailInvoicesInnerSerializer implements PrimitiveSerializer<AdminSubscriptionDetailInvoicesInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionDetailInvoicesInner,
-    _$AdminSubscriptionDetailInvoicesInner
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionDetailInvoicesInner, _$AdminSubscriptionDetailInvoicesInner];
 
   @override
   final String wireName = r'AdminSubscriptionDetailInvoicesInner';
@@ -90,8 +80,7 @@ class _$AdminSubscriptionDetailInvoicesInnerSerializer
     yield r'status';
     yield serializers.serialize(
       object.status,
-      specifiedType:
-          const FullType(AdminSubscriptionDetailInvoicesInnerStatusEnum),
+      specifiedType: const FullType(AdminSubscriptionDetailInvoicesInnerStatusEnum),
     );
     yield r'createdAt';
     yield serializers.serialize(
@@ -111,9 +100,7 @@ class _$AdminSubscriptionDetailInvoicesInnerSerializer
     AdminSubscriptionDetailInvoicesInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -152,8 +139,7 @@ class _$AdminSubscriptionDetailInvoicesInnerSerializer
         case r'status':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminSubscriptionDetailInvoicesInnerStatusEnum),
+            specifiedType: const FullType(AdminSubscriptionDetailInvoicesInnerStatusEnum),
           ) as AdminSubscriptionDetailInvoicesInnerStatusEnum;
           result.status = valueDes;
           break;
@@ -201,28 +187,21 @@ class _$AdminSubscriptionDetailInvoicesInnerSerializer
 }
 
 class AdminSubscriptionDetailInvoicesInnerStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'issued')
-  static const AdminSubscriptionDetailInvoicesInnerStatusEnum issued =
-      _$adminSubscriptionDetailInvoicesInnerStatusEnum_issued;
+  static const AdminSubscriptionDetailInvoicesInnerStatusEnum issued = _$adminSubscriptionDetailInvoicesInnerStatusEnum_issued;
   @BuiltValueEnumConst(wireName: r'void')
-  static const AdminSubscriptionDetailInvoicesInnerStatusEnum void_ =
-      _$adminSubscriptionDetailInvoicesInnerStatusEnum_void_;
+  static const AdminSubscriptionDetailInvoicesInnerStatusEnum void_ = _$adminSubscriptionDetailInvoicesInnerStatusEnum_void_;
   @BuiltValueEnumConst(wireName: r'paid')
-  static const AdminSubscriptionDetailInvoicesInnerStatusEnum paid =
-      _$adminSubscriptionDetailInvoicesInnerStatusEnum_paid;
+  static const AdminSubscriptionDetailInvoicesInnerStatusEnum paid = _$adminSubscriptionDetailInvoicesInnerStatusEnum_paid;
   @BuiltValueEnumConst(wireName: r'comped')
-  static const AdminSubscriptionDetailInvoicesInnerStatusEnum comped =
-      _$adminSubscriptionDetailInvoicesInnerStatusEnum_comped;
+  static const AdminSubscriptionDetailInvoicesInnerStatusEnum comped = _$adminSubscriptionDetailInvoicesInnerStatusEnum_comped;
 
-  static Serializer<AdminSubscriptionDetailInvoicesInnerStatusEnum>
-      get serializer =>
-          _$adminSubscriptionDetailInvoicesInnerStatusEnumSerializer;
+  static Serializer<AdminSubscriptionDetailInvoicesInnerStatusEnum> get serializer => _$adminSubscriptionDetailInvoicesInnerStatusEnumSerializer;
 
-  const AdminSubscriptionDetailInvoicesInnerStatusEnum._(String name)
-      : super(name);
+  const AdminSubscriptionDetailInvoicesInnerStatusEnum._(String name): super(name);
 
-  static BuiltSet<AdminSubscriptionDetailInvoicesInnerStatusEnum> get values =>
-      _$adminSubscriptionDetailInvoicesInnerStatusEnumValues;
-  static AdminSubscriptionDetailInvoicesInnerStatusEnum valueOf(String name) =>
-      _$adminSubscriptionDetailInvoicesInnerStatusEnumValueOf(name);
+  static BuiltSet<AdminSubscriptionDetailInvoicesInnerStatusEnum> get values => _$adminSubscriptionDetailInvoicesInnerStatusEnumValues;
+  static AdminSubscriptionDetailInvoicesInnerStatusEnum valueOf(String name) => _$adminSubscriptionDetailInvoicesInnerStatusEnumValueOf(name);
 }
+

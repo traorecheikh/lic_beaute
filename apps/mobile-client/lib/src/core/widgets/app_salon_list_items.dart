@@ -20,7 +20,7 @@ class AppSalonListItems extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverList.separated(
       itemCount: AppListUtils.getItemCount(items.length, isStale, cachedAt),
-      separatorBuilder: (_, __) => gapH12,
+      separatorBuilder: (_, _) => gapH12,
       itemBuilder: (context, i) => AppListUtils.buildItem(
         context: context,
         index: i,

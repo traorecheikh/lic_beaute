@@ -24,7 +24,7 @@ class NotificationPreferencesPage extends ConsumerWidget {
       ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
         data: (profile) {
           if (profile == null) return const SizedBox.shrink();
           return ListView(
@@ -45,18 +45,19 @@ class NotificationPreferencesPage extends ConsumerWidget {
                       pushOptIn: value,
                     ),
                   ),
-                  _PrefTile(
-                    icon: Icons.campaign_outlined,
-                    title: 'Offres et promotions',
-                    subtitle:
-                        'Codes promo, nouveaux salons et actualités BeautéAvenue.',
-                    value: profile.marketingOptIn,
-                    onChanged: (value) => _update(
-                      context,
-                      ref,
-                      marketingOptIn: value,
-                    ),
-                  ),
+                  // Promos hidden —
+                  // _PrefTile(
+                  //   icon: Icons.campaign_outlined,
+                  //   title: 'Offres et promotions',
+                  //   subtitle:
+                  //       'Codes promo, nouveaux salons et actualités BeautéAvenue.',
+                  //   value: profile.marketingOptIn,
+                  //   onChanged: (value) => _update(
+                  //     context,
+                  //     ref,
+                  //     marketingOptIn: value,
+                  //   ),
+                  // ),
                 ],
               ),
             ],

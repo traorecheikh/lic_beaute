@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../features/discovery/providers/salon_detail_provider.dart';
 import 'app_async_view.dart';
 import '../../features/booking/widgets/funnel_step_bar.dart';
@@ -8,7 +9,7 @@ class AppBookingFunnelScaffold extends ConsumerWidget {
   final String salonId;
   final int step;
   final String title;
-  final Widget Function(dynamic salon) builder;
+  final Widget Function(SalonDetail salon) builder;
   final Widget? bottomNavigationBar;
 
   const AppBookingFunnelScaffold({
@@ -40,7 +41,14 @@ class AppBookingFunnelScaffold extends ConsumerWidget {
         errorTitle: "Impossible de charger le salon",
         serverTitle: "Le salon est indisponible",
         onRetry: refresh,
-        builder: builder,
+        builder: (salon) {
+          if (salon == null) {
+            return const Center(
+              child: Text("Salon introuvable."),
+            );
+          }
+          return builder(salon);
+        },
       ),
     );
   }

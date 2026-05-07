@@ -55,7 +55,7 @@ class FaqPage extends StatelessWidget {
       body: ListView.separated(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
         itemCount: _faqs.length,
-        separatorBuilder: (_, __) => SizedBox(height: 10.h),
+        separatorBuilder: (_, _) => SizedBox(height: 10.h),
         itemBuilder: (_, i) =>
             FaqTile(question: _faqs[i].q, answer: _faqs[i].a),
       ),

@@ -12,14 +12,13 @@ part 'salon_detail_staff_inner.g.dart';
 /// SalonDetailStaffInner
 ///
 /// Properties:
-/// * [id]
-/// * [displayName]
-/// * [avatarUrl]
-/// * [description]
-/// * [serviceIds]
+/// * [id] 
+/// * [displayName] 
+/// * [avatarUrl] 
+/// * [description] 
+/// * [serviceIds] 
 @BuiltValue()
-abstract class SalonDetailStaffInner
-    implements Built<SalonDetailStaffInner, SalonDetailStaffInnerBuilder> {
+abstract class SalonDetailStaffInner implements Built<SalonDetailStaffInner, SalonDetailStaffInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -37,24 +36,18 @@ abstract class SalonDetailStaffInner
 
   SalonDetailStaffInner._();
 
-  factory SalonDetailStaffInner(
-      [void updates(SalonDetailStaffInnerBuilder b)]) = _$SalonDetailStaffInner;
+  factory SalonDetailStaffInner([void updates(SalonDetailStaffInnerBuilder b)]) = _$SalonDetailStaffInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SalonDetailStaffInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SalonDetailStaffInner> get serializer =>
-      _$SalonDetailStaffInnerSerializer();
+  static Serializer<SalonDetailStaffInner> get serializer => _$SalonDetailStaffInnerSerializer();
 }
 
-class _$SalonDetailStaffInnerSerializer
-    implements PrimitiveSerializer<SalonDetailStaffInner> {
+class _$SalonDetailStaffInnerSerializer implements PrimitiveSerializer<SalonDetailStaffInner> {
   @override
-  final Iterable<Type> types = const [
-    SalonDetailStaffInner,
-    _$SalonDetailStaffInner
-  ];
+  final Iterable<Type> types = const [SalonDetailStaffInner, _$SalonDetailStaffInner];
 
   @override
   final String wireName = r'SalonDetailStaffInner';
@@ -75,19 +68,15 @@ class _$SalonDetailStaffInnerSerializer
       specifiedType: const FullType(String),
     );
     yield r'avatarUrl';
-    yield object.avatarUrl == null
-        ? null
-        : serializers.serialize(
-            object.avatarUrl,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.avatarUrl == null ? null : serializers.serialize(
+      object.avatarUrl,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'description';
-    yield object.description == null
-        ? null
-        : serializers.serialize(
-            object.description,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.description == null ? null : serializers.serialize(
+      object.description,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'serviceIds';
     yield serializers.serialize(
       object.serviceIds,
@@ -101,9 +90,7 @@ class _$SalonDetailStaffInnerSerializer
     SalonDetailStaffInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -183,3 +170,4 @@ class _$SalonDetailStaffInnerSerializer
     return result.build();
   }
 }
+

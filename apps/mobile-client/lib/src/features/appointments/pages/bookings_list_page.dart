@@ -164,7 +164,7 @@ class _BookingTab extends StatelessWidget {
               ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.55,
-              child: const Center(
+              child: Center(
                 child: AppEmptyState(
                   icon: Icons.calendar_today_outlined,
                   title: 'Aucun rendez-vous',
@@ -188,7 +188,7 @@ class _BookingTab extends StatelessWidget {
         ),
         padding: EdgeInsets.all(20.w),
         itemCount: items.length + (staleAt != null ? 1 : 0),
-        separatorBuilder: (_, __) => gapH12,
+        separatorBuilder: (_, _) => gapH12,
         itemBuilder: (_, i) {
           if (staleAt != null) {
             if (i == 0) {

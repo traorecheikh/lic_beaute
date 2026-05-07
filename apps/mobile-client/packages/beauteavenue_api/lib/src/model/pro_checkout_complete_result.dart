@@ -12,14 +12,12 @@ part 'pro_checkout_complete_result.g.dart';
 /// ProCheckoutCompleteResult
 ///
 /// Properties:
-/// * [completed]
-/// * [bookingId]
-/// * [status]
-/// * [chargedXof]
+/// * [completed] 
+/// * [bookingId] 
+/// * [status] 
+/// * [chargedXof] 
 @BuiltValue()
-abstract class ProCheckoutCompleteResult
-    implements
-        Built<ProCheckoutCompleteResult, ProCheckoutCompleteResultBuilder> {
+abstract class ProCheckoutCompleteResult implements Built<ProCheckoutCompleteResult, ProCheckoutCompleteResultBuilder> {
   @BuiltValueField(wireName: r'completed')
   bool get completed;
 
@@ -35,25 +33,18 @@ abstract class ProCheckoutCompleteResult
 
   ProCheckoutCompleteResult._();
 
-  factory ProCheckoutCompleteResult(
-          [void updates(ProCheckoutCompleteResultBuilder b)]) =
-      _$ProCheckoutCompleteResult;
+  factory ProCheckoutCompleteResult([void updates(ProCheckoutCompleteResultBuilder b)]) = _$ProCheckoutCompleteResult;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProCheckoutCompleteResultBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProCheckoutCompleteResult> get serializer =>
-      _$ProCheckoutCompleteResultSerializer();
+  static Serializer<ProCheckoutCompleteResult> get serializer => _$ProCheckoutCompleteResultSerializer();
 }
 
-class _$ProCheckoutCompleteResultSerializer
-    implements PrimitiveSerializer<ProCheckoutCompleteResult> {
+class _$ProCheckoutCompleteResultSerializer implements PrimitiveSerializer<ProCheckoutCompleteResult> {
   @override
-  final Iterable<Type> types = const [
-    ProCheckoutCompleteResult,
-    _$ProCheckoutCompleteResult
-  ];
+  final Iterable<Type> types = const [ProCheckoutCompleteResult, _$ProCheckoutCompleteResult];
 
   @override
   final String wireName = r'ProCheckoutCompleteResult';
@@ -91,9 +82,7 @@ class _$ProCheckoutCompleteResultSerializer
     ProCheckoutCompleteResult object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -166,29 +155,23 @@ class _$ProCheckoutCompleteResultSerializer
 }
 
 class ProCheckoutCompleteResultStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const ProCheckoutCompleteResultStatusEnum pending =
-      _$proCheckoutCompleteResultStatusEnum_pending;
+  static const ProCheckoutCompleteResultStatusEnum pending = _$proCheckoutCompleteResultStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const ProCheckoutCompleteResultStatusEnum confirmed =
-      _$proCheckoutCompleteResultStatusEnum_confirmed;
+  static const ProCheckoutCompleteResultStatusEnum confirmed = _$proCheckoutCompleteResultStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const ProCheckoutCompleteResultStatusEnum inProgress =
-      _$proCheckoutCompleteResultStatusEnum_inProgress;
+  static const ProCheckoutCompleteResultStatusEnum inProgress = _$proCheckoutCompleteResultStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const ProCheckoutCompleteResultStatusEnum completed =
-      _$proCheckoutCompleteResultStatusEnum_completed;
+  static const ProCheckoutCompleteResultStatusEnum completed = _$proCheckoutCompleteResultStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProCheckoutCompleteResultStatusEnum cancelled =
-      _$proCheckoutCompleteResultStatusEnum_cancelled;
+  static const ProCheckoutCompleteResultStatusEnum cancelled = _$proCheckoutCompleteResultStatusEnum_cancelled;
 
-  static Serializer<ProCheckoutCompleteResultStatusEnum> get serializer =>
-      _$proCheckoutCompleteResultStatusEnumSerializer;
+  static Serializer<ProCheckoutCompleteResultStatusEnum> get serializer => _$proCheckoutCompleteResultStatusEnumSerializer;
 
-  const ProCheckoutCompleteResultStatusEnum._(String name) : super(name);
+  const ProCheckoutCompleteResultStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProCheckoutCompleteResultStatusEnum> get values =>
-      _$proCheckoutCompleteResultStatusEnumValues;
-  static ProCheckoutCompleteResultStatusEnum valueOf(String name) =>
-      _$proCheckoutCompleteResultStatusEnumValueOf(name);
+  static BuiltSet<ProCheckoutCompleteResultStatusEnum> get values => _$proCheckoutCompleteResultStatusEnumValues;
+  static ProCheckoutCompleteResultStatusEnum valueOf(String name) => _$proCheckoutCompleteResultStatusEnumValueOf(name);
 }
+

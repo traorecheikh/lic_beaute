@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../utils/app_haptics.dart';
-import '../widgets/app_snackbar.dart';
 
 class SalonMapCard extends StatelessWidget {
   const SalonMapCard({

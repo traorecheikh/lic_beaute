@@ -10,6 +10,9 @@ class AuthChoicePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final redirectTo = GoRouterState.of(context).uri.queryParameters['redirectTo'];
+    final query = redirectTo != null ? '?redirectTo=${Uri.encodeComponent(redirectTo)}' : '';
+
     return Scaffold(
       backgroundColor: AppColors.neutral,
       body: Stack(
@@ -57,7 +60,7 @@ class AuthChoicePage extends StatelessWidget {
                     width: double.infinity,
                     height: 56.h,
                     child: ElevatedButton(
-                      onPressed: () => context.push(AppRoutes.otpLogin),
+                      onPressed: () => context.push('${AppRoutes.otpLogin}$query'),
                       child: const Text('Commencer'),
                     ),
                   ),
@@ -66,7 +69,7 @@ class AuthChoicePage extends StatelessWidget {
                     width: double.infinity,
                     height: 56.h,
                     child: OutlinedButton(
-                      onPressed: () => context.push(AppRoutes.emailLogin),
+                      onPressed: () => context.push('${AppRoutes.emailLogin}$query'),
                       child: const Text('Se connecter'),
                     ),
                   ),

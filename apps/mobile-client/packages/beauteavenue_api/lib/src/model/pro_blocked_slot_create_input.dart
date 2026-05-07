@@ -12,15 +12,13 @@ part 'pro_blocked_slot_create_input.g.dart';
 /// ProBlockedSlotCreateInput
 ///
 /// Properties:
-/// * [startsAt]
-/// * [endsAt]
-/// * [reason]
-/// * [scope]
-/// * [employeeId]
+/// * [startsAt] 
+/// * [endsAt] 
+/// * [reason] 
+/// * [scope] 
+/// * [employeeId] 
 @BuiltValue()
-abstract class ProBlockedSlotCreateInput
-    implements
-        Built<ProBlockedSlotCreateInput, ProBlockedSlotCreateInputBuilder> {
+abstract class ProBlockedSlotCreateInput implements Built<ProBlockedSlotCreateInput, ProBlockedSlotCreateInputBuilder> {
   @BuiltValueField(wireName: r'startsAt')
   DateTime get startsAt;
 
@@ -39,26 +37,19 @@ abstract class ProBlockedSlotCreateInput
 
   ProBlockedSlotCreateInput._();
 
-  factory ProBlockedSlotCreateInput(
-          [void updates(ProBlockedSlotCreateInputBuilder b)]) =
-      _$ProBlockedSlotCreateInput;
+  factory ProBlockedSlotCreateInput([void updates(ProBlockedSlotCreateInputBuilder b)]) = _$ProBlockedSlotCreateInput;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(ProBlockedSlotCreateInputBuilder b) =>
-      b..scope = ProBlockedSlotCreateInputScopeEnum.valueOf('salon');
+  static void _defaults(ProBlockedSlotCreateInputBuilder b) => b
+      ..scope = ProBlockedSlotCreateInputScopeEnum.valueOf('salon');
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProBlockedSlotCreateInput> get serializer =>
-      _$ProBlockedSlotCreateInputSerializer();
+  static Serializer<ProBlockedSlotCreateInput> get serializer => _$ProBlockedSlotCreateInputSerializer();
 }
 
-class _$ProBlockedSlotCreateInputSerializer
-    implements PrimitiveSerializer<ProBlockedSlotCreateInput> {
+class _$ProBlockedSlotCreateInputSerializer implements PrimitiveSerializer<ProBlockedSlotCreateInput> {
   @override
-  final Iterable<Type> types = const [
-    ProBlockedSlotCreateInput,
-    _$ProBlockedSlotCreateInput
-  ];
+  final Iterable<Type> types = const [ProBlockedSlotCreateInput, _$ProBlockedSlotCreateInput];
 
   @override
   final String wireName = r'ProBlockedSlotCreateInput';
@@ -107,9 +98,7 @@ class _$ProBlockedSlotCreateInputSerializer
     ProBlockedSlotCreateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -189,20 +178,17 @@ class _$ProBlockedSlotCreateInputSerializer
 }
 
 class ProBlockedSlotCreateInputScopeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'salon')
-  static const ProBlockedSlotCreateInputScopeEnum salon =
-      _$proBlockedSlotCreateInputScopeEnum_salon;
+  static const ProBlockedSlotCreateInputScopeEnum salon = _$proBlockedSlotCreateInputScopeEnum_salon;
   @BuiltValueEnumConst(wireName: r'employee')
-  static const ProBlockedSlotCreateInputScopeEnum employee =
-      _$proBlockedSlotCreateInputScopeEnum_employee;
+  static const ProBlockedSlotCreateInputScopeEnum employee = _$proBlockedSlotCreateInputScopeEnum_employee;
 
-  static Serializer<ProBlockedSlotCreateInputScopeEnum> get serializer =>
-      _$proBlockedSlotCreateInputScopeEnumSerializer;
+  static Serializer<ProBlockedSlotCreateInputScopeEnum> get serializer => _$proBlockedSlotCreateInputScopeEnumSerializer;
 
-  const ProBlockedSlotCreateInputScopeEnum._(String name) : super(name);
+  const ProBlockedSlotCreateInputScopeEnum._(String name): super(name);
 
-  static BuiltSet<ProBlockedSlotCreateInputScopeEnum> get values =>
-      _$proBlockedSlotCreateInputScopeEnumValues;
-  static ProBlockedSlotCreateInputScopeEnum valueOf(String name) =>
-      _$proBlockedSlotCreateInputScopeEnumValueOf(name);
+  static BuiltSet<ProBlockedSlotCreateInputScopeEnum> get values => _$proBlockedSlotCreateInputScopeEnumValues;
+  static ProBlockedSlotCreateInputScopeEnum valueOf(String name) => _$proBlockedSlotCreateInputScopeEnumValueOf(name);
 }
+

@@ -1,10 +1,29 @@
-import { createPaymentAdapter } from "./adapters/index.js";
+import { getPaymentAdapter, getStorageAdapter, getR2Adapter } from "./adapters/index.js";
+import type { R2StorageAdapter } from "./adapters/storage-r2.js";
 import { config } from "./config.js";
 import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
+import { sendPushBatch } from "./lib/push.js";
 import { sendNotification } from "./modules/notifications.js";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+const storageAdapter = getStorageAdapter(config.storageDriver, {
+  storagePath: config.storagePath,
+  r2AccountId: config.r2AccountId,
+  r2AccessKeyId: config.r2AccessKeyId,
+  r2SecretAccessKey: config.r2SecretAccessKey,
+  r2Bucket: config.r2Bucket,
+  mediaPublicBaseUrl: config.mediaPublicBaseUrl
+});
+
+const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
+  intechApiKey: config.intechApiKey,
+  intechApiSecret: config.intechApiSecret,
+  intechEnv: config.intechEnv,
+  intechBaseUrl: config.intechBaseUrl,
+  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
+  intechHmacSecretKey: config.intechHmacSecretKey,
+  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
+  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
   paytechApiKey: config.paytechApiKey,
   paytechApiSecret: config.paytechApiSecret,
   paytechEnv: config.paytechEnv,
@@ -32,6 +51,11 @@ async function handleJob(job: Job): Promise<void> {
       const payment = booking.payments[0];
       if (!payment) return;
 
+      const existingRelease = await prisma.settlementEvent.findFirst({
+        where: { paymentId: payment.id, eventType: "released" }
+      });
+      if (existingRelease) return;
+
       await prisma.settlementEvent.create({
         data: {
           bookingId: booking.id,
@@ -55,6 +79,14 @@ async function handleJob(job: Job): Promise<void> {
           reason: "booking_cancelled"
         });
         await prisma.payment.update({ where: { id: payment.id }, data: { status: "refunded" } });
+        await prisma.booking.update({
+          where: { id: payment.bookingId },
+          data: { depositPaymentStatus: "refunded" }
+        });
+        const existingRefund = await prisma.settlementEvent.findFirst({
+          where: { paymentId: payment.id, eventType: "refunded" }
+        });
+        if (existingRefund) return;
         await prisma.settlementEvent.create({
           data: {
             bookingId: payment.bookingId,
@@ -73,7 +105,7 @@ async function handleJob(job: Job): Promise<void> {
         where: { id: payload.bookingId },
         include: { client: true, service: true }
       });
-      if (!booking) return;
+      if (!booking || !["pending", "confirmed"].includes(booking.status)) return;
 
       await sendNotification(
         booking.clientId,
@@ -84,10 +116,22 @@ async function handleJob(job: Job): Promise<void> {
     }
 
     case "media_cleanup": {
-      if (config.storageDriver !== "noop") {
-        logger.info("[WORKER] media_cleanup: driver not noop, implement delete", { objectKey: payload.objectKey });
-      } else {
-        logger.info("[WORKER] media_cleanup: noop driver, skipping actual delete", { objectKey: payload.objectKey });
+      logger.info("[WORKER] media_cleanup: running", { objectKey: payload.objectKey });
+      await storageAdapter.delete(payload.objectKey);
+      break;
+    }
+
+    case "media_review_notify": {
+      const adminTokens = await prisma.pushToken.findMany({
+        where: { revokedAt: null, role: "platform_admin" }
+      });
+      const tokens = adminTokens.map((t) => t.token);
+      if (tokens.length > 0) {
+        await sendPushBatch(
+          tokens,
+          { title: "Nouvelle photo à vérifier", body: "Un fichier attend votre approbation." },
+          { type: "media_pending_review", mediaId: payload.mediaId ?? "", salonId: payload.salonId ?? "" }
+        );
       }
       break;
     }
@@ -110,6 +154,35 @@ async function handleJob(job: Job): Promise<void> {
           data: { subscriptionTier: "standard" }
         });
       }
+      if (expired.length > 0) {
+        logger.info("[WORKER] subscription_expiry_check: expired", { count: expired.length });
+      }
+      const nextMidnight = new Date();
+      nextMidnight.setUTCHours(24, 0, 0, 0);
+      await prisma.job.create({
+        data: { queue: "default", type: "subscription_expiry_check", payloadJson: "{}", runAfter: nextMidnight }
+      });
+      break;
+    }
+
+    case "platform_settings_cleanup": {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const deleted = await prisma.platformSetting.deleteMany({
+        where: {
+          OR: [
+            { key: { startsWith: "otp:challenge:" }, updatedAt: { lt: cutoff } },
+            { key: { startsWith: "otp:ratelimit:" }, updatedAt: { lt: cutoff } }
+          ]
+        }
+      });
+      if (deleted.count > 0) {
+        logger.info("[WORKER] platform_settings_cleanup: cleared ephemeral entries", { count: deleted.count });
+      }
+      const nextHour = new Date();
+      nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+      await prisma.job.create({
+        data: { queue: "default", type: "platform_settings_cleanup", payloadJson: "{}", runAfter: nextHour }
+      });
       break;
     }
 
@@ -150,7 +223,6 @@ async function handleJob(job: Job): Promise<void> {
       await prisma.$transaction(updates);
       logger.info("[WORKER] prestige_score_refresh: updated", { count: salons.length });
 
-      // Re-enqueue for next midnight UTC
       const nextMidnight = new Date();
       nextMidnight.setUTCHours(24, 0, 0, 0);
       await prisma.job.create({
@@ -165,18 +237,28 @@ async function handleJob(job: Job): Promise<void> {
 }
 
 async function pollJobs() {
+  const now = new Date();
   const jobs = await prisma.job.findMany({
-    where: { status: "pending", runAfter: { lte: new Date() } },
+    where: { status: "pending", runAfter: { lte: now } },
     take: config.workerBatchSize,
     orderBy: { createdAt: "asc" }
   });
 
   for (const job of jobs) {
-    await prisma.job.update({ where: { id: job.id }, data: { status: "running", lockedAt: new Date() } });
+    const claimed = await prisma.job.updateMany({
+      where: { id: job.id, status: "pending", runAfter: { lte: now } },
+      data: { status: "running", lockedAt: new Date() }
+    });
+    if (claimed.count === 0) {
+      continue;
+    }
 
     try {
       await handleJob(job);
-      await prisma.job.update({ where: { id: job.id }, data: { status: "completed" } });
+      await prisma.job.update({
+        where: { id: job.id },
+        data: { status: "completed", lockedAt: null }
+      });
     } catch (err) {
       const attempts = job.attempts + 1;
       await prisma.job.update({
@@ -185,7 +267,8 @@ async function pollJobs() {
           status: attempts >= 3 ? "failed" : "pending",
           attempts,
           lastError: String(err),
-          runAfter: new Date(Date.now() + attempts * 60_000)
+          runAfter: new Date(Date.now() + attempts * 60_000),
+          lockedAt: null
         }
       });
       logger.error("[WORKER] job failed", { jobId: job.id, jobType: job.type, err: String(err) });
@@ -207,9 +290,39 @@ async function ensureNightlyPrestigeJob() {
   }
 }
 
+async function ensureNightlyExpiryJob() {
+  const existing = await prisma.job.findFirst({
+    where: { type: "subscription_expiry_check", status: "pending" }
+  });
+  if (!existing) {
+    const nextMidnight = new Date();
+    nextMidnight.setUTCHours(24, 0, 0, 0);
+    await prisma.job.create({
+      data: { queue: "default", type: "subscription_expiry_check", payloadJson: "{}", runAfter: nextMidnight }
+    });
+    logger.info("[WORKER] Scheduled nightly subscription_expiry_check", { runAfter: nextMidnight });
+  }
+}
+
+async function ensureCleanupJob() {
+  const existing = await prisma.job.findFirst({
+    where: { type: "platform_settings_cleanup", status: "pending" }
+  });
+  if (!existing) {
+    const nextHour = new Date();
+    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+    await prisma.job.create({
+      data: { queue: "default", type: "platform_settings_cleanup", payloadJson: "{}", runAfter: nextHour }
+    });
+    logger.info("[WORKER] Scheduled platform_settings_cleanup", { runAfter: nextHour });
+  }
+}
+
 logger.info("Worker started", { pollIntervalMs: config.workerPollIntervalMs });
 
 void ensureNightlyPrestigeJob();
+void ensureNightlyExpiryJob();
+void ensureCleanupJob();
 
 setInterval(() => {
   void pollJobs();

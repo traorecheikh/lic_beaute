@@ -11,13 +11,10 @@ part 'pro_subscription_checkout_result.g.dart';
 /// ProSubscriptionCheckoutResult
 ///
 /// Properties:
-/// * [redirectUrl]
-/// * [chargeId]
+/// * [redirectUrl] 
+/// * [chargeId] 
 @BuiltValue()
-abstract class ProSubscriptionCheckoutResult
-    implements
-        Built<ProSubscriptionCheckoutResult,
-            ProSubscriptionCheckoutResultBuilder> {
+abstract class ProSubscriptionCheckoutResult implements Built<ProSubscriptionCheckoutResult, ProSubscriptionCheckoutResultBuilder> {
   @BuiltValueField(wireName: r'redirectUrl')
   String get redirectUrl;
 
@@ -26,25 +23,18 @@ abstract class ProSubscriptionCheckoutResult
 
   ProSubscriptionCheckoutResult._();
 
-  factory ProSubscriptionCheckoutResult(
-          [void updates(ProSubscriptionCheckoutResultBuilder b)]) =
-      _$ProSubscriptionCheckoutResult;
+  factory ProSubscriptionCheckoutResult([void updates(ProSubscriptionCheckoutResultBuilder b)]) = _$ProSubscriptionCheckoutResult;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSubscriptionCheckoutResultBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSubscriptionCheckoutResult> get serializer =>
-      _$ProSubscriptionCheckoutResultSerializer();
+  static Serializer<ProSubscriptionCheckoutResult> get serializer => _$ProSubscriptionCheckoutResultSerializer();
 }
 
-class _$ProSubscriptionCheckoutResultSerializer
-    implements PrimitiveSerializer<ProSubscriptionCheckoutResult> {
+class _$ProSubscriptionCheckoutResultSerializer implements PrimitiveSerializer<ProSubscriptionCheckoutResult> {
   @override
-  final Iterable<Type> types = const [
-    ProSubscriptionCheckoutResult,
-    _$ProSubscriptionCheckoutResult
-  ];
+  final Iterable<Type> types = const [ProSubscriptionCheckoutResult, _$ProSubscriptionCheckoutResult];
 
   @override
   final String wireName = r'ProSubscriptionCheckoutResult';
@@ -72,9 +62,7 @@ class _$ProSubscriptionCheckoutResultSerializer
     ProSubscriptionCheckoutResult object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -131,3 +119,4 @@ class _$ProSubscriptionCheckoutResultSerializer
     return result.build();
   }
 }
+

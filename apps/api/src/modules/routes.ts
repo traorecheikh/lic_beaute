@@ -6,6 +6,7 @@ import { AuthController } from "./auth.js";
 import { BookingController } from "./bookings.js";
 import { CatalogController } from "./catalog.js";
 import { ClientAccountController } from "./client-account.js";
+import { AdminMediaController } from "./admin-media.js";
 import { MediaController } from "./media.js";
 import { NotificationController } from "./notifications.js";
 import { PaymentController } from "./payments.js";
@@ -21,6 +22,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   const payments = new PaymentController();
   const notifications = new NotificationController();
   const media = new MediaController();
+  const adminMedia = new AdminMediaController();
 
   // ── Health ────────────────────────────────────────────────────────────────
   app.get("/health", async () => ({
@@ -51,6 +53,11 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/me/benefits", (req, rep) => clientAccounts.listBenefits(req, rep));
   app.get("/api/v1/me/vouchers", (req, rep) => clientAccounts.listVouchers(req, rep));
   app.post("/api/v1/me/vouchers/redeem", (req, rep) => clientAccounts.redeemVoucher(req, rep));
+  app.get("/api/v1/me/addresses", (req, rep) => clientAccounts.listAddresses(req, rep));
+  app.post("/api/v1/me/addresses", (req, rep) => clientAccounts.createAddress(req, rep));
+  app.patch("/api/v1/me/addresses/:addressId", (req, rep) => clientAccounts.updateAddress(req, rep));
+  app.delete("/api/v1/me/addresses/:addressId", (req, rep) => clientAccounts.deleteAddress(req, rep));
+  app.delete("/api/v1/me", (req, rep) => clientAccounts.deleteAccount(req, rep));
 
   // ── Catalog ───────────────────────────────────────────────────────────────
   app.get("/api/v1/salons", (req, rep) => catalog.list(req, rep));
@@ -76,6 +83,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/payments/deposits/initiate", (req, rep) => payments.initiate(req, rep));
   app.get("/api/v1/payments/:paymentId", (req, rep) => payments.status(req, rep));
   app.post("/api/v1/payments/:paymentId/reconcile", (req, rep) => payments.reconcile(req, rep));
+  app.post("/api/v1/payments/webhooks/intech", (req, rep) => payments.webhookIntech(req, rep));
   app.post("/api/v1/payments/webhooks/paytech", (req, rep) => payments.webhookPayTech(req, rep));
   app.post("/api/v1/payments/:paymentId/refund", (req, rep) => payments.refund(req, rep));
 
@@ -127,9 +135,17 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.delete("/api/v1/push-tokens/:tokenId", (req, rep) => notifications.revokePushToken(req, rep));
 
   // ── Media ─────────────────────────────────────────────────────────────────
-  app.post("/api/v1/media/upload", (req, rep) => media.upload(req, rep));
+  app.post("/api/v1/media/upload-intent", (req, rep) => media.uploadIntent(req, rep));
+  app.post("/api/v1/media/:mediaId/complete", (req, rep) => media.completeUpload(req, rep));
   app.get("/api/v1/media/:mediaId", (req, rep) => media.get(req, rep));
   app.delete("/api/v1/media/:mediaId", (req, rep) => media.delete(req, rep));
+  app.get("/api/v1/salons/:salonId/public-media", (req, rep) => media.getPublicMedia(req, rep));
+
+  // ── Admin Media ───────────────────────────────────────────────────────────
+  app.get("/api/v1/admin/media/pending", (req, rep) => adminMedia.listPending(req, rep));
+  app.post("/api/v1/admin/media/:mediaId/signed-view-url", (req, rep) => adminMedia.signedViewUrl(req, rep));
+  app.post("/api/v1/admin/media/:mediaId/approve", (req, rep) => adminMedia.approve(req, rep));
+  app.post("/api/v1/admin/media/:mediaId/reject", (req, rep) => adminMedia.reject(req, rep));
 
   // ── Admin ─────────────────────────────────────────────────────────────────
   app.get("/api/v1/admin/dashboard", (req, rep) => admin.dashboard(req, rep));

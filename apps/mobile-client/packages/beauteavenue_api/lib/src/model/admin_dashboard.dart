@@ -16,13 +16,12 @@ part 'admin_dashboard.g.dart';
 /// AdminDashboard
 ///
 /// Properties:
-/// * [kpis]
-/// * [topGrowthSalons]
-/// * [inactivityAlerts]
-/// * [quickLinks]
+/// * [kpis] 
+/// * [topGrowthSalons] 
+/// * [inactivityAlerts] 
+/// * [quickLinks] 
 @BuiltValue()
-abstract class AdminDashboard
-    implements Built<AdminDashboard, AdminDashboardBuilder> {
+abstract class AdminDashboard implements Built<AdminDashboard, AdminDashboardBuilder> {
   @BuiltValueField(wireName: r'kpis')
   BuiltList<AdminDashboardKpisInner> get kpis;
 
@@ -37,19 +36,16 @@ abstract class AdminDashboard
 
   AdminDashboard._();
 
-  factory AdminDashboard([void updates(AdminDashboardBuilder b)]) =
-      _$AdminDashboard;
+  factory AdminDashboard([void updates(AdminDashboardBuilder b)]) = _$AdminDashboard;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminDashboardBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminDashboard> get serializer =>
-      _$AdminDashboardSerializer();
+  static Serializer<AdminDashboard> get serializer => _$AdminDashboardSerializer();
 }
 
-class _$AdminDashboardSerializer
-    implements PrimitiveSerializer<AdminDashboard> {
+class _$AdminDashboardSerializer implements PrimitiveSerializer<AdminDashboard> {
   @override
   final Iterable<Type> types = const [AdminDashboard, _$AdminDashboard];
 
@@ -64,20 +60,17 @@ class _$AdminDashboardSerializer
     yield r'kpis';
     yield serializers.serialize(
       object.kpis,
-      specifiedType:
-          const FullType(BuiltList, [FullType(AdminDashboardKpisInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(AdminDashboardKpisInner)]),
     );
     yield r'topGrowthSalons';
     yield serializers.serialize(
       object.topGrowthSalons,
-      specifiedType: const FullType(
-          BuiltList, [FullType(AdminDashboardTopGrowthSalonsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(AdminDashboardTopGrowthSalonsInner)]),
     );
     yield r'inactivityAlerts';
     yield serializers.serialize(
       object.inactivityAlerts,
-      specifiedType: const FullType(
-          BuiltList, [FullType(AdminDashboardInactivityAlertsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(AdminDashboardInactivityAlertsInner)]),
     );
     yield r'quickLinks';
     yield serializers.serialize(
@@ -92,9 +85,7 @@ class _$AdminDashboardSerializer
     AdminDashboard object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -112,24 +103,21 @@ class _$AdminDashboardSerializer
         case r'kpis':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(AdminDashboardKpisInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(AdminDashboardKpisInner)]),
           ) as BuiltList<AdminDashboardKpisInner>;
           result.kpis.replace(valueDes);
           break;
         case r'topGrowthSalons':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(AdminDashboardTopGrowthSalonsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(AdminDashboardTopGrowthSalonsInner)]),
           ) as BuiltList<AdminDashboardTopGrowthSalonsInner>;
           result.topGrowthSalons.replace(valueDes);
           break;
         case r'inactivityAlerts':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(AdminDashboardInactivityAlertsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(AdminDashboardInactivityAlertsInner)]),
           ) as BuiltList<AdminDashboardInactivityAlertsInner>;
           result.inactivityAlerts.replace(valueDes);
           break;
@@ -168,3 +156,4 @@ class _$AdminDashboardSerializer
     return result.build();
   }
 }
+

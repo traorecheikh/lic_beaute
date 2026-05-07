@@ -13,16 +13,14 @@ part 'pro_checkout_complete_input.g.dart';
 /// ProCheckoutCompleteInput
 ///
 /// Properties:
-/// * [paymentMethod]
-/// * [lineItems]
-/// * [discountXof]
+/// * [paymentMethod] 
+/// * [lineItems] 
+/// * [discountXof] 
 @BuiltValue()
-abstract class ProCheckoutCompleteInput
-    implements
-        Built<ProCheckoutCompleteInput, ProCheckoutCompleteInputBuilder> {
+abstract class ProCheckoutCompleteInput implements Built<ProCheckoutCompleteInput, ProCheckoutCompleteInputBuilder> {
   @BuiltValueField(wireName: r'paymentMethod')
   ProCheckoutCompleteInputPaymentMethodEnum get paymentMethod;
-  // enum paymentMethodEnum {  cash,  wave,  orange_money,  other,  };
+  // enum paymentMethodEnum {  cash,  intech,  other,  };
 
   @BuiltValueField(wireName: r'lineItems')
   BuiltList<ProCheckoutDetailsLineItemsInner> get lineItems;
@@ -32,26 +30,19 @@ abstract class ProCheckoutCompleteInput
 
   ProCheckoutCompleteInput._();
 
-  factory ProCheckoutCompleteInput(
-          [void updates(ProCheckoutCompleteInputBuilder b)]) =
-      _$ProCheckoutCompleteInput;
+  factory ProCheckoutCompleteInput([void updates(ProCheckoutCompleteInputBuilder b)]) = _$ProCheckoutCompleteInput;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(ProCheckoutCompleteInputBuilder b) =>
-      b..discountXof = 0;
+  static void _defaults(ProCheckoutCompleteInputBuilder b) => b
+      ..discountXof = 0;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProCheckoutCompleteInput> get serializer =>
-      _$ProCheckoutCompleteInputSerializer();
+  static Serializer<ProCheckoutCompleteInput> get serializer => _$ProCheckoutCompleteInputSerializer();
 }
 
-class _$ProCheckoutCompleteInputSerializer
-    implements PrimitiveSerializer<ProCheckoutCompleteInput> {
+class _$ProCheckoutCompleteInputSerializer implements PrimitiveSerializer<ProCheckoutCompleteInput> {
   @override
-  final Iterable<Type> types = const [
-    ProCheckoutCompleteInput,
-    _$ProCheckoutCompleteInput
-  ];
+  final Iterable<Type> types = const [ProCheckoutCompleteInput, _$ProCheckoutCompleteInput];
 
   @override
   final String wireName = r'ProCheckoutCompleteInput';
@@ -69,8 +60,7 @@ class _$ProCheckoutCompleteInputSerializer
     yield r'lineItems';
     yield serializers.serialize(
       object.lineItems,
-      specifiedType: const FullType(
-          BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
     );
     if (object.discountXof != null) {
       yield r'discountXof';
@@ -87,9 +77,7 @@ class _$ProCheckoutCompleteInputSerializer
     ProCheckoutCompleteInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -107,16 +95,14 @@ class _$ProCheckoutCompleteInputSerializer
         case r'paymentMethod':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(ProCheckoutCompleteInputPaymentMethodEnum),
+            specifiedType: const FullType(ProCheckoutCompleteInputPaymentMethodEnum),
           ) as ProCheckoutCompleteInputPaymentMethodEnum;
           result.paymentMethod = valueDes;
           break;
         case r'lineItems':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
           ) as BuiltList<ProCheckoutDetailsLineItemsInner>;
           result.lineItems.replace(valueDes);
           break;
@@ -157,26 +143,19 @@ class _$ProCheckoutCompleteInputSerializer
 }
 
 class ProCheckoutCompleteInputPaymentMethodEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'cash')
-  static const ProCheckoutCompleteInputPaymentMethodEnum cash =
-      _$proCheckoutCompleteInputPaymentMethodEnum_cash;
-  @BuiltValueEnumConst(wireName: r'wave')
-  static const ProCheckoutCompleteInputPaymentMethodEnum wave =
-      _$proCheckoutCompleteInputPaymentMethodEnum_wave;
-  @BuiltValueEnumConst(wireName: r'orange_money')
-  static const ProCheckoutCompleteInputPaymentMethodEnum orangeMoney =
-      _$proCheckoutCompleteInputPaymentMethodEnum_orangeMoney;
+  static const ProCheckoutCompleteInputPaymentMethodEnum cash = _$proCheckoutCompleteInputPaymentMethodEnum_cash;
+  @BuiltValueEnumConst(wireName: r'intech')
+  static const ProCheckoutCompleteInputPaymentMethodEnum intech = _$proCheckoutCompleteInputPaymentMethodEnum_intech;
   @BuiltValueEnumConst(wireName: r'other')
-  static const ProCheckoutCompleteInputPaymentMethodEnum other =
-      _$proCheckoutCompleteInputPaymentMethodEnum_other;
+  static const ProCheckoutCompleteInputPaymentMethodEnum other = _$proCheckoutCompleteInputPaymentMethodEnum_other;
 
-  static Serializer<ProCheckoutCompleteInputPaymentMethodEnum> get serializer =>
-      _$proCheckoutCompleteInputPaymentMethodEnumSerializer;
+  static Serializer<ProCheckoutCompleteInputPaymentMethodEnum> get serializer => _$proCheckoutCompleteInputPaymentMethodEnumSerializer;
 
-  const ProCheckoutCompleteInputPaymentMethodEnum._(String name) : super(name);
+  const ProCheckoutCompleteInputPaymentMethodEnum._(String name): super(name);
 
-  static BuiltSet<ProCheckoutCompleteInputPaymentMethodEnum> get values =>
-      _$proCheckoutCompleteInputPaymentMethodEnumValues;
-  static ProCheckoutCompleteInputPaymentMethodEnum valueOf(String name) =>
-      _$proCheckoutCompleteInputPaymentMethodEnumValueOf(name);
+  static BuiltSet<ProCheckoutCompleteInputPaymentMethodEnum> get values => _$proCheckoutCompleteInputPaymentMethodEnumValues;
+  static ProCheckoutCompleteInputPaymentMethodEnum valueOf(String name) => _$proCheckoutCompleteInputPaymentMethodEnumValueOf(name);
 }
+

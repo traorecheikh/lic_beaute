@@ -12,21 +12,18 @@ part 'admin_salon_queue_response_items_inner.g.dart';
 /// AdminSalonQueueResponseItemsInner
 ///
 /// Properties:
-/// * [id]
-/// * [salonName]
-/// * [category]
-/// * [city]
-/// * [ownerName]
-/// * [submittedAt]
-/// * [approvalStatus]
-/// * [subscriptionIntentTier]
-/// * [missingEvidence]
-/// * [latestAdminNote]
+/// * [id] 
+/// * [salonName] 
+/// * [category] 
+/// * [city] 
+/// * [ownerName] 
+/// * [submittedAt] 
+/// * [approvalStatus] 
+/// * [subscriptionIntentTier] 
+/// * [missingEvidence] 
+/// * [latestAdminNote] 
 @BuiltValue()
-abstract class AdminSalonQueueResponseItemsInner
-    implements
-        Built<AdminSalonQueueResponseItemsInner,
-            AdminSalonQueueResponseItemsInnerBuilder> {
+abstract class AdminSalonQueueResponseItemsInner implements Built<AdminSalonQueueResponseItemsInner, AdminSalonQueueResponseItemsInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -50,8 +47,7 @@ abstract class AdminSalonQueueResponseItemsInner
   // enum approvalStatusEnum {  pending_review,  needs_info,  approved,  rejected,  };
 
   @BuiltValueField(wireName: r'subscriptionIntentTier')
-  AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum
-      get subscriptionIntentTier;
+  AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum get subscriptionIntentTier;
   // enum subscriptionIntentTierEnum {  standard,  premium,  };
 
   @BuiltValueField(wireName: r'missingEvidence')
@@ -62,25 +58,18 @@ abstract class AdminSalonQueueResponseItemsInner
 
   AdminSalonQueueResponseItemsInner._();
 
-  factory AdminSalonQueueResponseItemsInner(
-          [void updates(AdminSalonQueueResponseItemsInnerBuilder b)]) =
-      _$AdminSalonQueueResponseItemsInner;
+  factory AdminSalonQueueResponseItemsInner([void updates(AdminSalonQueueResponseItemsInnerBuilder b)]) = _$AdminSalonQueueResponseItemsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonQueueResponseItemsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonQueueResponseItemsInner> get serializer =>
-      _$AdminSalonQueueResponseItemsInnerSerializer();
+  static Serializer<AdminSalonQueueResponseItemsInner> get serializer => _$AdminSalonQueueResponseItemsInnerSerializer();
 }
 
-class _$AdminSalonQueueResponseItemsInnerSerializer
-    implements PrimitiveSerializer<AdminSalonQueueResponseItemsInner> {
+class _$AdminSalonQueueResponseItemsInnerSerializer implements PrimitiveSerializer<AdminSalonQueueResponseItemsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonQueueResponseItemsInner,
-    _$AdminSalonQueueResponseItemsInner
-  ];
+  final Iterable<Type> types = const [AdminSalonQueueResponseItemsInner, _$AdminSalonQueueResponseItemsInner];
 
   @override
   final String wireName = r'AdminSalonQueueResponseItemsInner';
@@ -123,14 +112,12 @@ class _$AdminSalonQueueResponseItemsInnerSerializer
     yield r'approvalStatus';
     yield serializers.serialize(
       object.approvalStatus,
-      specifiedType:
-          const FullType(AdminSalonQueueResponseItemsInnerApprovalStatusEnum),
+      specifiedType: const FullType(AdminSalonQueueResponseItemsInnerApprovalStatusEnum),
     );
     yield r'subscriptionIntentTier';
     yield serializers.serialize(
       object.subscriptionIntentTier,
-      specifiedType: const FullType(
-          AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum),
+      specifiedType: const FullType(AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum),
     );
     yield r'missingEvidence';
     yield serializers.serialize(
@@ -138,12 +125,10 @@ class _$AdminSalonQueueResponseItemsInnerSerializer
       specifiedType: const FullType(BuiltList, [FullType(String)]),
     );
     yield r'latestAdminNote';
-    yield object.latestAdminNote == null
-        ? null
-        : serializers.serialize(
-            object.latestAdminNote,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.latestAdminNote == null ? null : serializers.serialize(
+      object.latestAdminNote,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -152,9 +137,7 @@ class _$AdminSalonQueueResponseItemsInnerSerializer
     AdminSalonQueueResponseItemsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -214,16 +197,14 @@ class _$AdminSalonQueueResponseItemsInnerSerializer
         case r'approvalStatus':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                AdminSalonQueueResponseItemsInnerApprovalStatusEnum),
+            specifiedType: const FullType(AdminSalonQueueResponseItemsInnerApprovalStatusEnum),
           ) as AdminSalonQueueResponseItemsInnerApprovalStatusEnum;
           result.approvalStatus = valueDes;
           break;
         case r'subscriptionIntentTier':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum),
+            specifiedType: const FullType(AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum),
           ) as AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum;
           result.subscriptionIntentTier = valueDes;
           break;
@@ -272,58 +253,36 @@ class _$AdminSalonQueueResponseItemsInnerSerializer
 }
 
 class AdminSalonQueueResponseItemsInnerApprovalStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending_review')
-  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum
-      pendingReview =
-      _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_pendingReview;
+  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum pendingReview = _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_pendingReview;
   @BuiltValueEnumConst(wireName: r'needs_info')
-  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum needsInfo =
-      _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_needsInfo;
+  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum needsInfo = _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_needsInfo;
   @BuiltValueEnumConst(wireName: r'approved')
-  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum approved =
-      _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_approved;
+  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum approved = _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_approved;
   @BuiltValueEnumConst(wireName: r'rejected')
-  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum rejected =
-      _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_rejected;
+  static const AdminSalonQueueResponseItemsInnerApprovalStatusEnum rejected = _$adminSalonQueueResponseItemsInnerApprovalStatusEnum_rejected;
 
-  static Serializer<AdminSalonQueueResponseItemsInnerApprovalStatusEnum>
-      get serializer =>
-          _$adminSalonQueueResponseItemsInnerApprovalStatusEnumSerializer;
+  static Serializer<AdminSalonQueueResponseItemsInnerApprovalStatusEnum> get serializer => _$adminSalonQueueResponseItemsInnerApprovalStatusEnumSerializer;
 
-  const AdminSalonQueueResponseItemsInnerApprovalStatusEnum._(String name)
-      : super(name);
+  const AdminSalonQueueResponseItemsInnerApprovalStatusEnum._(String name): super(name);
 
-  static BuiltSet<AdminSalonQueueResponseItemsInnerApprovalStatusEnum>
-      get values => _$adminSalonQueueResponseItemsInnerApprovalStatusEnumValues;
-  static AdminSalonQueueResponseItemsInnerApprovalStatusEnum valueOf(
-          String name) =>
-      _$adminSalonQueueResponseItemsInnerApprovalStatusEnumValueOf(name);
+  static BuiltSet<AdminSalonQueueResponseItemsInnerApprovalStatusEnum> get values => _$adminSalonQueueResponseItemsInnerApprovalStatusEnumValues;
+  static AdminSalonQueueResponseItemsInnerApprovalStatusEnum valueOf(String name) => _$adminSalonQueueResponseItemsInnerApprovalStatusEnumValueOf(name);
 }
 
-class AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum
-    extends EnumClass {
+class AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'standard')
-  static const AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum
-      standard =
-      _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum_standard;
+  static const AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum standard = _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum_standard;
   @BuiltValueEnumConst(wireName: r'premium')
-  static const AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum
-      premium =
-      _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum_premium;
+  static const AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum premium = _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum_premium;
 
-  static Serializer<AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum>
-      get serializer =>
-          _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnumSerializer;
+  static Serializer<AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum> get serializer => _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnumSerializer;
 
-  const AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum._(
-      String name)
-      : super(name);
+  const AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum._(String name): super(name);
 
-  static BuiltSet<AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum>
-      get values =>
-          _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnumValues;
-  static AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum valueOf(
-          String name) =>
-      _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnumValueOf(
-          name);
+  static BuiltSet<AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum> get values => _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnumValues;
+  static AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum valueOf(String name) => _$adminSalonQueueResponseItemsInnerSubscriptionIntentTierEnumValueOf(name);
 }
+

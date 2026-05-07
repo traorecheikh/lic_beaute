@@ -16,3 +16,4 @@ export const reviewSchema = z.object({
 
 export type ReviewCreateInput = z.infer<typeof reviewCreateInputSchema>;
 export type Review = z.infer<typeof reviewSchema>;
+export type ReviewBody = Review;

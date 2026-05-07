@@ -28,7 +28,7 @@ import '../features/profile/pages/notification_preferences_page.dart';
 import '../features/profile/pages/profile_page.dart';
 import '../features/profile/pages/edit_profile_page.dart';
 import '../features/profile/pages/payment_methods_page.dart';
-import '../features/profile/pages/vouchers_page.dart';
+// Promos hidden — import '../features/profile/pages/vouchers_page.dart';
 import '../features/profile/pages/memberships_page.dart';
 import '../features/profile/pages/support_page.dart';
 import '../features/profile/pages/legal_page.dart';
@@ -68,7 +68,7 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const profileEdit = '/profile/edit';
   static const profilePayments = '/profile/payment-methods';
-  static const profileVouchers = '/profile/vouchers';
+  // Promos hidden — static const profileVouchers = '/profile/vouchers';
   static const profileMemberships = '/profile/memberships';
   static const profileSupport = '/profile/support';
   static const profileLegal = '/profile/legal';
@@ -121,30 +121,33 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAllowedWithoutAuth = _routesAllowedWithoutAuth.contains(location);
 
       if (!session.isAuthenticated && !isAllowedWithoutAuth) {
-        return AppRoutes.auth;
+        final current = Uri.encodeComponent(state.uri.toString());
+        return '${AppRoutes.auth}?redirectTo=$current';
       }
       if (session.isAuthenticated && _authEntryRoutes.contains(location)) {
+        final redirect = state.uri.queryParameters['redirectTo'];
+        if (redirect != null && redirect.isNotEmpty) return redirect;
         return AppRoutes.home;
       }
       return null;
     },
     routes: [
       // ── Pre-auth ──────────────────────────────────────────────────────────
-      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashPage()),
+      GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
       GoRoute(
         path: AppRoutes.auth,
-        builder: (_, __) => const AuthChoicePage(),
+        builder: (_, _) => const AuthChoicePage(),
         routes: [
           GoRoute(
             path: 'email-login',
-            builder: (_, __) => const EmailLoginPage(),
+            builder: (_, _) => const EmailLoginPage(),
           ),
-          GoRoute(path: 'otp', builder: (_, __) => const OtpLoginPage()),
+          GoRoute(path: 'otp', builder: (_, _) => const OtpLoginPage()),
         ],
       ),
       GoRoute(
         path: AppRoutes.profileBootstrap,
-        builder: (_, __) => const ProfileBootstrapPage(),
+        builder: (_, _) => const ProfileBootstrapPage(),
       ),
 
       // ── Main shell (bottom nav) ───────────────────────────────────────────
@@ -153,18 +156,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: AppRoutes.home,
-            builder: (_, __) => const HomePage(),
+            builder: (_, _) => const HomePage(),
             routes: [
-              GoRoute(path: 'search', builder: (_, __) => const SearchPage()),
+              GoRoute(path: 'search', builder: (_, _) => const SearchPage()),
               GoRoute(
                 path: 'favorites',
-                builder: (_, __) => const FavoritesPage(),
+                builder: (_, _) => const FavoritesPage(),
               ),
             ],
           ),
           GoRoute(
             path: AppRoutes.bookingsList,
-            builder: (_, __) => const BookingsListPage(),
+            builder: (_, _) => const BookingsListPage(),
             routes: [
               GoRoute(
                 path: ':bookingId',
@@ -185,32 +188,33 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.profile,
-            builder: (_, __) => const ProfilePage(),
+            builder: (_, _) => const ProfilePage(),
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (_, __) => const EditProfilePage(),
+                builder: (_, _) => const EditProfilePage(),
               ),
               GoRoute(
                 path: 'notification-preferences',
-                builder: (_, __) => const NotificationPreferencesPage(),
+                builder: (_, _) => const NotificationPreferencesPage(),
               ),
               GoRoute(
                 path: 'payment-methods',
-                builder: (_, __) => const PaymentMethodsPage(),
+                builder: (_, _) => const PaymentMethodsPage(),
               ),
-              GoRoute(
-                path: 'vouchers',
-                builder: (_, __) => const VouchersPage(),
-              ),
+              // Promos hidden —
+              // GoRoute(
+              //   path: 'vouchers',
+              //   builder: (_, __) => const VouchersPage(),
+              // ),
               GoRoute(
                 path: 'memberships',
-                builder: (_, __) => const MembershipsPage(),
+                builder: (_, _) => const MembershipsPage(),
               ),
-              GoRoute(path: 'support', builder: (_, __) => const SupportPage()),
-              GoRoute(path: 'legal', builder: (_, __) => const LegalPage()),
-              GoRoute(path: 'about', builder: (_, __) => const AboutPage()),
-              GoRoute(path: 'faq', builder: (_, __) => const FaqPage()),
+              GoRoute(path: 'support', builder: (_, _) => const SupportPage()),
+              GoRoute(path: 'legal', builder: (_, _) => const LegalPage()),
+              GoRoute(path: 'about', builder: (_, _) => const AboutPage()),
+              GoRoute(path: 'faq', builder: (_, _) => const FaqPage()),
             ],
           ),
         ],
@@ -219,27 +223,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Salon list pages ──────────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.salonsNearby,
-        builder: (_, __) =>
+        builder: (_, _) =>
             const SalonsListPage(filter: SalonListFilter.nearby),
       ),
       GoRoute(
         path: AppRoutes.salonsPrestige,
-        builder: (_, __) =>
+        builder: (_, _) =>
             const SalonsListPage(filter: SalonListFilter.prestige),
       ),
       GoRoute(
         path: AppRoutes.salonsTopRated,
-        builder: (_, __) =>
+        builder: (_, _) =>
             const SalonsListPage(filter: SalonListFilter.topRated),
       ),
       GoRoute(
         path: AppRoutes.salonsTrending,
-        builder: (_, __) =>
+        builder: (_, _) =>
             const SalonsListPage(filter: SalonListFilter.trending),
       ),
       GoRoute(
         path: AppRoutes.locationPermission,
-        builder: (_, __) => const LocationPermissionPage(),
+        builder: (_, _) => const LocationPermissionPage(),
       ),
 
       // ── Salon detail (outside shell so it can be reached from booking funnel)
@@ -260,6 +264,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.bookingStaff,
         builder: (_, state) => StaffSelectionPage(
           salonId: state.uri.queryParameters['salonId'] ?? '',
+          serviceId: state.uri.queryParameters['serviceId'],
         ),
       ),
       GoRoute(
@@ -268,11 +273,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           serviceId: state.uri.queryParameters['serviceId'] ?? '',
           salonId: state.uri.queryParameters['salonId'] ?? '',
           employeeId: state.uri.queryParameters['employeeId'],
+          rescheduleBookingId: state.uri.queryParameters['rescheduleBookingId'],
         ),
       ),
       GoRoute(
         path: AppRoutes.bookingReview,
-        builder: (_, __) => const BookingReviewPage(),
+        builder: (_, _) => const BookingReviewPage(),
       ),
       GoRoute(
         path: '/booking/payment-handoff/:bookingId',
@@ -288,7 +294,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Notifications (reachable from any tab) ────────────────────────────
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (_, __) => const NotificationsPage(),
+        builder: (_, _) => const NotificationsPage(),
       ),
 
       // ── Post-visit review ─────────────────────────────────────────────────
@@ -305,7 +311,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 class _SessionListenable extends ChangeNotifier {
   _SessionListenable(this._ref) {
-    _ref.listen<SessionState>(sessionProvider, (_, __) => notifyListeners());
+    _ref.listen<SessionState>(sessionProvider, (_, _) => notifyListeners());
   }
   final Ref _ref;
 }

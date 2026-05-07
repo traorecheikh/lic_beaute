@@ -9,15 +9,18 @@ export class MockPaymentAdapter implements PaymentAdapter {
     description: string;
     callbackUrl: string;
     idempotencyKey: string;
+    channel?: "wave" | "orange_money" | "free_money";
+    phone?: string;
   }) {
     return {
       redirectUrl: `mock://pay/${params.paymentId}?amount=${params.amountXof}`,
       providerRef: `mock-${params.paymentId}`,
+      providerToken: `mock-${params.paymentId}`,
       expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     };
   }
 
-  verifyWebhookSignature(_rawBody: string, _signature: string): boolean {
+  verifyWebhookSignature(_params: { rawBody: string; signature?: string; timestamp?: string }): boolean {
     return true;
   }
 

@@ -146,7 +146,7 @@ class PaymentMethodRecord {
   }) {
     return PaymentMethodRecord(
       id: json['id'] as String,
-      provider: json['provider'] as String? ?? 'wave',
+      provider: json['provider'] as String? ?? 'intech',
       phoneNumber: json['phoneNumber'] as String? ?? '',
       label: json['label'] as String?,
       isDefault: json['isDefault'] as bool? ?? false,

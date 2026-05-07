@@ -7,7 +7,6 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
@@ -22,7 +21,7 @@ class OtpLoginPage extends ConsumerStatefulWidget {
 
 class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
   final _phoneController = TextEditingController(text: '77 000 00 00');
-  final _otpController = TextEditingController(text: '123456');
+  final _otpController = TextEditingController();
   bool _codeSent = false;
   bool _submitting = false;
 
@@ -149,6 +148,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             .read(authActionsProvider)
             .verifyOtp(phone: phone, code: code);
         if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         await navigateAfterAuth(context, ref);
         },
 

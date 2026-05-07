@@ -1,5 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
 
 class AppProfileAvatar extends StatelessWidget {
@@ -16,16 +16,13 @@ class AppProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasUrl = url != null && url!.isNotEmpty;
     return CircleAvatar(
       radius: radius,
       backgroundColor: AppColors.primaryLight,
-      backgroundImage: url != null ? NetworkImage(url!) : null,
-      child: url == null
-          ? Icon(
-              Icons.person_outline,
-              size: iconSize,
-              color: AppColors.primary,
-            )
+      backgroundImage: hasUrl ? CachedNetworkImageProvider(url!) : null,
+      child: !hasUrl
+          ? Icon(Icons.person_outline, size: iconSize, color: AppColors.primary)
           : null,
     );
   }

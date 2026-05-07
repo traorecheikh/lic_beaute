@@ -13,19 +13,18 @@ part 'admin_audit_detail.g.dart';
 /// AdminAuditDetail
 ///
 /// Properties:
-/// * [id]
-/// * [action]
-/// * [summary]
-/// * [entityType]
-/// * [entityId]
-/// * [actorName]
-/// * [createdAt]
-/// * [severity]
-/// * [payloadJson]
-/// * [relatedLinks]
+/// * [id] 
+/// * [action] 
+/// * [summary] 
+/// * [entityType] 
+/// * [entityId] 
+/// * [actorName] 
+/// * [createdAt] 
+/// * [severity] 
+/// * [payloadJson] 
+/// * [relatedLinks] 
 @BuiltValue()
-abstract class AdminAuditDetail
-    implements Built<AdminAuditDetail, AdminAuditDetailBuilder> {
+abstract class AdminAuditDetail implements Built<AdminAuditDetail, AdminAuditDetailBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -59,19 +58,16 @@ abstract class AdminAuditDetail
 
   AdminAuditDetail._();
 
-  factory AdminAuditDetail([void updates(AdminAuditDetailBuilder b)]) =
-      _$AdminAuditDetail;
+  factory AdminAuditDetail([void updates(AdminAuditDetailBuilder b)]) = _$AdminAuditDetail;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminAuditDetailBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminAuditDetail> get serializer =>
-      _$AdminAuditDetailSerializer();
+  static Serializer<AdminAuditDetail> get serializer => _$AdminAuditDetailSerializer();
 }
 
-class _$AdminAuditDetailSerializer
-    implements PrimitiveSerializer<AdminAuditDetail> {
+class _$AdminAuditDetailSerializer implements PrimitiveSerializer<AdminAuditDetail> {
   @override
   final Iterable<Type> types = const [AdminAuditDetail, _$AdminAuditDetail];
 
@@ -131,8 +127,7 @@ class _$AdminAuditDetailSerializer
     yield r'relatedLinks';
     yield serializers.serialize(
       object.relatedLinks,
-      specifiedType: const FullType(
-          BuiltList, [FullType(AdminAuditDetailRelatedLinksInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(AdminAuditDetailRelatedLinksInner)]),
     );
   }
 
@@ -142,9 +137,7 @@ class _$AdminAuditDetailSerializer
     AdminAuditDetail object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -225,8 +218,7 @@ class _$AdminAuditDetailSerializer
         case r'relatedLinks':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(AdminAuditDetailRelatedLinksInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(AdminAuditDetailRelatedLinksInner)]),
           ) as BuiltList<AdminAuditDetailRelatedLinksInner>;
           result.relatedLinks.replace(valueDes);
           break;
@@ -260,23 +252,19 @@ class _$AdminAuditDetailSerializer
 }
 
 class AdminAuditDetailSeverityEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'info')
-  static const AdminAuditDetailSeverityEnum info =
-      _$adminAuditDetailSeverityEnum_info;
+  static const AdminAuditDetailSeverityEnum info = _$adminAuditDetailSeverityEnum_info;
   @BuiltValueEnumConst(wireName: r'warning')
-  static const AdminAuditDetailSeverityEnum warning =
-      _$adminAuditDetailSeverityEnum_warning;
+  static const AdminAuditDetailSeverityEnum warning = _$adminAuditDetailSeverityEnum_warning;
   @BuiltValueEnumConst(wireName: r'critical')
-  static const AdminAuditDetailSeverityEnum critical =
-      _$adminAuditDetailSeverityEnum_critical;
+  static const AdminAuditDetailSeverityEnum critical = _$adminAuditDetailSeverityEnum_critical;
 
-  static Serializer<AdminAuditDetailSeverityEnum> get serializer =>
-      _$adminAuditDetailSeverityEnumSerializer;
+  static Serializer<AdminAuditDetailSeverityEnum> get serializer => _$adminAuditDetailSeverityEnumSerializer;
 
-  const AdminAuditDetailSeverityEnum._(String name) : super(name);
+  const AdminAuditDetailSeverityEnum._(String name): super(name);
 
-  static BuiltSet<AdminAuditDetailSeverityEnum> get values =>
-      _$adminAuditDetailSeverityEnumValues;
-  static AdminAuditDetailSeverityEnum valueOf(String name) =>
-      _$adminAuditDetailSeverityEnumValueOf(name);
+  static BuiltSet<AdminAuditDetailSeverityEnum> get values => _$adminAuditDetailSeverityEnumValues;
+  static AdminAuditDetailSeverityEnum valueOf(String name) => _$adminAuditDetailSeverityEnumValueOf(name);
 }
+

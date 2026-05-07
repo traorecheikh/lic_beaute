@@ -12,14 +12,13 @@ part 'pro_manual_booking_created.g.dart';
 /// ProManualBookingCreated
 ///
 /// Properties:
-/// * [id]
-/// * [startsAt]
-/// * [endsAt]
-/// * [status]
-/// * [source_]
+/// * [id] 
+/// * [startsAt] 
+/// * [endsAt] 
+/// * [status] 
+/// * [source_] 
 @BuiltValue()
-abstract class ProManualBookingCreated
-    implements Built<ProManualBookingCreated, ProManualBookingCreatedBuilder> {
+abstract class ProManualBookingCreated implements Built<ProManualBookingCreated, ProManualBookingCreatedBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -38,25 +37,18 @@ abstract class ProManualBookingCreated
 
   ProManualBookingCreated._();
 
-  factory ProManualBookingCreated(
-          [void updates(ProManualBookingCreatedBuilder b)]) =
-      _$ProManualBookingCreated;
+  factory ProManualBookingCreated([void updates(ProManualBookingCreatedBuilder b)]) = _$ProManualBookingCreated;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProManualBookingCreatedBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProManualBookingCreated> get serializer =>
-      _$ProManualBookingCreatedSerializer();
+  static Serializer<ProManualBookingCreated> get serializer => _$ProManualBookingCreatedSerializer();
 }
 
-class _$ProManualBookingCreatedSerializer
-    implements PrimitiveSerializer<ProManualBookingCreated> {
+class _$ProManualBookingCreatedSerializer implements PrimitiveSerializer<ProManualBookingCreated> {
   @override
-  final Iterable<Type> types = const [
-    ProManualBookingCreated,
-    _$ProManualBookingCreated
-  ];
+  final Iterable<Type> types = const [ProManualBookingCreated, _$ProManualBookingCreated];
 
   @override
   final String wireName = r'ProManualBookingCreated';
@@ -99,9 +91,7 @@ class _$ProManualBookingCreatedSerializer
     ProManualBookingCreated object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -181,29 +171,23 @@ class _$ProManualBookingCreatedSerializer
 }
 
 class ProManualBookingCreatedStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const ProManualBookingCreatedStatusEnum pending =
-      _$proManualBookingCreatedStatusEnum_pending;
+  static const ProManualBookingCreatedStatusEnum pending = _$proManualBookingCreatedStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const ProManualBookingCreatedStatusEnum confirmed =
-      _$proManualBookingCreatedStatusEnum_confirmed;
+  static const ProManualBookingCreatedStatusEnum confirmed = _$proManualBookingCreatedStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const ProManualBookingCreatedStatusEnum inProgress =
-      _$proManualBookingCreatedStatusEnum_inProgress;
+  static const ProManualBookingCreatedStatusEnum inProgress = _$proManualBookingCreatedStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const ProManualBookingCreatedStatusEnum completed =
-      _$proManualBookingCreatedStatusEnum_completed;
+  static const ProManualBookingCreatedStatusEnum completed = _$proManualBookingCreatedStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProManualBookingCreatedStatusEnum cancelled =
-      _$proManualBookingCreatedStatusEnum_cancelled;
+  static const ProManualBookingCreatedStatusEnum cancelled = _$proManualBookingCreatedStatusEnum_cancelled;
 
-  static Serializer<ProManualBookingCreatedStatusEnum> get serializer =>
-      _$proManualBookingCreatedStatusEnumSerializer;
+  static Serializer<ProManualBookingCreatedStatusEnum> get serializer => _$proManualBookingCreatedStatusEnumSerializer;
 
-  const ProManualBookingCreatedStatusEnum._(String name) : super(name);
+  const ProManualBookingCreatedStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProManualBookingCreatedStatusEnum> get values =>
-      _$proManualBookingCreatedStatusEnumValues;
-  static ProManualBookingCreatedStatusEnum valueOf(String name) =>
-      _$proManualBookingCreatedStatusEnumValueOf(name);
+  static BuiltSet<ProManualBookingCreatedStatusEnum> get values => _$proManualBookingCreatedStatusEnumValues;
+  static ProManualBookingCreatedStatusEnum valueOf(String name) => _$proManualBookingCreatedStatusEnumValueOf(name);
 }
+

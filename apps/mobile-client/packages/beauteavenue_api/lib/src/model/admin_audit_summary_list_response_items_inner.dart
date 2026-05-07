@@ -12,19 +12,16 @@ part 'admin_audit_summary_list_response_items_inner.g.dart';
 /// AdminAuditSummaryListResponseItemsInner
 ///
 /// Properties:
-/// * [id]
-/// * [action]
-/// * [summary]
-/// * [entityType]
-/// * [entityId]
-/// * [actorName]
-/// * [createdAt]
-/// * [severity]
+/// * [id] 
+/// * [action] 
+/// * [summary] 
+/// * [entityType] 
+/// * [entityId] 
+/// * [actorName] 
+/// * [createdAt] 
+/// * [severity] 
 @BuiltValue()
-abstract class AdminAuditSummaryListResponseItemsInner
-    implements
-        Built<AdminAuditSummaryListResponseItemsInner,
-            AdminAuditSummaryListResponseItemsInnerBuilder> {
+abstract class AdminAuditSummaryListResponseItemsInner implements Built<AdminAuditSummaryListResponseItemsInner, AdminAuditSummaryListResponseItemsInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -52,25 +49,18 @@ abstract class AdminAuditSummaryListResponseItemsInner
 
   AdminAuditSummaryListResponseItemsInner._();
 
-  factory AdminAuditSummaryListResponseItemsInner(
-          [void updates(AdminAuditSummaryListResponseItemsInnerBuilder b)]) =
-      _$AdminAuditSummaryListResponseItemsInner;
+  factory AdminAuditSummaryListResponseItemsInner([void updates(AdminAuditSummaryListResponseItemsInnerBuilder b)]) = _$AdminAuditSummaryListResponseItemsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminAuditSummaryListResponseItemsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminAuditSummaryListResponseItemsInner> get serializer =>
-      _$AdminAuditSummaryListResponseItemsInnerSerializer();
+  static Serializer<AdminAuditSummaryListResponseItemsInner> get serializer => _$AdminAuditSummaryListResponseItemsInnerSerializer();
 }
 
-class _$AdminAuditSummaryListResponseItemsInnerSerializer
-    implements PrimitiveSerializer<AdminAuditSummaryListResponseItemsInner> {
+class _$AdminAuditSummaryListResponseItemsInnerSerializer implements PrimitiveSerializer<AdminAuditSummaryListResponseItemsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminAuditSummaryListResponseItemsInner,
-    _$AdminAuditSummaryListResponseItemsInner
-  ];
+  final Iterable<Type> types = const [AdminAuditSummaryListResponseItemsInner, _$AdminAuditSummaryListResponseItemsInner];
 
   @override
   final String wireName = r'AdminAuditSummaryListResponseItemsInner';
@@ -118,8 +108,7 @@ class _$AdminAuditSummaryListResponseItemsInnerSerializer
     yield r'severity';
     yield serializers.serialize(
       object.severity,
-      specifiedType:
-          const FullType(AdminAuditSummaryListResponseItemsInnerSeverityEnum),
+      specifiedType: const FullType(AdminAuditSummaryListResponseItemsInnerSeverityEnum),
     );
   }
 
@@ -129,9 +118,7 @@ class _$AdminAuditSummaryListResponseItemsInnerSerializer
     AdminAuditSummaryListResponseItemsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -198,8 +185,7 @@ class _$AdminAuditSummaryListResponseItemsInnerSerializer
         case r'severity':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                AdminAuditSummaryListResponseItemsInnerSeverityEnum),
+            specifiedType: const FullType(AdminAuditSummaryListResponseItemsInnerSeverityEnum),
           ) as AdminAuditSummaryListResponseItemsInnerSeverityEnum;
           result.severity = valueDes;
           break;
@@ -233,26 +219,19 @@ class _$AdminAuditSummaryListResponseItemsInnerSerializer
 }
 
 class AdminAuditSummaryListResponseItemsInnerSeverityEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'info')
-  static const AdminAuditSummaryListResponseItemsInnerSeverityEnum info =
-      _$adminAuditSummaryListResponseItemsInnerSeverityEnum_info;
+  static const AdminAuditSummaryListResponseItemsInnerSeverityEnum info = _$adminAuditSummaryListResponseItemsInnerSeverityEnum_info;
   @BuiltValueEnumConst(wireName: r'warning')
-  static const AdminAuditSummaryListResponseItemsInnerSeverityEnum warning =
-      _$adminAuditSummaryListResponseItemsInnerSeverityEnum_warning;
+  static const AdminAuditSummaryListResponseItemsInnerSeverityEnum warning = _$adminAuditSummaryListResponseItemsInnerSeverityEnum_warning;
   @BuiltValueEnumConst(wireName: r'critical')
-  static const AdminAuditSummaryListResponseItemsInnerSeverityEnum critical =
-      _$adminAuditSummaryListResponseItemsInnerSeverityEnum_critical;
+  static const AdminAuditSummaryListResponseItemsInnerSeverityEnum critical = _$adminAuditSummaryListResponseItemsInnerSeverityEnum_critical;
 
-  static Serializer<AdminAuditSummaryListResponseItemsInnerSeverityEnum>
-      get serializer =>
-          _$adminAuditSummaryListResponseItemsInnerSeverityEnumSerializer;
+  static Serializer<AdminAuditSummaryListResponseItemsInnerSeverityEnum> get serializer => _$adminAuditSummaryListResponseItemsInnerSeverityEnumSerializer;
 
-  const AdminAuditSummaryListResponseItemsInnerSeverityEnum._(String name)
-      : super(name);
+  const AdminAuditSummaryListResponseItemsInnerSeverityEnum._(String name): super(name);
 
-  static BuiltSet<AdminAuditSummaryListResponseItemsInnerSeverityEnum>
-      get values => _$adminAuditSummaryListResponseItemsInnerSeverityEnumValues;
-  static AdminAuditSummaryListResponseItemsInnerSeverityEnum valueOf(
-          String name) =>
-      _$adminAuditSummaryListResponseItemsInnerSeverityEnumValueOf(name);
+  static BuiltSet<AdminAuditSummaryListResponseItemsInnerSeverityEnum> get values => _$adminAuditSummaryListResponseItemsInnerSeverityEnumValues;
+  static AdminAuditSummaryListResponseItemsInnerSeverityEnum valueOf(String name) => _$adminAuditSummaryListResponseItemsInnerSeverityEnumValueOf(name);
 }
+

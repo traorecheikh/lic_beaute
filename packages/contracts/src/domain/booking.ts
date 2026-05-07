@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { bookingStatusSchema, paymentProviderSchema, paymentStatusSchema } from "./enums.js";
+import { paymentChannelSchema } from "./payment.js";
 
 export const bookingCreateSchema = z.object({
   salonId: z.string(),
@@ -8,7 +9,8 @@ export const bookingCreateSchema = z.object({
   employeeId: z.string().optional(),
   startsAt: z.string().datetime(),
   clientNote: z.string().max(500).optional(),
-  provider: paymentProviderSchema.optional()
+  provider: paymentProviderSchema.optional(),
+  channel: paymentChannelSchema.optional()
 });
 
 export const bookingRescheduleSchema = z.object({

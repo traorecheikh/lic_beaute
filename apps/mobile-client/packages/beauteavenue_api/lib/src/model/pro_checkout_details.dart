@@ -13,19 +13,18 @@ part 'pro_checkout_details.g.dart';
 /// ProCheckoutDetails
 ///
 /// Properties:
-/// * [bookingId]
-/// * [status]
-/// * [clientName]
-/// * [serviceName]
-/// * [startsAt]
-/// * [staffName]
-/// * [subtotalXof]
-/// * [depositPaidXof]
-/// * [balanceXof]
-/// * [lineItems]
+/// * [bookingId] 
+/// * [status] 
+/// * [clientName] 
+/// * [serviceName] 
+/// * [startsAt] 
+/// * [staffName] 
+/// * [subtotalXof] 
+/// * [depositPaidXof] 
+/// * [balanceXof] 
+/// * [lineItems] 
 @BuiltValue()
-abstract class ProCheckoutDetails
-    implements Built<ProCheckoutDetails, ProCheckoutDetailsBuilder> {
+abstract class ProCheckoutDetails implements Built<ProCheckoutDetails, ProCheckoutDetailsBuilder> {
   @BuiltValueField(wireName: r'bookingId')
   String get bookingId;
 
@@ -59,19 +58,16 @@ abstract class ProCheckoutDetails
 
   ProCheckoutDetails._();
 
-  factory ProCheckoutDetails([void updates(ProCheckoutDetailsBuilder b)]) =
-      _$ProCheckoutDetails;
+  factory ProCheckoutDetails([void updates(ProCheckoutDetailsBuilder b)]) = _$ProCheckoutDetails;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProCheckoutDetailsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProCheckoutDetails> get serializer =>
-      _$ProCheckoutDetailsSerializer();
+  static Serializer<ProCheckoutDetails> get serializer => _$ProCheckoutDetailsSerializer();
 }
 
-class _$ProCheckoutDetailsSerializer
-    implements PrimitiveSerializer<ProCheckoutDetails> {
+class _$ProCheckoutDetailsSerializer implements PrimitiveSerializer<ProCheckoutDetails> {
   @override
   final Iterable<Type> types = const [ProCheckoutDetails, _$ProCheckoutDetails];
 
@@ -94,12 +90,10 @@ class _$ProCheckoutDetailsSerializer
       specifiedType: const FullType(ProCheckoutDetailsStatusEnum),
     );
     yield r'clientName';
-    yield object.clientName == null
-        ? null
-        : serializers.serialize(
-            object.clientName,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.clientName == null ? null : serializers.serialize(
+      object.clientName,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'serviceName';
     yield serializers.serialize(
       object.serviceName,
@@ -111,12 +105,10 @@ class _$ProCheckoutDetailsSerializer
       specifiedType: const FullType(DateTime),
     );
     yield r'staffName';
-    yield object.staffName == null
-        ? null
-        : serializers.serialize(
-            object.staffName,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.staffName == null ? null : serializers.serialize(
+      object.staffName,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'subtotalXof';
     yield serializers.serialize(
       object.subtotalXof,
@@ -135,8 +127,7 @@ class _$ProCheckoutDetailsSerializer
     yield r'lineItems';
     yield serializers.serialize(
       object.lineItems,
-      specifiedType: const FullType(
-          BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
     );
   }
 
@@ -146,9 +137,7 @@ class _$ProCheckoutDetailsSerializer
     ProCheckoutDetails object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -231,8 +220,7 @@ class _$ProCheckoutDetailsSerializer
         case r'lineItems':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProCheckoutDetailsLineItemsInner)]),
           ) as BuiltList<ProCheckoutDetailsLineItemsInner>;
           result.lineItems.replace(valueDes);
           break;
@@ -266,29 +254,23 @@ class _$ProCheckoutDetailsSerializer
 }
 
 class ProCheckoutDetailsStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const ProCheckoutDetailsStatusEnum pending =
-      _$proCheckoutDetailsStatusEnum_pending;
+  static const ProCheckoutDetailsStatusEnum pending = _$proCheckoutDetailsStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const ProCheckoutDetailsStatusEnum confirmed =
-      _$proCheckoutDetailsStatusEnum_confirmed;
+  static const ProCheckoutDetailsStatusEnum confirmed = _$proCheckoutDetailsStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const ProCheckoutDetailsStatusEnum inProgress =
-      _$proCheckoutDetailsStatusEnum_inProgress;
+  static const ProCheckoutDetailsStatusEnum inProgress = _$proCheckoutDetailsStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const ProCheckoutDetailsStatusEnum completed =
-      _$proCheckoutDetailsStatusEnum_completed;
+  static const ProCheckoutDetailsStatusEnum completed = _$proCheckoutDetailsStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProCheckoutDetailsStatusEnum cancelled =
-      _$proCheckoutDetailsStatusEnum_cancelled;
+  static const ProCheckoutDetailsStatusEnum cancelled = _$proCheckoutDetailsStatusEnum_cancelled;
 
-  static Serializer<ProCheckoutDetailsStatusEnum> get serializer =>
-      _$proCheckoutDetailsStatusEnumSerializer;
+  static Serializer<ProCheckoutDetailsStatusEnum> get serializer => _$proCheckoutDetailsStatusEnumSerializer;
 
-  const ProCheckoutDetailsStatusEnum._(String name) : super(name);
+  const ProCheckoutDetailsStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProCheckoutDetailsStatusEnum> get values =>
-      _$proCheckoutDetailsStatusEnumValues;
-  static ProCheckoutDetailsStatusEnum valueOf(String name) =>
-      _$proCheckoutDetailsStatusEnumValueOf(name);
+  static BuiltSet<ProCheckoutDetailsStatusEnum> get values => _$proCheckoutDetailsStatusEnumValues;
+  static ProCheckoutDetailsStatusEnum valueOf(String name) => _$proCheckoutDetailsStatusEnumValueOf(name);
 }
+

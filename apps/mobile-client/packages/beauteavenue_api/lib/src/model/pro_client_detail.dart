@@ -13,17 +13,16 @@ part 'pro_client_detail.g.dart';
 /// ProClientDetail
 ///
 /// Properties:
-/// * [id]
-/// * [fullName]
-/// * [phone]
-/// * [email]
-/// * [visitCount]
-/// * [totalSpentXof]
-/// * [lastVisitAt]
-/// * [recentBookings]
+/// * [id] 
+/// * [fullName] 
+/// * [phone] 
+/// * [email] 
+/// * [visitCount] 
+/// * [totalSpentXof] 
+/// * [lastVisitAt] 
+/// * [recentBookings] 
 @BuiltValue()
-abstract class ProClientDetail
-    implements Built<ProClientDetail, ProClientDetailBuilder> {
+abstract class ProClientDetail implements Built<ProClientDetail, ProClientDetailBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -50,19 +49,16 @@ abstract class ProClientDetail
 
   ProClientDetail._();
 
-  factory ProClientDetail([void updates(ProClientDetailBuilder b)]) =
-      _$ProClientDetail;
+  factory ProClientDetail([void updates(ProClientDetailBuilder b)]) = _$ProClientDetail;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProClientDetailBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProClientDetail> get serializer =>
-      _$ProClientDetailSerializer();
+  static Serializer<ProClientDetail> get serializer => _$ProClientDetailSerializer();
 }
 
-class _$ProClientDetailSerializer
-    implements PrimitiveSerializer<ProClientDetail> {
+class _$ProClientDetailSerializer implements PrimitiveSerializer<ProClientDetail> {
   @override
   final Iterable<Type> types = const [ProClientDetail, _$ProClientDetail];
 
@@ -85,19 +81,15 @@ class _$ProClientDetailSerializer
       specifiedType: const FullType(String),
     );
     yield r'phone';
-    yield object.phone == null
-        ? null
-        : serializers.serialize(
-            object.phone,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.phone == null ? null : serializers.serialize(
+      object.phone,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'email';
-    yield object.email == null
-        ? null
-        : serializers.serialize(
-            object.email,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.email == null ? null : serializers.serialize(
+      object.email,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'visitCount';
     yield serializers.serialize(
       object.visitCount,
@@ -109,17 +101,14 @@ class _$ProClientDetailSerializer
       specifiedType: const FullType(int),
     );
     yield r'lastVisitAt';
-    yield object.lastVisitAt == null
-        ? null
-        : serializers.serialize(
-            object.lastVisitAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.lastVisitAt == null ? null : serializers.serialize(
+      object.lastVisitAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
     yield r'recentBookings';
     yield serializers.serialize(
       object.recentBookings,
-      specifiedType: const FullType(
-          BuiltList, [FullType(ProClientDetailRecentBookingsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProClientDetailRecentBookingsInner)]),
     );
   }
 
@@ -129,9 +118,7 @@ class _$ProClientDetailSerializer
     ProClientDetail object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -201,8 +188,7 @@ class _$ProClientDetailSerializer
         case r'recentBookings':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProClientDetailRecentBookingsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProClientDetailRecentBookingsInner)]),
           ) as BuiltList<ProClientDetailRecentBookingsInner>;
           result.recentBookings.replace(valueDes);
           break;
@@ -234,3 +220,4 @@ class _$ProClientDetailSerializer
     return result.build();
   }
 }
+

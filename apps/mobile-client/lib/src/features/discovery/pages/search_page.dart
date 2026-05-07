@@ -154,7 +154,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
-                  separatorBuilder: (_, __) => gapW8,
+                  separatorBuilder: (_, _) => gapW8,
                   itemBuilder: (_, i) {
                     final cat = categories[i];
                     final active = _activeCategory == cat;
@@ -175,7 +175,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         child: Text(
                           cat,
                           style: AppTextStyles.labelMd.copyWith(
-                            color: active ? AppColors.white : AppColors.onSurface,
+                            color: active
+                                ? AppColors.white
+                                : AppColors.onSurface,
                           ),
                         ),
                       ),
@@ -209,6 +211,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       s.city.toLowerCase().contains(q);
                   final matchCat =
                       _activeCategory == null || s.category == _activeCategory;
+
                   return matchQ && matchCat;
                 }).toList();
 

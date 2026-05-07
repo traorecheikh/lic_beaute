@@ -12,13 +12,19 @@ import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod
 
 import { config } from "./config.js";
 import type { DatabaseRuntime } from "./lib/database-runtime.js";
+import { setPrisma } from "./lib/prisma.js";
 import { registerRoutes } from "./modules/routes.js";
+import type { PrismaClient } from "@prisma/client";
 
 type CreateAppOptions = {
   databaseRuntime: DatabaseRuntime;
+  prisma?: PrismaClient;
 };
 
-export async function createApp({ databaseRuntime }: CreateAppOptions) {
+export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
+  if (prisma) {
+    setPrisma(prisma);
+  }
   const app = Fastify({
     logger:
       config.nodeEnv === "development"

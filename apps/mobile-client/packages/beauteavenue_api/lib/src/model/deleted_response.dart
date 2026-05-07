@@ -11,28 +11,24 @@ part 'deleted_response.g.dart';
 /// DeletedResponse
 ///
 /// Properties:
-/// * [deleted]
+/// * [deleted] 
 @BuiltValue()
-abstract class DeletedResponse
-    implements Built<DeletedResponse, DeletedResponseBuilder> {
+abstract class DeletedResponse implements Built<DeletedResponse, DeletedResponseBuilder> {
   @BuiltValueField(wireName: r'deleted')
   bool get deleted;
 
   DeletedResponse._();
 
-  factory DeletedResponse([void updates(DeletedResponseBuilder b)]) =
-      _$DeletedResponse;
+  factory DeletedResponse([void updates(DeletedResponseBuilder b)]) = _$DeletedResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DeletedResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DeletedResponse> get serializer =>
-      _$DeletedResponseSerializer();
+  static Serializer<DeletedResponse> get serializer => _$DeletedResponseSerializer();
 }
 
-class _$DeletedResponseSerializer
-    implements PrimitiveSerializer<DeletedResponse> {
+class _$DeletedResponseSerializer implements PrimitiveSerializer<DeletedResponse> {
   @override
   final Iterable<Type> types = const [DeletedResponse, _$DeletedResponse];
 
@@ -57,9 +53,7 @@ class _$DeletedResponseSerializer
     DeletedResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -109,3 +103,4 @@ class _$DeletedResponseSerializer
     return result.build();
   }
 }
+

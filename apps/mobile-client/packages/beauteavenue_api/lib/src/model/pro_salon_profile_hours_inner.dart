@@ -11,14 +11,12 @@ part 'pro_salon_profile_hours_inner.g.dart';
 /// ProSalonProfileHoursInner
 ///
 /// Properties:
-/// * [dayOfWeek]
-/// * [isOpen]
-/// * [opensAt]
-/// * [closesAt]
+/// * [dayOfWeek] 
+/// * [isOpen] 
+/// * [opensAt] 
+/// * [closesAt] 
 @BuiltValue()
-abstract class ProSalonProfileHoursInner
-    implements
-        Built<ProSalonProfileHoursInner, ProSalonProfileHoursInnerBuilder> {
+abstract class ProSalonProfileHoursInner implements Built<ProSalonProfileHoursInner, ProSalonProfileHoursInnerBuilder> {
   @BuiltValueField(wireName: r'dayOfWeek')
   int get dayOfWeek;
 
@@ -33,25 +31,18 @@ abstract class ProSalonProfileHoursInner
 
   ProSalonProfileHoursInner._();
 
-  factory ProSalonProfileHoursInner(
-          [void updates(ProSalonProfileHoursInnerBuilder b)]) =
-      _$ProSalonProfileHoursInner;
+  factory ProSalonProfileHoursInner([void updates(ProSalonProfileHoursInnerBuilder b)]) = _$ProSalonProfileHoursInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSalonProfileHoursInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSalonProfileHoursInner> get serializer =>
-      _$ProSalonProfileHoursInnerSerializer();
+  static Serializer<ProSalonProfileHoursInner> get serializer => _$ProSalonProfileHoursInnerSerializer();
 }
 
-class _$ProSalonProfileHoursInnerSerializer
-    implements PrimitiveSerializer<ProSalonProfileHoursInner> {
+class _$ProSalonProfileHoursInnerSerializer implements PrimitiveSerializer<ProSalonProfileHoursInner> {
   @override
-  final Iterable<Type> types = const [
-    ProSalonProfileHoursInner,
-    _$ProSalonProfileHoursInner
-  ];
+  final Iterable<Type> types = const [ProSalonProfileHoursInner, _$ProSalonProfileHoursInner];
 
   @override
   final String wireName = r'ProSalonProfileHoursInner';
@@ -72,19 +63,15 @@ class _$ProSalonProfileHoursInnerSerializer
       specifiedType: const FullType(bool),
     );
     yield r'opensAt';
-    yield object.opensAt == null
-        ? null
-        : serializers.serialize(
-            object.opensAt,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.opensAt == null ? null : serializers.serialize(
+      object.opensAt,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'closesAt';
-    yield object.closesAt == null
-        ? null
-        : serializers.serialize(
-            object.closesAt,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.closesAt == null ? null : serializers.serialize(
+      object.closesAt,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -93,9 +80,7 @@ class _$ProSalonProfileHoursInnerSerializer
     ProSalonProfileHoursInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -168,3 +153,4 @@ class _$ProSalonProfileHoursInnerSerializer
     return result.build();
   }
 }
+

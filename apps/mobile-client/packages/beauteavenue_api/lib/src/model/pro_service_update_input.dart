@@ -12,16 +12,15 @@ part 'pro_service_update_input.g.dart';
 /// ProServiceUpdateInput
 ///
 /// Properties:
-/// * [name]
-/// * [category]
-/// * [durationMinutes]
-/// * [priceXof]
-/// * [depositMode]
-/// * [depositAmountXof]
-/// * [depositPercent]
+/// * [name] 
+/// * [category] 
+/// * [durationMinutes] 
+/// * [priceXof] 
+/// * [depositMode] 
+/// * [depositAmountXof] 
+/// * [depositPercent] 
 @BuiltValue()
-abstract class ProServiceUpdateInput
-    implements Built<ProServiceUpdateInput, ProServiceUpdateInputBuilder> {
+abstract class ProServiceUpdateInput implements Built<ProServiceUpdateInput, ProServiceUpdateInputBuilder> {
   @BuiltValueField(wireName: r'name')
   String? get name;
 
@@ -46,24 +45,18 @@ abstract class ProServiceUpdateInput
 
   ProServiceUpdateInput._();
 
-  factory ProServiceUpdateInput(
-      [void updates(ProServiceUpdateInputBuilder b)]) = _$ProServiceUpdateInput;
+  factory ProServiceUpdateInput([void updates(ProServiceUpdateInputBuilder b)]) = _$ProServiceUpdateInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProServiceUpdateInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProServiceUpdateInput> get serializer =>
-      _$ProServiceUpdateInputSerializer();
+  static Serializer<ProServiceUpdateInput> get serializer => _$ProServiceUpdateInputSerializer();
 }
 
-class _$ProServiceUpdateInputSerializer
-    implements PrimitiveSerializer<ProServiceUpdateInput> {
+class _$ProServiceUpdateInputSerializer implements PrimitiveSerializer<ProServiceUpdateInput> {
   @override
-  final Iterable<Type> types = const [
-    ProServiceUpdateInput,
-    _$ProServiceUpdateInput
-  ];
+  final Iterable<Type> types = const [ProServiceUpdateInput, _$ProServiceUpdateInput];
 
   @override
   final String wireName = r'ProServiceUpdateInput';
@@ -130,9 +123,7 @@ class _$ProServiceUpdateInputSerializer
     ProServiceUpdateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -226,23 +217,19 @@ class _$ProServiceUpdateInputSerializer
 }
 
 class ProServiceUpdateInputDepositModeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'none')
-  static const ProServiceUpdateInputDepositModeEnum none =
-      _$proServiceUpdateInputDepositModeEnum_none;
+  static const ProServiceUpdateInputDepositModeEnum none = _$proServiceUpdateInputDepositModeEnum_none;
   @BuiltValueEnumConst(wireName: r'fixed')
-  static const ProServiceUpdateInputDepositModeEnum fixed =
-      _$proServiceUpdateInputDepositModeEnum_fixed;
+  static const ProServiceUpdateInputDepositModeEnum fixed = _$proServiceUpdateInputDepositModeEnum_fixed;
   @BuiltValueEnumConst(wireName: r'percent')
-  static const ProServiceUpdateInputDepositModeEnum percent =
-      _$proServiceUpdateInputDepositModeEnum_percent;
+  static const ProServiceUpdateInputDepositModeEnum percent = _$proServiceUpdateInputDepositModeEnum_percent;
 
-  static Serializer<ProServiceUpdateInputDepositModeEnum> get serializer =>
-      _$proServiceUpdateInputDepositModeEnumSerializer;
+  static Serializer<ProServiceUpdateInputDepositModeEnum> get serializer => _$proServiceUpdateInputDepositModeEnumSerializer;
 
-  const ProServiceUpdateInputDepositModeEnum._(String name) : super(name);
+  const ProServiceUpdateInputDepositModeEnum._(String name): super(name);
 
-  static BuiltSet<ProServiceUpdateInputDepositModeEnum> get values =>
-      _$proServiceUpdateInputDepositModeEnumValues;
-  static ProServiceUpdateInputDepositModeEnum valueOf(String name) =>
-      _$proServiceUpdateInputDepositModeEnumValueOf(name);
+  static BuiltSet<ProServiceUpdateInputDepositModeEnum> get values => _$proServiceUpdateInputDepositModeEnumValues;
+  static ProServiceUpdateInputDepositModeEnum valueOf(String name) => _$proServiceUpdateInputDepositModeEnumValueOf(name);
 }
+

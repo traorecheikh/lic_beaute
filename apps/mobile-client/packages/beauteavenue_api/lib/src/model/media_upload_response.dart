@@ -1,0 +1,186 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+
+// ignore_for_file: unused_element
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+
+part 'media_upload_response.g.dart';
+
+/// MediaUploadResponse
+///
+/// Properties:
+/// * [id] 
+/// * [publicUrl] 
+/// * [filename] 
+/// * [mimeType] 
+/// * [sizeBytes] 
+/// * [createdAt] 
+@BuiltValue()
+abstract class MediaUploadResponse implements Built<MediaUploadResponse, MediaUploadResponseBuilder> {
+  @BuiltValueField(wireName: r'id')
+  String get id;
+
+  @BuiltValueField(wireName: r'publicUrl')
+  String get publicUrl;
+
+  @BuiltValueField(wireName: r'filename')
+  String get filename;
+
+  @BuiltValueField(wireName: r'mimeType')
+  String get mimeType;
+
+  @BuiltValueField(wireName: r'sizeBytes')
+  int get sizeBytes;
+
+  @BuiltValueField(wireName: r'createdAt')
+  DateTime get createdAt;
+
+  MediaUploadResponse._();
+
+  factory MediaUploadResponse([void updates(MediaUploadResponseBuilder b)]) = _$MediaUploadResponse;
+
+  @BuiltValueHook(initializeBuilder: true)
+  static void _defaults(MediaUploadResponseBuilder b) => b;
+
+  @BuiltValueSerializer(custom: true)
+  static Serializer<MediaUploadResponse> get serializer => _$MediaUploadResponseSerializer();
+}
+
+class _$MediaUploadResponseSerializer implements PrimitiveSerializer<MediaUploadResponse> {
+  @override
+  final Iterable<Type> types = const [MediaUploadResponse, _$MediaUploadResponse];
+
+  @override
+  final String wireName = r'MediaUploadResponse';
+
+  Iterable<Object?> _serializeProperties(
+    Serializers serializers,
+    MediaUploadResponse object, {
+    FullType specifiedType = FullType.unspecified,
+  }) sync* {
+    yield r'id';
+    yield serializers.serialize(
+      object.id,
+      specifiedType: const FullType(String),
+    );
+    yield r'publicUrl';
+    yield serializers.serialize(
+      object.publicUrl,
+      specifiedType: const FullType(String),
+    );
+    yield r'filename';
+    yield serializers.serialize(
+      object.filename,
+      specifiedType: const FullType(String),
+    );
+    yield r'mimeType';
+    yield serializers.serialize(
+      object.mimeType,
+      specifiedType: const FullType(String),
+    );
+    yield r'sizeBytes';
+    yield serializers.serialize(
+      object.sizeBytes,
+      specifiedType: const FullType(int),
+    );
+    yield r'createdAt';
+    yield serializers.serialize(
+      object.createdAt,
+      specifiedType: const FullType(DateTime),
+    );
+  }
+
+  @override
+  Object serialize(
+    Serializers serializers,
+    MediaUploadResponse object, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+  }
+
+  void _deserializeProperties(
+    Serializers serializers,
+    Object serialized, {
+    FullType specifiedType = FullType.unspecified,
+    required List<Object?> serializedList,
+    required MediaUploadResponseBuilder result,
+    required List<Object?> unhandled,
+  }) {
+    for (var i = 0; i < serializedList.length; i += 2) {
+      final key = serializedList[i] as String;
+      final value = serializedList[i + 1];
+      switch (key) {
+        case r'id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.id = valueDes;
+          break;
+        case r'publicUrl':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.publicUrl = valueDes;
+          break;
+        case r'filename':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.filename = valueDes;
+          break;
+        case r'mimeType':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.mimeType = valueDes;
+          break;
+        case r'sizeBytes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.sizeBytes = valueDes;
+          break;
+        case r'createdAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(DateTime),
+          ) as DateTime;
+          result.createdAt = valueDes;
+          break;
+        default:
+          unhandled.add(key);
+          unhandled.add(value);
+          break;
+      }
+    }
+  }
+
+  @override
+  MediaUploadResponse deserialize(
+    Serializers serializers,
+    Object serialized, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    final result = MediaUploadResponseBuilder();
+    final serializedList = (serialized as Iterable<Object?>).toList();
+    final unhandled = <Object?>[];
+    _deserializeProperties(
+      serializers,
+      serialized,
+      specifiedType: specifiedType,
+      serializedList: serializedList,
+      unhandled: unhandled,
+      result: result,
+    );
+    return result.build();
+  }
+}
+

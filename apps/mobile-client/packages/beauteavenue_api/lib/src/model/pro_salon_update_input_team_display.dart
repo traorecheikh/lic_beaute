@@ -11,13 +11,10 @@ part 'pro_salon_update_input_team_display.g.dart';
 /// ProSalonUpdateInputTeamDisplay
 ///
 /// Properties:
-/// * [showPhotos]
-/// * [showDescriptions]
+/// * [showPhotos] 
+/// * [showDescriptions] 
 @BuiltValue()
-abstract class ProSalonUpdateInputTeamDisplay
-    implements
-        Built<ProSalonUpdateInputTeamDisplay,
-            ProSalonUpdateInputTeamDisplayBuilder> {
+abstract class ProSalonUpdateInputTeamDisplay implements Built<ProSalonUpdateInputTeamDisplay, ProSalonUpdateInputTeamDisplayBuilder> {
   @BuiltValueField(wireName: r'showPhotos')
   bool? get showPhotos;
 
@@ -26,25 +23,18 @@ abstract class ProSalonUpdateInputTeamDisplay
 
   ProSalonUpdateInputTeamDisplay._();
 
-  factory ProSalonUpdateInputTeamDisplay(
-          [void updates(ProSalonUpdateInputTeamDisplayBuilder b)]) =
-      _$ProSalonUpdateInputTeamDisplay;
+  factory ProSalonUpdateInputTeamDisplay([void updates(ProSalonUpdateInputTeamDisplayBuilder b)]) = _$ProSalonUpdateInputTeamDisplay;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSalonUpdateInputTeamDisplayBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSalonUpdateInputTeamDisplay> get serializer =>
-      _$ProSalonUpdateInputTeamDisplaySerializer();
+  static Serializer<ProSalonUpdateInputTeamDisplay> get serializer => _$ProSalonUpdateInputTeamDisplaySerializer();
 }
 
-class _$ProSalonUpdateInputTeamDisplaySerializer
-    implements PrimitiveSerializer<ProSalonUpdateInputTeamDisplay> {
+class _$ProSalonUpdateInputTeamDisplaySerializer implements PrimitiveSerializer<ProSalonUpdateInputTeamDisplay> {
   @override
-  final Iterable<Type> types = const [
-    ProSalonUpdateInputTeamDisplay,
-    _$ProSalonUpdateInputTeamDisplay
-  ];
+  final Iterable<Type> types = const [ProSalonUpdateInputTeamDisplay, _$ProSalonUpdateInputTeamDisplay];
 
   @override
   final String wireName = r'ProSalonUpdateInputTeamDisplay';
@@ -76,9 +66,7 @@ class _$ProSalonUpdateInputTeamDisplaySerializer
     ProSalonUpdateInputTeamDisplay object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -135,3 +123,4 @@ class _$ProSalonUpdateInputTeamDisplaySerializer
     return result.build();
   }
 }
+

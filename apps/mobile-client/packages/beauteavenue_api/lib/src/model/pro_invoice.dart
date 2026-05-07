@@ -11,12 +11,12 @@ part 'pro_invoice.g.dart';
 /// ProInvoice
 ///
 /// Properties:
-/// * [id]
-/// * [invoiceNumber]
-/// * [amountXof]
-/// * [status]
-/// * [createdAt]
-/// * [pdfUrl]
+/// * [id] 
+/// * [invoiceNumber] 
+/// * [amountXof] 
+/// * [status] 
+/// * [createdAt] 
+/// * [pdfUrl] 
 @BuiltValue()
 abstract class ProInvoice implements Built<ProInvoice, ProInvoiceBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -86,12 +86,10 @@ class _$ProInvoiceSerializer implements PrimitiveSerializer<ProInvoice> {
       specifiedType: const FullType(DateTime),
     );
     yield r'pdfUrl';
-    yield object.pdfUrl == null
-        ? null
-        : serializers.serialize(
-            object.pdfUrl,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.pdfUrl == null ? null : serializers.serialize(
+      object.pdfUrl,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -100,9 +98,7 @@ class _$ProInvoiceSerializer implements PrimitiveSerializer<ProInvoice> {
     ProInvoice object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -188,3 +184,4 @@ class _$ProInvoiceSerializer implements PrimitiveSerializer<ProInvoice> {
     return result.build();
   }
 }
+

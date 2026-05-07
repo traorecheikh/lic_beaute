@@ -12,19 +12,17 @@ part 'admin_subscription_summary.g.dart';
 /// AdminSubscriptionSummary
 ///
 /// Properties:
-/// * [id]
-/// * [salonId]
-/// * [salonName]
-/// * [tier]
-/// * [status]
-/// * [billingProvider]
-/// * [expiresAt]
-/// * [autoRenew]
-/// * [isComplimentary]
+/// * [id] 
+/// * [salonId] 
+/// * [salonName] 
+/// * [tier] 
+/// * [status] 
+/// * [billingProvider] 
+/// * [expiresAt] 
+/// * [autoRenew] 
+/// * [isComplimentary] 
 @BuiltValue()
-abstract class AdminSubscriptionSummary
-    implements
-        Built<AdminSubscriptionSummary, AdminSubscriptionSummaryBuilder> {
+abstract class AdminSubscriptionSummary implements Built<AdminSubscriptionSummary, AdminSubscriptionSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -44,7 +42,7 @@ abstract class AdminSubscriptionSummary
 
   @BuiltValueField(wireName: r'billingProvider')
   AdminSubscriptionSummaryBillingProviderEnum? get billingProvider;
-  // enum billingProviderEnum {  wave,  orange_money,  };
+  // enum billingProviderEnum {  intech,  manual,  };
 
   @BuiltValueField(wireName: r'expiresAt')
   DateTime? get expiresAt;
@@ -57,25 +55,18 @@ abstract class AdminSubscriptionSummary
 
   AdminSubscriptionSummary._();
 
-  factory AdminSubscriptionSummary(
-          [void updates(AdminSubscriptionSummaryBuilder b)]) =
-      _$AdminSubscriptionSummary;
+  factory AdminSubscriptionSummary([void updates(AdminSubscriptionSummaryBuilder b)]) = _$AdminSubscriptionSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionSummary> get serializer =>
-      _$AdminSubscriptionSummarySerializer();
+  static Serializer<AdminSubscriptionSummary> get serializer => _$AdminSubscriptionSummarySerializer();
 }
 
-class _$AdminSubscriptionSummarySerializer
-    implements PrimitiveSerializer<AdminSubscriptionSummary> {
+class _$AdminSubscriptionSummarySerializer implements PrimitiveSerializer<AdminSubscriptionSummary> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionSummary,
-    _$AdminSubscriptionSummary
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionSummary, _$AdminSubscriptionSummary];
 
   @override
   final String wireName = r'AdminSubscriptionSummary';
@@ -111,20 +102,15 @@ class _$AdminSubscriptionSummarySerializer
       specifiedType: const FullType(AdminSubscriptionSummaryStatusEnum),
     );
     yield r'billingProvider';
-    yield object.billingProvider == null
-        ? null
-        : serializers.serialize(
-            object.billingProvider,
-            specifiedType: const FullType.nullable(
-                AdminSubscriptionSummaryBillingProviderEnum),
-          );
+    yield object.billingProvider == null ? null : serializers.serialize(
+      object.billingProvider,
+      specifiedType: const FullType.nullable(AdminSubscriptionSummaryBillingProviderEnum),
+    );
     yield r'expiresAt';
-    yield object.expiresAt == null
-        ? null
-        : serializers.serialize(
-            object.expiresAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.expiresAt == null ? null : serializers.serialize(
+      object.expiresAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
     yield r'autoRenew';
     yield serializers.serialize(
       object.autoRenew,
@@ -143,9 +129,7 @@ class _$AdminSubscriptionSummarySerializer
     AdminSubscriptionSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -198,8 +182,7 @@ class _$AdminSubscriptionSummarySerializer
         case r'billingProvider':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(
-                AdminSubscriptionSummaryBillingProviderEnum),
+            specifiedType: const FullType.nullable(AdminSubscriptionSummaryBillingProviderEnum),
           ) as AdminSubscriptionSummaryBillingProviderEnum?;
           if (valueDes == null) continue;
           result.billingProvider = valueDes;
@@ -256,71 +239,55 @@ class _$AdminSubscriptionSummarySerializer
 }
 
 class AdminSubscriptionSummaryTierEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'standard')
-  static const AdminSubscriptionSummaryTierEnum standard =
-      _$adminSubscriptionSummaryTierEnum_standard;
+  static const AdminSubscriptionSummaryTierEnum standard = _$adminSubscriptionSummaryTierEnum_standard;
   @BuiltValueEnumConst(wireName: r'premium')
-  static const AdminSubscriptionSummaryTierEnum premium =
-      _$adminSubscriptionSummaryTierEnum_premium;
+  static const AdminSubscriptionSummaryTierEnum premium = _$adminSubscriptionSummaryTierEnum_premium;
 
-  static Serializer<AdminSubscriptionSummaryTierEnum> get serializer =>
-      _$adminSubscriptionSummaryTierEnumSerializer;
+  static Serializer<AdminSubscriptionSummaryTierEnum> get serializer => _$adminSubscriptionSummaryTierEnumSerializer;
 
-  const AdminSubscriptionSummaryTierEnum._(String name) : super(name);
+  const AdminSubscriptionSummaryTierEnum._(String name): super(name);
 
-  static BuiltSet<AdminSubscriptionSummaryTierEnum> get values =>
-      _$adminSubscriptionSummaryTierEnumValues;
-  static AdminSubscriptionSummaryTierEnum valueOf(String name) =>
-      _$adminSubscriptionSummaryTierEnumValueOf(name);
+  static BuiltSet<AdminSubscriptionSummaryTierEnum> get values => _$adminSubscriptionSummaryTierEnumValues;
+  static AdminSubscriptionSummaryTierEnum valueOf(String name) => _$adminSubscriptionSummaryTierEnumValueOf(name);
 }
 
 class AdminSubscriptionSummaryStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'inactive')
-  static const AdminSubscriptionSummaryStatusEnum inactive =
-      _$adminSubscriptionSummaryStatusEnum_inactive;
+  static const AdminSubscriptionSummaryStatusEnum inactive = _$adminSubscriptionSummaryStatusEnum_inactive;
   @BuiltValueEnumConst(wireName: r'active')
-  static const AdminSubscriptionSummaryStatusEnum active =
-      _$adminSubscriptionSummaryStatusEnum_active;
+  static const AdminSubscriptionSummaryStatusEnum active = _$adminSubscriptionSummaryStatusEnum_active;
   @BuiltValueEnumConst(wireName: r'past_due')
-  static const AdminSubscriptionSummaryStatusEnum pastDue =
-      _$adminSubscriptionSummaryStatusEnum_pastDue;
+  static const AdminSubscriptionSummaryStatusEnum pastDue = _$adminSubscriptionSummaryStatusEnum_pastDue;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const AdminSubscriptionSummaryStatusEnum cancelled =
-      _$adminSubscriptionSummaryStatusEnum_cancelled;
+  static const AdminSubscriptionSummaryStatusEnum cancelled = _$adminSubscriptionSummaryStatusEnum_cancelled;
   @BuiltValueEnumConst(wireName: r'expired')
-  static const AdminSubscriptionSummaryStatusEnum expired =
-      _$adminSubscriptionSummaryStatusEnum_expired;
+  static const AdminSubscriptionSummaryStatusEnum expired = _$adminSubscriptionSummaryStatusEnum_expired;
   @BuiltValueEnumConst(wireName: r'paused')
-  static const AdminSubscriptionSummaryStatusEnum paused =
-      _$adminSubscriptionSummaryStatusEnum_paused;
+  static const AdminSubscriptionSummaryStatusEnum paused = _$adminSubscriptionSummaryStatusEnum_paused;
 
-  static Serializer<AdminSubscriptionSummaryStatusEnum> get serializer =>
-      _$adminSubscriptionSummaryStatusEnumSerializer;
+  static Serializer<AdminSubscriptionSummaryStatusEnum> get serializer => _$adminSubscriptionSummaryStatusEnumSerializer;
 
-  const AdminSubscriptionSummaryStatusEnum._(String name) : super(name);
+  const AdminSubscriptionSummaryStatusEnum._(String name): super(name);
 
-  static BuiltSet<AdminSubscriptionSummaryStatusEnum> get values =>
-      _$adminSubscriptionSummaryStatusEnumValues;
-  static AdminSubscriptionSummaryStatusEnum valueOf(String name) =>
-      _$adminSubscriptionSummaryStatusEnumValueOf(name);
+  static BuiltSet<AdminSubscriptionSummaryStatusEnum> get values => _$adminSubscriptionSummaryStatusEnumValues;
+  static AdminSubscriptionSummaryStatusEnum valueOf(String name) => _$adminSubscriptionSummaryStatusEnumValueOf(name);
 }
 
 class AdminSubscriptionSummaryBillingProviderEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'wave')
-  static const AdminSubscriptionSummaryBillingProviderEnum wave =
-      _$adminSubscriptionSummaryBillingProviderEnum_wave;
-  @BuiltValueEnumConst(wireName: r'orange_money')
-  static const AdminSubscriptionSummaryBillingProviderEnum orangeMoney =
-      _$adminSubscriptionSummaryBillingProviderEnum_orangeMoney;
 
-  static Serializer<AdminSubscriptionSummaryBillingProviderEnum>
-      get serializer => _$adminSubscriptionSummaryBillingProviderEnumSerializer;
+  @BuiltValueEnumConst(wireName: r'intech')
+  static const AdminSubscriptionSummaryBillingProviderEnum intech = _$adminSubscriptionSummaryBillingProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const AdminSubscriptionSummaryBillingProviderEnum manual = _$adminSubscriptionSummaryBillingProviderEnum_manual;
 
-  const AdminSubscriptionSummaryBillingProviderEnum._(String name)
-      : super(name);
+  static Serializer<AdminSubscriptionSummaryBillingProviderEnum> get serializer => _$adminSubscriptionSummaryBillingProviderEnumSerializer;
 
-  static BuiltSet<AdminSubscriptionSummaryBillingProviderEnum> get values =>
-      _$adminSubscriptionSummaryBillingProviderEnumValues;
-  static AdminSubscriptionSummaryBillingProviderEnum valueOf(String name) =>
-      _$adminSubscriptionSummaryBillingProviderEnumValueOf(name);
+  const AdminSubscriptionSummaryBillingProviderEnum._(String name): super(name);
+
+  static BuiltSet<AdminSubscriptionSummaryBillingProviderEnum> get values => _$adminSubscriptionSummaryBillingProviderEnumValues;
+  static AdminSubscriptionSummaryBillingProviderEnum valueOf(String name) => _$adminSubscriptionSummaryBillingProviderEnumValueOf(name);
 }
+

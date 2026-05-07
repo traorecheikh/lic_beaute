@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
-import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/app_icon_box.dart';
@@ -25,14 +24,16 @@ class PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = method.provider == 'wave' ? 'Wave' : 'Orange Money';
-    final logoAsset = method.provider == 'wave'
-        ? 'assets/wave.png'
-        : 'assets/om.png';
+    final channel = _resolveChannel(method.provider, method.label);
+    final title = _displayTitle(channel);
+    final logoAsset = _logoAsset(channel);
 
     return ProfileCardShell(
       highlighted: method.isDefault,
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md.w, vertical: 14.h),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md.w,
+        vertical: 14.h,
+      ),
       child: Column(
         children: [
           Row(
@@ -43,7 +44,13 @@ class PaymentTile extends StatelessWidget {
                 radius: BorderRadius.circular(14.r),
                 child: Padding(
                   padding: EdgeInsets.all(AppSpacing.sm.r),
-                  child: Image.asset(logoAsset, fit: BoxFit.contain),
+                  child: logoAsset != null
+                      ? Image.asset(logoAsset, fit: BoxFit.contain)
+                      : Icon(
+                          Icons.account_balance_wallet_outlined,
+                          color: AppColors.onSurfaceVariant,
+                          size: 20.r,
+                        ),
                 ),
               ),
               gapW16,
@@ -119,5 +126,40 @@ class PaymentTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _resolveChannel(String provider, String? label) {
+    if (provider == 'wave' ||
+        provider == 'orange_money' ||
+        provider == 'free_money') {
+      return provider;
+    }
+    if (provider == 'om') return 'orange_money';
+    final normalized = (label ?? '').toLowerCase();
+    if (normalized.contains('orange')) return 'orange_money';
+    if (normalized.contains('free')) return 'free_money';
+    return 'wave';
+  }
+
+  static String _displayTitle(String channel) {
+    switch (channel) {
+      case 'orange_money':
+        return 'Orange Money';
+      case 'free_money':
+        return 'Free Money';
+      default:
+        return 'Wave';
+    }
+  }
+
+  static String? _logoAsset(String channel) {
+    switch (channel) {
+      case 'wave':
+        return 'assets/wave.png';
+      case 'orange_money':
+        return 'assets/om.png';
+      default:
+        return null;
+    }
   }
 }

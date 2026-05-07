@@ -1,3 +1,5 @@
+import type { PrismaClient } from "@prisma/client";
+
 export type SlotHours = {
   isOpen: boolean;
   opensAt: string | null;
@@ -80,6 +82,11 @@ export function computeAvailableSlots(params: {
 
     if (activeEmployees.length > 0) {
       // Find first available employee for this slot
+      const unassignedBooking = existingBookings.some(
+        (bk) => bk.employeeId === null && overlaps(slotStart, slotEnd, bk.startsAt, bk.endsAt)
+      );
+      if (unassignedBooking && !requestedEmployeeId) continue;
+
       const availableEmployee = activeEmployees.find((emp) => {
         const empBlocked = blockedSlots.some(
           (b) =>
@@ -120,4 +127,59 @@ export function computeAvailableSlots(params: {
   }
 
   return slots;
+}
+
+export async function fetchAndComputeAvailableSlots(
+  prisma: PrismaClient,
+  params: {
+    salonId: string;
+    date: Date;
+    durationMinutes: number;
+    employeeId?: string;
+    slotIntervalMinutes?: number;
+    excludeBookingId?: string;
+  }
+): Promise<AvailableSlot[]> {
+  const { salonId, date, durationMinutes, employeeId, slotIntervalMinutes, excludeBookingId } = params;
+  const dayOfWeek = date.getDay();
+  const nextDay = new Date(date);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  const [salonHour, blockedSlots, existingBookings, employees] = await Promise.all([
+    prisma.salonHours.findUnique({ where: { salonId_dayOfWeek: { salonId, dayOfWeek } } }),
+    prisma.blockedSlot.findMany({
+      where: { salonId, startsAt: { lt: nextDay }, endsAt: { gt: date } }
+    }),
+    prisma.booking.findMany({
+      where: {
+        salonId,
+        status: { notIn: ["cancelled"] },
+        ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+        startsAt: { lt: nextDay },
+        endsAt: { gt: date }
+      },
+      select: { startsAt: true, endsAt: true, employeeId: true }
+    }),
+    prisma.employee.findMany({
+      where: { salonId, isActive: true, schedulingEnabled: true }
+    })
+  ]);
+
+  return computeAvailableSlots({
+    hours: salonHour
+      ? { isOpen: salonHour.isOpen, opensAt: salonHour.opensAt, closesAt: salonHour.closesAt }
+      : { isOpen: false, opensAt: null, closesAt: null },
+    service: { durationMinutes },
+    date,
+    blockedSlots: blockedSlots.map((b) => ({
+      startsAt: b.startsAt,
+      endsAt: b.endsAt,
+      scope: b.scope as "salon" | "employee",
+      employeeId: b.employeeId
+    })),
+    existingBookings,
+    employees,
+    requestedEmployeeId: employeeId,
+    ...(slotIntervalMinutes != null ? { slotIntervalMinutes } : {})
+  });
 }

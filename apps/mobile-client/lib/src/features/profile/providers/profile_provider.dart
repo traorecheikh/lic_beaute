@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/media_upload_service.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../../../core/constants/storage_keys.dart';
 import '../../../core/network/connectivity_provider.dart';
 import '../../../core/session/session_store.dart';
@@ -61,13 +64,12 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     String? preferredLanguage,
   }) async {
     final payload = <String, dynamic>{
-      if (fullName != null) 'fullName': fullName,
-      if (city != null) 'city': city,
-      if (preferredContactChannel != null)
-        'preferredContactChannel': preferredContactChannel,
-      if (pushOptIn != null) 'pushOptIn': pushOptIn,
-      if (marketingOptIn != null) 'marketingOptIn': marketingOptIn,
-      if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
+      'fullName': ?fullName,
+      'city': ?city,
+      'preferredContactChannel': ?preferredContactChannel,
+      'pushOptIn': ?pushOptIn,
+      'marketingOptIn': ?marketingOptIn,
+      'preferredLanguage': ?preferredLanguage,
     };
     final previous = state.asData?.value;
     if (previous != null) {
@@ -141,20 +143,12 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
 
     final dio = ref.read(dioProvider);
     try {
-      final upload = await dio.post<Map<String, dynamic>>(
-        '/api/v1/media/upload',
-        data: FormData.fromMap({
-          'file': await MultipartFile.fromFile(
-            file.path,
-            filename: file.uri.pathSegments.last,
-          ),
-        }),
-      );
-      final mediaId = upload.data?['id'] as String?;
-      if (mediaId == null) {
-        throw StateError('Upload avatar impossible');
-      }
+      final xFile = XFile(file.path);
+      final mediaId = await MediaUploadService(
+        dio,
+      ).uploadSalonImage(salonId: '', file: xFile, purpose: 'avatar');
       await _updateAndSync({'avatarMediaId': mediaId});
+      await refresh();
     } on DioException catch (error) {
       final isRecoverable =
           error.type == DioExceptionType.connectionError ||
@@ -170,11 +164,13 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     await ref
         .read(outboxProvider.notifier)
         .clearByTypePrefix('profile_avatar_');
-    await ref.read(outboxProvider.notifier).enqueue(
-      type: 'profile_avatar_upload',
-      payload: const {},
-      localFilePath: filePath,
-    );
+    await ref
+        .read(outboxProvider.notifier)
+        .enqueue(
+          type: 'profile_avatar_upload',
+          payload: const {},
+          localFilePath: filePath,
+        );
   }
 }
 

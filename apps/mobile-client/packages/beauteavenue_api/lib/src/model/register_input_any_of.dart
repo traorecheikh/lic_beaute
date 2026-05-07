@@ -12,14 +12,13 @@ part 'register_input_any_of.g.dart';
 /// RegisterInputAnyOf
 ///
 /// Properties:
-/// * [type]
-/// * [fullName]
-/// * [email]
-/// * [phone]
-/// * [password]
+/// * [type] 
+/// * [fullName] 
+/// * [email] 
+/// * [phone] 
+/// * [password] 
 @BuiltValue()
-abstract class RegisterInputAnyOf
-    implements Built<RegisterInputAnyOf, RegisterInputAnyOfBuilder> {
+abstract class RegisterInputAnyOf implements Built<RegisterInputAnyOf, RegisterInputAnyOfBuilder> {
   @BuiltValueField(wireName: r'type')
   RegisterInputAnyOfTypeEnum get type;
   // enum typeEnum {  client,  };
@@ -38,19 +37,16 @@ abstract class RegisterInputAnyOf
 
   RegisterInputAnyOf._();
 
-  factory RegisterInputAnyOf([void updates(RegisterInputAnyOfBuilder b)]) =
-      _$RegisterInputAnyOf;
+  factory RegisterInputAnyOf([void updates(RegisterInputAnyOfBuilder b)]) = _$RegisterInputAnyOf;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RegisterInputAnyOfBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RegisterInputAnyOf> get serializer =>
-      _$RegisterInputAnyOfSerializer();
+  static Serializer<RegisterInputAnyOf> get serializer => _$RegisterInputAnyOfSerializer();
 }
 
-class _$RegisterInputAnyOfSerializer
-    implements PrimitiveSerializer<RegisterInputAnyOf> {
+class _$RegisterInputAnyOfSerializer implements PrimitiveSerializer<RegisterInputAnyOf> {
   @override
   final Iterable<Type> types = const [RegisterInputAnyOf, _$RegisterInputAnyOf];
 
@@ -99,9 +95,7 @@ class _$RegisterInputAnyOfSerializer
     RegisterInputAnyOf object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -181,17 +175,15 @@ class _$RegisterInputAnyOfSerializer
 }
 
 class RegisterInputAnyOfTypeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'client')
-  static const RegisterInputAnyOfTypeEnum client =
-      _$registerInputAnyOfTypeEnum_client;
+  static const RegisterInputAnyOfTypeEnum client = _$registerInputAnyOfTypeEnum_client;
 
-  static Serializer<RegisterInputAnyOfTypeEnum> get serializer =>
-      _$registerInputAnyOfTypeEnumSerializer;
+  static Serializer<RegisterInputAnyOfTypeEnum> get serializer => _$registerInputAnyOfTypeEnumSerializer;
 
-  const RegisterInputAnyOfTypeEnum._(String name) : super(name);
+  const RegisterInputAnyOfTypeEnum._(String name): super(name);
 
-  static BuiltSet<RegisterInputAnyOfTypeEnum> get values =>
-      _$registerInputAnyOfTypeEnumValues;
-  static RegisterInputAnyOfTypeEnum valueOf(String name) =>
-      _$registerInputAnyOfTypeEnumValueOf(name);
+  static BuiltSet<RegisterInputAnyOfTypeEnum> get values => _$registerInputAnyOfTypeEnumValues;
+  static RegisterInputAnyOfTypeEnum valueOf(String name) => _$registerInputAnyOfTypeEnumValueOf(name);
 }
+

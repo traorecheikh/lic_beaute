@@ -77,6 +77,33 @@ export const proClientBenefitCreateSchema = z.object({
   billingDate: z.string().datetime().nullable().optional()
 });
 
+export const clientAddressSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  street: z.string().nullable(),
+  city: z.string().nullable(),
+  isDefault: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string()
+});
+
+export const clientAddressCreateSchema = z.object({
+  label: z.string().min(1).max(60),
+  street: z.string().max(240).nullable().optional(),
+  city: z.string().max(120).nullable().optional()
+});
+
+export const clientAddressUpdateSchema = z.object({
+  label: z.string().min(1).max(60).optional(),
+  street: z.string().max(240).nullable().optional(),
+  city: z.string().max(120).nullable().optional(),
+  isDefault: z.boolean().optional()
+});
+
+export const clientAddressListResponseSchema = z.object({
+  items: z.array(clientAddressSchema)
+});
+
 export const proVoucherCreateSchema = z.object({
   code: z.string().trim().min(3).max(64),
   title: z.string().min(2).max(120),
@@ -95,3 +122,7 @@ export type ClientVoucher = z.infer<typeof clientVoucherSchema>;
 export type RedeemVoucherInput = z.infer<typeof redeemVoucherInputSchema>;
 export type ProClientBenefitCreateInput = z.infer<typeof proClientBenefitCreateSchema>;
 export type ProVoucherCreateInput = z.infer<typeof proVoucherCreateSchema>;
+export type ClientAddress = z.infer<typeof clientAddressSchema>;
+export type ClientAddressCreateInput = z.infer<typeof clientAddressCreateSchema>;
+export type ClientAddressUpdateInput = z.infer<typeof clientAddressUpdateSchema>;
+export type ClientAddressListResponse = z.infer<typeof clientAddressListResponseSchema>;

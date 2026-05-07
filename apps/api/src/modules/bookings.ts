@@ -2,19 +2,52 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { bookingCreateSchema, bookingRescheduleSchema, reviewCreateInputSchema } from "@beauteavenue/contracts";
 
-import { createPaymentAdapter } from "../adapters/index.js";
+import { getPaymentAdapter } from "../adapters/index.js";
 import { config } from "../config.js";
 import { HttpAuthError, requireRole } from "../lib/auth.js";
-import { computeAvailableSlots } from "../lib/availability.js";
+import { fetchAndComputeAvailableSlots } from "../lib/availability.js";
 import { fail, ok } from "../lib/http.js";
+import { logger } from "../lib/logger.js";
+import { toDbProvider, toPublicGatewayProvider } from "../lib/payment-provider.js";
 import { prisma } from "../lib/prisma.js";
+import type { PrismaClient } from "@prisma/client";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
+  intechApiKey: config.intechApiKey,
+  intechApiSecret: config.intechApiSecret,
+  intechEnv: config.intechEnv,
+  intechBaseUrl: config.intechBaseUrl,
+  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
+  intechHmacSecretKey: config.intechHmacSecretKey,
+  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
+  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
   paytechApiKey: config.paytechApiKey,
   paytechApiSecret: config.paytechApiSecret,
   paytechEnv: config.paytechEnv,
   baseOrigin: config.webOrigin
 });
+
+async function scheduleReminders(client: PrismaClient, bookingId: string, startsAt: Date) {
+  const windows = [
+    { label: "24h", offsetMs: 24 * 60 * 60 * 1000 },
+    { label: "1h", offsetMs: 60 * 60 * 1000 }
+  ];
+
+  for (const w of windows) {
+    const runAfter = new Date(startsAt.getTime() - w.offsetMs);
+    if (runAfter.getTime() > Date.now()) {
+      await client.job.create({
+        data: {
+          queue: "notifications",
+          type: "booking_reminder",
+          payloadJson: JSON.stringify({ bookingId, window: w.label }),
+          status: "pending",
+          runAfter
+        }
+      });
+    }
+  }
+}
 
 function calcDepositAmount(service: {
   depositMode: string;
@@ -56,7 +89,7 @@ function bookingSummary(booking: {
     source: booking.source,
     depositAmountXof: booking.depositAmountXof,
     depositPaymentStatus: booking.depositPaymentStatus,
-    paymentProvider: booking.paymentProvider,
+    paymentProvider: booking.paymentProvider ? toPublicGatewayProvider(booking.paymentProvider) : null,
     paymentId: booking.payments[0]?.id ?? null
   };
 }
@@ -68,7 +101,7 @@ export class BookingController {
       const body = bookingCreateSchema.parse(request.body);
 
       const service = await prisma.service.findFirst({
-        where: { id: body.serviceId, isActive: true }
+        where: { id: body.serviceId, salonId: body.salonId, isActive: true }
       });
       if (!service) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
 
@@ -80,46 +113,34 @@ export class BookingController {
       }
 
       const startsAt = new Date(body.startsAt);
+      if (startsAt.getTime() <= Date.now()) {
+        fail(reply, 422, "invalid_start_time", "La réservation doit être planifiée dans le futur.");
+        return;
+      }
       const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
+
+      if (body.employeeId) {
+        const employee = await prisma.employee.findFirst({
+          where: { id: body.employeeId, salonId: body.salonId, isActive: true, schedulingEnabled: true },
+          include: { specialties: { select: { serviceId: true } } }
+        });
+        if (!employee) {
+          fail(reply, 422, "employee_not_available", "Employé introuvable ou indisponible.");
+          return;
+        }
+        if (employee.specialties.length > 0 && !employee.specialties.some((s) => s.serviceId === body.serviceId)) {
+          fail(reply, 422, "employee_service_mismatch", "Cet employé ne propose pas ce service.");
+          return;
+        }
+      }
+
       const date = new Date(startsAt.getFullYear(), startsAt.getMonth(), startsAt.getDate());
-      const dayOfWeek = startsAt.getDay();
-      const nextDay = new Date(date);
-      nextDay.setDate(nextDay.getDate() + 1);
 
-      const [salonHour, blockedSlots, existingBookings, employees] = await Promise.all([
-        prisma.salonHours.findUnique({ where: { salonId_dayOfWeek: { salonId: body.salonId, dayOfWeek } } }),
-        prisma.blockedSlot.findMany({
-          where: { salonId: body.salonId, startsAt: { lt: nextDay }, endsAt: { gt: date } }
-        }),
-        prisma.booking.findMany({
-          where: {
-            salonId: body.salonId,
-            status: { notIn: ["cancelled"] },
-            startsAt: { lt: nextDay },
-            endsAt: { gt: date }
-          },
-          select: { startsAt: true, endsAt: true, employeeId: true }
-        }),
-        prisma.employee.findMany({
-          where: { salonId: body.salonId, isActive: true, schedulingEnabled: true }
-        })
-      ]);
-
-      const availableSlots = computeAvailableSlots({
-        hours: salonHour
-          ? { isOpen: salonHour.isOpen, opensAt: salonHour.opensAt, closesAt: salonHour.closesAt }
-          : { isOpen: false, opensAt: null, closesAt: null },
-        service: { durationMinutes: service.durationMinutes },
+      const availableSlots = await fetchAndComputeAvailableSlots(prisma, {
+        salonId: body.salonId,
         date,
-        blockedSlots: blockedSlots.map((b) => ({
-          startsAt: b.startsAt,
-          endsAt: b.endsAt,
-          scope: b.scope as "salon" | "employee",
-          employeeId: b.employeeId
-        })),
-        existingBookings,
-        employees,
-        requestedEmployeeId: body.employeeId
+        durationMinutes: service.durationMinutes,
+        employeeId: body.employeeId
       });
 
       const slotAvailable = availableSlots.some(
@@ -149,15 +170,18 @@ export class BookingController {
           }
         });
 
-        const payment = await tx.payment.create({
-          data: {
-            bookingId: booking.id,
-            provider: body.provider ?? "paytech",
-            status: "pending",
-            amountXof: depositAmountXof,
-            idempotencyKey: `booking-${booking.id}-deposit`
-          }
-        });
+        let payment = null;
+        if (depositAmountXof > 0) {
+          payment = await tx.payment.create({
+            data: {
+              bookingId: booking.id,
+              provider: toDbProvider(body.provider ?? "intech") ?? "intech",
+              status: "pending",
+              amountXof: depositAmountXof,
+              idempotencyKey: `booking-${booking.id}-deposit`
+            }
+          });
+        }
 
         await tx.bookingEvent.create({
           data: {
@@ -176,9 +200,19 @@ export class BookingController {
         include: { salon: true, service: true, payments: { take: 1 } }
       });
 
+      try {
+        await scheduleReminders(prisma, result.booking.id, result.booking.startsAt);
+      } catch (error) {
+        logger.error("booking.create: reminder scheduling failed", {
+          bookingId: result.booking.id,
+          error
+        });
+      }
+
       ok(reply, bookingSummary(full!), 201);
     } catch (error) {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      logger.error("booking.create failed", { error });
       fail(reply, 500, "internal_error", "Erreur interne.");
     }
   }
@@ -228,10 +262,24 @@ export class BookingController {
         return;
       }
 
+      const windowSetting = await prisma.platformSetting.findUnique({ where: { key: "cancellation_window_hours" } });
+      const windowHours = windowSetting ? parseInt(windowSetting.value, 10) : 24;
+      if (windowHours > 0) {
+        const cutoff = new Date(booking.startsAt.getTime() - windowHours * 3600_000);
+        if (new Date() > cutoff) {
+          fail(reply, 422, "cancellation_window_closed", `L'annulation n'est plus possible. Délai de ${windowHours}h avant la prestation écoulé.`);
+          return;
+        }
+      }
+
       await prisma.$transaction(async (tx) => {
         await tx.booking.update({ where: { id: booking.id }, data: { status: "cancelled" } });
         await tx.bookingEvent.create({
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "cancelled", fromStatus: booking.status, toStatus: "cancelled" }
+        });
+        await tx.job.updateMany({
+          where: { type: "booking_reminder", payloadJson: { contains: booking.id }, status: "pending" },
+          data: { status: "cancelled" }
         });
 
         if (booking.payments.length > 0) {
@@ -244,6 +292,24 @@ export class BookingController {
             }
           });
         }
+
+        await tx.auditLog.create({
+          data: {
+            action: "booking_cancelled_by_client",
+            summary: `Annulation client ${booking.id}`,
+            entityType: "Booking",
+            entityId: booking.id,
+            actorName: "client",
+            actorUserId: session.sub,
+            severity: "info",
+            payloadJson: JSON.stringify({
+              fromStatus: booking.status,
+              toStatus: "cancelled",
+              paymentLinked: booking.payments.length > 0,
+              paymentId: booking.payments[0]?.id ?? null
+            })
+          }
+        });
       });
 
       ok(reply, { cancelled: true });
@@ -270,29 +336,19 @@ export class BookingController {
       }
 
       const newStart = new Date(body.startsAt);
+      if (newStart.getTime() <= Date.now()) {
+        fail(reply, 422, "invalid_start_time", "La réservation doit être planifiée dans le futur.");
+        return;
+      }
       const newEnd = new Date(newStart.getTime() + booking.service.durationMinutes * 60 * 1000);
       const date = new Date(newStart.getFullYear(), newStart.getMonth(), newStart.getDate());
-      const dayOfWeek = newStart.getDay();
-      const nextDay = new Date(date);
-      nextDay.setDate(nextDay.getDate() + 1);
 
-      const [salonHour, blockedSlots, existingBookings, employees] = await Promise.all([
-        prisma.salonHours.findUnique({ where: { salonId_dayOfWeek: { salonId: booking.salonId, dayOfWeek } } }),
-        prisma.blockedSlot.findMany({ where: { salonId: booking.salonId, startsAt: { lt: nextDay }, endsAt: { gt: date } } }),
-        prisma.booking.findMany({
-          where: { salonId: booking.salonId, status: { notIn: ["cancelled"] }, id: { not: booking.id }, startsAt: { lt: nextDay }, endsAt: { gt: date } },
-          select: { startsAt: true, endsAt: true, employeeId: true }
-        }),
-        prisma.employee.findMany({ where: { salonId: booking.salonId, isActive: true, schedulingEnabled: true } })
-      ]);
-
-      const slots = computeAvailableSlots({
-        hours: salonHour ? { isOpen: salonHour.isOpen, opensAt: salonHour.opensAt, closesAt: salonHour.closesAt } : { isOpen: false, opensAt: null, closesAt: null },
-        service: { durationMinutes: booking.service.durationMinutes },
+      const slots = await fetchAndComputeAvailableSlots(prisma, {
+        salonId: booking.salonId,
         date,
-        blockedSlots: blockedSlots.map((b) => ({ startsAt: b.startsAt, endsAt: b.endsAt, scope: b.scope as "salon" | "employee", employeeId: b.employeeId })),
-        existingBookings,
-        employees
+        durationMinutes: booking.service.durationMinutes,
+        employeeId: booking.employeeId ?? undefined,
+        excludeBookingId: booking.id
       });
 
       if (!slots.some((s) => new Date(s.startsAt).getTime() === newStart.getTime())) {
@@ -305,7 +361,13 @@ export class BookingController {
         await tx.bookingEvent.create({
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "rescheduled", payloadJson: JSON.stringify({ newStartsAt: newStart }) }
         });
+        await tx.job.updateMany({
+          where: { type: "booking_reminder", payloadJson: { contains: booking.id }, status: "pending" },
+          data: { status: "cancelled" }
+        });
       });
+
+      await scheduleReminders(prisma, booking.id, newStart);
 
       const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { salon: true, service: true, payments: { take: 1 } } });
       ok(reply, bookingSummary(updated!));

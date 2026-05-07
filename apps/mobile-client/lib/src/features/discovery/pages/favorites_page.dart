@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_async_view.dart';
-import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_sliver_salon_list.dart';
 import '../../../router/app_router.dart';
 import '../providers/favorites_provider.dart';
@@ -19,20 +19,22 @@ class FavoritesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favoritesAsync = ref.watch(favoritesListProvider);
+    final favoriteIds = ref.watch(
+      favoritesProvider.select((state) => state.salonIds),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        title: const Text('Mes Favoris'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Mes Favoris'), centerTitle: true),
       body: AppAsyncView(
         value: favoritesAsync,
         errorTitle: 'Impossible de charger vos favoris',
         serverTitle: 'Les favoris sont indisponibles',
         onRetry: () => ref.refresh(favoritesListProvider.future),
         builder: (resource) {
-          final favorites = (resource.data as List<dynamic>?) ?? [];
+          final favorites = (resource.data ?? const <SalonSummary>[])
+              .where((salon) => favoriteIds.contains(salon.id))
+              .toList(growable: false);
 
           return CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(

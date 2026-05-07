@@ -16,6 +16,9 @@
     "db:migrate": "pnpm --filter @beauteavenue/api prisma:migrate",
     "db:seed": "pnpm --filter @beauteavenue/api prisma:seed",
     "openapi:generate": "pnpm --filter @beauteavenue/contracts openapi:generate",
+    "openapi:generate:mobile": "bash scripts/generate-mobile-client.sh",
+    "openapi:generate:web": "pnpm --filter @beauteavenue/web-admin openapi:generate",
+    "openapi:generate:all": "pnpm openapi:generate && pnpm openapi:generate:web && pnpm openapi:generate:mobile",
     "docker:up": "docker compose -f infra/compose/docker-compose.yml up --build",
     "docker:down": "docker compose -f infra/compose/docker-compose.yml down -v"
   }

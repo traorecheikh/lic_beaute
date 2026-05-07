@@ -45,20 +45,57 @@ import 'package:beauteavenue_api/src/model/admin_subscription_override_input.dar
 import 'package:beauteavenue_api/src/model/admin_subscription_override_input_metadata.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_summary.dart';
 import 'package:beauteavenue_api/src/model/api_error.dart';
+import 'package:beauteavenue_api/src/model/api_v1_bookings_booking_id_review_post201_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_bookings_booking_id_review_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_addresses_address_id_patch_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_addresses_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_addresses_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_addresses_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_benefits_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_benefits_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_payment_methods_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_payment_methods_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_vouchers_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_me_vouchers_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_media_media_id_complete_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_media_upload_intent_post201_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_media_upload_intent_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_notifications_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_notifications_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_notifications_id_read_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_intech_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_pro_vouchers_post201_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_push_tokens_post201_response.dart';
 import 'package:beauteavenue_api/src/model/auth_session.dart';
 import 'package:beauteavenue_api/src/model/booking_create_input.dart';
+import 'package:beauteavenue_api/src/model/booking_reschedule_input.dart';
 import 'package:beauteavenue_api/src/model/booking_summary.dart';
 import 'package:beauteavenue_api/src/model/booking_summary_list_response.dart';
 import 'package:beauteavenue_api/src/model/booking_summary_list_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/client_benefit.dart';
+import 'package:beauteavenue_api/src/model/client_payment_method.dart';
+import 'package:beauteavenue_api/src/model/client_payment_method_create_input.dart';
+import 'package:beauteavenue_api/src/model/client_payment_method_update_input.dart';
+import 'package:beauteavenue_api/src/model/client_voucher.dart';
 import 'package:beauteavenue_api/src/model/current_user.dart';
 import 'package:beauteavenue_api/src/model/deleted_response.dart';
 import 'package:beauteavenue_api/src/model/email_login_input.dart';
+import 'package:beauteavenue_api/src/model/favorite_item.dart';
+import 'package:beauteavenue_api/src/model/favorite_list_response.dart';
 import 'package:beauteavenue_api/src/model/health_get200_response.dart';
 import 'package:beauteavenue_api/src/model/health_get200_response_database.dart';
 import 'package:beauteavenue_api/src/model/logout_response.dart';
+import 'package:beauteavenue_api/src/model/media_asset.dart';
+import 'package:beauteavenue_api/src/model/media_upload_response.dart';
 import 'package:beauteavenue_api/src/model/otp_accepted_response.dart';
 import 'package:beauteavenue_api/src/model/otp_request_input.dart';
 import 'package:beauteavenue_api/src/model/otp_verify_input.dart';
+import 'package:beauteavenue_api/src/model/payment_initiate_input.dart';
+import 'package:beauteavenue_api/src/model/payment_initiate_response.dart';
+import 'package:beauteavenue_api/src/model/payment_reconcile_response.dart';
+import 'package:beauteavenue_api/src/model/payment_status_response.dart';
+import 'package:beauteavenue_api/src/model/payment_webhook_body.dart';
+import 'package:beauteavenue_api/src/model/payment_webhook_body_amount.dart';
 import 'package:beauteavenue_api/src/model/pro_analytics.dart';
 import 'package:beauteavenue_api/src/model/pro_analytics_top_services_inner.dart';
 import 'package:beauteavenue_api/src/model/pro_blocked_slot.dart';
@@ -72,6 +109,7 @@ import 'package:beauteavenue_api/src/model/pro_checkout_complete_input.dart';
 import 'package:beauteavenue_api/src/model/pro_checkout_complete_result.dart';
 import 'package:beauteavenue_api/src/model/pro_checkout_details.dart';
 import 'package:beauteavenue_api/src/model/pro_checkout_details_line_items_inner.dart';
+import 'package:beauteavenue_api/src/model/pro_client_benefit_create_input.dart';
 import 'package:beauteavenue_api/src/model/pro_client_detail.dart';
 import 'package:beauteavenue_api/src/model/pro_client_detail_recent_bookings_inner.dart';
 import 'package:beauteavenue_api/src/model/pro_client_summary.dart';
@@ -99,6 +137,10 @@ import 'package:beauteavenue_api/src/model/pro_subscription_checkout_input.dart'
 import 'package:beauteavenue_api/src/model/pro_subscription_checkout_result.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_update_input.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_update_input_billing_method.dart';
+import 'package:beauteavenue_api/src/model/pro_voucher_create_input.dart';
+import 'package:beauteavenue_api/src/model/profile_options.dart';
+import 'package:beauteavenue_api/src/model/push_token_input.dart';
+import 'package:beauteavenue_api/src/model/redeem_voucher_input.dart';
 import 'package:beauteavenue_api/src/model/refresh_input.dart';
 import 'package:beauteavenue_api/src/model/register_input.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of.dart';
@@ -150,20 +192,57 @@ part 'serializers.g.dart';
   AdminSubscriptionOverrideInputMetadata,
   AdminSubscriptionSummary,
   ApiError,
+  ApiV1BookingsBookingIdReviewPost201Response,
+  ApiV1BookingsBookingIdReviewPostRequest,
+  ApiV1MeAddressesAddressIdPatchRequest,
+  ApiV1MeAddressesGet200Response,
+  ApiV1MeAddressesGet200ResponseItemsInner,
+  ApiV1MeAddressesPostRequest,
+  ApiV1MeBenefitsGet200Response,
+  ApiV1MeBenefitsGet200ResponseItemsInner,
+  ApiV1MePaymentMethodsGet200Response,
+  ApiV1MePaymentMethodsGet200ResponseItemsInner,
+  ApiV1MeVouchersGet200Response,
+  ApiV1MeVouchersGet200ResponseItemsInner,
+  ApiV1MediaMediaIdCompletePost200Response,
+  ApiV1MediaUploadIntentPost201Response,
+  ApiV1MediaUploadIntentPostRequest,
+  ApiV1NotificationsGet200Response,
+  ApiV1NotificationsGet200ResponseItemsInner,
+  ApiV1NotificationsIdReadPost200Response,
+  ApiV1PaymentsWebhooksIntechPost200Response,
+  ApiV1ProVouchersPost201Response,
+  ApiV1PushTokensPost201Response,
   AuthSession,
   BookingCreateInput,
+  BookingRescheduleInput,
   BookingSummary,
   BookingSummaryListResponse,
   BookingSummaryListResponseItemsInner,
+  ClientBenefit,
+  ClientPaymentMethod,
+  ClientPaymentMethodCreateInput,
+  ClientPaymentMethodUpdateInput,
+  ClientVoucher,
   CurrentUser,
   DeletedResponse,
   EmailLoginInput,
+  FavoriteItem,
+  FavoriteListResponse,
   HealthGet200Response,
   HealthGet200ResponseDatabase,
   LogoutResponse,
+  MediaAsset,
+  MediaUploadResponse,
   OtpAcceptedResponse,
   OtpRequestInput,
   OtpVerifyInput,
+  PaymentInitiateInput,
+  PaymentInitiateResponse,
+  PaymentReconcileResponse,
+  PaymentStatusResponse,
+  PaymentWebhookBody,
+  PaymentWebhookBodyAmount,
   ProAnalytics,
   ProAnalyticsTopServicesInner,
   ProBlockedSlot,
@@ -177,6 +256,7 @@ part 'serializers.g.dart';
   ProCheckoutCompleteResult,
   ProCheckoutDetails,
   ProCheckoutDetailsLineItemsInner,
+  ProClientBenefitCreateInput,
   ProClientDetail,
   ProClientDetailRecentBookingsInner,
   ProClientSummary,
@@ -204,6 +284,10 @@ part 'serializers.g.dart';
   ProSubscriptionCheckoutResult,
   ProSubscriptionUpdateInput,
   ProSubscriptionUpdateInputBillingMethod,
+  ProVoucherCreateInput,
+  ProfileOptions,
+  PushTokenInput,
+  RedeemVoucherInput,
   RefreshInput,
   RegisterInput,
   RegisterInputAnyOf,
@@ -265,8 +349,8 @@ Serializers serializers = (_$serializers.toBuilder()
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
       ..add(const DateSerializer())
-      ..add(Iso8601DateTimeSerializer()))
-    .build();
+      ..add(Iso8601DateTimeSerializer())
+    ).build();
 
 Serializers standardSerializers =
     (serializers.toBuilder()..addPlugin(StandardJsonPlugin())).build();

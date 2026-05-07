@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -28,6 +30,7 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
 
   String? _serviceId;
   String _staffId = 'any';
+  bool _isResolvingAnyStaff = false;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   int? _selectedHour;
   Map<String, dynamic>? _selectedSlot;
@@ -44,22 +47,39 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
     return true;
   }
 
-  void _advance() {
-    if (!_canAdvance) return;
+  Future<void> _advance() async {
+    if (!_canAdvance || _isResolvingAnyStaff) return;
     AppHaptics.medium();
     if (_step == 1) {
-      final staffId = _staffId == 'any' ? null : _staffId;
-      final staff = ref
-          .read(salonDetailProvider(widget.salonId))
-          .value
-          ?.staff
-          .where((s) => s.id == _staffId)
-          .firstOrNull;
+      final salon = ref.read(salonDetailProvider(widget.salonId)).value;
+      final serviceId = _serviceId;
+      String? staffId = _staffId == 'any' ? null : _staffId;
+
+      if (_staffId == 'any' &&
+          salon != null &&
+          serviceId != null &&
+          serviceId.isNotEmpty) {
+        setState(() => _isResolvingAnyStaff = true);
+        try {
+          staffId = await _resolveBestStaffId(
+            salon: salon,
+            serviceId: serviceId,
+          );
+          if (!mounted) return;
+          if (staffId != null && staffId.isNotEmpty) {
+            setState(() => _staffId = staffId!);
+          }
+        } finally {
+          if (mounted) setState(() => _isResolvingAnyStaff = false);
+        }
+      }
+
+      final staff = salon?.staff.where((s) => s.id == staffId).firstOrNull;
       ref
           .read(bookingFunnelProvider.notifier)
           .selectEmployee(
             employeeId: staffId,
-            employeeName: staff?.displayName,
+            employeeName: staff?.displayName ?? 'Sans préférence',
           );
     } else if (_step == 2) {
       ref
@@ -80,6 +100,97 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
     } else {
       _confirm();
     }
+  }
+
+  Future<String?> _resolveBestStaffId({
+    required SalonDetail salon,
+    required String serviceId,
+  }) async {
+    final candidates = salon.staff
+        .where((s) => s.serviceIds.contains(serviceId))
+        .toList();
+    if (candidates.isEmpty) return null;
+
+    final scores = <String, _StaffLoadScore>{
+      for (final s in candidates) s.id: _StaffLoadScore(staffId: s.id),
+    };
+
+    const horizonDays = 5;
+    for (var dayOffset = 1; dayOffset <= horizonDays; dayOffset++) {
+      final probeDate = DateTime.now().add(Duration(days: dayOffset));
+      final date = _ymd(probeDate);
+
+      final daySamples = await Future.wait(
+        candidates.map((staff) async {
+          final params = (
+            salonId: widget.salonId,
+            date: date,
+            serviceId: serviceId,
+            employeeId: staff.id,
+          );
+          try {
+            final slots = await ref.read(
+              salonAvailabilityProvider(params).future,
+            );
+            return (staffId: staff.id, slots: slots);
+          } catch (_) {
+            return (staffId: staff.id, slots: const <dynamic>[]);
+          }
+        }),
+      );
+
+      for (final sample in daySamples) {
+        final slotMaps = sample.slots
+            .whereType<Map<String, dynamic>>()
+            .toList();
+        final score = scores[sample.staffId];
+        if (score == null || slotMaps.isEmpty) continue;
+
+        score.totalSlots += slotMaps.length;
+        score.availableDays += 1;
+        final dayEarliest = slotMaps
+            .map((slot) => slot['startsAt'] as String?)
+            .whereType<String>()
+            .fold<DateTime?>(null, (earliest, startsAt) {
+              final parsed = DateTime.tryParse(startsAt);
+              if (parsed == null) return earliest;
+              if (earliest == null || parsed.isBefore(earliest)) return parsed;
+              return earliest;
+            });
+        if (dayEarliest != null &&
+            (score.earliest == null || dayEarliest.isBefore(score.earliest!))) {
+          score.earliest = dayEarliest;
+        }
+      }
+    }
+
+    final ranked = scores.values.toList()
+      ..sort((a, b) {
+        final byDays = b.availableDays.compareTo(a.availableDays);
+        if (byDays != 0) return byDays;
+        final bySlots = b.totalSlots.compareTo(a.totalSlots);
+        if (bySlots != 0) return bySlots;
+        final aEarliest = a.earliest;
+        final bEarliest = b.earliest;
+        if (aEarliest != null && bEarliest != null) {
+          final byEarliest = aEarliest.compareTo(bEarliest);
+          if (byEarliest != 0) return byEarliest;
+        } else if (aEarliest != null) {
+          return -1;
+        } else if (bEarliest != null) {
+          return 1;
+        }
+        return a.staffId.compareTo(b.staffId);
+      });
+
+    return ranked.firstOrNull?.staffId;
+  }
+
+  String _ymd(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   void _back() {
@@ -121,6 +232,8 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
   Widget build(BuildContext context) {
     final createState = ref.watch(bookingCreateProvider);
     final isConfirming = createState.isLoading && _step == 3;
+    final isResolvingStaff = _isResolvingAnyStaff && _step == 1;
+    final isBusy = isConfirming || isResolvingStaff;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.82,
@@ -219,9 +332,11 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
                   ),
                 ),
               _Cta(
-                label: _step == 3 ? 'Confirmer la réservation' : 'Continuer',
-                enabled: _canAdvance && !isConfirming,
-                loading: isConfirming,
+                label: isResolvingStaff
+                    ? 'Recherche du meilleur prestataire...'
+                    : (_step == 3 ? 'Confirmer la réservation' : 'Continuer'),
+                enabled: _canAdvance && !isBusy,
+                loading: isBusy,
                 onTap: () {
                   setState(() => _errorMsg = null);
                   _advance();
@@ -233,6 +348,15 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
       },
     );
   }
+}
+
+class _StaffLoadScore {
+  _StaffLoadScore({required this.staffId});
+
+  final String staffId;
+  int totalSlots = 0;
+  int availableDays = 0;
+  DateTime? earliest;
 }
 
 // ─── Shell widgets ────────────────────────────────────────────────────────────
@@ -375,7 +499,7 @@ class _ServiceStep extends ConsumerWidget {
     final salonAsync = ref.watch(salonDetailProvider(salonId));
     return salonAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) =>
+      error: (_, _) =>
           const Center(child: Text('Impossible de charger les services.')),
       data: (salon) {
         final services = salon?.services.toList() ?? [];
@@ -392,7 +516,7 @@ class _ServiceStep extends ConsumerWidget {
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 20.h),
           itemCount: services.length,
-          separatorBuilder: (_, __) => SizedBox(height: 10.h),
+          separatorBuilder: (_, _) => SizedBox(height: 10.h),
           itemBuilder: (_, i) {
             final s = services[i];
             return _ServiceCard(
@@ -432,7 +556,7 @@ class _StaffStep extends ConsumerWidget {
     final salonAsync = ref.watch(salonDetailProvider(salonId));
     return salonAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) =>
+      error: (_, _) =>
           const Center(child: Text("Impossible de charger l'équipe.")),
       data: (salon) {
         final staff = (salon?.staff.toList() ?? [])
@@ -458,7 +582,7 @@ class _StaffStep extends ConsumerWidget {
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 20.h),
           itemCount: items.length,
-          separatorBuilder: (_, __) => SizedBox(height: 10.h),
+          separatorBuilder: (_, _) => SizedBox(height: 10.h),
           itemBuilder: (_, i) {
             final (id, name, role, image, isAny) = items[i];
             final isSelected = selectedId == id;
@@ -535,6 +659,21 @@ class _SlotStep extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (serviceId.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Text(
+            'Choisissez d’abord une prestation.',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
     final params = (
       salonId: salonId,
       date: _ymd(selectedDate),
@@ -605,7 +744,7 @@ class _SlotStep extends ConsumerWidget {
         Expanded(
           child: availabilityAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Center(
+            error: (_, _) => Center(
               child: Text(
                 'Impossible de charger les disponibilités.',
                 style: AppTextStyles.bodyMd.copyWith(
@@ -902,11 +1041,7 @@ class _ReviewStep extends ConsumerWidget {
               SizedBox(height: 14.h),
               _PriceLine('Total prestation', '$total XOF'),
               Divider(color: AppColors.outlineVariant, height: 20.h),
-              _PriceLine(
-                'Acompte maintenant',
-                '$deposit XOF',
-                highlight: true,
-              ),
+              _PriceLine('Acompte maintenant', '$deposit XOF', highlight: true),
               gapH4,
               _PriceLine('Reste sur place', '$remaining XOF', muted: true),
             ],
@@ -1064,7 +1199,11 @@ class _ServiceCard extends StatelessWidget {
               ),
               child: selected
                   ? Center(
-                      child: Icon(Icons.check, color: AppColors.white, size: 13.r),
+                      child: Icon(
+                        Icons.check,
+                        color: AppColors.white,
+                        size: 13.r,
+                      ),
                     )
                   : null,
             ),
@@ -1173,7 +1312,7 @@ class _StaffCard extends StatelessWidget {
                 radius: 22.r,
                 backgroundColor: AppColors.primaryLight,
                 backgroundImage: (image != null && image!.isNotEmpty)
-                    ? NetworkImage(image!)
+                    ? CachedNetworkImageProvider(image!)
                     : null,
                 child: (image == null || image!.isEmpty)
                     ? Text(
@@ -1213,7 +1352,11 @@ class _StaffCard extends StatelessWidget {
               ),
               child: selected
                   ? Center(
-                      child: Icon(Icons.check, color: AppColors.white, size: 13.r),
+                      child: Icon(
+                        Icons.check,
+                        color: AppColors.white,
+                        size: 13.r,
+                      ),
                     )
                   : null,
             ),

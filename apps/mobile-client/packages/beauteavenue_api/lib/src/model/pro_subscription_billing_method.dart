@@ -12,41 +12,31 @@ part 'pro_subscription_billing_method.g.dart';
 /// ProSubscriptionBillingMethod
 ///
 /// Properties:
-/// * [provider]
-/// * [accountNumberMasked]
+/// * [provider] 
+/// * [accountNumberMasked] 
 @BuiltValue()
-abstract class ProSubscriptionBillingMethod
-    implements
-        Built<ProSubscriptionBillingMethod,
-            ProSubscriptionBillingMethodBuilder> {
+abstract class ProSubscriptionBillingMethod implements Built<ProSubscriptionBillingMethod, ProSubscriptionBillingMethodBuilder> {
   @BuiltValueField(wireName: r'provider')
   ProSubscriptionBillingMethodProviderEnum get provider;
-  // enum providerEnum {  wave,  orange_money,  };
+  // enum providerEnum {  intech,  manual,  };
 
   @BuiltValueField(wireName: r'accountNumberMasked')
   String get accountNumberMasked;
 
   ProSubscriptionBillingMethod._();
 
-  factory ProSubscriptionBillingMethod(
-          [void updates(ProSubscriptionBillingMethodBuilder b)]) =
-      _$ProSubscriptionBillingMethod;
+  factory ProSubscriptionBillingMethod([void updates(ProSubscriptionBillingMethodBuilder b)]) = _$ProSubscriptionBillingMethod;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSubscriptionBillingMethodBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSubscriptionBillingMethod> get serializer =>
-      _$ProSubscriptionBillingMethodSerializer();
+  static Serializer<ProSubscriptionBillingMethod> get serializer => _$ProSubscriptionBillingMethodSerializer();
 }
 
-class _$ProSubscriptionBillingMethodSerializer
-    implements PrimitiveSerializer<ProSubscriptionBillingMethod> {
+class _$ProSubscriptionBillingMethodSerializer implements PrimitiveSerializer<ProSubscriptionBillingMethod> {
   @override
-  final Iterable<Type> types = const [
-    ProSubscriptionBillingMethod,
-    _$ProSubscriptionBillingMethod
-  ];
+  final Iterable<Type> types = const [ProSubscriptionBillingMethod, _$ProSubscriptionBillingMethod];
 
   @override
   final String wireName = r'ProSubscriptionBillingMethod';
@@ -74,9 +64,7 @@ class _$ProSubscriptionBillingMethodSerializer
     ProSubscriptionBillingMethod object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -94,8 +82,7 @@ class _$ProSubscriptionBillingMethodSerializer
         case r'provider':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(ProSubscriptionBillingMethodProviderEnum),
+            specifiedType: const FullType(ProSubscriptionBillingMethodProviderEnum),
           ) as ProSubscriptionBillingMethodProviderEnum;
           result.provider = valueDes;
           break;
@@ -136,20 +123,17 @@ class _$ProSubscriptionBillingMethodSerializer
 }
 
 class ProSubscriptionBillingMethodProviderEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'wave')
-  static const ProSubscriptionBillingMethodProviderEnum wave =
-      _$proSubscriptionBillingMethodProviderEnum_wave;
-  @BuiltValueEnumConst(wireName: r'orange_money')
-  static const ProSubscriptionBillingMethodProviderEnum orangeMoney =
-      _$proSubscriptionBillingMethodProviderEnum_orangeMoney;
 
-  static Serializer<ProSubscriptionBillingMethodProviderEnum> get serializer =>
-      _$proSubscriptionBillingMethodProviderEnumSerializer;
+  @BuiltValueEnumConst(wireName: r'intech')
+  static const ProSubscriptionBillingMethodProviderEnum intech = _$proSubscriptionBillingMethodProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const ProSubscriptionBillingMethodProviderEnum manual = _$proSubscriptionBillingMethodProviderEnum_manual;
 
-  const ProSubscriptionBillingMethodProviderEnum._(String name) : super(name);
+  static Serializer<ProSubscriptionBillingMethodProviderEnum> get serializer => _$proSubscriptionBillingMethodProviderEnumSerializer;
 
-  static BuiltSet<ProSubscriptionBillingMethodProviderEnum> get values =>
-      _$proSubscriptionBillingMethodProviderEnumValues;
-  static ProSubscriptionBillingMethodProviderEnum valueOf(String name) =>
-      _$proSubscriptionBillingMethodProviderEnumValueOf(name);
+  const ProSubscriptionBillingMethodProviderEnum._(String name): super(name);
+
+  static BuiltSet<ProSubscriptionBillingMethodProviderEnum> get values => _$proSubscriptionBillingMethodProviderEnumValues;
+  static ProSubscriptionBillingMethodProviderEnum valueOf(String name) => _$proSubscriptionBillingMethodProviderEnumValueOf(name);
 }
+

@@ -11,16 +11,13 @@ part 'admin_dashboard_top_growth_salons_inner.g.dart';
 /// AdminDashboardTopGrowthSalonsInner
 ///
 /// Properties:
-/// * [salonId]
-/// * [salonName]
-/// * [bookingDeltaPercent]
-/// * [bookingsThisWeek]
-/// * [city]
+/// * [salonId] 
+/// * [salonName] 
+/// * [bookingDeltaPercent] 
+/// * [bookingsThisWeek] 
+/// * [city] 
 @BuiltValue()
-abstract class AdminDashboardTopGrowthSalonsInner
-    implements
-        Built<AdminDashboardTopGrowthSalonsInner,
-            AdminDashboardTopGrowthSalonsInnerBuilder> {
+abstract class AdminDashboardTopGrowthSalonsInner implements Built<AdminDashboardTopGrowthSalonsInner, AdminDashboardTopGrowthSalonsInnerBuilder> {
   @BuiltValueField(wireName: r'salonId')
   String get salonId;
 
@@ -38,25 +35,18 @@ abstract class AdminDashboardTopGrowthSalonsInner
 
   AdminDashboardTopGrowthSalonsInner._();
 
-  factory AdminDashboardTopGrowthSalonsInner(
-          [void updates(AdminDashboardTopGrowthSalonsInnerBuilder b)]) =
-      _$AdminDashboardTopGrowthSalonsInner;
+  factory AdminDashboardTopGrowthSalonsInner([void updates(AdminDashboardTopGrowthSalonsInnerBuilder b)]) = _$AdminDashboardTopGrowthSalonsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminDashboardTopGrowthSalonsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminDashboardTopGrowthSalonsInner> get serializer =>
-      _$AdminDashboardTopGrowthSalonsInnerSerializer();
+  static Serializer<AdminDashboardTopGrowthSalonsInner> get serializer => _$AdminDashboardTopGrowthSalonsInnerSerializer();
 }
 
-class _$AdminDashboardTopGrowthSalonsInnerSerializer
-    implements PrimitiveSerializer<AdminDashboardTopGrowthSalonsInner> {
+class _$AdminDashboardTopGrowthSalonsInnerSerializer implements PrimitiveSerializer<AdminDashboardTopGrowthSalonsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminDashboardTopGrowthSalonsInner,
-    _$AdminDashboardTopGrowthSalonsInner
-  ];
+  final Iterable<Type> types = const [AdminDashboardTopGrowthSalonsInner, _$AdminDashboardTopGrowthSalonsInner];
 
   @override
   final String wireName = r'AdminDashboardTopGrowthSalonsInner';
@@ -99,9 +89,7 @@ class _$AdminDashboardTopGrowthSalonsInnerSerializer
     AdminDashboardTopGrowthSalonsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -179,3 +167,4 @@ class _$AdminDashboardTopGrowthSalonsInnerSerializer
     return result.build();
   }
 }
+

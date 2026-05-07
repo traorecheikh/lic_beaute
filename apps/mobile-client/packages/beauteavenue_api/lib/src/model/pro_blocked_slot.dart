@@ -12,15 +12,14 @@ part 'pro_blocked_slot.g.dart';
 /// ProBlockedSlot
 ///
 /// Properties:
-/// * [id]
-/// * [startsAt]
-/// * [endsAt]
-/// * [reason]
-/// * [scope]
-/// * [employeeId]
+/// * [id] 
+/// * [startsAt] 
+/// * [endsAt] 
+/// * [reason] 
+/// * [scope] 
+/// * [employeeId] 
 @BuiltValue()
-abstract class ProBlockedSlot
-    implements Built<ProBlockedSlot, ProBlockedSlotBuilder> {
+abstract class ProBlockedSlot implements Built<ProBlockedSlot, ProBlockedSlotBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -42,19 +41,16 @@ abstract class ProBlockedSlot
 
   ProBlockedSlot._();
 
-  factory ProBlockedSlot([void updates(ProBlockedSlotBuilder b)]) =
-      _$ProBlockedSlot;
+  factory ProBlockedSlot([void updates(ProBlockedSlotBuilder b)]) = _$ProBlockedSlot;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProBlockedSlotBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProBlockedSlot> get serializer =>
-      _$ProBlockedSlotSerializer();
+  static Serializer<ProBlockedSlot> get serializer => _$ProBlockedSlotSerializer();
 }
 
-class _$ProBlockedSlotSerializer
-    implements PrimitiveSerializer<ProBlockedSlot> {
+class _$ProBlockedSlotSerializer implements PrimitiveSerializer<ProBlockedSlot> {
   @override
   final Iterable<Type> types = const [ProBlockedSlot, _$ProBlockedSlot];
 
@@ -82,24 +78,20 @@ class _$ProBlockedSlotSerializer
       specifiedType: const FullType(DateTime),
     );
     yield r'reason';
-    yield object.reason == null
-        ? null
-        : serializers.serialize(
-            object.reason,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.reason == null ? null : serializers.serialize(
+      object.reason,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'scope';
     yield serializers.serialize(
       object.scope,
       specifiedType: const FullType(ProBlockedSlotScopeEnum),
     );
     yield r'employeeId';
-    yield object.employeeId == null
-        ? null
-        : serializers.serialize(
-            object.employeeId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.employeeId == null ? null : serializers.serialize(
+      object.employeeId,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -108,9 +100,7 @@ class _$ProBlockedSlotSerializer
     ProBlockedSlot object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -199,19 +189,17 @@ class _$ProBlockedSlotSerializer
 }
 
 class ProBlockedSlotScopeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'salon')
   static const ProBlockedSlotScopeEnum salon = _$proBlockedSlotScopeEnum_salon;
   @BuiltValueEnumConst(wireName: r'employee')
-  static const ProBlockedSlotScopeEnum employee =
-      _$proBlockedSlotScopeEnum_employee;
+  static const ProBlockedSlotScopeEnum employee = _$proBlockedSlotScopeEnum_employee;
 
-  static Serializer<ProBlockedSlotScopeEnum> get serializer =>
-      _$proBlockedSlotScopeEnumSerializer;
+  static Serializer<ProBlockedSlotScopeEnum> get serializer => _$proBlockedSlotScopeEnumSerializer;
 
-  const ProBlockedSlotScopeEnum._(String name) : super(name);
+  const ProBlockedSlotScopeEnum._(String name): super(name);
 
-  static BuiltSet<ProBlockedSlotScopeEnum> get values =>
-      _$proBlockedSlotScopeEnumValues;
-  static ProBlockedSlotScopeEnum valueOf(String name) =>
-      _$proBlockedSlotScopeEnumValueOf(name);
+  static BuiltSet<ProBlockedSlotScopeEnum> get values => _$proBlockedSlotScopeEnumValues;
+  static ProBlockedSlotScopeEnum valueOf(String name) => _$proBlockedSlotScopeEnumValueOf(name);
 }
+

@@ -11,34 +11,26 @@ part 'pro_review_response_input.g.dart';
 /// ProReviewResponseInput
 ///
 /// Properties:
-/// * [responseText]
+/// * [responseText] 
 @BuiltValue()
-abstract class ProReviewResponseInput
-    implements Built<ProReviewResponseInput, ProReviewResponseInputBuilder> {
+abstract class ProReviewResponseInput implements Built<ProReviewResponseInput, ProReviewResponseInputBuilder> {
   @BuiltValueField(wireName: r'responseText')
   String get responseText;
 
   ProReviewResponseInput._();
 
-  factory ProReviewResponseInput(
-          [void updates(ProReviewResponseInputBuilder b)]) =
-      _$ProReviewResponseInput;
+  factory ProReviewResponseInput([void updates(ProReviewResponseInputBuilder b)]) = _$ProReviewResponseInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProReviewResponseInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProReviewResponseInput> get serializer =>
-      _$ProReviewResponseInputSerializer();
+  static Serializer<ProReviewResponseInput> get serializer => _$ProReviewResponseInputSerializer();
 }
 
-class _$ProReviewResponseInputSerializer
-    implements PrimitiveSerializer<ProReviewResponseInput> {
+class _$ProReviewResponseInputSerializer implements PrimitiveSerializer<ProReviewResponseInput> {
   @override
-  final Iterable<Type> types = const [
-    ProReviewResponseInput,
-    _$ProReviewResponseInput
-  ];
+  final Iterable<Type> types = const [ProReviewResponseInput, _$ProReviewResponseInput];
 
   @override
   final String wireName = r'ProReviewResponseInput';
@@ -61,9 +53,7 @@ class _$ProReviewResponseInputSerializer
     ProReviewResponseInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -113,3 +103,4 @@ class _$ProReviewResponseInputSerializer
     return result.build();
   }
 }
+

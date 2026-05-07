@@ -11,13 +11,12 @@ part 'pro_salon_hour.g.dart';
 /// ProSalonHour
 ///
 /// Properties:
-/// * [dayOfWeek]
-/// * [isOpen]
-/// * [opensAt]
-/// * [closesAt]
+/// * [dayOfWeek] 
+/// * [isOpen] 
+/// * [opensAt] 
+/// * [closesAt] 
 @BuiltValue()
-abstract class ProSalonHour
-    implements Built<ProSalonHour, ProSalonHourBuilder> {
+abstract class ProSalonHour implements Built<ProSalonHour, ProSalonHourBuilder> {
   @BuiltValueField(wireName: r'dayOfWeek')
   int get dayOfWeek;
 
@@ -64,19 +63,15 @@ class _$ProSalonHourSerializer implements PrimitiveSerializer<ProSalonHour> {
       specifiedType: const FullType(bool),
     );
     yield r'opensAt';
-    yield object.opensAt == null
-        ? null
-        : serializers.serialize(
-            object.opensAt,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.opensAt == null ? null : serializers.serialize(
+      object.opensAt,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'closesAt';
-    yield object.closesAt == null
-        ? null
-        : serializers.serialize(
-            object.closesAt,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.closesAt == null ? null : serializers.serialize(
+      object.closesAt,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -85,9 +80,7 @@ class _$ProSalonHourSerializer implements PrimitiveSerializer<ProSalonHour> {
     ProSalonHour object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -160,3 +153,4 @@ class _$ProSalonHourSerializer implements PrimitiveSerializer<ProSalonHour> {
     return result.build();
   }
 }
+

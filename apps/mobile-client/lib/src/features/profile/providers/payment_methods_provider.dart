@@ -68,7 +68,7 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
     String? label,
   }) async {
     final payload = {
-      if (phoneNumber != null) 'phoneNumber': phoneNumber,
+      'phoneNumber': ?phoneNumber,
       'label': label,
     };
     final isOnline = ref.read(isOnlineProvider);
@@ -135,7 +135,7 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
           items = [
             PaymentMethodRecord(
               id: 'pending-${entry.id}',
-              provider: entry.payload['provider'] as String? ?? 'wave',
+              provider: entry.payload['provider'] as String? ?? 'intech',
               phoneNumber: entry.payload['phoneNumber'] as String? ?? '',
               label: entry.payload['label'] as String?,
               isDefault: items.every((item) => !item.isDefault),

@@ -12,18 +12,15 @@ part 'admin_salon_detail_services_inner.g.dart';
 /// AdminSalonDetailServicesInner
 ///
 /// Properties:
-/// * [id]
-/// * [name]
-/// * [durationMinutes]
-/// * [priceXof]
-/// * [depositMode]
-/// * [depositAmountXof]
-/// * [depositPercent]
+/// * [id] 
+/// * [name] 
+/// * [durationMinutes] 
+/// * [priceXof] 
+/// * [depositMode] 
+/// * [depositAmountXof] 
+/// * [depositPercent] 
 @BuiltValue()
-abstract class AdminSalonDetailServicesInner
-    implements
-        Built<AdminSalonDetailServicesInner,
-            AdminSalonDetailServicesInnerBuilder> {
+abstract class AdminSalonDetailServicesInner implements Built<AdminSalonDetailServicesInner, AdminSalonDetailServicesInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -38,7 +35,7 @@ abstract class AdminSalonDetailServicesInner
 
   @BuiltValueField(wireName: r'depositMode')
   AdminSalonDetailServicesInnerDepositModeEnum get depositMode;
-  // enum depositModeEnum {  none,  fixed,  percentage,  };
+  // enum depositModeEnum {  none,  fixed,  percent,  };
 
   @BuiltValueField(wireName: r'depositAmountXof')
   int? get depositAmountXof;
@@ -48,25 +45,18 @@ abstract class AdminSalonDetailServicesInner
 
   AdminSalonDetailServicesInner._();
 
-  factory AdminSalonDetailServicesInner(
-          [void updates(AdminSalonDetailServicesInnerBuilder b)]) =
-      _$AdminSalonDetailServicesInner;
+  factory AdminSalonDetailServicesInner([void updates(AdminSalonDetailServicesInnerBuilder b)]) = _$AdminSalonDetailServicesInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonDetailServicesInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonDetailServicesInner> get serializer =>
-      _$AdminSalonDetailServicesInnerSerializer();
+  static Serializer<AdminSalonDetailServicesInner> get serializer => _$AdminSalonDetailServicesInnerSerializer();
 }
 
-class _$AdminSalonDetailServicesInnerSerializer
-    implements PrimitiveSerializer<AdminSalonDetailServicesInner> {
+class _$AdminSalonDetailServicesInnerSerializer implements PrimitiveSerializer<AdminSalonDetailServicesInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonDetailServicesInner,
-    _$AdminSalonDetailServicesInner
-  ];
+  final Iterable<Type> types = const [AdminSalonDetailServicesInner, _$AdminSalonDetailServicesInner];
 
   @override
   final String wireName = r'AdminSalonDetailServicesInner';
@@ -99,23 +89,18 @@ class _$AdminSalonDetailServicesInnerSerializer
     yield r'depositMode';
     yield serializers.serialize(
       object.depositMode,
-      specifiedType:
-          const FullType(AdminSalonDetailServicesInnerDepositModeEnum),
+      specifiedType: const FullType(AdminSalonDetailServicesInnerDepositModeEnum),
     );
     yield r'depositAmountXof';
-    yield object.depositAmountXof == null
-        ? null
-        : serializers.serialize(
-            object.depositAmountXof,
-            specifiedType: const FullType.nullable(int),
-          );
+    yield object.depositAmountXof == null ? null : serializers.serialize(
+      object.depositAmountXof,
+      specifiedType: const FullType.nullable(int),
+    );
     yield r'depositPercent';
-    yield object.depositPercent == null
-        ? null
-        : serializers.serialize(
-            object.depositPercent,
-            specifiedType: const FullType.nullable(int),
-          );
+    yield object.depositPercent == null ? null : serializers.serialize(
+      object.depositPercent,
+      specifiedType: const FullType.nullable(int),
+    );
   }
 
   @override
@@ -124,9 +109,7 @@ class _$AdminSalonDetailServicesInnerSerializer
     AdminSalonDetailServicesInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -172,8 +155,7 @@ class _$AdminSalonDetailServicesInnerSerializer
         case r'depositMode':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminSalonDetailServicesInnerDepositModeEnum),
+            specifiedType: const FullType(AdminSalonDetailServicesInnerDepositModeEnum),
           ) as AdminSalonDetailServicesInnerDepositModeEnum;
           result.depositMode = valueDes;
           break;
@@ -223,25 +205,19 @@ class _$AdminSalonDetailServicesInnerSerializer
 }
 
 class AdminSalonDetailServicesInnerDepositModeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'none')
-  static const AdminSalonDetailServicesInnerDepositModeEnum none =
-      _$adminSalonDetailServicesInnerDepositModeEnum_none;
+  static const AdminSalonDetailServicesInnerDepositModeEnum none = _$adminSalonDetailServicesInnerDepositModeEnum_none;
   @BuiltValueEnumConst(wireName: r'fixed')
-  static const AdminSalonDetailServicesInnerDepositModeEnum fixed =
-      _$adminSalonDetailServicesInnerDepositModeEnum_fixed;
-  @BuiltValueEnumConst(wireName: r'percentage')
-  static const AdminSalonDetailServicesInnerDepositModeEnum percentage =
-      _$adminSalonDetailServicesInnerDepositModeEnum_percentage;
+  static const AdminSalonDetailServicesInnerDepositModeEnum fixed = _$adminSalonDetailServicesInnerDepositModeEnum_fixed;
+  @BuiltValueEnumConst(wireName: r'percent')
+  static const AdminSalonDetailServicesInnerDepositModeEnum percent = _$adminSalonDetailServicesInnerDepositModeEnum_percent;
 
-  static Serializer<AdminSalonDetailServicesInnerDepositModeEnum>
-      get serializer =>
-          _$adminSalonDetailServicesInnerDepositModeEnumSerializer;
+  static Serializer<AdminSalonDetailServicesInnerDepositModeEnum> get serializer => _$adminSalonDetailServicesInnerDepositModeEnumSerializer;
 
-  const AdminSalonDetailServicesInnerDepositModeEnum._(String name)
-      : super(name);
+  const AdminSalonDetailServicesInnerDepositModeEnum._(String name): super(name);
 
-  static BuiltSet<AdminSalonDetailServicesInnerDepositModeEnum> get values =>
-      _$adminSalonDetailServicesInnerDepositModeEnumValues;
-  static AdminSalonDetailServicesInnerDepositModeEnum valueOf(String name) =>
-      _$adminSalonDetailServicesInnerDepositModeEnumValueOf(name);
+  static BuiltSet<AdminSalonDetailServicesInnerDepositModeEnum> get values => _$adminSalonDetailServicesInnerDepositModeEnumValues;
+  static AdminSalonDetailServicesInnerDepositModeEnum valueOf(String name) => _$adminSalonDetailServicesInnerDepositModeEnumValueOf(name);
 }
+

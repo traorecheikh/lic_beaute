@@ -49,14 +49,18 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
 
   Future<String?> initiate({
     required String bookingId,
-    required String provider,
+    required String channel,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final dio = ref.read(dioProvider);
       final response = await dio.post<Map<String, dynamic>>(
         '/api/v1/payments/deposits/initiate',
-        data: {'bookingId': bookingId, 'provider': provider},
+        data: {
+          'bookingId': bookingId,
+          'provider': 'intech',
+          'channel': channel,
+        },
       );
       return response.data;
     });

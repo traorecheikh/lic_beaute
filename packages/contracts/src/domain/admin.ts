@@ -71,7 +71,7 @@ export const adminSalonServiceSnapshotSchema = z.object({
   name: z.string(),
   durationMinutes: z.number().int().positive(),
   priceXof: z.number().int().nonnegative(),
-  depositMode: z.enum(["none", "fixed", "percentage"]),
+  depositMode: z.enum(["none", "fixed", "percent"]),
   depositAmountXof: z.number().int().nonnegative().nullable(),
   depositPercent: z.number().int().nonnegative().nullable()
 });
@@ -111,7 +111,8 @@ export const adminSalonCreateInputSchema = z.object({
   address: z.string().trim().min(5),
   description: z.string().trim().min(10),
   ownerEmail: z.string().email(),
-  ownerPhone: z.string().trim().min(8)
+  ownerPhone: z.string().trim().min(8),
+  ownerName: z.string().trim().min(2)
 });
 
 export const adminSubscriptionSummarySchema = z.object({
@@ -120,7 +121,7 @@ export const adminSubscriptionSummarySchema = z.object({
   salonName: z.string(),
   tier: subscriptionTierSchema,
   status: subscriptionStatusSchema,
-  billingProvider: z.enum(["paytech", "manual"]).nullable(),
+  billingProvider: z.enum(["intech", "manual"]).nullable(),
   expiresAt: z.string().datetime().nullable(),
   autoRenew: z.boolean(),
   isComplimentary: z.boolean()
@@ -231,6 +232,9 @@ export const adminAuditDetailSchema = adminAuditSummarySchema.extend({
   )
 });
 
+export type AdminKpi = z.infer<typeof adminKpiSchema>;
+export type AdminGrowthSalon = z.infer<typeof adminGrowthSalonSchema>;
+export type AdminInactivityAlert = z.infer<typeof adminInactivityAlertSchema>;
 export type AdminDashboard = z.infer<typeof adminDashboardSchema>;
 export type AdminSalonQueueFilters = z.infer<typeof adminSalonQueueFiltersSchema>;
 export type AdminSalonQueueItem = z.infer<typeof adminSalonQueueItemSchema>;
@@ -239,7 +243,10 @@ export type AdminSalonDetail = z.infer<typeof adminSalonDetailSchema>;
 export type AdminSalonDecisionInput = z.infer<typeof adminSalonDecisionSchema>;
 export type AdminSubscriptionSummary = z.infer<typeof adminSubscriptionSummarySchema>;
 export type AdminSubscriptionDetail = z.infer<typeof adminSubscriptionDetailSchema>;
+export type AdminSubscriptionEvent = z.infer<typeof adminSubscriptionEventSchema>;
+export type AdminSubscriptionOverrideAction = z.infer<typeof adminSubscriptionOverrideActionSchema>;
 export type AdminSubscriptionOverrideInput = z.infer<typeof adminSubscriptionOverrideSchema>;
 export type BillingInvoice = z.infer<typeof billingInvoiceSchema>;
+export type AdminAuditFilters = z.infer<typeof adminAuditFiltersSchema>;
 export type AdminAuditSummary = z.infer<typeof adminAuditSummarySchema>;
 export type AdminAuditDetail = z.infer<typeof adminAuditDetailSchema>;

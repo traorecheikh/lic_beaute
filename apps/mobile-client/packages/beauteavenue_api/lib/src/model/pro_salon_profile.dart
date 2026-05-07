@@ -14,28 +14,27 @@ part 'pro_salon_profile.g.dart';
 /// ProSalonProfile
 ///
 /// Properties:
-/// * [id]
-/// * [name]
-/// * [category]
-/// * [logoUrl]
-/// * [description]
-/// * [city]
-/// * [address]
-/// * [neighborhood]
-/// * [latitude]
-/// * [longitude]
-/// * [phone]
-/// * [instagram]
-/// * [averageRating]
-/// * [subscriptionTier]
-/// * [isVisibleInMarketplace]
-/// * [canReceiveBookings]
-/// * [teamDisplay]
-/// * [gallery]
-/// * [hours]
+/// * [id] 
+/// * [name] 
+/// * [category] 
+/// * [logoUrl] 
+/// * [description] 
+/// * [city] 
+/// * [address] 
+/// * [neighborhood] 
+/// * [latitude] 
+/// * [longitude] 
+/// * [phone] 
+/// * [instagram] 
+/// * [averageRating] 
+/// * [subscriptionTier] 
+/// * [isVisibleInMarketplace] 
+/// * [canReceiveBookings] 
+/// * [teamDisplay] 
+/// * [gallery] 
+/// * [hours] 
 @BuiltValue()
-abstract class ProSalonProfile
-    implements Built<ProSalonProfile, ProSalonProfileBuilder> {
+abstract class ProSalonProfile implements Built<ProSalonProfile, ProSalonProfileBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -96,19 +95,16 @@ abstract class ProSalonProfile
 
   ProSalonProfile._();
 
-  factory ProSalonProfile([void updates(ProSalonProfileBuilder b)]) =
-      _$ProSalonProfile;
+  factory ProSalonProfile([void updates(ProSalonProfileBuilder b)]) = _$ProSalonProfile;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSalonProfileBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSalonProfile> get serializer =>
-      _$ProSalonProfileSerializer();
+  static Serializer<ProSalonProfile> get serializer => _$ProSalonProfileSerializer();
 }
 
-class _$ProSalonProfileSerializer
-    implements PrimitiveSerializer<ProSalonProfile> {
+class _$ProSalonProfileSerializer implements PrimitiveSerializer<ProSalonProfile> {
   @override
   final Iterable<Type> types = const [ProSalonProfile, _$ProSalonProfile];
 
@@ -136,12 +132,10 @@ class _$ProSalonProfileSerializer
       specifiedType: const FullType(String),
     );
     yield r'logoUrl';
-    yield object.logoUrl == null
-        ? null
-        : serializers.serialize(
-            object.logoUrl,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.logoUrl == null ? null : serializers.serialize(
+      object.logoUrl,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'description';
     yield serializers.serialize(
       object.description,
@@ -158,40 +152,30 @@ class _$ProSalonProfileSerializer
       specifiedType: const FullType(String),
     );
     yield r'neighborhood';
-    yield object.neighborhood == null
-        ? null
-        : serializers.serialize(
-            object.neighborhood,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.neighborhood == null ? null : serializers.serialize(
+      object.neighborhood,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'latitude';
-    yield object.latitude == null
-        ? null
-        : serializers.serialize(
-            object.latitude,
-            specifiedType: const FullType.nullable(num),
-          );
+    yield object.latitude == null ? null : serializers.serialize(
+      object.latitude,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'longitude';
-    yield object.longitude == null
-        ? null
-        : serializers.serialize(
-            object.longitude,
-            specifiedType: const FullType.nullable(num),
-          );
+    yield object.longitude == null ? null : serializers.serialize(
+      object.longitude,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'phone';
-    yield object.phone == null
-        ? null
-        : serializers.serialize(
-            object.phone,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.phone == null ? null : serializers.serialize(
+      object.phone,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'instagram';
-    yield object.instagram == null
-        ? null
-        : serializers.serialize(
-            object.instagram,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.instagram == null ? null : serializers.serialize(
+      object.instagram,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'averageRating';
     yield serializers.serialize(
       object.averageRating,
@@ -225,8 +209,7 @@ class _$ProSalonProfileSerializer
     yield r'hours';
     yield serializers.serialize(
       object.hours,
-      specifiedType:
-          const FullType(BuiltList, [FullType(ProSalonProfileHoursInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProSalonProfileHoursInner)]),
     );
   }
 
@@ -236,9 +219,7 @@ class _$ProSalonProfileSerializer
     ProSalonProfile object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -388,8 +369,7 @@ class _$ProSalonProfileSerializer
         case r'hours':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProSalonProfileHoursInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProSalonProfileHoursInner)]),
           ) as BuiltList<ProSalonProfileHoursInner>;
           result.hours.replace(valueDes);
           break;
@@ -423,20 +403,17 @@ class _$ProSalonProfileSerializer
 }
 
 class ProSalonProfileSubscriptionTierEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'standard')
-  static const ProSalonProfileSubscriptionTierEnum standard =
-      _$proSalonProfileSubscriptionTierEnum_standard;
+  static const ProSalonProfileSubscriptionTierEnum standard = _$proSalonProfileSubscriptionTierEnum_standard;
   @BuiltValueEnumConst(wireName: r'premium')
-  static const ProSalonProfileSubscriptionTierEnum premium =
-      _$proSalonProfileSubscriptionTierEnum_premium;
+  static const ProSalonProfileSubscriptionTierEnum premium = _$proSalonProfileSubscriptionTierEnum_premium;
 
-  static Serializer<ProSalonProfileSubscriptionTierEnum> get serializer =>
-      _$proSalonProfileSubscriptionTierEnumSerializer;
+  static Serializer<ProSalonProfileSubscriptionTierEnum> get serializer => _$proSalonProfileSubscriptionTierEnumSerializer;
 
-  const ProSalonProfileSubscriptionTierEnum._(String name) : super(name);
+  const ProSalonProfileSubscriptionTierEnum._(String name): super(name);
 
-  static BuiltSet<ProSalonProfileSubscriptionTierEnum> get values =>
-      _$proSalonProfileSubscriptionTierEnumValues;
-  static ProSalonProfileSubscriptionTierEnum valueOf(String name) =>
-      _$proSalonProfileSubscriptionTierEnumValueOf(name);
+  static BuiltSet<ProSalonProfileSubscriptionTierEnum> get values => _$proSalonProfileSubscriptionTierEnumValues;
+  static ProSalonProfileSubscriptionTierEnum valueOf(String name) => _$proSalonProfileSubscriptionTierEnumValueOf(name);
 }
+

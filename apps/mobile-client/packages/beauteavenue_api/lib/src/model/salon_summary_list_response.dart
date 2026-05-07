@@ -13,12 +13,10 @@ part 'salon_summary_list_response.g.dart';
 /// SalonSummaryListResponse
 ///
 /// Properties:
-/// * [items]
-/// * [total]
+/// * [items] 
+/// * [total] 
 @BuiltValue()
-abstract class SalonSummaryListResponse
-    implements
-        Built<SalonSummaryListResponse, SalonSummaryListResponseBuilder> {
+abstract class SalonSummaryListResponse implements Built<SalonSummaryListResponse, SalonSummaryListResponseBuilder> {
   @BuiltValueField(wireName: r'items')
   BuiltList<SalonSummaryListResponseItemsInner> get items;
 
@@ -27,25 +25,18 @@ abstract class SalonSummaryListResponse
 
   SalonSummaryListResponse._();
 
-  factory SalonSummaryListResponse(
-          [void updates(SalonSummaryListResponseBuilder b)]) =
-      _$SalonSummaryListResponse;
+  factory SalonSummaryListResponse([void updates(SalonSummaryListResponseBuilder b)]) = _$SalonSummaryListResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SalonSummaryListResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SalonSummaryListResponse> get serializer =>
-      _$SalonSummaryListResponseSerializer();
+  static Serializer<SalonSummaryListResponse> get serializer => _$SalonSummaryListResponseSerializer();
 }
 
-class _$SalonSummaryListResponseSerializer
-    implements PrimitiveSerializer<SalonSummaryListResponse> {
+class _$SalonSummaryListResponseSerializer implements PrimitiveSerializer<SalonSummaryListResponse> {
   @override
-  final Iterable<Type> types = const [
-    SalonSummaryListResponse,
-    _$SalonSummaryListResponse
-  ];
+  final Iterable<Type> types = const [SalonSummaryListResponse, _$SalonSummaryListResponse];
 
   @override
   final String wireName = r'SalonSummaryListResponse';
@@ -58,8 +49,7 @@ class _$SalonSummaryListResponseSerializer
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(
-          BuiltList, [FullType(SalonSummaryListResponseItemsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(SalonSummaryListResponseItemsInner)]),
     );
     yield r'total';
     yield serializers.serialize(
@@ -74,9 +64,7 @@ class _$SalonSummaryListResponseSerializer
     SalonSummaryListResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -94,8 +82,7 @@ class _$SalonSummaryListResponseSerializer
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(SalonSummaryListResponseItemsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(SalonSummaryListResponseItemsInner)]),
           ) as BuiltList<SalonSummaryListResponseItemsInner>;
           result.items.replace(valueDes);
           break;
@@ -134,3 +121,4 @@ class _$SalonSummaryListResponseSerializer
     return result.build();
   }
 }
+

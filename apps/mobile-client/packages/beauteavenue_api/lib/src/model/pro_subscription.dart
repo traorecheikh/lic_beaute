@@ -13,17 +13,16 @@ part 'pro_subscription.g.dart';
 /// ProSubscription
 ///
 /// Properties:
-/// * [id]
-/// * [tier]
-/// * [status]
-/// * [renewsAt]
-/// * [expiresAt]
-/// * [isComplimentary]
-/// * [autoRenew]
-/// * [billingMethod]
+/// * [id] 
+/// * [tier] 
+/// * [status] 
+/// * [renewsAt] 
+/// * [expiresAt] 
+/// * [isComplimentary] 
+/// * [autoRenew] 
+/// * [billingMethod] 
 @BuiltValue()
-abstract class ProSubscription
-    implements Built<ProSubscription, ProSubscriptionBuilder> {
+abstract class ProSubscription implements Built<ProSubscription, ProSubscriptionBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -52,19 +51,16 @@ abstract class ProSubscription
 
   ProSubscription._();
 
-  factory ProSubscription([void updates(ProSubscriptionBuilder b)]) =
-      _$ProSubscription;
+  factory ProSubscription([void updates(ProSubscriptionBuilder b)]) = _$ProSubscription;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSubscriptionBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSubscription> get serializer =>
-      _$ProSubscriptionSerializer();
+  static Serializer<ProSubscription> get serializer => _$ProSubscriptionSerializer();
 }
 
-class _$ProSubscriptionSerializer
-    implements PrimitiveSerializer<ProSubscription> {
+class _$ProSubscriptionSerializer implements PrimitiveSerializer<ProSubscription> {
   @override
   final Iterable<Type> types = const [ProSubscription, _$ProSubscription];
 
@@ -92,19 +88,15 @@ class _$ProSubscriptionSerializer
       specifiedType: const FullType(ProSubscriptionStatusEnum),
     );
     yield r'renewsAt';
-    yield object.renewsAt == null
-        ? null
-        : serializers.serialize(
-            object.renewsAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.renewsAt == null ? null : serializers.serialize(
+      object.renewsAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
     yield r'expiresAt';
-    yield object.expiresAt == null
-        ? null
-        : serializers.serialize(
-            object.expiresAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.expiresAt == null ? null : serializers.serialize(
+      object.expiresAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
     yield r'isComplimentary';
     yield serializers.serialize(
       object.isComplimentary,
@@ -116,13 +108,10 @@ class _$ProSubscriptionSerializer
       specifiedType: const FullType(bool),
     );
     yield r'billingMethod';
-    yield object.billingMethod == null
-        ? null
-        : serializers.serialize(
-            object.billingMethod,
-            specifiedType:
-                const FullType.nullable(ProSubscriptionBillingMethod),
-          );
+    yield object.billingMethod == null ? null : serializers.serialize(
+      object.billingMethod,
+      specifiedType: const FullType.nullable(ProSubscriptionBillingMethod),
+    );
   }
 
   @override
@@ -131,9 +120,7 @@ class _$ProSubscriptionSerializer
     ProSubscription object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -202,8 +189,7 @@ class _$ProSubscriptionSerializer
         case r'billingMethod':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType.nullable(ProSubscriptionBillingMethod),
+            specifiedType: const FullType.nullable(ProSubscriptionBillingMethod),
           ) as ProSubscriptionBillingMethod?;
           if (valueDes == null) continue;
           result.billingMethod.replace(valueDes);
@@ -238,51 +224,40 @@ class _$ProSubscriptionSerializer
 }
 
 class ProSubscriptionTierEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'standard')
-  static const ProSubscriptionTierEnum standard =
-      _$proSubscriptionTierEnum_standard;
+  static const ProSubscriptionTierEnum standard = _$proSubscriptionTierEnum_standard;
   @BuiltValueEnumConst(wireName: r'premium')
-  static const ProSubscriptionTierEnum premium =
-      _$proSubscriptionTierEnum_premium;
+  static const ProSubscriptionTierEnum premium = _$proSubscriptionTierEnum_premium;
 
-  static Serializer<ProSubscriptionTierEnum> get serializer =>
-      _$proSubscriptionTierEnumSerializer;
+  static Serializer<ProSubscriptionTierEnum> get serializer => _$proSubscriptionTierEnumSerializer;
 
-  const ProSubscriptionTierEnum._(String name) : super(name);
+  const ProSubscriptionTierEnum._(String name): super(name);
 
-  static BuiltSet<ProSubscriptionTierEnum> get values =>
-      _$proSubscriptionTierEnumValues;
-  static ProSubscriptionTierEnum valueOf(String name) =>
-      _$proSubscriptionTierEnumValueOf(name);
+  static BuiltSet<ProSubscriptionTierEnum> get values => _$proSubscriptionTierEnumValues;
+  static ProSubscriptionTierEnum valueOf(String name) => _$proSubscriptionTierEnumValueOf(name);
 }
 
 class ProSubscriptionStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'inactive')
-  static const ProSubscriptionStatusEnum inactive =
-      _$proSubscriptionStatusEnum_inactive;
+  static const ProSubscriptionStatusEnum inactive = _$proSubscriptionStatusEnum_inactive;
   @BuiltValueEnumConst(wireName: r'active')
-  static const ProSubscriptionStatusEnum active =
-      _$proSubscriptionStatusEnum_active;
+  static const ProSubscriptionStatusEnum active = _$proSubscriptionStatusEnum_active;
   @BuiltValueEnumConst(wireName: r'past_due')
-  static const ProSubscriptionStatusEnum pastDue =
-      _$proSubscriptionStatusEnum_pastDue;
+  static const ProSubscriptionStatusEnum pastDue = _$proSubscriptionStatusEnum_pastDue;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProSubscriptionStatusEnum cancelled =
-      _$proSubscriptionStatusEnum_cancelled;
+  static const ProSubscriptionStatusEnum cancelled = _$proSubscriptionStatusEnum_cancelled;
   @BuiltValueEnumConst(wireName: r'expired')
-  static const ProSubscriptionStatusEnum expired =
-      _$proSubscriptionStatusEnum_expired;
+  static const ProSubscriptionStatusEnum expired = _$proSubscriptionStatusEnum_expired;
   @BuiltValueEnumConst(wireName: r'paused')
-  static const ProSubscriptionStatusEnum paused =
-      _$proSubscriptionStatusEnum_paused;
+  static const ProSubscriptionStatusEnum paused = _$proSubscriptionStatusEnum_paused;
 
-  static Serializer<ProSubscriptionStatusEnum> get serializer =>
-      _$proSubscriptionStatusEnumSerializer;
+  static Serializer<ProSubscriptionStatusEnum> get serializer => _$proSubscriptionStatusEnumSerializer;
 
-  const ProSubscriptionStatusEnum._(String name) : super(name);
+  const ProSubscriptionStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProSubscriptionStatusEnum> get values =>
-      _$proSubscriptionStatusEnumValues;
-  static ProSubscriptionStatusEnum valueOf(String name) =>
-      _$proSubscriptionStatusEnumValueOf(name);
+  static BuiltSet<ProSubscriptionStatusEnum> get values => _$proSubscriptionStatusEnumValues;
+  static ProSubscriptionStatusEnum valueOf(String name) => _$proSubscriptionStatusEnumValueOf(name);
 }
+

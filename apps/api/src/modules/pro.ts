@@ -16,15 +16,25 @@ import {
   proSubscriptionUpdateInputSchema
 } from "@beauteavenue/contracts";
 
-import { createPaymentAdapter } from "../adapters/index.js";
+import { getPaymentAdapter } from "../adapters/index.js";
 import { config } from "../config.js";
 import { HttpAuthError, requireRole } from "../lib/auth.js";
-import { fail, ok } from "../lib/http.js";
+import { fetchAndComputeAvailableSlots } from "../lib/availability.js";
+import { fail, handleError, ok } from "../lib/http.js";
 import { logger } from "../lib/logger.js";
+import { toDbProvider, toPublicBillingProvider, toPublicGatewayProvider } from "../lib/payment-provider.js";
 import { prisma } from "../lib/prisma.js";
 import { getProAnalytics, getProDashboard } from "./pro-data.js";
 
-const paymentAdapter = createPaymentAdapter(config.paymentDriver, {
+const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
+  intechApiKey: config.intechApiKey,
+  intechApiSecret: config.intechApiSecret,
+  intechEnv: config.intechEnv,
+  intechBaseUrl: config.intechBaseUrl,
+  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
+  intechHmacSecretKey: config.intechHmacSecretKey,
+  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
+  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
   paytechApiKey: config.paytechApiKey,
   paytechApiSecret: config.paytechApiSecret,
   paytechEnv: config.paytechEnv,
@@ -260,12 +270,6 @@ function ownerOnly(role: string, reply: FastifyReply): boolean {
   return true;
 }
 
-function handleError(error: unknown, reply: FastifyReply) {
-  if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
-  logger.error("Pro error", { error: String(error) });
-  fail(reply, 500, "internal_error", "Erreur interne.");
-}
-
 export class ProController {
   // ─── Dashboard ─────────────────────────────────────────────────────────────
 
@@ -329,6 +333,14 @@ export class ProController {
       if (!ownerOnly(role, reply)) return;
       const body = proSalonUpdateInputSchema.parse(request.body);
       const { gallery, phone, instagram, teamDisplay, ...salonPayload } = body;
+
+      if (gallery !== undefined) {
+        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+        if (salon?.subscriptionTier === "standard" && gallery.length > 3) {
+          fail(reply, 422, "gallery_limit", "Les salons Standard sont limités à 3 photos de galerie.");
+          return;
+        }
+      }
 
       if (teamDisplay?.showPhotos === true) {
         const activeWithoutAvatarCount = await prisma.employee.count({
@@ -484,6 +496,12 @@ export class ProController {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
       const body = proServiceCreateInputSchema.parse(request.body);
+      if (body.depositMode !== "none") {
+        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+        if (salon?.subscriptionTier !== "premium") {
+          fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
+        }
+      }
       if (body.depositMode === "fixed" && !body.depositAmountXof) {
         fail(reply, 422, "invalid_deposit", "depositAmountXof requis pour depositMode=fixed."); return;
       }
@@ -506,6 +524,21 @@ export class ProController {
       const body = proServiceUpdateInputSchema.parse(request.body);
       const existing = await prisma.service.findFirst({ where: { id: params.serviceId, salonId } });
       if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
+      if (body.depositMode !== undefined && body.depositMode !== "none") {
+        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+        if (salon?.subscriptionTier !== "premium") {
+          fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
+        }
+      }
+      const effectiveMode = body.depositMode ?? existing.depositMode;
+      const effectiveAmount = body.depositAmountXof ?? existing.depositAmountXof;
+      const effectivePercent = body.depositPercent ?? existing.depositPercent;
+      if (effectiveMode === "fixed" && !effectiveAmount) {
+        fail(reply, 422, "invalid_deposit", "depositAmountXof requis pour depositMode=fixed."); return;
+      }
+      if (effectiveMode === "percent" && !effectivePercent) {
+        fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
+      }
       const service = await prisma.service.update({ where: { id: params.serviceId }, data: body });
       ok(reply, { id: service.id, name: service.name, category: service.category, durationMinutes: service.durationMinutes, priceXof: service.priceXof, depositMode: service.depositMode, depositAmountXof: service.depositAmountXof, depositPercent: service.depositPercent, isActive: service.isActive, displayOrder: service.displayOrder });
     } catch (e) { handleError(e, reply); }
@@ -560,19 +593,34 @@ export class ProController {
         return;
       }
 
+      if (body.serviceIds.length > 0) {
+        const salonServices = await prisma.service.findMany({
+          where: { salonId, id: { in: body.serviceIds } },
+          select: { id: true }
+        });
+        if (salonServices.length !== body.serviceIds.length) {
+          fail(reply, 422, "invalid_specialty", "Un ou plusieurs services n'appartiennent pas à ce salon.");
+          return;
+        }
+      }
+
       const result = await prisma.$transaction(async (tx) => {
         const existing = await tx.user.findUnique({ where: { phone: body.phone } });
         if (existing && existing.salonId && existing.salonId !== salonId) {
           throw new HttpAuthError(409, "user_in_other_salon", "Cet utilisateur appartient à un autre salon.");
         }
-
-        const user = existing ?? await tx.user.create({
-          data: { fullName: body.fullName, phone: body.phone, role: "salon_staff", salonId }
-        });
-
-        if (!existing) {
-          await tx.user.update({ where: { id: user.id }, data: { salonId } });
+        if (existing && existing.role === "salon_owner") {
+          throw new HttpAuthError(422, "cannot_staff_owner", "Impossible d'ajouter un propriétaire de salon comme employé.");
         }
+
+        const user = existing
+          ? await tx.user.update({
+              where: { id: existing.id },
+              data: { fullName: body.fullName, role: "salon_staff", salonId }
+            })
+          : await tx.user.create({
+              data: { fullName: body.fullName, phone: body.phone, role: "salon_staff", salonId }
+            });
 
         const employee = await tx.employee.create({
           data: {
@@ -622,6 +670,17 @@ export class ProController {
       if (photoRequired && nextIsActive && !nextAvatar) {
         fail(reply, 422, "team_photo_required", "Photo obligatoire pour activer un collaborateur.");
         return;
+      }
+
+      if (body.serviceIds !== undefined && body.serviceIds.length > 0) {
+        const salonServices = await prisma.service.findMany({
+          where: { salonId, id: { in: body.serviceIds } },
+          select: { id: true }
+        });
+        if (salonServices.length !== body.serviceIds.length) {
+          fail(reply, 422, "invalid_specialty", "Un ou plusieurs services n'appartiennent pas à ce salon.");
+          return;
+        }
       }
 
       await prisma.$transaction(async (tx) => {
@@ -706,8 +765,33 @@ export class ProController {
     try {
       const { salonId, userId } = await ensurePro(request);
       const body = proBlockedSlotCreateInputSchema.parse(request.body);
+      const startsAt = new Date(body.startsAt);
+      const endsAt = new Date(body.endsAt);
+
+      if (startsAt.getTime() >= endsAt.getTime()) {
+        fail(reply, 422, "invalid_time_range", "L'heure de fin doit être après l'heure de début.");
+        return;
+      }
+      if (body.scope === "employee" && !body.employeeId) {
+        fail(reply, 422, "employee_required", "Un employé est requis pour un blocage scope=employee.");
+        return;
+      }
+      if (body.scope === "salon" && body.employeeId) {
+        fail(reply, 422, "employee_forbidden", "Ne fournissez pas d'employé pour un blocage scope=salon.");
+        return;
+      }
+      if (body.employeeId) {
+        const employee = await prisma.employee.findFirst({
+          where: { id: body.employeeId, salonId, isActive: true }
+        });
+        if (!employee) {
+          fail(reply, 422, "employee_not_found", "Employé introuvable pour ce salon.");
+          return;
+        }
+      }
+
       const slot = await prisma.blockedSlot.create({
-        data: { salonId, startsAt: new Date(body.startsAt), endsAt: new Date(body.endsAt), reason: body.reason ?? null, scope: body.scope, employeeId: body.employeeId ?? null, createdByUserId: userId }
+        data: { salonId, startsAt, endsAt, reason: body.reason ?? null, scope: body.scope, employeeId: body.employeeId ?? null, createdByUserId: userId }
       });
       ok(reply, { id: slot.id, startsAt: slot.startsAt.toISOString(), endsAt: slot.endsAt.toISOString(), reason: slot.reason, scope: slot.scope, employeeId: slot.employeeId }, 201);
     } catch (e) { handleError(e, reply); }
@@ -782,7 +866,7 @@ export class ProController {
         startsAt: booking.startsAt.toISOString(), endsAt: booking.endsAt.toISOString(),
         status: booking.status, source: booking.source, depositAmountXof: booking.depositAmountXof,
         createdAt: booking.createdAt.toISOString(),
-        payments: booking.payments.map((p) => ({ id: p.id, status: p.status, amountXof: p.amountXof, provider: p.provider })),
+        payments: booking.payments.map((p) => ({ id: p.id, status: p.status, amountXof: p.amountXof, provider: toPublicGatewayProvider(p.provider) })),
         events: booking.bookingEvents.map((e) => ({ eventType: e.eventType, fromStatus: e.fromStatus, toStatus: e.toStatus, createdAt: e.createdAt.toISOString() }))
       });
     } catch (e) { handleError(e, reply); }
@@ -805,6 +889,24 @@ export class ProController {
       await prisma.$transaction(async (tx) => {
         await tx.booking.update({ where: { id: booking.id }, data: { status: toStatus as never } });
         await tx.bookingEvent.create({ data: { bookingId: booking.id, actorUserId: userId, eventType, fromStatus: booking.status, toStatus } });
+        await tx.auditLog.create({
+          data: {
+            action: `booking_${eventType}`,
+            summary: `Transition ${booking.id}: ${booking.status} -> ${toStatus}`,
+            entityType: "Booking",
+            entityId: booking.id,
+            actorName: "pro",
+            actorUserId: userId,
+            severity: toStatus === "cancelled" ? "warn" : "info",
+            payloadJson: JSON.stringify({
+              bookingId: booking.id,
+              salonId,
+              fromStatus: booking.status,
+              toStatus,
+              eventType
+            })
+          }
+        });
         if (afterHook) await afterHook(booking.id, tx);
       });
 
@@ -849,7 +951,41 @@ export class ProController {
       if (!service) { fail(reply, 422, "service_not_found", "Service introuvable."); return; }
 
       const startsAt = new Date(body.startsAt);
+      if (startsAt.getTime() <= Date.now()) {
+        fail(reply, 422, "invalid_start_time", "La réservation doit être planifiée dans le futur.");
+        return;
+      }
       const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
+      const date = new Date(startsAt.getFullYear(), startsAt.getMonth(), startsAt.getDate());
+      const dayOfWeek = startsAt.getDay();
+
+      if (body.employeeId) {
+        const employee = await prisma.employee.findFirst({
+          where: { id: body.employeeId, salonId, isActive: true, schedulingEnabled: true },
+          include: { specialties: { select: { serviceId: true } } }
+        });
+        if (!employee) {
+          fail(reply, 422, "employee_not_available", "Employé introuvable ou indisponible.");
+          return;
+        }
+        if (employee.specialties.length > 0 && !employee.specialties.some((s) => s.serviceId === body.serviceId)) {
+          fail(reply, 422, "employee_service_mismatch", "Cet employé ne propose pas ce service.");
+          return;
+        }
+      }
+
+      const availableSlots = await fetchAndComputeAvailableSlots(prisma, {
+        salonId,
+        date,
+        durationMinutes: service.durationMinutes,
+        employeeId: body.employeeId
+      });
+
+      const slotAvailable = availableSlots.some((s) => new Date(s.startsAt).getTime() === startsAt.getTime());
+      if (!slotAvailable) {
+        fail(reply, 422, "slot_unavailable", "Ce créneau n'est plus disponible.");
+        return;
+      }
 
       const booking = await prisma.$transaction(async (tx) => {
         let resolvedClientId = body.clientId;
@@ -864,6 +1000,9 @@ export class ProController {
           });
 
           if (existingClient) {
+            if (existingClient.role !== "client") {
+              throw new HttpAuthError(422, "client_role_invalid", "Le contact fourni n'est pas un compte client.");
+            }
             resolvedClientId = existingClient.id;
           } else {
             const newClient = await tx.user.create({
@@ -878,6 +1017,9 @@ export class ProController {
         } else {
           const clientExists = await tx.user.findUnique({ where: { id: resolvedClientId } });
           if (!clientExists) throw new HttpAuthError(404, "client_not_found", "Client introuvable.");
+          if (clientExists.role !== "client") {
+            throw new HttpAuthError(422, "client_role_invalid", "Le client sélectionné est invalide.");
+          }
         }
 
         const b = await tx.booking.create({
@@ -935,7 +1077,7 @@ export class ProController {
               startsAt: true,
               depositAmountXof: true,
               payments: {
-                where: { status: { in: ["authorized", "succeeded"] } },
+                where: { status: "succeeded" },
                 select: { amountXof: true }
               }
             },
@@ -950,7 +1092,7 @@ export class ProController {
         let lastVisitAt = null;
 
         for (const booking of client.bookings) {
-          totalSpentXof += booking.payments[0]?.amountXof ?? booking.depositAmountXof;
+          totalSpentXof += booking.payments[0]?.amountXof ?? 0;
           if (!lastVisitAt || booking.startsAt > lastVisitAt) {
             lastVisitAt = booking.startsAt;
           }
@@ -988,7 +1130,7 @@ export class ProController {
           client: { select: { id: true, fullName: true, phone: true, email: true } },
           service: { select: { name: true } },
           payments: {
-            where: { status: { in: ["authorized", "succeeded"] } },
+            where: { status: "succeeded" },
             orderBy: { createdAt: "desc" },
             take: 1
           }
@@ -1004,7 +1146,7 @@ export class ProController {
       const firstClient = bookings[0].client;
       const visitCount = bookings.length;
       const totalSpentXof = bookings.reduce(
-        (sum, booking) => sum + (booking.payments[0]?.amountXof ?? booking.depositAmountXof),
+        (sum, booking) => sum + (booking.payments[0]?.amountXof ?? 0),
         0
       );
       const lastVisitAt = bookings[0]?.startsAt ?? null;
@@ -1021,7 +1163,7 @@ export class ProController {
           bookingId: booking.id,
           startsAt: booking.startsAt.toISOString(),
           serviceName: booking.service.name,
-          amountXof: booking.payments[0]?.amountXof ?? booking.depositAmountXof,
+          amountXof: booking.payments[0]?.amountXof ?? 0,
           status: booking.status
         }))
       });
@@ -1055,7 +1197,7 @@ export class ProController {
       }
 
       const subtotalXof = booking.service.priceXof;
-      const depositPaidXof = booking.payments[0]?.amountXof ?? booking.depositAmountXof;
+      const depositPaidXof = booking.payments[0]?.amountXof ?? 0;
       const balanceXof = Math.max(0, subtotalXof - depositPaidXof);
 
       ok(reply, {
@@ -1169,6 +1311,11 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+      if (salon?.subscriptionTier !== "premium") {
+        fail(reply, 402, "premium_required", "Les statistiques avancées sont réservées aux salons Premium.");
+        return;
+      }
       const q = request.query as { period?: string };
       const period = (["7d", "30d", "90d"].includes(q.period ?? "") ? q.period : "30d") as "7d" | "30d" | "90d";
       ok(reply, await getProAnalytics(salonId, period));
@@ -1191,10 +1338,7 @@ export class ProController {
       if (!sub) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
       const settingMap = toSettingMap(settings);
       const rawProvider = settingMap[salonBillingProviderKey(salonId)];
-      const provider =
-        rawProvider === "paytech" || rawProvider === "manual"
-          ? rawProvider
-          : sub.billingProvider;
+      const provider = toPublicBillingProvider(rawProvider ?? sub.billingProvider);
       const accountNumber = settingMap[salonBillingAccountKey(salonId)];
       const billingMethod = provider && accountNumber
         ? { provider, accountNumberMasked: maskAccountNumber(accountNumber) }
@@ -1223,7 +1367,7 @@ export class ProController {
           updatePayload.autoRenew = body.autoRenew;
         }
         if (body.billingMethod !== undefined) {
-          updatePayload.billingProvider = body.billingMethod?.provider ?? null;
+          updatePayload.billingProvider = toDbProvider(body.billingMethod?.provider ?? null);
         }
         if (Object.keys(updatePayload).length > 0) {
           await tx.subscription.update({ where: { salonId }, data: updatePayload });
@@ -1264,12 +1408,20 @@ export class ProController {
 
   async subscriptionCheckout(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { salonId, role } = await ensurePro(request);
+      const { userId, salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
       const body = proSubscriptionCheckoutInputSchema.parse(request.body);
 
       const sub = await prisma.subscription.findUnique({ where: { salonId } });
       if (!sub) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
+      const owner = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { phone: true }
+      });
+      if (config.paymentDriver === "intech" && !owner?.phone) {
+        fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
+        return;
+      }
 
       const priceRows = await prisma.platformSetting.findMany({
         where: { key: { in: ["subscription_premium_price_xof"] } }
@@ -1279,7 +1431,7 @@ export class ProController {
       const idempotencyKey = `sub-${sub.id}-${body.action}-${Date.now()}`;
 
       const charge = await prisma.subscriptionCharge.create({
-        data: { subscriptionId: sub.id, provider: body.provider, amountXof, idempotencyKey, chargeType: body.action }
+        data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "intech", amountXof, idempotencyKey, chargeType: body.action }
       });
 
       const result = await paymentAdapter.initiateDeposit({
@@ -1287,7 +1439,8 @@ export class ProController {
         amountXof,
         description: `Abonnement ${body.action}`,
         callbackUrl: `${config.webOrigin}/pro/subscription/callback`,
-        idempotencyKey
+        idempotencyKey,
+        phone: owner?.phone ?? undefined
       });
 
       await prisma.subscriptionCharge.update({ where: { id: charge.id }, data: { providerTxId: result.providerRef } });
@@ -1358,9 +1511,9 @@ export class ProController {
         timeStyle: "short"
       }).format(invoice.createdAt);
       const amountLabel = new Intl.NumberFormat("fr-FR").format(invoice.amountXof);
-      const billingProvider = providerSetting?.value ?? sub.billingProvider ?? "manual";
+      const billingProvider = toPublicBillingProvider(providerSetting?.value ?? sub.billingProvider ?? "manual");
       const providerLabel =
-        billingProvider === "paytech" ? "PayTech" : "Manuel";
+        billingProvider === "manual" ? "Manuel" : "Intech";
       const pdf = buildInvoicePdfBuffer({
         invoiceNumber: invoice.invoiceNumber,
         issuedAt,

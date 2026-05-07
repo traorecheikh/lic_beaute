@@ -13,15 +13,14 @@ part 'pro_analytics.g.dart';
 /// ProAnalytics
 ///
 /// Properties:
-/// * [period]
-/// * [bookingCount]
-/// * [completedCount]
-/// * [occupancyPercent]
-/// * [totalRevenueXof]
-/// * [topServices]
+/// * [period] 
+/// * [bookingCount] 
+/// * [completedCount] 
+/// * [occupancyPercent] 
+/// * [totalRevenueXof] 
+/// * [topServices] 
 @BuiltValue()
-abstract class ProAnalytics
-    implements Built<ProAnalytics, ProAnalyticsBuilder> {
+abstract class ProAnalytics implements Built<ProAnalytics, ProAnalyticsBuilder> {
   @BuiltValueField(wireName: r'period')
   String get period;
 
@@ -91,8 +90,7 @@ class _$ProAnalyticsSerializer implements PrimitiveSerializer<ProAnalytics> {
     yield r'topServices';
     yield serializers.serialize(
       object.topServices,
-      specifiedType:
-          const FullType(BuiltList, [FullType(ProAnalyticsTopServicesInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProAnalyticsTopServicesInner)]),
     );
   }
 
@@ -102,9 +100,7 @@ class _$ProAnalyticsSerializer implements PrimitiveSerializer<ProAnalytics> {
     ProAnalytics object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -157,8 +153,7 @@ class _$ProAnalyticsSerializer implements PrimitiveSerializer<ProAnalytics> {
         case r'topServices':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProAnalyticsTopServicesInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProAnalyticsTopServicesInner)]),
           ) as BuiltList<ProAnalyticsTopServicesInner>;
           result.topServices.replace(valueDes);
           break;
@@ -190,3 +185,4 @@ class _$ProAnalyticsSerializer implements PrimitiveSerializer<ProAnalytics> {
     return result.build();
   }
 }
+

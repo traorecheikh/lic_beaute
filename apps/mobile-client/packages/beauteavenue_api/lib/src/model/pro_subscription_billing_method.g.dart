@@ -7,19 +7,19 @@ part of 'pro_subscription_billing_method.dart';
 // **************************************************************************
 
 const ProSubscriptionBillingMethodProviderEnum
-    _$proSubscriptionBillingMethodProviderEnum_wave =
-    const ProSubscriptionBillingMethodProviderEnum._('wave');
+    _$proSubscriptionBillingMethodProviderEnum_intech =
+    const ProSubscriptionBillingMethodProviderEnum._('intech');
 const ProSubscriptionBillingMethodProviderEnum
-    _$proSubscriptionBillingMethodProviderEnum_orangeMoney =
-    const ProSubscriptionBillingMethodProviderEnum._('orangeMoney');
+    _$proSubscriptionBillingMethodProviderEnum_manual =
+    const ProSubscriptionBillingMethodProviderEnum._('manual');
 
 ProSubscriptionBillingMethodProviderEnum
     _$proSubscriptionBillingMethodProviderEnumValueOf(String name) {
   switch (name) {
-    case 'wave':
-      return _$proSubscriptionBillingMethodProviderEnum_wave;
-    case 'orangeMoney':
-      return _$proSubscriptionBillingMethodProviderEnum_orangeMoney;
+    case 'intech':
+      return _$proSubscriptionBillingMethodProviderEnum_intech;
+    case 'manual':
+      return _$proSubscriptionBillingMethodProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -28,8 +28,8 @@ ProSubscriptionBillingMethodProviderEnum
 final BuiltSet<ProSubscriptionBillingMethodProviderEnum>
     _$proSubscriptionBillingMethodProviderEnumValues = BuiltSet<
         ProSubscriptionBillingMethodProviderEnum>(const <ProSubscriptionBillingMethodProviderEnum>[
-  _$proSubscriptionBillingMethodProviderEnum_wave,
-  _$proSubscriptionBillingMethodProviderEnum_orangeMoney,
+  _$proSubscriptionBillingMethodProviderEnum_intech,
+  _$proSubscriptionBillingMethodProviderEnum_manual,
 ]);
 
 Serializer<ProSubscriptionBillingMethodProviderEnum>
@@ -39,12 +39,12 @@ Serializer<ProSubscriptionBillingMethodProviderEnum>
 class _$ProSubscriptionBillingMethodProviderEnumSerializer
     implements PrimitiveSerializer<ProSubscriptionBillingMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'wave': 'wave',
-    'orangeMoney': 'orange_money',
+    'intech': 'intech',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'wave': 'wave',
-    'orange_money': 'orangeMoney',
+    'intech': 'intech',
+    'manual': 'manual',
   };
 
   @override

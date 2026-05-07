@@ -11,8 +11,8 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@beauteavenue/contracts": ["packages/contracts/src/index.ts"],
-      "@beauteavenue/shared-ts": ["packages/shared-ts/src/index.ts"]
+      "@beauteavenue/contracts": ["packages/contracts/dist/index.js"],
+      "@beauteavenue/shared-ts": ["packages/shared-ts/dist/index.js"]
     }
   }
 }

@@ -14,14 +14,11 @@ part 'admin_subscription_list_response.g.dart';
 /// AdminSubscriptionListResponse
 ///
 /// Properties:
-/// * [summary]
-/// * [items]
-/// * [total]
+/// * [summary] 
+/// * [items] 
+/// * [total] 
 @BuiltValue()
-abstract class AdminSubscriptionListResponse
-    implements
-        Built<AdminSubscriptionListResponse,
-            AdminSubscriptionListResponseBuilder> {
+abstract class AdminSubscriptionListResponse implements Built<AdminSubscriptionListResponse, AdminSubscriptionListResponseBuilder> {
   @BuiltValueField(wireName: r'summary')
   AdminSubscriptionListResponseSummary get summary;
 
@@ -33,25 +30,18 @@ abstract class AdminSubscriptionListResponse
 
   AdminSubscriptionListResponse._();
 
-  factory AdminSubscriptionListResponse(
-          [void updates(AdminSubscriptionListResponseBuilder b)]) =
-      _$AdminSubscriptionListResponse;
+  factory AdminSubscriptionListResponse([void updates(AdminSubscriptionListResponseBuilder b)]) = _$AdminSubscriptionListResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionListResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionListResponse> get serializer =>
-      _$AdminSubscriptionListResponseSerializer();
+  static Serializer<AdminSubscriptionListResponse> get serializer => _$AdminSubscriptionListResponseSerializer();
 }
 
-class _$AdminSubscriptionListResponseSerializer
-    implements PrimitiveSerializer<AdminSubscriptionListResponse> {
+class _$AdminSubscriptionListResponseSerializer implements PrimitiveSerializer<AdminSubscriptionListResponse> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionListResponse,
-    _$AdminSubscriptionListResponse
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionListResponse, _$AdminSubscriptionListResponse];
 
   @override
   final String wireName = r'AdminSubscriptionListResponse';
@@ -69,8 +59,7 @@ class _$AdminSubscriptionListResponseSerializer
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(
-          BuiltList, [FullType(AdminSubscriptionListResponseItemsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(AdminSubscriptionListResponseItemsInner)]),
     );
     yield r'total';
     yield serializers.serialize(
@@ -85,9 +74,7 @@ class _$AdminSubscriptionListResponseSerializer
     AdminSubscriptionListResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -112,8 +99,7 @@ class _$AdminSubscriptionListResponseSerializer
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(AdminSubscriptionListResponseItemsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(AdminSubscriptionListResponseItemsInner)]),
           ) as BuiltList<AdminSubscriptionListResponseItemsInner>;
           result.items.replace(valueDes);
           break;
@@ -152,3 +138,4 @@ class _$AdminSubscriptionListResponseSerializer
     return result.build();
   }
 }
+

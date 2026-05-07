@@ -10,11 +10,8 @@ const ProCheckoutCompleteInputPaymentMethodEnum
     _$proCheckoutCompleteInputPaymentMethodEnum_cash =
     const ProCheckoutCompleteInputPaymentMethodEnum._('cash');
 const ProCheckoutCompleteInputPaymentMethodEnum
-    _$proCheckoutCompleteInputPaymentMethodEnum_wave =
-    const ProCheckoutCompleteInputPaymentMethodEnum._('wave');
-const ProCheckoutCompleteInputPaymentMethodEnum
-    _$proCheckoutCompleteInputPaymentMethodEnum_orangeMoney =
-    const ProCheckoutCompleteInputPaymentMethodEnum._('orangeMoney');
+    _$proCheckoutCompleteInputPaymentMethodEnum_intech =
+    const ProCheckoutCompleteInputPaymentMethodEnum._('intech');
 const ProCheckoutCompleteInputPaymentMethodEnum
     _$proCheckoutCompleteInputPaymentMethodEnum_other =
     const ProCheckoutCompleteInputPaymentMethodEnum._('other');
@@ -24,10 +21,8 @@ ProCheckoutCompleteInputPaymentMethodEnum
   switch (name) {
     case 'cash':
       return _$proCheckoutCompleteInputPaymentMethodEnum_cash;
-    case 'wave':
-      return _$proCheckoutCompleteInputPaymentMethodEnum_wave;
-    case 'orangeMoney':
-      return _$proCheckoutCompleteInputPaymentMethodEnum_orangeMoney;
+    case 'intech':
+      return _$proCheckoutCompleteInputPaymentMethodEnum_intech;
     case 'other':
       return _$proCheckoutCompleteInputPaymentMethodEnum_other;
     default:
@@ -39,8 +34,7 @@ final BuiltSet<ProCheckoutCompleteInputPaymentMethodEnum>
     _$proCheckoutCompleteInputPaymentMethodEnumValues = BuiltSet<
         ProCheckoutCompleteInputPaymentMethodEnum>(const <ProCheckoutCompleteInputPaymentMethodEnum>[
   _$proCheckoutCompleteInputPaymentMethodEnum_cash,
-  _$proCheckoutCompleteInputPaymentMethodEnum_wave,
-  _$proCheckoutCompleteInputPaymentMethodEnum_orangeMoney,
+  _$proCheckoutCompleteInputPaymentMethodEnum_intech,
   _$proCheckoutCompleteInputPaymentMethodEnum_other,
 ]);
 
@@ -52,14 +46,12 @@ class _$ProCheckoutCompleteInputPaymentMethodEnumSerializer
     implements PrimitiveSerializer<ProCheckoutCompleteInputPaymentMethodEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'cash': 'cash',
-    'wave': 'wave',
-    'orangeMoney': 'orange_money',
+    'intech': 'intech',
     'other': 'other',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'cash': 'cash',
-    'wave': 'wave',
-    'orange_money': 'orangeMoney',
+    'intech': 'intech',
     'other': 'other',
   };
 

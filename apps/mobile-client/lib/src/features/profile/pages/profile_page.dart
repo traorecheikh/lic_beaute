@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,7 +11,6 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_resource_view.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../providers/profile_provider.dart';
 
@@ -30,6 +30,8 @@ class ProfilePage extends ConsumerWidget {
         errorTitle: 'Impossible de charger le profil',
         emptyMessage: 'Connectez-vous pour accéder à votre compte.',
         builder: (profile) {
+          final avatarUrl = profile!.avatarUrl;
+          final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -45,10 +47,10 @@ class ProfilePage extends ConsumerWidget {
                           CircleAvatar(
                             radius: 40.r,
                             backgroundColor: AppColors.primaryLight,
-                            backgroundImage: profile!.avatarUrl != null
-                                ? NetworkImage(profile.avatarUrl!)
+                            backgroundImage: hasAvatar
+                                ? CachedNetworkImageProvider(avatarUrl)
                                 : null,
-                            child: profile.avatarUrl == null
+                            child: !hasAvatar
                                 ? Icon(
                                     Icons.person_outline,
                                     size: 34.r,
@@ -138,18 +140,19 @@ class ProfilePage extends ConsumerWidget {
                     _MenuTile(
                       icon: Icons.notifications_none_rounded,
                       label: 'Préférences de notifications',
-                      onTap: () => context.push(AppRoutes.notificationPreferences),
+                      onTap: () =>
+                          context.push(AppRoutes.notificationPreferences),
                     ),
                     _MenuTile(
                       icon: Icons.payment_outlined,
                       label: 'Moyens de paiement',
                       onTap: () => context.push(AppRoutes.profilePayments),
                     ),
-                    _MenuTile(
-                      icon: Icons.card_giftcard_outlined,
-                      label: 'Mes bons et codes',
-                      onTap: () => context.push(AppRoutes.profileVouchers),
-                    ),
+                    // Promos hidden — _MenuTile(
+                    //   icon: Icons.card_giftcard_outlined,
+                    //   label: 'Mes bons et codes',
+                    //   onTap: () => context.push(AppRoutes.profileVouchers),
+                    // ),
                     _MenuTile(
                       icon: Icons.workspace_premium_outlined,
                       label: 'Mes abonnements',
@@ -202,7 +205,7 @@ class _MenuTile extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.destructive = false,
-    this.trailingText,
+    this.trailingText, // ignore: unused_element_parameter
   });
 
   final IconData icon;

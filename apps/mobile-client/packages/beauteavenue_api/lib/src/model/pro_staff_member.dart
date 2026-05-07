@@ -12,17 +12,16 @@ part 'pro_staff_member.g.dart';
 /// ProStaffMember
 ///
 /// Properties:
-/// * [id]
-/// * [userId]
-/// * [displayName]
-/// * [avatarUrl]
-/// * [description]
-/// * [isActive]
-/// * [schedulingEnabled]
-/// * [serviceIds]
+/// * [id] 
+/// * [userId] 
+/// * [displayName] 
+/// * [avatarUrl] 
+/// * [description] 
+/// * [isActive] 
+/// * [schedulingEnabled] 
+/// * [serviceIds] 
 @BuiltValue()
-abstract class ProStaffMember
-    implements Built<ProStaffMember, ProStaffMemberBuilder> {
+abstract class ProStaffMember implements Built<ProStaffMember, ProStaffMemberBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -49,19 +48,16 @@ abstract class ProStaffMember
 
   ProStaffMember._();
 
-  factory ProStaffMember([void updates(ProStaffMemberBuilder b)]) =
-      _$ProStaffMember;
+  factory ProStaffMember([void updates(ProStaffMemberBuilder b)]) = _$ProStaffMember;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProStaffMemberBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProStaffMember> get serializer =>
-      _$ProStaffMemberSerializer();
+  static Serializer<ProStaffMember> get serializer => _$ProStaffMemberSerializer();
 }
 
-class _$ProStaffMemberSerializer
-    implements PrimitiveSerializer<ProStaffMember> {
+class _$ProStaffMemberSerializer implements PrimitiveSerializer<ProStaffMember> {
   @override
   final Iterable<Type> types = const [ProStaffMember, _$ProStaffMember];
 
@@ -89,19 +85,15 @@ class _$ProStaffMemberSerializer
       specifiedType: const FullType(String),
     );
     yield r'avatarUrl';
-    yield object.avatarUrl == null
-        ? null
-        : serializers.serialize(
-            object.avatarUrl,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.avatarUrl == null ? null : serializers.serialize(
+      object.avatarUrl,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'description';
-    yield object.description == null
-        ? null
-        : serializers.serialize(
-            object.description,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.description == null ? null : serializers.serialize(
+      object.description,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'isActive';
     yield serializers.serialize(
       object.isActive,
@@ -125,9 +117,7 @@ class _$ProStaffMemberSerializer
     ProStaffMember object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -228,3 +218,4 @@ class _$ProStaffMemberSerializer
     return result.build();
   }
 }
+

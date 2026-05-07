@@ -11,13 +11,13 @@ part 'pro_review.g.dart';
 /// ProReview
 ///
 /// Properties:
-/// * [id]
-/// * [rating]
-/// * [comment]
-/// * [createdAt]
-/// * [responseText]
-/// * [responseAt]
-/// * [clientId]
+/// * [id] 
+/// * [rating] 
+/// * [comment] 
+/// * [createdAt] 
+/// * [responseText] 
+/// * [responseAt] 
+/// * [clientId] 
 @BuiltValue()
 abstract class ProReview implements Built<ProReview, ProReviewBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -75,31 +75,25 @@ class _$ProReviewSerializer implements PrimitiveSerializer<ProReview> {
       specifiedType: const FullType(int),
     );
     yield r'comment';
-    yield object.comment == null
-        ? null
-        : serializers.serialize(
-            object.comment,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.comment == null ? null : serializers.serialize(
+      object.comment,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'createdAt';
     yield serializers.serialize(
       object.createdAt,
       specifiedType: const FullType(DateTime),
     );
     yield r'responseText';
-    yield object.responseText == null
-        ? null
-        : serializers.serialize(
-            object.responseText,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.responseText == null ? null : serializers.serialize(
+      object.responseText,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'responseAt';
-    yield object.responseAt == null
-        ? null
-        : serializers.serialize(
-            object.responseAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.responseAt == null ? null : serializers.serialize(
+      object.responseAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
     yield r'clientId';
     yield serializers.serialize(
       object.clientId,
@@ -113,9 +107,7 @@ class _$ProReviewSerializer implements PrimitiveSerializer<ProReview> {
     ProReview object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -210,3 +202,4 @@ class _$ProReviewSerializer implements PrimitiveSerializer<ProReview> {
     return result.build();
   }
 }
+

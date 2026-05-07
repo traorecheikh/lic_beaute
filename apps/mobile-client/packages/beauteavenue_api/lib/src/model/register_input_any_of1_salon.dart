@@ -11,15 +11,13 @@ part 'register_input_any_of1_salon.g.dart';
 /// RegisterInputAnyOf1Salon
 ///
 /// Properties:
-/// * [name]
-/// * [category]
-/// * [city]
-/// * [address]
-/// * [description]
+/// * [name] 
+/// * [category] 
+/// * [city] 
+/// * [address] 
+/// * [description] 
 @BuiltValue()
-abstract class RegisterInputAnyOf1Salon
-    implements
-        Built<RegisterInputAnyOf1Salon, RegisterInputAnyOf1SalonBuilder> {
+abstract class RegisterInputAnyOf1Salon implements Built<RegisterInputAnyOf1Salon, RegisterInputAnyOf1SalonBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -37,25 +35,18 @@ abstract class RegisterInputAnyOf1Salon
 
   RegisterInputAnyOf1Salon._();
 
-  factory RegisterInputAnyOf1Salon(
-          [void updates(RegisterInputAnyOf1SalonBuilder b)]) =
-      _$RegisterInputAnyOf1Salon;
+  factory RegisterInputAnyOf1Salon([void updates(RegisterInputAnyOf1SalonBuilder b)]) = _$RegisterInputAnyOf1Salon;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RegisterInputAnyOf1SalonBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RegisterInputAnyOf1Salon> get serializer =>
-      _$RegisterInputAnyOf1SalonSerializer();
+  static Serializer<RegisterInputAnyOf1Salon> get serializer => _$RegisterInputAnyOf1SalonSerializer();
 }
 
-class _$RegisterInputAnyOf1SalonSerializer
-    implements PrimitiveSerializer<RegisterInputAnyOf1Salon> {
+class _$RegisterInputAnyOf1SalonSerializer implements PrimitiveSerializer<RegisterInputAnyOf1Salon> {
   @override
-  final Iterable<Type> types = const [
-    RegisterInputAnyOf1Salon,
-    _$RegisterInputAnyOf1Salon
-  ];
+  final Iterable<Type> types = const [RegisterInputAnyOf1Salon, _$RegisterInputAnyOf1Salon];
 
   @override
   final String wireName = r'RegisterInputAnyOf1Salon';
@@ -100,9 +91,7 @@ class _$RegisterInputAnyOf1SalonSerializer
     RegisterInputAnyOf1Salon object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -180,3 +169,4 @@ class _$RegisterInputAnyOf1SalonSerializer
     return result.build();
   }
 }
+

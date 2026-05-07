@@ -12,24 +12,21 @@ part 'booking_summary_list_response_items_inner.g.dart';
 /// BookingSummaryListResponseItemsInner
 ///
 /// Properties:
-/// * [id]
-/// * [salonId]
-/// * [salonName]
-/// * [serviceId]
-/// * [serviceName]
-/// * [startsAt]
-/// * [endsAt]
-/// * [status]
-/// * [source_]
-/// * [depositAmountXof]
-/// * [depositPaymentStatus]
-/// * [paymentProvider]
-/// * [paymentId]
+/// * [id] 
+/// * [salonId] 
+/// * [salonName] 
+/// * [serviceId] 
+/// * [serviceName] 
+/// * [startsAt] 
+/// * [endsAt] 
+/// * [status] 
+/// * [source_] 
+/// * [depositAmountXof] 
+/// * [depositPaymentStatus] 
+/// * [paymentProvider] 
+/// * [paymentId] 
 @BuiltValue()
-abstract class BookingSummaryListResponseItemsInner
-    implements
-        Built<BookingSummaryListResponseItemsInner,
-            BookingSummaryListResponseItemsInnerBuilder> {
+abstract class BookingSummaryListResponseItemsInner implements Built<BookingSummaryListResponseItemsInner, BookingSummaryListResponseItemsInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -62,38 +59,30 @@ abstract class BookingSummaryListResponseItemsInner
   num get depositAmountXof;
 
   @BuiltValueField(wireName: r'depositPaymentStatus')
-  BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-      get depositPaymentStatus;
+  BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum get depositPaymentStatus;
   // enum depositPaymentStatusEnum {  pending,  authorized,  succeeded,  failed,  refunded,  };
 
   @BuiltValueField(wireName: r'paymentProvider')
   BookingSummaryListResponseItemsInnerPaymentProviderEnum? get paymentProvider;
-  // enum paymentProviderEnum {  wave,  orange_money,  };
+  // enum paymentProviderEnum {  intech,  };
 
   @BuiltValueField(wireName: r'paymentId')
   String? get paymentId;
 
   BookingSummaryListResponseItemsInner._();
 
-  factory BookingSummaryListResponseItemsInner(
-          [void updates(BookingSummaryListResponseItemsInnerBuilder b)]) =
-      _$BookingSummaryListResponseItemsInner;
+  factory BookingSummaryListResponseItemsInner([void updates(BookingSummaryListResponseItemsInnerBuilder b)]) = _$BookingSummaryListResponseItemsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BookingSummaryListResponseItemsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BookingSummaryListResponseItemsInner> get serializer =>
-      _$BookingSummaryListResponseItemsInnerSerializer();
+  static Serializer<BookingSummaryListResponseItemsInner> get serializer => _$BookingSummaryListResponseItemsInnerSerializer();
 }
 
-class _$BookingSummaryListResponseItemsInnerSerializer
-    implements PrimitiveSerializer<BookingSummaryListResponseItemsInner> {
+class _$BookingSummaryListResponseItemsInnerSerializer implements PrimitiveSerializer<BookingSummaryListResponseItemsInner> {
   @override
-  final Iterable<Type> types = const [
-    BookingSummaryListResponseItemsInner,
-    _$BookingSummaryListResponseItemsInner
-  ];
+  final Iterable<Type> types = const [BookingSummaryListResponseItemsInner, _$BookingSummaryListResponseItemsInner];
 
   @override
   final String wireName = r'BookingSummaryListResponseItemsInner';
@@ -141,8 +130,7 @@ class _$BookingSummaryListResponseItemsInnerSerializer
     yield r'status';
     yield serializers.serialize(
       object.status,
-      specifiedType:
-          const FullType(BookingSummaryListResponseItemsInnerStatusEnum),
+      specifiedType: const FullType(BookingSummaryListResponseItemsInnerStatusEnum),
     );
     yield r'source';
     yield serializers.serialize(
@@ -157,24 +145,18 @@ class _$BookingSummaryListResponseItemsInnerSerializer
     yield r'depositPaymentStatus';
     yield serializers.serialize(
       object.depositPaymentStatus,
-      specifiedType: const FullType(
-          BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum),
+      specifiedType: const FullType(BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum),
     );
     yield r'paymentProvider';
-    yield object.paymentProvider == null
-        ? null
-        : serializers.serialize(
-            object.paymentProvider,
-            specifiedType: const FullType.nullable(
-                BookingSummaryListResponseItemsInnerPaymentProviderEnum),
-          );
+    yield object.paymentProvider == null ? null : serializers.serialize(
+      object.paymentProvider,
+      specifiedType: const FullType.nullable(BookingSummaryListResponseItemsInnerPaymentProviderEnum),
+    );
     yield r'paymentId';
-    yield object.paymentId == null
-        ? null
-        : serializers.serialize(
-            object.paymentId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.paymentId == null ? null : serializers.serialize(
+      object.paymentId,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -183,9 +165,7 @@ class _$BookingSummaryListResponseItemsInnerSerializer
     BookingSummaryListResponseItemsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -252,8 +232,7 @@ class _$BookingSummaryListResponseItemsInnerSerializer
         case r'status':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BookingSummaryListResponseItemsInnerStatusEnum),
+            specifiedType: const FullType(BookingSummaryListResponseItemsInnerStatusEnum),
           ) as BookingSummaryListResponseItemsInnerStatusEnum;
           result.status = valueDes;
           break;
@@ -274,16 +253,14 @@ class _$BookingSummaryListResponseItemsInnerSerializer
         case r'depositPaymentStatus':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum),
+            specifiedType: const FullType(BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum),
           ) as BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum;
           result.depositPaymentStatus = valueDes;
           break;
         case r'paymentProvider':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(
-                BookingSummaryListResponseItemsInnerPaymentProviderEnum),
+            specifiedType: const FullType.nullable(BookingSummaryListResponseItemsInnerPaymentProviderEnum),
           ) as BookingSummaryListResponseItemsInnerPaymentProviderEnum?;
           if (valueDes == null) continue;
           result.paymentProvider = valueDes;
@@ -326,97 +303,57 @@ class _$BookingSummaryListResponseItemsInnerSerializer
 }
 
 class BookingSummaryListResponseItemsInnerStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const BookingSummaryListResponseItemsInnerStatusEnum pending =
-      _$bookingSummaryListResponseItemsInnerStatusEnum_pending;
+  static const BookingSummaryListResponseItemsInnerStatusEnum pending = _$bookingSummaryListResponseItemsInnerStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const BookingSummaryListResponseItemsInnerStatusEnum confirmed =
-      _$bookingSummaryListResponseItemsInnerStatusEnum_confirmed;
+  static const BookingSummaryListResponseItemsInnerStatusEnum confirmed = _$bookingSummaryListResponseItemsInnerStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const BookingSummaryListResponseItemsInnerStatusEnum inProgress =
-      _$bookingSummaryListResponseItemsInnerStatusEnum_inProgress;
+  static const BookingSummaryListResponseItemsInnerStatusEnum inProgress = _$bookingSummaryListResponseItemsInnerStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const BookingSummaryListResponseItemsInnerStatusEnum completed =
-      _$bookingSummaryListResponseItemsInnerStatusEnum_completed;
+  static const BookingSummaryListResponseItemsInnerStatusEnum completed = _$bookingSummaryListResponseItemsInnerStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const BookingSummaryListResponseItemsInnerStatusEnum cancelled =
-      _$bookingSummaryListResponseItemsInnerStatusEnum_cancelled;
+  static const BookingSummaryListResponseItemsInnerStatusEnum cancelled = _$bookingSummaryListResponseItemsInnerStatusEnum_cancelled;
 
-  static Serializer<BookingSummaryListResponseItemsInnerStatusEnum>
-      get serializer =>
-          _$bookingSummaryListResponseItemsInnerStatusEnumSerializer;
+  static Serializer<BookingSummaryListResponseItemsInnerStatusEnum> get serializer => _$bookingSummaryListResponseItemsInnerStatusEnumSerializer;
 
-  const BookingSummaryListResponseItemsInnerStatusEnum._(String name)
-      : super(name);
+  const BookingSummaryListResponseItemsInnerStatusEnum._(String name): super(name);
 
-  static BuiltSet<BookingSummaryListResponseItemsInnerStatusEnum> get values =>
-      _$bookingSummaryListResponseItemsInnerStatusEnumValues;
-  static BookingSummaryListResponseItemsInnerStatusEnum valueOf(String name) =>
-      _$bookingSummaryListResponseItemsInnerStatusEnumValueOf(name);
+  static BuiltSet<BookingSummaryListResponseItemsInnerStatusEnum> get values => _$bookingSummaryListResponseItemsInnerStatusEnumValues;
+  static BookingSummaryListResponseItemsInnerStatusEnum valueOf(String name) => _$bookingSummaryListResponseItemsInnerStatusEnumValueOf(name);
 }
 
-class BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-    extends EnumClass {
+class BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-      pending =
-      _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_pending;
+  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum pending = _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'authorized')
-  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-      authorized =
-      _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_authorized;
+  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum authorized = _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_authorized;
   @BuiltValueEnumConst(wireName: r'succeeded')
-  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-      succeeded =
-      _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_succeeded;
+  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum succeeded = _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_succeeded;
   @BuiltValueEnumConst(wireName: r'failed')
-  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-      failed =
-      _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_failed;
+  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum failed = _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_failed;
   @BuiltValueEnumConst(wireName: r'refunded')
-  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum
-      refunded =
-      _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_refunded;
+  static const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum refunded = _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnum_refunded;
 
-  static Serializer<
-          BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum>
-      get serializer =>
-          _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnumSerializer;
+  static Serializer<BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum> get serializer => _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnumSerializer;
 
-  const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum._(
-      String name)
-      : super(name);
+  const BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum._(String name): super(name);
 
-  static BuiltSet<BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum>
-      get values =>
-          _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnumValues;
-  static BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum valueOf(
-          String name) =>
-      _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnumValueOf(
-          name);
+  static BuiltSet<BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum> get values => _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnumValues;
+  static BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum valueOf(String name) => _$bookingSummaryListResponseItemsInnerDepositPaymentStatusEnumValueOf(name);
 }
 
-class BookingSummaryListResponseItemsInnerPaymentProviderEnum
-    extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'wave')
-  static const BookingSummaryListResponseItemsInnerPaymentProviderEnum wave =
-      _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_wave;
-  @BuiltValueEnumConst(wireName: r'orange_money')
-  static const BookingSummaryListResponseItemsInnerPaymentProviderEnum
-      orangeMoney =
-      _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_orangeMoney;
+class BookingSummaryListResponseItemsInnerPaymentProviderEnum extends EnumClass {
 
-  static Serializer<BookingSummaryListResponseItemsInnerPaymentProviderEnum>
-      get serializer =>
-          _$bookingSummaryListResponseItemsInnerPaymentProviderEnumSerializer;
+  @BuiltValueEnumConst(wireName: r'intech')
+  static const BookingSummaryListResponseItemsInnerPaymentProviderEnum intech = _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_intech;
 
-  const BookingSummaryListResponseItemsInnerPaymentProviderEnum._(String name)
-      : super(name);
+  static Serializer<BookingSummaryListResponseItemsInnerPaymentProviderEnum> get serializer => _$bookingSummaryListResponseItemsInnerPaymentProviderEnumSerializer;
 
-  static BuiltSet<BookingSummaryListResponseItemsInnerPaymentProviderEnum>
-      get values =>
-          _$bookingSummaryListResponseItemsInnerPaymentProviderEnumValues;
-  static BookingSummaryListResponseItemsInnerPaymentProviderEnum valueOf(
-          String name) =>
-      _$bookingSummaryListResponseItemsInnerPaymentProviderEnumValueOf(name);
+  const BookingSummaryListResponseItemsInnerPaymentProviderEnum._(String name): super(name);
+
+  static BuiltSet<BookingSummaryListResponseItemsInnerPaymentProviderEnum> get values => _$bookingSummaryListResponseItemsInnerPaymentProviderEnumValues;
+  static BookingSummaryListResponseItemsInnerPaymentProviderEnum valueOf(String name) => _$bookingSummaryListResponseItemsInnerPaymentProviderEnumValueOf(name);
 }
+

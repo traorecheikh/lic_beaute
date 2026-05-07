@@ -14,9 +14,15 @@ export interface PaymentAdapter {
     description: string;
     callbackUrl: string;
     idempotencyKey: string;
-  }): Promise<{ redirectUrl: string; providerRef: string; expiresAt: Date }>;
+    channel?: "wave" | "orange_money" | "free_money";
+    phone?: string;
+  }): Promise<{ redirectUrl: string; providerRef: string; providerToken?: string; expiresAt: Date }>;
 
-  verifyWebhookSignature(rawBody: string, signature: string): boolean;
+  verifyWebhookSignature(params: {
+    rawBody: string;
+    signature?: string;
+    timestamp?: string;
+  }): boolean;
 
   parseWebhook(rawBody: string): ParsedWebhookEvent;
 

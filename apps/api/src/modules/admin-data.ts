@@ -1,17 +1,21 @@
-import type {
+import { randomBytes } from "node:crypto";
+import argon2 from "argon2";
+
+import {
   AdminAuditDetail,
   AdminDashboard,
   AdminSalonDecisionInput,
+  AdminSalonCreateInput,
   AdminSalonDetail,
   AdminSalonQueueFilters,
   AdminSalonQueueItem,
   AdminSubscriptionDetail,
   AdminSubscriptionOverrideInput,
-  AdminSubscriptionSummary,
-  AdminSalonCreateInput
+  AdminSubscriptionSummary
 } from "@beauteavenue/contracts";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 
+import { toPublicBillingProvider } from "../lib/payment-provider.js";
 import { prisma } from "../lib/prisma.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -83,7 +87,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       _sum: { amountXof: true }
     }),
     prisma.booking.count({ where: { createdAt: { gte: today } } }),
-    prisma.salon.count({ where: { approvalStatus: "approved" } }),
+    prisma.salon.count({ where: { approvalStatus: "approved", isVisibleInMarketplace: true } }),
     prisma.salon.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
     prisma.salon.count({ where: { approvalStatus: { in: ["pending_review", "needs_info"] } } }),
     prisma.subscription.count({ where: { status: { in: ["past_due", "paused"] } } }),
@@ -289,7 +293,7 @@ export async function getPendingSalonDetail(salonId: string): Promise<AdminSalon
       name: s.name,
       durationMinutes: s.durationMinutes,
       priceXof: s.priceXof,
-      depositMode: s.depositMode as "none" | "fixed" | "percentage",
+      depositMode: s.depositMode as "none" | "fixed" | "percent",
       depositAmountXof: s.depositAmountXof,
       depositPercent: s.depositPercent
     })),
@@ -308,7 +312,7 @@ export async function approveSalon(salonId: string, actorName: string) {
 
   const updated = await prisma.salon.update({
     where: { id: salonId },
-    data: { approvalStatus: "approved", latestAdminNote: "Salon approuvé et prêt à être visible." }
+    data: { approvalStatus: "approved", isVisibleInMarketplace: true, canReceiveBookings: true, latestAdminNote: "Salon approuvé et prêt à être visible." }
   });
 
   await prisma.subscription.upsert({
@@ -378,6 +382,8 @@ export async function requestSalonInfo(salonId: string, input: AdminSalonDecisio
 }
 
 export async function createSalon(data: AdminSalonCreateInput, actorName: string) {
+  const temporaryPassword = randomBytes(12).toString("base64url").slice(0, 16);
+
   const salon = await prisma.salon.create({
     data: {
       name: data.name,
@@ -386,12 +392,15 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
       address: data.address,
       description: data.description,
       approvalStatus: "approved",
+      isVisibleInMarketplace: true,
+      canReceiveBookings: true,
       staffMembers: {
         create: {
-          fullName: "Propriétaire",
+          fullName: data.ownerName,
           email: data.ownerEmail,
           phone: data.ownerPhone,
-          role: "salon_owner"
+          role: "salon_owner",
+          passwordHash: await argon2.hash(temporaryPassword)
         }
       }
     }
@@ -412,7 +421,7 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
   });
 
-  return getPendingSalonDetail(salon.id);
+  return { ...await getPendingSalonDetail(salon.id), temporaryPassword };
 }
 
 // ─── Subscriptions ────────────────────────────────────────────────────────────
@@ -444,7 +453,7 @@ export async function listSubscriptions(filters: {
     salonName: sub.salon.name,
     tier: sub.tier as AdminSubscriptionSummary["tier"],
     status: sub.status as AdminSubscriptionSummary["status"],
-    billingProvider: sub.billingProvider as AdminSubscriptionSummary["billingProvider"],
+    billingProvider: toPublicBillingProvider(sub.billingProvider),
     expiresAt: sub.expiresAt?.toISOString() ?? null,
     autoRenew: sub.autoRenew,
     isComplimentary: sub.isComplimentary
@@ -471,7 +480,7 @@ export async function getSubscriptionDetail(subscriptionId: string): Promise<Adm
     salonName: sub.salon.name,
     tier: sub.tier as AdminSubscriptionDetail["tier"],
     status: sub.status as AdminSubscriptionDetail["status"],
-    billingProvider: sub.billingProvider as AdminSubscriptionDetail["billingProvider"],
+    billingProvider: toPublicBillingProvider(sub.billingProvider),
     expiresAt: sub.expiresAt?.toISOString() ?? null,
     autoRenew: sub.autoRenew,
     isComplimentary: sub.isComplimentary,
@@ -548,6 +557,20 @@ export async function overrideSubscription(
 
   await prisma.$transaction(async (tx) => {
     await tx.subscription.update({ where: { id: subscriptionId }, data: updateData });
+
+    if (input.action === "pause_subscription" || input.action === "terminate_subscription") {
+      await tx.salon.update({
+        where: { id: sub.salonId },
+        data: { isVisibleInMarketplace: false, canReceiveBookings: false }
+      });
+    }
+
+    if (input.action === "mark_charge_resolved" && input.metadata?.subscriptionChargeId) {
+      await tx.subscriptionCharge.update({
+        where: { id: input.metadata.subscriptionChargeId },
+        data: { status: "succeeded" }
+      });
+    }
 
     await tx.subscriptionEvent.create({
       data: {
@@ -681,6 +704,8 @@ export async function getAuditDetail(auditId: string): Promise<AdminAuditDetail 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 const HIDDEN_SETTING_KEYS = new Set([
+  "intech_api_key",
+  "intech_api_secret",
   "paytech_api_key",
   "paytech_api_secret",
   "platform_name"
@@ -695,9 +720,10 @@ export async function getPlatformSettings(group?: string) {
 }
 
 export async function updatePlatformSetting(key: string, value: string, actorName: string) {
-  const setting = await prisma.platformSetting.update({
+  const setting = await prisma.platformSetting.upsert({
     where: { key },
-    data: { value }
+    create: { group: "config", key, value, description: "" },
+    update: { value }
   });
 
   await writeAuditLog({

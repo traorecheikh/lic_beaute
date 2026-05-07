@@ -12,12 +12,11 @@ part 'health_get200_response.g.dart';
 /// HealthGet200Response
 ///
 /// Properties:
-/// * [status]
-/// * [timestamp]
-/// * [database]
+/// * [status] 
+/// * [timestamp] 
+/// * [database] 
 @BuiltValue()
-abstract class HealthGet200Response
-    implements Built<HealthGet200Response, HealthGet200ResponseBuilder> {
+abstract class HealthGet200Response implements Built<HealthGet200Response, HealthGet200ResponseBuilder> {
   @BuiltValueField(wireName: r'status')
   String get status;
 
@@ -29,24 +28,18 @@ abstract class HealthGet200Response
 
   HealthGet200Response._();
 
-  factory HealthGet200Response([void updates(HealthGet200ResponseBuilder b)]) =
-      _$HealthGet200Response;
+  factory HealthGet200Response([void updates(HealthGet200ResponseBuilder b)]) = _$HealthGet200Response;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(HealthGet200ResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<HealthGet200Response> get serializer =>
-      _$HealthGet200ResponseSerializer();
+  static Serializer<HealthGet200Response> get serializer => _$HealthGet200ResponseSerializer();
 }
 
-class _$HealthGet200ResponseSerializer
-    implements PrimitiveSerializer<HealthGet200Response> {
+class _$HealthGet200ResponseSerializer implements PrimitiveSerializer<HealthGet200Response> {
   @override
-  final Iterable<Type> types = const [
-    HealthGet200Response,
-    _$HealthGet200Response
-  ];
+  final Iterable<Type> types = const [HealthGet200Response, _$HealthGet200Response];
 
   @override
   final String wireName = r'HealthGet200Response';
@@ -79,9 +72,7 @@ class _$HealthGet200ResponseSerializer
     HealthGet200Response object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -145,3 +136,4 @@ class _$HealthGet200ResponseSerializer
     return result.build();
   }
 }
+

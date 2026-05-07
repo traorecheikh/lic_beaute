@@ -13,11 +13,10 @@ part 'admin_salon_queue_response.g.dart';
 /// AdminSalonQueueResponse
 ///
 /// Properties:
-/// * [items]
-/// * [total]
+/// * [items] 
+/// * [total] 
 @BuiltValue()
-abstract class AdminSalonQueueResponse
-    implements Built<AdminSalonQueueResponse, AdminSalonQueueResponseBuilder> {
+abstract class AdminSalonQueueResponse implements Built<AdminSalonQueueResponse, AdminSalonQueueResponseBuilder> {
   @BuiltValueField(wireName: r'items')
   BuiltList<AdminSalonQueueResponseItemsInner> get items;
 
@@ -26,25 +25,18 @@ abstract class AdminSalonQueueResponse
 
   AdminSalonQueueResponse._();
 
-  factory AdminSalonQueueResponse(
-          [void updates(AdminSalonQueueResponseBuilder b)]) =
-      _$AdminSalonQueueResponse;
+  factory AdminSalonQueueResponse([void updates(AdminSalonQueueResponseBuilder b)]) = _$AdminSalonQueueResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonQueueResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonQueueResponse> get serializer =>
-      _$AdminSalonQueueResponseSerializer();
+  static Serializer<AdminSalonQueueResponse> get serializer => _$AdminSalonQueueResponseSerializer();
 }
 
-class _$AdminSalonQueueResponseSerializer
-    implements PrimitiveSerializer<AdminSalonQueueResponse> {
+class _$AdminSalonQueueResponseSerializer implements PrimitiveSerializer<AdminSalonQueueResponse> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonQueueResponse,
-    _$AdminSalonQueueResponse
-  ];
+  final Iterable<Type> types = const [AdminSalonQueueResponse, _$AdminSalonQueueResponse];
 
   @override
   final String wireName = r'AdminSalonQueueResponse';
@@ -57,8 +49,7 @@ class _$AdminSalonQueueResponseSerializer
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(
-          BuiltList, [FullType(AdminSalonQueueResponseItemsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(AdminSalonQueueResponseItemsInner)]),
     );
     yield r'total';
     yield serializers.serialize(
@@ -73,9 +64,7 @@ class _$AdminSalonQueueResponseSerializer
     AdminSalonQueueResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -93,8 +82,7 @@ class _$AdminSalonQueueResponseSerializer
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(AdminSalonQueueResponseItemsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(AdminSalonQueueResponseItemsInner)]),
           ) as BuiltList<AdminSalonQueueResponseItemsInner>;
           result.items.replace(valueDes);
           break;
@@ -133,3 +121,4 @@ class _$AdminSalonQueueResponseSerializer
     return result.build();
   }
 }
+

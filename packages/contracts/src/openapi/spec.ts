@@ -6,6 +6,7 @@ import {
   adminAuditFiltersSchema,
   adminAuditSummarySchema,
   adminDashboardSchema,
+  adminSalonCreateInputSchema,
   adminSalonDecisionSchema,
   adminSalonDetailSchema,
   adminSalonQueueFiltersSchema,
@@ -24,8 +25,13 @@ import {
   registerInputSchema,
   updateMeInputSchema
 } from "../domain/auth.js";
-import { bookingCreateSchema, bookingSummarySchema } from "../domain/booking.js";
+import { bookingCreateSchema, bookingRescheduleSchema, bookingSummarySchema } from "../domain/booking.js";
+import { reviewCreateInputSchema, reviewSchema } from "../domain/review.js";
 import {
+  clientAddressCreateSchema,
+  clientAddressListResponseSchema,
+  clientAddressSchema,
+  clientAddressUpdateSchema,
   clientBenefitSchema,
   clientPaymentMethodCreateSchema,
   clientPaymentMethodSchema,
@@ -37,6 +43,7 @@ import {
   redeemVoucherInputSchema
 } from "../domain/profile.js";
 import {
+  availabilitySlotSchema,
   proAnalyticsSchema,
   proBlockedSlotCreateInputSchema,
   proBlockedSlotSchema,
@@ -71,6 +78,16 @@ import {
   proSubscriptionUpdateInputSchema
 } from "../domain/pro.js";
 import { salonDetailSchema, salonSummarySchema } from "../domain/salon.js";
+import { favoriteItemSchema, favoriteListResponseSchema } from "../domain/favorite.js";
+import {
+  paymentInitiateInputSchema,
+  paymentInitiateResponseSchema,
+  paymentStatusResponseSchema,
+  paymentReconcileResponseSchema,
+  paymentIntechCallbackSchema
+} from "../domain/payment.js";
+import { pushTokenRegisterSchema } from "../domain/notification.js";
+import { mediaUploadResponseSchema, mediaAssetSchema } from "../domain/media.js";
 import { apiErrorSchema, paginatedResponse } from "../http/common.js";
 
 type JsonSchema = Record<string, unknown>;
@@ -167,10 +184,13 @@ const schemaEntries = {
   SalonSummary: salonSummarySchema,
   SalonSummaryListResponse: paginatedResponse(salonSummarySchema),
   SalonDetail: salonDetailSchema,
+  FavoriteItem: favoriteItemSchema,
+  FavoriteListResponse: favoriteListResponseSchema,
 
   BookingCreateInput: bookingCreateSchema,
   BookingSummary: bookingSummarySchema,
   BookingSummaryListResponse: paginatedResponse(bookingSummarySchema),
+  BookingRescheduleInput: bookingRescheduleSchema,
 
   AdminDashboard: adminDashboardSchema,
   AdminSalonQueueFilters: adminSalonQueueFiltersSchema,
@@ -219,6 +239,17 @@ const schemaEntries = {
   ProSubscriptionCheckoutResult: proSubscriptionCheckoutResultSchema,
   ProPayoutEvent: proPayoutEventSchema,
   ProInvoice: proInvoiceSchema,
+
+  PaymentInitiateInput: paymentInitiateInputSchema,
+  PaymentInitiateResponse: paymentInitiateResponseSchema,
+  PaymentStatusResponse: paymentStatusResponseSchema,
+  PaymentReconcileResponse: paymentReconcileResponseSchema,
+  PaymentWebhookBody: paymentIntechCallbackSchema,
+
+  PushTokenInput: pushTokenRegisterSchema,
+
+  MediaUploadResponse: mediaUploadResponseSchema,
+  MediaAsset: mediaAssetSchema,
 
   UpdatedResponse: updatedResponseSchema,
   DeletedResponse: deletedResponseSchema
@@ -483,6 +514,20 @@ export const openApiSpec = {
             }
           }
         }
+      }),
+      delete: withBearer({
+        tags: ["auth"],
+        summary: "Delete current user account (GDPR right to erasure)",
+        responses: {
+          200: {
+            description: "Account deleted",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
       })
     },
     "/api/v1/metadata/profile-options": {
@@ -705,6 +750,59 @@ export const openApiSpec = {
       }
     },
 
+    "/api/v1/favorites": {
+      get: withBearer({
+        tags: ["favorites"],
+        summary: "List client favorites",
+        responses: {
+          200: {
+            description: "Favorite salons list",
+            content: {
+              "application/json": {
+                schema: ref("FavoriteListResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/favorites/{salonId}": {
+      post: withBearer({
+        tags: ["favorites"],
+        summary: "Add salon to favorites",
+        parameters: [pathParam("salonId", "Salon identifier")],
+        responses: {
+          201: {
+            description: "Added to favorites",
+            content: {
+              "application/json": {
+                schema: ref("FavoriteItem")
+              }
+            }
+          },
+          404: {
+            description: "Salon not found",
+            content: { "application/json": { schema: ref("ApiError") } }
+          }
+        }
+      }),
+      delete: withBearer({
+        tags: ["favorites"],
+        summary: "Remove salon from favorites",
+        parameters: [pathParam("salonId", "Salon identifier")],
+        responses: {
+          200: {
+            description: "Removed from favorites",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+
     "/api/v1/bookings": {
       get: withBearer({
         tags: ["bookings"],
@@ -737,6 +835,122 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: ref("BookingSummary")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/bookings/{bookingId}": {
+      get: withBearer({
+        tags: ["bookings"],
+        summary: "Get booking detail",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Booking detail",
+            content: {
+              "application/json": {
+                schema: ref("BookingSummary")
+              }
+            }
+          },
+          404: {
+            description: "Booking not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/bookings/{bookingId}/cancel": {
+      post: withBearer({
+        tags: ["bookings"],
+        summary: "Cancel a booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        responses: {
+          200: {
+            description: "Cancelled booking",
+            content: {
+              "application/json": {
+                schema: ref("BookingSummary")
+              }
+            }
+          },
+          404: {
+            description: "Booking not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/bookings/{bookingId}/reschedule": {
+      post: withBearer({
+        tags: ["bookings"],
+        summary: "Reschedule a booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("BookingRescheduleInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Rescheduled booking",
+            content: {
+              "application/json": {
+                schema: ref("BookingSummary")
+              }
+            }
+          },
+          404: {
+            description: "Booking not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/bookings/{bookingId}/review": {
+      post: withBearer({
+        tags: ["bookings"],
+        summary: "Submit a review for a completed booking",
+        parameters: [pathParam("bookingId", "Booking identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: toOpenApiSchema(reviewCreateInputSchema)
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Review created",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(reviewSchema)
+              }
+            }
+          },
+          404: {
+            description: "Booking not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
               }
             }
           }
@@ -1809,6 +2023,599 @@ export const openApiSpec = {
               }
             }
           }
+        }
+      })
+    },
+
+    "/api/v1/payments/deposits/initiate": {
+      post: withBearer({
+        tags: ["payments"],
+        summary: "Initiate deposit payment for a booking",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("PaymentInitiateInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Payment initiation",
+            content: {
+              "application/json": {
+                schema: ref("PaymentInitiateResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/payments/{paymentId}": {
+      get: withBearer({
+        tags: ["payments"],
+        summary: "Get payment status",
+        parameters: [pathParam("paymentId", "Payment identifier")],
+        responses: {
+          200: {
+            description: "Payment status",
+            content: {
+              "application/json": {
+                schema: ref("PaymentStatusResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/payments/{paymentId}/refund": {
+      post: withBearer({
+        tags: ["payments"],
+        summary: "Refund a payment",
+        parameters: [pathParam("paymentId", "Payment identifier")],
+        responses: {
+          200: {
+            description: "Refund result",
+            content: {
+              "application/json": {
+                schema: ref("PaymentStatusResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/payments/{paymentId}/reconcile": {
+      post: withBearer({
+        tags: ["payments"],
+        summary: "Manually reconcile a payment (admin or pro)",
+        parameters: [pathParam("paymentId", "Payment identifier")],
+        responses: {
+          200: {
+            description: "Reconciled payment status",
+            content: {
+              "application/json": {
+                schema: ref("PaymentReconcileResponse")
+              }
+            }
+          },
+          404: {
+            description: "Payment not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/payments/webhooks/intech": {
+      post: {
+        tags: ["payments"],
+        summary: "Intech payment webhook callback",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("PaymentWebhookBody")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Webhook acknowledged",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ received: z.boolean() }))
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/webhooks/paytech": {
+      post: {
+        tags: ["payments"],
+        summary: "PayTech payment webhook callback",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("PaymentWebhookBody")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Webhook acknowledged",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ received: z.boolean() }))
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v1/push-tokens": {
+      post: withBearer({
+        tags: ["push"],
+        summary: "Register a push notification token",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("PushTokenInput")
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Registered push token",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({
+                  id: z.string(),
+                  token: z.string(),
+                  platform: z.string(),
+                  createdAt: z.string()
+                }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/push-tokens/{tokenId}": {
+      delete: withBearer({
+        tags: ["push"],
+        summary: "Revoke a push notification token",
+        parameters: [pathParam("tokenId", "Push token identifier")],
+        responses: {
+          200: {
+            description: "Revoked token",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+
+    "/api/v1/media/upload-intent": {
+      post: withBearer({
+        tags: ["media"],
+        summary: "Request a presigned PUT URL for direct R2 upload",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: toOpenApiSchema(z.object({
+                salonId: z.string().optional(),
+                purpose: z.enum(["salon_cover","salon_logo","salon_gallery","kyc_document","avatar"]),
+                mimeType: z.string(),
+                originalFilename: z.string(),
+                sizeBytes: z.number().int()
+              }))
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Presigned upload intent",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({
+                  assetId: z.string(),
+                  uploadUrl: z.string(),
+                  expiresAt: z.string()
+                }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/media/{mediaId}/complete": {
+      post: withBearer({
+        tags: ["media"],
+        summary: "Confirm upload completed — triggers admin review",
+        parameters: [pathParam("mediaId", "Media asset identifier")],
+        responses: {
+          200: {
+            description: "Upload confirmed",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({
+                  assetId: z.string(),
+                  uploadStatus: z.string(),
+                  reviewStatus: z.string()
+                }))
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/media/{mediaId}": {
+      get: withBearer({
+        tags: ["media"],
+        summary: "Retrieve media metadata",
+        parameters: [pathParam("mediaId", "Media identifier")],
+        responses: {
+          200: {
+            description: "Media metadata",
+            content: {
+              "application/json": {
+                schema: ref("MediaAsset")
+              }
+            }
+          },
+          404: {
+            description: "Media not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      }),
+      delete: withBearer({
+        tags: ["media"],
+        summary: "Soft-delete a media asset",
+        parameters: [pathParam("mediaId", "Media identifier")],
+        responses: {
+          200: {
+            description: "Deleted media",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          },
+          404: {
+            description: "Media not found",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      })
+    },
+
+    "/api/v1/me/addresses": {
+      get: withBearer({
+        tags: ["auth"],
+        summary: "List saved addresses",
+        responses: {
+          200: {
+            description: "Address list",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(clientAddressListResponseSchema)
+              }
+            }
+          }
+        }
+      }),
+      post: withBearer({
+        tags: ["auth"],
+        summary: "Create a saved address",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: toOpenApiSchema(clientAddressCreateSchema)
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Created address",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(clientAddressSchema)
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/me/addresses/{addressId}": {
+      patch: withBearer({
+        tags: ["auth"],
+        summary: "Update a saved address",
+        parameters: [pathParam("addressId", "Address identifier")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: toOpenApiSchema(clientAddressUpdateSchema)
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Updated address",
+            content: {
+              "application/json": {
+                schema: ref("UpdatedResponse")
+              }
+            }
+          }
+        }
+      }),
+      delete: withBearer({
+        tags: ["auth"],
+        summary: "Delete a saved address",
+        parameters: [pathParam("addressId", "Address identifier")],
+        responses: {
+          200: {
+            description: "Deleted address",
+            content: {
+              "application/json": {
+                schema: ref("DeletedResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+
+    "/api/v1/salons/{id}/availability": {
+      get: {
+        tags: ["catalog"],
+        summary: "Get available booking slots",
+        parameters: [
+          pathParam("id", "Salon identifier"),
+          { name: "date", in: "query", required: true, schema: { type: "string", format: "date" } },
+          { name: "serviceId", in: "query", required: true, schema: { type: "string" } },
+          { name: "employeeId", in: "query", required: false, schema: { type: "string" } }
+        ],
+        responses: {
+          200: { description: "Available slots", content: { "application/json": { schema: toOpenApiSchema(z.array(availabilitySlotSchema)) } } },
+          404: { description: "Salon not found", content: { "application/json": { schema: ref("ApiError") } } }
+        }
+      }
+    },
+
+    "/api/v1/salons/{id}/reviews": {
+      get: {
+        tags: ["catalog"],
+        summary: "List salon reviews",
+        parameters: [pathParam("id", "Salon identifier"), queryParam("page"), queryParam("pageSize")],
+        responses: {
+          200: { description: "Reviews list", content: { "application/json": { schema: toOpenApiSchema(paginatedResponse(reviewSchema)) } } },
+          404: { description: "Salon not found", content: { "application/json": { schema: ref("ApiError") } } }
+        }
+      }
+    },
+
+    "/api/v1/config/pricing": {
+      get: {
+        tags: ["catalog"],
+        summary: "Get subscription pricing tiers",
+        responses: {
+          200: {
+            description: "Pricing info",
+            content: { "application/json": { schema: toOpenApiSchema(z.object({
+              standard: z.object({ tier: z.string(), priceXof: z.number().int(), label: z.string() }),
+              premium: z.object({ tier: z.string(), priceXof: z.number().int(), label: z.string() }),
+              commissionPercent: z.number()
+            })) } }
+          }
+        }
+      }
+    },
+
+    "/api/v1/salons/{salonId}/public-media": {
+      get: {
+        tags: ["media"],
+        summary: "Get public media for a salon",
+        parameters: [pathParam("salonId", "Salon identifier")],
+        responses: {
+          200: {
+            description: "Public media list",
+            content: { "application/json": { schema: toOpenApiSchema(z.object({
+              items: z.array(z.object({
+                id: z.string(), publicUrl: z.string(), purpose: z.string(),
+                mimeType: z.string(), displayOrder: z.number().int(),
+                createdAt: z.string().datetime()
+              }))
+            })) } }
+          }
+        }
+      }
+    },
+
+    "/api/v1/admin/media/pending": {
+      get: withBearer({
+        tags: ["admin"],
+        summary: "List media pending review",
+        parameters: [queryParam("page"), queryParam("pageSize")],
+        responses: {
+          200: {
+            description: "Pending media list",
+            content: { "application/json": { schema: toOpenApiSchema(z.object({
+              items: z.array(z.object({
+                id: z.string(), salonId: z.string(), uploadedBy: z.string(),
+                objectKey: z.string(), mimeType: z.string(), sizeBytes: z.number().int().nonnegative(),
+                purpose: z.string(), uploadStatus: z.string(), reviewStatus: z.string(),
+                originalFilename: z.string(), createdAt: z.string().datetime()
+              })),
+              total: z.number().int().nonnegative(), page: z.number().int(), pageSize: z.number().int()
+            })) } }
+          }
+        }
+      })
+    },
+
+    "/api/v1/admin/media/{mediaId}/signed-view-url": {
+      post: withBearer({
+        tags: ["admin"],
+        summary: "Get a signed URL to preview a media asset",
+        parameters: [pathParam("mediaId", "Media identifier")],
+        responses: {
+          200: {
+            description: "Signed URL",
+            content: { "application/json": { schema: toOpenApiSchema(z.object({ signedUrl: z.string(), expiresAt: z.string().datetime() })) } }
+          },
+          404: { description: "Media not found", content: { "application/json": { schema: ref("ApiError") } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/media/{mediaId}/approve": {
+      post: withBearer({
+        tags: ["admin"],
+        summary: "Approve a media asset",
+        parameters: [pathParam("mediaId", "Media identifier")],
+        requestBody: { required: false, content: { "application/json": { schema: toOpenApiSchema(z.object({ purpose: z.string().optional(), displayOrder: z.number().int().optional() })) } } },
+        responses: {
+          200: { description: "Approved", content: { "application/json": { schema: toOpenApiSchema(z.object({ approved: z.boolean(), publicUrl: z.string().nullable() })) } } },
+          404: { description: "Media not found", content: { "application/json": { schema: ref("ApiError") } } },
+          409: { description: "Already approved", content: { "application/json": { schema: ref("ApiError") } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/media/{mediaId}/reject": {
+      post: withBearer({
+        tags: ["admin"],
+        summary: "Reject a media asset",
+        parameters: [pathParam("mediaId", "Media identifier")],
+        requestBody: { required: true, content: { "application/json": { schema: toOpenApiSchema(z.object({ reason: z.string().min(1).max(500) })) } } },
+        responses: {
+          200: { description: "Rejected", content: { "application/json": { schema: toOpenApiSchema(z.object({ rejected: z.boolean() })) } } },
+          404: { description: "Media not found", content: { "application/json": { schema: ref("ApiError") } } },
+          409: { description: "Already rejected", content: { "application/json": { schema: ref("ApiError") } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/salons": {
+      get: withBearer({
+        tags: ["admin"],
+        summary: "List all salons with optional filters",
+        parameters: [queryParam("search"), queryParam("status")],
+        responses: {
+          200: { description: "Salons list", content: { "application/json": { schema: toOpenApiSchema(adminSalonQueueResponseSchema) } } }
+        }
+      }),
+      post: withBearer({
+        tags: ["admin"],
+        summary: "Create a salon manually",
+        requestBody: { required: true, content: { "application/json": { schema: toOpenApiSchema(adminSalonCreateInputSchema) } } },
+        responses: {
+          201: { description: "Created salon", content: { "application/json": { schema: toOpenApiSchema(adminSalonDetailSchema.extend({ temporaryPassword: z.string().nullable() })) } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/config/settings": {
+      get: withBearer({
+        tags: ["admin"],
+        summary: "List all platform settings",
+        parameters: [queryParam("group")],
+        responses: {
+          200: { description: "Settings list", content: { "application/json": { schema: toOpenApiSchema(z.array(z.object({ id: z.string(), group: z.string(), key: z.string(), value: z.string(), description: z.string().nullable(), updatedAt: z.string().datetime() }))) } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/config/settings/{key}": {
+      patch: withBearer({
+        tags: ["admin"],
+        summary: "Update a platform setting",
+        parameters: [pathParam("key", "Setting key")],
+        requestBody: { required: true, content: { "application/json": { schema: toOpenApiSchema(z.object({ value: z.string() })) } } },
+        responses: {
+          200: { description: "Updated setting", content: { "application/json": { schema: ref("UpdatedResponse") } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/config/categories": {
+      get: withBearer({
+        tags: ["admin"],
+        summary: "List salon categories",
+        responses: {
+          200: { description: "Categories list", content: { "application/json": { schema: toOpenApiSchema(z.array(z.object({ id: z.string(), name: z.string(), slug: z.string(), enabled: z.boolean(), createdAt: z.string().datetime() }))) } } }
+        }
+      }),
+      post: withBearer({
+        tags: ["admin"],
+        summary: "Create or update a salon category",
+        requestBody: { required: true, content: { "application/json": { schema: toOpenApiSchema(z.object({ name: z.string().min(1), slug: z.string().min(1), enabled: z.boolean().optional() })) } } },
+        responses: {
+          200: { description: "Upserted category" }
+        }
+      })
+    },
+
+    "/api/v1/admin/config/categories/{id}": {
+      delete: withBearer({
+        tags: ["admin"],
+        summary: "Delete a salon category",
+        parameters: [pathParam("id", "Category identifier")],
+        responses: {
+          200: { description: "Deleted category", content: { "application/json": { schema: ref("DeletedResponse") } } }
+        }
+      })
+    },
+
+    "/api/v1/admin/config/documents": {
+      get: withBearer({
+        tags: ["admin"],
+        summary: "List required documents",
+        responses: {
+          200: { description: "Documents list", content: { "application/json": { schema: toOpenApiSchema(z.array(z.object({ id: z.string(), label: z.string(), slug: z.string(), type: z.string(), isRequired: z.boolean(), enabled: z.boolean(), createdAt: z.string().datetime() }))) } } }
+        }
+      }),
+      post: withBearer({
+        tags: ["admin"],
+        summary: "Create or update a required document",
+        requestBody: { required: true, content: { "application/json": { schema: toOpenApiSchema(z.object({ label: z.string().min(1), slug: z.string().min(1), type: z.string(), isRequired: z.boolean(), enabled: z.boolean().optional() })) } } },
+        responses: {
+          200: { description: "Upserted document" }
+        }
+      })
+    },
+
+    "/api/v1/admin/config/documents/{id}": {
+      delete: withBearer({
+        tags: ["admin"],
+        summary: "Delete a required document",
+        parameters: [pathParam("id", "Document identifier")],
+        responses: {
+          200: { description: "Deleted document", content: { "application/json": { schema: ref("DeletedResponse") } } }
         }
       })
     }

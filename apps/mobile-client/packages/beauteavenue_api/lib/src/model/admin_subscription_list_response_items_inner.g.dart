@@ -83,21 +83,22 @@ final BuiltSet<AdminSubscriptionListResponseItemsInnerStatusEnum>
 ]);
 
 const AdminSubscriptionListResponseItemsInnerBillingProviderEnum
-    _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_wave =
-    const AdminSubscriptionListResponseItemsInnerBillingProviderEnum._('wave');
-const AdminSubscriptionListResponseItemsInnerBillingProviderEnum
-    _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_orangeMoney =
+    _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech =
     const AdminSubscriptionListResponseItemsInnerBillingProviderEnum._(
-        'orangeMoney');
+        'intech');
+const AdminSubscriptionListResponseItemsInnerBillingProviderEnum
+    _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_manual =
+    const AdminSubscriptionListResponseItemsInnerBillingProviderEnum._(
+        'manual');
 
 AdminSubscriptionListResponseItemsInnerBillingProviderEnum
     _$adminSubscriptionListResponseItemsInnerBillingProviderEnumValueOf(
         String name) {
   switch (name) {
-    case 'wave':
-      return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_wave;
-    case 'orangeMoney':
-      return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_orangeMoney;
+    case 'intech':
+      return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech;
+    case 'manual':
+      return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -107,8 +108,8 @@ final BuiltSet<AdminSubscriptionListResponseItemsInnerBillingProviderEnum>
     _$adminSubscriptionListResponseItemsInnerBillingProviderEnumValues =
     BuiltSet<
         AdminSubscriptionListResponseItemsInnerBillingProviderEnum>(const <AdminSubscriptionListResponseItemsInnerBillingProviderEnum>[
-  _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_wave,
-  _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_orangeMoney,
+  _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech,
+  _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_manual,
 ]);
 
 Serializer<AdminSubscriptionListResponseItemsInnerTierEnum>
@@ -200,12 +201,12 @@ class _$AdminSubscriptionListResponseItemsInnerBillingProviderEnumSerializer
         PrimitiveSerializer<
             AdminSubscriptionListResponseItemsInnerBillingProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'wave': 'wave',
-    'orangeMoney': 'orange_money',
+    'intech': 'intech',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'wave': 'wave',
-    'orange_money': 'orangeMoney',
+    'intech': 'intech',
+    'manual': 'manual',
   };
 
   @override

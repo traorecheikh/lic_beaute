@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "199272356684",
+    "project_id": "beauteavenue-915fa",
+    "storage_bucket": "beauteavenue-915fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199272356684:android:a133fa95f8410825930de9",
+        "android_client_info": {
+          "package_name": "com.example.beauteavenue_mobile_client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIZmDZwxVkLKYXow2l4ibkM5PfwhtApHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199272356684:android:7ecfe326fddc9bb9930de9",
+        "android_client_info": {
+          "package_name": "sn.lic.beauteavenu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIZmDZwxVkLKYXow2l4ibkM5PfwhtApHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

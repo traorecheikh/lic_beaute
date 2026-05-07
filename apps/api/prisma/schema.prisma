@@ -55,6 +55,7 @@ enum SubscriptionStatus {
 
 enum PaymentProvider {
   paytech
+  intech
   manual
 }
 
@@ -109,6 +110,35 @@ enum VoucherRedemptionStatus {
   expired
 }
 
+enum MediaPurpose {
+  salon_cover
+  salon_logo
+  salon_gallery
+  kyc_document
+  avatar
+}
+
+enum MediaVisibility {
+  incoming
+  public
+  private_kyc
+  rejected
+}
+
+enum UploadStatus {
+  pending_upload
+  upload_confirmed
+  review_pending
+  approved
+  rejected
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
 // ─── Core models ─────────────────────────────────────────────────────────────
 
 model User {
@@ -135,7 +165,9 @@ model User {
   paymentMethods      ClientPaymentMethod[]
   clientBenefits      ClientBenefit[]
   voucherRedemptions  ClientVoucherRedemption[]
+  addresses           ClientAddress[]
   blockedSlotsCreated BlockedSlot[] @relation("BlockedSlotCreator")
+  uploadedMedia       MediaAsset[]  @relation("UploadedMedia")
 }
 
 model Session {
@@ -185,6 +217,7 @@ model Salon {
   reviews                Review[]
   clientBenefits         ClientBenefit[]
   vouchers               VoucherDefinition[]
+  mediaAssets            MediaAsset[]
 }
 
 model Service {
@@ -236,7 +269,7 @@ model Booking {
 model Payment {
   id               String            @id @default(cuid())
   bookingId        String
-  provider         PaymentProvider   @default(paytech)
+  provider         PaymentProvider   @default(intech)
   status           PaymentStatus     @default(pending)
   amountXof        Int
   providerTxId     String?
@@ -376,6 +409,21 @@ model PlatformRequiredDocument {
   createdAt  DateTime @default(now())
 }
 
+model ClientAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  street    String?
+  city      String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, label])
+  @@map("client_addresses")
+}
+
 // ─── New models ───────────────────────────────────────────────────────────────
 
 model SalonHours {
@@ -464,14 +512,17 @@ model Review {
 }
 
 model PushToken {
-  id        String       @id @default(cuid())
-  userId    String
-  platform  PushPlatform
-  deviceId  String
-  token     String       @unique
-  revokedAt DateTime?
-  createdAt DateTime     @default(now())
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String       @id @default(cuid())
+  userId     String
+  platform   PushPlatform
+  deviceId   String
+  token      String       @unique
+  role       String?
+  appVersion String?
+  lastSeenAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SubscriptionCharge {
@@ -504,16 +555,32 @@ model BookingEvent {
 }
 
 model MediaAsset {
-  id           String         @id @default(cuid())
-  ownerType    MediaOwnerType
-  ownerId      String
-  objectKey    String         @unique
-  publicUrl    String
-  mimeType     String
-  sizeBytes    Int
-  displayOrder Int            @default(0)
-  deletedAt    DateTime?
-  createdAt    DateTime       @default(now())
+  id               String          @id @default(cuid())
+  ownerType        MediaOwnerType
+  ownerId          String
+  salonId          String?
+  uploadedBy       String?
+  objectKey        String          @unique
+  finalObjectKey   String?
+  publicUrl        String?
+  bucket           String          @default("beauteavenu")
+  originalFilename String?
+  fileExt          String?
+  mimeType         String
+  sizeBytes        Int             @default(0)
+  purpose          MediaPurpose?
+  visibility       MediaVisibility @default(incoming)
+  uploadStatus     UploadStatus    @default(pending_upload)
+  reviewStatus     ReviewStatus    @default(pending)
+  rejectionReason  String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  displayOrder     Int             @default(0)
+  deletedAt        DateTime?
+  createdAt        DateTime        @default(now())
+
+  salon            Salon?          @relation(fields: [salonId], references: [id], onDelete: SetNull)
+  uploader         User?           @relation("UploadedMedia", fields: [uploadedBy], references: [id], onDelete: SetNull)
 }
 
 model SettlementEvent {

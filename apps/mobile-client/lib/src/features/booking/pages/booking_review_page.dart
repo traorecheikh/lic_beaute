@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../profile/widgets/profile_card_shell.dart';
+import '../../profile/providers/payment_methods_provider.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/session/session_store.dart';
 import '../../../router/app_router.dart';
 import '../providers/booking_create_provider.dart';
 import '../providers/booking_funnel_provider.dart';
@@ -168,7 +173,6 @@ class _PriceCard extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _PriceRow extends StatelessWidget {
@@ -245,57 +249,187 @@ class _CancellationCard extends StatelessWidget {
   }
 }
 
-class _ConfirmBar extends ConsumerWidget {
+class _ConfirmBar extends ConsumerStatefulWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ConfirmBar> createState() => _ConfirmBarState();
+}
+
+class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
+  bool _isProcessingPayment = false;
+  static const Map<String, String> _channelLabels = {
+    'wave': 'Wave',
+    'orange_money': 'Orange Money',
+    'free_money': 'Free Money',
+  };
+
+  @override
+  Widget build(BuildContext context) {
     final createState = ref.watch(bookingCreateProvider);
-    final loading = createState.isLoading;
+    final loading = createState.isLoading || _isProcessingPayment;
+    final currentDeposit = ref.watch(bookingFunnelProvider).depositAmount ?? 0;
+    final requiresDepositPayment = currentDeposit > 0;
+
+    final methodsAsync = ref.watch(paymentMethodsProvider);
+    final defaultMethod = methodsAsync.asData?.value
+        .where((m) => m.isDefault)
+        .firstOrNull;
+    final defaultChannel = _channelFromMethod(defaultMethod);
+    final hasStoredPaymentMethod = (methodsAsync.asData?.value.isNotEmpty ?? false);
+    final hasDefault = defaultMethod != null;
 
     return AppBottomBar(
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: loading
-                  ? null
-                  : () async {
-                      final booking = await ref
-                          .read(bookingCreateProvider.notifier)
-                          .create();
-                      if (!context.mounted) return;
-                      if (booking == null) {
-                        AppSnackbar.error(
-                          context,
-                          bookingCreateErrorMessage(
-                            ref.read(bookingCreateProvider).error,
-                          ),
-                        );
-                        return;
+          AppButton.primary(
+            onPressed: loading
+                ? null
+                : () async {
+                    final booking = await ref
+                        .read(bookingCreateProvider.notifier)
+                        .create();
+                    if (!context.mounted) return;
+                    if (booking == null) {
+                      final error = ref.read(bookingCreateProvider).error;
+                      if (error is DioException) {
+                        final statusCode = error.response?.statusCode;
+                        final code =
+                            (error.response?.data as Map<String, dynamic>?)?['code'] as String?;
+
+                        if (statusCode == 401 || statusCode == 403 || code == 'invalid_token') {
+                          await ref.read(sessionProvider.notifier).logout();
+                          if (!context.mounted) return;
+                          context.go(AppRoutes.auth);
+                          AppSnackbar.info(
+                            context,
+                            'Session expirée. Reconnectez-vous pour confirmer la réservation.',
+                          );
+                          return;
+                        }
+
+                        if (statusCode != null && statusCode >= 500) {
+                          AppSnackbar.error(
+                            context,
+                            "Erreur serveur lors de la confirmation. Vérifiez 'Mes rendez-vous' avant de réessayer.",
+                          );
+                          return;
+                        }
                       }
-                      ref
-                          .read(bookingFunnelProvider.notifier)
-                          .setDepositAmount(booking.depositAmountXof.toInt());
-                      context.push(AppRoutes.success(booking.id));
-                    },
-              child: loading
-                  ? const CircularProgressIndicator()
-                  : const Text('Confirmer la réservation'),
-            ),
+                      AppSnackbar.error(
+                        context,
+                        bookingCreateErrorMessage(
+                          error,
+                        ),
+                      );
+                      return;
+                    }
+                    ref
+                        .read(bookingFunnelProvider.notifier)
+                        .setDepositAmount(booking.depositAmountXof.toInt());
+                    final depositAmount = booking.depositAmountXof.toInt();
+
+                    if (depositAmount <= 0) {
+                      context.pushReplacement(AppRoutes.success(booking.id));
+                      return;
+                    }
+
+                    if (!hasStoredPaymentMethod) {
+                      AppSnackbar.info(
+                        context,
+                        'Aucun compte de paiement configuré. Réservation envoyée, confirmation manuelle par le salon.',
+                      );
+                      context.pushReplacement(AppRoutes.bookingDetailPath(booking.id));
+                      return;
+                    }
+
+                    if (defaultChannel != null) {
+                      setState(() => _isProcessingPayment = true);
+                      try {
+                        final url = await ref
+                            .read(paymentInitiateProvider.notifier)
+                            .initiate(
+                              bookingId: booking.id,
+                              channel: defaultChannel,
+                            );
+                        if (!context.mounted) return;
+                        if (url != null) {
+                          final uri = Uri.parse(url);
+                          if (uri.scheme == 'mock') {
+                            context.pushReplacement(AppRoutes.success(booking.id));
+                            return;
+                          }
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                            if (context.mounted) {
+                              context.pushReplacement(
+                                AppRoutes.success(booking.id),
+                              );
+                            }
+                            return;
+                          }
+                        }
+                      } catch (e) {
+                        // Silently fallback to handoff page on error
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isProcessingPayment = false);
+                        }
+                      }
+                    }
+                    if (context.mounted) {
+                      context.pushReplacement(
+                        AppRoutes.paymentHandoff(booking.id),
+                      );
+                    }
+                  },
+            isLoading: loading,
+            label: !requiresDepositPayment
+                ? 'Confirmer la réservation'
+                : !hasStoredPaymentMethod
+                ? 'Confirmer (validation manuelle)'
+                : defaultChannel != null
+                ? "Payer avec ${_channelLabels[defaultChannel] ?? defaultChannel}"
+                : "Confirmer & Payer l'acompte",
           ),
-          gapH8,
-          Text(
-            'Paiement sera activé dans une prochaine étape.',
-            style: AppTextStyles.bodySm.copyWith(
-              color: AppColors.onSurfaceVariant,
+          if (hasDefault && requiresDepositPayment) ...[
+            gapH8,
+            GestureDetector(
+              onTap: () {
+                // To allow changing, we just let them go to handoff after booking creation
+                // But since booking isn't created yet, we can't just push handoff.
+                // It's simpler to instruct them to tap the button, or they can change default in profile.
+                AppSnackbar.info(
+                  context,
+                  "Vous pouvez modifier votre compte principal dans le profil.",
+                );
+              },
+              child: Text(
+                'Modifier le compte principal',
+                style: AppTextStyles.labelSm.copyWith(
+                  color: AppColors.primary,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          gapH4,
+          ],
         ],
       ),
     );
+  }
+
+  String? _channelFromMethod(dynamic method) {
+    if (method == null) return null;
+    final provider = method.provider as String? ?? '';
+    if (_channelLabels.containsKey(provider)) return provider;
+    final label = (method.label as String?)?.toLowerCase() ?? '';
+    if (label.contains('orange')) return 'orange_money';
+    if (label.contains('free')) return 'free_money';
+    if (label.contains('wave')) return 'wave';
+    if (provider == 'om') return 'orange_money';
+    return null;
   }
 }

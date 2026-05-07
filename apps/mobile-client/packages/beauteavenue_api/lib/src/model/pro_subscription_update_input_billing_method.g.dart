@@ -7,19 +7,19 @@ part of 'pro_subscription_update_input_billing_method.dart';
 // **************************************************************************
 
 const ProSubscriptionUpdateInputBillingMethodProviderEnum
-    _$proSubscriptionUpdateInputBillingMethodProviderEnum_wave =
-    const ProSubscriptionUpdateInputBillingMethodProviderEnum._('wave');
+    _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech =
+    const ProSubscriptionUpdateInputBillingMethodProviderEnum._('intech');
 const ProSubscriptionUpdateInputBillingMethodProviderEnum
-    _$proSubscriptionUpdateInputBillingMethodProviderEnum_orangeMoney =
-    const ProSubscriptionUpdateInputBillingMethodProviderEnum._('orangeMoney');
+    _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual =
+    const ProSubscriptionUpdateInputBillingMethodProviderEnum._('manual');
 
 ProSubscriptionUpdateInputBillingMethodProviderEnum
     _$proSubscriptionUpdateInputBillingMethodProviderEnumValueOf(String name) {
   switch (name) {
-    case 'wave':
-      return _$proSubscriptionUpdateInputBillingMethodProviderEnum_wave;
-    case 'orangeMoney':
-      return _$proSubscriptionUpdateInputBillingMethodProviderEnum_orangeMoney;
+    case 'intech':
+      return _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech;
+    case 'manual':
+      return _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -28,8 +28,8 @@ ProSubscriptionUpdateInputBillingMethodProviderEnum
 final BuiltSet<ProSubscriptionUpdateInputBillingMethodProviderEnum>
     _$proSubscriptionUpdateInputBillingMethodProviderEnumValues = BuiltSet<
         ProSubscriptionUpdateInputBillingMethodProviderEnum>(const <ProSubscriptionUpdateInputBillingMethodProviderEnum>[
-  _$proSubscriptionUpdateInputBillingMethodProviderEnum_wave,
-  _$proSubscriptionUpdateInputBillingMethodProviderEnum_orangeMoney,
+  _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech,
+  _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual,
 ]);
 
 Serializer<ProSubscriptionUpdateInputBillingMethodProviderEnum>
@@ -41,12 +41,12 @@ class _$ProSubscriptionUpdateInputBillingMethodProviderEnumSerializer
         PrimitiveSerializer<
             ProSubscriptionUpdateInputBillingMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'wave': 'wave',
-    'orangeMoney': 'orange_money',
+    'intech': 'intech',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'wave': 'wave',
-    'orange_money': 'orangeMoney',
+    'intech': 'intech',
+    'manual': 'manual',
   };
 
   @override

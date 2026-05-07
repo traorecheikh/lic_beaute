@@ -9,6 +9,7 @@ import {
   adminSalonCreateInputSchema
 } from "@beauteavenue/contracts";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { z } from "zod";
 
 import { requireRole, HttpAuthError } from "../lib/auth.js";
 import { fail, ok } from "../lib/http.js";
@@ -69,7 +70,7 @@ export class AdminController {
 
   async listSalons(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    const filters = request.query as { search?: string; status?: string };
+    const filters = z.object({ search: z.string().optional(), status: z.string().optional() }).parse(request.query);
     ok(reply, await listSalons(filters));
   }
 
@@ -123,11 +124,11 @@ export class AdminController {
 
   async listSubscriptions(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    const query = request.query as {
-      search?: string;
-      tier?: "standard" | "premium";
-      status?: "inactive" | "active" | "past_due" | "cancelled" | "expired" | "paused";
-    };
+    const query = z.object({
+      search: z.string().optional(),
+      tier: z.enum(["standard", "premium"]).optional(),
+      status: z.enum(["inactive", "active", "past_due", "cancelled", "expired", "paused"]).optional()
+    }).parse(request.query);
     ok(reply, await listSubscriptions(query));
   }
 
@@ -168,7 +169,7 @@ export class AdminController {
 
   async listSettings(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    const { group } = request.query as { group?: string };
+    const { group } = z.object({ group: z.string().optional() }).parse(request.query);
     ok(reply, await getPlatformSettings(group));
   }
 

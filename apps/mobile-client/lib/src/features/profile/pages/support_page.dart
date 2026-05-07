@@ -4,8 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
-import '../../../core/widgets/app_section_label.dart';
-import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../widgets/faq_tile.dart';
 import '../widgets/support_tile.dart';

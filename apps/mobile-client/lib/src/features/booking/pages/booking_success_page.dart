@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
-import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -130,13 +129,13 @@ class _SuccessBody extends StatelessWidget {
                   SizedBox(height: 20.h),
                 ],
                 Text(
-                  "C'est réservé !",
+                  "Réservation confirmée !",
                   style: AppTextStyles.displaySm,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  "Votre rendez-vous a bien été enregistré.",
+                  "Votre acompte a bien été reçu. À très vite au salon !",
                   style: AppTextStyles.bodyMd.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),

@@ -9,7 +9,7 @@ import '../../features/notifications/providers/notifications_provider.dart';
 import '../../features/profile/providers/benefits_provider.dart';
 import '../../features/profile/providers/payment_methods_provider.dart';
 import '../../features/profile/providers/profile_provider.dart';
-import '../../features/profile/providers/vouchers_provider.dart';
+// Promos hidden — import '../../features/profile/providers/vouchers_provider.dart';
 import '../network/connectivity_provider.dart';
 import '../sync/app_outbox.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
@@ -48,7 +48,7 @@ class _AppConnectivityRecoveryState
         ref.invalidate(profileProvider);
         ref.invalidate(paymentMethodsProvider);
         ref.invalidate(benefitsProvider);
-        ref.invalidate(vouchersProvider);
+        // Promos hidden — ref.invalidate(vouchersProvider);
         ref.invalidate(notificationsProvider);
       }
     });

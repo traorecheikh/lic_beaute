@@ -12,43 +12,33 @@ part 'pro_subscription_checkout_input.g.dart';
 /// ProSubscriptionCheckoutInput
 ///
 /// Properties:
-/// * [action]
-/// * [provider]
+/// * [action] 
+/// * [provider] 
 @BuiltValue()
-abstract class ProSubscriptionCheckoutInput
-    implements
-        Built<ProSubscriptionCheckoutInput,
-            ProSubscriptionCheckoutInputBuilder> {
+abstract class ProSubscriptionCheckoutInput implements Built<ProSubscriptionCheckoutInput, ProSubscriptionCheckoutInputBuilder> {
   @BuiltValueField(wireName: r'action')
   ProSubscriptionCheckoutInputActionEnum get action;
   // enum actionEnum {  upgrade,  renewal,  };
 
   @BuiltValueField(wireName: r'provider')
   ProSubscriptionCheckoutInputProviderEnum? get provider;
-  // enum providerEnum {  wave,  orange_money,  };
+  // enum providerEnum {  intech,  manual,  };
 
   ProSubscriptionCheckoutInput._();
 
-  factory ProSubscriptionCheckoutInput(
-          [void updates(ProSubscriptionCheckoutInputBuilder b)]) =
-      _$ProSubscriptionCheckoutInput;
+  factory ProSubscriptionCheckoutInput([void updates(ProSubscriptionCheckoutInputBuilder b)]) = _$ProSubscriptionCheckoutInput;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(ProSubscriptionCheckoutInputBuilder b) =>
-      b..provider = ProSubscriptionCheckoutInputProviderEnum.valueOf('wave');
+  static void _defaults(ProSubscriptionCheckoutInputBuilder b) => b
+      ..provider = ProSubscriptionCheckoutInputProviderEnum.valueOf('intech');
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSubscriptionCheckoutInput> get serializer =>
-      _$ProSubscriptionCheckoutInputSerializer();
+  static Serializer<ProSubscriptionCheckoutInput> get serializer => _$ProSubscriptionCheckoutInputSerializer();
 }
 
-class _$ProSubscriptionCheckoutInputSerializer
-    implements PrimitiveSerializer<ProSubscriptionCheckoutInput> {
+class _$ProSubscriptionCheckoutInputSerializer implements PrimitiveSerializer<ProSubscriptionCheckoutInput> {
   @override
-  final Iterable<Type> types = const [
-    ProSubscriptionCheckoutInput,
-    _$ProSubscriptionCheckoutInput
-  ];
+  final Iterable<Type> types = const [ProSubscriptionCheckoutInput, _$ProSubscriptionCheckoutInput];
 
   @override
   final String wireName = r'ProSubscriptionCheckoutInput';
@@ -78,9 +68,7 @@ class _$ProSubscriptionCheckoutInputSerializer
     ProSubscriptionCheckoutInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -98,16 +86,14 @@ class _$ProSubscriptionCheckoutInputSerializer
         case r'action':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(ProSubscriptionCheckoutInputActionEnum),
+            specifiedType: const FullType(ProSubscriptionCheckoutInputActionEnum),
           ) as ProSubscriptionCheckoutInputActionEnum;
           result.action = valueDes;
           break;
         case r'provider':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(ProSubscriptionCheckoutInputProviderEnum),
+            specifiedType: const FullType(ProSubscriptionCheckoutInputProviderEnum),
           ) as ProSubscriptionCheckoutInputProviderEnum;
           result.provider = valueDes;
           break;
@@ -141,39 +127,32 @@ class _$ProSubscriptionCheckoutInputSerializer
 }
 
 class ProSubscriptionCheckoutInputActionEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'upgrade')
-  static const ProSubscriptionCheckoutInputActionEnum upgrade =
-      _$proSubscriptionCheckoutInputActionEnum_upgrade;
+  static const ProSubscriptionCheckoutInputActionEnum upgrade = _$proSubscriptionCheckoutInputActionEnum_upgrade;
   @BuiltValueEnumConst(wireName: r'renewal')
-  static const ProSubscriptionCheckoutInputActionEnum renewal =
-      _$proSubscriptionCheckoutInputActionEnum_renewal;
+  static const ProSubscriptionCheckoutInputActionEnum renewal = _$proSubscriptionCheckoutInputActionEnum_renewal;
 
-  static Serializer<ProSubscriptionCheckoutInputActionEnum> get serializer =>
-      _$proSubscriptionCheckoutInputActionEnumSerializer;
+  static Serializer<ProSubscriptionCheckoutInputActionEnum> get serializer => _$proSubscriptionCheckoutInputActionEnumSerializer;
 
-  const ProSubscriptionCheckoutInputActionEnum._(String name) : super(name);
+  const ProSubscriptionCheckoutInputActionEnum._(String name): super(name);
 
-  static BuiltSet<ProSubscriptionCheckoutInputActionEnum> get values =>
-      _$proSubscriptionCheckoutInputActionEnumValues;
-  static ProSubscriptionCheckoutInputActionEnum valueOf(String name) =>
-      _$proSubscriptionCheckoutInputActionEnumValueOf(name);
+  static BuiltSet<ProSubscriptionCheckoutInputActionEnum> get values => _$proSubscriptionCheckoutInputActionEnumValues;
+  static ProSubscriptionCheckoutInputActionEnum valueOf(String name) => _$proSubscriptionCheckoutInputActionEnumValueOf(name);
 }
 
 class ProSubscriptionCheckoutInputProviderEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'wave')
-  static const ProSubscriptionCheckoutInputProviderEnum wave =
-      _$proSubscriptionCheckoutInputProviderEnum_wave;
-  @BuiltValueEnumConst(wireName: r'orange_money')
-  static const ProSubscriptionCheckoutInputProviderEnum orangeMoney =
-      _$proSubscriptionCheckoutInputProviderEnum_orangeMoney;
 
-  static Serializer<ProSubscriptionCheckoutInputProviderEnum> get serializer =>
-      _$proSubscriptionCheckoutInputProviderEnumSerializer;
+  @BuiltValueEnumConst(wireName: r'intech')
+  static const ProSubscriptionCheckoutInputProviderEnum intech = _$proSubscriptionCheckoutInputProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const ProSubscriptionCheckoutInputProviderEnum manual = _$proSubscriptionCheckoutInputProviderEnum_manual;
 
-  const ProSubscriptionCheckoutInputProviderEnum._(String name) : super(name);
+  static Serializer<ProSubscriptionCheckoutInputProviderEnum> get serializer => _$proSubscriptionCheckoutInputProviderEnumSerializer;
 
-  static BuiltSet<ProSubscriptionCheckoutInputProviderEnum> get values =>
-      _$proSubscriptionCheckoutInputProviderEnumValues;
-  static ProSubscriptionCheckoutInputProviderEnum valueOf(String name) =>
-      _$proSubscriptionCheckoutInputProviderEnumValueOf(name);
+  const ProSubscriptionCheckoutInputProviderEnum._(String name): super(name);
+
+  static BuiltSet<ProSubscriptionCheckoutInputProviderEnum> get values => _$proSubscriptionCheckoutInputProviderEnumValues;
+  static ProSubscriptionCheckoutInputProviderEnum valueOf(String name) => _$proSubscriptionCheckoutInputProviderEnumValueOf(name);
 }
+

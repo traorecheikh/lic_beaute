@@ -11,7 +11,7 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 abstract final class AppShare {
   /// Share plain text (salon link, booking ref, etc.)
   static Future<void> text(String text, {String? subject}) async {
-    await Share.share(text, subject: subject);
+    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
 
   /// Render [card] to PNG and open the native share sheet.
@@ -33,7 +33,7 @@ abstract final class AppShare {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes);
-    await Share.shareXFiles([XFile(file.path, mimeType: 'image/png')]);
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: 'image/png')]));
   }
 }
 

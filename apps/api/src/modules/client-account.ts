@@ -1,6 +1,11 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { Prisma } from "@prisma/client";
 
 import {
+  clientAddressCreateSchema,
+  clientAddressListResponseSchema,
+  clientAddressSchema,
+  clientAddressUpdateSchema,
   clientBenefitSchema,
   clientPaymentMethodCreateSchema,
   clientPaymentMethodSchema,
@@ -15,6 +20,7 @@ import {
 
 import { HttpAuthError, requireRole } from "../lib/auth.js";
 import { fail, ok } from "../lib/http.js";
+import { toDbProvider, toPublicGatewayProvider } from "../lib/payment-provider.js";
 import { prisma } from "../lib/prisma.js";
 
 const SENEGAL_CITIES = [
@@ -36,9 +42,13 @@ function normalizePhoneNumber(phoneNumber: string) {
   return phoneNumber.replace(/\s+/g, "").trim();
 }
 
+function isPrismaKnownError(error: unknown): error is { code: string } {
+  return typeof error === "object" && error !== null && "code" in error && typeof (error as { code?: unknown }).code === "string";
+}
+
 function serializePaymentMethod(method: {
   id: string;
-  provider: "paytech" | "manual";
+  provider: "intech" | "paytech" | "manual";
   phoneNumber: string;
   label: string | null;
   isDefault: boolean;
@@ -48,8 +58,7 @@ function serializePaymentMethod(method: {
 }) {
   return clientPaymentMethodSchema.parse({
     id: method.id,
-    // Client methods must remain gateway-backed; treat legacy/manual rows as non-selectable paytech.
-    provider: paymentProviderSchema.parse(method.provider === "manual" ? "paytech" : method.provider),
+    provider: paymentProviderSchema.parse(toPublicGatewayProvider(method.provider)),
     phoneNumber: method.phoneNumber,
     label: method.label,
     isDefault: method.isDefault,
@@ -122,8 +131,8 @@ export class ClientAccountController {
     ok(reply, profileOptionsSchema.parse({
       cities: SENEGAL_CITIES,
       languages: ["fr", "en"],
-      contactChannels: ["phone", "sms", "whatsapp"],
-      paymentProviders: ["paytech"]
+      contactChannels: ["phone", "sms"],
+      paymentProviders: ["intech"]
     }));
   }
 
@@ -144,31 +153,53 @@ export class ClientAccountController {
     try {
       const session = requireRole(request, ["client"]);
       const body = clientPaymentMethodCreateSchema.parse(request.body);
-      const idempotencyKey = request.headers["x-idempotency-key"]?.toString();
+      const headerBag = ((request as unknown as { headers?: Record<string, unknown>; raw?: { headers?: Record<string, unknown> } }).headers
+        ?? (request as unknown as { raw?: { headers?: Record<string, unknown> } }).raw?.headers
+        ?? {}) as Record<string, unknown>;
+      const idempotencyHeader = headerBag["x-idempotency-key"] ?? headerBag["X-Idempotency-Key"];
+      const idempotencyKey = typeof idempotencyHeader === "string" ? idempotencyHeader : idempotencyHeader?.toString();
       if (idempotencyKey) {
         const existing = await prisma.clientPaymentMethod.findUnique({ where: { idempotencyKey } });
         if (existing && existing.userId === session.sub) {
           ok(reply, serializePaymentMethod(existing), 201);
           return;
         }
+        if (existing && existing.userId !== session.sub) {
+          fail(reply, 409, "idempotency_key_conflict", "Cette clé d'idempotence est déjà utilisée.");
+          return;
+        }
       }
       const normalizedPhone = normalizePhoneNumber(body.phoneNumber);
       const hasDefault = await prisma.clientPaymentMethod.count({ where: { userId: session.sub, isDefault: true } });
-      const created = await prisma.$transaction(async (tx) => {
-        if (!hasDefault) {
-          await tx.clientPaymentMethod.updateMany({ where: { userId: session.sub }, data: { isDefault: false } });
-        }
-        return tx.clientPaymentMethod.create({
-          data: {
-            userId: session.sub,
-            provider: body.provider,
-            phoneNumber: normalizedPhone,
-            label: body.label ?? null,
-            isDefault: hasDefault === 0,
-            idempotencyKey: idempotencyKey ?? null
+      let created;
+      try {
+        created = await prisma.$transaction(async (tx) => {
+          if (!hasDefault) {
+            await tx.clientPaymentMethod.updateMany({ where: { userId: session.sub }, data: { isDefault: false } });
           }
+          return tx.clientPaymentMethod.create({
+            data: {
+            userId: session.sub,
+            provider: toDbProvider(body.provider) ?? "intech",
+            phoneNumber: normalizedPhone,
+              label: body.label ?? null,
+              isDefault: hasDefault === 0,
+              idempotencyKey: idempotencyKey ?? null
+            }
+          });
         });
-      });
+      } catch (error) {
+        if (idempotencyKey && isPrismaKnownError(error) && error.code === "P2002") {
+          const existing = await prisma.clientPaymentMethod.findUnique({ where: { idempotencyKey } });
+          if (existing && existing.userId === session.sub) {
+            ok(reply, serializePaymentMethod(existing), 201);
+            return;
+          }
+          fail(reply, 409, "idempotency_key_conflict", "Cette clé d'idempotence est déjà utilisée.");
+          return;
+        }
+        throw error;
+      }
       ok(reply, serializePaymentMethod(created), 201);
     } catch (error) {
       this._handleError(error, reply);
@@ -310,38 +341,7 @@ export class ClientAccountController {
       const session = requireRole(request, ["client"]);
       const body = redeemVoucherInputSchema.parse(request.body);
       const code = body.code.trim().toUpperCase();
-      const voucher = await prisma.voucherDefinition.findUnique({
-        where: { code },
-        include: { _count: { select: { redemptions: true } }, salon: { select: { name: true } } }
-      });
-      if (!voucher || !voucher.isActive) {
-        fail(reply, 404, "voucher_not_found", "Code introuvable.");
-        return;
-      }
-      if (voucher.expiresAt && voucher.expiresAt.getTime() < Date.now()) {
-        fail(reply, 422, "voucher_expired", "Ce code a expiré.");
-        return;
-      }
-      if (voucher.maxRedemptions != null && voucher._count.redemptions >= voucher.maxRedemptions) {
-        fail(reply, 422, "voucher_exhausted", "Ce code n'est plus disponible.");
-        return;
-      }
-      const existing = await prisma.clientVoucherRedemption.findUnique({
-        where: { userId_voucherId: { userId: session.sub, voucherId: voucher.id } },
-        include: { voucher: { include: { salon: { select: { name: true } } } } }
-      });
-      if (existing) {
-        fail(reply, 409, "voucher_already_redeemed", "Ce code a déjà été ajouté à votre compte.");
-        return;
-      }
-      const redeemed = await prisma.clientVoucherRedemption.create({
-        data: {
-          userId: session.sub,
-          voucherId: voucher.id,
-          expiresAt: voucher.expiresAt ?? null
-        },
-        include: { voucher: { include: { salon: { select: { name: true } } } } }
-      });
+      const redeemed = await this._redeemVoucherWithConcurrencyGuard(session.sub, code);
       ok(reply, serializeVoucherRedemption(redeemed), 201);
     } catch (error) {
       this._handleError(error, reply);
@@ -378,13 +378,214 @@ export class ClientAccountController {
         maxRedemptions: created.maxRedemptions
       }, 201);
     } catch (error) {
+      if (isPrismaKnownError(error) && error.code === "P2002") {
+        fail(reply, 409, "voucher_code_exists", "Ce code voucher existe déjà.");
+        return;
+      }
       this._handleError(error, reply);
     }
+  }
+
+  // ── Addresses ──
+
+  async listAddresses(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["client"]);
+      const items = await prisma.clientAddress.findMany({
+        where: { userId: session.sub },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }]
+      });
+      ok(reply, clientAddressListResponseSchema.parse({
+        items: items.map((a) => ({
+          id: a.id,
+          label: a.label,
+          street: a.street,
+          city: a.city,
+          isDefault: a.isDefault,
+          createdAt: a.createdAt.toISOString(),
+          updatedAt: a.updatedAt.toISOString()
+        }))
+      }));
+    } catch (error) {
+      this._handleError(error, reply);
+    }
+  }
+
+  async createAddress(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["client"]);
+      const body = clientAddressCreateSchema.parse(request.body);
+      const created = await prisma.$transaction(async (tx) => {
+        await tx.clientAddress.updateMany({ where: { userId: session.sub }, data: { isDefault: false } });
+        return tx.clientAddress.create({
+          data: {
+            userId: session.sub,
+            label: body.label,
+            street: body.street ?? null,
+            city: body.city ?? null,
+            isDefault: true
+          }
+        });
+      });
+      ok(reply, {
+        id: created.id,
+        label: created.label,
+        street: created.street,
+        city: created.city,
+        isDefault: created.isDefault,
+        createdAt: created.createdAt.toISOString(),
+        updatedAt: created.updatedAt.toISOString()
+      }, 201);
+    } catch (error) {
+      this._handleError(error, reply);
+    }
+  }
+
+  async updateAddress(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["client"]);
+      const params = request.params as { addressId: string };
+      const body = clientAddressUpdateSchema.parse(request.body);
+      const existing = await prisma.clientAddress.findFirst({ where: { id: params.addressId, userId: session.sub } });
+      if (!existing) {
+        fail(reply, 404, "address_not_found", "Adresse introuvable.");
+        return;
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        if (body.isDefault === true) {
+          await tx.clientAddress.updateMany({ where: { userId: session.sub }, data: { isDefault: false } });
+        }
+        return tx.clientAddress.update({
+          where: { id: params.addressId },
+          data: {
+            label: body.label,
+            street: body.street === undefined ? undefined : body.street,
+            city: body.city === undefined ? undefined : body.city,
+            isDefault: body.isDefault === undefined ? undefined : body.isDefault
+          }
+        });
+      });
+      ok(reply, {
+        id: updated.id,
+        label: updated.label,
+        street: updated.street,
+        city: updated.city,
+        isDefault: updated.isDefault,
+        createdAt: updated.createdAt.toISOString(),
+        updatedAt: updated.updatedAt.toISOString()
+      });
+    } catch (error) {
+      this._handleError(error, reply);
+    }
+  }
+
+  async deleteAddress(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["client"]);
+      const params = request.params as { addressId: string };
+      const existing = await prisma.clientAddress.findFirst({ where: { id: params.addressId, userId: session.sub } });
+      if (!existing) {
+        fail(reply, 404, "address_not_found", "Adresse introuvable.");
+        return;
+      }
+      await prisma.$transaction(async (tx) => {
+        await tx.clientAddress.delete({ where: { id: params.addressId } });
+        if (existing.isDefault) {
+          const next = await tx.clientAddress.findFirst({
+            where: { userId: session.sub },
+            orderBy: { createdAt: "asc" }
+          });
+          if (next) {
+            await tx.clientAddress.update({ where: { id: next.id }, data: { isDefault: true } });
+          }
+        }
+      });
+      ok(reply, { deleted: true });
+    } catch (error) {
+      this._handleError(error, reply);
+    }
+  }
+
+  async deleteAccount(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["client"]);
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: session.sub },
+          data: { fullName: "Deleted User", email: `deleted+${session.sub}@beauteavenue.local`, phone: null }
+        }),
+        prisma.pushToken.deleteMany({ where: { userId: session.sub } }),
+        prisma.clientAddress.deleteMany({ where: { userId: session.sub } })
+      ]);
+      reply.status(204).send();
+    } catch (error) {
+      this._handleError(error, reply);
+    }
+  }
+
+  private async _redeemVoucherWithConcurrencyGuard(userId: string, code: string) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await prisma.$transaction(async (tx) => {
+          const voucher = await tx.voucherDefinition.findUnique({
+            where: { code },
+            include: { salon: { select: { name: true } } }
+          });
+          if (!voucher || !voucher.isActive) {
+            throw new HttpAuthError(404, "voucher_not_found", "Code introuvable.");
+          }
+          if (voucher.expiresAt && voucher.expiresAt.getTime() < Date.now()) {
+            throw new HttpAuthError(422, "voucher_expired", "Ce code a expiré.");
+          }
+
+          const existing = await tx.clientVoucherRedemption.findUnique({
+            where: { userId_voucherId: { userId, voucherId: voucher.id } },
+            include: { voucher: { include: { salon: { select: { name: true } } } } }
+          });
+          if (existing) {
+            throw new HttpAuthError(409, "voucher_already_redeemed", "Ce code a déjà été ajouté à votre compte.");
+          }
+
+          if (voucher.maxRedemptions != null) {
+            const count = await tx.clientVoucherRedemption.count({
+              where: { voucherId: voucher.id }
+            });
+            if (count >= voucher.maxRedemptions) {
+              throw new HttpAuthError(422, "voucher_exhausted", "Ce code n'est plus disponible.");
+            }
+          }
+
+          return tx.clientVoucherRedemption.create({
+            data: {
+              userId,
+              voucherId: voucher.id,
+              expiresAt: voucher.expiresAt ?? null
+            },
+            include: { voucher: { include: { salon: { select: { name: true } } } } }
+          });
+        }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      } catch (error) {
+        if (error instanceof HttpAuthError) throw error;
+        if (isPrismaKnownError(error) && error.code === "P2002") {
+          throw new HttpAuthError(409, "voucher_already_redeemed", "Ce code a déjà été ajouté à votre compte.");
+        }
+        if (isPrismaKnownError(error) && error.code === "P2034") {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new HttpAuthError(409, "voucher_retry_conflict", "Conflit de concurrence, réessayez.");
   }
 
   private _handleError(error: unknown, reply: FastifyReply) {
     if (error instanceof HttpAuthError) {
       fail(reply, error.statusCode, error.code, error.message);
+      return;
+    }
+    if (isPrismaKnownError(error) && error.code === "P2002") {
+      fail(reply, 409, "already_exists", "La ressource existe déjà.");
       return;
     }
     fail(reply, 500, "internal_error", "Erreur interne.");

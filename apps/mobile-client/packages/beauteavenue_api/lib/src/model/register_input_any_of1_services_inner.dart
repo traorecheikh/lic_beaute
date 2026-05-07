@@ -12,17 +12,14 @@ part 'register_input_any_of1_services_inner.g.dart';
 /// RegisterInputAnyOf1ServicesInner
 ///
 /// Properties:
-/// * [name]
-/// * [durationMinutes]
-/// * [priceXof]
-/// * [depositMode]
-/// * [depositAmountXof]
-/// * [depositPercent]
+/// * [name] 
+/// * [durationMinutes] 
+/// * [priceXof] 
+/// * [depositMode] 
+/// * [depositAmountXof] 
+/// * [depositPercent] 
 @BuiltValue()
-abstract class RegisterInputAnyOf1ServicesInner
-    implements
-        Built<RegisterInputAnyOf1ServicesInner,
-            RegisterInputAnyOf1ServicesInnerBuilder> {
+abstract class RegisterInputAnyOf1ServicesInner implements Built<RegisterInputAnyOf1ServicesInner, RegisterInputAnyOf1ServicesInnerBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -44,25 +41,18 @@ abstract class RegisterInputAnyOf1ServicesInner
 
   RegisterInputAnyOf1ServicesInner._();
 
-  factory RegisterInputAnyOf1ServicesInner(
-          [void updates(RegisterInputAnyOf1ServicesInnerBuilder b)]) =
-      _$RegisterInputAnyOf1ServicesInner;
+  factory RegisterInputAnyOf1ServicesInner([void updates(RegisterInputAnyOf1ServicesInnerBuilder b)]) = _$RegisterInputAnyOf1ServicesInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RegisterInputAnyOf1ServicesInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RegisterInputAnyOf1ServicesInner> get serializer =>
-      _$RegisterInputAnyOf1ServicesInnerSerializer();
+  static Serializer<RegisterInputAnyOf1ServicesInner> get serializer => _$RegisterInputAnyOf1ServicesInnerSerializer();
 }
 
-class _$RegisterInputAnyOf1ServicesInnerSerializer
-    implements PrimitiveSerializer<RegisterInputAnyOf1ServicesInner> {
+class _$RegisterInputAnyOf1ServicesInnerSerializer implements PrimitiveSerializer<RegisterInputAnyOf1ServicesInner> {
   @override
-  final Iterable<Type> types = const [
-    RegisterInputAnyOf1ServicesInner,
-    _$RegisterInputAnyOf1ServicesInner
-  ];
+  final Iterable<Type> types = const [RegisterInputAnyOf1ServicesInner, _$RegisterInputAnyOf1ServicesInner];
 
   @override
   final String wireName = r'RegisterInputAnyOf1ServicesInner';
@@ -90,8 +80,7 @@ class _$RegisterInputAnyOf1ServicesInnerSerializer
     yield r'depositMode';
     yield serializers.serialize(
       object.depositMode,
-      specifiedType:
-          const FullType(RegisterInputAnyOf1ServicesInnerDepositModeEnum),
+      specifiedType: const FullType(RegisterInputAnyOf1ServicesInnerDepositModeEnum),
     );
     if (object.depositAmountXof != null) {
       yield r'depositAmountXof';
@@ -115,9 +104,7 @@ class _$RegisterInputAnyOf1ServicesInnerSerializer
     RegisterInputAnyOf1ServicesInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -156,8 +143,7 @@ class _$RegisterInputAnyOf1ServicesInnerSerializer
         case r'depositMode':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(RegisterInputAnyOf1ServicesInnerDepositModeEnum),
+            specifiedType: const FullType(RegisterInputAnyOf1ServicesInnerDepositModeEnum),
           ) as RegisterInputAnyOf1ServicesInnerDepositModeEnum;
           result.depositMode = valueDes;
           break;
@@ -205,25 +191,19 @@ class _$RegisterInputAnyOf1ServicesInnerSerializer
 }
 
 class RegisterInputAnyOf1ServicesInnerDepositModeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'none')
-  static const RegisterInputAnyOf1ServicesInnerDepositModeEnum none =
-      _$registerInputAnyOf1ServicesInnerDepositModeEnum_none;
+  static const RegisterInputAnyOf1ServicesInnerDepositModeEnum none = _$registerInputAnyOf1ServicesInnerDepositModeEnum_none;
   @BuiltValueEnumConst(wireName: r'fixed')
-  static const RegisterInputAnyOf1ServicesInnerDepositModeEnum fixed =
-      _$registerInputAnyOf1ServicesInnerDepositModeEnum_fixed;
+  static const RegisterInputAnyOf1ServicesInnerDepositModeEnum fixed = _$registerInputAnyOf1ServicesInnerDepositModeEnum_fixed;
   @BuiltValueEnumConst(wireName: r'percent')
-  static const RegisterInputAnyOf1ServicesInnerDepositModeEnum percent =
-      _$registerInputAnyOf1ServicesInnerDepositModeEnum_percent;
+  static const RegisterInputAnyOf1ServicesInnerDepositModeEnum percent = _$registerInputAnyOf1ServicesInnerDepositModeEnum_percent;
 
-  static Serializer<RegisterInputAnyOf1ServicesInnerDepositModeEnum>
-      get serializer =>
-          _$registerInputAnyOf1ServicesInnerDepositModeEnumSerializer;
+  static Serializer<RegisterInputAnyOf1ServicesInnerDepositModeEnum> get serializer => _$registerInputAnyOf1ServicesInnerDepositModeEnumSerializer;
 
-  const RegisterInputAnyOf1ServicesInnerDepositModeEnum._(String name)
-      : super(name);
+  const RegisterInputAnyOf1ServicesInnerDepositModeEnum._(String name): super(name);
 
-  static BuiltSet<RegisterInputAnyOf1ServicesInnerDepositModeEnum> get values =>
-      _$registerInputAnyOf1ServicesInnerDepositModeEnumValues;
-  static RegisterInputAnyOf1ServicesInnerDepositModeEnum valueOf(String name) =>
-      _$registerInputAnyOf1ServicesInnerDepositModeEnumValueOf(name);
+  static BuiltSet<RegisterInputAnyOf1ServicesInnerDepositModeEnum> get values => _$registerInputAnyOf1ServicesInnerDepositModeEnumValues;
+  static RegisterInputAnyOf1ServicesInnerDepositModeEnum valueOf(String name) => _$registerInputAnyOf1ServicesInnerDepositModeEnumValueOf(name);
 }
+

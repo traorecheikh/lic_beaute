@@ -300,8 +300,7 @@
             "type": "string",
             "enum": [
               "phone",
-              "sms",
-              "whatsapp"
+              "sms"
             ]
           },
           "pushOptIn": {
@@ -316,6 +315,13 @@
               "fr",
               "en"
             ]
+          },
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
           }
         },
         "additionalProperties": false
@@ -417,8 +423,7 @@
             "type": "string",
             "enum": [
               "phone",
-              "sms",
-              "whatsapp"
+              "sms"
             ]
           },
           "pushOptIn": {
@@ -476,8 +481,7 @@
               "type": "string",
               "enum": [
                 "phone",
-                "sms",
-                "whatsapp"
+                "sms"
               ]
             }
           },
@@ -486,8 +490,8 @@
             "items": {
               "type": "string",
               "enum": [
-                "wave",
-                "orange_money"
+                "intech",
+                "paytech"
               ]
             }
           }
@@ -509,8 +513,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "wave",
-              "orange_money"
+              "intech",
+              "paytech"
             ]
           },
           "phoneNumber": {
@@ -552,8 +556,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "wave",
-              "orange_money"
+              "intech",
+              "paytech"
             ]
           },
           "phoneNumber": {
@@ -1168,6 +1172,170 @@
         ],
         "additionalProperties": false
       },
+      "FavoriteItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
+          "averageRating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "latitude": {
+            "type": "number",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "nullable": true
+          },
+          "subscriptionTier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
+            ]
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "isPrestige": {
+            "type": "boolean"
+          },
+          "prestigeScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "distanceKm": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "logoUrl",
+          "city",
+          "neighborhood",
+          "averageRating",
+          "latitude",
+          "longitude",
+          "subscriptionTier",
+          "featured",
+          "isPrestige",
+          "prestigeScore",
+          "distanceKm"
+        ],
+        "additionalProperties": false
+      },
+      "FavoriteListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "logoUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "city": {
+                  "type": "string"
+                },
+                "neighborhood": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "averageRating": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5
+                },
+                "latitude": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "longitude": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "subscriptionTier": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "premium"
+                  ]
+                },
+                "featured": {
+                  "type": "boolean"
+                },
+                "isPrestige": {
+                  "type": "boolean"
+                },
+                "prestigeScore": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "distanceKm": {
+                  "type": "number",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "category",
+                "logoUrl",
+                "city",
+                "neighborhood",
+                "averageRating",
+                "latitude",
+                "longitude",
+                "subscriptionTier",
+                "featured",
+                "isPrestige",
+                "prestigeScore",
+                "distanceKm"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
       "BookingCreateInput": {
         "type": "object",
         "properties": {
@@ -1191,8 +1359,16 @@
           "provider": {
             "type": "string",
             "enum": [
+              "intech",
+              "paytech"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
               "wave",
-              "orange_money"
+              "orange_money",
+              "free_money"
             ]
           }
         },
@@ -1259,8 +1435,8 @@
           "paymentProvider": {
             "type": "string",
             "enum": [
-              "wave",
-              "orange_money"
+              "intech",
+              "paytech"
             ],
             "nullable": true
           },
@@ -1347,8 +1523,8 @@
                 "paymentProvider": {
                   "type": "string",
                   "enum": [
-                    "wave",
-                    "orange_money"
+                    "intech",
+                    "paytech"
                   ],
                   "nullable": true
                 },
@@ -1383,6 +1559,19 @@
         "required": [
           "items",
           "total"
+        ],
+        "additionalProperties": false
+      },
+      "BookingRescheduleInput": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "startsAt"
         ],
         "additionalProperties": false
       },
@@ -1792,7 +1981,7 @@
                   "enum": [
                     "none",
                     "fixed",
-                    "percentage"
+                    "percent"
                   ]
                 },
                 "depositAmountXof": {
@@ -1920,8 +2109,8 @@
           "billingProvider": {
             "type": "string",
             "enum": [
-              "wave",
-              "orange_money"
+              "intech",
+              "manual"
             ],
             "nullable": true
           },
@@ -2011,8 +2200,8 @@
                 "billingProvider": {
                   "type": "string",
                   "enum": [
-                    "wave",
-                    "orange_money"
+                    "intech",
+                    "manual"
                   ],
                   "nullable": true
                 },
@@ -2087,8 +2276,8 @@
           "billingProvider": {
             "type": "string",
             "enum": [
-              "wave",
-              "orange_money"
+              "intech",
+              "manual"
             ],
             "nullable": true
           },
@@ -3638,8 +3827,7 @@
             "type": "string",
             "enum": [
               "cash",
-              "wave",
-              "orange_money",
+              "intech",
               "other"
             ]
           },
@@ -3864,8 +4052,8 @@
               "provider": {
                 "type": "string",
                 "enum": [
-                  "wave",
-                  "orange_money"
+                  "intech",
+                  "manual"
                 ]
               },
               "accountNumberMasked": {
@@ -3904,8 +4092,8 @@
               "provider": {
                 "type": "string",
                 "enum": [
-                  "wave",
-                  "orange_money"
+                  "intech",
+                  "manual"
                 ]
               },
               "accountNumber": {
@@ -3937,10 +4125,10 @@
           "provider": {
             "type": "string",
             "enum": [
-              "wave",
-              "orange_money"
+              "intech",
+              "manual"
             ],
-            "default": "wave"
+            "default": "intech"
           }
         },
         "required": [
@@ -4027,6 +4215,304 @@
           "status",
           "createdAt",
           "pdfUrl"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentInitiateInput": {
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "intech",
+              "paytech"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "wave",
+              "orange_money",
+              "free_money"
+            ]
+          }
+        },
+        "required": [
+          "bookingId",
+          "provider"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentInitiateResponse": {
+        "type": "object",
+        "properties": {
+          "paymentId": {
+            "type": "string"
+          },
+          "redirectUrl": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "paymentId",
+          "redirectUrl",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentStatusResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "authorized",
+              "succeeded",
+              "failed",
+              "refunded"
+            ]
+          },
+          "amountXof": {
+            "type": "number",
+            "minimum": 0
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "intech",
+              "paytech"
+            ]
+          },
+          "providerTxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amountXof",
+          "provider",
+          "providerTxId",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentReconcileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "authorized",
+              "succeeded",
+              "failed",
+              "refunded"
+            ]
+          },
+          "amountXof": {
+            "type": "number",
+            "minimum": 0
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "intech",
+              "paytech"
+            ]
+          },
+          "providerTxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amountXof",
+          "provider",
+          "providerTxId",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentWebhookBody": {
+        "type": "object",
+        "properties": {
+          "idFromGu": {
+            "type": "string"
+          },
+          "idFromClient": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "amountWithoutFees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "serviceCode": {
+            "type": "string"
+          },
+          "infoHash": {
+            "type": "string"
+          },
+          "secureHash": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PushTokenInput": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "deviceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "token",
+          "platform",
+          "deviceId"
+        ],
+        "additionalProperties": false
+      },
+      "MediaUploadResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "publicUrl": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "publicUrl",
+          "filename",
+          "mimeType",
+          "sizeBytes",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "MediaAsset": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "publicUrl": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ownerType": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "publicUrl",
+          "filename",
+          "mimeType",
+          "sizeBytes",
+          "createdAt",
+          "ownerType",
+          "ownerId",
+          "deletedAt"
         ],
         "additionalProperties": false
       },
@@ -4376,6 +4862,29 @@
             "bearerAuth": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Delete current user account (GDPR right to erasure)",
+        "responses": {
+          "200": {
+            "description": "Account deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/metadata/profile-options": {
@@ -4428,8 +4937,8 @@
                           "provider": {
                             "type": "string",
                             "enum": [
-                              "wave",
-                              "orange_money"
+                              "intech",
+                              "paytech"
                             ]
                           },
                           "phoneNumber": {
@@ -4991,6 +5500,111 @@
         }
       }
     },
+    "/api/v1/favorites": {
+      "get": {
+        "tags": [
+          "favorites"
+        ],
+        "summary": "List client favorites",
+        "responses": {
+          "200": {
+            "description": "Favorite salons list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoriteListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/favorites/{salonId}": {
+      "post": {
+        "tags": [
+          "favorites"
+        ],
+        "summary": "Add salon to favorites",
+        "parameters": [
+          {
+            "name": "salonId",
+            "in": "path",
+            "required": true,
+            "description": "Salon identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Added to favorites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoriteItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "favorites"
+        ],
+        "summary": "Remove salon from favorites",
+        "parameters": [
+          {
+            "name": "salonId",
+            "in": "path",
+            "required": true,
+            "description": "Salon identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed from favorites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/bookings": {
       "get": {
         "tags": [
@@ -5037,6 +5651,261 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BookingSummary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/{bookingId}": {
+      "get": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Get booking detail",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/{bookingId}/cancel": {
+      "post": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Cancel a booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/{bookingId}/reschedule": {
+      "post": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Reschedule a booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingRescheduleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rescheduled booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/{bookingId}/review": {
+      "post": {
+        "tags": [
+          "bookings"
+        ],
+        "summary": "Submit a review for a completed booking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "description": "Booking identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "comment": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "rating"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "rating": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 5
+                    },
+                    "comment": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "responseText": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "responseAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "rating",
+                    "comment",
+                    "createdAt",
+                    "responseText",
+                    "responseAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -7057,6 +7926,2307 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/deposits/initiate": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Initiate deposit payment for a booking",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentInitiateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment initiation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentInitiateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/{paymentId}": {
+      "get": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Get payment status",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "description": "Payment identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/{paymentId}/refund": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Refund a payment",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "description": "Payment identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refund result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/{paymentId}/reconcile": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Manually reconcile a payment (admin or pro)",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "description": "Payment identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciled payment status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentReconcileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/webhooks/intech": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Intech payment webhook callback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentWebhookBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook acknowledged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "received"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/webhooks/paytech": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "PayTech payment webhook callback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentWebhookBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook acknowledged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "received"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/push-tokens": {
+      "post": {
+        "tags": [
+          "push"
+        ],
+        "summary": "Register a push notification token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered push token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "platform": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "token",
+                    "platform",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/push-tokens/{tokenId}": {
+      "delete": {
+        "tags": [
+          "push"
+        ],
+        "summary": "Revoke a push notification token",
+        "parameters": [
+          {
+            "name": "tokenId",
+            "in": "path",
+            "required": true,
+            "description": "Push token identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/media/upload-intent": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Request a presigned PUT URL for direct R2 upload",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "salonId": {
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "salon_cover",
+                      "salon_logo",
+                      "salon_gallery",
+                      "kyc_document",
+                      "avatar"
+                    ]
+                  },
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "originalFilename": {
+                    "type": "string"
+                  },
+                  "sizeBytes": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "purpose",
+                  "mimeType",
+                  "originalFilename",
+                  "sizeBytes"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Presigned upload intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assetId": {
+                      "type": "string"
+                    },
+                    "uploadUrl": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "assetId",
+                    "uploadUrl",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/media/{mediaId}/complete": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Confirm upload completed — triggers admin review",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "description": "Media asset identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upload confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assetId": {
+                      "type": "string"
+                    },
+                    "uploadStatus": {
+                      "type": "string"
+                    },
+                    "reviewStatus": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "assetId",
+                    "uploadStatus",
+                    "reviewStatus"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/media/{mediaId}": {
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Retrieve media metadata",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "description": "Media identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAsset"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Soft-delete a media asset",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "description": "Media identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted media",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/addresses": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List saved addresses",
+        "responses": {
+          "200": {
+            "description": "Address list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "street": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "city": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "street",
+                          "city",
+                          "isDefault",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Create a saved address",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "street": {
+                    "type": "string",
+                    "maxLength": 240,
+                    "nullable": true
+                  },
+                  "city": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "street": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "city": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "isDefault": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "street",
+                    "city",
+                    "isDefault",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/addresses/{addressId}": {
+      "patch": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update a saved address",
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "description": "Address identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "street": {
+                    "type": "string",
+                    "maxLength": 240,
+                    "nullable": true
+                  },
+                  "city": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "nullable": true
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Delete a saved address",
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "description": "Address identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/salons/{id}/availability": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Get available booking slots",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Salon identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employeeId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "startsAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "endsAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "employeeId": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "startsAt",
+                      "endsAt",
+                      "employeeId"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/salons/{id}/reviews": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List salon reviews",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Salon identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reviews list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "rating": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                          },
+                          "comment": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "responseText": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "responseAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "rating",
+                          "comment",
+                          "createdAt",
+                          "responseText",
+                          "responseAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config/pricing": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Get subscription pricing tiers",
+        "responses": {
+          "200": {
+            "description": "Pricing info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "standard": {
+                      "type": "object",
+                      "properties": {
+                        "tier": {
+                          "type": "string"
+                        },
+                        "priceXof": {
+                          "type": "integer"
+                        },
+                        "label": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tier",
+                        "priceXof",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "premium": {
+                      "type": "object",
+                      "properties": {
+                        "tier": {
+                          "type": "string"
+                        },
+                        "priceXof": {
+                          "type": "integer"
+                        },
+                        "label": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tier",
+                        "priceXof",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "commissionPercent": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "standard",
+                    "premium",
+                    "commissionPercent"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/salons/{salonId}/public-media": {
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Get public media for a salon",
+        "parameters": [
+          {
+            "name": "salonId",
+            "in": "path",
+            "required": true,
+            "description": "Salon identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public media list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "publicUrl": {
+                            "type": "string"
+                          },
+                          "purpose": {
+                            "type": "string"
+                          },
+                          "mimeType": {
+                            "type": "string"
+                          },
+                          "displayOrder": {
+                            "type": "integer"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "publicUrl",
+                          "purpose",
+                          "mimeType",
+                          "displayOrder",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/media/pending": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List media pending review",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pending media list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "salonId": {
+                            "type": "string"
+                          },
+                          "uploadedBy": {
+                            "type": "string"
+                          },
+                          "objectKey": {
+                            "type": "string"
+                          },
+                          "mimeType": {
+                            "type": "string"
+                          },
+                          "sizeBytes": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "purpose": {
+                            "type": "string"
+                          },
+                          "uploadStatus": {
+                            "type": "string"
+                          },
+                          "reviewStatus": {
+                            "type": "string"
+                          },
+                          "originalFilename": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "salonId",
+                          "uploadedBy",
+                          "objectKey",
+                          "mimeType",
+                          "sizeBytes",
+                          "purpose",
+                          "uploadStatus",
+                          "reviewStatus",
+                          "originalFilename",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/media/{mediaId}/signed-view-url": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get a signed URL to preview a media asset",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "description": "Media identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "signedUrl": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "signedUrl",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/media/{mediaId}/approve": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Approve a media asset",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "description": "Media identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "purpose": {
+                    "type": "string"
+                  },
+                  "displayOrder": {
+                    "type": "integer"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "approved": {
+                      "type": "boolean"
+                    },
+                    "publicUrl": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "approved",
+                    "publicUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/media/{mediaId}/reject": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reject a media asset",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "description": "Media identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rejected": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "rejected"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Media not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/salons": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List all salons with optional filters",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Salons list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "salonName": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "ownerName": {
+                            "type": "string"
+                          },
+                          "submittedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "approvalStatus": {
+                            "type": "string",
+                            "enum": [
+                              "pending_review",
+                              "needs_info",
+                              "approved",
+                              "rejected"
+                            ]
+                          },
+                          "subscriptionIntentTier": {
+                            "type": "string",
+                            "enum": [
+                              "standard",
+                              "premium"
+                            ]
+                          },
+                          "missingEvidence": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "latestAdminNote": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "salonName",
+                          "category",
+                          "city",
+                          "ownerName",
+                          "submittedAt",
+                          "approvalStatus",
+                          "subscriptionIntentTier",
+                          "missingEvidence",
+                          "latestAdminNote"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create a salon manually",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "category": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "city": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "address": {
+                    "type": "string",
+                    "minLength": 5
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "ownerEmail": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "ownerPhone": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "ownerName": {
+                    "type": "string",
+                    "minLength": 2
+                  }
+                },
+                "required": [
+                  "name",
+                  "category",
+                  "city",
+                  "address",
+                  "description",
+                  "ownerEmail",
+                  "ownerPhone",
+                  "ownerName"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "salonName": {
+                      "type": "string"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "fullName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "phone": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "fullName",
+                        "email",
+                        "phone"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "approvalStatus": {
+                      "type": "string",
+                      "enum": [
+                        "pending_review",
+                        "needs_info",
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "subscriptionIntentTier": {
+                      "type": "string",
+                      "enum": [
+                        "standard",
+                        "premium"
+                      ]
+                    },
+                    "submittedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "missingEvidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "latestAdminNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "gallery": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "durationMinutes": {
+                            "type": "integer",
+                            "exclusiveMinimum": true,
+                            "minimum": 0
+                          },
+                          "priceXof": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "depositMode": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "fixed",
+                              "percent"
+                            ]
+                          },
+                          "depositAmountXof": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "nullable": true
+                          },
+                          "depositPercent": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "durationMinutes",
+                          "priceXof",
+                          "depositMode",
+                          "depositAmountXof",
+                          "depositPercent"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "received",
+                              "missing",
+                              "invalid"
+                            ]
+                          },
+                          "note": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "fileUrl": {
+                            "type": "string",
+                            "format": "uri",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "label",
+                          "status",
+                          "note",
+                          "fileUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "temporaryPassword": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "salonName",
+                    "category",
+                    "city",
+                    "address",
+                    "description",
+                    "owner",
+                    "approvalStatus",
+                    "subscriptionIntentTier",
+                    "submittedAt",
+                    "missingEvidence",
+                    "latestAdminNote",
+                    "gallery",
+                    "services",
+                    "documents",
+                    "temporaryPassword"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/config/settings": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List all platform settings",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settings list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "group": {
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "group",
+                      "key",
+                      "value",
+                      "description",
+                      "updatedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/config/settings/{key}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Update a platform setting",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "Setting key",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated setting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/config/categories": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List salon categories",
+        "responses": {
+          "200": {
+            "description": "Categories list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "slug",
+                      "enabled",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create or update a salon category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name",
+                  "slug"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upserted category"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/config/categories/{id}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete a salon category",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Category identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/config/documents": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List required documents",
+        "responses": {
+          "200": {
+            "description": "Documents list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "isRequired": {
+                        "type": "boolean"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "slug",
+                      "type",
+                      "isRequired",
+                      "enabled",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create or update a required document",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "isRequired": {
+                    "type": "boolean"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "label",
+                  "slug",
+                  "type",
+                  "isRequired"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upserted document"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/config/documents/{id}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete a required document",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Document identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponse"
                 }
               }
             }

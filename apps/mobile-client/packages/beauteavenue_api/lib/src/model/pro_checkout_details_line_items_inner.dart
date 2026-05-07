@@ -11,13 +11,10 @@ part 'pro_checkout_details_line_items_inner.g.dart';
 /// ProCheckoutDetailsLineItemsInner
 ///
 /// Properties:
-/// * [name]
-/// * [amountXof]
+/// * [name] 
+/// * [amountXof] 
 @BuiltValue()
-abstract class ProCheckoutDetailsLineItemsInner
-    implements
-        Built<ProCheckoutDetailsLineItemsInner,
-            ProCheckoutDetailsLineItemsInnerBuilder> {
+abstract class ProCheckoutDetailsLineItemsInner implements Built<ProCheckoutDetailsLineItemsInner, ProCheckoutDetailsLineItemsInnerBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -26,25 +23,18 @@ abstract class ProCheckoutDetailsLineItemsInner
 
   ProCheckoutDetailsLineItemsInner._();
 
-  factory ProCheckoutDetailsLineItemsInner(
-          [void updates(ProCheckoutDetailsLineItemsInnerBuilder b)]) =
-      _$ProCheckoutDetailsLineItemsInner;
+  factory ProCheckoutDetailsLineItemsInner([void updates(ProCheckoutDetailsLineItemsInnerBuilder b)]) = _$ProCheckoutDetailsLineItemsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProCheckoutDetailsLineItemsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProCheckoutDetailsLineItemsInner> get serializer =>
-      _$ProCheckoutDetailsLineItemsInnerSerializer();
+  static Serializer<ProCheckoutDetailsLineItemsInner> get serializer => _$ProCheckoutDetailsLineItemsInnerSerializer();
 }
 
-class _$ProCheckoutDetailsLineItemsInnerSerializer
-    implements PrimitiveSerializer<ProCheckoutDetailsLineItemsInner> {
+class _$ProCheckoutDetailsLineItemsInnerSerializer implements PrimitiveSerializer<ProCheckoutDetailsLineItemsInner> {
   @override
-  final Iterable<Type> types = const [
-    ProCheckoutDetailsLineItemsInner,
-    _$ProCheckoutDetailsLineItemsInner
-  ];
+  final Iterable<Type> types = const [ProCheckoutDetailsLineItemsInner, _$ProCheckoutDetailsLineItemsInner];
 
   @override
   final String wireName = r'ProCheckoutDetailsLineItemsInner';
@@ -72,9 +62,7 @@ class _$ProCheckoutDetailsLineItemsInnerSerializer
     ProCheckoutDetailsLineItemsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -131,3 +119,4 @@ class _$ProCheckoutDetailsLineItemsInnerSerializer
     return result.build();
   }
 }
+

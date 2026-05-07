@@ -11,12 +11,11 @@ part 'pro_dashboard.g.dart';
 /// ProDashboard
 ///
 /// Properties:
-/// * [pendingBookingCount]
-/// * [todayBookingCount]
-/// * [totalRevenueXof]
+/// * [pendingBookingCount] 
+/// * [todayBookingCount] 
+/// * [totalRevenueXof] 
 @BuiltValue()
-abstract class ProDashboard
-    implements Built<ProDashboard, ProDashboardBuilder> {
+abstract class ProDashboard implements Built<ProDashboard, ProDashboardBuilder> {
   @BuiltValueField(wireName: r'pendingBookingCount')
   int get pendingBookingCount;
 
@@ -60,12 +59,10 @@ class _$ProDashboardSerializer implements PrimitiveSerializer<ProDashboard> {
       specifiedType: const FullType(int),
     );
     yield r'totalRevenueXof';
-    yield object.totalRevenueXof == null
-        ? null
-        : serializers.serialize(
-            object.totalRevenueXof,
-            specifiedType: const FullType.nullable(int),
-          );
+    yield object.totalRevenueXof == null ? null : serializers.serialize(
+      object.totalRevenueXof,
+      specifiedType: const FullType.nullable(int),
+    );
   }
 
   @override
@@ -74,9 +71,7 @@ class _$ProDashboardSerializer implements PrimitiveSerializer<ProDashboard> {
     ProDashboard object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -141,3 +136,4 @@ class _$ProDashboardSerializer implements PrimitiveSerializer<ProDashboard> {
     return result.build();
   }
 }
+

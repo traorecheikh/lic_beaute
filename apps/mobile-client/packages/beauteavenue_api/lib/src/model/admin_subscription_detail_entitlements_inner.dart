@@ -11,14 +11,11 @@ part 'admin_subscription_detail_entitlements_inner.g.dart';
 /// AdminSubscriptionDetailEntitlementsInner
 ///
 /// Properties:
-/// * [label]
-/// * [enabled]
-/// * [note]
+/// * [label] 
+/// * [enabled] 
+/// * [note] 
 @BuiltValue()
-abstract class AdminSubscriptionDetailEntitlementsInner
-    implements
-        Built<AdminSubscriptionDetailEntitlementsInner,
-            AdminSubscriptionDetailEntitlementsInnerBuilder> {
+abstract class AdminSubscriptionDetailEntitlementsInner implements Built<AdminSubscriptionDetailEntitlementsInner, AdminSubscriptionDetailEntitlementsInnerBuilder> {
   @BuiltValueField(wireName: r'label')
   String get label;
 
@@ -30,25 +27,18 @@ abstract class AdminSubscriptionDetailEntitlementsInner
 
   AdminSubscriptionDetailEntitlementsInner._();
 
-  factory AdminSubscriptionDetailEntitlementsInner(
-          [void updates(AdminSubscriptionDetailEntitlementsInnerBuilder b)]) =
-      _$AdminSubscriptionDetailEntitlementsInner;
+  factory AdminSubscriptionDetailEntitlementsInner([void updates(AdminSubscriptionDetailEntitlementsInnerBuilder b)]) = _$AdminSubscriptionDetailEntitlementsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionDetailEntitlementsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionDetailEntitlementsInner> get serializer =>
-      _$AdminSubscriptionDetailEntitlementsInnerSerializer();
+  static Serializer<AdminSubscriptionDetailEntitlementsInner> get serializer => _$AdminSubscriptionDetailEntitlementsInnerSerializer();
 }
 
-class _$AdminSubscriptionDetailEntitlementsInnerSerializer
-    implements PrimitiveSerializer<AdminSubscriptionDetailEntitlementsInner> {
+class _$AdminSubscriptionDetailEntitlementsInnerSerializer implements PrimitiveSerializer<AdminSubscriptionDetailEntitlementsInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionDetailEntitlementsInner,
-    _$AdminSubscriptionDetailEntitlementsInner
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionDetailEntitlementsInner, _$AdminSubscriptionDetailEntitlementsInner];
 
   @override
   final String wireName = r'AdminSubscriptionDetailEntitlementsInner';
@@ -69,12 +59,10 @@ class _$AdminSubscriptionDetailEntitlementsInnerSerializer
       specifiedType: const FullType(bool),
     );
     yield r'note';
-    yield object.note == null
-        ? null
-        : serializers.serialize(
-            object.note,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.note == null ? null : serializers.serialize(
+      object.note,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -83,9 +71,7 @@ class _$AdminSubscriptionDetailEntitlementsInnerSerializer
     AdminSubscriptionDetailEntitlementsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -150,3 +136,4 @@ class _$AdminSubscriptionDetailEntitlementsInnerSerializer
     return result.build();
   }
 }
+

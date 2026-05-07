@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/session/session_store.dart';
+
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'app_router.dart';
 
@@ -61,9 +62,12 @@ class _SplashPageState extends ConsumerState<SplashPage>
 
   Future<void> _bootstrap() async {
     await ref.read(sessionProvider.notifier).restore();
+    final session = ref.read(sessionProvider);
+    if (session.isAuthenticated) {
+      ref.read(fcmRegistrationServiceProvider).register();
+    }
     await Future.delayed(const Duration(milliseconds: 1600));
     if (!mounted) return;
-    final session = ref.read(sessionProvider);
     context.go(session.isAuthenticated ? AppRoutes.home : AppRoutes.auth);
   }
 
@@ -87,7 +91,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 // Logomark
                 AnimatedBuilder(
                   animation: _ctrl,
-                  builder: (_, __) => FadeTransition(
+                  builder: (_, _) => FadeTransition(
                     opacity: _fade,
                     child: ScaleTransition(
                       scale: _scale,
@@ -99,7 +103,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 // Wordmark
                 AnimatedBuilder(
                   animation: _wordmarkFade,
-                  builder: (_, __) => Opacity(
+                  builder: (_, _) => Opacity(
                     opacity: _wordmarkFade.value,
                     child: Column(
                       children: [
@@ -125,7 +129,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 // Loading dots
                 AnimatedBuilder(
                   animation: _wordmarkFade,
-                  builder: (_, __) => Opacity(
+                  builder: (_, _) => Opacity(
                     opacity: _wordmarkFade.value,
                     child: const _PulsingDots(),
                   ),
@@ -183,7 +187,7 @@ class _PulsingDotsState extends State<_PulsingDots>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) {
+      builder: (_, _) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {

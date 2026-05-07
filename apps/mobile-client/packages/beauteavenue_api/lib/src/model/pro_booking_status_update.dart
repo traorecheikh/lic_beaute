@@ -12,35 +12,27 @@ part 'pro_booking_status_update.g.dart';
 /// ProBookingStatusUpdate
 ///
 /// Properties:
-/// * [status]
+/// * [status] 
 @BuiltValue()
-abstract class ProBookingStatusUpdate
-    implements Built<ProBookingStatusUpdate, ProBookingStatusUpdateBuilder> {
+abstract class ProBookingStatusUpdate implements Built<ProBookingStatusUpdate, ProBookingStatusUpdateBuilder> {
   @BuiltValueField(wireName: r'status')
   ProBookingStatusUpdateStatusEnum get status;
   // enum statusEnum {  pending,  confirmed,  in_progress,  completed,  cancelled,  };
 
   ProBookingStatusUpdate._();
 
-  factory ProBookingStatusUpdate(
-          [void updates(ProBookingStatusUpdateBuilder b)]) =
-      _$ProBookingStatusUpdate;
+  factory ProBookingStatusUpdate([void updates(ProBookingStatusUpdateBuilder b)]) = _$ProBookingStatusUpdate;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProBookingStatusUpdateBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProBookingStatusUpdate> get serializer =>
-      _$ProBookingStatusUpdateSerializer();
+  static Serializer<ProBookingStatusUpdate> get serializer => _$ProBookingStatusUpdateSerializer();
 }
 
-class _$ProBookingStatusUpdateSerializer
-    implements PrimitiveSerializer<ProBookingStatusUpdate> {
+class _$ProBookingStatusUpdateSerializer implements PrimitiveSerializer<ProBookingStatusUpdate> {
   @override
-  final Iterable<Type> types = const [
-    ProBookingStatusUpdate,
-    _$ProBookingStatusUpdate
-  ];
+  final Iterable<Type> types = const [ProBookingStatusUpdate, _$ProBookingStatusUpdate];
 
   @override
   final String wireName = r'ProBookingStatusUpdate';
@@ -63,9 +55,7 @@ class _$ProBookingStatusUpdateSerializer
     ProBookingStatusUpdate object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -117,29 +107,23 @@ class _$ProBookingStatusUpdateSerializer
 }
 
 class ProBookingStatusUpdateStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const ProBookingStatusUpdateStatusEnum pending =
-      _$proBookingStatusUpdateStatusEnum_pending;
+  static const ProBookingStatusUpdateStatusEnum pending = _$proBookingStatusUpdateStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const ProBookingStatusUpdateStatusEnum confirmed =
-      _$proBookingStatusUpdateStatusEnum_confirmed;
+  static const ProBookingStatusUpdateStatusEnum confirmed = _$proBookingStatusUpdateStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const ProBookingStatusUpdateStatusEnum inProgress =
-      _$proBookingStatusUpdateStatusEnum_inProgress;
+  static const ProBookingStatusUpdateStatusEnum inProgress = _$proBookingStatusUpdateStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const ProBookingStatusUpdateStatusEnum completed =
-      _$proBookingStatusUpdateStatusEnum_completed;
+  static const ProBookingStatusUpdateStatusEnum completed = _$proBookingStatusUpdateStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProBookingStatusUpdateStatusEnum cancelled =
-      _$proBookingStatusUpdateStatusEnum_cancelled;
+  static const ProBookingStatusUpdateStatusEnum cancelled = _$proBookingStatusUpdateStatusEnum_cancelled;
 
-  static Serializer<ProBookingStatusUpdateStatusEnum> get serializer =>
-      _$proBookingStatusUpdateStatusEnumSerializer;
+  static Serializer<ProBookingStatusUpdateStatusEnum> get serializer => _$proBookingStatusUpdateStatusEnumSerializer;
 
-  const ProBookingStatusUpdateStatusEnum._(String name) : super(name);
+  const ProBookingStatusUpdateStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProBookingStatusUpdateStatusEnum> get values =>
-      _$proBookingStatusUpdateStatusEnumValues;
-  static ProBookingStatusUpdateStatusEnum valueOf(String name) =>
-      _$proBookingStatusUpdateStatusEnumValueOf(name);
+  static BuiltSet<ProBookingStatusUpdateStatusEnum> get values => _$proBookingStatusUpdateStatusEnumValues;
+  static ProBookingStatusUpdateStatusEnum valueOf(String name) => _$proBookingStatusUpdateStatusEnumValueOf(name);
 }
+

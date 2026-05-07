@@ -14,26 +14,25 @@ part 'pro_booking_full_detail.g.dart';
 /// ProBookingFullDetail
 ///
 /// Properties:
-/// * [id]
-/// * [salonId]
-/// * [serviceId]
-/// * [serviceName]
-/// * [employeeId]
-/// * [employeeName]
-/// * [clientId]
-/// * [clientName]
-/// * [clientPhone]
-/// * [startsAt]
-/// * [endsAt]
-/// * [status]
-/// * [source_]
-/// * [depositAmountXof]
-/// * [createdAt]
-/// * [payments]
-/// * [events]
+/// * [id] 
+/// * [salonId] 
+/// * [serviceId] 
+/// * [serviceName] 
+/// * [employeeId] 
+/// * [employeeName] 
+/// * [clientId] 
+/// * [clientName] 
+/// * [clientPhone] 
+/// * [startsAt] 
+/// * [endsAt] 
+/// * [status] 
+/// * [source_] 
+/// * [depositAmountXof] 
+/// * [createdAt] 
+/// * [payments] 
+/// * [events] 
 @BuiltValue()
-abstract class ProBookingFullDetail
-    implements Built<ProBookingFullDetail, ProBookingFullDetailBuilder> {
+abstract class ProBookingFullDetail implements Built<ProBookingFullDetail, ProBookingFullDetailBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -88,24 +87,18 @@ abstract class ProBookingFullDetail
 
   ProBookingFullDetail._();
 
-  factory ProBookingFullDetail([void updates(ProBookingFullDetailBuilder b)]) =
-      _$ProBookingFullDetail;
+  factory ProBookingFullDetail([void updates(ProBookingFullDetailBuilder b)]) = _$ProBookingFullDetail;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProBookingFullDetailBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProBookingFullDetail> get serializer =>
-      _$ProBookingFullDetailSerializer();
+  static Serializer<ProBookingFullDetail> get serializer => _$ProBookingFullDetailSerializer();
 }
 
-class _$ProBookingFullDetailSerializer
-    implements PrimitiveSerializer<ProBookingFullDetail> {
+class _$ProBookingFullDetailSerializer implements PrimitiveSerializer<ProBookingFullDetail> {
   @override
-  final Iterable<Type> types = const [
-    ProBookingFullDetail,
-    _$ProBookingFullDetail
-  ];
+  final Iterable<Type> types = const [ProBookingFullDetail, _$ProBookingFullDetail];
 
   @override
   final String wireName = r'ProBookingFullDetail';
@@ -136,40 +129,30 @@ class _$ProBookingFullDetailSerializer
       specifiedType: const FullType(String),
     );
     yield r'employeeId';
-    yield object.employeeId == null
-        ? null
-        : serializers.serialize(
-            object.employeeId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.employeeId == null ? null : serializers.serialize(
+      object.employeeId,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'employeeName';
-    yield object.employeeName == null
-        ? null
-        : serializers.serialize(
-            object.employeeName,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.employeeName == null ? null : serializers.serialize(
+      object.employeeName,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'clientId';
-    yield object.clientId == null
-        ? null
-        : serializers.serialize(
-            object.clientId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.clientId == null ? null : serializers.serialize(
+      object.clientId,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'clientName';
-    yield object.clientName == null
-        ? null
-        : serializers.serialize(
-            object.clientName,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.clientName == null ? null : serializers.serialize(
+      object.clientName,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'clientPhone';
-    yield object.clientPhone == null
-        ? null
-        : serializers.serialize(
-            object.clientPhone,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.clientPhone == null ? null : serializers.serialize(
+      object.clientPhone,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'startsAt';
     yield serializers.serialize(
       object.startsAt,
@@ -203,14 +186,12 @@ class _$ProBookingFullDetailSerializer
     yield r'payments';
     yield serializers.serialize(
       object.payments,
-      specifiedType: const FullType(
-          BuiltList, [FullType(ProBookingFullDetailPaymentsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProBookingFullDetailPaymentsInner)]),
     );
     yield r'events';
     yield serializers.serialize(
       object.events,
-      specifiedType: const FullType(
-          BuiltList, [FullType(ProBookingFullDetailEventsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ProBookingFullDetailEventsInner)]),
     );
   }
 
@@ -220,9 +201,7 @@ class _$ProBookingFullDetailSerializer
     ProBookingFullDetail object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -350,16 +329,14 @@ class _$ProBookingFullDetailSerializer
         case r'payments':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProBookingFullDetailPaymentsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProBookingFullDetailPaymentsInner)]),
           ) as BuiltList<ProBookingFullDetailPaymentsInner>;
           result.payments.replace(valueDes);
           break;
         case r'events':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(ProBookingFullDetailEventsInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(ProBookingFullDetailEventsInner)]),
           ) as BuiltList<ProBookingFullDetailEventsInner>;
           result.events.replace(valueDes);
           break;
@@ -393,29 +370,23 @@ class _$ProBookingFullDetailSerializer
 }
 
 class ProBookingFullDetailStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending')
-  static const ProBookingFullDetailStatusEnum pending =
-      _$proBookingFullDetailStatusEnum_pending;
+  static const ProBookingFullDetailStatusEnum pending = _$proBookingFullDetailStatusEnum_pending;
   @BuiltValueEnumConst(wireName: r'confirmed')
-  static const ProBookingFullDetailStatusEnum confirmed =
-      _$proBookingFullDetailStatusEnum_confirmed;
+  static const ProBookingFullDetailStatusEnum confirmed = _$proBookingFullDetailStatusEnum_confirmed;
   @BuiltValueEnumConst(wireName: r'in_progress')
-  static const ProBookingFullDetailStatusEnum inProgress =
-      _$proBookingFullDetailStatusEnum_inProgress;
+  static const ProBookingFullDetailStatusEnum inProgress = _$proBookingFullDetailStatusEnum_inProgress;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const ProBookingFullDetailStatusEnum completed =
-      _$proBookingFullDetailStatusEnum_completed;
+  static const ProBookingFullDetailStatusEnum completed = _$proBookingFullDetailStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const ProBookingFullDetailStatusEnum cancelled =
-      _$proBookingFullDetailStatusEnum_cancelled;
+  static const ProBookingFullDetailStatusEnum cancelled = _$proBookingFullDetailStatusEnum_cancelled;
 
-  static Serializer<ProBookingFullDetailStatusEnum> get serializer =>
-      _$proBookingFullDetailStatusEnumSerializer;
+  static Serializer<ProBookingFullDetailStatusEnum> get serializer => _$proBookingFullDetailStatusEnumSerializer;
 
-  const ProBookingFullDetailStatusEnum._(String name) : super(name);
+  const ProBookingFullDetailStatusEnum._(String name): super(name);
 
-  static BuiltSet<ProBookingFullDetailStatusEnum> get values =>
-      _$proBookingFullDetailStatusEnumValues;
-  static ProBookingFullDetailStatusEnum valueOf(String name) =>
-      _$proBookingFullDetailStatusEnumValueOf(name);
+  static BuiltSet<ProBookingFullDetailStatusEnum> get values => _$proBookingFullDetailStatusEnumValues;
+  static ProBookingFullDetailStatusEnum valueOf(String name) => _$proBookingFullDetailStatusEnumValueOf(name);
 }
+

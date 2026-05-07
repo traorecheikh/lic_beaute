@@ -1,5 +1,5 @@
-String xof(int amount) {
-  final thousands = amount ~/ 1000;
-  final remainder = amount % 1000;
-  return remainder == 0 ? '$thousands 000 XOF' : '$amount XOF';
-}
+import 'package:intl/intl.dart';
+
+final NumberFormat _xofFormatter = NumberFormat.decimalPattern('fr_FR');
+
+String xof(int amount) => '${_xofFormatter.format(amount)} XOF';

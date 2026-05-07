@@ -12,15 +12,15 @@ part 'booking_create_input.g.dart';
 /// BookingCreateInput
 ///
 /// Properties:
-/// * [salonId]
-/// * [serviceId]
-/// * [employeeId]
-/// * [startsAt]
-/// * [clientNote]
-/// * [provider]
+/// * [salonId] 
+/// * [serviceId] 
+/// * [employeeId] 
+/// * [startsAt] 
+/// * [clientNote] 
+/// * [provider] 
+/// * [channel] 
 @BuiltValue()
-abstract class BookingCreateInput
-    implements Built<BookingCreateInput, BookingCreateInputBuilder> {
+abstract class BookingCreateInput implements Built<BookingCreateInput, BookingCreateInputBuilder> {
   @BuiltValueField(wireName: r'salonId')
   String get salonId;
 
@@ -38,23 +38,24 @@ abstract class BookingCreateInput
 
   @BuiltValueField(wireName: r'provider')
   BookingCreateInputProviderEnum? get provider;
-  // enum providerEnum {  wave,  orange_money,  };
+  // enum providerEnum {  intech,  };
+
+  @BuiltValueField(wireName: r'channel')
+  BookingCreateInputChannelEnum? get channel;
+  // enum channelEnum {  wave,  orange_money,  free_money,  };
 
   BookingCreateInput._();
 
-  factory BookingCreateInput([void updates(BookingCreateInputBuilder b)]) =
-      _$BookingCreateInput;
+  factory BookingCreateInput([void updates(BookingCreateInputBuilder b)]) = _$BookingCreateInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BookingCreateInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BookingCreateInput> get serializer =>
-      _$BookingCreateInputSerializer();
+  static Serializer<BookingCreateInput> get serializer => _$BookingCreateInputSerializer();
 }
 
-class _$BookingCreateInputSerializer
-    implements PrimitiveSerializer<BookingCreateInput> {
+class _$BookingCreateInputSerializer implements PrimitiveSerializer<BookingCreateInput> {
   @override
   final Iterable<Type> types = const [BookingCreateInput, _$BookingCreateInput];
 
@@ -102,6 +103,13 @@ class _$BookingCreateInputSerializer
         specifiedType: const FullType(BookingCreateInputProviderEnum),
       );
     }
+    if (object.channel != null) {
+      yield r'channel';
+      yield serializers.serialize(
+        object.channel,
+        specifiedType: const FullType(BookingCreateInputChannelEnum),
+      );
+    }
   }
 
   @override
@@ -110,9 +118,7 @@ class _$BookingCreateInputSerializer
     BookingCreateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -169,6 +175,13 @@ class _$BookingCreateInputSerializer
           ) as BookingCreateInputProviderEnum;
           result.provider = valueDes;
           break;
+        case r'channel':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BookingCreateInputChannelEnum),
+          ) as BookingCreateInputChannelEnum;
+          result.channel = valueDes;
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -199,20 +212,32 @@ class _$BookingCreateInputSerializer
 }
 
 class BookingCreateInputProviderEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'wave')
-  static const BookingCreateInputProviderEnum wave =
-      _$bookingCreateInputProviderEnum_wave;
-  @BuiltValueEnumConst(wireName: r'orange_money')
-  static const BookingCreateInputProviderEnum orangeMoney =
-      _$bookingCreateInputProviderEnum_orangeMoney;
 
-  static Serializer<BookingCreateInputProviderEnum> get serializer =>
-      _$bookingCreateInputProviderEnumSerializer;
+  @BuiltValueEnumConst(wireName: r'intech')
+  static const BookingCreateInputProviderEnum intech = _$bookingCreateInputProviderEnum_intech;
 
-  const BookingCreateInputProviderEnum._(String name) : super(name);
+  static Serializer<BookingCreateInputProviderEnum> get serializer => _$bookingCreateInputProviderEnumSerializer;
 
-  static BuiltSet<BookingCreateInputProviderEnum> get values =>
-      _$bookingCreateInputProviderEnumValues;
-  static BookingCreateInputProviderEnum valueOf(String name) =>
-      _$bookingCreateInputProviderEnumValueOf(name);
+  const BookingCreateInputProviderEnum._(String name): super(name);
+
+  static BuiltSet<BookingCreateInputProviderEnum> get values => _$bookingCreateInputProviderEnumValues;
+  static BookingCreateInputProviderEnum valueOf(String name) => _$bookingCreateInputProviderEnumValueOf(name);
 }
+
+class BookingCreateInputChannelEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'wave')
+  static const BookingCreateInputChannelEnum wave = _$bookingCreateInputChannelEnum_wave;
+  @BuiltValueEnumConst(wireName: r'orange_money')
+  static const BookingCreateInputChannelEnum orangeMoney = _$bookingCreateInputChannelEnum_orangeMoney;
+  @BuiltValueEnumConst(wireName: r'free_money')
+  static const BookingCreateInputChannelEnum freeMoney = _$bookingCreateInputChannelEnum_freeMoney;
+
+  static Serializer<BookingCreateInputChannelEnum> get serializer => _$bookingCreateInputChannelEnumSerializer;
+
+  const BookingCreateInputChannelEnum._(String name): super(name);
+
+  static BuiltSet<BookingCreateInputChannelEnum> get values => _$bookingCreateInputChannelEnumValues;
+  static BookingCreateInputChannelEnum valueOf(String name) => _$bookingCreateInputChannelEnumValueOf(name);
+}
+

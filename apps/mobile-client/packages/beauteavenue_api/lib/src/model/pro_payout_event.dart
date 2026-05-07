@@ -11,14 +11,13 @@ part 'pro_payout_event.g.dart';
 /// ProPayoutEvent
 ///
 /// Properties:
-/// * [id]
-/// * [bookingId]
-/// * [eventType]
-/// * [amountXof]
-/// * [createdAt]
+/// * [id] 
+/// * [bookingId] 
+/// * [eventType] 
+/// * [amountXof] 
+/// * [createdAt] 
 @BuiltValue()
-abstract class ProPayoutEvent
-    implements Built<ProPayoutEvent, ProPayoutEventBuilder> {
+abstract class ProPayoutEvent implements Built<ProPayoutEvent, ProPayoutEventBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -36,19 +35,16 @@ abstract class ProPayoutEvent
 
   ProPayoutEvent._();
 
-  factory ProPayoutEvent([void updates(ProPayoutEventBuilder b)]) =
-      _$ProPayoutEvent;
+  factory ProPayoutEvent([void updates(ProPayoutEventBuilder b)]) = _$ProPayoutEvent;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProPayoutEventBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProPayoutEvent> get serializer =>
-      _$ProPayoutEventSerializer();
+  static Serializer<ProPayoutEvent> get serializer => _$ProPayoutEventSerializer();
 }
 
-class _$ProPayoutEventSerializer
-    implements PrimitiveSerializer<ProPayoutEvent> {
+class _$ProPayoutEventSerializer implements PrimitiveSerializer<ProPayoutEvent> {
   @override
   final Iterable<Type> types = const [ProPayoutEvent, _$ProPayoutEvent];
 
@@ -93,9 +89,7 @@ class _$ProPayoutEventSerializer
     ProPayoutEvent object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -173,3 +167,4 @@ class _$ProPayoutEventSerializer
     return result.build();
   }
 }
+

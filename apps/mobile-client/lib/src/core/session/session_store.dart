@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/storage_keys.dart';
 import '../network/connectivity_provider.dart';
 import '../network/dio_client.dart';
+import '../services/fcm_registration_service.dart';
 import '../storage/secure_storage.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────
@@ -54,7 +55,10 @@ final secureStorageProvider = Provider<SecureStorage>((ref) => SecureStorage());
 
 final dioProvider = Provider<Dio>((ref) {
   final storage = ref.watch(secureStorageProvider);
-  final dio = createDio(storage);
+  final dio = createDio(
+    storage,
+    onSessionCleared: () => ref.read(sessionProvider.notifier).logout(),
+  );
   final reachability = ref.read(networkReachabilityProvider.notifier);
   dio.interceptors.add(_ReachabilityInterceptor(reachability));
   return dio;
@@ -63,6 +67,11 @@ final dioProvider = Provider<Dio>((ref) {
 final sessionProvider = NotifierProvider<SessionNotifier, SessionState>(
   SessionNotifier.new,
 );
+
+final fcmRegistrationServiceProvider = Provider<FcmRegistrationService>((ref) {
+  final dio = ref.watch(dioProvider);
+  return FcmRegistrationService(dio);
+});
 
 // ── Notifier ──────────────────────────────────────────────────────────────
 

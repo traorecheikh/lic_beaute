@@ -15,26 +15,26 @@ part 'salon_detail.g.dart';
 /// SalonDetail
 ///
 /// Properties:
-/// * [id]
-/// * [name]
-/// * [category]
-/// * [logoUrl]
-/// * [city]
-/// * [neighborhood]
-/// * [averageRating]
-/// * [latitude]
-/// * [longitude]
-/// * [subscriptionTier]
-/// * [featured]
-/// * [isPrestige]
-/// * [prestigeScore]
-/// * [distanceKm]
-/// * [description]
-/// * [address]
-/// * [gallery]
-/// * [services]
-/// * [teamDisplay]
-/// * [staff]
+/// * [id] 
+/// * [name] 
+/// * [category] 
+/// * [logoUrl] 
+/// * [city] 
+/// * [neighborhood] 
+/// * [averageRating] 
+/// * [latitude] 
+/// * [longitude] 
+/// * [subscriptionTier] 
+/// * [featured] 
+/// * [isPrestige] 
+/// * [prestigeScore] 
+/// * [distanceKm] 
+/// * [description] 
+/// * [address] 
+/// * [gallery] 
+/// * [services] 
+/// * [teamDisplay] 
+/// * [staff] 
 @BuiltValue()
 abstract class SalonDetail implements Built<SalonDetail, SalonDetailBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -137,43 +137,35 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
       specifiedType: const FullType(String),
     );
     yield r'logoUrl';
-    yield object.logoUrl == null
-        ? null
-        : serializers.serialize(
-            object.logoUrl,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.logoUrl == null ? null : serializers.serialize(
+      object.logoUrl,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'city';
     yield serializers.serialize(
       object.city,
       specifiedType: const FullType(String),
     );
     yield r'neighborhood';
-    yield object.neighborhood == null
-        ? null
-        : serializers.serialize(
-            object.neighborhood,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.neighborhood == null ? null : serializers.serialize(
+      object.neighborhood,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'averageRating';
     yield serializers.serialize(
       object.averageRating,
       specifiedType: const FullType(num),
     );
     yield r'latitude';
-    yield object.latitude == null
-        ? null
-        : serializers.serialize(
-            object.latitude,
-            specifiedType: const FullType.nullable(num),
-          );
+    yield object.latitude == null ? null : serializers.serialize(
+      object.latitude,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'longitude';
-    yield object.longitude == null
-        ? null
-        : serializers.serialize(
-            object.longitude,
-            specifiedType: const FullType.nullable(num),
-          );
+    yield object.longitude == null ? null : serializers.serialize(
+      object.longitude,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'subscriptionTier';
     yield serializers.serialize(
       object.subscriptionTier,
@@ -190,19 +182,15 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
       specifiedType: const FullType(bool),
     );
     yield r'prestigeScore';
-    yield object.prestigeScore == null
-        ? null
-        : serializers.serialize(
-            object.prestigeScore,
-            specifiedType: const FullType.nullable(num),
-          );
+    yield object.prestigeScore == null ? null : serializers.serialize(
+      object.prestigeScore,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'distanceKm';
-    yield object.distanceKm == null
-        ? null
-        : serializers.serialize(
-            object.distanceKm,
-            specifiedType: const FullType.nullable(num),
-          );
+    yield object.distanceKm == null ? null : serializers.serialize(
+      object.distanceKm,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'description';
     yield serializers.serialize(
       object.description,
@@ -221,8 +209,7 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
     yield r'services';
     yield serializers.serialize(
       object.services,
-      specifiedType:
-          const FullType(BuiltList, [FullType(SalonDetailServicesInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(SalonDetailServicesInner)]),
     );
     yield r'teamDisplay';
     yield serializers.serialize(
@@ -232,8 +219,7 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
     yield r'staff';
     yield serializers.serialize(
       object.staff,
-      specifiedType:
-          const FullType(BuiltList, [FullType(SalonDetailStaffInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(SalonDetailStaffInner)]),
     );
   }
 
@@ -243,9 +229,7 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
     SalonDetail object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -388,8 +372,7 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
         case r'services':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(SalonDetailServicesInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(SalonDetailServicesInner)]),
           ) as BuiltList<SalonDetailServicesInner>;
           result.services.replace(valueDes);
           break;
@@ -403,8 +386,7 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
         case r'staff':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(SalonDetailStaffInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(SalonDetailStaffInner)]),
           ) as BuiltList<SalonDetailStaffInner>;
           result.staff.replace(valueDes);
           break;
@@ -438,20 +420,17 @@ class _$SalonDetailSerializer implements PrimitiveSerializer<SalonDetail> {
 }
 
 class SalonDetailSubscriptionTierEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'standard')
-  static const SalonDetailSubscriptionTierEnum standard =
-      _$salonDetailSubscriptionTierEnum_standard;
+  static const SalonDetailSubscriptionTierEnum standard = _$salonDetailSubscriptionTierEnum_standard;
   @BuiltValueEnumConst(wireName: r'premium')
-  static const SalonDetailSubscriptionTierEnum premium =
-      _$salonDetailSubscriptionTierEnum_premium;
+  static const SalonDetailSubscriptionTierEnum premium = _$salonDetailSubscriptionTierEnum_premium;
 
-  static Serializer<SalonDetailSubscriptionTierEnum> get serializer =>
-      _$salonDetailSubscriptionTierEnumSerializer;
+  static Serializer<SalonDetailSubscriptionTierEnum> get serializer => _$salonDetailSubscriptionTierEnumSerializer;
 
-  const SalonDetailSubscriptionTierEnum._(String name) : super(name);
+  const SalonDetailSubscriptionTierEnum._(String name): super(name);
 
-  static BuiltSet<SalonDetailSubscriptionTierEnum> get values =>
-      _$salonDetailSubscriptionTierEnumValues;
-  static SalonDetailSubscriptionTierEnum valueOf(String name) =>
-      _$salonDetailSubscriptionTierEnumValueOf(name);
+  static BuiltSet<SalonDetailSubscriptionTierEnum> get values => _$salonDetailSubscriptionTierEnumValues;
+  static SalonDetailSubscriptionTierEnum valueOf(String name) => _$salonDetailSubscriptionTierEnumValueOf(name);
 }
+

@@ -11,13 +11,10 @@ part 'admin_audit_detail_related_links_inner.g.dart';
 /// AdminAuditDetailRelatedLinksInner
 ///
 /// Properties:
-/// * [label]
-/// * [href]
+/// * [label] 
+/// * [href] 
 @BuiltValue()
-abstract class AdminAuditDetailRelatedLinksInner
-    implements
-        Built<AdminAuditDetailRelatedLinksInner,
-            AdminAuditDetailRelatedLinksInnerBuilder> {
+abstract class AdminAuditDetailRelatedLinksInner implements Built<AdminAuditDetailRelatedLinksInner, AdminAuditDetailRelatedLinksInnerBuilder> {
   @BuiltValueField(wireName: r'label')
   String get label;
 
@@ -26,25 +23,18 @@ abstract class AdminAuditDetailRelatedLinksInner
 
   AdminAuditDetailRelatedLinksInner._();
 
-  factory AdminAuditDetailRelatedLinksInner(
-          [void updates(AdminAuditDetailRelatedLinksInnerBuilder b)]) =
-      _$AdminAuditDetailRelatedLinksInner;
+  factory AdminAuditDetailRelatedLinksInner([void updates(AdminAuditDetailRelatedLinksInnerBuilder b)]) = _$AdminAuditDetailRelatedLinksInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminAuditDetailRelatedLinksInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminAuditDetailRelatedLinksInner> get serializer =>
-      _$AdminAuditDetailRelatedLinksInnerSerializer();
+  static Serializer<AdminAuditDetailRelatedLinksInner> get serializer => _$AdminAuditDetailRelatedLinksInnerSerializer();
 }
 
-class _$AdminAuditDetailRelatedLinksInnerSerializer
-    implements PrimitiveSerializer<AdminAuditDetailRelatedLinksInner> {
+class _$AdminAuditDetailRelatedLinksInnerSerializer implements PrimitiveSerializer<AdminAuditDetailRelatedLinksInner> {
   @override
-  final Iterable<Type> types = const [
-    AdminAuditDetailRelatedLinksInner,
-    _$AdminAuditDetailRelatedLinksInner
-  ];
+  final Iterable<Type> types = const [AdminAuditDetailRelatedLinksInner, _$AdminAuditDetailRelatedLinksInner];
 
   @override
   final String wireName = r'AdminAuditDetailRelatedLinksInner';
@@ -72,9 +62,7 @@ class _$AdminAuditDetailRelatedLinksInnerSerializer
     AdminAuditDetailRelatedLinksInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -131,3 +119,4 @@ class _$AdminAuditDetailRelatedLinksInnerSerializer
     return result.build();
   }
 }
+

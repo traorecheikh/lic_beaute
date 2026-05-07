@@ -9,4 +9,21 @@ import { PrismaClient } from "@prisma/client";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../");
 dotenv.config({ path: resolve(repoRoot, ".env") });
 
-export const prisma = new PrismaClient();
+let _instance: PrismaClient | null = null;
+
+export function getPrisma(): PrismaClient {
+  if (!_instance) {
+    _instance = new PrismaClient();
+  }
+  return _instance;
+}
+
+export function setPrisma(client: PrismaClient): void {
+  _instance = client;
+}
+
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_, prop) {
+    return (getPrisma() as any)[prop];
+  }
+});

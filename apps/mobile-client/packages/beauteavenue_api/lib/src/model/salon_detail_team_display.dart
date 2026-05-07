@@ -11,11 +11,10 @@ part 'salon_detail_team_display.g.dart';
 /// SalonDetailTeamDisplay
 ///
 /// Properties:
-/// * [showPhotos]
-/// * [showDescriptions]
+/// * [showPhotos] 
+/// * [showDescriptions] 
 @BuiltValue()
-abstract class SalonDetailTeamDisplay
-    implements Built<SalonDetailTeamDisplay, SalonDetailTeamDisplayBuilder> {
+abstract class SalonDetailTeamDisplay implements Built<SalonDetailTeamDisplay, SalonDetailTeamDisplayBuilder> {
   @BuiltValueField(wireName: r'showPhotos')
   bool get showPhotos;
 
@@ -24,25 +23,18 @@ abstract class SalonDetailTeamDisplay
 
   SalonDetailTeamDisplay._();
 
-  factory SalonDetailTeamDisplay(
-          [void updates(SalonDetailTeamDisplayBuilder b)]) =
-      _$SalonDetailTeamDisplay;
+  factory SalonDetailTeamDisplay([void updates(SalonDetailTeamDisplayBuilder b)]) = _$SalonDetailTeamDisplay;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SalonDetailTeamDisplayBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SalonDetailTeamDisplay> get serializer =>
-      _$SalonDetailTeamDisplaySerializer();
+  static Serializer<SalonDetailTeamDisplay> get serializer => _$SalonDetailTeamDisplaySerializer();
 }
 
-class _$SalonDetailTeamDisplaySerializer
-    implements PrimitiveSerializer<SalonDetailTeamDisplay> {
+class _$SalonDetailTeamDisplaySerializer implements PrimitiveSerializer<SalonDetailTeamDisplay> {
   @override
-  final Iterable<Type> types = const [
-    SalonDetailTeamDisplay,
-    _$SalonDetailTeamDisplay
-  ];
+  final Iterable<Type> types = const [SalonDetailTeamDisplay, _$SalonDetailTeamDisplay];
 
   @override
   final String wireName = r'SalonDetailTeamDisplay';
@@ -70,9 +62,7 @@ class _$SalonDetailTeamDisplaySerializer
     SalonDetailTeamDisplay object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -129,3 +119,4 @@ class _$SalonDetailTeamDisplaySerializer
     return result.build();
   }
 }
+

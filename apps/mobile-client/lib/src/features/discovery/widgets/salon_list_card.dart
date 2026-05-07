@@ -36,7 +36,7 @@ class SalonListCard extends StatelessWidget {
 
     final displayName = salon?.name ?? name ?? '';
     final displayCategory = salon?.category ?? category ?? '';
-    final displayLocation = salon?.formattedLocation ?? location ?? '';
+    final displayLocation = salon?.city ?? location ?? '';
     final displayRating = salon?.averageRating.toStringAsFixed(1) ?? rating ?? '0.0';
     final displayImageUrl = salon?.logoUrl ?? imageUrl ?? '';
 
@@ -116,7 +116,7 @@ class SalonListCard extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
           ],
         ),
       ),

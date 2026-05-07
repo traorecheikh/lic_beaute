@@ -11,13 +11,11 @@ part 'admin_dashboard_quick_links.g.dart';
 /// AdminDashboardQuickLinks
 ///
 /// Properties:
-/// * [pendingSalonApprovals]
-/// * [subscriptionsNeedingAction]
-/// * [auditEventsToday]
+/// * [pendingSalonApprovals] 
+/// * [subscriptionsNeedingAction] 
+/// * [auditEventsToday] 
 @BuiltValue()
-abstract class AdminDashboardQuickLinks
-    implements
-        Built<AdminDashboardQuickLinks, AdminDashboardQuickLinksBuilder> {
+abstract class AdminDashboardQuickLinks implements Built<AdminDashboardQuickLinks, AdminDashboardQuickLinksBuilder> {
   @BuiltValueField(wireName: r'pendingSalonApprovals')
   int get pendingSalonApprovals;
 
@@ -29,25 +27,18 @@ abstract class AdminDashboardQuickLinks
 
   AdminDashboardQuickLinks._();
 
-  factory AdminDashboardQuickLinks(
-          [void updates(AdminDashboardQuickLinksBuilder b)]) =
-      _$AdminDashboardQuickLinks;
+  factory AdminDashboardQuickLinks([void updates(AdminDashboardQuickLinksBuilder b)]) = _$AdminDashboardQuickLinks;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminDashboardQuickLinksBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminDashboardQuickLinks> get serializer =>
-      _$AdminDashboardQuickLinksSerializer();
+  static Serializer<AdminDashboardQuickLinks> get serializer => _$AdminDashboardQuickLinksSerializer();
 }
 
-class _$AdminDashboardQuickLinksSerializer
-    implements PrimitiveSerializer<AdminDashboardQuickLinks> {
+class _$AdminDashboardQuickLinksSerializer implements PrimitiveSerializer<AdminDashboardQuickLinks> {
   @override
-  final Iterable<Type> types = const [
-    AdminDashboardQuickLinks,
-    _$AdminDashboardQuickLinks
-  ];
+  final Iterable<Type> types = const [AdminDashboardQuickLinks, _$AdminDashboardQuickLinks];
 
   @override
   final String wireName = r'AdminDashboardQuickLinks';
@@ -80,9 +71,7 @@ class _$AdminDashboardQuickLinksSerializer
     AdminDashboardQuickLinks object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -146,3 +135,4 @@ class _$AdminDashboardQuickLinksSerializer
     return result.build();
   }
 }
+

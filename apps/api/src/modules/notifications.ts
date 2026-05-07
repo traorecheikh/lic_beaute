@@ -1,8 +1,11 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
+import { pushTokenRegisterSchema } from "@beauteavenue/contracts";
+
 import { HttpAuthError, requireRole } from "../lib/auth.js";
 import { fail, ok } from "../lib/http.js";
 import { prisma } from "../lib/prisma.js";
+import { sendPush } from "../lib/push.js";
 
 export class NotificationController {
   async list(request: FastifyRequest, reply: FastifyReply) {
@@ -73,12 +76,30 @@ export class NotificationController {
   async registerPushToken(request: FastifyRequest, reply: FastifyReply) {
     try {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
-      const body = request.body as { token: string; platform: "ios" | "android"; deviceId: string };
+      const parsed = pushTokenRegisterSchema.safeParse(request.body);
+      if (!parsed.success) {
+        fail(reply, 400, "validation_error", parsed.error.issues[0]?.message ?? "Données invalides.");
+        return;
+      }
+      const body = parsed.data;
+
+      const existing = await prisma.pushToken.findUnique({ where: { token: body.token } });
+      if (existing && existing.revokedAt === null && existing.userId !== session.sub) {
+        fail(reply, 409, "token_owned", "Ce token appartient déjà à un autre compte.");
+        return;
+      }
 
       await prisma.pushToken.upsert({
         where: { token: body.token },
-        create: { userId: session.sub, token: body.token, platform: body.platform, deviceId: body.deviceId },
-        update: { userId: session.sub, revokedAt: null }
+        create: {
+          userId: session.sub,
+          token: body.token,
+          platform: body.platform,
+          deviceId: body.deviceId,
+          role: session.role,
+          lastSeenAt: new Date()
+        },
+        update: { userId: session.sub, revokedAt: null, role: session.role, lastSeenAt: new Date() }
       });
 
       ok(reply, { registered: true }, 201);
@@ -107,4 +128,11 @@ export async function sendNotification(userId: string, title: string, body: stri
   await prisma.notification.create({
     data: { userId, title, body, channel: "push" }
   });
+
+  const tokens = await prisma.pushToken.findMany({
+    where: { userId, revokedAt: null }
+  });
+  for (const token of tokens) {
+    await sendPush(token.token, { title, body });
+  }
 }

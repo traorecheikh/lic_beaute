@@ -11,15 +11,12 @@ part 'pro_booking_full_detail_payments_inner.g.dart';
 /// ProBookingFullDetailPaymentsInner
 ///
 /// Properties:
-/// * [id]
-/// * [status]
-/// * [amountXof]
-/// * [provider]
+/// * [id] 
+/// * [status] 
+/// * [amountXof] 
+/// * [provider] 
 @BuiltValue()
-abstract class ProBookingFullDetailPaymentsInner
-    implements
-        Built<ProBookingFullDetailPaymentsInner,
-            ProBookingFullDetailPaymentsInnerBuilder> {
+abstract class ProBookingFullDetailPaymentsInner implements Built<ProBookingFullDetailPaymentsInner, ProBookingFullDetailPaymentsInnerBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -34,25 +31,18 @@ abstract class ProBookingFullDetailPaymentsInner
 
   ProBookingFullDetailPaymentsInner._();
 
-  factory ProBookingFullDetailPaymentsInner(
-          [void updates(ProBookingFullDetailPaymentsInnerBuilder b)]) =
-      _$ProBookingFullDetailPaymentsInner;
+  factory ProBookingFullDetailPaymentsInner([void updates(ProBookingFullDetailPaymentsInnerBuilder b)]) = _$ProBookingFullDetailPaymentsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProBookingFullDetailPaymentsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProBookingFullDetailPaymentsInner> get serializer =>
-      _$ProBookingFullDetailPaymentsInnerSerializer();
+  static Serializer<ProBookingFullDetailPaymentsInner> get serializer => _$ProBookingFullDetailPaymentsInnerSerializer();
 }
 
-class _$ProBookingFullDetailPaymentsInnerSerializer
-    implements PrimitiveSerializer<ProBookingFullDetailPaymentsInner> {
+class _$ProBookingFullDetailPaymentsInnerSerializer implements PrimitiveSerializer<ProBookingFullDetailPaymentsInner> {
   @override
-  final Iterable<Type> types = const [
-    ProBookingFullDetailPaymentsInner,
-    _$ProBookingFullDetailPaymentsInner
-  ];
+  final Iterable<Type> types = const [ProBookingFullDetailPaymentsInner, _$ProBookingFullDetailPaymentsInner];
 
   @override
   final String wireName = r'ProBookingFullDetailPaymentsInner';
@@ -90,9 +80,7 @@ class _$ProBookingFullDetailPaymentsInnerSerializer
     ProBookingFullDetailPaymentsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -163,3 +151,4 @@ class _$ProBookingFullDetailPaymentsInnerSerializer
     return result.build();
   }
 }
+

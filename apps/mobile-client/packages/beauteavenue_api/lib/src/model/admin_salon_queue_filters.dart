@@ -12,13 +12,12 @@ part 'admin_salon_queue_filters.g.dart';
 /// AdminSalonQueueFilters
 ///
 /// Properties:
-/// * [search]
-/// * [category]
-/// * [city]
-/// * [status]
+/// * [search] 
+/// * [category] 
+/// * [city] 
+/// * [status] 
 @BuiltValue()
-abstract class AdminSalonQueueFilters
-    implements Built<AdminSalonQueueFilters, AdminSalonQueueFiltersBuilder> {
+abstract class AdminSalonQueueFilters implements Built<AdminSalonQueueFilters, AdminSalonQueueFiltersBuilder> {
   @BuiltValueField(wireName: r'search')
   String? get search;
 
@@ -34,25 +33,18 @@ abstract class AdminSalonQueueFilters
 
   AdminSalonQueueFilters._();
 
-  factory AdminSalonQueueFilters(
-          [void updates(AdminSalonQueueFiltersBuilder b)]) =
-      _$AdminSalonQueueFilters;
+  factory AdminSalonQueueFilters([void updates(AdminSalonQueueFiltersBuilder b)]) = _$AdminSalonQueueFilters;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSalonQueueFiltersBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSalonQueueFilters> get serializer =>
-      _$AdminSalonQueueFiltersSerializer();
+  static Serializer<AdminSalonQueueFilters> get serializer => _$AdminSalonQueueFiltersSerializer();
 }
 
-class _$AdminSalonQueueFiltersSerializer
-    implements PrimitiveSerializer<AdminSalonQueueFilters> {
+class _$AdminSalonQueueFiltersSerializer implements PrimitiveSerializer<AdminSalonQueueFilters> {
   @override
-  final Iterable<Type> types = const [
-    AdminSalonQueueFilters,
-    _$AdminSalonQueueFilters
-  ];
+  final Iterable<Type> types = const [AdminSalonQueueFilters, _$AdminSalonQueueFilters];
 
   @override
   final String wireName = r'AdminSalonQueueFilters';
@@ -98,9 +90,7 @@ class _$AdminSalonQueueFiltersSerializer
     AdminSalonQueueFilters object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -173,26 +163,21 @@ class _$AdminSalonQueueFiltersSerializer
 }
 
 class AdminSalonQueueFiltersStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'pending_review')
-  static const AdminSalonQueueFiltersStatusEnum pendingReview =
-      _$adminSalonQueueFiltersStatusEnum_pendingReview;
+  static const AdminSalonQueueFiltersStatusEnum pendingReview = _$adminSalonQueueFiltersStatusEnum_pendingReview;
   @BuiltValueEnumConst(wireName: r'needs_info')
-  static const AdminSalonQueueFiltersStatusEnum needsInfo =
-      _$adminSalonQueueFiltersStatusEnum_needsInfo;
+  static const AdminSalonQueueFiltersStatusEnum needsInfo = _$adminSalonQueueFiltersStatusEnum_needsInfo;
   @BuiltValueEnumConst(wireName: r'approved')
-  static const AdminSalonQueueFiltersStatusEnum approved =
-      _$adminSalonQueueFiltersStatusEnum_approved;
+  static const AdminSalonQueueFiltersStatusEnum approved = _$adminSalonQueueFiltersStatusEnum_approved;
   @BuiltValueEnumConst(wireName: r'rejected')
-  static const AdminSalonQueueFiltersStatusEnum rejected =
-      _$adminSalonQueueFiltersStatusEnum_rejected;
+  static const AdminSalonQueueFiltersStatusEnum rejected = _$adminSalonQueueFiltersStatusEnum_rejected;
 
-  static Serializer<AdminSalonQueueFiltersStatusEnum> get serializer =>
-      _$adminSalonQueueFiltersStatusEnumSerializer;
+  static Serializer<AdminSalonQueueFiltersStatusEnum> get serializer => _$adminSalonQueueFiltersStatusEnumSerializer;
 
-  const AdminSalonQueueFiltersStatusEnum._(String name) : super(name);
+  const AdminSalonQueueFiltersStatusEnum._(String name): super(name);
 
-  static BuiltSet<AdminSalonQueueFiltersStatusEnum> get values =>
-      _$adminSalonQueueFiltersStatusEnumValues;
-  static AdminSalonQueueFiltersStatusEnum valueOf(String name) =>
-      _$adminSalonQueueFiltersStatusEnumValueOf(name);
+  static BuiltSet<AdminSalonQueueFiltersStatusEnum> get values => _$adminSalonQueueFiltersStatusEnumValues;
+  static AdminSalonQueueFiltersStatusEnum valueOf(String name) => _$adminSalonQueueFiltersStatusEnumValueOf(name);
 }
+

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,10 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_http_error_handler.dart';
-import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
-import '../../../core/widgets/app_booking_header_badge.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -18,7 +17,6 @@ import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../../profile/providers/payment_methods_provider.dart';
 import '../providers/booking_create_provider.dart';
-import '../widgets/funnel_step_bar.dart';
 
 class PaymentHandoffPage extends ConsumerStatefulWidget {
   final String bookingId;
@@ -31,15 +29,35 @@ class PaymentHandoffPage extends ConsumerStatefulWidget {
 class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   String? _selectedMethod;
   bool _isProcessing = false;
+  static const Map<String, String> _channelLabels = {
+    'wave': 'Wave',
+    'orange_money': 'Orange Money',
+    'free_money': 'Free Money',
+  };
 
   @override
   Widget build(BuildContext context) {
-    final methodsAsync = ref.watch(paymentMethodsProvider);
-    final defaultMethod = methodsAsync.asData?.value.where((m) => m.isDefault).firstOrNull;
-
-    if (_selectedMethod == null && defaultMethod != null) {
+    final detailAsync = ref.watch(bookingDetailResourceProvider(widget.bookingId));
+    final depositFromBooking = detailAsync.asData?.value.depositXof;
+    if (depositFromBooking != null && depositFromBooking <= 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedMethod = defaultMethod.provider);
+        if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+      });
+      return Scaffold(
+        backgroundColor: AppColors.neutral,
+        body: const Center(child: CircularProgressIndicator.adaptive()),
+      );
+    }
+
+    final methodsAsync = ref.watch(paymentMethodsProvider);
+    final defaultMethod = methodsAsync.asData?.value
+        .where((m) => m.isDefault)
+        .firstOrNull;
+    final defaultChannel = _channelFromMethod(defaultMethod);
+
+    if (_selectedMethod == null && defaultChannel != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _selectedMethod = defaultChannel);
       });
     }
 
@@ -52,9 +70,23 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       pageSubtitle: 'Sécurisez votre réservation avec un acompte.',
       bottomNavigationBar: _buildBottomBar(),
       sliverBuilder: (resource) {
-        final deposit = (resource.data?['depositAmountXof'] as num?)?.toInt() ?? 0;
+        final deposit =
+            (resource.data?['depositAmountXof'] as num?)?.toInt() ?? 0;
 
         return [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: AppIcon('arrow-left', size: 20, color: AppColors.onSurface),
+                  onPressed: () => context.pop(),
+                  tooltip: 'Retour',
+                ),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 0),
@@ -73,7 +105,10 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: AppColors.primaryLight, width: 1.5),
+                      border: Border.all(
+                        color: AppColors.primaryLight,
+                        width: 1.5,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -90,7 +125,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                               gapH4,
                               Text(
                                 '$deposit XOF',
-                                style: AppTextStyles.headlineLg.copyWith(color: AppColors.primary),
+                                style: AppTextStyles.headlineLg.copyWith(
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ],
                           ),
@@ -98,9 +135,15 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(resource.salonName, style: AppTextStyles.labelMd),
+                            Text(
+                              resource.salonName,
+                              style: AppTextStyles.labelMd,
+                            ),
                             SizedBox(height: 2.h),
-                            Text(resource.serviceName, style: AppTextStyles.bodySm),
+                            Text(
+                              resource.serviceName,
+                              style: AppTextStyles.bodySm,
+                            ),
                           ],
                         ),
                       ],
@@ -112,7 +155,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                     SizedBox(height: 6.h),
                     Text(
                       'Numéro enregistré: ${defaultMethod.phoneNumber}',
-                      style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   SizedBox(height: 14.h),
@@ -127,13 +172,24 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                   ),
                   SizedBox(height: 10.h),
                   _MethodTile(
-                    id: 'om',
+                    id: 'orange_money',
                     label: 'Orange Money',
                     subtitle: 'Paiement mobile Orange',
                     icon: 'star',
                     iconColor: const Color(0xFFFF6B00),
-                    selected: _selectedMethod == 'om',
-                    onTap: () => setState(() => _selectedMethod = 'om'),
+                    selected: _selectedMethod == 'orange_money',
+                    onTap: () =>
+                        setState(() => _selectedMethod = 'orange_money'),
+                  ),
+                  SizedBox(height: 10.h),
+                  _MethodTile(
+                    id: 'free_money',
+                    label: 'Free Money',
+                    subtitle: 'Paiement mobile Free',
+                    icon: 'user',
+                    iconColor: const Color(0xFF16A34A),
+                    selected: _selectedMethod == 'free_money',
+                    onTap: () => setState(() => _selectedMethod = 'free_money'),
                   ),
                 ],
               ),
@@ -148,7 +204,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     return AppBottomBar(
       child: AppButton.primary(
         onPressed: _selectedMethod == null ? null : _pay,
-        label: 'Payer l’acompte',
+        label: _selectedMethod != null
+            ? 'Continuer avec ${_channelLabels[_selectedMethod] ?? _selectedMethod}'
+            : 'Continuer',
         isLoading: _isProcessing,
       ),
     );
@@ -157,27 +215,81 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   Future<void> _pay() async {
     setState(() => _isProcessing = true);
     try {
-      final url = await ref.read(paymentInitiateProvider.notifier).initiate(
-            bookingId: widget.bookingId,
-            provider: _selectedMethod!,
-          );
-      if (!mounted) return;
+      final url = await ref
+          .read(paymentInitiateProvider.notifier)
+          .initiate(bookingId: widget.bookingId, channel: _selectedMethod!);
+      if (!context.mounted) return;
       if (url != null) {
         final uri = Uri.parse(url);
+        if (uri.scheme == 'mock') {
+          if (!mounted) return;
+          context.pushReplacement(AppRoutes.success(widget.bookingId));
+          return;
+        }
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+          if (!context.mounted) return;
+          // ignore: use_build_context_synchronously
+          context.pushReplacement(AppRoutes.success(widget.bookingId));
         } else {
+          if (!context.mounted) return;
+          // ignore: use_build_context_synchronously
           AppSnackbar.error(context, "Impossible d'ouvrir l'application de paiement.");
         }
       } else {
+        if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         context.pushReplacement(AppRoutes.success(widget.bookingId));
       }
     } catch (e) {
-      await context.handleHttpError(e, "Échec du paiement.");
+      if (!context.mounted) return;
+      await _handlePaymentError(e);
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  Future<void> _handlePaymentError(Object error) async {
+    if (error is DioException) {
+      final code =
+          (error.response?.data as Map<String, dynamic>?)?['code'] as String?;
+      final retryAfter =
+          (error.response?.data as Map<String, dynamic>?)?['message']
+              as String?;
+
+      switch (code) {
+        case 'phone_required':
+          AppSnackbar.error(
+            context,
+            'Ajoutez un numéro de téléphone à votre profil pour payer.',
+          );
+          await Future.delayed(const Duration(milliseconds: 600));
+          if (mounted) context.push(AppRoutes.profileEdit);
+          return;
+        case 'reconcile_throttled':
+          AppSnackbar.info(
+            context,
+            retryAfter ??
+                'Réconciliation trop fréquente. Réessayez dans quelques secondes.',
+          );
+          return;
+      }
+    }
+    if (!context.mounted) return;
+    // ignore: use_build_context_synchronously
+    await context.handleHttpError(error, 'Échec du paiement.');
+  }
+
+  String? _channelFromMethod(dynamic method) {
+    if (method == null) return null;
+    final provider = method.provider as String? ?? '';
+    if (_channelLabels.containsKey(provider)) return provider;
+    final label = (method.label as String?)?.toLowerCase() ?? '';
+    if (label.contains('orange')) return 'orange_money';
+    if (label.contains('free')) return 'free_money';
+    if (label.contains('wave')) return 'wave';
+    if (provider == 'om') return 'orange_money';
+    return null;
   }
 }
 
@@ -205,7 +317,9 @@ class _MethodTile extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.05)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(18.r),
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.outlineVariant,
@@ -217,7 +331,10 @@ class _MethodTile extends StatelessWidget {
             Container(
               width: 44.r,
               height: 44.r,
-              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
               child: Center(child: AppIcon(icon, color: iconColor, size: 22)),
             ),
             SizedBox(width: 14.w),
@@ -227,7 +344,12 @@ class _MethodTile extends StatelessWidget {
                 children: [
                   Text(label, style: AppTextStyles.labelLg),
                   SizedBox(height: 2.h),
-                  Text(subtitle, style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),

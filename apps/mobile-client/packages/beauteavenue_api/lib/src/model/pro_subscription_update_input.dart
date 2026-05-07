@@ -12,12 +12,10 @@ part 'pro_subscription_update_input.g.dart';
 /// ProSubscriptionUpdateInput
 ///
 /// Properties:
-/// * [autoRenew]
-/// * [billingMethod]
+/// * [autoRenew] 
+/// * [billingMethod] 
 @BuiltValue()
-abstract class ProSubscriptionUpdateInput
-    implements
-        Built<ProSubscriptionUpdateInput, ProSubscriptionUpdateInputBuilder> {
+abstract class ProSubscriptionUpdateInput implements Built<ProSubscriptionUpdateInput, ProSubscriptionUpdateInputBuilder> {
   @BuiltValueField(wireName: r'autoRenew')
   bool? get autoRenew;
 
@@ -26,25 +24,18 @@ abstract class ProSubscriptionUpdateInput
 
   ProSubscriptionUpdateInput._();
 
-  factory ProSubscriptionUpdateInput(
-          [void updates(ProSubscriptionUpdateInputBuilder b)]) =
-      _$ProSubscriptionUpdateInput;
+  factory ProSubscriptionUpdateInput([void updates(ProSubscriptionUpdateInputBuilder b)]) = _$ProSubscriptionUpdateInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSubscriptionUpdateInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProSubscriptionUpdateInput> get serializer =>
-      _$ProSubscriptionUpdateInputSerializer();
+  static Serializer<ProSubscriptionUpdateInput> get serializer => _$ProSubscriptionUpdateInputSerializer();
 }
 
-class _$ProSubscriptionUpdateInputSerializer
-    implements PrimitiveSerializer<ProSubscriptionUpdateInput> {
+class _$ProSubscriptionUpdateInputSerializer implements PrimitiveSerializer<ProSubscriptionUpdateInput> {
   @override
-  final Iterable<Type> types = const [
-    ProSubscriptionUpdateInput,
-    _$ProSubscriptionUpdateInput
-  ];
+  final Iterable<Type> types = const [ProSubscriptionUpdateInput, _$ProSubscriptionUpdateInput];
 
   @override
   final String wireName = r'ProSubscriptionUpdateInput';
@@ -65,8 +56,7 @@ class _$ProSubscriptionUpdateInputSerializer
       yield r'billingMethod';
       yield serializers.serialize(
         object.billingMethod,
-        specifiedType:
-            const FullType.nullable(ProSubscriptionUpdateInputBillingMethod),
+        specifiedType: const FullType.nullable(ProSubscriptionUpdateInputBillingMethod),
       );
     }
   }
@@ -77,9 +67,7 @@ class _$ProSubscriptionUpdateInputSerializer
     ProSubscriptionUpdateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -104,8 +92,7 @@ class _$ProSubscriptionUpdateInputSerializer
         case r'billingMethod':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(
-                ProSubscriptionUpdateInputBillingMethod),
+            specifiedType: const FullType.nullable(ProSubscriptionUpdateInputBillingMethod),
           ) as ProSubscriptionUpdateInputBillingMethod?;
           if (valueDes == null) continue;
           result.billingMethod.replace(valueDes);
@@ -138,3 +125,4 @@ class _$ProSubscriptionUpdateInputSerializer
     return result.build();
   }
 }
+

@@ -88,7 +88,7 @@ async function main() {
       where: { userId: client.id },
       update: {
         city: index % 3 == 0 ? "Dakar" : index % 3 == 1 ? "Pikine" : "Thiès",
-        preferredContactChannel: index % 2 == 0 ? "phone" : "whatsapp",
+        preferredContactChannel: index % 2 == 0 ? "phone" : "sms",
         pushOptIn: true,
         marketingOptIn: index % 4 == 0,
         preferredLanguage: "fr"
@@ -96,7 +96,7 @@ async function main() {
       create: {
         userId: client.id,
         city: index % 3 == 0 ? "Dakar" : index % 3 == 1 ? "Pikine" : "Thiès",
-        preferredContactChannel: index % 2 == 0 ? "phone" : "whatsapp",
+        preferredContactChannel: index % 2 == 0 ? "phone" : "sms",
         pushOptIn: true,
         marketingOptIn: index % 4 == 0,
         preferredLanguage: "fr"
@@ -780,6 +780,7 @@ async function main() {
   // ── Platform Settings ──────────────────────────────────────────────────────
   const platformSettings = [
     { group: "pricing", key: "commission_rate_percent", value: "5", description: "Commission" },
+    { group: "pricing", key: "cancellation_window_hours", value: "24", description: "Cancellation penalty window" },
     { group: "pricing", key: "subscription_standard_price_xof", value: "15000", description: "Standard Price" },
     { group: "pricing", key: "subscription_premium_price_xof", value: "25000", description: "Premium Price" },
   ];

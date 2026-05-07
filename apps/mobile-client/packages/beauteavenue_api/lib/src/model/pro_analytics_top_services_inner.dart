@@ -11,14 +11,11 @@ part 'pro_analytics_top_services_inner.g.dart';
 /// ProAnalyticsTopServicesInner
 ///
 /// Properties:
-/// * [serviceId]
-/// * [serviceName]
-/// * [bookingCount]
+/// * [serviceId] 
+/// * [serviceName] 
+/// * [bookingCount] 
 @BuiltValue()
-abstract class ProAnalyticsTopServicesInner
-    implements
-        Built<ProAnalyticsTopServicesInner,
-            ProAnalyticsTopServicesInnerBuilder> {
+abstract class ProAnalyticsTopServicesInner implements Built<ProAnalyticsTopServicesInner, ProAnalyticsTopServicesInnerBuilder> {
   @BuiltValueField(wireName: r'serviceId')
   String get serviceId;
 
@@ -30,25 +27,18 @@ abstract class ProAnalyticsTopServicesInner
 
   ProAnalyticsTopServicesInner._();
 
-  factory ProAnalyticsTopServicesInner(
-          [void updates(ProAnalyticsTopServicesInnerBuilder b)]) =
-      _$ProAnalyticsTopServicesInner;
+  factory ProAnalyticsTopServicesInner([void updates(ProAnalyticsTopServicesInnerBuilder b)]) = _$ProAnalyticsTopServicesInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProAnalyticsTopServicesInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProAnalyticsTopServicesInner> get serializer =>
-      _$ProAnalyticsTopServicesInnerSerializer();
+  static Serializer<ProAnalyticsTopServicesInner> get serializer => _$ProAnalyticsTopServicesInnerSerializer();
 }
 
-class _$ProAnalyticsTopServicesInnerSerializer
-    implements PrimitiveSerializer<ProAnalyticsTopServicesInner> {
+class _$ProAnalyticsTopServicesInnerSerializer implements PrimitiveSerializer<ProAnalyticsTopServicesInner> {
   @override
-  final Iterable<Type> types = const [
-    ProAnalyticsTopServicesInner,
-    _$ProAnalyticsTopServicesInner
-  ];
+  final Iterable<Type> types = const [ProAnalyticsTopServicesInner, _$ProAnalyticsTopServicesInner];
 
   @override
   final String wireName = r'ProAnalyticsTopServicesInner';
@@ -81,9 +71,7 @@ class _$ProAnalyticsTopServicesInnerSerializer
     ProAnalyticsTopServicesInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -147,3 +135,4 @@ class _$ProAnalyticsTopServicesInnerSerializer
     return result.build();
   }
 }
+

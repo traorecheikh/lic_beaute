@@ -33,7 +33,8 @@ export class PayTechAdapter implements PaymentAdapter {
     private apiKey: string,
     private apiSecret: string,
     private env: "prod" | "test",
-    private baseOrigin: string
+    private baseOrigin: string,
+    private webhookPath = "paytech"
   ) {}
 
   async initiateDeposit(params: {
@@ -42,6 +43,8 @@ export class PayTechAdapter implements PaymentAdapter {
     description: string;
     callbackUrl: string;
     idempotencyKey: string;
+    channel?: "wave" | "orange_money" | "free_money";
+    phone?: string;
   }) {
     const refCommand = `CMD_${params.paymentId}_${params.idempotencyKey.slice(0, 12)}`;
 
@@ -52,7 +55,7 @@ export class PayTechAdapter implements PaymentAdapter {
       ref_command: refCommand,
       command_name: params.description,
       env: this.env,
-      ipn_url: `${this.baseOrigin}/api/v1/payments/webhooks/paytech`,
+      ipn_url: `${this.baseOrigin}/api/v1/payments/webhooks/${this.webhookPath}`,
       success_url: `${params.callbackUrl}?status=success`,
       cancel_url: `${params.callbackUrl}?status=cancel`,
       custom_field: JSON.stringify({
@@ -85,11 +88,16 @@ export class PayTechAdapter implements PaymentAdapter {
     return {
       redirectUrl: json.redirectUrl ?? json.redirect_url,
       providerRef: refCommand,
+      providerToken: json.token,
       expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     };
   }
 
-  verifyWebhookSignature(_rawBody: string, _signature: string): boolean {
+  verifyWebhookSignature(_params: {
+    rawBody: string;
+    signature?: string;
+    timestamp?: string;
+  }): boolean {
     return true;
   }
 

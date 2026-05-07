@@ -15,17 +15,16 @@ part 'register_input_any_of1.g.dart';
 /// RegisterInputAnyOf1
 ///
 /// Properties:
-/// * [type]
-/// * [fullName]
-/// * [email]
-/// * [phone]
-/// * [password]
-/// * [salon]
-/// * [services]
-/// * [hours]
+/// * [type] 
+/// * [fullName] 
+/// * [email] 
+/// * [phone] 
+/// * [password] 
+/// * [salon] 
+/// * [services] 
+/// * [hours] 
 @BuiltValue()
-abstract class RegisterInputAnyOf1
-    implements Built<RegisterInputAnyOf1, RegisterInputAnyOf1Builder> {
+abstract class RegisterInputAnyOf1 implements Built<RegisterInputAnyOf1, RegisterInputAnyOf1Builder> {
   @BuiltValueField(wireName: r'type')
   RegisterInputAnyOf1TypeEnum get type;
   // enum typeEnum {  salon_owner,  };
@@ -53,24 +52,18 @@ abstract class RegisterInputAnyOf1
 
   RegisterInputAnyOf1._();
 
-  factory RegisterInputAnyOf1([void updates(RegisterInputAnyOf1Builder b)]) =
-      _$RegisterInputAnyOf1;
+  factory RegisterInputAnyOf1([void updates(RegisterInputAnyOf1Builder b)]) = _$RegisterInputAnyOf1;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RegisterInputAnyOf1Builder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RegisterInputAnyOf1> get serializer =>
-      _$RegisterInputAnyOf1Serializer();
+  static Serializer<RegisterInputAnyOf1> get serializer => _$RegisterInputAnyOf1Serializer();
 }
 
-class _$RegisterInputAnyOf1Serializer
-    implements PrimitiveSerializer<RegisterInputAnyOf1> {
+class _$RegisterInputAnyOf1Serializer implements PrimitiveSerializer<RegisterInputAnyOf1> {
   @override
-  final Iterable<Type> types = const [
-    RegisterInputAnyOf1,
-    _$RegisterInputAnyOf1
-  ];
+  final Iterable<Type> types = const [RegisterInputAnyOf1, _$RegisterInputAnyOf1];
 
   @override
   final String wireName = r'RegisterInputAnyOf1';
@@ -113,14 +106,12 @@ class _$RegisterInputAnyOf1Serializer
     yield r'services';
     yield serializers.serialize(
       object.services,
-      specifiedType: const FullType(
-          BuiltList, [FullType(RegisterInputAnyOf1ServicesInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1ServicesInner)]),
     );
     yield r'hours';
     yield serializers.serialize(
       object.hours,
-      specifiedType:
-          const FullType(BuiltList, [FullType(RegisterInputAnyOf1HoursInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1HoursInner)]),
     );
   }
 
@@ -130,9 +121,7 @@ class _$RegisterInputAnyOf1Serializer
     RegisterInputAnyOf1 object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -192,16 +181,14 @@ class _$RegisterInputAnyOf1Serializer
         case r'services':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(RegisterInputAnyOf1ServicesInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1ServicesInner)]),
           ) as BuiltList<RegisterInputAnyOf1ServicesInner>;
           result.services.replace(valueDes);
           break;
         case r'hours':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(RegisterInputAnyOf1HoursInner)]),
+            specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1HoursInner)]),
           ) as BuiltList<RegisterInputAnyOf1HoursInner>;
           result.hours.replace(valueDes);
           break;
@@ -235,17 +222,15 @@ class _$RegisterInputAnyOf1Serializer
 }
 
 class RegisterInputAnyOf1TypeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'salon_owner')
-  static const RegisterInputAnyOf1TypeEnum salonOwner =
-      _$registerInputAnyOf1TypeEnum_salonOwner;
+  static const RegisterInputAnyOf1TypeEnum salonOwner = _$registerInputAnyOf1TypeEnum_salonOwner;
 
-  static Serializer<RegisterInputAnyOf1TypeEnum> get serializer =>
-      _$registerInputAnyOf1TypeEnumSerializer;
+  static Serializer<RegisterInputAnyOf1TypeEnum> get serializer => _$registerInputAnyOf1TypeEnumSerializer;
 
-  const RegisterInputAnyOf1TypeEnum._(String name) : super(name);
+  const RegisterInputAnyOf1TypeEnum._(String name): super(name);
 
-  static BuiltSet<RegisterInputAnyOf1TypeEnum> get values =>
-      _$registerInputAnyOf1TypeEnumValues;
-  static RegisterInputAnyOf1TypeEnum valueOf(String name) =>
-      _$registerInputAnyOf1TypeEnumValueOf(name);
+  static BuiltSet<RegisterInputAnyOf1TypeEnum> get values => _$registerInputAnyOf1TypeEnumValues;
+  static RegisterInputAnyOf1TypeEnum valueOf(String name) => _$registerInputAnyOf1TypeEnumValueOf(name);
 }
+

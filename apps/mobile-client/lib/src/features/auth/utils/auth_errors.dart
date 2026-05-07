@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/network/app_network_error.dart';
 import '../../../core/widgets/app_snackbar.dart';
 
 class ClientOnlyAuthException implements Exception {
@@ -9,11 +10,7 @@ class ClientOnlyAuthException implements Exception {
 }
 
 String parseDioAuthError(DioException error, String fallback) {
-  return (error.response?.data is Map<String, dynamic>)
-      ? ((error.response!.data as Map<String, dynamic>)['message']
-              as String? ??
-          fallback)
-      : fallback;
+  return extractApiMessage(error.response?.data) ?? fallback;
 }
 
 /// Wraps a typical auth action with the shared try/catch pattern.

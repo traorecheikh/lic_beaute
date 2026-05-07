@@ -11,15 +11,12 @@ part 'pro_booking_full_detail_events_inner.g.dart';
 /// ProBookingFullDetailEventsInner
 ///
 /// Properties:
-/// * [eventType]
-/// * [fromStatus]
-/// * [toStatus]
-/// * [createdAt]
+/// * [eventType] 
+/// * [fromStatus] 
+/// * [toStatus] 
+/// * [createdAt] 
 @BuiltValue()
-abstract class ProBookingFullDetailEventsInner
-    implements
-        Built<ProBookingFullDetailEventsInner,
-            ProBookingFullDetailEventsInnerBuilder> {
+abstract class ProBookingFullDetailEventsInner implements Built<ProBookingFullDetailEventsInner, ProBookingFullDetailEventsInnerBuilder> {
   @BuiltValueField(wireName: r'eventType')
   String get eventType;
 
@@ -34,25 +31,18 @@ abstract class ProBookingFullDetailEventsInner
 
   ProBookingFullDetailEventsInner._();
 
-  factory ProBookingFullDetailEventsInner(
-          [void updates(ProBookingFullDetailEventsInnerBuilder b)]) =
-      _$ProBookingFullDetailEventsInner;
+  factory ProBookingFullDetailEventsInner([void updates(ProBookingFullDetailEventsInnerBuilder b)]) = _$ProBookingFullDetailEventsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProBookingFullDetailEventsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProBookingFullDetailEventsInner> get serializer =>
-      _$ProBookingFullDetailEventsInnerSerializer();
+  static Serializer<ProBookingFullDetailEventsInner> get serializer => _$ProBookingFullDetailEventsInnerSerializer();
 }
 
-class _$ProBookingFullDetailEventsInnerSerializer
-    implements PrimitiveSerializer<ProBookingFullDetailEventsInner> {
+class _$ProBookingFullDetailEventsInnerSerializer implements PrimitiveSerializer<ProBookingFullDetailEventsInner> {
   @override
-  final Iterable<Type> types = const [
-    ProBookingFullDetailEventsInner,
-    _$ProBookingFullDetailEventsInner
-  ];
+  final Iterable<Type> types = const [ProBookingFullDetailEventsInner, _$ProBookingFullDetailEventsInner];
 
   @override
   final String wireName = r'ProBookingFullDetailEventsInner';
@@ -68,19 +58,15 @@ class _$ProBookingFullDetailEventsInnerSerializer
       specifiedType: const FullType(String),
     );
     yield r'fromStatus';
-    yield object.fromStatus == null
-        ? null
-        : serializers.serialize(
-            object.fromStatus,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.fromStatus == null ? null : serializers.serialize(
+      object.fromStatus,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'toStatus';
-    yield object.toStatus == null
-        ? null
-        : serializers.serialize(
-            object.toStatus,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.toStatus == null ? null : serializers.serialize(
+      object.toStatus,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'createdAt';
     yield serializers.serialize(
       object.createdAt,
@@ -94,9 +80,7 @@ class _$ProBookingFullDetailEventsInnerSerializer
     ProBookingFullDetailEventsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -169,3 +153,4 @@ class _$ProBookingFullDetailEventsInnerSerializer
     return result.build();
   }
 }
+

@@ -13,16 +13,13 @@ part 'admin_subscription_override_input.g.dart';
 /// AdminSubscriptionOverrideInput
 ///
 /// Properties:
-/// * [action]
-/// * [reason]
-/// * [effectiveAt]
-/// * [expiresAt]
-/// * [metadata]
+/// * [action] 
+/// * [reason] 
+/// * [effectiveAt] 
+/// * [expiresAt] 
+/// * [metadata] 
 @BuiltValue()
-abstract class AdminSubscriptionOverrideInput
-    implements
-        Built<AdminSubscriptionOverrideInput,
-            AdminSubscriptionOverrideInputBuilder> {
+abstract class AdminSubscriptionOverrideInput implements Built<AdminSubscriptionOverrideInput, AdminSubscriptionOverrideInputBuilder> {
   @BuiltValueField(wireName: r'action')
   AdminSubscriptionOverrideInputActionEnum get action;
   // enum actionEnum {  grant_complimentary_premium,  extend_expiry,  downgrade_to_standard,  pause_subscription,  resume_subscription,  terminate_subscription,  mark_charge_resolved,  };
@@ -41,25 +38,18 @@ abstract class AdminSubscriptionOverrideInput
 
   AdminSubscriptionOverrideInput._();
 
-  factory AdminSubscriptionOverrideInput(
-          [void updates(AdminSubscriptionOverrideInputBuilder b)]) =
-      _$AdminSubscriptionOverrideInput;
+  factory AdminSubscriptionOverrideInput([void updates(AdminSubscriptionOverrideInputBuilder b)]) = _$AdminSubscriptionOverrideInput;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminSubscriptionOverrideInputBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminSubscriptionOverrideInput> get serializer =>
-      _$AdminSubscriptionOverrideInputSerializer();
+  static Serializer<AdminSubscriptionOverrideInput> get serializer => _$AdminSubscriptionOverrideInputSerializer();
 }
 
-class _$AdminSubscriptionOverrideInputSerializer
-    implements PrimitiveSerializer<AdminSubscriptionOverrideInput> {
+class _$AdminSubscriptionOverrideInputSerializer implements PrimitiveSerializer<AdminSubscriptionOverrideInput> {
   @override
-  final Iterable<Type> types = const [
-    AdminSubscriptionOverrideInput,
-    _$AdminSubscriptionOverrideInput
-  ];
+  final Iterable<Type> types = const [AdminSubscriptionOverrideInput, _$AdminSubscriptionOverrideInput];
 
   @override
   final String wireName = r'AdminSubscriptionOverrideInput';
@@ -108,9 +98,7 @@ class _$AdminSubscriptionOverrideInputSerializer
     AdminSubscriptionOverrideInput object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -128,8 +116,7 @@ class _$AdminSubscriptionOverrideInputSerializer
         case r'action':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminSubscriptionOverrideInputActionEnum),
+            specifiedType: const FullType(AdminSubscriptionOverrideInputActionEnum),
           ) as AdminSubscriptionOverrideInputActionEnum;
           result.action = valueDes;
           break;
@@ -157,8 +144,7 @@ class _$AdminSubscriptionOverrideInputSerializer
         case r'metadata':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(AdminSubscriptionOverrideInputMetadata),
+            specifiedType: const FullType(AdminSubscriptionOverrideInputMetadata),
           ) as AdminSubscriptionOverrideInputMetadata;
           result.metadata.replace(valueDes);
           break;
@@ -192,36 +178,27 @@ class _$AdminSubscriptionOverrideInputSerializer
 }
 
 class AdminSubscriptionOverrideInputActionEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'grant_complimentary_premium')
-  static const AdminSubscriptionOverrideInputActionEnum
-      grantComplimentaryPremium =
-      _$adminSubscriptionOverrideInputActionEnum_grantComplimentaryPremium;
+  static const AdminSubscriptionOverrideInputActionEnum grantComplimentaryPremium = _$adminSubscriptionOverrideInputActionEnum_grantComplimentaryPremium;
   @BuiltValueEnumConst(wireName: r'extend_expiry')
-  static const AdminSubscriptionOverrideInputActionEnum extendExpiry =
-      _$adminSubscriptionOverrideInputActionEnum_extendExpiry;
+  static const AdminSubscriptionOverrideInputActionEnum extendExpiry = _$adminSubscriptionOverrideInputActionEnum_extendExpiry;
   @BuiltValueEnumConst(wireName: r'downgrade_to_standard')
-  static const AdminSubscriptionOverrideInputActionEnum downgradeToStandard =
-      _$adminSubscriptionOverrideInputActionEnum_downgradeToStandard;
+  static const AdminSubscriptionOverrideInputActionEnum downgradeToStandard = _$adminSubscriptionOverrideInputActionEnum_downgradeToStandard;
   @BuiltValueEnumConst(wireName: r'pause_subscription')
-  static const AdminSubscriptionOverrideInputActionEnum pauseSubscription =
-      _$adminSubscriptionOverrideInputActionEnum_pauseSubscription;
+  static const AdminSubscriptionOverrideInputActionEnum pauseSubscription = _$adminSubscriptionOverrideInputActionEnum_pauseSubscription;
   @BuiltValueEnumConst(wireName: r'resume_subscription')
-  static const AdminSubscriptionOverrideInputActionEnum resumeSubscription =
-      _$adminSubscriptionOverrideInputActionEnum_resumeSubscription;
+  static const AdminSubscriptionOverrideInputActionEnum resumeSubscription = _$adminSubscriptionOverrideInputActionEnum_resumeSubscription;
   @BuiltValueEnumConst(wireName: r'terminate_subscription')
-  static const AdminSubscriptionOverrideInputActionEnum terminateSubscription =
-      _$adminSubscriptionOverrideInputActionEnum_terminateSubscription;
+  static const AdminSubscriptionOverrideInputActionEnum terminateSubscription = _$adminSubscriptionOverrideInputActionEnum_terminateSubscription;
   @BuiltValueEnumConst(wireName: r'mark_charge_resolved')
-  static const AdminSubscriptionOverrideInputActionEnum markChargeResolved =
-      _$adminSubscriptionOverrideInputActionEnum_markChargeResolved;
+  static const AdminSubscriptionOverrideInputActionEnum markChargeResolved = _$adminSubscriptionOverrideInputActionEnum_markChargeResolved;
 
-  static Serializer<AdminSubscriptionOverrideInputActionEnum> get serializer =>
-      _$adminSubscriptionOverrideInputActionEnumSerializer;
+  static Serializer<AdminSubscriptionOverrideInputActionEnum> get serializer => _$adminSubscriptionOverrideInputActionEnumSerializer;
 
-  const AdminSubscriptionOverrideInputActionEnum._(String name) : super(name);
+  const AdminSubscriptionOverrideInputActionEnum._(String name): super(name);
 
-  static BuiltSet<AdminSubscriptionOverrideInputActionEnum> get values =>
-      _$adminSubscriptionOverrideInputActionEnumValues;
-  static AdminSubscriptionOverrideInputActionEnum valueOf(String name) =>
-      _$adminSubscriptionOverrideInputActionEnumValueOf(name);
+  static BuiltSet<AdminSubscriptionOverrideInputActionEnum> get values => _$adminSubscriptionOverrideInputActionEnumValues;
+  static AdminSubscriptionOverrideInputActionEnum valueOf(String name) => _$adminSubscriptionOverrideInputActionEnumValueOf(name);
 }
+

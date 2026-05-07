@@ -49,7 +49,9 @@ export const salonListQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
-  sort: z.enum(["nearby", "rating", "trending"]).optional()
+  sort: z.enum(["nearby", "rating", "trending"]).optional(),
+  minPrice: z.coerce.number().int().min(0).optional(),
+  maxPrice: z.coerce.number().int().min(0).optional()
 });
 
 export const salonDetailSchema = salonSummarySchema.extend({

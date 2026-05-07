@@ -11,12 +11,11 @@ part 'admin_audit_filters.g.dart';
 /// AdminAuditFilters
 ///
 /// Properties:
-/// * [actor]
-/// * [entityType]
-/// * [action]
+/// * [actor] 
+/// * [entityType] 
+/// * [action] 
 @BuiltValue()
-abstract class AdminAuditFilters
-    implements Built<AdminAuditFilters, AdminAuditFiltersBuilder> {
+abstract class AdminAuditFilters implements Built<AdminAuditFilters, AdminAuditFiltersBuilder> {
   @BuiltValueField(wireName: r'actor')
   String? get actor;
 
@@ -28,19 +27,16 @@ abstract class AdminAuditFilters
 
   AdminAuditFilters._();
 
-  factory AdminAuditFilters([void updates(AdminAuditFiltersBuilder b)]) =
-      _$AdminAuditFilters;
+  factory AdminAuditFilters([void updates(AdminAuditFiltersBuilder b)]) = _$AdminAuditFilters;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminAuditFiltersBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminAuditFilters> get serializer =>
-      _$AdminAuditFiltersSerializer();
+  static Serializer<AdminAuditFilters> get serializer => _$AdminAuditFiltersSerializer();
 }
 
-class _$AdminAuditFiltersSerializer
-    implements PrimitiveSerializer<AdminAuditFilters> {
+class _$AdminAuditFiltersSerializer implements PrimitiveSerializer<AdminAuditFilters> {
   @override
   final Iterable<Type> types = const [AdminAuditFilters, _$AdminAuditFilters];
 
@@ -81,9 +77,7 @@ class _$AdminAuditFiltersSerializer
     AdminAuditFilters object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -147,3 +141,4 @@ class _$AdminAuditFiltersSerializer
     return result.build();
   }
 }
+

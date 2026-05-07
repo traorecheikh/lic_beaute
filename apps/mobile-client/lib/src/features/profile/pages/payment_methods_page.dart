@@ -1,18 +1,14 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_http_error_handler.dart';
-import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../models/account_models.dart';
 import '../providers/payment_methods_provider.dart';
-import '../providers/profile_provider.dart';
 import '../widgets/payment_tile.dart';
 import '../widgets/profile_card_shell.dart';
 
@@ -25,8 +21,13 @@ class PaymentMethodsPage extends ConsumerStatefulWidget {
 
 class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   final _phoneController = TextEditingController();
-  String _provider = 'wave';
+  String _channel = 'wave';
   bool _saving = false;
+  static const Map<String, String> _channelLabels = {
+    'wave': 'Wave',
+    'orange_money': 'Orange Money',
+    'free_money': 'Free Money',
+  };
 
   @override
   void dispose() {
@@ -60,7 +61,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                 icon: Icons.star_border,
                 title: 'Aucun moyen de paiement',
                 subtitle:
-                    'Enregistrez un numéro Wave ou Orange Money pour simplifier vos réservations.',
+                    'Enregistrez un numéro Wave, Orange Money ou Free Money pour simplifier vos réservations.',
               )
             else
               ...methods.map(
@@ -86,12 +87,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   SizedBox(height: 16.h),
                   AppDropdown<String>(
                     label: 'Opérateur',
-                    value: _provider,
-                    items: const ['wave', 'om'],
-                    itemLabel: (v) => v == 'wave' ? 'Wave' : 'Orange Money',
-                    onChanged: (val) {
-                      if (val != null) setState(() => _provider = val);
-                    },
+                    value: _channel,
+                    items: const ['wave', 'orange_money', 'free_money'],
+                    itemLabel: (v) => _channelLabels[v] ?? v,
+                    onChanged: (val) => setState(() => _channel = val),
                   ),
                   gapH16,
                   AppPhoneField(
@@ -134,7 +133,11 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     try {
       await ref
           .read(paymentMethodsProvider.notifier)
-          .add(provider: _provider, phoneNumber: phone);
+          .add(
+            provider: 'intech',
+            phoneNumber: phone,
+            label: _channelLabels[_channel],
+          );
       _phoneController.clear();
       if (!mounted) return;
       AppSnackbar.success(context, 'Moyen de paiement ajouté.');
