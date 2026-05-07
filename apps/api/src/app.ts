@@ -11,8 +11,8 @@ import Fastify from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
 import { config } from "./config.js";
-import type { DatabaseRuntime } from "./lib/database-runtime.js";
-import { setPrisma } from "./lib/prisma.js";
+import type { DatabaseRuntime } from "./lib/db/runtime.js";
+import { setPrisma } from "./lib/db/prisma.js";
 import { registerRoutes } from "./modules/routes.js";
 import type { PrismaClient } from "@prisma/client";
 

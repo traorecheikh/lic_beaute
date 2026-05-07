@@ -1,6 +1,6 @@
 import { createApp } from "./app.js";
 import { config, validateConfig } from "./config.js";
-import { resolveDatabaseRuntime } from "./lib/database-runtime.js";
+import { resolveDatabaseRuntime } from "./lib/db/runtime.js";
 import "./lib/push.js";
 
 validateConfig();
@@ -54,7 +54,7 @@ async function shutdown(signal: string) {
     app.log.error({ error: err instanceof Error ? err.message : "unknown" }, "Error closing server");
   }
   try {
-    const { prisma } = await import("./lib/prisma.js");
+    const { prisma } = await import("./lib/db/prisma.js");
     await prisma.$disconnect();
   } catch {}
   process.exit(0);

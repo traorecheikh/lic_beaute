@@ -1,0 +1,829 @@
+import { randomBytes } from "node:crypto";
+import argon2 from "argon2";
+
+import {
+  AdminAuditDetail,
+  AdminDashboard,
+  AdminSalonDecisionInput,
+  AdminSalonCreateInput,
+  AdminSalonDetail,
+  AdminSalonQueueFilters,
+  AdminSalonQueueItem,
+  AdminSubscriptionDetail,
+  AdminSubscriptionOverrideInput,
+  AdminSubscriptionSummary
+} from "@beauteavenue/contracts";
+import { formatMoneyXof } from "@beauteavenue/shared-ts";
+
+import { toPublicBillingProvider } from "../../lib/payment-provider.js";
+import { prisma } from "../../lib/db/prisma.js";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function daysAgo(n: number) {
+  return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+}
+
+async function writeAuditLog(entry: {
+  action: string;
+  summary: string;
+  entityType: string;
+  entityId: string;
+  actorName: string;
+  severity: "info" | "warning" | "critical";
+  payloadJson: string;
+  relatedLinks: Array<{ label: string; href: string }>;
+}) {
+  return prisma.auditLog.create({
+    data: {
+      action: entry.action,
+      summary: entry.summary,
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      actorName: entry.actorName,
+      severity: entry.severity,
+      payloadJson: entry.payloadJson,
+      relatedLinksJson: JSON.stringify(entry.relatedLinks)
+    }
+  });
+}
+
+function buildEntitlements(tier: "standard" | "premium") {
+  const isPremium = tier === "premium";
+  return [
+    { label: "Badge Premium", enabled: isPremium, note: null },
+    { label: "Mise en avant", enabled: isPremium, note: isPremium ? "Recommandé dans la découverte." : null },
+    { label: "Acompte client", enabled: isPremium, note: isPremium ? "Actif sur services éligibles." : null },
+    { label: "Galerie étendue", enabled: isPremium, note: isPremium ? null : "Limité à 3 photos." }
+  ];
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+export async function getAdminDashboard(): Promise<AdminDashboard> {
+  const today = startOfToday();
+  const sevenDaysAgo = daysAgo(7);
+  const fourteenDaysAgo = daysAgo(14);
+
+  const [
+    revenueToday,
+    bookingsToday,
+    activeSalons,
+    newRegistrations,
+    pendingApprovals,
+    subscriptionsNeedingAction,
+    auditEventsToday,
+    salonsWithRecentBookings,
+    approvedSalonsForInactivity
+  ] = await Promise.all([
+    prisma.payment.aggregate({
+      where: { status: "succeeded", createdAt: { gte: today } },
+      _sum: { amountXof: true }
+    }),
+    prisma.booking.count({ where: { createdAt: { gte: today } } }),
+    prisma.salon.count({ where: { approvalStatus: "approved", isVisibleInMarketplace: true } }),
+    prisma.salon.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+    prisma.salon.count({ where: { approvalStatus: { in: ["pending_review", "needs_info"] } } }),
+    prisma.subscription.count({ where: { status: { in: ["past_due", "paused"] } } }),
+    prisma.auditLog.count({ where: { createdAt: { gte: today } } }),
+    prisma.booking.groupBy({
+      by: ["salonId"],
+      where: { createdAt: { gte: sevenDaysAgo } },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+      take: 10
+    }),
+    prisma.salon.findMany({
+      where: { approvalStatus: "approved" },
+      select: { id: true, name: true, city: true, approvalStatus: true }
+    })
+  ]);
+
+  // Build top growth salons by comparing this week vs last week
+  const thisWeekMap = new Map(salonsWithRecentBookings.map((r) => [r.salonId, r._count.id]));
+  const topSalonIds = salonsWithRecentBookings.slice(0, 5).map((r) => r.salonId);
+
+  const lastWeekBookings = await prisma.booking.groupBy({
+    by: ["salonId"],
+    where: { salonId: { in: topSalonIds }, createdAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo } },
+    _count: { id: true }
+  });
+  const lastWeekMap = new Map(lastWeekBookings.map((r) => [r.salonId, r._count.id]));
+
+  const topSalons = await prisma.salon.findMany({
+    where: { id: { in: topSalonIds } },
+    select: { id: true, name: true, city: true }
+  });
+
+  const topGrowthSalons = topSalons
+    .map((salon) => {
+      const thisWeek = thisWeekMap.get(salon.id) ?? 0;
+      const lastWeek = lastWeekMap.get(salon.id) ?? 0;
+      const delta = lastWeek === 0 ? 100 : Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
+      return { salonId: salon.id, salonName: salon.name, city: salon.city, bookingsThisWeek: thisWeek, bookingDeltaPercent: delta };
+    })
+    .sort((a, b) => b.bookingDeltaPercent - a.bookingDeltaPercent);
+
+  // Inactivity alerts: approved salons with no bookings in last 7 days
+  const activeSalonIds = new Set(salonsWithRecentBookings.map((r) => r.salonId));
+  const inactivityAlerts = approvedSalonsForInactivity
+    .filter((s) => !activeSalonIds.has(s.id))
+    .slice(0, 5)
+    .map((s) => ({
+      salonId: s.id,
+      salonName: s.name,
+      city: s.city,
+      daysWithoutBookings: 7,
+      status: s.approvalStatus as "approved"
+    }));
+
+  return {
+    kpis: [
+      {
+        label: "Revenue du jour",
+        value: revenueToday._sum.amountXof ?? 0,
+        displayValue: formatMoneyXof(revenueToday._sum.amountXof ?? 0),
+        note: "Paiements validés après réconciliation."
+      },
+      {
+        label: "Réservations du jour",
+        value: bookingsToday,
+        displayValue: String(bookingsToday).padStart(2, "0"),
+        note: "Inclut les réservations premium avec acompte."
+      },
+      {
+        label: "Salons actifs",
+        value: activeSalons,
+        displayValue: String(activeSalons),
+        note: "Salons approuvés visibles sur la marketplace."
+      },
+      {
+        label: "Nouvelles inscriptions",
+        value: newRegistrations,
+        displayValue: String(newRegistrations).padStart(2, "0"),
+        note: "Demandes de salons sur les 7 derniers jours."
+      }
+    ],
+    topGrowthSalons,
+    inactivityAlerts,
+    quickLinks: {
+      pendingSalonApprovals: pendingApprovals,
+      subscriptionsNeedingAction,
+      auditEventsToday
+    }
+  };
+}
+
+// ─── Salon queue ──────────────────────────────────────────────────────────────
+
+export async function listPendingSalons(filters: AdminSalonQueueFilters) {
+  const salons = await prisma.salon.findMany({
+    where: {
+      approvalStatus: filters.status
+        ? { equals: filters.status as any }
+        : { in: ["pending_review", "needs_info"] },
+      ...(filters.category && { category: filters.category }),
+      ...(filters.city && { city: { contains: filters.city, mode: "insensitive" } }),
+      ...(filters.search && {
+        OR: [
+          { name: { contains: filters.search, mode: "insensitive" } },
+          { city: { contains: filters.search, mode: "insensitive" } },
+          { staffMembers: { some: { role: "salon_owner", fullName: { contains: filters.search, mode: "insensitive" } } } }
+        ]
+      })
+    },
+    include: {
+      staffMembers: { where: { role: "salon_owner" }, select: { fullName: true } },
+      documents: true
+    },
+    orderBy: { submittedAt: "asc" }
+  });
+
+  const items: AdminSalonQueueItem[] = salons.map((salon) => ({
+    id: salon.id,
+    salonName: salon.name,
+    category: salon.category,
+    city: salon.city,
+    ownerName: salon.staffMembers[0]?.fullName ?? "—",
+    submittedAt: salon.submittedAt.toISOString(),
+    approvalStatus: salon.approvalStatus as AdminSalonQueueItem["approvalStatus"],
+    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonQueueItem["subscriptionIntentTier"],
+    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
+    latestAdminNote: salon.latestAdminNote
+  }));
+
+  return { items, total: items.length };
+}
+
+export async function listSalons(filters: { search?: string; status?: string }) {
+  const salons = await prisma.salon.findMany({
+    where: {
+      ...(filters.status && { approvalStatus: filters.status as any }),
+      ...(filters.search && {
+        OR: [
+          { name: { contains: filters.search, mode: "insensitive" } },
+          { city: { contains: filters.search, mode: "insensitive" } }
+        ]
+      })
+    },
+    include: {
+      staffMembers: { where: { role: "salon_owner" }, select: { fullName: true } },
+      documents: true
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  const items: AdminSalonQueueItem[] = salons.map((salon) => ({
+    id: salon.id,
+    salonName: salon.name,
+    category: salon.category,
+    city: salon.city,
+    ownerName: salon.staffMembers[0]?.fullName ?? "—",
+    submittedAt: salon.submittedAt.toISOString(),
+    approvalStatus: salon.approvalStatus as AdminSalonQueueItem["approvalStatus"],
+    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonQueueItem["subscriptionIntentTier"],
+    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
+    latestAdminNote: salon.latestAdminNote
+  }));
+
+  return { items, total: items.length };
+}
+
+export async function getPendingSalonDetail(salonId: string): Promise<AdminSalonDetail | null> {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    include: {
+      staffMembers: { where: { role: "salon_owner" } },
+      services: true,
+      documents: true,
+      gallery: { orderBy: { position: "asc" } }
+    }
+  });
+
+  if (!salon) return null;
+
+  const owner = salon.staffMembers[0];
+
+  return {
+    id: salon.id,
+    salonName: salon.name,
+    category: salon.category,
+    city: salon.city,
+    address: salon.address,
+    description: salon.description,
+    owner: {
+      fullName: owner?.fullName ?? "—",
+      email: owner?.email ?? "",
+      phone: owner?.phone ?? ""
+    },
+    approvalStatus: salon.approvalStatus as AdminSalonDetail["approvalStatus"],
+    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonDetail["subscriptionIntentTier"],
+    submittedAt: salon.submittedAt.toISOString(),
+    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
+    latestAdminNote: salon.latestAdminNote,
+    gallery: salon.gallery.map((img) => img.url),
+    services: salon.services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      durationMinutes: s.durationMinutes,
+      priceXof: s.priceXof,
+      depositMode: s.depositMode as "none" | "fixed" | "percent",
+      depositAmountXof: s.depositAmountXof,
+      depositPercent: s.depositPercent
+    })),
+    documents: salon.documents.map((d) => ({
+      label: d.label,
+      status: d.status as "received" | "missing" | "invalid",
+      note: d.note,
+      fileUrl: d.fileUrl
+    }))
+  };
+}
+
+export async function approveSalon(salonId: string, actorName: string) {
+  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+  if (!salon) return null;
+
+  const updated = await prisma.salon.update({
+    where: { id: salonId },
+    data: { approvalStatus: "approved", isVisibleInMarketplace: true, canReceiveBookings: true, latestAdminNote: "Salon approuvé et prêt à être visible." }
+  });
+
+  await prisma.subscription.upsert({
+    where: { salonId },
+    create: { salonId, tier: salon.subscriptionIntentTier, status: "inactive" },
+    update: {}
+  });
+
+  await writeAuditLog({
+    action: "salon.approved",
+    summary: `Salon ${salon.name} approuvé.`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify({ salonId, approvalStatus: "approved" }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+
+  return getPendingSalonDetail(updated.id);
+}
+
+export async function rejectSalon(salonId: string, input: AdminSalonDecisionInput, actorName: string) {
+  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+  if (!salon) return null;
+
+  await prisma.salon.update({
+    where: { id: salonId },
+    data: { approvalStatus: "rejected", latestAdminNote: input.reason }
+  });
+
+  await writeAuditLog({
+    action: "salon.rejected",
+    summary: `Salon ${salon.name} rejeté.`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify({ reason: input.reason }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+
+  return getPendingSalonDetail(salonId);
+}
+
+export async function requestSalonInfo(salonId: string, input: AdminSalonDecisionInput, actorName: string) {
+  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+  if (!salon) return null;
+
+  await prisma.salon.update({
+    where: { id: salonId },
+    data: { approvalStatus: "needs_info", latestAdminNote: input.reason }
+  });
+
+  await writeAuditLog({
+    action: "salon.request_info",
+    summary: `Informations complémentaires demandées à ${salon.name}.`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify({ reason: input.reason }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+
+  return getPendingSalonDetail(salonId);
+}
+
+export async function createSalon(data: AdminSalonCreateInput, actorName: string) {
+  const temporaryPassword = randomBytes(12).toString("base64url").slice(0, 16);
+
+  const salon = await prisma.salon.create({
+    data: {
+      name: data.name,
+      category: data.category,
+      city: data.city,
+      address: data.address,
+      description: data.description,
+      approvalStatus: "approved",
+      isVisibleInMarketplace: true,
+      canReceiveBookings: true,
+      staffMembers: {
+        create: {
+          fullName: data.ownerName,
+          email: data.ownerEmail,
+          phone: data.ownerPhone,
+          role: "salon_owner",
+          passwordHash: await argon2.hash(temporaryPassword)
+        }
+      }
+    }
+  });
+
+  await prisma.subscription.create({
+    data: { salonId: salon.id, tier: "standard", status: "active" }
+  });
+
+  await writeAuditLog({
+    action: "salon.created",
+    summary: `Salon ${salon.name} créé manuellement.`,
+    entityType: "salon",
+    entityId: salon.id,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify(data),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
+  });
+
+  return { ...await getPendingSalonDetail(salon.id), temporaryPassword };
+}
+
+// ─── Subscriptions ────────────────────────────────────────────────────────────
+
+export async function listSubscriptions(filters: {
+  search?: string;
+  tier?: AdminSubscriptionSummary["tier"];
+  status?: AdminSubscriptionSummary["status"];
+}) {
+  const subscriptions = await prisma.subscription.findMany({
+    where: {
+      ...(filters.tier && { tier: filters.tier }),
+      ...(filters.status && { status: filters.status as any }),
+      ...(filters.search && { salon: { name: { contains: filters.search, mode: "insensitive" } } })
+    },
+    include: { salon: { select: { name: true } } },
+    orderBy: { createdAt: "desc" }
+  });
+
+  const [premiumCount, standardCount, pausedCount] = await Promise.all([
+    prisma.subscription.count({ where: { tier: "premium" } }),
+    prisma.subscription.count({ where: { tier: "standard" } }),
+    prisma.subscription.count({ where: { status: "paused" } })
+  ]);
+
+  const items: AdminSubscriptionSummary[] = subscriptions.map((sub) => ({
+    id: sub.id,
+    salonId: sub.salonId,
+    salonName: sub.salon.name,
+    tier: sub.tier as AdminSubscriptionSummary["tier"],
+    status: sub.status as AdminSubscriptionSummary["status"],
+    billingProvider: toPublicBillingProvider(sub.billingProvider),
+    expiresAt: sub.expiresAt?.toISOString() ?? null,
+    autoRenew: sub.autoRenew,
+    isComplimentary: sub.isComplimentary
+  }));
+
+  return { summary: { premiumCount, standardCount, pausedCount }, items, total: items.length };
+}
+
+export async function getSubscriptionDetail(subscriptionId: string): Promise<AdminSubscriptionDetail | null> {
+  const sub = await prisma.subscription.findUnique({
+    where: { id: subscriptionId },
+    include: {
+      salon: { select: { name: true } },
+      events: { orderBy: { createdAt: "desc" } },
+      invoices: { orderBy: { createdAt: "desc" } }
+    }
+  });
+
+  if (!sub) return null;
+
+  return {
+    id: sub.id,
+    salonId: sub.salonId,
+    salonName: sub.salon.name,
+    tier: sub.tier as AdminSubscriptionDetail["tier"],
+    status: sub.status as AdminSubscriptionDetail["status"],
+    billingProvider: toPublicBillingProvider(sub.billingProvider),
+    expiresAt: sub.expiresAt?.toISOString() ?? null,
+    autoRenew: sub.autoRenew,
+    isComplimentary: sub.isComplimentary,
+    startedAt: sub.startedAt.toISOString(),
+    renewedAt: sub.renewedAt?.toISOString() ?? null,
+    entitlements: buildEntitlements(sub.tier as "standard" | "premium"),
+    events: sub.events.map((e) => ({
+      id: e.id,
+      eventType: e.eventType,
+      summary: e.summary,
+      createdAt: e.createdAt.toISOString(),
+      actorName: e.actorName,
+      source: e.source as "provider" | "admin" | "system",
+      payloadPreview: e.payloadPreview
+    })),
+    invoices: sub.invoices.map((inv) => ({
+      id: inv.id,
+      invoiceNumber: inv.invoiceNumber,
+      amountXof: inv.amountXof,
+      status: inv.status as "issued" | "void" | "paid" | "comped",
+      createdAt: inv.createdAt.toISOString(),
+      pdfUrl: inv.pdfUrl
+    }))
+  };
+}
+
+export async function overrideSubscription(
+  subscriptionId: string,
+  input: AdminSubscriptionOverrideInput,
+  actorName: string
+) {
+  const sub = await prisma.subscription.findUnique({
+    where: { id: subscriptionId },
+    include: { salon: { select: { name: true } } }
+  });
+  if (!sub) return null;
+
+  const effectiveAt = input.effectiveAt ? new Date(input.effectiveAt) : new Date();
+
+  const updateData: Parameters<typeof prisma.subscription.update>[0]["data"] = {};
+
+  switch (input.action) {
+    case "grant_complimentary_premium":
+      updateData.tier = "premium";
+      updateData.status = "active";
+      updateData.isComplimentary = true;
+      updateData.autoRenew = false;
+      updateData.billingProvider = null;
+      if (input.expiresAt) updateData.expiresAt = new Date(input.expiresAt);
+      break;
+    case "extend_expiry":
+      if (input.expiresAt) updateData.expiresAt = new Date(input.expiresAt);
+      break;
+    case "downgrade_to_standard":
+      updateData.tier = "standard";
+      updateData.status = "active";
+      updateData.autoRenew = false;
+      break;
+    case "pause_subscription":
+      updateData.status = "paused";
+      updateData.autoRenew = false;
+      break;
+    case "resume_subscription":
+      updateData.status = "active";
+      break;
+    case "terminate_subscription":
+      updateData.status = "cancelled";
+      updateData.autoRenew = false;
+      updateData.expiresAt = effectiveAt;
+      break;
+    case "mark_charge_resolved":
+      break;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.subscription.update({ where: { id: subscriptionId }, data: updateData });
+
+    if (input.action === "pause_subscription" || input.action === "terminate_subscription") {
+      await tx.salon.update({
+        where: { id: sub.salonId },
+        data: { isVisibleInMarketplace: false, canReceiveBookings: false }
+      });
+    }
+
+    if (input.action === "mark_charge_resolved" && input.metadata?.subscriptionChargeId) {
+      await tx.subscriptionCharge.update({
+        where: { id: input.metadata.subscriptionChargeId },
+        data: { status: "succeeded" }
+      });
+    }
+
+    await tx.subscriptionEvent.create({
+      data: {
+        subscriptionId,
+        eventType: input.action,
+        summary: input.reason,
+        actorName,
+        source: "admin",
+        payloadPreview: input.metadata?.internalTicket ?? null
+      }
+    });
+
+    if (input.action === "grant_complimentary_premium") {
+      const count = await tx.billingInvoice.count({ where: { subscriptionId } });
+      await tx.billingInvoice.create({
+        data: {
+          subscriptionId,
+          invoiceNumber: `BA-${new Date().getFullYear()}-COMP-${count + 1}`,
+          amountXof: 0,
+          status: "comped",
+          pdfUrl: ""
+        }
+      });
+    }
+
+    await tx.auditLog.create({
+      data: {
+        action: `subscription.${input.action}`,
+        summary: `Override ${input.action} appliqué sur ${sub.salon.name}.`,
+        entityType: "subscription",
+        entityId: subscriptionId,
+        actorName,
+        severity: input.action === "terminate_subscription" ? "critical" : "warning",
+        payloadJson: JSON.stringify(input),
+        relatedLinksJson: JSON.stringify([
+          { label: sub.salon.name, href: `/admin/subscriptions/${subscriptionId}` }
+        ])
+      }
+    });
+
+    if (updateData.tier) {
+      await tx.salon.update({
+        where: { id: sub.salonId },
+        data: { subscriptionTier: updateData.tier as "standard" | "premium" }
+      });
+    }
+  });
+
+  return getSubscriptionDetail(subscriptionId);
+}
+
+// ─── Audit log ────────────────────────────────────────────────────────────────
+
+export async function listAuditEvents(filters: { actor?: string; entityType?: string; action?: string }) {
+  const events = await prisma.auditLog.findMany({
+    where: {
+      ...(filters.actor && { actorName: { contains: filters.actor, mode: "insensitive" } }),
+      ...(filters.entityType && { entityType: filters.entityType }),
+      ...(filters.action && { action: { contains: filters.action } })
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200
+  });
+
+  return {
+    items: events.map((e) => ({
+      id: e.id,
+      action: e.action,
+      summary: e.summary,
+      entityType: e.entityType,
+      entityId: e.entityId,
+      actorName: e.actorName,
+      createdAt: e.createdAt.toISOString(),
+      severity: e.severity as "info" | "warning" | "critical"
+    })),
+    total: events.length
+  };
+}
+
+async function normalizeSubscriptionAuditReference(
+  entityId: string,
+  relatedLinks: Array<{ label: string; href: string }>
+) {
+  const subscription = await prisma.subscription.findFirst({
+    where: {
+      OR: [
+        { id: entityId },
+        { salonId: entityId }
+      ]
+    },
+    select: { id: true }
+  });
+
+  if (!subscription) {
+    return { entityId, relatedLinks };
+  }
+
+  return {
+    entityId: subscription.id,
+    relatedLinks: relatedLinks.map((link) => (
+      link.href.startsWith("/admin/subscriptions/")
+        ? { ...link, href: `/admin/subscriptions/${subscription.id}` }
+        : link
+    ))
+  };
+}
+
+export async function getAuditDetail(auditId: string): Promise<AdminAuditDetail | null> {
+  const event = await prisma.auditLog.findUnique({ where: { id: auditId } });
+  if (!event) return null;
+
+  const relatedLinks = JSON.parse(event.relatedLinksJson) as Array<{ label: string; href: string }>;
+  const normalizedReference = event.entityType === "subscription"
+    ? await normalizeSubscriptionAuditReference(event.entityId, relatedLinks)
+    : { entityId: event.entityId, relatedLinks };
+
+  return {
+    id: event.id,
+    action: event.action,
+    summary: event.summary,
+    entityType: event.entityType,
+    entityId: normalizedReference.entityId,
+    actorName: event.actorName,
+    createdAt: event.createdAt.toISOString(),
+    severity: event.severity as "info" | "warning" | "critical",
+    payloadJson: event.payloadJson,
+    relatedLinks: normalizedReference.relatedLinks
+  };
+}
+
+// ─── Configuration ────────────────────────────────────────────────────────────
+
+const HIDDEN_SETTING_KEYS = new Set([
+  "intech_api_key",
+  "intech_api_secret",
+  "paytech_api_key",
+  "paytech_api_secret",
+  "platform_name"
+]);
+
+export async function getPlatformSettings(group?: string) {
+  const rows = await prisma.platformSetting.findMany({
+    where: group ? { group } : undefined,
+    orderBy: { key: "asc" }
+  });
+  return rows.filter((s) => !HIDDEN_SETTING_KEYS.has(s.key));
+}
+
+export async function updatePlatformSetting(key: string, value: string, actorName: string) {
+  const setting = await prisma.platformSetting.upsert({
+    where: { key },
+    create: { group: "config", key, value, description: "" },
+    update: { value }
+  });
+
+  await writeAuditLog({
+    action: "config.setting_updated",
+    summary: `Paramètre ${key} mis à jour.`,
+    entityType: "config",
+    entityId: setting.id,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify({ key, value }),
+    relatedLinks: []
+  });
+
+  return setting;
+}
+
+export async function listSalonCategories() {
+  return prisma.platformSalonCategory.findMany({
+    orderBy: { name: "asc" }
+  });
+}
+
+export async function upsertSalonCategory(data: { name: string; slug: string; enabled?: boolean }, actorName: string) {
+  const category = await prisma.platformSalonCategory.upsert({
+    where: { slug: data.slug },
+    update: { name: data.name, enabled: data.enabled ?? true },
+    create: { name: data.name, slug: data.slug, enabled: data.enabled ?? true }
+  });
+
+  await writeAuditLog({
+    action: "config.category_upserted",
+    summary: `Catégorie ${data.name} enregistrée.`,
+    entityType: "config",
+    entityId: category.id,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify(data),
+    relatedLinks: []
+  });
+
+  return category;
+}
+
+export async function deleteSalonCategory(id: string, actorName: string) {
+  const category = await prisma.platformSalonCategory.delete({ where: { id } });
+  
+  await writeAuditLog({
+    action: "config.category_deleted",
+    summary: `Catégorie ${category.name} supprimée.`,
+    entityType: "config",
+    entityId: category.id,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify(category),
+    relatedLinks: []
+  });
+
+  return category;
+}
+
+export async function listRequiredDocuments() {
+  return prisma.platformRequiredDocument.findMany({
+    orderBy: { label: "asc" }
+  });
+}
+
+export async function upsertRequiredDocument(data: { label: string; slug: string; type: string; isRequired: boolean; enabled?: boolean }, actorName: string) {
+  const doc = await prisma.platformRequiredDocument.upsert({
+    where: { slug: data.slug },
+    update: { label: data.label, type: data.type, isRequired: data.isRequired, enabled: data.enabled ?? true },
+    create: { label: data.label, slug: data.slug, type: data.type, isRequired: data.isRequired, enabled: data.enabled ?? true }
+  });
+
+  await writeAuditLog({
+    action: "config.document_upserted",
+    summary: `Document requis ${data.label} enregistré.`,
+    entityType: "config",
+    entityId: doc.id,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify(data),
+    relatedLinks: []
+  });
+
+  return doc;
+}
+
+export async function deleteRequiredDocument(id: string, actorName: string) {
+  const doc = await prisma.platformRequiredDocument.delete({ where: { id } });
+
+  await writeAuditLog({
+    action: "config.document_deleted",
+    summary: `Document requis ${doc.label} supprimé.`,
+    entityType: "config",
+    entityId: doc.id,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify(doc),
+    relatedLinks: []
+  });
+
+  return doc;
+}

@@ -58,6 +58,13 @@ Fresha/
 # Scratch files
 t.txt
 
+# Credentials and secrets — never commit
+*-firebase-adminsdk-*.json
+*-service-account*.json
+cloudfaretoken.md
+paytech.md
+agent-meet.md
+
 # Root design exports not used by app runtime
 /logo.png
 /om.png

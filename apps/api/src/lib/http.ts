@@ -1,5 +1,5 @@
 import type { FastifyReply } from "fastify";
-import { HttpAuthError } from "./auth.js";
+import { HttpAuthError } from "./auth/index.js";
 import { logger } from "./logger.js";
 
 export function ok(reply: FastifyReply, data: unknown, statusCode = 200) {

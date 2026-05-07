@@ -1,10 +1,10 @@
 import { getPaymentAdapter, getStorageAdapter, getR2Adapter } from "./adapters/index.js";
-import type { R2StorageAdapter } from "./adapters/storage-r2.js";
+import type { R2StorageAdapter } from "./adapters/storage/r2.js";
 import { config } from "./config.js";
 import { logger } from "./lib/logger.js";
-import { prisma } from "./lib/prisma.js";
+import { prisma } from "./lib/db/prisma.js";
 import { sendPushBatch } from "./lib/push.js";
-import { sendNotification } from "./modules/notifications.js";
+import { sendNotification } from "./modules/notifications/index.js";
 
 const storageAdapter = getStorageAdapter(config.storageDriver, {
   storagePath: config.storagePath,

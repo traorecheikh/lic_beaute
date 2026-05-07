@@ -1,16 +1,16 @@
-import type { PaymentAdapter } from "./payment.js";
-import { IntechAdapter } from "./payment-intech.js";
-import { MockPaymentAdapter } from "./payment-mock.js";
-import type { OtpAdapter } from "./otp.js";
-import { AfricasTalkingOtpAdapter, NoopOtpAdapter } from "./otp.js";
-import type { StorageAdapter } from "./storage.js";
-import { LocalStorageAdapter, NoopStorageAdapter } from "./storage.js";
-import { R2StorageAdapter } from "./storage-r2.js";
+import type { PaymentAdapter } from "./payment/index.js";
+import { IntechAdapter } from "./payment/intech.js";
+import { MockPaymentAdapter } from "./payment/mock.js";
+import type { OtpAdapter } from "./otp/index.js";
+import { AfricasTalkingOtpAdapter, NoopOtpAdapter } from "./otp/index.js";
+import type { StorageAdapter } from "./storage/index.js";
+import { LocalStorageAdapter, NoopStorageAdapter } from "./storage/index.js";
+import { R2StorageAdapter } from "./storage/r2.js";
 
-export { type PaymentAdapter } from "./payment.js";
-export { type OtpAdapter, NoopOtpAdapter } from "./otp.js";
-export { type StorageAdapter, LocalStorageAdapter, NoopStorageAdapter } from "./storage.js";
-export { R2StorageAdapter } from "./storage-r2.js";
+export { type PaymentAdapter } from "./payment/index.js";
+export { type OtpAdapter, NoopOtpAdapter } from "./otp/index.js";
+export { type StorageAdapter, LocalStorageAdapter, NoopStorageAdapter } from "./storage/index.js";
+export { R2StorageAdapter } from "./storage/r2.js";
 
 export function createOtpAdapter(
   driver: string,

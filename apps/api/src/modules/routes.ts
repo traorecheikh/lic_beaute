@@ -1,16 +1,16 @@
 import type { FastifyInstance } from "fastify";
 
-import type { DatabaseRuntime } from "../lib/database-runtime.js";
-import { AdminController } from "./admin.js";
-import { AuthController } from "./auth.js";
-import { BookingController } from "./bookings.js";
-import { CatalogController } from "./catalog.js";
-import { ClientAccountController } from "./client-account.js";
-import { AdminMediaController } from "./admin-media.js";
-import { MediaController } from "./media.js";
-import { NotificationController } from "./notifications.js";
-import { PaymentController } from "./payments.js";
-import { ProController } from "./pro.js";
+import type { DatabaseRuntime } from "../lib/db/runtime.js";
+import { AdminController } from "./admin/index.js";
+import { AdminMediaController } from "./admin/media.js";
+import { AuthController } from "./auth/index.js";
+import { BookingController } from "./bookings/index.js";
+import { CatalogController } from "./catalog/index.js";
+import { ClientAccountController } from "./client/index.js";
+import { MediaController } from "./media/index.js";
+import { NotificationController } from "./notifications/index.js";
+import { PaymentController } from "./payments/index.js";
+import { ProController } from "./pro/index.js";
 
 export async function registerRoutes(app: FastifyInstance, databaseRuntime: DatabaseRuntime) {
   const auth = new AuthController();
