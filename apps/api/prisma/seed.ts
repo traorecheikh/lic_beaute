@@ -1,13 +1,19 @@
-import { PrismaClient, Role, SalonApprovalStatus, SubscriptionTier, SubscriptionStatus, PaymentProvider, PaymentStatus, BlockedSlotScope } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient, Role, SalonApprovalStatus, SubscriptionTier, SubscriptionStatus, PaymentProvider, PaymentStatus, BlockedSlotScope } from "../src/generated/prisma/client.js";
 import argon2 from "argon2";
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const prisma = new PrismaClient();
-
 const seedDir = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(seedDir, "../../../.env") });
+
+const adapter = new PrismaPg({
+  connectionString:
+    process.env.DATABASE_URL ??
+    "postgresql://postgres:postgres@localhost:5434/beaute_avenue?schema=public"
+});
+const prisma = new PrismaClient({ adapter });
 
 // Set DEV_TEST_PHONE in .env to seed full demo data for your OTP dev account.
 const DEV_TEST_PHONE = process.env.DEV_TEST_PHONE ?? null;

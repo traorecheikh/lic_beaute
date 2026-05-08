@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../generated/prisma/client.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { availabilityQuerySchema } from "@beauteavenue/contracts";

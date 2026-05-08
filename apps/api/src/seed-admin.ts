@@ -1,7 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "./generated/prisma/client.js";
 import bcrypt from "bcrypt";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString:
+    process.env.DATABASE_URL ??
+    "postgresql://postgres:postgres@localhost:5434/beaute_avenue?schema=public"
+});
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const email = "admin@beauteavenue.local";

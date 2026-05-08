@@ -57,16 +57,16 @@ const mocks = vi.hoisted(() => {
   return { prisma, requireRole, ok, fail, HttpAuthError };
 });
 
-vi.mock("../lib/db/prisma.js", () => ({
+vi.mock("../../lib/db/prisma.js", () => ({
   prisma: mocks.prisma
 }));
 
-vi.mock("../lib/auth/index.js", () => ({
+vi.mock("../../lib/auth/index.js", () => ({
   HttpAuthError: mocks.HttpAuthError,
   requireRole: mocks.requireRole
 }));
 
-vi.mock("../lib/http.js", () => ({
+vi.mock("../../lib/http.js", () => ({
   ok: mocks.ok,
   fail: mocks.fail
 }));

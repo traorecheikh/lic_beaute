@@ -14,7 +14,7 @@ import { config } from "./config.js";
 import type { DatabaseRuntime } from "./lib/db/runtime.js";
 import { setPrisma } from "./lib/db/prisma.js";
 import { registerRoutes } from "./modules/routes.js";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "./generated/prisma/client.js";
 
 type CreateAppOptions = {
   databaseRuntime: DatabaseRuntime;

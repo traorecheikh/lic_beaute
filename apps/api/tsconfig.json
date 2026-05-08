@@ -4,8 +4,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
-    "paths": {},
-    "ignoreDeprecations": "6.0"
+    "paths": {}
   },
   "include": ["src/**/*.ts"],
   "exclude": ["prisma/seed.ts", "src/seed-admin.ts"]

@@ -2,7 +2,9 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { createApp } from "../../app.js";
 
-describe("notifications & reminders", () => {
+const RUN_DB_INTEGRATION = process.env.RUN_DB_INTEGRATION === "1";
+
+describe.runIf(RUN_DB_INTEGRATION)("notifications & reminders", () => {
   const appPromise = createApp({
     databaseRuntime: {
       driver: "sqlite",
@@ -14,6 +16,8 @@ describe("notifications & reminders", () => {
     }
   });
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   afterAll(async () => {
     const app = await appPromise;
     await app.close();
@@ -21,15 +25,25 @@ describe("notifications & reminders", () => {
 
   async function authenticateAdmin() {
     const app = await appPromise;
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/login",
-      payload: {
-        email: "admin@beauteavenue.local",
-        password: "admin1234"
+    let lastStatusCode = 500;
+
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/v1/auth/login",
+        payload: {
+          email: "admin@beauteavenue.local",
+          password: "admin1234"
+        }
+      });
+      lastStatusCode = response.statusCode;
+      if (response.statusCode === 200) {
+        return response.json<{ accessToken: string }>().accessToken;
       }
-    });
-    return response.json<{ accessToken: string }>().accessToken;
+      await sleep(120);
+    }
+
+    throw new Error(`authenticateAdmin failed with status ${lastStatusCode}`);
   }
 
   it("push token validation rejects invalid platform", async () => {

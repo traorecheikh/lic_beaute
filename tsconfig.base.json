@@ -9,11 +9,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
-      "@beauteavenue/contracts": ["packages/contracts/dist/index.js"],
-      "@beauteavenue/shared-ts": ["packages/shared-ts/dist/index.js"]
+      "@beauteavenue/contracts": ["./packages/contracts/dist/index.js"],
+      "@beauteavenue/shared-ts": ["./packages/shared-ts/dist/index.js"]
     }
   }
 }
-

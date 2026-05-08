@@ -2,7 +2,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../generated/prisma/client.js";
+import { config } from "../../config.js";
 
 // Load .env from repo root regardless of which directory the process runs from.
 // apps/api/src/lib → apps/api/src → apps/api → apps → repo root
@@ -13,7 +15,9 @@ let _instance: PrismaClient | null = null;
 
 export function getPrisma(): PrismaClient {
   if (!_instance) {
-    _instance = new PrismaClient();
+    const connectionString = process.env.DATABASE_URL ?? config.databaseUrl;
+    const adapter = new PrismaPg({ connectionString });
+    _instance = new PrismaClient({ adapter });
   }
   return _instance;
 }

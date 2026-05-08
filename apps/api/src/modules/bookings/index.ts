@@ -10,7 +10,7 @@ import { fail, ok } from "../../lib/http.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../../generated/prisma/client.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   intechApiKey: config.intechApiKey,

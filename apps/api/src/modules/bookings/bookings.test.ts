@@ -31,15 +31,15 @@ const mocks = vi.hoisted(() => {
   return { prisma, tx, requireRole, ok, fail, fetchAndComputeAvailableSlots };
 });
 
-vi.mock("../adapters/index.js", () => ({
+vi.mock("../../adapters/index.js", () => ({
   getPaymentAdapter: () => ({})
 }));
 
-vi.mock("../lib/db/prisma.js", () => ({
+vi.mock("../../lib/db/prisma.js", () => ({
   prisma: mocks.prisma
 }));
 
-vi.mock("../lib/auth/index.js", () => {
+vi.mock("../../lib/auth/index.js", () => {
   class HttpAuthError extends Error {
     statusCode: number;
     code: string;
@@ -55,12 +55,12 @@ vi.mock("../lib/auth/index.js", () => {
   };
 });
 
-vi.mock("../lib/http.js", () => ({
+vi.mock("../../lib/http.js", () => ({
   ok: mocks.ok,
   fail: mocks.fail
 }));
 
-vi.mock("../lib/availability.js", () => ({
+vi.mock("../../lib/availability.js", () => ({
   fetchAndComputeAvailableSlots: mocks.fetchAndComputeAvailableSlots
 }));
 

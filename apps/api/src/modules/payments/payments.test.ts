@@ -56,15 +56,15 @@ const mocks = vi.hoisted(() => {
   return { adapter, tx, prisma, requireRole, ok, fail, loggerError };
 });
 
-vi.mock("../adapters/index.js", () => ({
+vi.mock("../../adapters/index.js", () => ({
   getPaymentAdapter: () => mocks.adapter
 }));
 
-vi.mock("../lib/db/prisma.js", () => ({
+vi.mock("../../lib/db/prisma.js", () => ({
   prisma: mocks.prisma
 }));
 
-vi.mock("../lib/auth/index.js", () => {
+vi.mock("../../lib/auth/index.js", () => {
   class HttpAuthError extends Error {
     statusCode: number;
     code: string;
@@ -80,12 +80,12 @@ vi.mock("../lib/auth/index.js", () => {
   };
 });
 
-vi.mock("../lib/http.js", () => ({
+vi.mock("../../lib/http.js", () => ({
   ok: mocks.ok,
   fail: mocks.fail
 }));
 
-vi.mock("../lib/logger.js", () => ({
+vi.mock("../../lib/logger.js", () => ({
   logger: {
     error: mocks.loggerError
   }

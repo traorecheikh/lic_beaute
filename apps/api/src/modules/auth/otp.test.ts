@@ -34,23 +34,20 @@ const mocks = vi.hoisted(() => {
   return { otpSend, prisma, ok, fail };
 });
 
-vi.mock("../adapters/otp.js", () => ({
-  NoopOtpAdapter: class {
-    async send(phone: string, code: string) {
-      return mocks.otpSend(phone, code);
-    }
-
-    async verify() {
-      return true;
-    }
-  }
+vi.mock("../../adapters/index.js", () => ({
+  createOtpAdapter: () => ({
+    send: (phone: string, code: string) => mocks.otpSend(phone, code),
+    verify: async () => true
+  }),
+  getR2Adapter: () => null,
+  getStorageAdapter: vi.fn()
 }));
 
-vi.mock("../lib/db/prisma.js", () => ({
+vi.mock("../../lib/db/prisma.js", () => ({
   prisma: mocks.prisma
 }));
 
-vi.mock("../lib/http.js", () => ({
+vi.mock("../../lib/http.js", () => ({
   ok: mocks.ok,
   fail: mocks.fail
 }));
