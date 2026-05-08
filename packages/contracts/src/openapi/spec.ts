@@ -2134,31 +2134,6 @@ export const openApiSpec = {
         }
       }
     },
-    "/api/v1/payments/webhooks/paytech": {
-      post: {
-        tags: ["payments"],
-        summary: "PayTech payment webhook callback",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: ref("PaymentWebhookBody")
-            }
-          }
-        },
-        responses: {
-          200: {
-            description: "Webhook acknowledged",
-            content: {
-              "application/json": {
-                schema: toOpenApiSchema(z.object({ received: z.boolean() }))
-              }
-            }
-          }
-        }
-      }
-    },
-
     "/api/v1/push-tokens": {
       post: withBearer({
         tags: ["push"],

@@ -13,27 +13,27 @@
  */
 
 import { mapValues } from '../runtime';
-import type { AdminSalonDetailServicesInner } from './AdminSalonDetailServicesInner';
+import type { ApiV1AdminSalonsPost201ResponseServicesInner } from './ApiV1AdminSalonsPost201ResponseServicesInner';
 import {
-    AdminSalonDetailServicesInnerFromJSON,
-    AdminSalonDetailServicesInnerFromJSONTyped,
-    AdminSalonDetailServicesInnerToJSON,
-    AdminSalonDetailServicesInnerToJSONTyped,
-} from './AdminSalonDetailServicesInner';
-import type { AdminSalonDetailOwner } from './AdminSalonDetailOwner';
+    ApiV1AdminSalonsPost201ResponseServicesInnerFromJSON,
+    ApiV1AdminSalonsPost201ResponseServicesInnerFromJSONTyped,
+    ApiV1AdminSalonsPost201ResponseServicesInnerToJSON,
+    ApiV1AdminSalonsPost201ResponseServicesInnerToJSONTyped,
+} from './ApiV1AdminSalonsPost201ResponseServicesInner';
+import type { ApiV1AdminSalonsPost201ResponseDocumentsInner } from './ApiV1AdminSalonsPost201ResponseDocumentsInner';
 import {
-    AdminSalonDetailOwnerFromJSON,
-    AdminSalonDetailOwnerFromJSONTyped,
-    AdminSalonDetailOwnerToJSON,
-    AdminSalonDetailOwnerToJSONTyped,
-} from './AdminSalonDetailOwner';
-import type { AdminSalonDetailDocumentsInner } from './AdminSalonDetailDocumentsInner';
+    ApiV1AdminSalonsPost201ResponseDocumentsInnerFromJSON,
+    ApiV1AdminSalonsPost201ResponseDocumentsInnerFromJSONTyped,
+    ApiV1AdminSalonsPost201ResponseDocumentsInnerToJSON,
+    ApiV1AdminSalonsPost201ResponseDocumentsInnerToJSONTyped,
+} from './ApiV1AdminSalonsPost201ResponseDocumentsInner';
+import type { ApiV1AdminSalonsPost201ResponseOwner } from './ApiV1AdminSalonsPost201ResponseOwner';
 import {
-    AdminSalonDetailDocumentsInnerFromJSON,
-    AdminSalonDetailDocumentsInnerFromJSONTyped,
-    AdminSalonDetailDocumentsInnerToJSON,
-    AdminSalonDetailDocumentsInnerToJSONTyped,
-} from './AdminSalonDetailDocumentsInner';
+    ApiV1AdminSalonsPost201ResponseOwnerFromJSON,
+    ApiV1AdminSalonsPost201ResponseOwnerFromJSONTyped,
+    ApiV1AdminSalonsPost201ResponseOwnerToJSON,
+    ApiV1AdminSalonsPost201ResponseOwnerToJSONTyped,
+} from './ApiV1AdminSalonsPost201ResponseOwner';
 
 /**
  * 
@@ -79,10 +79,10 @@ export interface AdminSalonDetail {
     description: string;
     /**
      * 
-     * @type {AdminSalonDetailOwner}
+     * @type {ApiV1AdminSalonsPost201ResponseOwner}
      * @memberof AdminSalonDetail
      */
-    owner: AdminSalonDetailOwner;
+    owner: ApiV1AdminSalonsPost201ResponseOwner;
     /**
      * 
      * @type {AdminSalonDetailApprovalStatusEnum}
@@ -121,16 +121,16 @@ export interface AdminSalonDetail {
     gallery: Array<string>;
     /**
      * 
-     * @type {Array<AdminSalonDetailServicesInner>}
+     * @type {Array<ApiV1AdminSalonsPost201ResponseServicesInner>}
      * @memberof AdminSalonDetail
      */
-    services: Array<AdminSalonDetailServicesInner>;
+    services: Array<ApiV1AdminSalonsPost201ResponseServicesInner>;
     /**
      * 
-     * @type {Array<AdminSalonDetailDocumentsInner>}
+     * @type {Array<ApiV1AdminSalonsPost201ResponseDocumentsInner>}
      * @memberof AdminSalonDetail
      */
-    documents: Array<AdminSalonDetailDocumentsInner>;
+    documents: Array<ApiV1AdminSalonsPost201ResponseDocumentsInner>;
 }
 
 
@@ -193,15 +193,15 @@ export function AdminSalonDetailFromJSONTyped(json: any, ignoreDiscriminator: bo
         'city': json['city'],
         'address': json['address'],
         'description': json['description'],
-        'owner': AdminSalonDetailOwnerFromJSON(json['owner']),
+        'owner': ApiV1AdminSalonsPost201ResponseOwnerFromJSON(json['owner']),
         'approvalStatus': json['approvalStatus'],
         'subscriptionIntentTier': json['subscriptionIntentTier'],
         'submittedAt': (new Date(json['submittedAt'])),
         'missingEvidence': json['missingEvidence'],
         'latestAdminNote': json['latestAdminNote'],
         'gallery': json['gallery'],
-        'services': ((json['services'] as Array<any>).map(AdminSalonDetailServicesInnerFromJSON)),
-        'documents': ((json['documents'] as Array<any>).map(AdminSalonDetailDocumentsInnerFromJSON)),
+        'services': ((json['services'] as Array<any>).map(ApiV1AdminSalonsPost201ResponseServicesInnerFromJSON)),
+        'documents': ((json['documents'] as Array<any>).map(ApiV1AdminSalonsPost201ResponseDocumentsInnerFromJSON)),
     };
 }
 
@@ -222,15 +222,15 @@ export function AdminSalonDetailToJSONTyped(value?: AdminSalonDetail | null, ign
         'city': value['city'],
         'address': value['address'],
         'description': value['description'],
-        'owner': AdminSalonDetailOwnerToJSON(value['owner']),
+        'owner': ApiV1AdminSalonsPost201ResponseOwnerToJSON(value['owner']),
         'approvalStatus': value['approvalStatus'],
         'subscriptionIntentTier': value['subscriptionIntentTier'],
         'submittedAt': value['submittedAt'].toISOString(),
         'missingEvidence': value['missingEvidence'],
         'latestAdminNote': value['latestAdminNote'],
         'gallery': value['gallery'],
-        'services': ((value['services'] as Array<any>).map(AdminSalonDetailServicesInnerToJSON)),
-        'documents': ((value['documents'] as Array<any>).map(AdminSalonDetailDocumentsInnerToJSON)),
+        'services': ((value['services'] as Array<any>).map(ApiV1AdminSalonsPost201ResponseServicesInnerToJSON)),
+        'documents': ((value['documents'] as Array<any>).map(ApiV1AdminSalonsPost201ResponseDocumentsInnerToJSON)),
     };
 }
 

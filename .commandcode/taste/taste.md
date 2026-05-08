@@ -11,7 +11,7 @@
 - Store domain data (document types, categories, pricing, settings) in database-backed configuration tables, not hardcoded in UI components. Confidence: 0.70
 
 # payment-integration
-- Use backend-only payment integration with a custom frontend instead of third-party Flutter SDKs like PayTech. Confidence: 0.75
+- Use backend-only payment integration with a custom frontend instead of third-party Flutter SDKs. Confidence: 0.75
 - When replacing a payment provider, fully remove deprecated providers (Wave, Orange Money) rather than maintaining backward compatibility. Confidence: 0.65
 
 # testing

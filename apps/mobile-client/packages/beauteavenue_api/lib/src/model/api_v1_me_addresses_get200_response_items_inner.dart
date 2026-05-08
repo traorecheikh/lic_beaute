@@ -13,13 +13,11 @@ part 'api_v1_me_addresses_get200_response_items_inner.g.dart';
 /// Properties:
 /// * [id] 
 /// * [label] 
-/// * [addressLine1] 
-/// * [addressLine2] 
+/// * [street] 
 /// * [city] 
-/// * [region] 
-/// * [phone] 
 /// * [isDefault] 
 /// * [createdAt] 
+/// * [updatedAt] 
 @BuiltValue()
 abstract class ApiV1MeAddressesGet200ResponseItemsInner implements Built<ApiV1MeAddressesGet200ResponseItemsInner, ApiV1MeAddressesGet200ResponseItemsInnerBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -28,26 +26,20 @@ abstract class ApiV1MeAddressesGet200ResponseItemsInner implements Built<ApiV1Me
   @BuiltValueField(wireName: r'label')
   String get label;
 
-  @BuiltValueField(wireName: r'addressLine1')
-  String get addressLine1;
-
-  @BuiltValueField(wireName: r'addressLine2')
-  String? get addressLine2;
+  @BuiltValueField(wireName: r'street')
+  String? get street;
 
   @BuiltValueField(wireName: r'city')
-  String get city;
-
-  @BuiltValueField(wireName: r'region')
-  String? get region;
-
-  @BuiltValueField(wireName: r'phone')
-  String? get phone;
+  String? get city;
 
   @BuiltValueField(wireName: r'isDefault')
   bool get isDefault;
 
   @BuiltValueField(wireName: r'createdAt')
   String get createdAt;
+
+  @BuiltValueField(wireName: r'updatedAt')
+  String get updatedAt;
 
   ApiV1MeAddressesGet200ResponseItemsInner._();
 
@@ -82,29 +74,14 @@ class _$ApiV1MeAddressesGet200ResponseItemsInnerSerializer implements PrimitiveS
       object.label,
       specifiedType: const FullType(String),
     );
-    yield r'addressLine1';
-    yield serializers.serialize(
-      object.addressLine1,
-      specifiedType: const FullType(String),
-    );
-    yield r'addressLine2';
-    yield object.addressLine2 == null ? null : serializers.serialize(
-      object.addressLine2,
+    yield r'street';
+    yield object.street == null ? null : serializers.serialize(
+      object.street,
       specifiedType: const FullType.nullable(String),
     );
     yield r'city';
-    yield serializers.serialize(
+    yield object.city == null ? null : serializers.serialize(
       object.city,
-      specifiedType: const FullType(String),
-    );
-    yield r'region';
-    yield object.region == null ? null : serializers.serialize(
-      object.region,
-      specifiedType: const FullType.nullable(String),
-    );
-    yield r'phone';
-    yield object.phone == null ? null : serializers.serialize(
-      object.phone,
       specifiedType: const FullType.nullable(String),
     );
     yield r'isDefault';
@@ -115,6 +92,11 @@ class _$ApiV1MeAddressesGet200ResponseItemsInnerSerializer implements PrimitiveS
     yield r'createdAt';
     yield serializers.serialize(
       object.createdAt,
+      specifiedType: const FullType(String),
+    );
+    yield r'updatedAt';
+    yield serializers.serialize(
+      object.updatedAt,
       specifiedType: const FullType(String),
     );
   }
@@ -154,43 +136,21 @@ class _$ApiV1MeAddressesGet200ResponseItemsInnerSerializer implements PrimitiveS
           ) as String;
           result.label = valueDes;
           break;
-        case r'addressLine1':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.addressLine1 = valueDes;
-          break;
-        case r'addressLine2':
+        case r'street':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
           if (valueDes == null) continue;
-          result.addressLine2 = valueDes;
+          result.street = valueDes;
           break;
         case r'city':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.city = valueDes;
-          break;
-        case r'region':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.region = valueDes;
-          break;
-        case r'phone':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.phone = valueDes;
           break;
         case r'isDefault':
           final valueDes = serializers.deserialize(
@@ -205,6 +165,13 @@ class _$ApiV1MeAddressesGet200ResponseItemsInnerSerializer implements PrimitiveS
             specifiedType: const FullType(String),
           ) as String;
           result.createdAt = valueDes;
+          break;
+        case r'updatedAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.updatedAt = valueDes;
           break;
         default:
           unhandled.add(key);

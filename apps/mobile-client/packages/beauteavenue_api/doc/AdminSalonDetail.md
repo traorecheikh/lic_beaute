@@ -14,15 +14,15 @@ Name | Type | Description | Notes
 **city** | **String** |  | 
 **address** | **String** |  | 
 **description** | **String** |  | 
-**owner** | [**AdminSalonDetailOwner**](AdminSalonDetailOwner.md) |  | 
+**owner** | [**ApiV1AdminSalonsPost201ResponseOwner**](ApiV1AdminSalonsPost201ResponseOwner.md) |  | 
 **approvalStatus** | **String** |  | 
 **subscriptionIntentTier** | **String** |  | 
 **submittedAt** | [**DateTime**](DateTime.md) |  | 
 **missingEvidence** | **BuiltList&lt;String&gt;** |  | 
 **latestAdminNote** | **String** |  | 
 **gallery** | **BuiltList&lt;String&gt;** |  | 
-**services** | [**BuiltList&lt;AdminSalonDetailServicesInner&gt;**](AdminSalonDetailServicesInner.md) |  | 
-**documents** | [**BuiltList&lt;AdminSalonDetailDocumentsInner&gt;**](AdminSalonDetailDocumentsInner.md) |  | 
+**services** | [**BuiltList&lt;ApiV1AdminSalonsPost201ResponseServicesInner&gt;**](ApiV1AdminSalonsPost201ResponseServicesInner.md) |  | 
+**documents** | [**BuiltList&lt;ApiV1AdminSalonsPost201ResponseDocumentsInner&gt;**](ApiV1AdminSalonsPost201ResponseDocumentsInner.md) |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

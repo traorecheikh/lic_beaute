@@ -706,8 +706,6 @@ export async function getAuditDetail(auditId: string): Promise<AdminAuditDetail 
 const HIDDEN_SETTING_KEYS = new Set([
   "intech_api_key",
   "intech_api_secret",
-  "paytech_api_key",
-  "paytech_api_secret",
   "platform_name"
 ]);
 

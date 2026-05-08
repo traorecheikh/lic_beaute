@@ -67,8 +67,22 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminAuditAuditIdGet**](doc/AdminApi.md#apiv1adminauditauditidget) | **GET** /api/v1/admin/audit/{auditId} | Audit event detail
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminAuditGet**](doc/AdminApi.md#apiv1adminauditget) | **GET** /api/v1/admin/audit | List admin audit events
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigCategoriesGet**](doc/AdminApi.md#apiv1adminconfigcategoriesget) | **GET** /api/v1/admin/config/categories | List salon categories
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigCategoriesIdDelete**](doc/AdminApi.md#apiv1adminconfigcategoriesiddelete) | **DELETE** /api/v1/admin/config/categories/{id} | Delete a salon category
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigCategoriesPost**](doc/AdminApi.md#apiv1adminconfigcategoriespost) | **POST** /api/v1/admin/config/categories | Create or update a salon category
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigDocumentsGet**](doc/AdminApi.md#apiv1adminconfigdocumentsget) | **GET** /api/v1/admin/config/documents | List required documents
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigDocumentsIdDelete**](doc/AdminApi.md#apiv1adminconfigdocumentsiddelete) | **DELETE** /api/v1/admin/config/documents/{id} | Delete a required document
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigDocumentsPost**](doc/AdminApi.md#apiv1adminconfigdocumentspost) | **POST** /api/v1/admin/config/documents | Create or update a required document
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigSettingsGet**](doc/AdminApi.md#apiv1adminconfigsettingsget) | **GET** /api/v1/admin/config/settings | List all platform settings
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminConfigSettingsKeyPatch**](doc/AdminApi.md#apiv1adminconfigsettingskeypatch) | **PATCH** /api/v1/admin/config/settings/{key} | Update a platform setting
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminDashboardGet**](doc/AdminApi.md#apiv1admindashboardget) | **GET** /api/v1/admin/dashboard | Admin dashboard
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminMediaMediaIdApprovePost**](doc/AdminApi.md#apiv1adminmediamediaidapprovepost) | **POST** /api/v1/admin/media/{mediaId}/approve | Approve a media asset
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminMediaMediaIdRejectPost**](doc/AdminApi.md#apiv1adminmediamediaidrejectpost) | **POST** /api/v1/admin/media/{mediaId}/reject | Reject a media asset
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminMediaMediaIdSignedViewUrlPost**](doc/AdminApi.md#apiv1adminmediamediaidsignedviewurlpost) | **POST** /api/v1/admin/media/{mediaId}/signed-view-url | Get a signed URL to preview a media asset
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminMediaPendingGet**](doc/AdminApi.md#apiv1adminmediapendingget) | **GET** /api/v1/admin/media/pending | List media pending review
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSalonsGet**](doc/AdminApi.md#apiv1adminsalonsget) | **GET** /api/v1/admin/salons | List all salons with optional filters
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSalonsPendingGet**](doc/AdminApi.md#apiv1adminsalonspendingget) | **GET** /api/v1/admin/salons/pending | List pending salon approvals
+[*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSalonsPost**](doc/AdminApi.md#apiv1adminsalonspost) | **POST** /api/v1/admin/salons | Create a salon manually
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSalonsSalonIdApprovePost**](doc/AdminApi.md#apiv1adminsalonssalonidapprovepost) | **POST** /api/v1/admin/salons/{salonId}/approve | Approve salon listing
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSalonsSalonIdGet**](doc/AdminApi.md#apiv1adminsalonssalonidget) | **GET** /api/v1/admin/salons/{salonId} | Salon approval detail
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSalonsSalonIdRejectPost**](doc/AdminApi.md#apiv1adminsalonssalonidrejectpost) | **POST** /api/v1/admin/salons/{salonId}/reject | Reject salon listing
@@ -104,6 +118,9 @@ Class | Method | HTTP request | Description
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsBookingIdReviewPost**](doc/BookingsApi.md#apiv1bookingsbookingidreviewpost) | **POST** /api/v1/bookings/{bookingId}/review | Submit a review for a completed booking
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsGet**](doc/BookingsApi.md#apiv1bookingsget) | **GET** /api/v1/bookings | List bookings
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsPost**](doc/BookingsApi.md#apiv1bookingspost) | **POST** /api/v1/bookings | Create booking
+[*CatalogApi*](doc/CatalogApi.md) | [**apiV1ConfigPricingGet**](doc/CatalogApi.md#apiv1configpricingget) | **GET** /api/v1/config/pricing | Get subscription pricing tiers
+[*CatalogApi*](doc/CatalogApi.md) | [**apiV1SalonsIdAvailabilityGet**](doc/CatalogApi.md#apiv1salonsidavailabilityget) | **GET** /api/v1/salons/{id}/availability | Get available booking slots
+[*CatalogApi*](doc/CatalogApi.md) | [**apiV1SalonsIdReviewsGet**](doc/CatalogApi.md#apiv1salonsidreviewsget) | **GET** /api/v1/salons/{id}/reviews | List salon reviews
 [*FavoritesApi*](doc/FavoritesApi.md) | [**apiV1FavoritesGet**](doc/FavoritesApi.md#apiv1favoritesget) | **GET** /api/v1/favorites | List client favorites
 [*FavoritesApi*](doc/FavoritesApi.md) | [**apiV1FavoritesSalonIdDelete**](doc/FavoritesApi.md#apiv1favoritessaloniddelete) | **DELETE** /api/v1/favorites/{salonId} | Remove salon from favorites
 [*FavoritesApi*](doc/FavoritesApi.md) | [**apiV1FavoritesSalonIdPost**](doc/FavoritesApi.md#apiv1favoritessalonidpost) | **POST** /api/v1/favorites/{salonId} | Add salon to favorites
@@ -112,6 +129,7 @@ Class | Method | HTTP request | Description
 [*MediaApi*](doc/MediaApi.md) | [**apiV1MediaMediaIdDelete**](doc/MediaApi.md#apiv1mediamediaiddelete) | **DELETE** /api/v1/media/{mediaId} | Soft-delete a media asset
 [*MediaApi*](doc/MediaApi.md) | [**apiV1MediaMediaIdGet**](doc/MediaApi.md#apiv1mediamediaidget) | **GET** /api/v1/media/{mediaId} | Retrieve media metadata
 [*MediaApi*](doc/MediaApi.md) | [**apiV1MediaUploadIntentPost**](doc/MediaApi.md#apiv1mediauploadintentpost) | **POST** /api/v1/media/upload-intent | Request a presigned PUT URL for direct R2 upload
+[*MediaApi*](doc/MediaApi.md) | [**apiV1SalonsSalonIdPublicMediaGet**](doc/MediaApi.md#apiv1salonssalonidpublicmediaget) | **GET** /api/v1/salons/{salonId}/public-media | Get public media for a salon
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsGet**](doc/NotificationsApi.md#apiv1notificationsget) | **GET** /api/v1/notifications | List notifications
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsIdReadPost**](doc/NotificationsApi.md#apiv1notificationsidreadpost) | **POST** /api/v1/notifications/{id}/read | Mark one notification as read
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsReadAllPost**](doc/NotificationsApi.md#apiv1notificationsreadallpost) | **POST** /api/v1/notifications/read-all | Mark all notifications as read
@@ -120,7 +138,6 @@ Class | Method | HTTP request | Description
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdReconcilePost**](doc/PaymentsApi.md#apiv1paymentspaymentidreconcilepost) | **POST** /api/v1/payments/{paymentId}/reconcile | Manually reconcile a payment (admin or pro)
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdRefundPost**](doc/PaymentsApi.md#apiv1paymentspaymentidrefundpost) | **POST** /api/v1/payments/{paymentId}/refund | Refund a payment
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsWebhooksIntechPost**](doc/PaymentsApi.md#apiv1paymentswebhooksintechpost) | **POST** /api/v1/payments/webhooks/intech | Intech payment webhook callback
-[*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsWebhooksPaytechPost**](doc/PaymentsApi.md#apiv1paymentswebhookspaytechpost) | **POST** /api/v1/payments/webhooks/paytech | PayTech payment webhook callback
 [*ProApi*](doc/ProApi.md) | [**apiV1ProAnalyticsGet**](doc/ProApi.md#apiv1proanalyticsget) | **GET** /api/v1/pro/analytics | Get salon analytics
 [*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsGet**](doc/ProApi.md#apiv1problockedslotsget) | **GET** /api/v1/pro/blocked-slots | List blocked slots
 [*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsPost**](doc/ProApi.md#apiv1problockedslotspost) | **POST** /api/v1/pro/blocked-slots | Create blocked slot
@@ -180,13 +197,9 @@ Class | Method | HTTP request | Description
  - [AdminDashboardTopGrowthSalonsInner](doc/AdminDashboardTopGrowthSalonsInner.md)
  - [AdminSalonDecisionInput](doc/AdminSalonDecisionInput.md)
  - [AdminSalonDetail](doc/AdminSalonDetail.md)
- - [AdminSalonDetailDocumentsInner](doc/AdminSalonDetailDocumentsInner.md)
- - [AdminSalonDetailOwner](doc/AdminSalonDetailOwner.md)
- - [AdminSalonDetailServicesInner](doc/AdminSalonDetailServicesInner.md)
  - [AdminSalonQueueFilters](doc/AdminSalonQueueFilters.md)
  - [AdminSalonQueueItem](doc/AdminSalonQueueItem.md)
  - [AdminSalonQueueResponse](doc/AdminSalonQueueResponse.md)
- - [AdminSalonQueueResponseItemsInner](doc/AdminSalonQueueResponseItemsInner.md)
  - [AdminSubscriptionDetail](doc/AdminSubscriptionDetail.md)
  - [AdminSubscriptionDetailEntitlementsInner](doc/AdminSubscriptionDetailEntitlementsInner.md)
  - [AdminSubscriptionDetailEventsInner](doc/AdminSubscriptionDetailEventsInner.md)
@@ -198,8 +211,30 @@ Class | Method | HTTP request | Description
  - [AdminSubscriptionOverrideInputMetadata](doc/AdminSubscriptionOverrideInputMetadata.md)
  - [AdminSubscriptionSummary](doc/AdminSubscriptionSummary.md)
  - [ApiError](doc/ApiError.md)
+ - [ApiV1AdminConfigCategoriesGet200ResponseInner](doc/ApiV1AdminConfigCategoriesGet200ResponseInner.md)
+ - [ApiV1AdminConfigCategoriesPostRequest](doc/ApiV1AdminConfigCategoriesPostRequest.md)
+ - [ApiV1AdminConfigDocumentsGet200ResponseInner](doc/ApiV1AdminConfigDocumentsGet200ResponseInner.md)
+ - [ApiV1AdminConfigDocumentsPostRequest](doc/ApiV1AdminConfigDocumentsPostRequest.md)
+ - [ApiV1AdminConfigSettingsGet200ResponseInner](doc/ApiV1AdminConfigSettingsGet200ResponseInner.md)
+ - [ApiV1AdminConfigSettingsKeyPatchRequest](doc/ApiV1AdminConfigSettingsKeyPatchRequest.md)
+ - [ApiV1AdminMediaMediaIdApprovePost200Response](doc/ApiV1AdminMediaMediaIdApprovePost200Response.md)
+ - [ApiV1AdminMediaMediaIdApprovePostRequest](doc/ApiV1AdminMediaMediaIdApprovePostRequest.md)
+ - [ApiV1AdminMediaMediaIdRejectPost200Response](doc/ApiV1AdminMediaMediaIdRejectPost200Response.md)
+ - [ApiV1AdminMediaMediaIdRejectPostRequest](doc/ApiV1AdminMediaMediaIdRejectPostRequest.md)
+ - [ApiV1AdminMediaMediaIdSignedViewUrlPost200Response](doc/ApiV1AdminMediaMediaIdSignedViewUrlPost200Response.md)
+ - [ApiV1AdminMediaPendingGet200Response](doc/ApiV1AdminMediaPendingGet200Response.md)
+ - [ApiV1AdminMediaPendingGet200ResponseItemsInner](doc/ApiV1AdminMediaPendingGet200ResponseItemsInner.md)
+ - [ApiV1AdminSalonsGet200Response](doc/ApiV1AdminSalonsGet200Response.md)
+ - [ApiV1AdminSalonsGet200ResponseItemsInner](doc/ApiV1AdminSalonsGet200ResponseItemsInner.md)
+ - [ApiV1AdminSalonsPost201Response](doc/ApiV1AdminSalonsPost201Response.md)
+ - [ApiV1AdminSalonsPost201ResponseDocumentsInner](doc/ApiV1AdminSalonsPost201ResponseDocumentsInner.md)
+ - [ApiV1AdminSalonsPost201ResponseOwner](doc/ApiV1AdminSalonsPost201ResponseOwner.md)
+ - [ApiV1AdminSalonsPost201ResponseServicesInner](doc/ApiV1AdminSalonsPost201ResponseServicesInner.md)
+ - [ApiV1AdminSalonsPostRequest](doc/ApiV1AdminSalonsPostRequest.md)
  - [ApiV1BookingsBookingIdReviewPost201Response](doc/ApiV1BookingsBookingIdReviewPost201Response.md)
  - [ApiV1BookingsBookingIdReviewPostRequest](doc/ApiV1BookingsBookingIdReviewPostRequest.md)
+ - [ApiV1ConfigPricingGet200Response](doc/ApiV1ConfigPricingGet200Response.md)
+ - [ApiV1ConfigPricingGet200ResponseStandard](doc/ApiV1ConfigPricingGet200ResponseStandard.md)
  - [ApiV1MeAddressesAddressIdPatchRequest](doc/ApiV1MeAddressesAddressIdPatchRequest.md)
  - [ApiV1MeAddressesGet200Response](doc/ApiV1MeAddressesGet200Response.md)
  - [ApiV1MeAddressesGet200ResponseItemsInner](doc/ApiV1MeAddressesGet200ResponseItemsInner.md)
@@ -219,6 +254,10 @@ Class | Method | HTTP request | Description
  - [ApiV1PaymentsWebhooksIntechPost200Response](doc/ApiV1PaymentsWebhooksIntechPost200Response.md)
  - [ApiV1ProVouchersPost201Response](doc/ApiV1ProVouchersPost201Response.md)
  - [ApiV1PushTokensPost201Response](doc/ApiV1PushTokensPost201Response.md)
+ - [ApiV1SalonsIdAvailabilityGet200ResponseInner](doc/ApiV1SalonsIdAvailabilityGet200ResponseInner.md)
+ - [ApiV1SalonsIdReviewsGet200Response](doc/ApiV1SalonsIdReviewsGet200Response.md)
+ - [ApiV1SalonsSalonIdPublicMediaGet200Response](doc/ApiV1SalonsSalonIdPublicMediaGet200Response.md)
+ - [ApiV1SalonsSalonIdPublicMediaGet200ResponseItemsInner](doc/ApiV1SalonsSalonIdPublicMediaGet200ResponseItemsInner.md)
  - [AuthSession](doc/AuthSession.md)
  - [BookingCreateInput](doc/BookingCreateInput.md)
  - [BookingRescheduleInput](doc/BookingRescheduleInput.md)

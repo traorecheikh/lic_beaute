@@ -12,31 +12,19 @@ part 'api_v1_me_addresses_address_id_patch_request.g.dart';
 ///
 /// Properties:
 /// * [label] 
-/// * [addressLine1] 
-/// * [addressLine2] 
+/// * [street] 
 /// * [city] 
-/// * [region] 
-/// * [phone] 
 /// * [isDefault] 
 @BuiltValue()
 abstract class ApiV1MeAddressesAddressIdPatchRequest implements Built<ApiV1MeAddressesAddressIdPatchRequest, ApiV1MeAddressesAddressIdPatchRequestBuilder> {
   @BuiltValueField(wireName: r'label')
   String? get label;
 
-  @BuiltValueField(wireName: r'addressLine1')
-  String? get addressLine1;
-
-  @BuiltValueField(wireName: r'addressLine2')
-  String? get addressLine2;
+  @BuiltValueField(wireName: r'street')
+  String? get street;
 
   @BuiltValueField(wireName: r'city')
   String? get city;
-
-  @BuiltValueField(wireName: r'region')
-  String? get region;
-
-  @BuiltValueField(wireName: r'phone')
-  String? get phone;
 
   @BuiltValueField(wireName: r'isDefault')
   bool? get isDefault;
@@ -71,17 +59,10 @@ class _$ApiV1MeAddressesAddressIdPatchRequestSerializer implements PrimitiveSeri
         specifiedType: const FullType(String),
       );
     }
-    if (object.addressLine1 != null) {
-      yield r'addressLine1';
+    if (object.street != null) {
+      yield r'street';
       yield serializers.serialize(
-        object.addressLine1,
-        specifiedType: const FullType(String),
-      );
-    }
-    if (object.addressLine2 != null) {
-      yield r'addressLine2';
-      yield serializers.serialize(
-        object.addressLine2,
+        object.street,
         specifiedType: const FullType.nullable(String),
       );
     }
@@ -89,20 +70,6 @@ class _$ApiV1MeAddressesAddressIdPatchRequestSerializer implements PrimitiveSeri
       yield r'city';
       yield serializers.serialize(
         object.city,
-        specifiedType: const FullType(String),
-      );
-    }
-    if (object.region != null) {
-      yield r'region';
-      yield serializers.serialize(
-        object.region,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.phone != null) {
-      yield r'phone';
-      yield serializers.serialize(
-        object.phone,
         specifiedType: const FullType.nullable(String),
       );
     }
@@ -143,43 +110,21 @@ class _$ApiV1MeAddressesAddressIdPatchRequestSerializer implements PrimitiveSeri
           ) as String;
           result.label = valueDes;
           break;
-        case r'addressLine1':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.addressLine1 = valueDes;
-          break;
-        case r'addressLine2':
+        case r'street':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
           if (valueDes == null) continue;
-          result.addressLine2 = valueDes;
+          result.street = valueDes;
           break;
         case r'city':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.city = valueDes;
-          break;
-        case r'region':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.region = valueDes;
-          break;
-        case r'phone':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.phone = valueDes;
           break;
         case r'isDefault':
           final valueDes = serializers.deserialize(

@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { AdminSalonQueueResponseItemsInner } from './AdminSalonQueueResponseItemsInner';
+import type { ApiV1AdminSalonsGet200ResponseItemsInner } from './ApiV1AdminSalonsGet200ResponseItemsInner';
 import {
-    AdminSalonQueueResponseItemsInnerFromJSON,
-    AdminSalonQueueResponseItemsInnerFromJSONTyped,
-    AdminSalonQueueResponseItemsInnerToJSON,
-    AdminSalonQueueResponseItemsInnerToJSONTyped,
-} from './AdminSalonQueueResponseItemsInner';
+    ApiV1AdminSalonsGet200ResponseItemsInnerFromJSON,
+    ApiV1AdminSalonsGet200ResponseItemsInnerFromJSONTyped,
+    ApiV1AdminSalonsGet200ResponseItemsInnerToJSON,
+    ApiV1AdminSalonsGet200ResponseItemsInnerToJSONTyped,
+} from './ApiV1AdminSalonsGet200ResponseItemsInner';
 
 /**
  * 
@@ -29,10 +29,10 @@ import {
 export interface AdminSalonQueueResponse {
     /**
      * 
-     * @type {Array<AdminSalonQueueResponseItemsInner>}
+     * @type {Array<ApiV1AdminSalonsGet200ResponseItemsInner>}
      * @memberof AdminSalonQueueResponse
      */
-    items: Array<AdminSalonQueueResponseItemsInner>;
+    items: Array<ApiV1AdminSalonsGet200ResponseItemsInner>;
     /**
      * 
      * @type {number}
@@ -60,7 +60,7 @@ export function AdminSalonQueueResponseFromJSONTyped(json: any, ignoreDiscrimina
     }
     return {
         
-        'items': ((json['items'] as Array<any>).map(AdminSalonQueueResponseItemsInnerFromJSON)),
+        'items': ((json['items'] as Array<any>).map(ApiV1AdminSalonsGet200ResponseItemsInnerFromJSON)),
         'total': json['total'],
     };
 }
@@ -76,7 +76,7 @@ export function AdminSalonQueueResponseToJSONTyped(value?: AdminSalonQueueRespon
 
     return {
         
-        'items': ((value['items'] as Array<any>).map(AdminSalonQueueResponseItemsInnerToJSON)),
+        'items': ((value['items'] as Array<any>).map(ApiV1AdminSalonsGet200ResponseItemsInnerToJSON)),
         'total': value['total'],
     };
 }

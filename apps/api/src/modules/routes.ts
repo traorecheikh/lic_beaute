@@ -84,7 +84,6 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/payments/:paymentId", (req, rep) => payments.status(req, rep));
   app.post("/api/v1/payments/:paymentId/reconcile", (req, rep) => payments.reconcile(req, rep));
   app.post("/api/v1/payments/webhooks/intech", (req, rep) => payments.webhookIntech(req, rep));
-  app.post("/api/v1/payments/webhooks/paytech", (req, rep) => payments.webhookPayTech(req, rep));
   app.post("/api/v1/payments/:paymentId/refund", (req, rep) => payments.refund(req, rep));
 
   // ── Pro ───────────────────────────────────────────────────────────────────

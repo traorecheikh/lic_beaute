@@ -28,16 +28,11 @@ import { getProAnalytics, getProDashboard } from "./data.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   intechApiKey: config.intechApiKey,
-  intechApiSecret: config.intechApiSecret,
-  intechEnv: config.intechEnv,
   intechBaseUrl: config.intechBaseUrl,
   intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
   intechHmacSecretKey: config.intechHmacSecretKey,
   intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
   intechRequestTimeoutMs: config.intechRequestTimeoutMs,
-  paytechApiKey: config.paytechApiKey,
-  paytechApiSecret: config.paytechApiSecret,
-  paytechEnv: config.paytechEnv,
   baseOrigin: config.webOrigin
 });
 

@@ -36,31 +36,13 @@ export interface ApiV1MeAddressesGet200ResponseItemsInner {
      * @type {string}
      * @memberof ApiV1MeAddressesGet200ResponseItemsInner
      */
-    addressLine1: string;
+    street: string | null;
     /**
      * 
      * @type {string}
      * @memberof ApiV1MeAddressesGet200ResponseItemsInner
      */
-    addressLine2: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesGet200ResponseItemsInner
-     */
-    city: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesGet200ResponseItemsInner
-     */
-    region: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesGet200ResponseItemsInner
-     */
-    phone: string | null;
+    city: string | null;
     /**
      * 
      * @type {boolean}
@@ -73,6 +55,12 @@ export interface ApiV1MeAddressesGet200ResponseItemsInner {
      * @memberof ApiV1MeAddressesGet200ResponseItemsInner
      */
     createdAt: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1MeAddressesGet200ResponseItemsInner
+     */
+    updatedAt: string;
 }
 
 /**
@@ -81,13 +69,11 @@ export interface ApiV1MeAddressesGet200ResponseItemsInner {
 export function instanceOfApiV1MeAddressesGet200ResponseItemsInner(value: object): value is ApiV1MeAddressesGet200ResponseItemsInner {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('label' in value) || value['label'] === undefined) return false;
-    if (!('addressLine1' in value) || value['addressLine1'] === undefined) return false;
-    if (!('addressLine2' in value) || value['addressLine2'] === undefined) return false;
+    if (!('street' in value) || value['street'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
-    if (!('region' in value) || value['region'] === undefined) return false;
-    if (!('phone' in value) || value['phone'] === undefined) return false;
     if (!('isDefault' in value) || value['isDefault'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     return true;
 }
 
@@ -103,13 +89,11 @@ export function ApiV1MeAddressesGet200ResponseItemsInnerFromJSONTyped(json: any,
         
         'id': json['id'],
         'label': json['label'],
-        'addressLine1': json['addressLine1'],
-        'addressLine2': json['addressLine2'],
+        'street': json['street'],
         'city': json['city'],
-        'region': json['region'],
-        'phone': json['phone'],
         'isDefault': json['isDefault'],
         'createdAt': json['createdAt'],
+        'updatedAt': json['updatedAt'],
     };
 }
 
@@ -126,13 +110,11 @@ export function ApiV1MeAddressesGet200ResponseItemsInnerToJSONTyped(value?: ApiV
         
         'id': value['id'],
         'label': value['label'],
-        'addressLine1': value['addressLine1'],
-        'addressLine2': value['addressLine2'],
+        'street': value['street'],
         'city': value['city'],
-        'region': value['region'],
-        'phone': value['phone'],
         'isDefault': value['isDefault'],
         'createdAt': value['createdAt'],
+        'updatedAt': value['updatedAt'],
     };
 }
 

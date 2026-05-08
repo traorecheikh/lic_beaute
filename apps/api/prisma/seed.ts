@@ -384,7 +384,7 @@ async function main() {
     await prisma.clientPaymentMethod.create({
       data: {
         userId: client.id,
-        provider: PaymentProvider.paytech,
+        provider: PaymentProvider.intech,
         phoneNumber: client.phone ?? `+221770000${index.toString().padLeft(2, "0")}`,
         label: "Personnel",
         isDefault: true
@@ -630,7 +630,7 @@ async function main() {
             status: "completed",
             depositAmountXof: service.depositAmountXof ?? 0,
             depositPaymentStatus: "succeeded",
-            paymentProvider: PaymentProvider.paytech,
+            paymentProvider: PaymentProvider.intech,
             createdAt: daysAgo(d + 1)
           }
         });
@@ -688,7 +688,7 @@ async function main() {
             status: "confirmed",
             depositAmountXof: service.depositAmountXof ?? 0,
             depositPaymentStatus: "succeeded",
-            paymentProvider: PaymentProvider.paytech
+            paymentProvider: PaymentProvider.intech
           }
         });
       }
@@ -745,7 +745,7 @@ async function main() {
           source: "dev_seed",
           depositAmountXof: service.depositAmountXof ?? 0,
           depositPaymentStatus: "succeeded",
-          paymentProvider: PaymentProvider.paytech,
+          paymentProvider: PaymentProvider.intech,
           createdAt: target.status === "completed" ? daysAgo(8) : new Date(),
         }
       });

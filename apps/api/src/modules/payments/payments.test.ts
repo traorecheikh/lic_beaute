@@ -122,7 +122,7 @@ describe("PaymentController", () => {
       booking: { id: "book_1", clientId: "client_1" }
     });
 
-    await controller.webhookPayTech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.payment.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -161,7 +161,7 @@ describe("PaymentController", () => {
       booking: { id: "book_1", clientId: "client_1" }
     });
 
-    await controller.webhookPayTech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.tx.settlementEvent.create).not.toHaveBeenCalled();
@@ -380,7 +380,7 @@ describe("PaymentController", () => {
     });
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
 
-    await controller.webhookPayTech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
     expect(mocks.tx.subscriptionCharge.update).toHaveBeenCalledWith(
@@ -432,7 +432,7 @@ describe("PaymentController", () => {
       subscription: { salonId: "salon_3", tier: "premium" }
     });
 
-    await controller.webhookPayTech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });

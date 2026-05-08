@@ -55,7 +55,6 @@ enum SubscriptionStatus {
 }
 
 enum PaymentProvider {
-  paytech
   intech
   manual
 }

@@ -3,10 +3,10 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:beauteavenue_api/src/model/admin_salon_detail_documents_inner.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_detail_services_inner.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_detail_owner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response_documents_inner.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response_owner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response_services_inner.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -51,7 +51,7 @@ abstract class AdminSalonDetail implements Built<AdminSalonDetail, AdminSalonDet
   String get description;
 
   @BuiltValueField(wireName: r'owner')
-  AdminSalonDetailOwner get owner;
+  ApiV1AdminSalonsPost201ResponseOwner get owner;
 
   @BuiltValueField(wireName: r'approvalStatus')
   AdminSalonDetailApprovalStatusEnum get approvalStatus;
@@ -74,10 +74,10 @@ abstract class AdminSalonDetail implements Built<AdminSalonDetail, AdminSalonDet
   BuiltList<String> get gallery;
 
   @BuiltValueField(wireName: r'services')
-  BuiltList<AdminSalonDetailServicesInner> get services;
+  BuiltList<ApiV1AdminSalonsPost201ResponseServicesInner> get services;
 
   @BuiltValueField(wireName: r'documents')
-  BuiltList<AdminSalonDetailDocumentsInner> get documents;
+  BuiltList<ApiV1AdminSalonsPost201ResponseDocumentsInner> get documents;
 
   AdminSalonDetail._();
 
@@ -135,7 +135,7 @@ class _$AdminSalonDetailSerializer implements PrimitiveSerializer<AdminSalonDeta
     yield r'owner';
     yield serializers.serialize(
       object.owner,
-      specifiedType: const FullType(AdminSalonDetailOwner),
+      specifiedType: const FullType(ApiV1AdminSalonsPost201ResponseOwner),
     );
     yield r'approvalStatus';
     yield serializers.serialize(
@@ -170,12 +170,12 @@ class _$AdminSalonDetailSerializer implements PrimitiveSerializer<AdminSalonDeta
     yield r'services';
     yield serializers.serialize(
       object.services,
-      specifiedType: const FullType(BuiltList, [FullType(AdminSalonDetailServicesInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ApiV1AdminSalonsPost201ResponseServicesInner)]),
     );
     yield r'documents';
     yield serializers.serialize(
       object.documents,
-      specifiedType: const FullType(BuiltList, [FullType(AdminSalonDetailDocumentsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ApiV1AdminSalonsPost201ResponseDocumentsInner)]),
     );
   }
 
@@ -245,8 +245,8 @@ class _$AdminSalonDetailSerializer implements PrimitiveSerializer<AdminSalonDeta
         case r'owner':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(AdminSalonDetailOwner),
-          ) as AdminSalonDetailOwner;
+            specifiedType: const FullType(ApiV1AdminSalonsPost201ResponseOwner),
+          ) as ApiV1AdminSalonsPost201ResponseOwner;
           result.owner.replace(valueDes);
           break;
         case r'approvalStatus':
@@ -295,15 +295,15 @@ class _$AdminSalonDetailSerializer implements PrimitiveSerializer<AdminSalonDeta
         case r'services':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AdminSalonDetailServicesInner)]),
-          ) as BuiltList<AdminSalonDetailServicesInner>;
+            specifiedType: const FullType(BuiltList, [FullType(ApiV1AdminSalonsPost201ResponseServicesInner)]),
+          ) as BuiltList<ApiV1AdminSalonsPost201ResponseServicesInner>;
           result.services.replace(valueDes);
           break;
         case r'documents':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AdminSalonDetailDocumentsInner)]),
-          ) as BuiltList<AdminSalonDetailDocumentsInner>;
+            specifiedType: const FullType(BuiltList, [FullType(ApiV1AdminSalonsPost201ResponseDocumentsInner)]),
+          ) as BuiltList<ApiV1AdminSalonsPost201ResponseDocumentsInner>;
           result.documents.replace(valueDes);
           break;
         default:

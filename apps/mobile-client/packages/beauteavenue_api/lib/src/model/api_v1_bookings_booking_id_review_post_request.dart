@@ -12,18 +12,14 @@ part 'api_v1_bookings_booking_id_review_post_request.g.dart';
 ///
 /// Properties:
 /// * [rating] 
-/// * [title] 
 /// * [comment] 
 @BuiltValue()
 abstract class ApiV1BookingsBookingIdReviewPostRequest implements Built<ApiV1BookingsBookingIdReviewPostRequest, ApiV1BookingsBookingIdReviewPostRequestBuilder> {
   @BuiltValueField(wireName: r'rating')
   int get rating;
 
-  @BuiltValueField(wireName: r'title')
-  String? get title;
-
   @BuiltValueField(wireName: r'comment')
-  String get comment;
+  String? get comment;
 
   ApiV1BookingsBookingIdReviewPostRequest._();
 
@@ -53,18 +49,13 @@ class _$ApiV1BookingsBookingIdReviewPostRequestSerializer implements PrimitiveSe
       object.rating,
       specifiedType: const FullType(int),
     );
-    if (object.title != null) {
-      yield r'title';
+    if (object.comment != null) {
+      yield r'comment';
       yield serializers.serialize(
-        object.title,
+        object.comment,
         specifiedType: const FullType(String),
       );
     }
-    yield r'comment';
-    yield serializers.serialize(
-      object.comment,
-      specifiedType: const FullType(String),
-    );
   }
 
   @override
@@ -94,13 +85,6 @@ class _$ApiV1BookingsBookingIdReviewPostRequestSerializer implements PrimitiveSe
             specifiedType: const FullType(int),
           ) as int;
           result.rating = valueDes;
-          break;
-        case r'title':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.title = valueDes;
           break;
         case r'comment':
           final valueDes = serializers.deserialize(

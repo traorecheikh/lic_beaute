@@ -36,19 +36,25 @@ export interface ApiV1BookingsBookingIdReviewPost201Response {
      * @type {string}
      * @memberof ApiV1BookingsBookingIdReviewPost201Response
      */
-    title: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1BookingsBookingIdReviewPost201Response
-     */
-    comment: string;
+    comment: string | null;
     /**
      * 
      * @type {Date}
      * @memberof ApiV1BookingsBookingIdReviewPost201Response
      */
     createdAt: Date;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1BookingsBookingIdReviewPost201Response
+     */
+    responseText: string | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof ApiV1BookingsBookingIdReviewPost201Response
+     */
+    responseAt: Date | null;
 }
 
 /**
@@ -57,9 +63,10 @@ export interface ApiV1BookingsBookingIdReviewPost201Response {
 export function instanceOfApiV1BookingsBookingIdReviewPost201Response(value: object): value is ApiV1BookingsBookingIdReviewPost201Response {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('rating' in value) || value['rating'] === undefined) return false;
-    if (!('title' in value) || value['title'] === undefined) return false;
     if (!('comment' in value) || value['comment'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('responseText' in value) || value['responseText'] === undefined) return false;
+    if (!('responseAt' in value) || value['responseAt'] === undefined) return false;
     return true;
 }
 
@@ -75,9 +82,10 @@ export function ApiV1BookingsBookingIdReviewPost201ResponseFromJSONTyped(json: a
         
         'id': json['id'],
         'rating': json['rating'],
-        'title': json['title'],
         'comment': json['comment'],
         'createdAt': (new Date(json['createdAt'])),
+        'responseText': json['responseText'],
+        'responseAt': (json['responseAt'] == null ? null : new Date(json['responseAt'])),
     };
 }
 
@@ -94,9 +102,10 @@ export function ApiV1BookingsBookingIdReviewPost201ResponseToJSONTyped(value?: A
         
         'id': value['id'],
         'rating': value['rating'],
-        'title': value['title'],
         'comment': value['comment'],
         'createdAt': value['createdAt'].toISOString(),
+        'responseText': value['responseText'],
+        'responseAt': value['responseAt'] == null ? value['responseAt'] : value['responseAt'].toISOString(),
     };
 }
 

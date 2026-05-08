@@ -137,9 +137,9 @@
             <div>
               <p class="text-[12px] font-bold text-espresso">Identifiants marchands — variables d'environnement uniquement</p>
               <p class="text-[11px] text-cocoa/60 mt-0.5 leading-relaxed">
-                Les clés API Wave, Orange Money et PayTech sont configurées via
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">WAVE_API_KEY</code>,
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">OM_API_KEY</code>
+                Les clés API Intech sont configurées via
+                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">INTECH_API_KEY</code>,
+                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">INTECH_API_SECRET</code>
                 dans le fichier <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">.env</code> du serveur.
                 Ne jamais stocker des secrets dans la base de données.
               </p>

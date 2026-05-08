@@ -12,6 +12,7 @@ import 'package:beauteavenue_api/src/auth/oauth.dart';
 import 'package:beauteavenue_api/src/api/admin_api.dart';
 import 'package:beauteavenue_api/src/api/auth_api.dart';
 import 'package:beauteavenue_api/src/api/bookings_api.dart';
+import 'package:beauteavenue_api/src/api/catalog_api.dart';
 import 'package:beauteavenue_api/src/api/favorites_api.dart';
 import 'package:beauteavenue_api/src/api/health_api.dart';
 import 'package:beauteavenue_api/src/api/media_api.dart';
@@ -131,6 +132,12 @@ class BeauteavenueApi {
   /// by doing that all interceptors will not be executed
   BookingsApi getBookingsApi() {
     return BookingsApi(dio, serializers);
+  }
+
+  /// Get CatalogApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  CatalogApi getCatalogApi() {
+    return CatalogApi(dio, serializers);
   }
 
   /// Get FavoritesApi instance, base route and serializer can be overridden by a given but be careful,

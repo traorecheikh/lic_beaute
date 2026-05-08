@@ -7,11 +7,8 @@
 Name | Type
 ------------ | -------------
 `label` | string
-`addressLine1` | string
-`addressLine2` | string
+`street` | string
 `city` | string
-`region` | string
-`phone` | string
 `isDefault` | boolean
 
 ## Example
@@ -22,11 +19,8 @@ import type { ApiV1MeAddressesAddressIdPatchRequest } from ''
 // TODO: Update the object below with actual values
 const example = {
   "label": null,
-  "addressLine1": null,
-  "addressLine2": null,
+  "street": null,
   "city": null,
-  "region": null,
-  "phone": null,
   "isDefault": null,
 } satisfies ApiV1MeAddressesAddressIdPatchRequest
 

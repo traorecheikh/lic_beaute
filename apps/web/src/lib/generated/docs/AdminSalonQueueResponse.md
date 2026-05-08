@@ -6,7 +6,7 @@
 
 Name | Type
 ------------ | -------------
-`items` | [Array&lt;AdminSalonQueueResponseItemsInner&gt;](AdminSalonQueueResponseItemsInner.md)
+`items` | [Array&lt;ApiV1AdminSalonsGet200ResponseItemsInner&gt;](ApiV1AdminSalonsGet200ResponseItemsInner.md)
 `total` | number
 
 ## Example

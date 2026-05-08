@@ -95,12 +95,7 @@ let _paymentAdapter: PaymentAdapter | null = null;
 export function getPaymentAdapter(
   driver: string,
   config: {
-    paytechApiKey?: string;
-    paytechApiSecret?: string;
-    paytechEnv?: "prod" | "test";
     intechApiKey?: string;
-    intechApiSecret?: string;
-    intechEnv?: "prod" | "test";
     intechBaseUrl?: string;
     intechCallbackHmacEnabled?: boolean;
     intechHmacSecretKey?: string;
@@ -117,12 +112,7 @@ export function getPaymentAdapter(
 export function createPaymentAdapter(
   driver: string,
   config: {
-    paytechApiKey?: string;
-    paytechApiSecret?: string;
-    paytechEnv?: "prod" | "test";
     intechApiKey?: string;
-    intechApiSecret?: string;
-    intechEnv?: "prod" | "test";
     intechBaseUrl?: string;
     intechCallbackHmacEnabled?: boolean;
     intechHmacSecretKey?: string;
@@ -134,11 +124,10 @@ export function createPaymentAdapter(
   switch (driver) {
     case "mock":
       return new MockPaymentAdapter();
-    case "paytech":
     case "intech": {
-      const apiKey = config.intechApiKey ?? config.paytechApiKey;
+      const apiKey = config.intechApiKey;
       if (!apiKey) {
-        throw new Error("INTECH_API_KEY required for intech/paytech driver");
+        throw new Error("INTECH_API_KEY required for intech driver");
       }
       return new IntechAdapter(
         apiKey,

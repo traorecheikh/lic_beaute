@@ -69,10 +69,6 @@ export interface ApiV1PaymentsWebhooksIntechPostRequest {
     paymentWebhookBody: PaymentWebhookBody;
 }
 
-export interface ApiV1PaymentsWebhooksPaytechPostRequest {
-    paymentWebhookBody: PaymentWebhookBody;
-}
-
 /**
  * 
  */
@@ -336,53 +332,6 @@ export class PaymentsApi extends runtime.BaseAPI {
      */
     async apiV1PaymentsWebhooksIntechPost(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1PaymentsWebhooksIntechPost200Response> {
         const response = await this.apiV1PaymentsWebhooksIntechPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for apiV1PaymentsWebhooksPaytechPost without sending the request
-     */
-    async apiV1PaymentsWebhooksPaytechPostRequestOpts(requestParameters: ApiV1PaymentsWebhooksPaytechPostRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['paymentWebhookBody'] == null) {
-            throw new runtime.RequiredError(
-                'paymentWebhookBody',
-                'Required parameter "paymentWebhookBody" was null or undefined when calling apiV1PaymentsWebhooksPaytechPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/payments/webhooks/paytech`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: PaymentWebhookBodyToJSON(requestParameters['paymentWebhookBody']),
-        };
-    }
-
-    /**
-     * PayTech payment webhook callback
-     */
-    async apiV1PaymentsWebhooksPaytechPostRaw(requestParameters: ApiV1PaymentsWebhooksPaytechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1PaymentsWebhooksIntechPost200Response>> {
-        const requestOptions = await this.apiV1PaymentsWebhooksPaytechPostRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1PaymentsWebhooksIntechPost200ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * PayTech payment webhook callback
-     */
-    async apiV1PaymentsWebhooksPaytechPost(requestParameters: ApiV1PaymentsWebhooksPaytechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1PaymentsWebhooksIntechPost200Response> {
-        const response = await this.apiV1PaymentsWebhooksPaytechPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -9,10 +9,11 @@ import 'package:beauteavenue_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | 
-**rating** | **num** |  | 
-**title** | **String** |  | 
+**rating** | **int** |  | 
 **comment** | **String** |  | 
 **createdAt** | [**DateTime**](DateTime.md) |  | 
+**responseText** | **String** |  | 
+**responseAt** | [**DateTime**](DateTime.md) |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

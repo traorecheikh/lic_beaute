@@ -14,7 +14,6 @@ Method | HTTP request | Description
 [**apiV1PaymentsPaymentIdReconcilePost**](PaymentsApi.md#apiv1paymentspaymentidreconcilepost) | **POST** /api/v1/payments/{paymentId}/reconcile | Manually reconcile a payment (admin or pro)
 [**apiV1PaymentsPaymentIdRefundPost**](PaymentsApi.md#apiv1paymentspaymentidrefundpost) | **POST** /api/v1/payments/{paymentId}/refund | Refund a payment
 [**apiV1PaymentsWebhooksIntechPost**](PaymentsApi.md#apiv1paymentswebhooksintechpost) | **POST** /api/v1/payments/webhooks/intech | Intech payment webhook callback
-[**apiV1PaymentsWebhooksPaytechPost**](PaymentsApi.md#apiv1paymentswebhookspaytechpost) | **POST** /api/v1/payments/webhooks/paytech | PayTech payment webhook callback
 
 
 # **apiV1PaymentsDepositsInitiatePost**
@@ -198,47 +197,6 @@ try {
     print(response);
 } on DioException catch (e) {
     print('Exception when calling PaymentsApi->apiV1PaymentsWebhooksIntechPost: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **paymentWebhookBody** | [**PaymentWebhookBody**](PaymentWebhookBody.md)|  | 
-
-### Return type
-
-[**ApiV1PaymentsWebhooksIntechPost200Response**](ApiV1PaymentsWebhooksIntechPost200Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV1PaymentsWebhooksPaytechPost**
-> ApiV1PaymentsWebhooksIntechPost200Response apiV1PaymentsWebhooksPaytechPost(paymentWebhookBody)
-
-PayTech payment webhook callback
-
-### Example
-```dart
-import 'package:beauteavenue_api/api.dart';
-
-final api = BeauteavenueApi().getPaymentsApi();
-final PaymentWebhookBody paymentWebhookBody = ; // PaymentWebhookBody | 
-
-try {
-    final response = api.apiV1PaymentsWebhooksPaytechPost(paymentWebhookBody);
-    print(response);
-} on DioException catch (e) {
-    print('Exception when calling PaymentsApi->apiV1PaymentsWebhooksPaytechPost: $e\n');
 }
 ```
 

@@ -3,6 +3,7 @@
 export * from './AdminApi';
 export * from './AuthApi';
 export * from './BookingsApi';
+export * from './CatalogApi';
 export * from './FavoritesApi';
 export * from './HealthApi';
 export * from './MediaApi';

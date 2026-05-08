@@ -63,6 +63,91 @@ import {
     ApiErrorFromJSON,
     ApiErrorToJSON,
 } from '../models/ApiError';
+import {
+    type ApiV1AdminConfigCategoriesGet200ResponseInner,
+    ApiV1AdminConfigCategoriesGet200ResponseInnerFromJSON,
+    ApiV1AdminConfigCategoriesGet200ResponseInnerToJSON,
+} from '../models/ApiV1AdminConfigCategoriesGet200ResponseInner';
+import {
+    type ApiV1AdminConfigCategoriesPostRequest,
+    ApiV1AdminConfigCategoriesPostRequestFromJSON,
+    ApiV1AdminConfigCategoriesPostRequestToJSON,
+} from '../models/ApiV1AdminConfigCategoriesPostRequest';
+import {
+    type ApiV1AdminConfigDocumentsGet200ResponseInner,
+    ApiV1AdminConfigDocumentsGet200ResponseInnerFromJSON,
+    ApiV1AdminConfigDocumentsGet200ResponseInnerToJSON,
+} from '../models/ApiV1AdminConfigDocumentsGet200ResponseInner';
+import {
+    type ApiV1AdminConfigDocumentsPostRequest,
+    ApiV1AdminConfigDocumentsPostRequestFromJSON,
+    ApiV1AdminConfigDocumentsPostRequestToJSON,
+} from '../models/ApiV1AdminConfigDocumentsPostRequest';
+import {
+    type ApiV1AdminConfigSettingsGet200ResponseInner,
+    ApiV1AdminConfigSettingsGet200ResponseInnerFromJSON,
+    ApiV1AdminConfigSettingsGet200ResponseInnerToJSON,
+} from '../models/ApiV1AdminConfigSettingsGet200ResponseInner';
+import {
+    type ApiV1AdminConfigSettingsKeyPatchRequest,
+    ApiV1AdminConfigSettingsKeyPatchRequestFromJSON,
+    ApiV1AdminConfigSettingsKeyPatchRequestToJSON,
+} from '../models/ApiV1AdminConfigSettingsKeyPatchRequest';
+import {
+    type ApiV1AdminMediaMediaIdApprovePost200Response,
+    ApiV1AdminMediaMediaIdApprovePost200ResponseFromJSON,
+    ApiV1AdminMediaMediaIdApprovePost200ResponseToJSON,
+} from '../models/ApiV1AdminMediaMediaIdApprovePost200Response';
+import {
+    type ApiV1AdminMediaMediaIdApprovePostRequest,
+    ApiV1AdminMediaMediaIdApprovePostRequestFromJSON,
+    ApiV1AdminMediaMediaIdApprovePostRequestToJSON,
+} from '../models/ApiV1AdminMediaMediaIdApprovePostRequest';
+import {
+    type ApiV1AdminMediaMediaIdRejectPost200Response,
+    ApiV1AdminMediaMediaIdRejectPost200ResponseFromJSON,
+    ApiV1AdminMediaMediaIdRejectPost200ResponseToJSON,
+} from '../models/ApiV1AdminMediaMediaIdRejectPost200Response';
+import {
+    type ApiV1AdminMediaMediaIdRejectPostRequest,
+    ApiV1AdminMediaMediaIdRejectPostRequestFromJSON,
+    ApiV1AdminMediaMediaIdRejectPostRequestToJSON,
+} from '../models/ApiV1AdminMediaMediaIdRejectPostRequest';
+import {
+    type ApiV1AdminMediaMediaIdSignedViewUrlPost200Response,
+    ApiV1AdminMediaMediaIdSignedViewUrlPost200ResponseFromJSON,
+    ApiV1AdminMediaMediaIdSignedViewUrlPost200ResponseToJSON,
+} from '../models/ApiV1AdminMediaMediaIdSignedViewUrlPost200Response';
+import {
+    type ApiV1AdminMediaPendingGet200Response,
+    ApiV1AdminMediaPendingGet200ResponseFromJSON,
+    ApiV1AdminMediaPendingGet200ResponseToJSON,
+} from '../models/ApiV1AdminMediaPendingGet200Response';
+import {
+    type ApiV1AdminSalonsGet200Response,
+    ApiV1AdminSalonsGet200ResponseFromJSON,
+    ApiV1AdminSalonsGet200ResponseToJSON,
+} from '../models/ApiV1AdminSalonsGet200Response';
+import {
+    type ApiV1AdminSalonsPost201Response,
+    ApiV1AdminSalonsPost201ResponseFromJSON,
+    ApiV1AdminSalonsPost201ResponseToJSON,
+} from '../models/ApiV1AdminSalonsPost201Response';
+import {
+    type ApiV1AdminSalonsPostRequest,
+    ApiV1AdminSalonsPostRequestFromJSON,
+    ApiV1AdminSalonsPostRequestToJSON,
+} from '../models/ApiV1AdminSalonsPostRequest';
+import {
+    type DeletedResponse,
+    DeletedResponseFromJSON,
+    DeletedResponseToJSON,
+} from '../models/DeletedResponse';
+import {
+    type UpdatedResponse,
+    UpdatedResponseFromJSON,
+    UpdatedResponseToJSON,
+} from '../models/UpdatedResponse';
 
 export interface ApiV1AdminAuditAuditIdGetRequest {
     auditId: string;
@@ -74,11 +159,64 @@ export interface ApiV1AdminAuditGetRequest {
     action?: string;
 }
 
+export interface ApiV1AdminConfigCategoriesIdDeleteRequest {
+    id: string;
+}
+
+export interface ApiV1AdminConfigCategoriesPostOperationRequest {
+    apiV1AdminConfigCategoriesPostRequest: ApiV1AdminConfigCategoriesPostRequest;
+}
+
+export interface ApiV1AdminConfigDocumentsIdDeleteRequest {
+    id: string;
+}
+
+export interface ApiV1AdminConfigDocumentsPostOperationRequest {
+    apiV1AdminConfigDocumentsPostRequest: ApiV1AdminConfigDocumentsPostRequest;
+}
+
+export interface ApiV1AdminConfigSettingsGetRequest {
+    group?: string;
+}
+
+export interface ApiV1AdminConfigSettingsKeyPatchOperationRequest {
+    key: string;
+    apiV1AdminConfigSettingsKeyPatchRequest: ApiV1AdminConfigSettingsKeyPatchRequest;
+}
+
+export interface ApiV1AdminMediaMediaIdApprovePostOperationRequest {
+    mediaId: string;
+    apiV1AdminMediaMediaIdApprovePostRequest?: ApiV1AdminMediaMediaIdApprovePostRequest;
+}
+
+export interface ApiV1AdminMediaMediaIdRejectPostOperationRequest {
+    mediaId: string;
+    apiV1AdminMediaMediaIdRejectPostRequest: ApiV1AdminMediaMediaIdRejectPostRequest;
+}
+
+export interface ApiV1AdminMediaMediaIdSignedViewUrlPostRequest {
+    mediaId: string;
+}
+
+export interface ApiV1AdminMediaPendingGetRequest {
+    page?: string;
+    pageSize?: string;
+}
+
+export interface ApiV1AdminSalonsGetRequest {
+    search?: string;
+    status?: string;
+}
+
 export interface ApiV1AdminSalonsPendingGetRequest {
     search?: string;
     category?: string;
     city?: string;
     status?: string;
+}
+
+export interface ApiV1AdminSalonsPostOperationRequest {
+    apiV1AdminSalonsPostRequest: ApiV1AdminSalonsPostRequest;
 }
 
 export interface ApiV1AdminSalonsSalonIdApprovePostRequest {
@@ -230,6 +368,422 @@ export class AdminApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for apiV1AdminConfigCategoriesGet without sending the request
+     */
+    async apiV1AdminConfigCategoriesGetRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/categories`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List salon categories
+     */
+    async apiV1AdminConfigCategoriesGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ApiV1AdminConfigCategoriesGet200ResponseInner>>> {
+        const requestOptions = await this.apiV1AdminConfigCategoriesGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ApiV1AdminConfigCategoriesGet200ResponseInnerFromJSON));
+    }
+
+    /**
+     * List salon categories
+     */
+    async apiV1AdminConfigCategoriesGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ApiV1AdminConfigCategoriesGet200ResponseInner>> {
+        const response = await this.apiV1AdminConfigCategoriesGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigCategoriesIdDelete without sending the request
+     */
+    async apiV1AdminConfigCategoriesIdDeleteRequestOpts(requestParameters: ApiV1AdminConfigCategoriesIdDeleteRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling apiV1AdminConfigCategoriesIdDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/categories/{id}`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete a salon category
+     */
+    async apiV1AdminConfigCategoriesIdDeleteRaw(requestParameters: ApiV1AdminConfigCategoriesIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeletedResponse>> {
+        const requestOptions = await this.apiV1AdminConfigCategoriesIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => DeletedResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Delete a salon category
+     */
+    async apiV1AdminConfigCategoriesIdDelete(requestParameters: ApiV1AdminConfigCategoriesIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DeletedResponse> {
+        const response = await this.apiV1AdminConfigCategoriesIdDeleteRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigCategoriesPost without sending the request
+     */
+    async apiV1AdminConfigCategoriesPostRequestOpts(requestParameters: ApiV1AdminConfigCategoriesPostOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['apiV1AdminConfigCategoriesPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiV1AdminConfigCategoriesPostRequest',
+                'Required parameter "apiV1AdminConfigCategoriesPostRequest" was null or undefined when calling apiV1AdminConfigCategoriesPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/categories`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiV1AdminConfigCategoriesPostRequestToJSON(requestParameters['apiV1AdminConfigCategoriesPostRequest']),
+        };
+    }
+
+    /**
+     * Create or update a salon category
+     */
+    async apiV1AdminConfigCategoriesPostRaw(requestParameters: ApiV1AdminConfigCategoriesPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.apiV1AdminConfigCategoriesPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Create or update a salon category
+     */
+    async apiV1AdminConfigCategoriesPost(requestParameters: ApiV1AdminConfigCategoriesPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.apiV1AdminConfigCategoriesPostRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigDocumentsGet without sending the request
+     */
+    async apiV1AdminConfigDocumentsGetRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/documents`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List required documents
+     */
+    async apiV1AdminConfigDocumentsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ApiV1AdminConfigDocumentsGet200ResponseInner>>> {
+        const requestOptions = await this.apiV1AdminConfigDocumentsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ApiV1AdminConfigDocumentsGet200ResponseInnerFromJSON));
+    }
+
+    /**
+     * List required documents
+     */
+    async apiV1AdminConfigDocumentsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ApiV1AdminConfigDocumentsGet200ResponseInner>> {
+        const response = await this.apiV1AdminConfigDocumentsGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigDocumentsIdDelete without sending the request
+     */
+    async apiV1AdminConfigDocumentsIdDeleteRequestOpts(requestParameters: ApiV1AdminConfigDocumentsIdDeleteRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling apiV1AdminConfigDocumentsIdDelete().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/documents/{id}`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete a required document
+     */
+    async apiV1AdminConfigDocumentsIdDeleteRaw(requestParameters: ApiV1AdminConfigDocumentsIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeletedResponse>> {
+        const requestOptions = await this.apiV1AdminConfigDocumentsIdDeleteRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => DeletedResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Delete a required document
+     */
+    async apiV1AdminConfigDocumentsIdDelete(requestParameters: ApiV1AdminConfigDocumentsIdDeleteRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DeletedResponse> {
+        const response = await this.apiV1AdminConfigDocumentsIdDeleteRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigDocumentsPost without sending the request
+     */
+    async apiV1AdminConfigDocumentsPostRequestOpts(requestParameters: ApiV1AdminConfigDocumentsPostOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['apiV1AdminConfigDocumentsPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiV1AdminConfigDocumentsPostRequest',
+                'Required parameter "apiV1AdminConfigDocumentsPostRequest" was null or undefined when calling apiV1AdminConfigDocumentsPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/documents`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiV1AdminConfigDocumentsPostRequestToJSON(requestParameters['apiV1AdminConfigDocumentsPostRequest']),
+        };
+    }
+
+    /**
+     * Create or update a required document
+     */
+    async apiV1AdminConfigDocumentsPostRaw(requestParameters: ApiV1AdminConfigDocumentsPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.apiV1AdminConfigDocumentsPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Create or update a required document
+     */
+    async apiV1AdminConfigDocumentsPost(requestParameters: ApiV1AdminConfigDocumentsPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.apiV1AdminConfigDocumentsPostRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigSettingsGet without sending the request
+     */
+    async apiV1AdminConfigSettingsGetRequestOpts(requestParameters: ApiV1AdminConfigSettingsGetRequest): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        if (requestParameters['group'] != null) {
+            queryParameters['group'] = requestParameters['group'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/settings`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List all platform settings
+     */
+    async apiV1AdminConfigSettingsGetRaw(requestParameters: ApiV1AdminConfigSettingsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ApiV1AdminConfigSettingsGet200ResponseInner>>> {
+        const requestOptions = await this.apiV1AdminConfigSettingsGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ApiV1AdminConfigSettingsGet200ResponseInnerFromJSON));
+    }
+
+    /**
+     * List all platform settings
+     */
+    async apiV1AdminConfigSettingsGet(requestParameters: ApiV1AdminConfigSettingsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ApiV1AdminConfigSettingsGet200ResponseInner>> {
+        const response = await this.apiV1AdminConfigSettingsGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminConfigSettingsKeyPatch without sending the request
+     */
+    async apiV1AdminConfigSettingsKeyPatchRequestOpts(requestParameters: ApiV1AdminConfigSettingsKeyPatchOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['key'] == null) {
+            throw new runtime.RequiredError(
+                'key',
+                'Required parameter "key" was null or undefined when calling apiV1AdminConfigSettingsKeyPatch().'
+            );
+        }
+
+        if (requestParameters['apiV1AdminConfigSettingsKeyPatchRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiV1AdminConfigSettingsKeyPatchRequest',
+                'Required parameter "apiV1AdminConfigSettingsKeyPatchRequest" was null or undefined when calling apiV1AdminConfigSettingsKeyPatch().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/config/settings/{key}`;
+        urlPath = urlPath.replace('{key}', encodeURIComponent(String(requestParameters['key'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiV1AdminConfigSettingsKeyPatchRequestToJSON(requestParameters['apiV1AdminConfigSettingsKeyPatchRequest']),
+        };
+    }
+
+    /**
+     * Update a platform setting
+     */
+    async apiV1AdminConfigSettingsKeyPatchRaw(requestParameters: ApiV1AdminConfigSettingsKeyPatchOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UpdatedResponse>> {
+        const requestOptions = await this.apiV1AdminConfigSettingsKeyPatchRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UpdatedResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update a platform setting
+     */
+    async apiV1AdminConfigSettingsKeyPatch(requestParameters: ApiV1AdminConfigSettingsKeyPatchOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UpdatedResponse> {
+        const response = await this.apiV1AdminConfigSettingsKeyPatchRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for apiV1AdminDashboardGet without sending the request
      */
     async apiV1AdminDashboardGetRequestOpts(): Promise<runtime.RequestOpts> {
@@ -271,6 +825,284 @@ export class AdminApi extends runtime.BaseAPI {
      */
     async apiV1AdminDashboardGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AdminDashboard> {
         const response = await this.apiV1AdminDashboardGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminMediaMediaIdApprovePost without sending the request
+     */
+    async apiV1AdminMediaMediaIdApprovePostRequestOpts(requestParameters: ApiV1AdminMediaMediaIdApprovePostOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['mediaId'] == null) {
+            throw new runtime.RequiredError(
+                'mediaId',
+                'Required parameter "mediaId" was null or undefined when calling apiV1AdminMediaMediaIdApprovePost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/media/{mediaId}/approve`;
+        urlPath = urlPath.replace('{mediaId}', encodeURIComponent(String(requestParameters['mediaId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiV1AdminMediaMediaIdApprovePostRequestToJSON(requestParameters['apiV1AdminMediaMediaIdApprovePostRequest']),
+        };
+    }
+
+    /**
+     * Approve a media asset
+     */
+    async apiV1AdminMediaMediaIdApprovePostRaw(requestParameters: ApiV1AdminMediaMediaIdApprovePostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1AdminMediaMediaIdApprovePost200Response>> {
+        const requestOptions = await this.apiV1AdminMediaMediaIdApprovePostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1AdminMediaMediaIdApprovePost200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Approve a media asset
+     */
+    async apiV1AdminMediaMediaIdApprovePost(requestParameters: ApiV1AdminMediaMediaIdApprovePostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1AdminMediaMediaIdApprovePost200Response> {
+        const response = await this.apiV1AdminMediaMediaIdApprovePostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminMediaMediaIdRejectPost without sending the request
+     */
+    async apiV1AdminMediaMediaIdRejectPostRequestOpts(requestParameters: ApiV1AdminMediaMediaIdRejectPostOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['mediaId'] == null) {
+            throw new runtime.RequiredError(
+                'mediaId',
+                'Required parameter "mediaId" was null or undefined when calling apiV1AdminMediaMediaIdRejectPost().'
+            );
+        }
+
+        if (requestParameters['apiV1AdminMediaMediaIdRejectPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiV1AdminMediaMediaIdRejectPostRequest',
+                'Required parameter "apiV1AdminMediaMediaIdRejectPostRequest" was null or undefined when calling apiV1AdminMediaMediaIdRejectPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/media/{mediaId}/reject`;
+        urlPath = urlPath.replace('{mediaId}', encodeURIComponent(String(requestParameters['mediaId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiV1AdminMediaMediaIdRejectPostRequestToJSON(requestParameters['apiV1AdminMediaMediaIdRejectPostRequest']),
+        };
+    }
+
+    /**
+     * Reject a media asset
+     */
+    async apiV1AdminMediaMediaIdRejectPostRaw(requestParameters: ApiV1AdminMediaMediaIdRejectPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1AdminMediaMediaIdRejectPost200Response>> {
+        const requestOptions = await this.apiV1AdminMediaMediaIdRejectPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1AdminMediaMediaIdRejectPost200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Reject a media asset
+     */
+    async apiV1AdminMediaMediaIdRejectPost(requestParameters: ApiV1AdminMediaMediaIdRejectPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1AdminMediaMediaIdRejectPost200Response> {
+        const response = await this.apiV1AdminMediaMediaIdRejectPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminMediaMediaIdSignedViewUrlPost without sending the request
+     */
+    async apiV1AdminMediaMediaIdSignedViewUrlPostRequestOpts(requestParameters: ApiV1AdminMediaMediaIdSignedViewUrlPostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['mediaId'] == null) {
+            throw new runtime.RequiredError(
+                'mediaId',
+                'Required parameter "mediaId" was null or undefined when calling apiV1AdminMediaMediaIdSignedViewUrlPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/media/{mediaId}/signed-view-url`;
+        urlPath = urlPath.replace('{mediaId}', encodeURIComponent(String(requestParameters['mediaId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get a signed URL to preview a media asset
+     */
+    async apiV1AdminMediaMediaIdSignedViewUrlPostRaw(requestParameters: ApiV1AdminMediaMediaIdSignedViewUrlPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1AdminMediaMediaIdSignedViewUrlPost200Response>> {
+        const requestOptions = await this.apiV1AdminMediaMediaIdSignedViewUrlPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1AdminMediaMediaIdSignedViewUrlPost200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get a signed URL to preview a media asset
+     */
+    async apiV1AdminMediaMediaIdSignedViewUrlPost(requestParameters: ApiV1AdminMediaMediaIdSignedViewUrlPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1AdminMediaMediaIdSignedViewUrlPost200Response> {
+        const response = await this.apiV1AdminMediaMediaIdSignedViewUrlPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminMediaPendingGet without sending the request
+     */
+    async apiV1AdminMediaPendingGetRequestOpts(requestParameters: ApiV1AdminMediaPendingGetRequest): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/media/pending`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List media pending review
+     */
+    async apiV1AdminMediaPendingGetRaw(requestParameters: ApiV1AdminMediaPendingGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1AdminMediaPendingGet200Response>> {
+        const requestOptions = await this.apiV1AdminMediaPendingGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1AdminMediaPendingGet200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * List media pending review
+     */
+    async apiV1AdminMediaPendingGet(requestParameters: ApiV1AdminMediaPendingGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1AdminMediaPendingGet200Response> {
+        const response = await this.apiV1AdminMediaPendingGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminSalonsGet without sending the request
+     */
+    async apiV1AdminSalonsGetRequestOpts(requestParameters: ApiV1AdminSalonsGetRequest): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        if (requestParameters['search'] != null) {
+            queryParameters['search'] = requestParameters['search'];
+        }
+
+        if (requestParameters['status'] != null) {
+            queryParameters['status'] = requestParameters['status'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/salons`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List all salons with optional filters
+     */
+    async apiV1AdminSalonsGetRaw(requestParameters: ApiV1AdminSalonsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1AdminSalonsGet200Response>> {
+        const requestOptions = await this.apiV1AdminSalonsGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1AdminSalonsGet200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * List all salons with optional filters
+     */
+    async apiV1AdminSalonsGet(requestParameters: ApiV1AdminSalonsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1AdminSalonsGet200Response> {
+        const response = await this.apiV1AdminSalonsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -332,6 +1164,61 @@ export class AdminApi extends runtime.BaseAPI {
      */
     async apiV1AdminSalonsPendingGet(requestParameters: ApiV1AdminSalonsPendingGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AdminSalonQueueResponse> {
         const response = await this.apiV1AdminSalonsPendingGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AdminSalonsPost without sending the request
+     */
+    async apiV1AdminSalonsPostRequestOpts(requestParameters: ApiV1AdminSalonsPostOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['apiV1AdminSalonsPostRequest'] == null) {
+            throw new runtime.RequiredError(
+                'apiV1AdminSalonsPostRequest',
+                'Required parameter "apiV1AdminSalonsPostRequest" was null or undefined when calling apiV1AdminSalonsPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/admin/salons`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiV1AdminSalonsPostRequestToJSON(requestParameters['apiV1AdminSalonsPostRequest']),
+        };
+    }
+
+    /**
+     * Create a salon manually
+     */
+    async apiV1AdminSalonsPostRaw(requestParameters: ApiV1AdminSalonsPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1AdminSalonsPost201Response>> {
+        const requestOptions = await this.apiV1AdminSalonsPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1AdminSalonsPost201ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create a salon manually
+     */
+    async apiV1AdminSalonsPost(requestParameters: ApiV1AdminSalonsPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1AdminSalonsPost201Response> {
+        const response = await this.apiV1AdminSalonsPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

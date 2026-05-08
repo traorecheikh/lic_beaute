@@ -8,13 +8,11 @@ Name | Type
 ------------ | -------------
 `id` | string
 `label` | string
-`addressLine1` | string
-`addressLine2` | string
+`street` | string
 `city` | string
-`region` | string
-`phone` | string
 `isDefault` | boolean
 `createdAt` | string
+`updatedAt` | string
 
 ## Example
 
@@ -25,13 +23,11 @@ import type { ApiV1MeAddressesGet200ResponseItemsInner } from ''
 const example = {
   "id": null,
   "label": null,
-  "addressLine1": null,
-  "addressLine2": null,
+  "street": null,
   "city": null,
-  "region": null,
-  "phone": null,
   "isDefault": null,
   "createdAt": null,
+  "updatedAt": null,
 } satisfies ApiV1MeAddressesGet200ResponseItemsInner
 
 console.log(example)

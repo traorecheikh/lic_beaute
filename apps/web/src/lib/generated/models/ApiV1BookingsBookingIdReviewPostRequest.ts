@@ -30,13 +30,7 @@ export interface ApiV1BookingsBookingIdReviewPostRequest {
      * @type {string}
      * @memberof ApiV1BookingsBookingIdReviewPostRequest
      */
-    title?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1BookingsBookingIdReviewPostRequest
-     */
-    comment: string;
+    comment?: string;
 }
 
 /**
@@ -44,7 +38,6 @@ export interface ApiV1BookingsBookingIdReviewPostRequest {
  */
 export function instanceOfApiV1BookingsBookingIdReviewPostRequest(value: object): value is ApiV1BookingsBookingIdReviewPostRequest {
     if (!('rating' in value) || value['rating'] === undefined) return false;
-    if (!('comment' in value) || value['comment'] === undefined) return false;
     return true;
 }
 
@@ -59,8 +52,7 @@ export function ApiV1BookingsBookingIdReviewPostRequestFromJSONTyped(json: any, 
     return {
         
         'rating': json['rating'],
-        'title': json['title'] == null ? undefined : json['title'],
-        'comment': json['comment'],
+        'comment': json['comment'] == null ? undefined : json['comment'],
     };
 }
 
@@ -76,7 +68,6 @@ export function ApiV1BookingsBookingIdReviewPostRequestToJSONTyped(value?: ApiV1
     return {
         
         'rating': value['rating'],
-        'title': value['title'],
         'comment': value['comment'],
     };
 }

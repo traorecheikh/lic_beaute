@@ -3,8 +3,8 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_get200_response_items_inner.dart';
 import 'package:built_collection/built_collection.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_queue_response_items_inner.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -18,7 +18,7 @@ part 'admin_salon_queue_response.g.dart';
 @BuiltValue()
 abstract class AdminSalonQueueResponse implements Built<AdminSalonQueueResponse, AdminSalonQueueResponseBuilder> {
   @BuiltValueField(wireName: r'items')
-  BuiltList<AdminSalonQueueResponseItemsInner> get items;
+  BuiltList<ApiV1AdminSalonsGet200ResponseItemsInner> get items;
 
   @BuiltValueField(wireName: r'total')
   int get total;
@@ -49,7 +49,7 @@ class _$AdminSalonQueueResponseSerializer implements PrimitiveSerializer<AdminSa
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(BuiltList, [FullType(AdminSalonQueueResponseItemsInner)]),
+      specifiedType: const FullType(BuiltList, [FullType(ApiV1AdminSalonsGet200ResponseItemsInner)]),
     );
     yield r'total';
     yield serializers.serialize(
@@ -82,8 +82,8 @@ class _$AdminSalonQueueResponseSerializer implements PrimitiveSerializer<AdminSa
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AdminSalonQueueResponseItemsInner)]),
-          ) as BuiltList<AdminSalonQueueResponseItemsInner>;
+            specifiedType: const FullType(BuiltList, [FullType(ApiV1AdminSalonsGet200ResponseItemsInner)]),
+          ) as BuiltList<ApiV1AdminSalonsGet200ResponseItemsInner>;
           result.items.replace(valueDes);
           break;
         case r'total':

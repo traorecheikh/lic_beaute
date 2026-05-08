@@ -9,12 +9,8 @@ import 'package:beauteavenue_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **label** | **String** |  | 
-**addressLine1** | **String** |  | 
-**addressLine2** | **String** |  | [optional] 
-**city** | **String** |  | 
-**region** | **String** |  | [optional] 
-**phone** | **String** |  | [optional] 
-**isDefault** | **bool** |  | [optional] 
+**street** | **String** |  | [optional] 
+**city** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

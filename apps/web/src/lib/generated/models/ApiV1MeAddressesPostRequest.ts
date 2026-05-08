@@ -30,37 +30,13 @@ export interface ApiV1MeAddressesPostRequest {
      * @type {string}
      * @memberof ApiV1MeAddressesPostRequest
      */
-    addressLine1: string;
+    street?: string | null;
     /**
      * 
      * @type {string}
      * @memberof ApiV1MeAddressesPostRequest
      */
-    addressLine2?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesPostRequest
-     */
-    city: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesPostRequest
-     */
-    region?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesPostRequest
-     */
-    phone?: string | null;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiV1MeAddressesPostRequest
-     */
-    isDefault?: boolean;
+    city?: string | null;
 }
 
 /**
@@ -68,8 +44,6 @@ export interface ApiV1MeAddressesPostRequest {
  */
 export function instanceOfApiV1MeAddressesPostRequest(value: object): value is ApiV1MeAddressesPostRequest {
     if (!('label' in value) || value['label'] === undefined) return false;
-    if (!('addressLine1' in value) || value['addressLine1'] === undefined) return false;
-    if (!('city' in value) || value['city'] === undefined) return false;
     return true;
 }
 
@@ -84,12 +58,8 @@ export function ApiV1MeAddressesPostRequestFromJSONTyped(json: any, ignoreDiscri
     return {
         
         'label': json['label'],
-        'addressLine1': json['addressLine1'],
-        'addressLine2': json['addressLine2'] == null ? undefined : json['addressLine2'],
-        'city': json['city'],
-        'region': json['region'] == null ? undefined : json['region'],
-        'phone': json['phone'] == null ? undefined : json['phone'],
-        'isDefault': json['isDefault'] == null ? undefined : json['isDefault'],
+        'street': json['street'] == null ? undefined : json['street'],
+        'city': json['city'] == null ? undefined : json['city'],
     };
 }
 
@@ -105,12 +75,8 @@ export function ApiV1MeAddressesPostRequestToJSONTyped(value?: ApiV1MeAddressesP
     return {
         
         'label': value['label'],
-        'addressLine1': value['addressLine1'],
-        'addressLine2': value['addressLine2'],
+        'street': value['street'],
         'city': value['city'],
-        'region': value['region'],
-        'phone': value['phone'],
-        'isDefault': value['isDefault'],
     };
 }
 

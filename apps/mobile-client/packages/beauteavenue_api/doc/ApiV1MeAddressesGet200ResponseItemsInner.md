@@ -10,13 +10,11 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | 
 **label** | **String** |  | 
-**addressLine1** | **String** |  | 
-**addressLine2** | **String** |  | 
+**street** | **String** |  | 
 **city** | **String** |  | 
-**region** | **String** |  | 
-**phone** | **String** |  | 
 **isDefault** | **bool** |  | 
 **createdAt** | **String** |  | 
+**updatedAt** | **String** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

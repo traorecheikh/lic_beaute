@@ -12,15 +12,15 @@ Name | Type
 `city` | string
 `address` | string
 `description` | string
-`owner` | [AdminSalonDetailOwner](AdminSalonDetailOwner.md)
+`owner` | [ApiV1AdminSalonsPost201ResponseOwner](ApiV1AdminSalonsPost201ResponseOwner.md)
 `approvalStatus` | string
 `subscriptionIntentTier` | string
 `submittedAt` | Date
 `missingEvidence` | Array&lt;string&gt;
 `latestAdminNote` | string
 `gallery` | Array&lt;string&gt;
-`services` | [Array&lt;AdminSalonDetailServicesInner&gt;](AdminSalonDetailServicesInner.md)
-`documents` | [Array&lt;AdminSalonDetailDocumentsInner&gt;](AdminSalonDetailDocumentsInner.md)
+`services` | [Array&lt;ApiV1AdminSalonsPost201ResponseServicesInner&gt;](ApiV1AdminSalonsPost201ResponseServicesInner.md)
+`documents` | [Array&lt;ApiV1AdminSalonsPost201ResponseDocumentsInner&gt;](ApiV1AdminSalonsPost201ResponseDocumentsInner.md)
 
 ## Example
 

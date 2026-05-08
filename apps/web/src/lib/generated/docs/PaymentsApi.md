@@ -9,7 +9,6 @@ All URIs are relative to *http://localhost:3000*
 | [**apiV1PaymentsPaymentIdReconcilePost**](PaymentsApi.md#apiv1paymentspaymentidreconcilepost) | **POST** /api/v1/payments/{paymentId}/reconcile | Manually reconcile a payment (admin or pro) |
 | [**apiV1PaymentsPaymentIdRefundPost**](PaymentsApi.md#apiv1paymentspaymentidrefundpost) | **POST** /api/v1/payments/{paymentId}/refund | Refund a payment |
 | [**apiV1PaymentsWebhooksIntechPost**](PaymentsApi.md#apiv1paymentswebhooksintechpost) | **POST** /api/v1/payments/webhooks/intech | Intech payment webhook callback |
-| [**apiV1PaymentsWebhooksPaytechPost**](PaymentsApi.md#apiv1paymentswebhookspaytechpost) | **POST** /api/v1/payments/webhooks/paytech | PayTech payment webhook callback |
 
 
 
@@ -316,71 +315,6 @@ async function example() {
 
   try {
     const data = await api.apiV1PaymentsWebhooksIntechPost(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **paymentWebhookBody** | [PaymentWebhookBody](PaymentWebhookBody.md) |  | |
-
-### Return type
-
-[**ApiV1PaymentsWebhooksIntechPost200Response**](ApiV1PaymentsWebhooksIntechPost200Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: `application/json`
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | Webhook acknowledged |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
-
-## apiV1PaymentsWebhooksPaytechPost
-
-> ApiV1PaymentsWebhooksIntechPost200Response apiV1PaymentsWebhooksPaytechPost(paymentWebhookBody)
-
-PayTech payment webhook callback
-
-### Example
-
-```ts
-import {
-  Configuration,
-  PaymentsApi,
-} from '';
-import type { ApiV1PaymentsWebhooksPaytechPostRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new PaymentsApi();
-
-  const body = {
-    // PaymentWebhookBody
-    paymentWebhookBody: ...,
-  } satisfies ApiV1PaymentsWebhooksPaytechPostRequest;
-
-  try {
-    const data = await api.apiV1PaymentsWebhooksPaytechPost(body);
     console.log(data);
   } catch (error) {
     console.error(error);

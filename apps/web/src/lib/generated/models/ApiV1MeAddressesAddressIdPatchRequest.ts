@@ -30,31 +30,13 @@ export interface ApiV1MeAddressesAddressIdPatchRequest {
      * @type {string}
      * @memberof ApiV1MeAddressesAddressIdPatchRequest
      */
-    addressLine1?: string;
+    street?: string | null;
     /**
      * 
      * @type {string}
      * @memberof ApiV1MeAddressesAddressIdPatchRequest
      */
-    addressLine2?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesAddressIdPatchRequest
-     */
-    city?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesAddressIdPatchRequest
-     */
-    region?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiV1MeAddressesAddressIdPatchRequest
-     */
-    phone?: string | null;
+    city?: string | null;
     /**
      * 
      * @type {boolean}
@@ -81,11 +63,8 @@ export function ApiV1MeAddressesAddressIdPatchRequestFromJSONTyped(json: any, ig
     return {
         
         'label': json['label'] == null ? undefined : json['label'],
-        'addressLine1': json['addressLine1'] == null ? undefined : json['addressLine1'],
-        'addressLine2': json['addressLine2'] == null ? undefined : json['addressLine2'],
+        'street': json['street'] == null ? undefined : json['street'],
         'city': json['city'] == null ? undefined : json['city'],
-        'region': json['region'] == null ? undefined : json['region'],
-        'phone': json['phone'] == null ? undefined : json['phone'],
         'isDefault': json['isDefault'] == null ? undefined : json['isDefault'],
     };
 }
@@ -102,11 +81,8 @@ export function ApiV1MeAddressesAddressIdPatchRequestToJSONTyped(value?: ApiV1Me
     return {
         
         'label': value['label'],
-        'addressLine1': value['addressLine1'],
-        'addressLine2': value['addressLine2'],
+        'street': value['street'],
         'city': value['city'],
-        'region': value['region'],
-        'phone': value['phone'],
         'isDefault': value['isDefault'],
     };
 }

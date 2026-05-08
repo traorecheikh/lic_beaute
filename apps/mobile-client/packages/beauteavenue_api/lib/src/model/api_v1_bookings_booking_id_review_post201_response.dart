@@ -13,25 +13,29 @@ part 'api_v1_bookings_booking_id_review_post201_response.g.dart';
 /// Properties:
 /// * [id] 
 /// * [rating] 
-/// * [title] 
 /// * [comment] 
 /// * [createdAt] 
+/// * [responseText] 
+/// * [responseAt] 
 @BuiltValue()
 abstract class ApiV1BookingsBookingIdReviewPost201Response implements Built<ApiV1BookingsBookingIdReviewPost201Response, ApiV1BookingsBookingIdReviewPost201ResponseBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
   @BuiltValueField(wireName: r'rating')
-  num get rating;
-
-  @BuiltValueField(wireName: r'title')
-  String? get title;
+  int get rating;
 
   @BuiltValueField(wireName: r'comment')
-  String get comment;
+  String? get comment;
 
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
+
+  @BuiltValueField(wireName: r'responseText')
+  String? get responseText;
+
+  @BuiltValueField(wireName: r'responseAt')
+  DateTime? get responseAt;
 
   ApiV1BookingsBookingIdReviewPost201Response._();
 
@@ -64,22 +68,27 @@ class _$ApiV1BookingsBookingIdReviewPost201ResponseSerializer implements Primiti
     yield r'rating';
     yield serializers.serialize(
       object.rating,
-      specifiedType: const FullType(num),
-    );
-    yield r'title';
-    yield object.title == null ? null : serializers.serialize(
-      object.title,
-      specifiedType: const FullType.nullable(String),
+      specifiedType: const FullType(int),
     );
     yield r'comment';
-    yield serializers.serialize(
+    yield object.comment == null ? null : serializers.serialize(
       object.comment,
-      specifiedType: const FullType(String),
+      specifiedType: const FullType.nullable(String),
     );
     yield r'createdAt';
     yield serializers.serialize(
       object.createdAt,
       specifiedType: const FullType(DateTime),
+    );
+    yield r'responseText';
+    yield object.responseText == null ? null : serializers.serialize(
+      object.responseText,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'responseAt';
+    yield object.responseAt == null ? null : serializers.serialize(
+      object.responseAt,
+      specifiedType: const FullType.nullable(DateTime),
     );
   }
 
@@ -114,23 +123,16 @@ class _$ApiV1BookingsBookingIdReviewPost201ResponseSerializer implements Primiti
         case r'rating':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType(int),
+          ) as int;
           result.rating = valueDes;
           break;
-        case r'title':
+        case r'comment':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
           if (valueDes == null) continue;
-          result.title = valueDes;
-          break;
-        case r'comment':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
           result.comment = valueDes;
           break;
         case r'createdAt':
@@ -139,6 +141,22 @@ class _$ApiV1BookingsBookingIdReviewPost201ResponseSerializer implements Primiti
             specifiedType: const FullType(DateTime),
           ) as DateTime;
           result.createdAt = valueDes;
+          break;
+        case r'responseText':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.responseText = valueDes;
+          break;
+        case r'responseAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.responseAt = valueDes;
           break;
         default:
           unhandled.add(key);

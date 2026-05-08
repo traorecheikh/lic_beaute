@@ -8,6 +8,7 @@ All URIs are relative to *http://localhost:3000*
 | [**apiV1MediaMediaIdDelete**](MediaApi.md#apiv1mediamediaiddelete) | **DELETE** /api/v1/media/{mediaId} | Soft-delete a media asset |
 | [**apiV1MediaMediaIdGet**](MediaApi.md#apiv1mediamediaidget) | **GET** /api/v1/media/{mediaId} | Retrieve media metadata |
 | [**apiV1MediaUploadIntentPost**](MediaApi.md#apiv1mediauploadintentpostoperation) | **POST** /api/v1/media/upload-intent | Request a presigned PUT URL for direct R2 upload |
+| [**apiV1SalonsSalonIdPublicMediaGet**](MediaApi.md#apiv1salonssalonidpublicmediaget) | **GET** /api/v1/salons/{salonId}/public-media | Get public media for a salon |
 
 
 
@@ -285,6 +286,71 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **201** | Presigned upload intent |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiV1SalonsSalonIdPublicMediaGet
+
+> ApiV1SalonsSalonIdPublicMediaGet200Response apiV1SalonsSalonIdPublicMediaGet(salonId)
+
+Get public media for a salon
+
+### Example
+
+```ts
+import {
+  Configuration,
+  MediaApi,
+} from '';
+import type { ApiV1SalonsSalonIdPublicMediaGetRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new MediaApi();
+
+  const body = {
+    // string | Salon identifier
+    salonId: salonId_example,
+  } satisfies ApiV1SalonsSalonIdPublicMediaGetRequest;
+
+  try {
+    const data = await api.apiV1SalonsSalonIdPublicMediaGet(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **salonId** | `string` | Salon identifier | [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiV1SalonsSalonIdPublicMediaGet200Response**](ApiV1SalonsSalonIdPublicMediaGet200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Public media list |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

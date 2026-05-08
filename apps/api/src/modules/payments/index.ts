@@ -12,16 +12,11 @@ import { prisma } from "../../lib/db/prisma.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   intechApiKey: config.intechApiKey,
-  intechApiSecret: config.intechApiSecret,
-  intechEnv: config.intechEnv,
   intechBaseUrl: config.intechBaseUrl,
   intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
   intechHmacSecretKey: config.intechHmacSecretKey,
   intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
   intechRequestTimeoutMs: config.intechRequestTimeoutMs,
-  paytechApiKey: config.paytechApiKey,
-  paytechApiSecret: config.paytechApiSecret,
-  paytechEnv: config.paytechEnv,
   baseOrigin: config.webOrigin
 });
 
@@ -100,10 +95,6 @@ export class PaymentController {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
       fail(reply, 500, "internal_error", "Erreur interne.");
     }
-  }
-
-  async webhookPayTech(request: FastifyRequest, reply: FastifyReply) {
-    await this._handleWebhook(request, reply);
   }
 
   async webhookIntech(request: FastifyRequest, reply: FastifyReply) {

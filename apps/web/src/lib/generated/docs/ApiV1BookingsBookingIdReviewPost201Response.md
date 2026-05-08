@@ -8,9 +8,10 @@ Name | Type
 ------------ | -------------
 `id` | string
 `rating` | number
-`title` | string
 `comment` | string
 `createdAt` | Date
+`responseText` | string
+`responseAt` | Date
 
 ## Example
 
@@ -21,9 +22,10 @@ import type { ApiV1BookingsBookingIdReviewPost201Response } from ''
 const example = {
   "id": null,
   "rating": null,
-  "title": null,
   "comment": null,
   "createdAt": null,
+  "responseText": null,
+  "responseAt": null,
 } satisfies ApiV1BookingsBookingIdReviewPost201Response
 
 console.log(example)

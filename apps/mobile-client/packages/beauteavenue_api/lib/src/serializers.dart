@@ -27,13 +27,9 @@ import 'package:beauteavenue_api/src/model/admin_dashboard_quick_links.dart';
 import 'package:beauteavenue_api/src/model/admin_dashboard_top_growth_salons_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_salon_decision_input.dart';
 import 'package:beauteavenue_api/src/model/admin_salon_detail.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_detail_documents_inner.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_detail_owner.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_detail_services_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_salon_queue_filters.dart';
 import 'package:beauteavenue_api/src/model/admin_salon_queue_item.dart';
 import 'package:beauteavenue_api/src/model/admin_salon_queue_response.dart';
-import 'package:beauteavenue_api/src/model/admin_salon_queue_response_items_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_entitlements_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_events_inner.dart';
@@ -45,8 +41,30 @@ import 'package:beauteavenue_api/src/model/admin_subscription_override_input.dar
 import 'package:beauteavenue_api/src/model/admin_subscription_override_input_metadata.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_summary.dart';
 import 'package:beauteavenue_api/src/model/api_error.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_config_categories_get200_response_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_config_categories_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_config_documents_get200_response_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_config_documents_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_config_settings_get200_response_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_config_settings_key_patch_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_media_id_approve_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_media_id_approve_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_media_id_reject_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_media_id_reject_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_media_id_signed_view_url_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_pending_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_media_pending_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_get200_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response_documents_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response_owner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post201_response_services_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_admin_salons_post_request.dart';
 import 'package:beauteavenue_api/src/model/api_v1_bookings_booking_id_review_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_bookings_booking_id_review_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_config_pricing_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_config_pricing_get200_response_standard.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_addresses_address_id_patch_request.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_addresses_get200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_addresses_get200_response_items_inner.dart';
@@ -66,6 +84,10 @@ import 'package:beauteavenue_api/src/model/api_v1_notifications_id_read_post200_
 import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_intech_post200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_pro_vouchers_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_push_tokens_post201_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_salons_id_availability_get200_response_inner.dart';
+import 'package:beauteavenue_api/src/model/api_v1_salons_id_reviews_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_salons_salon_id_public_media_get200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_salons_salon_id_public_media_get200_response_items_inner.dart';
 import 'package:beauteavenue_api/src/model/auth_session.dart';
 import 'package:beauteavenue_api/src/model/booking_create_input.dart';
 import 'package:beauteavenue_api/src/model/booking_reschedule_input.dart';
@@ -174,13 +196,9 @@ part 'serializers.g.dart';
   AdminDashboardTopGrowthSalonsInner,
   AdminSalonDecisionInput,
   AdminSalonDetail,
-  AdminSalonDetailDocumentsInner,
-  AdminSalonDetailOwner,
-  AdminSalonDetailServicesInner,
   AdminSalonQueueFilters,
   AdminSalonQueueItem,
   AdminSalonQueueResponse,
-  AdminSalonQueueResponseItemsInner,
   AdminSubscriptionDetail,
   AdminSubscriptionDetailEntitlementsInner,
   AdminSubscriptionDetailEventsInner,
@@ -192,8 +210,30 @@ part 'serializers.g.dart';
   AdminSubscriptionOverrideInputMetadata,
   AdminSubscriptionSummary,
   ApiError,
+  ApiV1AdminConfigCategoriesGet200ResponseInner,
+  ApiV1AdminConfigCategoriesPostRequest,
+  ApiV1AdminConfigDocumentsGet200ResponseInner,
+  ApiV1AdminConfigDocumentsPostRequest,
+  ApiV1AdminConfigSettingsGet200ResponseInner,
+  ApiV1AdminConfigSettingsKeyPatchRequest,
+  ApiV1AdminMediaMediaIdApprovePost200Response,
+  ApiV1AdminMediaMediaIdApprovePostRequest,
+  ApiV1AdminMediaMediaIdRejectPost200Response,
+  ApiV1AdminMediaMediaIdRejectPostRequest,
+  ApiV1AdminMediaMediaIdSignedViewUrlPost200Response,
+  ApiV1AdminMediaPendingGet200Response,
+  ApiV1AdminMediaPendingGet200ResponseItemsInner,
+  ApiV1AdminSalonsGet200Response,
+  ApiV1AdminSalonsGet200ResponseItemsInner,
+  ApiV1AdminSalonsPost201Response,
+  ApiV1AdminSalonsPost201ResponseDocumentsInner,
+  ApiV1AdminSalonsPost201ResponseOwner,
+  ApiV1AdminSalonsPost201ResponseServicesInner,
+  ApiV1AdminSalonsPostRequest,
   ApiV1BookingsBookingIdReviewPost201Response,
   ApiV1BookingsBookingIdReviewPostRequest,
+  ApiV1ConfigPricingGet200Response,
+  ApiV1ConfigPricingGet200ResponseStandard,
   ApiV1MeAddressesAddressIdPatchRequest,
   ApiV1MeAddressesGet200Response,
   ApiV1MeAddressesGet200ResponseItemsInner,
@@ -213,6 +253,10 @@ part 'serializers.g.dart';
   ApiV1PaymentsWebhooksIntechPost200Response,
   ApiV1ProVouchersPost201Response,
   ApiV1PushTokensPost201Response,
+  ApiV1SalonsIdAvailabilityGet200ResponseInner,
+  ApiV1SalonsIdReviewsGet200Response,
+  ApiV1SalonsSalonIdPublicMediaGet200Response,
+  ApiV1SalonsSalonIdPublicMediaGet200ResponseItemsInner,
   AuthSession,
   BookingCreateInput,
   BookingRescheduleInput,
@@ -323,12 +367,12 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<ProInvoice>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(ProReview)]),
-        () => ListBuilder<ProReview>(),
-      )
-      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProSalonProfileHoursInner)]),
         () => ListBuilder<ProSalonProfileHoursInner>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ApiV1SalonsIdAvailabilityGet200ResponseInner)]),
+        () => ListBuilder<ApiV1SalonsIdAvailabilityGet200ResponseInner>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProStaffMember)]),
@@ -343,8 +387,24 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<ProService>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ApiV1AdminConfigDocumentsGet200ResponseInner)]),
+        () => ListBuilder<ApiV1AdminConfigDocumentsGet200ResponseInner>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProBlockedSlot)]),
         () => ListBuilder<ProBlockedSlot>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ProReview)]),
+        () => ListBuilder<ProReview>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ApiV1AdminConfigSettingsGet200ResponseInner)]),
+        () => ListBuilder<ApiV1AdminConfigSettingsGet200ResponseInner>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ApiV1AdminConfigCategoriesGet200ResponseInner)]),
+        () => ListBuilder<ApiV1AdminConfigCategoriesGet200ResponseInner>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())

@@ -63,7 +63,6 @@ t.txt
 *-firebase-adminsdk-*.json
 *-service-account*.json
 cloudfaretoken.md
-paytech.md
 agent-meet.md
 
 # Root design exports not used by app runtime

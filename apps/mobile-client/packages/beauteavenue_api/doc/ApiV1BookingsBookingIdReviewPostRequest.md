@@ -9,8 +9,7 @@ import 'package:beauteavenue_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **rating** | **int** |  | 
-**title** | **String** |  | [optional] 
-**comment** | **String** |  | 
+**comment** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

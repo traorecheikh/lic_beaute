@@ -34,6 +34,11 @@ import {
     ApiV1MediaUploadIntentPostRequestToJSON,
 } from '../models/ApiV1MediaUploadIntentPostRequest';
 import {
+    type ApiV1SalonsSalonIdPublicMediaGet200Response,
+    ApiV1SalonsSalonIdPublicMediaGet200ResponseFromJSON,
+    ApiV1SalonsSalonIdPublicMediaGet200ResponseToJSON,
+} from '../models/ApiV1SalonsSalonIdPublicMediaGet200Response';
+import {
     type DeletedResponse,
     DeletedResponseFromJSON,
     DeletedResponseToJSON,
@@ -58,6 +63,10 @@ export interface ApiV1MediaMediaIdGetRequest {
 
 export interface ApiV1MediaUploadIntentPostOperationRequest {
     apiV1MediaUploadIntentPostRequest: ApiV1MediaUploadIntentPostRequest;
+}
+
+export interface ApiV1SalonsSalonIdPublicMediaGetRequest {
+    salonId: string;
 }
 
 /**
@@ -276,6 +285,51 @@ export class MediaApi extends runtime.BaseAPI {
      */
     async apiV1MediaUploadIntentPost(requestParameters: ApiV1MediaUploadIntentPostOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1MediaUploadIntentPost201Response> {
         const response = await this.apiV1MediaUploadIntentPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1SalonsSalonIdPublicMediaGet without sending the request
+     */
+    async apiV1SalonsSalonIdPublicMediaGetRequestOpts(requestParameters: ApiV1SalonsSalonIdPublicMediaGetRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['salonId'] == null) {
+            throw new runtime.RequiredError(
+                'salonId',
+                'Required parameter "salonId" was null or undefined when calling apiV1SalonsSalonIdPublicMediaGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/salons/{salonId}/public-media`;
+        urlPath = urlPath.replace('{salonId}', encodeURIComponent(String(requestParameters['salonId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get public media for a salon
+     */
+    async apiV1SalonsSalonIdPublicMediaGetRaw(requestParameters: ApiV1SalonsSalonIdPublicMediaGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1SalonsSalonIdPublicMediaGet200Response>> {
+        const requestOptions = await this.apiV1SalonsSalonIdPublicMediaGetRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1SalonsSalonIdPublicMediaGet200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get public media for a salon
+     */
+    async apiV1SalonsSalonIdPublicMediaGet(requestParameters: ApiV1SalonsSalonIdPublicMediaGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1SalonsSalonIdPublicMediaGet200Response> {
+        const response = await this.apiV1SalonsSalonIdPublicMediaGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

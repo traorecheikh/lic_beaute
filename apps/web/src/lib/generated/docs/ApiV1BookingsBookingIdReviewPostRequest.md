@@ -7,7 +7,6 @@
 Name | Type
 ------------ | -------------
 `rating` | number
-`title` | string
 `comment` | string
 
 ## Example
@@ -18,7 +17,6 @@ import type { ApiV1BookingsBookingIdReviewPostRequest } from ''
 // TODO: Update the object below with actual values
 const example = {
   "rating": null,
-  "title": null,
   "comment": null,
 } satisfies ApiV1BookingsBookingIdReviewPostRequest
 

@@ -490,8 +490,7 @@
             "items": {
               "type": "string",
               "enum": [
-                "intech",
-                "paytech"
+                "intech"
               ]
             }
           }
@@ -513,8 +512,7 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ]
           },
           "phoneNumber": {
@@ -556,8 +554,7 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ]
           },
           "phoneNumber": {
@@ -1359,8 +1356,7 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ]
           },
           "channel": {
@@ -1435,8 +1431,7 @@
           "paymentProvider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ],
             "nullable": true
           },
@@ -1523,8 +1518,7 @@
                 "paymentProvider": {
                   "type": "string",
                   "enum": [
-                    "intech",
-                    "paytech"
+                    "intech"
                   ],
                   "nullable": true
                 },
@@ -4227,8 +4221,7 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ]
           },
           "channel": {
@@ -4290,8 +4283,7 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ]
           },
           "providerTxId": {
@@ -4336,8 +4328,7 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paytech"
+              "intech"
             ]
           },
           "providerTxId": {
@@ -4937,8 +4928,7 @@
                           "provider": {
                             "type": "string",
                             "enum": [
-                              "intech",
-                              "paytech"
+                              "intech"
                             ]
                           },
                           "phoneNumber": {
@@ -8097,45 +8087,6 @@
           "payments"
         ],
         "summary": "Intech payment webhook callback",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PaymentWebhookBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Webhook acknowledged",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "received": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "received"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/payments/webhooks/paytech": {
-      "post": {
-        "tags": [
-          "payments"
-        ],
-        "summary": "PayTech payment webhook callback",
         "requestBody": {
           "required": true,
           "content": {

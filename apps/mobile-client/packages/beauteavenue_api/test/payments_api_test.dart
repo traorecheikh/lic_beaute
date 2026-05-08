@@ -42,12 +42,5 @@ void main() {
       // TODO
     });
 
-    // PayTech payment webhook callback
-    //
-    //Future<ApiV1PaymentsWebhooksIntechPost200Response> apiV1PaymentsWebhooksPaytechPost(PaymentWebhookBody paymentWebhookBody) async
-    test('test apiV1PaymentsWebhooksPaytechPost', () async {
-      // TODO
-    });
-
   });
 }

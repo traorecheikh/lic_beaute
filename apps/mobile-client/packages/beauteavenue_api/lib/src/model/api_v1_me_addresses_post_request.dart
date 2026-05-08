@@ -12,34 +12,18 @@ part 'api_v1_me_addresses_post_request.g.dart';
 ///
 /// Properties:
 /// * [label] 
-/// * [addressLine1] 
-/// * [addressLine2] 
+/// * [street] 
 /// * [city] 
-/// * [region] 
-/// * [phone] 
-/// * [isDefault] 
 @BuiltValue()
 abstract class ApiV1MeAddressesPostRequest implements Built<ApiV1MeAddressesPostRequest, ApiV1MeAddressesPostRequestBuilder> {
   @BuiltValueField(wireName: r'label')
   String get label;
 
-  @BuiltValueField(wireName: r'addressLine1')
-  String get addressLine1;
-
-  @BuiltValueField(wireName: r'addressLine2')
-  String? get addressLine2;
+  @BuiltValueField(wireName: r'street')
+  String? get street;
 
   @BuiltValueField(wireName: r'city')
-  String get city;
-
-  @BuiltValueField(wireName: r'region')
-  String? get region;
-
-  @BuiltValueField(wireName: r'phone')
-  String? get phone;
-
-  @BuiltValueField(wireName: r'isDefault')
-  bool? get isDefault;
+  String? get city;
 
   ApiV1MeAddressesPostRequest._();
 
@@ -69,42 +53,18 @@ class _$ApiV1MeAddressesPostRequestSerializer implements PrimitiveSerializer<Api
       object.label,
       specifiedType: const FullType(String),
     );
-    yield r'addressLine1';
-    yield serializers.serialize(
-      object.addressLine1,
-      specifiedType: const FullType(String),
-    );
-    if (object.addressLine2 != null) {
-      yield r'addressLine2';
+    if (object.street != null) {
+      yield r'street';
       yield serializers.serialize(
-        object.addressLine2,
+        object.street,
         specifiedType: const FullType.nullable(String),
       );
     }
-    yield r'city';
-    yield serializers.serialize(
-      object.city,
-      specifiedType: const FullType(String),
-    );
-    if (object.region != null) {
-      yield r'region';
+    if (object.city != null) {
+      yield r'city';
       yield serializers.serialize(
-        object.region,
+        object.city,
         specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.phone != null) {
-      yield r'phone';
-      yield serializers.serialize(
-        object.phone,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.isDefault != null) {
-      yield r'isDefault';
-      yield serializers.serialize(
-        object.isDefault,
-        specifiedType: const FullType(bool),
       );
     }
   }
@@ -137,50 +97,21 @@ class _$ApiV1MeAddressesPostRequestSerializer implements PrimitiveSerializer<Api
           ) as String;
           result.label = valueDes;
           break;
-        case r'addressLine1':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.addressLine1 = valueDes;
-          break;
-        case r'addressLine2':
+        case r'street':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
           if (valueDes == null) continue;
-          result.addressLine2 = valueDes;
+          result.street = valueDes;
           break;
         case r'city':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.city = valueDes;
-          break;
-        case r'region':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.region = valueDes;
-          break;
-        case r'phone':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.phone = valueDes;
-          break;
-        case r'isDefault':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(bool),
-          ) as bool;
-          result.isDefault = valueDes;
           break;
         default:
           unhandled.add(key);
