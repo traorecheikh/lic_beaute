@@ -198,7 +198,7 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
 
   void _back() {
     if (_step == 0) {
-      Navigator.of(context).pop();
+      Navigator.of(context, rootNavigator: true).pop();
     } else {
       setState(() => _step--);
       _pageCtrl.animateToPage(

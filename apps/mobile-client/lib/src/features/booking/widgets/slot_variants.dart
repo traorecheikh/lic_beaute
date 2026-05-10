@@ -36,8 +36,11 @@ typedef OnSlotSelect = void Function(Map<String, dynamic> slot);
 DateTime _dt(Map<String, dynamic> s) =>
     DateTime.parse(s['startsAt'] as String).toLocal();
 
-DateTime _endDt(Map<String, dynamic> s) =>
-    DateTime.parse(s['endsAt'] as String).toLocal();
+DateTime _endDt(Map<String, dynamic> s) {
+  final v = s['endsAt'];
+  if (v == null) return _dt(s);
+  return DateTime.parse(v as String).toLocal();
+}
 
 String _fmt(DateTime dt) =>
     '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';

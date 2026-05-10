@@ -64,7 +64,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
       return AppScaffold(
         appBar: AppTopBar(
           showBackButton: true,
-          onBack: () => Navigator.of(context).pop(),
+          onBack: () => context.pop(),
           titleWidget: const FunnelStepTitle(
             step: 3,
             total: 4,
@@ -92,7 +92,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
     return AppScaffold(
       appBar: AppTopBar(
         showBackButton: true,
-        onBack: () => Navigator.of(context).pop(),
+        onBack: () => context.pop(),
         titleWidget: const FunnelStepTitle(
           step: 3,
           total: 4,
