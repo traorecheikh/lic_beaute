@@ -7,12 +7,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/utils/app_http_error_handler.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_city_dropdown.dart';
 import '../../../core/widgets/app_error_state.dart';
-
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../providers/profile_provider.dart';
@@ -48,7 +50,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final profileAsync = ref.watch(profileProvider);
     final optionsAsync = ref.watch(profileOptionsProvider);
 
-    return Scaffold(
+    return AppScaffold(
       appBar: const AppTopBar(title: 'Modifier mon profil'),
       body: AppAsyncView(
         value: profileAsync,
@@ -92,13 +94,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                       : null),
                             child:
                                 (_localAvatarPath == null && !hasRemoteAvatar)
-                                ? Icon(Icons.person_outline, size: 44.r)
+                                ? AppIcon('user', size: 44, color: AppColors.primary)
                                 : null,
                           ),
                           Positioned(
                             bottom: 0,
                             right: 0,
-                            child: InkWell(
+                            child: AppPressable(
                               onTap: _uploadingAvatar ? null : _pickAvatar,
                               child: Container(
                                 padding: EdgeInsets.all(10.r),
@@ -115,9 +117,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : Icon(
-                                        Icons.camera_alt,
-                                        size: 16.r,
+                                    : AppIcon(
+                                        'camera',
+                                        size: 16,
                                         color: Colors.white,
                                       ),
                               ),
@@ -208,20 +210,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     //       setState(() => _marketingOptIn = value),
                     // ),
                     SizedBox(height: 36.h),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _saving ? null : _save,
-                        child: _saving
-                            ? SizedBox(
-                                width: 18.r,
-                                height: 18.r,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Enregistrer'),
-                      ),
+                    AppButton.primary(
+                      label: 'Enregistrer',
+                      onPressed: _saving ? null : _save,
+                      isLoading: _saving,
                     ),
                   ],
                 ),

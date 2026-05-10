@@ -9,7 +9,10 @@ import '../../../core/sync/app_outbox.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_resource_view.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../providers/profile_provider.dart';
@@ -22,7 +25,7 @@ class ProfilePage extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
     final pendingSyncCount = ref.watch(pendingSyncCountProvider);
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
       body: AppResourceView(
         value: profileAsync,
@@ -51,9 +54,9 @@ class ProfilePage extends ConsumerWidget {
                                 ? CachedNetworkImageProvider(avatarUrl)
                                 : null,
                             child: !hasAvatar
-                                ? Icon(
-                                    Icons.person_outline,
-                                    size: 34.r,
+                                ? AppIcon(
+                                    'user',
+                                    size: 34,
                                     color: AppColors.primary,
                                   )
                                 : null,
@@ -86,10 +89,16 @@ class ProfilePage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () =>
-                                context.push(AppRoutes.profileEdit),
+                          AppPressable(
+                            onTap: () => context.push(AppRoutes.profileEdit),
+                            child: Padding(
+                              padding: EdgeInsets.all(12.r),
+                              child: AppIcon(
+                                'edit',
+                                size: 20,
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -107,9 +116,10 @@ class ProfilePage extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.sync_outlined,
-                                color: Color(0xFF8C6A1C),
+                              AppIcon(
+                                'refresh',
+                                size: 20,
+                                color: const Color(0xFF8C6A1C),
                               ),
                               SizedBox(width: 10.w),
                               Expanded(
@@ -133,50 +143,50 @@ class ProfilePage extends ConsumerWidget {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     _MenuTile(
-                      icon: Icons.favorite_border_rounded,
+                      icon: 'heart',
                       label: 'Mes favoris',
                       onTap: () => context.push(AppRoutes.favorites),
                     ),
                     _MenuTile(
-                      icon: Icons.notifications_none_rounded,
+                      icon: 'bell',
                       label: 'Préférences de notifications',
                       onTap: () =>
                           context.push(AppRoutes.notificationPreferences),
                     ),
                     _MenuTile(
-                      icon: Icons.payment_outlined,
+                      icon: 'credit-card',
                       label: 'Moyens de paiement',
                       onTap: () => context.push(AppRoutes.profilePayments),
                     ),
                     // Promos hidden — _MenuTile(
-                    //   icon: Icons.card_giftcard_outlined,
+                    //   icon: 'gift',
                     //   label: 'Mes bons et codes',
                     //   onTap: () => context.push(AppRoutes.profileVouchers),
                     // ),
                     _MenuTile(
-                      icon: Icons.workspace_premium_outlined,
+                      icon: 'star',
                       label: 'Mes abonnements',
                       onTap: () => context.push(AppRoutes.profileMemberships),
                     ),
                     SizedBox(height: 30.h),
                     _MenuTile(
-                      icon: Icons.help_outline_rounded,
+                      icon: 'help-circle',
                       label: 'Support & assistance',
                       onTap: () => context.push(AppRoutes.profileSupport),
                     ),
                     _MenuTile(
-                      icon: Icons.quiz_outlined,
+                      icon: 'message-circle',
                       label: 'FAQ',
                       onTap: () => context.push(AppRoutes.profileFaq),
                     ),
                     _MenuTile(
-                      icon: Icons.info_outline_rounded,
+                      icon: 'info',
                       label: 'À propos',
                       onTap: () => context.push(AppRoutes.profileAbout),
                     ),
                     SizedBox(height: 12.h),
                     _MenuTile(
-                      icon: Icons.logout_rounded,
+                      icon: 'logout',
                       label: 'Déconnexion',
                       destructive: true,
                       onTap: () async {
@@ -208,7 +218,7 @@ class _MenuTile extends StatelessWidget {
     this.trailingText, // ignore: unused_element_parameter
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final VoidCallback onTap;
   final bool destructive;
@@ -216,7 +226,7 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: () {
         destructive ? AppHaptics.heavy() : AppHaptics.light();
         onTap();
@@ -233,9 +243,9 @@ class _MenuTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
+            AppIcon(
               icon,
-              size: 22.w,
+              size: 22,
               color: destructive ? AppColors.error : AppColors.onSurfaceVariant,
             ),
             SizedBox(width: 16.w),
@@ -262,11 +272,7 @@ class _MenuTile extends StatelessWidget {
                 ),
               )
             else
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 12.w,
-                color: AppColors.outline,
-              ),
+              AppIcon('chevron-right', size: 12, color: AppColors.outline),
           ],
         ),
       ),

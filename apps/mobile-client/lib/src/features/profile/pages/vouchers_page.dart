@@ -7,8 +7,13 @@ import 'package:intl/intl.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_http_error_handler.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../models/account_models.dart';
 import '../providers/vouchers_provider.dart';
 
@@ -33,14 +38,9 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
   Widget build(BuildContext context) {
     final vouchersAsync = ref.watch(vouchersProvider);
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('Mes bons et codes', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+      appBar: const AppTopBar(title: 'Mes bons et codes', showBackButton: true),
       body: Column(
         children: [
           Expanded(
@@ -85,11 +85,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                             ),
                             child: Column(
                               children: [
-                                Icon(
-                                  Icons.card_giftcard_outlined,
-                                  size: 32.r,
-                                  color: AppColors.primary,
-                                ),
+                                AppIcon('gift', size: 32, color: AppColors.primary),
                                 SizedBox(height: 10.h),
                                 Text(
                                   'Aucun code enregistré',
@@ -168,24 +164,11 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                             ),
                           ),
                           gapW12,
-                          ElevatedButton(
+                          AppButton.primary(
+                            label: 'Appliquer',
                             onPressed: _submitting ? null : _applyCode,
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: Size(0, 56.h),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 18.w,
-                                vertical: 16.h,
-                              ),
-                            ),
-                            child: _submitting
-                                ? SizedBox(
-                                    width: 18.r,
-                                    height: 18.r,
-                                    child: const CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Appliquer'),
+                            isLoading: _submitting,
+                            isFullWidth: false,
                           ),
                         ],
                       ),
@@ -304,11 +287,14 @@ class _VoucherCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: onCopy,
-                child: Text(
-                  'Copier',
-                  style: AppTextStyles.labelMd.copyWith(color: AppColors.white),
+              AppPressable(
+                onTap: onCopy,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  child: Text(
+                    'Copier',
+                    style: AppTextStyles.labelMd.copyWith(color: AppColors.white),
+                  ),
                 ),
               ),
               _StatusBadge(status: voucher.status),

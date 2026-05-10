@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 class LegalPage extends StatelessWidget {
@@ -9,13 +13,8 @@ class LegalPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Mentions Légales', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+    return AppScaffold(
+      appBar: const AppTopBar(title: 'Mentions Légales', showBackButton: true),
       body: ListView(
         padding: EdgeInsets.all(24.w),
         children: [
@@ -30,10 +29,10 @@ class LegalPage extends StatelessWidget {
                 Image.asset(
                   'assets/logo.png',
                   height: 60.h,
-                  errorBuilder: (c, e, s) => Icon(
-                    Icons.auto_awesome,
-                    size: 60.h,
-                    color: colorScheme.primary,
+                  errorBuilder: (c, e, s) => AppIcon(
+                    'sparkle',
+                    size: 60,
+                    color: AppColors.primary,
                   ),
                 ),
                 gapH16,
@@ -58,14 +57,20 @@ class LegalPage extends StatelessWidget {
   }
 
   Widget _buildLegalTile(BuildContext context, String title) {
-    return ListTile(
-      title: Text(title, style: AppTextStyles.bodyMd),
-      trailing: const Icon(Icons.open_in_new, size: 20),
+    return AppPressable(
       onTap: () {
         AppHaptics.light();
         AppSnackbar.info(context, 'Document bientôt disponible.');
       },
-      contentPadding: EdgeInsets.symmetric(horizontal: 8.w),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 14.h),
+        child: Row(
+          children: [
+            Expanded(child: Text(title, style: AppTextStyles.bodyMd)),
+            AppIcon('external-link', size: 20, color: AppColors.onSurfaceVariant),
+          ],
+        ),
+      ),
     );
   }
 }

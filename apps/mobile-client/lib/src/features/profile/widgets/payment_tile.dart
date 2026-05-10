@@ -4,7 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_badge.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_icon_box.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../models/account_models.dart';
 import 'profile_card_shell.dart';
 
@@ -46,10 +49,10 @@ class PaymentTile extends StatelessWidget {
                   padding: EdgeInsets.all(AppSpacing.sm.r),
                   child: logoAsset != null
                       ? Image.asset(logoAsset, fit: BoxFit.contain)
-                      : Icon(
-                          Icons.account_balance_wallet_outlined,
+                      : AppIcon(
+                          'wallet',
+                          size: 20,
                           color: AppColors.onSurfaceVariant,
-                          size: 20.r,
                         ),
                 ),
               ),
@@ -93,33 +96,38 @@ class PaymentTile extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: onTap,
-                icon: const Icon(Icons.edit_outlined),
+              AppPressable(
+                onTap: onTap,
+                child: Padding(
+                  padding: EdgeInsets.all(12.r),
+                  child: AppIcon('edit', size: 20, color: AppColors.onSurfaceVariant),
+                ),
               ),
             ],
           ),
           gapH12,
           Row(
             children: [
-              TextButton(
+              AppButton.outline(
+                label: 'Définir par défaut',
                 onPressed: onDefault == null
                     ? null
                     : () {
                         AppHaptics.light();
                         onDefault!();
                       },
-                child: const Text('Définir par défaut'),
+                isFullWidth: false,
               ),
               const Spacer(),
-              TextButton(
+              AppButton.outline(
+                label: 'Supprimer',
                 onPressed: onDelete == null
                     ? null
                     : () {
                         AppHaptics.light();
                         onDelete!();
                       },
-                child: const Text('Supprimer'),
+                isFullWidth: false,
               ),
             ],
           ),

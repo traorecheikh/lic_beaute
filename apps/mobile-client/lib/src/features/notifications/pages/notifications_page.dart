@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_empty_state.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../providers/notifications_provider.dart';
 import '../widgets/notification_tile.dart';
 
@@ -16,15 +22,14 @@ class NotificationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsProvider);
-    final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text('Notifications', style: AppTextStyles.headlineMd),
+    return AppScaffold(
+      backgroundColor: AppColors.neutral,
+      appBar: AppTopBar(
+        title: 'Notifications',
         actions: [
-          TextButton(
-            onPressed: () async {
+          AppPressable(
+            onTap: () async {
               try {
                 AppHaptics.select();
                 await ref.read(notificationsProvider.notifier).markAllRead();
@@ -40,7 +45,13 @@ class NotificationsPage extends ConsumerWidget {
                 );
               }
             },
-            child: const Text('Tout marquer lu'),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: Text(
+                'Tout marquer lu',
+                style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
+              ),
+            ),
           ),
         ],
       ),
@@ -65,11 +76,10 @@ class NotificationsPage extends ConsumerWidget {
             onRefresh: () => ref.refresh(notificationsProvider.future),
             child: ListView.separated(
               itemCount: items.length,
-              separatorBuilder: (_, _) =>
-                  Divider(height: 1, color: colorScheme.outlineVariant),
+              separatorBuilder: (_, _) => const AppDivider(),
               itemBuilder: (context, index) {
                 final item = items[index];
-                return InkWell(
+                return AppPressable(
                   onTap: item.isRead
                       ? null
                       : () async {

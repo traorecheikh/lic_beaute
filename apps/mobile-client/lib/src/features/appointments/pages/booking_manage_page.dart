@@ -5,7 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../providers/booking_actions_provider.dart';
 import '../providers/bookings_list_provider.dart';
@@ -19,13 +23,9 @@ class BookingManagePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(bookingDetailProvider(bookingId));
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('Modifier le RDV', style: AppTextStyles.headlineMd),
-      ),
+      appBar: const AppTopBar(title: 'Modifier le RDV', showBackButton: true),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => Center(
@@ -44,7 +44,7 @@ class BookingManagePage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _OptionCard(
-                  icon: Icons.calendar_month_outlined,
+                  icon: 'calendar',
                   title: 'Déplacer le rendez-vous',
                   subtitle: 'Changer la date ou l\'heure de votre prestation.',
                   onTap: () {
@@ -61,7 +61,7 @@ class BookingManagePage extends ConsumerWidget {
                 ),
                 gapH16,
                 _OptionCard(
-                  icon: Icons.person_add_alt_1_outlined,
+                  icon: 'user-plus',
                   title: 'Changer de prestataire',
                   subtitle: 'Contactez le salon pour modifier le prestataire.',
                   onTap: () => AppSnackbar.info(
@@ -71,7 +71,7 @@ class BookingManagePage extends ConsumerWidget {
                 ),
                 gapH16,
                 _OptionCard(
-                  icon: Icons.cancel_outlined,
+                  icon: 'close',
                   title: 'Annuler le rendez-vous',
                   subtitle: 'Si vous ne pouvez plus venir.',
                   isDestructive: true,
@@ -117,7 +117,7 @@ class _OptionCard extends StatelessWidget {
     this.isDestructive = false,
   });
 
-  final IconData icon;
+  final String icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -125,7 +125,7 @@ class _OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(20.w),
@@ -142,10 +142,10 @@ class _OptionCard extends StatelessWidget {
                 color: isDestructive ? AppColors.errorContainer : AppColors.neutral,
                 borderRadius: BorderRadius.circular(16.r),
               ),
-              child: Icon(
+              child: AppIcon(
                 icon,
+                size: 24,
                 color: isDestructive ? AppColors.error : AppColors.primary,
-                size: 24.w,
               ),
             ),
             gapW16,
@@ -169,7 +169,7 @@ class _OptionCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+            AppIcon('chevron-right', size: 20, color: AppColors.onSurfaceVariant),
           ],
         ),
       ),

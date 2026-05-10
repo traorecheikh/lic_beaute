@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 
 class FaqTile extends StatefulWidget {
   const FaqTile({
@@ -29,7 +31,7 @@ class _FaqTileState extends State<FaqTile> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: () {
         AppHaptics.select();
         setState(() => _expanded = !_expanded);
@@ -66,9 +68,9 @@ class _FaqTileState extends State<FaqTile> {
                 AnimatedRotation(
                   turns: _expanded ? 0.5 : 0,
                   duration: widget.duration,
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 22.r,
+                  child: AppIcon(
+                    'chevron-down',
+                    size: 22,
                     color: _expanded
                         ? AppColors.primary
                         : AppColors.onSurfaceVariant,

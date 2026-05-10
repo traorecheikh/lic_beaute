@@ -10,6 +10,7 @@ import '../../../core/widgets/app_booking_header_badge.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
@@ -75,7 +76,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                     children: List.generate(5, (i) {
                       final star = i + 1;
                       final active = star <= _rating;
-                      return GestureDetector(
+                      return AppPressable(
                         onTap: () {
                           AppHaptics.select();
                           setState(() => _rating = star);

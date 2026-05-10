@@ -7,7 +7,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../../booking/utils/booking_format.dart';
@@ -132,11 +135,9 @@ class BookingDetailPage extends ConsumerWidget {
                         ),
                       ),
                       if (totalAmountXof != null || depositAmountXof > 0) ...[
-                        Divider(
-                          height: 1,
-                          color: AppColors.outlineVariant,
-                          indent: 16.w,
-                          endIndent: 16.w,
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: AppDivider(),
                         ),
                         Padding(
                           padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
@@ -205,34 +206,29 @@ class BookingDetailPage extends ConsumerWidget {
                     ),
                     SizedBox(height: 32.h),
                     Center(
-                      child: GestureDetector(
+                      child: AppPressable(
                         onTap: () async {
                           AppHaptics.medium();
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.r),
+                          bool? confirm;
+                          await AppDialog.show<void>(
+                            context,
+                            title: 'Annuler le RDV ?',
+                            body: 'Cette action est irréversible.',
+                            actions: [
+                              AppDialogAction(
+                                label: 'Non',
+                                onPressed: () {
+                                  confirm = false;
+                                },
                               ),
-                              title: const Text('Annuler le RDV ?'),
-                              content: const Text(
-                                'Cette action est irréversible.',
+                              AppDialogAction(
+                                label: 'Annuler',
+                                onPressed: () {
+                                  confirm = true;
+                                },
+                                isDestructive: true,
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Non'),
-                                ),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: AppColors.error,
-                                  ),
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Annuler'),
-                                ),
-                              ],
-                            ),
+                            ],
                           );
                           if (confirm != true) return;
                           await ref
@@ -281,8 +277,8 @@ class _StatusHeader extends StatelessWidget {
               ? AppColors.errorContainer
               : AppColors.secondaryContainer);
     final icon = isSuccess
-        ? Icons.check_rounded
-        : (isCancelled ? Icons.close_rounded : Icons.access_time_rounded);
+        ? 'check'
+        : (isCancelled ? 'close' : 'clock');
 
     final title = switch (status) {
       'confirmed' => 'Rendez-vous confirmé',
@@ -305,7 +301,7 @@ class _StatusHeader extends StatelessWidget {
             width: 48.r,
             height: 48.r,
             decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-            child: Icon(icon, color: iconColor, size: 28.r),
+            child: AppIcon(icon, size: 28, color: iconColor),
           ),
           SizedBox(height: 16.h),
           Text(title, style: AppTextStyles.headlineSm),

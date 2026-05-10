@@ -3,6 +3,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../widgets/profile_card_shell.dart';
@@ -60,7 +64,7 @@ class _AddressesPageState extends State<AddressesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
       appBar: const AppTopBar(
         title: 'Mes Adresses',
@@ -80,7 +84,7 @@ class _AddressesPageState extends State<AddressesPage> {
             ),
           ),
           gapH8,
-          GestureDetector(
+          AppPressable(
             onTap: _addAddress,
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -92,7 +96,7 @@ class _AddressesPageState extends State<AddressesPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_rounded, size: 20.r, color: AppColors.primary),
+                  AppIcon('add', size: 20, color: AppColors.primary),
                   gapW8,
                   Text(
                     'Ajouter une adresse',
@@ -131,11 +135,9 @@ class _AddressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                address.title == 'Domicile'
-                    ? Icons.home_outlined
-                    : Icons.work_outline,
-                size: 18.r,
+              AppIcon(
+                address.title == 'Domicile' ? 'home' : 'briefcase',
+                size: 18,
                 color: AppColors.onSurfaceVariant,
               ),
               gapW8,
@@ -169,34 +171,16 @@ class _AddressCard extends StatelessWidget {
           Row(
             children: [
               if (!address.isDefault)
-                TextButton(
+                AppButton.outline(
+                  label: 'Définir par défaut',
                   onPressed: onSetDefault,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    'Définir par défaut',
-                    style: AppTextStyles.labelSm.copyWith(
-                      color: AppColors.primary,
-                    ),
-                  ),
+                  isFullWidth: false,
                 ),
               const Spacer(),
-              TextButton(
+              AppButton.outline(
+                label: 'Supprimer',
                 onPressed: onDelete,
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Supprimer',
-                  style: AppTextStyles.labelSm.copyWith(color: AppColors.error),
-                ),
+                isFullWidth: false,
               ),
             ],
           ),

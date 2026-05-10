@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_empty_state.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../router/app_router.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
 import '../providers/bookings_list_provider.dart';
@@ -22,7 +24,7 @@ class BookingsListPage extends ConsumerWidget {
 
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.neutral,
         body: NestedScrollView(
           headerSliverBuilder: (context, _) => [
@@ -198,7 +200,7 @@ class _BookingTab extends StatelessWidget {
           }
           final b = items[i];
 
-          return GestureDetector(
+          return AppPressable(
             onTap: () => context.push(
               '${AppRoutes.bookingDetailPath(b.id)}${isUpcoming ? '' : '?past=true'}',
             ),
