@@ -11,6 +11,8 @@ import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_share.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/salon_map_card.dart';
 import '../../../core/session/session_store.dart';
 import '../../../router/app_router.dart';
@@ -69,8 +71,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
     Future<void> refreshSalon() =>
         ref.refresh(salonDetailResourceProvider(widget.salonId).future);
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
+    return AppScaffold(
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Padding(
@@ -544,7 +545,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
     final topPad = MediaQuery.of(context).padding.top;
     final botPad = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
@@ -579,7 +580,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                   color: Colors.black54,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.close, color: Colors.white, size: 18),
+                child: const AppIcon('close', color: Colors.white, size: 18),
               ),
             ),
           ),
@@ -768,28 +769,33 @@ class _BottomCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.onSurface,
-        foregroundColor: AppColors.surface,
-        elevation: 4,
-        shadowColor: AppColors.onSurface.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100.r),
-        ),
+    return AppPressable(
+      onTap: onBook,
+      child: Container(
+        width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 16.h),
-      ),
-      onPressed: onBook,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AppIcon('calendar', color: AppColors.surface, size: 18),
-          SizedBox(width: 8.w),
-          Text(
-            price != null ? 'Réserver · $price' : 'Choisir une prestation',
-            style: AppTextStyles.labelLg.copyWith(color: AppColors.surface),
-          ),
-        ],
+        decoration: BoxDecoration(
+          color: AppColors.onSurface,
+          borderRadius: BorderRadius.circular(100.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.onSurface.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AppIcon('calendar', color: AppColors.surface, size: 18),
+            SizedBox(width: 8.w),
+            Text(
+              price != null ? 'Réserver · $price' : 'Choisir une prestation',
+              style: AppTextStyles.labelLg.copyWith(color: AppColors.surface),
+            ),
+          ],
+        ),
       ),
     );
   }

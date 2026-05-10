@@ -47,7 +47,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       body: methodsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppEmptyState(
-          icon: Icons.star_border,
+          icon: 'star',
           title: 'Impossible de charger vos moyens de paiement',
           subtitle: error.toString(),
           action: () => ref.refresh(paymentMethodsProvider),
@@ -58,7 +58,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
           children: [
             if (methods.isEmpty)
               const AppEmptyState(
-                icon: Icons.star_border,
+                icon: 'star',
                 title: 'Aucun moyen de paiement',
                 subtitle:
                     'Enregistrez un numéro Wave, Orange Money ou Free Money pour simplifier vos réservations.',

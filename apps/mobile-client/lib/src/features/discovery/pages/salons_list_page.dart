@@ -9,6 +9,9 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../providers/salon_list_provider.dart';
 
@@ -44,26 +47,26 @@ class SalonsListPage extends ConsumerWidget {
       SalonListFilter.trending => ref.refresh(trendingProvider.future),
     };
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
+    return AppScaffold(
+      appBar: AppTopBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        leading: IconButton(
-          icon: AppIcon('arrow-left', size: 22, color: AppColors.onSurface),
-          onPressed: () {
-            AppHaptics.light();
-            context.pop();
-          },
-        ),
-        title: Text(_title, style: AppTextStyles.headlineMd),
+        showBackButton: true,
+        onBack: () {
+          AppHaptics.light();
+          context.pop();
+        },
+        title: _title,
         actions: [
-          IconButton(
-            icon: AppIcon('search', size: 20, color: AppColors.onSurface),
-            onPressed: () {
+          AppPressable(
+            onTap: () {
               AppHaptics.light();
               context.push(AppRoutes.search);
             },
+            child: Padding(
+              padding: EdgeInsets.all(8.r),
+              child: AppIcon('search', size: 20, color: AppColors.onSurface),
+            ),
           ),
           gapW4,
         ],
@@ -147,9 +150,12 @@ class _SalonCard extends StatelessWidget {
                           width: 100.r,
                           height: 100.r,
                           color: AppColors.surfaceVariant,
-                          child: Icon(
-                            Icons.storefront,
-                            color: AppColors.onSurfaceVariant,
+                          child: Center(
+                            child: AppIcon(
+                              'store',
+                              size: 32,
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
                         ),
                 ),

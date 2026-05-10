@@ -54,7 +54,7 @@ class NotificationsPage extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: AppEmptyState(
-                  icon: Icons.notifications_none_rounded,
+                  icon: 'bell',
                   title: 'Aucune notification',
                   subtitle: 'Vos rappels et confirmations apparaîtront ici.',
                 ),

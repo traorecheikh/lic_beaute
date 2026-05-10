@@ -10,6 +10,8 @@ import '../../../core/location/location_service.dart';
 import '../../../core/session/session_store.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../router/app_router.dart';
 import '../../auth/widgets/auth_required_sheet.dart';
 import '../providers/favorites_provider.dart';
@@ -102,8 +104,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       ref.invalidate(prestigeProvider);
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
+    return AppScaffold(
       body: RefreshIndicator.adaptive(
         color: AppColors.primary,
         onRefresh: refreshAll,
@@ -485,7 +486,7 @@ class _AdaptiveIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -523,23 +524,21 @@ class _SearchBarContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 4.h),
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20.r),
-            boxShadow: AppShadows.card,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Hero(
-                  tag: _searchHeroTag,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: GestureDetector(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Hero(
+                tag: _searchHeroTag,
+                child: Material(
+                  color: Colors.transparent,
+                  child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => context.push(AppRoutes.search),
                       child: Row(
@@ -612,7 +611,6 @@ class _SearchBarContent extends StatelessWidget {
                 ),
               ),
             ],
-          ),
         ),
       ),
     );

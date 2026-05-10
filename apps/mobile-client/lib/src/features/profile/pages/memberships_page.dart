@@ -48,7 +48,7 @@ class MembershipsPage extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.all(20.r),
                 child: AppEmptyState(
-              icon: Icons.workspace_premium_outlined,
+              icon: 'sparkle',
               title: 'Aucun abonnement',
               subtitle:
                   'Vos abonnements et packages attribués par les salons apparaîtront ici.',

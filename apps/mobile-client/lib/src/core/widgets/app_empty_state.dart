@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_theme.dart';
+import 'app_button.dart';
+import 'app_icon.dart';
 import 'app_icon_box.dart';
 import 'app_state_card.dart';
 
@@ -16,7 +18,7 @@ class AppEmptyState extends StatelessWidget {
     super.key,
   });
 
-  final IconData icon;
+  final String icon;
   final String title;
   final String? subtitle;
   final VoidCallback? action;
@@ -35,7 +37,7 @@ class AppEmptyState extends StatelessWidget {
             size: 56.r,
             color: AppColors.primaryContainer.withValues(alpha: 0.5),
             circle: true,
-            child: Icon(icon, size: 26.r, color: AppColors.primary),
+            child: AppIcon(icon, size: 26, color: AppColors.primary),
           ),
           SizedBox(height: 14.h),
           Text(
@@ -57,11 +59,7 @@ class AppEmptyState extends StatelessWidget {
             SizedBox(height: 18.h),
             SizedBox(
               width: compact ? double.infinity : 200.w,
-              child: FilledButton(
-                onPressed: action,
-                style: AppTheme.stateButtonStyle(context),
-                child: Text(actionLabel!),
-              ),
+              child: AppButton.primary(label: actionLabel!, onPressed: action!),
             ),
           ],
         ],

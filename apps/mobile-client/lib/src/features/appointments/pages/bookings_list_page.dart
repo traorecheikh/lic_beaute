@@ -166,7 +166,7 @@ class _BookingTab extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.55,
               child: Center(
                 child: AppEmptyState(
-                  icon: Icons.calendar_today_outlined,
+                  icon: 'calendar',
                   title: 'Aucun rendez-vous',
                   subtitle:
                       'Vos réservations à venir et passées apparaîtront ici.',

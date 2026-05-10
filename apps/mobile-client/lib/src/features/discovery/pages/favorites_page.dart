@@ -7,7 +7,11 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_sliver_salon_list.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../providers/favorites_provider.dart';
 import '../../../core/widgets/app_empty_state.dart';
@@ -23,9 +27,8 @@ class FavoritesPage extends ConsumerWidget {
       favoritesProvider.select((state) => state.salonIds),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(title: const Text('Mes Favoris'), centerTitle: true),
+    return AppScaffold(
+      appBar: AppTopBar(title: 'Mes Favoris', centerTitle: true, showBackButton: false),
       body: AppAsyncView(
         value: favoritesAsync,
         errorTitle: 'Impossible de charger vos favoris',
@@ -45,7 +48,7 @@ class FavoritesPage extends ConsumerWidget {
                 SliverFillRemaining(
                   child: Center(
                     child: AppEmptyState(
-                      icon: Icons.favorite_border,
+                      icon: 'heart',
                       title: 'Aucun favori',
                       subtitle:
                           'Enregistrez vos salons préférés pour les retrouver ici facilement.',
@@ -62,16 +65,15 @@ class FavoritesPage extends ConsumerWidget {
                   itemBuilder: (context, i, salon) => SalonListCard(
                     salon: salon,
                     onTap: () => context.push(AppRoutes.salon(salon.id)),
-                    trailing: IconButton(
-                      icon: Icon(
-                        Icons.heart_broken_rounded,
-                        color: AppColors.primary,
-                        size: 20.r,
-                      ),
-                      onPressed: () {
+                    trailing: AppPressable(
+                      onTap: () {
                         AppHaptics.light();
                         ref.read(favoritesProvider.notifier).toggle(salon.id);
                       },
+                      child: Padding(
+                        padding: EdgeInsets.all(8.r),
+                        child: AppIcon('heart-broken', size: 22, color: AppColors.error),
+                      ),
                     ),
                   ),
                 ),

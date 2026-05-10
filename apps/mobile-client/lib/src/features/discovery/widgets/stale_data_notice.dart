@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import 'package:beauteavenue_mobile_client/src/core/widgets/app_icon.dart';
 
 /// A sliver version of [StaleDataNotice] — renders the notice inside a
 /// [SliverToBoxAdapter] with the standard padding, so pages can drop it
@@ -38,7 +39,7 @@ class StaleDataNotice extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.history_rounded, size: 16, color: Color(0xFF92600A)),
+          const AppIcon('clock', size: 16, color: Color(0xFF92600A)),
           gapW8,
           Expanded(
             child: Text(

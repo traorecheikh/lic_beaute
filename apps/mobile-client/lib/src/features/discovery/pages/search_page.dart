@@ -6,8 +6,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_icon_box.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_salon_list_view.dart';
 import '../../../router/app_router.dart';
 import '../providers/salon_list_provider.dart';
@@ -59,8 +63,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     _maybeOpenFiltersFromRoute(context, categories);
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
+    return AppScaffold(
       body: Column(
         children: [
           // Search bar header
@@ -128,7 +131,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 ),
                               ),
                               if (_query.isNotEmpty)
-                                GestureDetector(
+                                AppPressable(
                                   onTap: () {
                                     _controller.clear();
                                     _focus.requestFocus();
@@ -332,16 +335,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         ? categories
         : const ['Coiffure', 'Esthétique', 'Spa', 'Ongles', 'Maquillage'];
     String? draftCategory = _activeCategory;
-    final selected = await showModalBottomSheet<String?>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
+    final selected = await AppSheet.show<String?>(
+      context,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) => SafeArea(
           child: Padding(
@@ -373,19 +368,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(sheetContext),
-                        child: const Text('Annuler'),
+                      child: AppButton.outline(
+                        label: 'Annuler',
+                        onPressed: () => GoRouter.of(sheetContext).pop(),
                       ),
                     ),
                     SizedBox(width: 10.w),
                     Expanded(
-                      child: FilledButton(
-                        onPressed: () => Navigator.pop(
+                      child: AppButton.primary(
+                        label: 'Appliquer',
+                        onPressed: () => Navigator.of(
                           sheetContext,
-                          draftCategory ?? '',
-                        ),
-                        child: const Text('Appliquer'),
+                          rootNavigator: true,
+                        ).pop(draftCategory ?? ''),
                       ),
                     ),
                   ],
