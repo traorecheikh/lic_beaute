@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
+import 'app_icon.dart';
 import 'app_icon_box.dart';
+import 'app_pressable.dart';
 
 class AppTile extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final String icon;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -21,7 +23,7 @@ class AppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return AppPressable(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.lg.r),
       child: Padding(
@@ -32,7 +34,7 @@ class AppTile extends StatelessWidget {
               size: 44.r,
               color: AppColors.primaryLight,
               radius: BorderRadius.circular(AppRadius.md.r),
-              child: Icon(icon, color: AppColors.primary, size: 22.r),
+              child: AppIcon(icon, size: 22, color: AppColors.primary),
             ),
             SizedBox(width: 14.w),
             Expanded(

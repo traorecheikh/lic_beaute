@@ -30,7 +30,7 @@ class SupportPage extends StatelessWidget {
           ),
           gapH12,
           SupportTile(
-            icon: Icons.chat_bubble_outline_rounded,
+            icon: 'chat',
             title: 'Chat en direct',
             subtitle: 'Réponse en moins de 5 minutes',
             onTap: () {
@@ -40,7 +40,7 @@ class SupportPage extends StatelessWidget {
           ),
           gapH12,
           SupportTile(
-            icon: Icons.phone_outlined,
+            icon: 'phone',
             title: 'Appel téléphonique',
             subtitle: 'Lun-Sam, 9h à 19h',
             onTap: () {
@@ -50,7 +50,7 @@ class SupportPage extends StatelessWidget {
           ),
           gapH12,
           SupportTile(
-            icon: Icons.email_outlined,
+            icon: 'mail',
             title: 'Email',
             subtitle: 'support@beauteavenue.com',
             onTap: () {

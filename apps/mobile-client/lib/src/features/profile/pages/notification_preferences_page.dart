@@ -43,7 +43,7 @@ class NotificationPreferencesPage extends ConsumerWidget {
                 label: 'Alertes',
                 children: [
                   _PrefTile(
-                    icon: Icons.notifications_active_outlined,
+                    icon: 'bell',
                     title: 'Notifications push',
                     subtitle:
                         'Rappels de rendez-vous, confirmations et alertes salon.',
@@ -151,7 +151,7 @@ class _PrefTile extends StatelessWidget {
     required this.onChanged,
   });
 
-  final IconData icon;
+  final String icon;
   final String title;
   final String subtitle;
   final bool value;

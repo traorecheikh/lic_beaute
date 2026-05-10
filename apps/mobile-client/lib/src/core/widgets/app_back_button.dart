@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'app_icon.dart';
+import 'app_pressable.dart';
 
-/// Standard back button for AppBar.leading.
 class AppBackButton extends StatelessWidget {
   const AppBackButton({this.onPressed, this.color, super.key});
 
@@ -13,13 +13,16 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: AppIcon(
-        'arrow-left',
-        size: 20,
-        color: color ?? AppColors.onSurface,
+    return AppPressable(
+      onTap: onPressed ?? () => context.pop(),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: AppIcon(
+          'arrow-left',
+          size: 20,
+          color: color ?? AppColors.onSurface,
+        ),
       ),
-      onPressed: onPressed ?? () => context.pop(),
     );
   }
 }
