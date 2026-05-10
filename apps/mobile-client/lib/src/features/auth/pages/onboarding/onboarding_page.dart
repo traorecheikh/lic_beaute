@@ -74,14 +74,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 10.h,
             right: 20.w,
-            child: AppPressable(
-              onTap: _completeOnboarding,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                child: Text(
-                  'Passer',
-                  style: AppTextStyles.labelMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+            child: Semantics(
+              button: true,
+              label: 'Passer l\'onboarding',
+              child: AppPressable(
+                onTap: _completeOnboarding,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  child: Text(
+                    'Passer',
+                    style: AppTextStyles.labelMd.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),

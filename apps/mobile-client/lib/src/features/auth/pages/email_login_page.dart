@@ -101,6 +101,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
   }
 
   Future<void> _submitLogin() async {
+    if (_submitting) return;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {

@@ -145,7 +145,7 @@ class AuthChoicePage extends StatelessWidget {
                 subtitle: 'Rapide et sécurisé (Recommandé)',
                 icon: 'message',
                 onTap: () {
-                  Navigator.pop(ctx);
+                  GoRouter.of(ctx).pop();
                   GoRouter.of(ctx).push('${AppRoutes.otpLogin}$query');
                 },
                 isPrimary: true,
@@ -158,7 +158,7 @@ class AuthChoicePage extends StatelessWidget {
                 subtitle: 'Classique avec mot de passe',
                 icon: 'mail',
                 onTap: () {
-                  Navigator.pop(ctx);
+                  GoRouter.of(ctx).pop();
                   GoRouter.of(ctx).push('${AppRoutes.register}$query');
                 },
                 isPrimary: false,

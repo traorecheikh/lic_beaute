@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_top_bar.dart';
 
@@ -228,8 +229,9 @@ class AuthPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: loading ? null : onTap,
+      enabled: !loading,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: double.infinity,

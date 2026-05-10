@@ -82,6 +82,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   Future<void> _submitRegister() async {
+    if (_submitting) return;
     final name = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
