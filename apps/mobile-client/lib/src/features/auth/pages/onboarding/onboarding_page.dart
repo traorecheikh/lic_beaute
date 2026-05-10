@@ -6,6 +6,8 @@ import 'package:hive_ce/hive_ce.dart';
 
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_pressable.dart';
+import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../router/app_router.dart';
 import '../../widgets/auth_form_widgets.dart';
 
@@ -58,8 +60,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
+    return AppScaffold(
       body: Stack(
         children: [
           PageView.builder(
@@ -73,12 +74,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 10.h,
             right: 20.w,
-            child: TextButton(
-              onPressed: _completeOnboarding,
-              child: Text(
-                'Passer',
-                style: AppTextStyles.labelMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
+            child: AppPressable(
+              onTap: _completeOnboarding,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                child: Text(
+                  'Passer',
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),

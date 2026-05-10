@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 
 /// Shared scaffold for auth pages: neutral background, transparent AppBar with
 /// a back button, scrollable body with the standard header block
@@ -26,11 +28,10 @@ class AuthPageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
+    return AppScaffold(
+      appBar: AppTopBar(
         backgroundColor: AppColors.transparent,
-        elevation: 0,
+        showBackButton: false,
         leading: leading ?? const AppBackButton(),
       ),
       body: SingleChildScrollView(

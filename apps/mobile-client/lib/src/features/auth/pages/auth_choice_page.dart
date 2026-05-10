@@ -3,6 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_divider.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../../router/app_router.dart';
 
 class AuthChoicePage extends StatelessWidget {
@@ -13,8 +19,7 @@ class AuthChoicePage extends StatelessWidget {
     final redirectTo = GoRouterState.of(context).uri.queryParameters['redirectTo'];
     final query = redirectTo != null ? '?redirectTo=${Uri.encodeComponent(redirectTo)}' : '';
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
+    return AppScaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -55,21 +60,17 @@ class AuthChoicePage extends StatelessWidget {
                   const Spacer(flex: 3),
 
                   // PRIMARY ACTION: S'inscrire (Merged Entry)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56.h,
-                    child: ElevatedButton(
-                      onPressed: () => _showSignUpOptions(context, query),
-                      child: const Text('S\'inscrire'),
-                    ),
+                  AppButton.primary(
+                    label: 'S\'inscrire',
+                    onPressed: () => _showSignUpOptions(context, query),
                   ),
-                  
+
                   SizedBox(height: 32.h),
-                  
+
                   // SECONDARY ACTION: Connexion (Existing Users)
                   Row(
                     children: [
-                      const Expanded(child: Divider()),
+                      const Expanded(child: AppDivider()),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: Text(
@@ -79,29 +80,19 @@ class AuthChoicePage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Expanded(child: Divider()),
+                      const Expanded(child: AppDivider()),
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56.h,
-                    child: TextButton(
-                      onPressed: () => context.push('${AppRoutes.emailLogin}$query'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.onSurface,
-                        backgroundColor: AppColors.surface,
-                        shape: StadiumBorder(),
-                        side: BorderSide(color: AppColors.outline.withValues(alpha: 0.3)),
-                      ),
-                      child: const Text('Se connecter'),
-                    ),
+
+                  AppButton.outline(
+                    label: 'Se connecter',
+                    onPressed: () => context.push('${AppRoutes.emailLogin}$query'),
                   ),
 
                   SizedBox(height: 20.h),
 
-                  GestureDetector(
+                  AppPressable(
                     onTap: () => context.go(AppRoutes.home),
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -126,9 +117,9 @@ class AuthChoicePage extends StatelessWidget {
   }
 
   void _showSignUpOptions(BuildContext context, String query) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
+    AppSheet.show(
+      context,
+      builder: (ctx) => SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(28.w, 32.h, 28.w, 40.h),
           child: Column(
@@ -152,23 +143,23 @@ class AuthChoicePage extends StatelessWidget {
               _SignUpOptionTile(
                 title: 'Via SMS',
                 subtitle: 'Rapide et sécurisé (Recommandé)',
-                icon: Icons.sms_outlined,
+                icon: 'message',
                 onTap: () {
-                  Navigator.pop(context);
-                  GoRouter.of(context).push('${AppRoutes.otpLogin}$query');
+                  Navigator.pop(ctx);
+                  GoRouter.of(ctx).push('${AppRoutes.otpLogin}$query');
                 },
                 isPrimary: true,
               ),
               gapH16,
-              
+
               // Email Option
               _SignUpOptionTile(
                 title: 'Via Email',
                 subtitle: 'Classique avec mot de passe',
-                icon: Icons.email_outlined,
+                icon: 'mail',
                 onTap: () {
-                  Navigator.pop(context);
-                  GoRouter.of(context).push('${AppRoutes.register}$query');
+                  Navigator.pop(ctx);
+                  GoRouter.of(ctx).push('${AppRoutes.register}$query');
                 },
                 isPrimary: false,
               ),
@@ -191,13 +182,13 @@ class _SignUpOptionTile extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final IconData icon;
+  final String icon;
   final VoidCallback onTap;
   final bool isPrimary;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppPressable(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(16.r),
@@ -217,10 +208,10 @@ class _SignUpOptionTile extends StatelessWidget {
                 color: isPrimary ? AppColors.primary : AppColors.surfaceVariant,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: AppIcon(
                 icon,
                 color: isPrimary ? AppColors.white : AppColors.onSurface,
-                size: 22.r,
+                size: 22,
               ),
             ),
             gapW16,
@@ -244,10 +235,10 @@ class _SignUpOptionTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
+            AppIcon(
+              'chevron-right',
               color: AppColors.outline,
-              size: 20.r,
+              size: 20,
             ),
           ],
         ),

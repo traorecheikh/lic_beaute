@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_router_helper.dart';
@@ -56,16 +58,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             label: 'MOT DE PASSE',
             controller: _passwordController,
             obscureText: _obscurePassword,
-            suffixBuilder: (focused) => GestureDetector(
+            suffixBuilder: (focused) => AppPressable(
               onTap: () => setState(() => _obscurePassword = !_obscurePassword),
               child: Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
-                child: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
+                child: AppIcon(
+                  _obscurePassword ? 'eye-off' : 'eye',
                   color: focused ? AppColors.primary : AppColors.onSurfaceVariant,
-                  size: 20.r,
+                  size: 20,
                 ),
               ),
             ),
