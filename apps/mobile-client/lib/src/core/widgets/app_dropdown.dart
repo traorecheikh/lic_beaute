@@ -170,11 +170,7 @@ class _AppDropdownSheet<T> extends StatelessWidget {
                           ),
                         ),
                         if (isSelected)
-                          Icon(
-                            Icons.check_rounded,
-                            color: AppColors.primary,
-                            size: 18.r,
-                          ),
+                          AppIcon('check', color: AppColors.primary, size: 18),
                       ],
                     ),
                   ),
