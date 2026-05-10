@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 
 enum AppButtonVariant { primary, outline, text }
 
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   const AppButton({
     required this.label,
     required this.onPressed,
@@ -95,49 +95,106 @@ class AppButton extends StatelessWidget {
   final double? width, height;
 
   @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _pressed = false;
+
+  void _onTapDown(TapDownDetails _) => setState(() => _pressed = true);
+  void _onTapUp(TapUpDetails _) => setState(() => _pressed = false);
+  void _onTapCancel() => setState(() => _pressed = false);
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isPrimary = variant == AppButtonVariant.primary;
+    final isDisabled = widget.isLoading || widget.onPressed == null;
+    final isPrimary = widget.variant == AppButtonVariant.primary;
 
     final Widget indicator = SizedBox(
       height: 20.h,
       width: 20.h,
       child: CircularProgressIndicator(
         strokeWidth: 2,
-        color: isPrimary ? AppColors.white : theme.primaryColor,
+        color: isPrimary ? AppColors.white : AppColors.primary,
       ),
     );
 
-    final Widget labelWidget = isLoading ? indicator : Text(label);
+    final Widget labelWidget =
+        widget.isLoading ? indicator : Text(widget.label);
 
-    final Widget content = icon != null && !isLoading
+    final Widget content = widget.icon != null && !widget.isLoading
         ? Row(
             mainAxisSize: MainAxisSize.min,
-            children: [icon!, gapW8, labelWidget],
+            children: [widget.icon!, gapW8, labelWidget],
           )
         : labelWidget;
 
-    final VoidCallback? onBtnPressed = isLoading ? null : onPressed;
+    final Color bgColor;
+    final Color textColor;
+    final BoxBorder? border;
+    final EdgeInsets padding;
+    final double? minHeight;
 
-    final Widget button = switch (variant) {
-      AppButtonVariant.primary => ElevatedButton(
-          onPressed: onBtnPressed,
-          child: content,
-        ),
-      AppButtonVariant.outline => OutlinedButton(
-          onPressed: onBtnPressed,
-          child: content,
-        ),
-      AppButtonVariant.text => TextButton(
-          onPressed: onBtnPressed,
-          child: content,
-        ),
-    };
+    switch (widget.variant) {
+      case AppButtonVariant.primary:
+        bgColor = isDisabled ? AppColors.outline : AppColors.primary;
+        textColor =
+            isDisabled ? AppColors.onSurfaceVariant : AppColors.onPrimary;
+        border = null;
+        padding = EdgeInsets.symmetric(horizontal: 28.w, vertical: 16.h);
+        minHeight = 56.h;
+      case AppButtonVariant.outline:
+        bgColor = isDisabled ? AppColors.outlineVariant : AppColors.surface;
+        textColor = AppColors.onSurface;
+        border = Border.all(color: AppColors.outline, width: 1.5);
+        padding = EdgeInsets.symmetric(horizontal: 28.w, vertical: 16.h);
+        minHeight = 56.h;
+      case AppButtonVariant.text:
+        bgColor = AppColors.transparent;
+        textColor = AppColors.primary;
+        border = null;
+        padding = EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h);
+        minHeight = null;
+    }
 
-    if (isFullWidth || width != null || height != null) {
+    Widget container = Container(
+      constraints: minHeight != null
+          ? BoxConstraints(minHeight: minHeight)
+          : null,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(100.r),
+        border: border,
+      ),
+      child: DefaultTextStyle(
+        style: AppTextStyles.labelLg.copyWith(color: textColor),
+        child: IconTheme(
+          data: IconThemeData(color: textColor, size: 20.r),
+          child: Center(child: content),
+        ),
+      ),
+    );
+
+    Widget button = AnimatedOpacity(
+      opacity: _pressed ? 0.7 : 1.0,
+      duration: const Duration(milliseconds: 150),
+      child: container,
+    );
+
+    button = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isDisabled ? null : widget.onPressed,
+      onTapDown: isDisabled ? null : _onTapDown,
+      onTapUp: isDisabled ? null : _onTapUp,
+      onTapCancel: isDisabled ? null : _onTapCancel,
+      child: button,
+    );
+
+    if (widget.isFullWidth || widget.width != null || widget.height != null) {
       return SizedBox(
-        width: width ?? (isFullWidth ? double.infinity : null),
-        height: height,
+        width: widget.width ?? (widget.isFullWidth ? double.infinity : null),
+        height: widget.height,
         child: button,
       );
     }
