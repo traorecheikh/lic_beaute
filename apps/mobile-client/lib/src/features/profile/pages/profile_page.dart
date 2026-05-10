@@ -190,7 +190,6 @@ class ProfilePage extends ConsumerWidget {
                       label: 'Déconnexion',
                       destructive: true,
                       onTap: () async {
-                        AppHaptics.heavy();
                         await ref.read(sessionProvider.notifier).logout();
                         if (!context.mounted) return;
                         AppSnackbar.success(context, 'Session fermée.');

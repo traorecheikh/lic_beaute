@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/utils/app_http_error_handler.dart';
@@ -264,7 +265,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           );
       if (!mounted) return;
       AppSnackbar.success(context, 'Profil enregistré.');
-      Navigator.of(context).pop();
+      context.pop();
     } catch (error) {
       await context.handleHttpError(error, 'Enregistrement impossible.');
     } finally {
