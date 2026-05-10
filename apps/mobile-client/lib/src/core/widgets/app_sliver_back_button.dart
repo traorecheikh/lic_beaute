@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'app_icon.dart';
 import 'app_icon_box.dart';
+import 'app_pressable.dart';
 
 /// A sliver that renders the standard circular back button row, wrapped in
 /// [SliverSafeArea] so it respects the top safe area inset.
@@ -32,8 +34,8 @@ class AppSliverBackButton extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 0),
           child: Row(
             children: [
-              GestureDetector(
-                onTap: onPressed ?? () => Navigator.of(context).pop(),
+              AppPressable(
+                onTap: onPressed ?? () => context.pop(),
                 child: AppIconBox(
                   circle: true,
                   color: AppColors.surface,

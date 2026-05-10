@@ -13,14 +13,18 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppPressable(
-      onTap: onPressed ?? () => context.pop(),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: AppIcon(
-          'arrow-left',
-          size: 20,
-          color: color ?? AppColors.onSurface,
+    return Semantics(
+      button: true,
+      label: 'Retour',
+      child: AppPressable(
+        onTap: onPressed ?? () => context.pop(),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: AppIcon(
+            'arrow-left',
+            size: 20,
+            color: color ?? AppColors.onSurface,
+          ),
         ),
       ),
     );

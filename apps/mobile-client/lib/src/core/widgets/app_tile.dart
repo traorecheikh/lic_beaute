@@ -25,7 +25,6 @@ class AppTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppPressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.lg.r),
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.sm.r),
         child: Row(

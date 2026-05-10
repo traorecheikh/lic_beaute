@@ -6,7 +6,6 @@ class AppPressable extends StatefulWidget {
     this.onTap,
     this.opacity = 0.5,
     this.duration = const Duration(milliseconds: 200),
-    this.borderRadius,
     this.enabled = true,
     super.key,
   });
@@ -15,7 +14,6 @@ class AppPressable extends StatefulWidget {
   final VoidCallback? onTap;
   final double opacity;
   final Duration duration;
-  final BorderRadius? borderRadius;
   final bool enabled;
 
   @override
@@ -26,22 +24,18 @@ class _AppPressableState extends State<AppPressable> {
   bool _pressed = false;
 
   void _onTapDown(TapDownDetails _) {
-    if (!widget.enabled) return;
     setState(() => _pressed = true);
   }
 
   void _onTapUp(TapUpDetails _) {
-    if (!widget.enabled) return;
     setState(() => _pressed = false);
   }
 
   void _onTapCancel() {
-    if (!widget.enabled) return;
     setState(() => _pressed = false);
   }
 
   void _onTap() {
-    if (!widget.enabled) return;
     widget.onTap?.call();
   }
 
