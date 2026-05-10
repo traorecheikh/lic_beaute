@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text("À propos", style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+      appBar: const AppTopBar(title: 'À propos', showBackButton: true),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 60.h),
         child: Column(

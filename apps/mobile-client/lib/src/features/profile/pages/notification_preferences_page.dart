@@ -4,8 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_tile.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../providers/profile_provider.dart';
 
 class NotificationPreferencesPage extends ConsumerWidget {
@@ -15,14 +17,9 @@ class NotificationPreferencesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileProvider);
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('Notifications', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+      appBar: const AppTopBar(title: 'Notifications', showBackButton: true),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Padding(

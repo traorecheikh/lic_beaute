@@ -7,6 +7,8 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../models/account_models.dart';
 import '../providers/benefits_provider.dart';
 import '../widgets/profile_card_shell.dart';
@@ -17,14 +19,9 @@ class MembershipsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final benefitsAsync = ref.watch(benefitsProvider);
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('Mes abonnements', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+      appBar: const AppTopBar(title: 'Mes abonnements', showBackButton: true),
       body: RefreshIndicator.adaptive(
         color: AppColors.primary,
         onRefresh: () => ref.refresh(benefitsProvider.future),

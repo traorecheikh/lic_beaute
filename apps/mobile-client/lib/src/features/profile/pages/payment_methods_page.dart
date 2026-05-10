@@ -4,10 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_http_error_handler.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_phone_field.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../providers/payment_methods_provider.dart';
 import '../widgets/payment_tile.dart';
 import '../widgets/profile_card_shell.dart';
@@ -39,11 +42,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   Widget build(BuildContext context) {
     final methodsAsync = ref.watch(paymentMethodsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Moyens de paiement', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+    return AppScaffold(
+      appBar: const AppTopBar(title: 'Moyens de paiement', showBackButton: true),
       body: methodsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppEmptyState(
@@ -98,20 +98,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                     labelText: 'Numéro de téléphone',
                   ),
                   SizedBox(height: 24.h),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _saving ? null : _addMethod,
-                      child: _saving
-                          ? SizedBox(
-                              width: 18.r,
-                              height: 18.r,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text('Ajouter'),
-                    ),
+                  AppButton.primary(
+                    label: 'Ajouter',
+                    onPressed: _saving ? null : _addMethod,
+                    isLoading: _saving,
                   ),
                 ],
               ),

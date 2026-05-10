@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../widgets/faq_tile.dart';
 
 class FaqPage extends StatelessWidget {
@@ -44,14 +46,9 @@ class FaqPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('FAQ', style: AppTextStyles.headlineSm),
-        centerTitle: true,
-      ),
+      appBar: const AppTopBar(title: 'FAQ', showBackButton: true),
       body: ListView.separated(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
         itemCount: _faqs.length,
