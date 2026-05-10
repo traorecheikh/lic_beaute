@@ -370,7 +370,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     Expanded(
                       child: AppButton.outline(
                         label: 'Annuler',
-                        onPressed: () => GoRouter.of(sheetContext).pop(),
+                        onPressed: () => Navigator.of(sheetContext, rootNavigator: true).pop(),
                       ),
                     ),
                     SizedBox(width: 10.w),

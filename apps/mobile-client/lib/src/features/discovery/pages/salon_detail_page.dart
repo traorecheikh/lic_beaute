@@ -242,7 +242,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                               Positioned(
                                 bottom: 48.h,
                                 right: 16.w,
-                                child: GestureDetector(
+                                child: AppPressable(
                                   onTap: () =>
                                       _openGallery(context, images, _heroPage),
                                   child: Container(
@@ -399,7 +399,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     children: [
                                       _SectionLabel('Photos'),
                                       const Spacer(),
-                                      GestureDetector(
+                                      AppPressable(
                                         onTap: () =>
                                             _openGallery(context, images, 0),
                                         child: Text(
@@ -497,11 +497,15 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                 left: 24.w,
                 right: 24.w,
                 bottom: 32.h,
-                child: _BottomCta(
-                  price: salon.services.isNotEmpty
-                      ? 'À partir de ${salon.services.first.priceXof.toInt()} XOF'
-                      : null,
-                  onBook: () => _showBookingSheet(context),
+                child: Semantics(
+                  button: true,
+                  label: 'Réserver',
+                  child: _BottomCta(
+                    price: salon.services.isNotEmpty
+                        ? 'À partir de ${salon.services.first.priceXof.toInt()} XOF'
+                        : null,
+                    onBook: () => _showBookingSheet(context),
+                  ),
                 ),
               ),
             ],

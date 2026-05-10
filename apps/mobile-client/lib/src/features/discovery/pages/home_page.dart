@@ -434,7 +434,7 @@ class _LocationBanner extends StatelessWidget {
               ),
             ),
             gapW8,
-            GestureDetector(
+            AppPressable(
               onTap: onEnable,
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
@@ -452,7 +452,7 @@ class _LocationBanner extends StatelessWidget {
               ),
             ),
             SizedBox(width: 6.w),
-            GestureDetector(
+            AppPressable(
               onTap: onDismiss,
               child: AppIcon(
                 'close',
@@ -639,7 +639,7 @@ class _SectionHeaderSliver extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(title, style: AppTextStyles.headlineMd),
-            GestureDetector(
+            AppPressable(
               onTap: onAction,
               child: Text(
                 action,
