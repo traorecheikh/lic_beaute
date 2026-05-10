@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'app_icon.dart';
+
 class SalonImageWidget extends StatelessWidget {
   final String? imageUrl;
   final double width;
@@ -53,6 +55,6 @@ class SalonImageWidget extends StatelessWidget {
         width: width,
         height: height,
         color: const Color(0xFFF5F5F0),
-        child: const Icon(Icons.image_outlined, color: Color(0xFFBDB9B4), size: 32),
+        child: const AppIcon('image', size: 32, color: Color(0xFFBDB9B4)),
       );
 }

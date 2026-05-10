@@ -4,6 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../widgets/app_dialog.dart';
+import '../widgets/app_icon.dart';
+import '../widgets/app_pressable.dart';
+import '../widgets/app_scaffold.dart';
+import '../widgets/app_top_bar.dart';
 import 'location_service.dart';
 
 class LocationPermissionPage extends ConsumerWidget {
@@ -11,15 +16,20 @@ class LocationPermissionPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
+    return AppScaffold(
+      appBar: AppTopBar(
         backgroundColor: AppColors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.onSurface),
-          onPressed: () => context.pop(),
-        ),
+        showBackButton: false,
+        actions: [
+          AppPressable(
+            onTap: () => context.pop(),
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: AppIcon('close', size: 22, color: AppColors.onSurface),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -38,11 +48,7 @@ class LocationPermissionPage extends ConsumerWidget {
                   boxShadow: AppShadows.card,
                 ),
                 child: Center(
-                  child: Icon(
-                    Icons.location_on_rounded,
-                    size: 48.r,
-                    color: AppColors.primary,
-                  ),
+                  child: AppIcon('map-pin', size: 48, color: AppColors.primary),
                 ),
               ),
 
@@ -71,9 +77,9 @@ class LocationPermissionPage extends ConsumerWidget {
 
               // Perks list
               ...[
-                ('Résultats triés par distance', Icons.near_me_rounded),
-                ('Distance affichée sur chaque salon', Icons.straighten_rounded),
-                ('Données jamais partagées avec des tiers', Icons.lock_rounded),
+                ('Résultats triés par distance', 'map-pin'),
+                ('Distance affichée sur chaque salon', 'map-pin'),
+                ('Données jamais partagées avec des tiers', 'lock'),
               ].map(
                 (item) => Padding(
                   padding: EdgeInsets.only(bottom: 14.h),
@@ -87,11 +93,7 @@ class LocationPermissionPage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Center(
-                          child: Icon(
-                            item.$2,
-                            size: 18.r,
-                            color: AppColors.primary,
-                          ),
+                          child: AppIcon(item.$2, size: 18, color: AppColors.primary),
                         ),
                       ),
                       SizedBox(width: 14.w),
@@ -110,12 +112,15 @@ class LocationPermissionPage extends ConsumerWidget {
 
               gapH12,
 
-              TextButton(
-                onPressed: () => context.pop(),
-                child: Text(
-                  'Plus tard',
-                  style: AppTextStyles.labelMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+              AppPressable(
+                onTap: () => context.pop(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  child: Text(
+                    'Plus tard',
+                    style: AppTextStyles.labelMd.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -157,36 +162,23 @@ class _LocationPermissionButtonState
 
   Future<void> _showSettingsDialog() async {
     if (!mounted) return;
-    final open = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: Text('Autorisation requise', style: AppTextStyles.headlineSm),
-        content: Text(
-          'La localisation a été refusée définitivement. Ouvrez les paramètres de l\'application pour l\'activer.',
-          style: AppTextStyles.bodyMd,
+    bool openSettings = false;
+    await AppDialog.show<void>(
+      context,
+      title: 'Autorisation requise',
+      body: 'La localisation a été refusée définitivement. Ouvrez les paramètres de l\'application pour l\'activer.',
+      actions: [
+        AppDialogAction(
+          label: 'Annuler',
+          onPressed: () {},
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Annuler',
-              style: AppTextStyles.labelMd.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Paramètres',
-              style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
-            ),
-          ),
-        ],
-      ),
+        AppDialogAction(
+          label: 'Paramètres',
+          onPressed: () => openSettings = true,
+        ),
+      ],
     );
-    if (open == true) await openAppSettings();
+    if (openSettings) await openAppSettings();
   }
 
   @override

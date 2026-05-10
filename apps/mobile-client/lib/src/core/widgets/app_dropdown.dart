@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import 'app_icon.dart';
 
 /// A fully custom dropdown that matches the app's design language.
 /// Opens a themed bottom sheet — no Material DropdownButton, no Cupertino picker.
@@ -77,11 +78,7 @@ class AppDropdown<T> extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: AppColors.onSurfaceVariant,
-              size: 20.r,
-            ),
+            AppIcon('chevron-down', color: AppColors.onSurfaceVariant, size: 20),
           ],
         ),
       ),
@@ -121,11 +118,7 @@ class _AppDropdownSheet<T> extends StatelessWidget {
                 Expanded(child: Text(label, style: AppTextStyles.headlineSm)),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: Icon(
-                    Icons.close_rounded,
-                    color: AppColors.onSurfaceVariant,
-                    size: 22.r,
-                  ),
+                  child: AppIcon('close', color: AppColors.onSurfaceVariant, size: 22),
                 ),
               ],
             ),

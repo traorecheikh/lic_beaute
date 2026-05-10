@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../utils/app_haptics.dart';
+import 'app_icon.dart';
 
 class SalonMapCard extends StatelessWidget {
   const SalonMapCard({
@@ -92,11 +93,7 @@ class SalonMapCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.storefront_rounded,
-                            color: AppColors.white,
-                            size: 18,
-                          ),
+                          child: const AppIcon('store', size: 18, color: AppColors.white),
                         ),
                       ),
                     ],
@@ -120,11 +117,7 @@ class SalonMapCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.map_rounded,
-                      size: 14,
-                      color: AppColors.white70,
-                    ),
+                    const AppIcon('map', size: 14, color: AppColors.white70),
                     SizedBox(width: 6.w),
                     Expanded(
                       child: Text(

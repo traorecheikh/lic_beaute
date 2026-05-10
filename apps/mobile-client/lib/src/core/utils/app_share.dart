@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../widgets/app_icon.dart';
 
 abstract final class AppShare {
   /// Share plain text (salon link, booking ref, etc.)
@@ -70,14 +72,14 @@ class BookingShareCard extends StatelessWidget {
       subtitle: service,
       children: [
         _Row(
-          icon: Icons.calendar_today_rounded,
+          icon: 'calendar',
           label: '$date · $time',
         ),
         const SizedBox(height: 14),
-        _Row(icon: Icons.person_outline_rounded, label: staffName),
+        _Row(icon: 'user', label: staffName),
         if (price.isNotEmpty) ...[
           const SizedBox(height: 14),
-          _Row(icon: Icons.payments_outlined, label: price),
+          _Row(icon: 'credit-card', label: price),
         ],
       ],
     );
@@ -105,13 +107,13 @@ class SalonShareCard extends StatelessWidget {
       subtitle: category,
       children: [
         _Row(
-          icon: Icons.location_on_outlined,
+          icon: 'map-pin',
           label: location,
         ),
         if (rating != null) ...[
           const SizedBox(height: 14),
           _Row(
-            icon: Icons.star_rounded,
+            icon: 'star',
             label: '$rating / 5.0',
           ),
         ],
@@ -226,14 +228,14 @@ class _BaseShareCard extends StatelessWidget {
 
 class _Row extends StatelessWidget {
   const _Row({required this.icon, required this.label});
-  final IconData icon;
+  final String icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.primary),
+        AppIcon(icon, size: 20, color: AppColors.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Text(

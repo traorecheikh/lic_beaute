@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../utils/app_haptics.dart';
+import 'app_icon.dart';
 import 'app_sheet.dart';
 import 'app_sheet_content.dart';
 
@@ -14,14 +15,14 @@ abstract final class AppSnackbar {
       context,
       message,
       AppColors.success,
-      Icons.check_circle_outline_rounded,
+      'check-circle',
     );
   }
 
   /// Red error toast
   static void error(BuildContext context, String message) {
     AppHaptics.heavy();
-    _show(context, message, AppColors.error, Icons.error_outline_rounded);
+    _show(context, message, AppColors.error, 'alert-circle');
   }
 
   /// Neutral info toast
@@ -31,7 +32,7 @@ abstract final class AppSnackbar {
       context,
       message,
       AppColors.onSurfaceVariant,
-      Icons.info_outline_rounded,
+      'info',
     );
   }
 
@@ -64,7 +65,7 @@ abstract final class AppSnackbar {
     BuildContext context,
     String message,
     Color color,
-    IconData icon,
+    String icon,
   ) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -79,7 +80,7 @@ abstract final class AppSnackbar {
         duration: const Duration(seconds: 3),
         content: Row(
           children: [
-            Icon(icon, color: color, size: 20.r),
+            AppIcon(icon, size: 20, color: color),
             SizedBox(width: 10.w),
             Expanded(
               child: Text(

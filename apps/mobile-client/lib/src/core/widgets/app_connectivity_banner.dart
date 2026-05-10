@@ -5,6 +5,7 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 import '../network/connectivity_provider.dart';
 import 'app_connectivity_wrapper.dart';
+import 'app_icon.dart';
 
 class AppConnectivityBanner extends ConsumerWidget {
   const AppConnectivityBanner({super.key});
@@ -41,11 +42,7 @@ class AppConnectivityBanner extends ConsumerWidget {
                 color: Color(0xFFFFE7BF),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.wifi_off_rounded,
-                color: Color(0xFF9B6A10),
-                size: 18,
-              ),
+              child: const AppIcon('wifi-off', size: 18, color: Color(0xFF9B6A10)),
             ),
             gapW12,
             Expanded(

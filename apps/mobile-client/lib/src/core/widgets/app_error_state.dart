@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../network/app_network_error.dart';
 import '../network/connectivity_provider.dart';
 import '../theme/app_theme.dart';
+import 'app_icon.dart';
 import 'app_icon_box.dart';
 import 'app_state_card.dart';
 
@@ -63,7 +64,7 @@ class _AppErrorStateState extends ConsumerState<AppErrorState> {
             size: 52.r,
             color: _iconBackground(type),
             circle: true,
-            child: Icon(_iconData(type), color: _iconColor(type), size: 24.r),
+            child: AppIcon(_iconName(type), color: _iconColor(type), size: 24),
           ),
           SizedBox(height: 14.h),
           Text(
@@ -130,18 +131,18 @@ class _AppErrorStateState extends ConsumerState<AppErrorState> {
     }
   }
 
-  IconData _iconData(AppNetworkErrorType type) {
+  String _iconName(AppNetworkErrorType type) {
     switch (type) {
       case AppNetworkErrorType.offline:
-        return Icons.wifi_off_rounded;
+        return 'wifi-off';
       case AppNetworkErrorType.timeout:
-        return Icons.schedule_rounded;
+        return 'clock';
       case AppNetworkErrorType.server:
-        return Icons.cloud_off_rounded;
+        return 'cloud-off';
       case AppNetworkErrorType.unauthorized:
-        return Icons.lock_outline_rounded;
+        return 'lock';
       case AppNetworkErrorType.unknown:
-        return Icons.error_outline_rounded;
+        return 'alert-circle';
     }
   }
 
