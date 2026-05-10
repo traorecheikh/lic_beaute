@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/utils/app_share.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -178,11 +179,30 @@ class _SuccessBody extends StatelessWidget {
             child: Column(
               children: [
                 AppButton.primary(
-                  onPressed: () => context.go(AppRoutes.bookingDetailPath(bookingId)),
+                  onPressed: () =>
+                      context.go(AppRoutes.bookingDetailPath(bookingId)),
                   label: "Voir mon rendez-vous",
                 ),
                 SizedBox(height: 12.h),
                 AppButton.outline(
+                  onPressed: () {
+                    AppHaptics.light();
+                    AppShare.card(
+                      context: context,
+                      card: BookingShareCard(
+                        salonName: salonName,
+                        service: serviceName,
+                        date: dateLabel,
+                        time: '',
+                        staffName: 'Beauté Avenue',
+                      ),
+                      text: "Je viens de réserver chez $salonName !",
+                    );
+                  },
+                  label: "Partager ma réservation",
+                ),
+                SizedBox(height: 12.h),
+                AppButton.text(
                   onPressed: () => context.go(AppRoutes.home),
                   label: "Retour à l'accueil",
                 ),

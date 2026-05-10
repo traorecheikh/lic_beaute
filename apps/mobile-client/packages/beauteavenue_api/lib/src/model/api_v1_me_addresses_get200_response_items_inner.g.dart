@@ -13,19 +13,15 @@ class _$ApiV1MeAddressesGet200ResponseItemsInner
   @override
   final String label;
   @override
-  final String addressLine1;
+  final String? street;
   @override
-  final String? addressLine2;
-  @override
-  final String city;
-  @override
-  final String? region;
-  @override
-  final String? phone;
+  final String? city;
   @override
   final bool isDefault;
   @override
   final String createdAt;
+  @override
+  final String updatedAt;
 
   factory _$ApiV1MeAddressesGet200ResponseItemsInner(
           [void Function(ApiV1MeAddressesGet200ResponseItemsInnerBuilder)?
@@ -36,13 +32,11 @@ class _$ApiV1MeAddressesGet200ResponseItemsInner
   _$ApiV1MeAddressesGet200ResponseItemsInner._(
       {required this.id,
       required this.label,
-      required this.addressLine1,
-      this.addressLine2,
-      required this.city,
-      this.region,
-      this.phone,
+      this.street,
+      this.city,
       required this.isDefault,
-      required this.createdAt})
+      required this.createdAt,
+      required this.updatedAt})
       : super._();
   @override
   ApiV1MeAddressesGet200ResponseItemsInner rebuild(
@@ -60,13 +54,11 @@ class _$ApiV1MeAddressesGet200ResponseItemsInner
     return other is ApiV1MeAddressesGet200ResponseItemsInner &&
         id == other.id &&
         label == other.label &&
-        addressLine1 == other.addressLine1 &&
-        addressLine2 == other.addressLine2 &&
+        street == other.street &&
         city == other.city &&
-        region == other.region &&
-        phone == other.phone &&
         isDefault == other.isDefault &&
-        createdAt == other.createdAt;
+        createdAt == other.createdAt &&
+        updatedAt == other.updatedAt;
   }
 
   @override
@@ -74,13 +66,11 @@ class _$ApiV1MeAddressesGet200ResponseItemsInner
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, label.hashCode);
-    _$hash = $jc(_$hash, addressLine1.hashCode);
-    _$hash = $jc(_$hash, addressLine2.hashCode);
+    _$hash = $jc(_$hash, street.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
-    _$hash = $jc(_$hash, region.hashCode);
-    _$hash = $jc(_$hash, phone.hashCode);
     _$hash = $jc(_$hash, isDefault.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
+    _$hash = $jc(_$hash, updatedAt.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -91,13 +81,11 @@ class _$ApiV1MeAddressesGet200ResponseItemsInner
             r'ApiV1MeAddressesGet200ResponseItemsInner')
           ..add('id', id)
           ..add('label', label)
-          ..add('addressLine1', addressLine1)
-          ..add('addressLine2', addressLine2)
+          ..add('street', street)
           ..add('city', city)
-          ..add('region', region)
-          ..add('phone', phone)
           ..add('isDefault', isDefault)
-          ..add('createdAt', createdAt))
+          ..add('createdAt', createdAt)
+          ..add('updatedAt', updatedAt))
         .toString();
   }
 }
@@ -116,25 +104,13 @@ class ApiV1MeAddressesGet200ResponseItemsInnerBuilder
   String? get label => _$this._label;
   set label(String? label) => _$this._label = label;
 
-  String? _addressLine1;
-  String? get addressLine1 => _$this._addressLine1;
-  set addressLine1(String? addressLine1) => _$this._addressLine1 = addressLine1;
-
-  String? _addressLine2;
-  String? get addressLine2 => _$this._addressLine2;
-  set addressLine2(String? addressLine2) => _$this._addressLine2 = addressLine2;
+  String? _street;
+  String? get street => _$this._street;
+  set street(String? street) => _$this._street = street;
 
   String? _city;
   String? get city => _$this._city;
   set city(String? city) => _$this._city = city;
-
-  String? _region;
-  String? get region => _$this._region;
-  set region(String? region) => _$this._region = region;
-
-  String? _phone;
-  String? get phone => _$this._phone;
-  set phone(String? phone) => _$this._phone = phone;
 
   bool? _isDefault;
   bool? get isDefault => _$this._isDefault;
@@ -143,6 +119,10 @@ class ApiV1MeAddressesGet200ResponseItemsInnerBuilder
   String? _createdAt;
   String? get createdAt => _$this._createdAt;
   set createdAt(String? createdAt) => _$this._createdAt = createdAt;
+
+  String? _updatedAt;
+  String? get updatedAt => _$this._updatedAt;
+  set updatedAt(String? updatedAt) => _$this._updatedAt = updatedAt;
 
   ApiV1MeAddressesGet200ResponseItemsInnerBuilder() {
     ApiV1MeAddressesGet200ResponseItemsInner._defaults(this);
@@ -153,13 +133,11 @@ class ApiV1MeAddressesGet200ResponseItemsInnerBuilder
     if ($v != null) {
       _id = $v.id;
       _label = $v.label;
-      _addressLine1 = $v.addressLine1;
-      _addressLine2 = $v.addressLine2;
+      _street = $v.street;
       _city = $v.city;
-      _region = $v.region;
-      _phone = $v.phone;
       _isDefault = $v.isDefault;
       _createdAt = $v.createdAt;
+      _updatedAt = $v.updatedAt;
       _$v = null;
     }
     return this;
@@ -186,17 +164,14 @@ class ApiV1MeAddressesGet200ResponseItemsInnerBuilder
               id, r'ApiV1MeAddressesGet200ResponseItemsInner', 'id'),
           label: BuiltValueNullFieldError.checkNotNull(
               label, r'ApiV1MeAddressesGet200ResponseItemsInner', 'label'),
-          addressLine1: BuiltValueNullFieldError.checkNotNull(addressLine1,
-              r'ApiV1MeAddressesGet200ResponseItemsInner', 'addressLine1'),
-          addressLine2: addressLine2,
-          city: BuiltValueNullFieldError.checkNotNull(
-              city, r'ApiV1MeAddressesGet200ResponseItemsInner', 'city'),
-          region: region,
-          phone: phone,
+          street: street,
+          city: city,
           isDefault: BuiltValueNullFieldError.checkNotNull(isDefault,
               r'ApiV1MeAddressesGet200ResponseItemsInner', 'isDefault'),
           createdAt: BuiltValueNullFieldError.checkNotNull(createdAt,
               r'ApiV1MeAddressesGet200ResponseItemsInner', 'createdAt'),
+          updatedAt: BuiltValueNullFieldError.checkNotNull(updatedAt,
+              r'ApiV1MeAddressesGet200ResponseItemsInner', 'updatedAt'),
         );
     replace(_$result);
     return _$result;

@@ -7,8 +7,7 @@ import '../core/constants/app_strings.dart';
 import '../core/session/session_store.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../core/widgets/app_icon.dart';
-import '../core/widgets/app_sheet.dart';
-import '../core/widgets/app_sheet_content.dart';
+import '../features/auth/widgets/auth_required_sheet.dart';
 import 'app_router.dart';
 
 class ShellScaffold extends ConsumerWidget {
@@ -55,7 +54,10 @@ class ShellScaffold extends ConsumerWidget {
         context.go(_tabs[i].path);
         return;
       }
-      await _showAuthSheet(context);
+      await showAuthRequiredSheet(
+        context,
+        onLogin: () => context.go(AppRoutes.auth),
+      );
     }
 
     return Scaffold(
@@ -65,19 +67,6 @@ class ShellScaffold extends ConsumerWidget {
         currentIndex: index,
         tabs: _tabs,
         onTap: handleTabTap,
-      ),
-    );
-  }
-
-  Future<void> _showAuthSheet(BuildContext context) {
-    return AppSheet.show<void>(
-      context,
-      builder: (ctx) => _AuthPromptSheet(
-        onLogin: () {
-          Navigator.of(ctx).pop();
-          context.go(AppRoutes.auth);
-        },
-        onDismiss: () => Navigator.of(ctx).pop(),
       ),
     );
   }
@@ -173,29 +162,6 @@ class _NavItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Auth prompt bottom sheet
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _AuthPromptSheet extends StatelessWidget {
-  const _AuthPromptSheet({required this.onLogin, required this.onDismiss});
-
-  final VoidCallback onLogin;
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSheetContent(
-      title: 'Connexion requise',
-      body: 'Connectez-vous pour accéder à vos rendez-vous et à votre profil.',
-      confirmLabel: 'Se connecter',
-      cancelLabel: 'Plus tard',
-      onConfirm: onLogin,
-      onCancel: onDismiss,
     );
   }
 }

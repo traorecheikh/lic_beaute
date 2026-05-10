@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_tile.dart';
 import '../providers/profile_provider.dart';
@@ -24,7 +25,15 @@ class NotificationPreferencesPage extends ConsumerWidget {
       ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const SizedBox.shrink(),
+        error: (error, _) => Padding(
+          padding: EdgeInsets.all(24.r),
+          child: AppErrorState(
+            error: error,
+            fallbackTitle: 'Impossible de charger les préférences',
+            serverTitle: 'Service momentanément indisponible',
+            onRetry: () => ref.refresh(profileProvider.future),
+          ),
+        ),
         data: (profile) {
           if (profile == null) return const SizedBox.shrink();
           return ListView(

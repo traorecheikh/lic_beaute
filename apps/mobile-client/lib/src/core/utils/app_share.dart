@@ -19,6 +19,7 @@ abstract final class AppShare {
     required BuildContext context,
     required Widget card,
     String filename = 'partage.png',
+    String? text,
   }) async {
     final ctrl = ScreenshotController();
     final bytes = await ctrl.captureFromLongWidget(
@@ -26,19 +27,22 @@ abstract final class AppShare {
       pixelRatio: 3.0,
       context: context,
     );
-    await _shareBytes(bytes, filename);
+    await _shareBytes(bytes, filename, text: text);
   }
 
-  static Future<void> _shareBytes(Uint8List bytes, String filename) async {
+  static Future<void> _shareBytes(Uint8List bytes, String filename, {String? text}) async {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes);
-    await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: 'image/png')]));
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path, mimeType: 'image/png')],
+      text: text,
+    ));
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shareable booking card widget (rendered off-screen to PNG)
+// Shareable cards (rendered off-screen to PNG)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class BookingShareCard extends StatelessWidget {
@@ -61,6 +65,74 @@ class BookingShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _BaseShareCard(
+      title: salonName,
+      subtitle: service,
+      children: [
+        _Row(
+          icon: Icons.calendar_today_rounded,
+          label: '$date · $time',
+        ),
+        const SizedBox(height: 14),
+        _Row(icon: Icons.person_outline_rounded, label: staffName),
+        if (price.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          _Row(icon: Icons.payments_outlined, label: price),
+        ],
+      ],
+    );
+  }
+}
+
+class SalonShareCard extends StatelessWidget {
+  const SalonShareCard({
+    super.key,
+    required this.salonName,
+    required this.category,
+    required this.location,
+    this.rating,
+  });
+
+  final String salonName;
+  final String category;
+  final String location;
+  final double? rating;
+
+  @override
+  Widget build(BuildContext context) {
+    return _BaseShareCard(
+      title: salonName,
+      subtitle: category,
+      children: [
+        _Row(
+          icon: Icons.location_on_outlined,
+          label: location,
+        ),
+        if (rating != null) ...[
+          const SizedBox(height: 14),
+          _Row(
+            icon: Icons.star_rounded,
+            label: '$rating / 5.0',
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _BaseShareCard extends StatelessWidget {
+  const _BaseShareCard({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 380,
       decoration: BoxDecoration(
@@ -73,7 +145,7 @@ class BookingShareCard extends StatelessWidget {
           // Header gradient
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF2D1520), Color(0xFF1A1614)],
@@ -87,63 +159,59 @@ class BookingShareCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Image.asset('assets/logo.png', width: 28, height: 28),
-                    const SizedBox(width: 8),
+                    Image.asset('assets/logo.png', width: 32, height: 32),
+                    const SizedBox(width: 10),
                     Text(
                       'Beauté Avenue',
-                      style: AppTextStyles.labelMd.copyWith(
+                      style: AppTextStyles.labelLg.copyWith(
                         color: AppColors.white,
-                        letterSpacing: 0.3,
+                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Text(
-                  salonName,
+                  title,
                   style: AppTextStyles.displaySm.copyWith(
                     color: AppColors.white,
-                    fontSize: 22,
+                    fontSize: 26,
                     height: 1.1,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
-                  service,
-                  style: AppTextStyles.bodyMd.copyWith(color: AppColors.white70),
+                  subtitle,
+                  style: AppTextStyles.bodyLg.copyWith(
+                    color: AppColors.white.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
           ),
           // Details
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(28),
             child: Column(
               children: [
-                _Row(
-                  icon: Icons.calendar_today_rounded,
-                  label: '$date · $time',
-                ),
-                const SizedBox(height: 14),
-                _Row(icon: Icons.person_outline_rounded, label: staffName),
-                if (price.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  _Row(icon: Icons.payments_outlined, label: price),
-                ],
-                const SizedBox(height: 20),
+                ...children,
+                const SizedBox(height: 24),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    'Réservé sur Beauté Avenue',
+                    'Découvrez sur Beauté Avenue',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.labelSm.copyWith(
+                    style: AppTextStyles.labelMd.copyWith(
                       color: AppColors.primary,
-                      letterSpacing: 0.5,
+                      letterSpacing: 1.0,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -165,15 +233,19 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.onSurfaceVariant),
-        const SizedBox(width: 10),
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 12),
         Expanded(
           child: Text(
             label,
-            style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurface),
+            style: AppTextStyles.bodyLg.copyWith(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
     );
   }
 }
+

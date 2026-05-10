@@ -25,11 +25,6 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AdminSalonDecisionInput.serializer)
       ..add(AdminSalonDetail.serializer)
       ..add(AdminSalonDetailApprovalStatusEnum.serializer)
-      ..add(AdminSalonDetailDocumentsInner.serializer)
-      ..add(AdminSalonDetailDocumentsInnerStatusEnum.serializer)
-      ..add(AdminSalonDetailOwner.serializer)
-      ..add(AdminSalonDetailServicesInner.serializer)
-      ..add(AdminSalonDetailServicesInnerDepositModeEnum.serializer)
       ..add(AdminSalonDetailSubscriptionIntentTierEnum.serializer)
       ..add(AdminSalonQueueFilters.serializer)
       ..add(AdminSalonQueueFiltersStatusEnum.serializer)
@@ -37,10 +32,6 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AdminSalonQueueItemApprovalStatusEnum.serializer)
       ..add(AdminSalonQueueItemSubscriptionIntentTierEnum.serializer)
       ..add(AdminSalonQueueResponse.serializer)
-      ..add(AdminSalonQueueResponseItemsInner.serializer)
-      ..add(AdminSalonQueueResponseItemsInnerApprovalStatusEnum.serializer)
-      ..add(AdminSalonQueueResponseItemsInnerSubscriptionIntentTierEnum
-          .serializer)
       ..add(AdminSubscriptionDetail.serializer)
       ..add(AdminSubscriptionDetailBillingProviderEnum.serializer)
       ..add(AdminSubscriptionDetailEntitlementsInner.serializer)
@@ -65,8 +56,40 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AdminSubscriptionSummaryStatusEnum.serializer)
       ..add(AdminSubscriptionSummaryTierEnum.serializer)
       ..add(ApiError.serializer)
+      ..add(ApiV1AdminConfigCategoriesGet200ResponseInner.serializer)
+      ..add(ApiV1AdminConfigCategoriesPostRequest.serializer)
+      ..add(ApiV1AdminConfigDocumentsGet200ResponseInner.serializer)
+      ..add(ApiV1AdminConfigDocumentsPostRequest.serializer)
+      ..add(ApiV1AdminConfigSettingsGet200ResponseInner.serializer)
+      ..add(ApiV1AdminConfigSettingsKeyPatchRequest.serializer)
+      ..add(ApiV1AdminMediaMediaIdApprovePost200Response.serializer)
+      ..add(ApiV1AdminMediaMediaIdApprovePostRequest.serializer)
+      ..add(ApiV1AdminMediaMediaIdRejectPost200Response.serializer)
+      ..add(ApiV1AdminMediaMediaIdRejectPostRequest.serializer)
+      ..add(ApiV1AdminMediaMediaIdSignedViewUrlPost200Response.serializer)
+      ..add(ApiV1AdminMediaPendingGet200Response.serializer)
+      ..add(ApiV1AdminMediaPendingGet200ResponseItemsInner.serializer)
+      ..add(ApiV1AdminSalonsGet200Response.serializer)
+      ..add(ApiV1AdminSalonsGet200ResponseItemsInner.serializer)
+      ..add(
+          ApiV1AdminSalonsGet200ResponseItemsInnerApprovalStatusEnum.serializer)
+      ..add(ApiV1AdminSalonsGet200ResponseItemsInnerSubscriptionIntentTierEnum
+          .serializer)
+      ..add(ApiV1AdminSalonsPost201Response.serializer)
+      ..add(ApiV1AdminSalonsPost201ResponseApprovalStatusEnum.serializer)
+      ..add(ApiV1AdminSalonsPost201ResponseDocumentsInner.serializer)
+      ..add(ApiV1AdminSalonsPost201ResponseDocumentsInnerStatusEnum.serializer)
+      ..add(ApiV1AdminSalonsPost201ResponseOwner.serializer)
+      ..add(ApiV1AdminSalonsPost201ResponseServicesInner.serializer)
+      ..add(ApiV1AdminSalonsPost201ResponseServicesInnerDepositModeEnum
+          .serializer)
+      ..add(
+          ApiV1AdminSalonsPost201ResponseSubscriptionIntentTierEnum.serializer)
+      ..add(ApiV1AdminSalonsPostRequest.serializer)
       ..add(ApiV1BookingsBookingIdReviewPost201Response.serializer)
       ..add(ApiV1BookingsBookingIdReviewPostRequest.serializer)
+      ..add(ApiV1ConfigPricingGet200Response.serializer)
+      ..add(ApiV1ConfigPricingGet200ResponseStandard.serializer)
       ..add(ApiV1MeAddressesAddressIdPatchRequest.serializer)
       ..add(ApiV1MeAddressesGet200Response.serializer)
       ..add(ApiV1MeAddressesGet200ResponseItemsInner.serializer)
@@ -92,6 +115,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ApiV1PaymentsWebhooksIntechPost200Response.serializer)
       ..add(ApiV1ProVouchersPost201Response.serializer)
       ..add(ApiV1PushTokensPost201Response.serializer)
+      ..add(ApiV1SalonsIdAvailabilityGet200ResponseInner.serializer)
+      ..add(ApiV1SalonsIdReviewsGet200Response.serializer)
+      ..add(ApiV1SalonsSalonIdPublicMediaGet200Response.serializer)
+      ..add(ApiV1SalonsSalonIdPublicMediaGet200ResponseItemsInner.serializer)
       ..add(AuthSession.serializer)
       ..add(BookingCreateInput.serializer)
       ..add(BookingCreateInputChannelEnum.serializer)
@@ -262,10 +289,6 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<AdminDashboardInactivityAlertsInner>())
       ..addBuilderFactory(
           const FullType(BuiltList,
-              const [const FullType(AdminSalonQueueResponseItemsInner)]),
-          () => ListBuilder<AdminSalonQueueResponseItemsInner>())
-      ..addBuilderFactory(
-          const FullType(BuiltList,
               const [const FullType(AdminSubscriptionDetailEntitlementsInner)]),
           () => ListBuilder<AdminSubscriptionDetailEntitlementsInner>())
       ..addBuilderFactory(
@@ -280,6 +303,24 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList,
               const [const FullType(AdminSubscriptionListResponseItemsInner)]),
           () => ListBuilder<AdminSubscriptionListResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(ApiV1AdminMediaPendingGet200ResponseItemsInner)
+          ]),
+          () => ListBuilder<ApiV1AdminMediaPendingGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ApiV1AdminSalonsGet200ResponseItemsInner)]),
+          () => ListBuilder<ApiV1AdminSalonsGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ApiV1AdminSalonsGet200ResponseItemsInner)]),
+          () => ListBuilder<ApiV1AdminSalonsGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(ApiV1BookingsBookingIdReviewPost201Response)
+          ]),
+          () => ListBuilder<ApiV1BookingsBookingIdReviewPost201Response>())
       ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(ApiV1MeAddressesGet200ResponseItemsInner)]),
@@ -302,6 +343,13 @@ Serializers _$serializers = (Serializers().toBuilder()
             const FullType(ApiV1NotificationsGet200ResponseItemsInner)
           ]),
           () => ListBuilder<ApiV1NotificationsGet200ResponseItemsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(
+                ApiV1SalonsSalonIdPublicMediaGet200ResponseItemsInner)
+          ]),
+          () => ListBuilder<
+              ApiV1SalonsSalonIdPublicMediaGet200ResponseItemsInner>())
       ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(BookingSummaryListResponseItemsInner)]),
@@ -407,13 +455,31 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
       ..addBuilderFactory(
-          const FullType(
-              BuiltList, const [const FullType(AdminSalonDetailServicesInner)]),
-          () => ListBuilder<AdminSalonDetailServicesInner>())
+          const FullType(BuiltList, const [
+            const FullType(ApiV1AdminSalonsPost201ResponseServicesInner)
+          ]),
+          () => ListBuilder<ApiV1AdminSalonsPost201ResponseServicesInner>())
       ..addBuilderFactory(
-          const FullType(BuiltList,
-              const [const FullType(AdminSalonDetailDocumentsInner)]),
-          () => ListBuilder<AdminSalonDetailDocumentsInner>()))
+          const FullType(BuiltList, const [
+            const FullType(ApiV1AdminSalonsPost201ResponseDocumentsInner)
+          ]),
+          () => ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(ApiV1AdminSalonsPost201ResponseServicesInner)
+          ]),
+          () => ListBuilder<ApiV1AdminSalonsPost201ResponseServicesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(ApiV1AdminSalonsPost201ResponseDocumentsInner)
+          ]),
+          () => ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>()))
     .build();
 
 // ignore_for_file: deprecated_member_use_from_same_package,type=lint

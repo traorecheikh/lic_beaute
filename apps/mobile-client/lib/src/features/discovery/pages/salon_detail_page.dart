@@ -12,7 +12,9 @@ import '../../../core/utils/app_share.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/salon_map_card.dart';
+import '../../../core/session/session_store.dart';
 import '../../../router/app_router.dart';
+import '../../auth/widgets/auth_required_sheet.dart';
 import '../../booking/providers/booking_funnel_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/salon_detail_provider.dart';
@@ -59,7 +61,10 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(salonDetailResourceProvider(widget.salonId));
-    final favorites = ref.watch(favoritesProvider);
+    final session = ref.watch(sessionProvider);
+    final favorites = session.isAuthenticated
+        ? ref.watch(favoritesProvider)
+        : const FavoritesState();
     final isFavorite = favorites.contains(widget.salonId);
     Future<void> refreshSalon() =>
         ref.refresh(salonDetailResourceProvider(widget.salonId).future);
@@ -123,8 +128,17 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                           icon: 'share',
                           onTap: () {
                             AppHaptics.light();
-                            AppShare.text(
-                              'Découvrez ${salon.name} sur Beauté Avenue.\n${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
+                            AppShare.card(
+                              context: context,
+                              card: SalonShareCard(
+                                salonName: salon.name,
+                                category: salon.category,
+                                location:
+                                    '${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
+                                rating: salon.averageRating.toDouble(),
+                              ),
+                              text:
+                                  'Découvrez ${salon.name} sur Beauté Avenue.',
                             );
                           },
                         ),
@@ -132,8 +146,15 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                         _CircleBtn(
                           icon: isFavorite ? 'heart-filled' : 'heart',
                           iconColor: isFavorite ? AppColors.primary : null,
-                          onTap: () {
+                          onTap: () async {
                             AppHaptics.light();
+                            if (!session.isAuthenticated) {
+                              await showAuthRequiredSheet(
+                                context,
+                                onLogin: () => context.go(AppRoutes.auth),
+                              );
+                              return;
+                            }
                             ref
                                 .read(favoritesProvider.notifier)
                                 .toggle(widget.salonId);

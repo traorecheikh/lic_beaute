@@ -8,7 +8,7 @@ part of 'admin_salon_queue_response.dart';
 
 class _$AdminSalonQueueResponse extends AdminSalonQueueResponse {
   @override
-  final BuiltList<AdminSalonQueueResponseItemsInner> items;
+  final BuiltList<ApiV1AdminSalonsGet200ResponseItemsInner> items;
   @override
   final int total;
 
@@ -58,10 +58,10 @@ class AdminSalonQueueResponseBuilder
         Builder<AdminSalonQueueResponse, AdminSalonQueueResponseBuilder> {
   _$AdminSalonQueueResponse? _$v;
 
-  ListBuilder<AdminSalonQueueResponseItemsInner>? _items;
-  ListBuilder<AdminSalonQueueResponseItemsInner> get items =>
-      _$this._items ??= ListBuilder<AdminSalonQueueResponseItemsInner>();
-  set items(ListBuilder<AdminSalonQueueResponseItemsInner>? items) =>
+  ListBuilder<ApiV1AdminSalonsGet200ResponseItemsInner>? _items;
+  ListBuilder<ApiV1AdminSalonsGet200ResponseItemsInner> get items =>
+      _$this._items ??= ListBuilder<ApiV1AdminSalonsGet200ResponseItemsInner>();
+  set items(ListBuilder<ApiV1AdminSalonsGet200ResponseItemsInner>? items) =>
       _$this._items = items;
 
   int? _total;

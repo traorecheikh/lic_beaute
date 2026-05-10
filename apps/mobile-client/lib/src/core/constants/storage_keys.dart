@@ -25,4 +25,5 @@ abstract final class StorageKeys {
   static const benefitsList = 'benefits_list';
   static const vouchersList = 'vouchers_list';
   static const outboxItems = 'outbox_items';
+  static const onboardingCompleted = 'onboarding_completed';
 }

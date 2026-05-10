@@ -4,6 +4,8 @@ import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../env/app_env.dart';
+
 class MediaUploadService {
   final Dio _dio;
   final MediaApi _api;
@@ -19,6 +21,50 @@ class MediaUploadService {
   ///   2. PUT directly to R2 (no Authorization header)
   ///   3. POST /api/v1/media/{assetId}/complete → triggers admin review
   Future<String> uploadSalonImage({
+    required String salonId,
+    required XFile file,
+    required String purpose,
+  }) async {
+    if (AppEnv.mediaUploadStrategy == MediaUploadStrategy.apiMultipart) {
+      return _uploadViaApiMultipart(
+        salonId: salonId,
+        file: file,
+        purpose: purpose,
+      );
+    }
+    return _uploadViaPresignedR2(
+      salonId: salonId,
+      file: file,
+      purpose: purpose,
+    );
+  }
+
+  Future<String> _uploadViaApiMultipart({
+    required String salonId,
+    required XFile file,
+    required String purpose,
+  }) async {
+    final form = FormData.fromMap({
+      'purpose': purpose,
+      if (salonId.isNotEmpty) 'salonId': salonId,
+      'file': await MultipartFile.fromFile(file.path, filename: file.name),
+    });
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/api/v1/media/upload',
+      data: form,
+      options: Options(
+        contentType: 'multipart/form-data',
+        sendTimeout: const Duration(seconds: 120),
+      ),
+    );
+    final assetId = response.data?['assetId'] as String?;
+    if (assetId == null || assetId.isEmpty) {
+      throw StateError('Multipart upload response missing assetId');
+    }
+    return assetId;
+  }
+
+  Future<String> _uploadViaPresignedR2({
     required String salonId,
     required XFile file,
     required String purpose,

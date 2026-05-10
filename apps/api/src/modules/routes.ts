@@ -134,11 +134,13 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.delete("/api/v1/push-tokens/:tokenId", (req, rep) => notifications.revokePushToken(req, rep));
 
   // ── Media ─────────────────────────────────────────────────────────────────
+  app.post("/api/v1/media/upload", (req, rep) => media.upload(req, rep));
   app.post("/api/v1/media/upload-intent", (req, rep) => media.uploadIntent(req, rep));
   app.post("/api/v1/media/:mediaId/complete", (req, rep) => media.completeUpload(req, rep));
   app.get("/api/v1/media/:mediaId", (req, rep) => media.get(req, rep));
   app.delete("/api/v1/media/:mediaId", (req, rep) => media.delete(req, rep));
   app.get("/api/v1/salons/:salonId/public-media", (req, rep) => media.getPublicMedia(req, rep));
+  app.get("/api/v1/salons/media/:mediaId/public", (req, rep) => media.getPublicFile(req, rep));
 
   // ── Admin Media ───────────────────────────────────────────────────────────
   app.get("/api/v1/admin/media/pending", (req, rep) => adminMedia.listPending(req, rep));

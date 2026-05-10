@@ -11,13 +11,15 @@ class _$ApiV1BookingsBookingIdReviewPost201Response
   @override
   final String id;
   @override
-  final num rating;
+  final int rating;
   @override
-  final String? title;
-  @override
-  final String comment;
+  final String? comment;
   @override
   final DateTime createdAt;
+  @override
+  final String? responseText;
+  @override
+  final DateTime? responseAt;
 
   factory _$ApiV1BookingsBookingIdReviewPost201Response(
           [void Function(ApiV1BookingsBookingIdReviewPost201ResponseBuilder)?
@@ -28,9 +30,10 @@ class _$ApiV1BookingsBookingIdReviewPost201Response
   _$ApiV1BookingsBookingIdReviewPost201Response._(
       {required this.id,
       required this.rating,
-      this.title,
-      required this.comment,
-      required this.createdAt})
+      this.comment,
+      required this.createdAt,
+      this.responseText,
+      this.responseAt})
       : super._();
   @override
   ApiV1BookingsBookingIdReviewPost201Response rebuild(
@@ -48,9 +51,10 @@ class _$ApiV1BookingsBookingIdReviewPost201Response
     return other is ApiV1BookingsBookingIdReviewPost201Response &&
         id == other.id &&
         rating == other.rating &&
-        title == other.title &&
         comment == other.comment &&
-        createdAt == other.createdAt;
+        createdAt == other.createdAt &&
+        responseText == other.responseText &&
+        responseAt == other.responseAt;
   }
 
   @override
@@ -58,9 +62,10 @@ class _$ApiV1BookingsBookingIdReviewPost201Response
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, rating.hashCode);
-    _$hash = $jc(_$hash, title.hashCode);
     _$hash = $jc(_$hash, comment.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
+    _$hash = $jc(_$hash, responseText.hashCode);
+    _$hash = $jc(_$hash, responseAt.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -71,9 +76,10 @@ class _$ApiV1BookingsBookingIdReviewPost201Response
             r'ApiV1BookingsBookingIdReviewPost201Response')
           ..add('id', id)
           ..add('rating', rating)
-          ..add('title', title)
           ..add('comment', comment)
-          ..add('createdAt', createdAt))
+          ..add('createdAt', createdAt)
+          ..add('responseText', responseText)
+          ..add('responseAt', responseAt))
         .toString();
   }
 }
@@ -88,13 +94,9 @@ class ApiV1BookingsBookingIdReviewPost201ResponseBuilder
   String? get id => _$this._id;
   set id(String? id) => _$this._id = id;
 
-  num? _rating;
-  num? get rating => _$this._rating;
-  set rating(num? rating) => _$this._rating = rating;
-
-  String? _title;
-  String? get title => _$this._title;
-  set title(String? title) => _$this._title = title;
+  int? _rating;
+  int? get rating => _$this._rating;
+  set rating(int? rating) => _$this._rating = rating;
 
   String? _comment;
   String? get comment => _$this._comment;
@@ -103,6 +105,14 @@ class ApiV1BookingsBookingIdReviewPost201ResponseBuilder
   DateTime? _createdAt;
   DateTime? get createdAt => _$this._createdAt;
   set createdAt(DateTime? createdAt) => _$this._createdAt = createdAt;
+
+  String? _responseText;
+  String? get responseText => _$this._responseText;
+  set responseText(String? responseText) => _$this._responseText = responseText;
+
+  DateTime? _responseAt;
+  DateTime? get responseAt => _$this._responseAt;
+  set responseAt(DateTime? responseAt) => _$this._responseAt = responseAt;
 
   ApiV1BookingsBookingIdReviewPost201ResponseBuilder() {
     ApiV1BookingsBookingIdReviewPost201Response._defaults(this);
@@ -113,9 +123,10 @@ class ApiV1BookingsBookingIdReviewPost201ResponseBuilder
     if ($v != null) {
       _id = $v.id;
       _rating = $v.rating;
-      _title = $v.title;
       _comment = $v.comment;
       _createdAt = $v.createdAt;
+      _responseText = $v.responseText;
+      _responseAt = $v.responseAt;
       _$v = null;
     }
     return this;
@@ -143,11 +154,11 @@ class ApiV1BookingsBookingIdReviewPost201ResponseBuilder
               id, r'ApiV1BookingsBookingIdReviewPost201Response', 'id'),
           rating: BuiltValueNullFieldError.checkNotNull(
               rating, r'ApiV1BookingsBookingIdReviewPost201Response', 'rating'),
-          title: title,
-          comment: BuiltValueNullFieldError.checkNotNull(comment,
-              r'ApiV1BookingsBookingIdReviewPost201Response', 'comment'),
+          comment: comment,
           createdAt: BuiltValueNullFieldError.checkNotNull(createdAt,
               r'ApiV1BookingsBookingIdReviewPost201Response', 'createdAt'),
+          responseText: responseText,
+          responseAt: responseAt,
         );
     replace(_$result);
     return _$result;

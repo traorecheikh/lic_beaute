@@ -11,9 +11,7 @@ class _$ApiV1BookingsBookingIdReviewPostRequest
   @override
   final int rating;
   @override
-  final String? title;
-  @override
-  final String comment;
+  final String? comment;
 
   factory _$ApiV1BookingsBookingIdReviewPostRequest(
           [void Function(ApiV1BookingsBookingIdReviewPostRequestBuilder)?
@@ -22,7 +20,7 @@ class _$ApiV1BookingsBookingIdReviewPostRequest
           ._build();
 
   _$ApiV1BookingsBookingIdReviewPostRequest._(
-      {required this.rating, this.title, required this.comment})
+      {required this.rating, this.comment})
       : super._();
   @override
   ApiV1BookingsBookingIdReviewPostRequest rebuild(
@@ -39,7 +37,6 @@ class _$ApiV1BookingsBookingIdReviewPostRequest
     if (identical(other, this)) return true;
     return other is ApiV1BookingsBookingIdReviewPostRequest &&
         rating == other.rating &&
-        title == other.title &&
         comment == other.comment;
   }
 
@@ -47,7 +44,6 @@ class _$ApiV1BookingsBookingIdReviewPostRequest
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, rating.hashCode);
-    _$hash = $jc(_$hash, title.hashCode);
     _$hash = $jc(_$hash, comment.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -58,7 +54,6 @@ class _$ApiV1BookingsBookingIdReviewPostRequest
     return (newBuiltValueToStringHelper(
             r'ApiV1BookingsBookingIdReviewPostRequest')
           ..add('rating', rating)
-          ..add('title', title)
           ..add('comment', comment))
         .toString();
   }
@@ -74,10 +69,6 @@ class ApiV1BookingsBookingIdReviewPostRequestBuilder
   int? get rating => _$this._rating;
   set rating(int? rating) => _$this._rating = rating;
 
-  String? _title;
-  String? get title => _$this._title;
-  set title(String? title) => _$this._title = title;
-
   String? _comment;
   String? get comment => _$this._comment;
   set comment(String? comment) => _$this._comment = comment;
@@ -90,7 +81,6 @@ class ApiV1BookingsBookingIdReviewPostRequestBuilder
     final $v = _$v;
     if ($v != null) {
       _rating = $v.rating;
-      _title = $v.title;
       _comment = $v.comment;
       _$v = null;
     }
@@ -116,9 +106,7 @@ class ApiV1BookingsBookingIdReviewPostRequestBuilder
         _$ApiV1BookingsBookingIdReviewPostRequest._(
           rating: BuiltValueNullFieldError.checkNotNull(
               rating, r'ApiV1BookingsBookingIdReviewPostRequest', 'rating'),
-          title: title,
-          comment: BuiltValueNullFieldError.checkNotNull(
-              comment, r'ApiV1BookingsBookingIdReviewPostRequest', 'comment'),
+          comment: comment,
         );
     replace(_$result);
     return _$result;

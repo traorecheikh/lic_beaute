@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:hive_ce/hive_ce.dart';
+
+import '../core/constants/storage_keys.dart';
 import '../core/session/session_store.dart';
 import '../features/appointments/pages/booking_detail_page.dart';
 import '../features/appointments/pages/booking_manage_page.dart';
@@ -9,8 +12,10 @@ import '../features/appointments/pages/bookings_list_page.dart';
 import '../features/appointments/pages/review_new_page.dart';
 import '../features/auth/pages/auth_choice_page.dart';
 import '../features/auth/pages/email_login_page.dart';
+import '../features/auth/pages/onboarding/onboarding_page.dart';
 import '../features/auth/pages/otp_login_page.dart';
 import '../features/auth/pages/profile_bootstrap_page.dart';
+import '../features/auth/pages/register_page.dart';
 import '../features/booking/pages/booking_review_page.dart';
 import '../features/booking/pages/booking_success_page.dart';
 import '../features/booking/pages/payment_handoff_page.dart';
@@ -41,8 +46,10 @@ import 'splash_page.dart';
 
 abstract final class AppRoutes {
   static const splash = '/splash';
+  static const onboarding = '/onboarding';
   static const auth = '/auth';
   static const emailLogin = '/auth/email-login';
+  static const register = '/auth/register';
   static const otpLogin = '/auth/otp';
   static const profileBootstrap = '/profile/bootstrap';
   static const home = '/';
@@ -88,21 +95,33 @@ abstract final class AppRoutes {
 
 // ── Routes protected from unauthenticated access ──────────────────────────
 
-const _routesAllowedWithoutAuth = {
+const _publicRoutesWithoutAuth = {
   AppRoutes.splash,
+  AppRoutes.onboarding,
   AppRoutes.auth,
   AppRoutes.emailLogin,
+  AppRoutes.register,
   AppRoutes.otpLogin,
   AppRoutes.home,
   AppRoutes.search,
-  AppRoutes.salonDetail,
 };
+
+const _publicRoutePrefixesWithoutAuth = {'/salons/'};
 
 const _authEntryRoutes = {
   AppRoutes.auth,
   AppRoutes.emailLogin,
+  AppRoutes.register,
   AppRoutes.otpLogin,
 };
+
+bool _isPublicRouteWithoutAuth(String location) {
+  if (_publicRoutesWithoutAuth.contains(location)) return true;
+  for (final prefix in _publicRoutePrefixesWithoutAuth) {
+    if (location.startsWith(prefix)) return true;
+  }
+  return false;
+}
 
 // ── Provider ──────────────────────────────────────────────────────────────
 
@@ -118,12 +137,27 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (session.isRestoring) return null;
 
-      final isAllowedWithoutAuth = _routesAllowedWithoutAuth.contains(location);
+      // Check for first-time onboarding
+      final settingsBox = Hive.box<dynamic>(StorageKeys.settingsBox);
+      final onboardingCompleted =
+          settingsBox.get(StorageKeys.onboardingCompleted, defaultValue: false)
+              as bool;
+
+      if (!onboardingCompleted &&
+          location != AppRoutes.onboarding &&
+          location != AppRoutes.splash) {
+        return AppRoutes.onboarding;
+      }
+
+      final isAllowedWithoutAuth = _isPublicRouteWithoutAuth(location);
 
       if (!session.isAuthenticated && !isAllowedWithoutAuth) {
         final current = Uri.encodeComponent(state.uri.toString());
         return '${AppRoutes.auth}?redirectTo=$current';
       }
+
+      // If onboarding just completed and user is redirected to /auth,
+      // or if they are authenticated and try to go to auth pages, redirect to home.
       if (session.isAuthenticated && _authEntryRoutes.contains(location)) {
         final redirect = state.uri.queryParameters['redirectTo'];
         if (redirect != null && redirect.isNotEmpty) return redirect;
@@ -135,6 +169,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Pre-auth ──────────────────────────────────────────────────────────
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
       GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (_, _) => const OnboardingPage(),
+      ),
+      GoRoute(
         path: AppRoutes.auth,
         builder: (_, _) => const AuthChoicePage(),
         routes: [
@@ -142,6 +180,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'email-login',
             builder: (_, _) => const EmailLoginPage(),
           ),
+          GoRoute(path: 'register', builder: (_, _) => const RegisterPage()),
           GoRoute(path: 'otp', builder: (_, _) => const OtpLoginPage()),
         ],
       ),
@@ -190,10 +229,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.profile,
             builder: (_, _) => const ProfilePage(),
             routes: [
-              GoRoute(
-                path: 'edit',
-                builder: (_, _) => const EditProfilePage(),
-              ),
+              GoRoute(path: 'edit', builder: (_, _) => const EditProfilePage()),
               GoRoute(
                 path: 'notification-preferences',
                 builder: (_, _) => const NotificationPreferencesPage(),
@@ -223,8 +259,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Salon list pages ──────────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.salonsNearby,
-        builder: (_, _) =>
-            const SalonsListPage(filter: SalonListFilter.nearby),
+        builder: (_, _) => const SalonsListPage(filter: SalonListFilter.nearby),
       ),
       GoRoute(
         path: AppRoutes.salonsPrestige,

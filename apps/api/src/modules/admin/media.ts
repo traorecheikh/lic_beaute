@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { adminMediaApproveInputSchema, adminMediaRejectInputSchema } from "@beauteavenue/contracts";
 
+import { getStorageAdapter } from "../../adapters/index.js";
 import { R2StorageAdapter } from "../../adapters/storage/r2.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
@@ -108,12 +109,30 @@ export class AdminMediaController {
       const purposeDir = purpose ?? "gallery";
       const prefix = isPrivate ? "private_kyc" : "public";
       const finalObjectKey = `${prefix}/${salonPrefix}/${purposeDir}/${asset.id}${fileExt}`;
-      const publicUrl = isPrivate ? null : `${config.mediaPublicBaseUrl}/${finalObjectKey}`;
+      const publicUrl = isPrivate
+        ? null
+        : config.storageDriver === "r2"
+          ? `${config.mediaPublicBaseUrl}/${finalObjectKey}`
+          : `${config.mediaPublicBaseUrl}/api/v1/salons/media/${asset.id}/public`;
       const visibility = isPrivate ? "private_kyc" : "public";
 
       const r2 = getR2Adapter();
       if (r2) {
         await r2.copyObject(asset.objectKey, finalObjectKey);
+      } else if (asset.objectKey !== finalObjectKey) {
+        const storage = getStorageAdapter(config.storageDriver, {
+          storagePath: config.storagePath,
+          r2AccountId: config.r2AccountId,
+          r2AccessKeyId: config.r2AccessKeyId,
+          r2SecretAccessKey: config.r2SecretAccessKey,
+          r2Bucket: config.r2Bucket,
+          mediaPublicBaseUrl: config.mediaPublicBaseUrl
+        });
+        const source = await storage.retrieve(asset.objectKey);
+        if (source) {
+          await storage.store(finalObjectKey, source, asset.mimeType);
+          await storage.delete(asset.objectKey).catch(() => {});
+        }
       }
 
       await prisma.mediaAsset.update({

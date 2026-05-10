@@ -30,8 +30,7 @@ class AuthChoicePage extends StatelessWidget {
                   // Large logo
                   Image.asset(
                     'assets/logo.png',
-                    width: 120.r,
-                    height: 120.r,
+                    height: 120.h,
                     fit: BoxFit.contain,
                   ),
                   SizedBox(height: 20.h),
@@ -55,24 +54,51 @@ class AuthChoicePage extends StatelessWidget {
 
                   const Spacer(flex: 3),
 
-                  // Buttons — directly on the background, no white card
+                  // PRIMARY ACTION: S'inscrire (Merged Entry)
                   SizedBox(
                     width: double.infinity,
                     height: 56.h,
                     child: ElevatedButton(
-                      onPressed: () => context.push('${AppRoutes.otpLogin}$query'),
-                      child: const Text('Commencer'),
+                      onPressed: () => _showSignUpOptions(context, query),
+                      child: const Text('S\'inscrire'),
                     ),
                   ),
-                  gapH12,
+                  
+                  SizedBox(height: 32.h),
+                  
+                  // SECONDARY ACTION: Connexion (Existing Users)
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Text(
+                          'Déjà un compte ?',
+                          style: AppTextStyles.bodySm.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+                  
                   SizedBox(
                     width: double.infinity,
                     height: 56.h,
-                    child: OutlinedButton(
+                    child: TextButton(
                       onPressed: () => context.push('${AppRoutes.emailLogin}$query'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.onSurface,
+                        backgroundColor: AppColors.surface,
+                        shape: StadiumBorder(),
+                        side: BorderSide(color: AppColors.outline.withValues(alpha: 0.3)),
+                      ),
                       child: const Text('Se connecter'),
                     ),
                   ),
+
                   SizedBox(height: 20.h),
 
                   GestureDetector(
@@ -95,6 +121,136 @@ class AuthChoicePage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showSignUpOptions(BuildContext context, String query) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(28.w, 32.h, 28.w, 40.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Créer un compte',
+                style: AppTextStyles.headlineLg,
+              ),
+              gapH8,
+              Text(
+                'Choisissez votre méthode d\'inscription préférée.',
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: 32.h),
+              
+              // SMS Option
+              _SignUpOptionTile(
+                title: 'Via SMS',
+                subtitle: 'Rapide et sécurisé (Recommandé)',
+                icon: Icons.sms_outlined,
+                onTap: () {
+                  Navigator.pop(context);
+                  GoRouter.of(context).push('${AppRoutes.otpLogin}$query');
+                },
+                isPrimary: true,
+              ),
+              gapH16,
+              
+              // Email Option
+              _SignUpOptionTile(
+                title: 'Via Email',
+                subtitle: 'Classique avec mot de passe',
+                icon: Icons.email_outlined,
+                onTap: () {
+                  Navigator.pop(context);
+                  GoRouter.of(context).push('${AppRoutes.register}$query');
+                },
+                isPrimary: false,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SignUpOptionTile extends StatelessWidget {
+  const _SignUpOptionTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+    required this.isPrimary,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: isPrimary ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: isPrimary ? AppColors.primary.withValues(alpha: 0.2) : AppColors.outlineVariant,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: isPrimary ? AppColors.primary : AppColors.surfaceVariant,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isPrimary ? AppColors.white : AppColors.onSurface,
+                size: 22.r,
+              ),
+            ),
+            gapW16,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.outline,
+              size: 20.r,
+            ),
+          ],
+        ),
       ),
     );
   }

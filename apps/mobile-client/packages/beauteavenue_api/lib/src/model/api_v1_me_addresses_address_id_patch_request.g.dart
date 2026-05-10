@@ -11,15 +11,9 @@ class _$ApiV1MeAddressesAddressIdPatchRequest
   @override
   final String? label;
   @override
-  final String? addressLine1;
-  @override
-  final String? addressLine2;
+  final String? street;
   @override
   final String? city;
-  @override
-  final String? region;
-  @override
-  final String? phone;
   @override
   final bool? isDefault;
 
@@ -30,13 +24,7 @@ class _$ApiV1MeAddressesAddressIdPatchRequest
           ._build();
 
   _$ApiV1MeAddressesAddressIdPatchRequest._(
-      {this.label,
-      this.addressLine1,
-      this.addressLine2,
-      this.city,
-      this.region,
-      this.phone,
-      this.isDefault})
+      {this.label, this.street, this.city, this.isDefault})
       : super._();
   @override
   ApiV1MeAddressesAddressIdPatchRequest rebuild(
@@ -53,11 +41,8 @@ class _$ApiV1MeAddressesAddressIdPatchRequest
     if (identical(other, this)) return true;
     return other is ApiV1MeAddressesAddressIdPatchRequest &&
         label == other.label &&
-        addressLine1 == other.addressLine1 &&
-        addressLine2 == other.addressLine2 &&
+        street == other.street &&
         city == other.city &&
-        region == other.region &&
-        phone == other.phone &&
         isDefault == other.isDefault;
   }
 
@@ -65,11 +50,8 @@ class _$ApiV1MeAddressesAddressIdPatchRequest
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, label.hashCode);
-    _$hash = $jc(_$hash, addressLine1.hashCode);
-    _$hash = $jc(_$hash, addressLine2.hashCode);
+    _$hash = $jc(_$hash, street.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
-    _$hash = $jc(_$hash, region.hashCode);
-    _$hash = $jc(_$hash, phone.hashCode);
     _$hash = $jc(_$hash, isDefault.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -80,11 +62,8 @@ class _$ApiV1MeAddressesAddressIdPatchRequest
     return (newBuiltValueToStringHelper(
             r'ApiV1MeAddressesAddressIdPatchRequest')
           ..add('label', label)
-          ..add('addressLine1', addressLine1)
-          ..add('addressLine2', addressLine2)
+          ..add('street', street)
           ..add('city', city)
-          ..add('region', region)
-          ..add('phone', phone)
           ..add('isDefault', isDefault))
         .toString();
   }
@@ -100,25 +79,13 @@ class ApiV1MeAddressesAddressIdPatchRequestBuilder
   String? get label => _$this._label;
   set label(String? label) => _$this._label = label;
 
-  String? _addressLine1;
-  String? get addressLine1 => _$this._addressLine1;
-  set addressLine1(String? addressLine1) => _$this._addressLine1 = addressLine1;
-
-  String? _addressLine2;
-  String? get addressLine2 => _$this._addressLine2;
-  set addressLine2(String? addressLine2) => _$this._addressLine2 = addressLine2;
+  String? _street;
+  String? get street => _$this._street;
+  set street(String? street) => _$this._street = street;
 
   String? _city;
   String? get city => _$this._city;
   set city(String? city) => _$this._city = city;
-
-  String? _region;
-  String? get region => _$this._region;
-  set region(String? region) => _$this._region = region;
-
-  String? _phone;
-  String? get phone => _$this._phone;
-  set phone(String? phone) => _$this._phone = phone;
 
   bool? _isDefault;
   bool? get isDefault => _$this._isDefault;
@@ -132,11 +99,8 @@ class ApiV1MeAddressesAddressIdPatchRequestBuilder
     final $v = _$v;
     if ($v != null) {
       _label = $v.label;
-      _addressLine1 = $v.addressLine1;
-      _addressLine2 = $v.addressLine2;
+      _street = $v.street;
       _city = $v.city;
-      _region = $v.region;
-      _phone = $v.phone;
       _isDefault = $v.isDefault;
       _$v = null;
     }
@@ -161,11 +125,8 @@ class ApiV1MeAddressesAddressIdPatchRequestBuilder
     final _$result = _$v ??
         _$ApiV1MeAddressesAddressIdPatchRequest._(
           label: label,
-          addressLine1: addressLine1,
-          addressLine2: addressLine2,
+          street: street,
           city: city,
-          region: region,
-          phone: phone,
           isDefault: isDefault,
         );
     replace(_$result);

@@ -1,5 +1,6 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:one_of/any_of.dart';
 
 import '../../../core/network/api_client_provider.dart';
 import '../../../core/session/session_store.dart';
@@ -42,6 +43,30 @@ class AuthActions {
         (b) => b
           ..email = email
           ..password = password,
+      ),
+    );
+    await _hydrateSession(sessionResponse.data!);
+  }
+
+  Future<void> registerEmail({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    final api = _ref.read(apiClientProvider).getAuthApi();
+    final clientData = RegisterInputAnyOf(
+      (b) => b
+        ..type = RegisterInputAnyOfTypeEnum.client
+        ..fullName = fullName
+        ..email = email
+        ..password = password,
+    );
+    final sessionResponse = await api.apiV1AuthRegisterPost(
+      registerInput: RegisterInput(
+        (b) => b
+          ..anyOf = AnyOf2<RegisterInputAnyOf, RegisterInputAnyOf1>(
+            values: {0: clientData},
+          ),
       ),
     );
     await _hydrateSession(sessionResponse.data!);

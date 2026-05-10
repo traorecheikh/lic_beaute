@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phone_form_field/phone_form_field.dart';
+import 'package:pinput/pinput.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
@@ -20,7 +22,7 @@ class OtpLoginPage extends ConsumerStatefulWidget {
 }
 
 class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
-  final _phoneController = TextEditingController(text: '77 000 00 00');
+  final _phoneController = PhoneController(initialValue: PhoneNumber.parse('+221'));
   final _otpController = TextEditingController();
   bool _codeSent = false;
   bool _submitting = false;
@@ -34,10 +36,12 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final phoneText = _phoneController.value.international;
+
     return AuthPageScaffold(
       title: _codeSent ? 'Vérification' : 'Inscription',
       subtitle: _codeSent
-          ? 'Code envoyé au +221 ${_phoneController.text}'
+          ? 'Code envoyé au $phoneText'
           : 'Nous vous enverrons un code par SMS.',
       leading: AppBackButton(
         onPressed: () {
@@ -52,11 +56,60 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_codeSent) ...[
-            EditorialField(
-              label: 'NUMÉRO DE TÉLÉPHONE',
+            Text(
+              'NUMÉRO DE TÉLÉPHONE',
+              style: AppTextStyles.labelSm.copyWith(
+                color: AppColors.onSurfaceVariant,
+                letterSpacing: 1.5,
+              ),
+            ),
+            SizedBox(height: 10.h),
+            PhoneFormField(
               controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              prefixText: '+221 ',
+              isCountrySelectionEnabled: false,
+              isCountryButtonPersistent: true,
+              countrySelectorNavigator: const CountrySelectorNavigator.bottomSheet(
+                countries: [IsoCode.SN],
+              ),
+              countryButtonStyle: CountryButtonStyle(
+                showFlag: true,
+                showDialCode: true,
+                showIsoCode: false,
+                textStyle: AppTextStyles.bodyLg.copyWith(
+                  color: AppColors.onSurface,
+                ),
+              ),
+              validator: PhoneValidator.compose([
+                PhoneValidator.required(context),
+                PhoneValidator.validMobile(context),
+              ]),
+              style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surface,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 16.h,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(
+                    color: AppColors.outline.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
             SizedBox(height: 48.h),
             AuthPrimaryButton(
@@ -65,14 +118,54 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
               onTap: _requestCode,
             ),
           ] else ...[
-            EditorialField(
-              label: 'CODE À 6 CHIFFRES',
-              controller: _otpController,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.headlineLg.copyWith(
-                letterSpacing: 12.w,
-                color: AppColors.onSurface,
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'CODE À 6 CHIFFRES',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  Pinput(
+                    length: 6,
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    defaultPinTheme: PinTheme(
+                      width: 48.w,
+                      height: 56.h,
+                      textStyle: AppTextStyles.headlineLg.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColors.outline.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    focusedPinTheme: PinTheme(
+                      width: 48.w,
+                      height: 56.h,
+                      textStyle: AppTextStyles.headlineLg.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    onCompleted: (_) => _verifyCode(),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 48.h),
@@ -105,11 +198,11 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
   }
 
   Future<void> _requestCode() async {
-    final phone = _normalizeSenegalPhone(_phoneController.text);
-    if (phone == null) {
+    final phone = _phoneController.value.international;
+    if (!_phoneController.value.isValid()) {
       AppSnackbar.info(
         context,
-        'Numéro invalide. Entrez un numéro Sénégal (+221 XX XXX XX XX).',
+        'Numéro invalide. Veuillez vérifier votre saisie.',
       );
       return;
     }
@@ -129,12 +222,9 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
   }
 
   Future<void> _verifyCode() async {
-    final phone = _normalizeSenegalPhone(_phoneController.text);
+    final phone = _phoneController.value.international;
     final code = _otpController.text.trim();
-    if (phone == null) {
-      AppSnackbar.info(context, 'Numéro Sénégal invalide.');
-      return;
-    }
+    
     if (code.length != 6) {
       AppSnackbar.info(context, 'Le code doit contenir 6 chiffres.');
       return;
@@ -156,11 +246,5 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     );
     if (mounted) setState(() => _submitting = false);
   }
-
-  String? _normalizeSenegalPhone(String raw) {
-    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.startsWith('221') && digits.length == 12) return '+$digits';
-    if (digits.length == 9) return '+221$digits';
-    return null;
-  }
 }
+

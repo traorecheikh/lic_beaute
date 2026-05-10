@@ -34,11 +34,20 @@ class AuthPageScaffold extends StatelessWidget {
         leading: leading ?? const AppBackButton(),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 28.w),
+        padding: EdgeInsets.fromLTRB(28.w, 0, 28.w, 48.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            gapH16,
+            Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: 20.h, bottom: 40.h),
+                child: Image.asset(
+                  'assets/logo.png',
+                  height: 120.h,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
             Text(title, style: AppTextStyles.displayMd),
             gapH8,
             Text(

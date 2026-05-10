@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { extname } from "node:path";
 
 import type { FastifyReply, FastifyRequest } from "fastify";
 
@@ -16,7 +17,7 @@ function mimeToExt(mimeType: string): string {
   return MIME_TO_EXT[mimeType] ?? ".bin";
 }
 
-import { uploadCompleteInputSchema, uploadIntentInputSchema } from "@beauteavenue/contracts";
+import { mediaPurposeSchema, uploadCompleteInputSchema, uploadIntentInputSchema } from "@beauteavenue/contracts";
 
 import { getR2Adapter, getStorageAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
@@ -25,7 +26,120 @@ import { fail, ok } from "../../lib/http.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
 
+const ALLOWED_UPLOAD_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+  "application/pdf"
+]);
+
+function readMultipartFieldValue(fields: Record<string, unknown>, key: string): string | undefined {
+  const raw = fields[key];
+  if (!raw) return undefined;
+  const part = Array.isArray(raw) ? raw[0] : raw;
+  if (!part || typeof part !== "object") return undefined;
+  const value = (part as { value?: unknown }).value;
+  return typeof value === "string" ? value : undefined;
+}
+
 export class MediaController {
+  async upload(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        r2AccountId: config.r2AccountId,
+        r2AccessKeyId: config.r2AccessKeyId,
+        r2SecretAccessKey: config.r2SecretAccessKey,
+        r2Bucket: config.r2Bucket,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
+
+      const file = await request.file({ limits: { files: 1, fileSize: config.maxUploadBytes } });
+      if (!file) {
+        fail(reply, 400, "file_required", "Aucun fichier reçu.");
+        return;
+      }
+
+      const fields = file.fields as Record<string, unknown>;
+      const purposeValue = readMultipartFieldValue(fields, "purpose");
+      const salonIdValue = readMultipartFieldValue(fields, "salonId");
+      const originalFilename = file.filename;
+      const mimeType = file.mimetype;
+
+      if (typeof purposeValue !== "string" || purposeValue.length === 0) {
+        fail(reply, 422, "invalid_purpose", "Le champ purpose est requis.");
+        return;
+      }
+
+      if (typeof originalFilename !== "string" || originalFilename.length === 0) {
+        fail(reply, 422, "invalid_filename", "Nom de fichier invalide.");
+        return;
+      }
+
+      if (!ALLOWED_UPLOAD_MIME_TYPES.has(mimeType)) {
+        fail(reply, 415, "unsupported_media_type", "Type de fichier non supporté.");
+        return;
+      }
+
+      const owner = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true } });
+      const input = {
+        salonId: typeof salonIdValue === "string" && salonIdValue.length > 0 ? salonIdValue : undefined,
+        purpose: mediaPurposeSchema.parse(purposeValue),
+        mimeType,
+        originalFilename
+      };
+
+      const fileExt = mimeToExt(input.mimeType) || extname(input.originalFilename) || ".bin";
+      const objectKey = `incoming/${randomUUID()}${fileExt}`;
+      const ownerType = owner?.salonId ? "salon" : "user";
+      const ownerId = owner?.salonId ?? session.sub;
+
+      const sizeBytes = await storage.store(objectKey, file.file, input.mimeType);
+      if (sizeBytes <= 0 || sizeBytes > config.maxUploadBytes) {
+        await storage.delete(objectKey).catch(() => {});
+        fail(reply, 422, "invalid_upload_size", "Fichier invalide ou vide.");
+        return;
+      }
+
+      const asset = await prisma.mediaAsset.create({
+        data: {
+          ownerType,
+          ownerId,
+          salonId: input.salonId ?? owner?.salonId ?? null,
+          uploadedBy: session.sub,
+          objectKey,
+          mimeType: input.mimeType,
+          sizeBytes,
+          purpose: input.purpose,
+          originalFilename: input.originalFilename,
+          fileExt,
+          uploadStatus: "review_pending",
+          reviewStatus: "pending",
+          visibility: "incoming"
+        }
+      });
+
+      await prisma.job.create({
+        data: {
+          queue: "notifications",
+          type: "media_review_notify",
+          payloadJson: JSON.stringify({ mediaId: asset.id, salonId: asset.salonId }),
+          status: "pending"
+        }
+      });
+
+      ok(reply, { assetId: asset.id, uploadStatus: "review_pending", reviewStatus: "pending" }, 201);
+    } catch (error) {
+      if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      logger.error("Media upload error", { error: String(error) });
+      fail(reply, 500, "internal_error", "Erreur interne.");
+    }
+  }
+
   async uploadIntent(request: FastifyRequest, reply: FastifyReply) {
     try {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
@@ -151,6 +265,42 @@ export class MediaController {
         createdAt: a.createdAt.toISOString()
       }))
     });
+  }
+
+  async getPublicFile(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const params = request.params as { mediaId: string };
+      const asset = await prisma.mediaAsset.findUnique({ where: { id: params.mediaId } });
+      if (!asset || asset.deletedAt || asset.reviewStatus !== "approved" || asset.visibility !== "public") {
+        fail(reply, 404, "media_not_found", "Fichier introuvable.");
+        return;
+      }
+
+      const objectKey = asset.finalObjectKey ?? asset.objectKey;
+      if (config.storageDriver === "r2" && asset.publicUrl) {
+        reply.redirect(asset.publicUrl);
+        return;
+      }
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        r2AccountId: config.r2AccountId,
+        r2AccessKeyId: config.r2AccessKeyId,
+        r2SecretAccessKey: config.r2SecretAccessKey,
+        r2Bucket: config.r2Bucket,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
+
+      const data = await storage.retrieve(objectKey);
+      if (!data) {
+        fail(reply, 404, "media_not_found", "Fichier introuvable.");
+        return;
+      }
+
+      reply.type(asset.mimeType).header("Cache-Control", "public, max-age=300").send(data);
+    } catch (error) {
+      logger.error("Media getPublicFile error", { error: String(error) });
+      fail(reply, 500, "internal_error", "Erreur interne.");
+    }
   }
 
   async get(request: FastifyRequest, reply: FastifyReply) {

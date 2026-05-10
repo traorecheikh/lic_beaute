@@ -8212,6 +8212,78 @@
         ]
       }
     },
+    "/api/v1/media/upload": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Upload media through API (adapter-aware: local/noop/r2)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {},
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "salon_cover",
+                      "salon_logo",
+                      "salon_gallery",
+                      "kyc_document",
+                      "avatar"
+                    ]
+                  },
+                  "salonId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "purpose"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Upload accepted and pending review",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assetId": {
+                      "type": "string"
+                    },
+                    "uploadStatus": {
+                      "type": "string"
+                    },
+                    "reviewStatus": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "assetId",
+                    "uploadStatus",
+                    "reviewStatus"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/media/upload-intent": {
       "post": {
         "tags": [

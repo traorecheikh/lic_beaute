@@ -2181,6 +2181,38 @@ export const openApiSpec = {
       })
     },
 
+    "/api/v1/media/upload": {
+      post: withBearer({
+        tags: ["media"],
+        summary: "Upload media through API (adapter-aware: local/noop/r2)",
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: toOpenApiSchema(z.object({
+                file: z.any(),
+                purpose: z.enum(["salon_cover","salon_logo","salon_gallery","kyc_document","avatar"]),
+                salonId: z.string().optional()
+              }))
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: "Upload accepted and pending review",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({
+                  assetId: z.string(),
+                  uploadStatus: z.string(),
+                  reviewStatus: z.string()
+                }))
+              }
+            }
+          }
+        }
+      })
+    },
     "/api/v1/media/upload-intent": {
       post: withBearer({
         tags: ["media"],

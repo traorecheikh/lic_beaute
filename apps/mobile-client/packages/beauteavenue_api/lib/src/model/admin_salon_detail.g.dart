@@ -157,7 +157,7 @@ class _$AdminSalonDetail extends AdminSalonDetail {
   @override
   final String description;
   @override
-  final AdminSalonDetailOwner owner;
+  final ApiV1AdminSalonsPost201ResponseOwner owner;
   @override
   final AdminSalonDetailApprovalStatusEnum approvalStatus;
   @override
@@ -171,9 +171,9 @@ class _$AdminSalonDetail extends AdminSalonDetail {
   @override
   final BuiltList<String> gallery;
   @override
-  final BuiltList<AdminSalonDetailServicesInner> services;
+  final BuiltList<ApiV1AdminSalonsPost201ResponseServicesInner> services;
   @override
-  final BuiltList<AdminSalonDetailDocumentsInner> documents;
+  final BuiltList<ApiV1AdminSalonsPost201ResponseDocumentsInner> documents;
 
   factory _$AdminSalonDetail(
           [void Function(AdminSalonDetailBuilder)? updates]) =>
@@ -297,10 +297,11 @@ class AdminSalonDetailBuilder
   String? get description => _$this._description;
   set description(String? description) => _$this._description = description;
 
-  AdminSalonDetailOwnerBuilder? _owner;
-  AdminSalonDetailOwnerBuilder get owner =>
-      _$this._owner ??= AdminSalonDetailOwnerBuilder();
-  set owner(AdminSalonDetailOwnerBuilder? owner) => _$this._owner = owner;
+  ApiV1AdminSalonsPost201ResponseOwnerBuilder? _owner;
+  ApiV1AdminSalonsPost201ResponseOwnerBuilder get owner =>
+      _$this._owner ??= ApiV1AdminSalonsPost201ResponseOwnerBuilder();
+  set owner(ApiV1AdminSalonsPost201ResponseOwnerBuilder? owner) =>
+      _$this._owner = owner;
 
   AdminSalonDetailApprovalStatusEnum? _approvalStatus;
   AdminSalonDetailApprovalStatusEnum? get approvalStatus =>
@@ -334,16 +335,22 @@ class AdminSalonDetailBuilder
   ListBuilder<String> get gallery => _$this._gallery ??= ListBuilder<String>();
   set gallery(ListBuilder<String>? gallery) => _$this._gallery = gallery;
 
-  ListBuilder<AdminSalonDetailServicesInner>? _services;
-  ListBuilder<AdminSalonDetailServicesInner> get services =>
-      _$this._services ??= ListBuilder<AdminSalonDetailServicesInner>();
-  set services(ListBuilder<AdminSalonDetailServicesInner>? services) =>
+  ListBuilder<ApiV1AdminSalonsPost201ResponseServicesInner>? _services;
+  ListBuilder<ApiV1AdminSalonsPost201ResponseServicesInner> get services =>
+      _$this._services ??=
+          ListBuilder<ApiV1AdminSalonsPost201ResponseServicesInner>();
+  set services(
+          ListBuilder<ApiV1AdminSalonsPost201ResponseServicesInner>?
+              services) =>
       _$this._services = services;
 
-  ListBuilder<AdminSalonDetailDocumentsInner>? _documents;
-  ListBuilder<AdminSalonDetailDocumentsInner> get documents =>
-      _$this._documents ??= ListBuilder<AdminSalonDetailDocumentsInner>();
-  set documents(ListBuilder<AdminSalonDetailDocumentsInner>? documents) =>
+  ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>? _documents;
+  ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner> get documents =>
+      _$this._documents ??=
+          ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>();
+  set documents(
+          ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>?
+              documents) =>
       _$this._documents = documents;
 
   AdminSalonDetailBuilder() {

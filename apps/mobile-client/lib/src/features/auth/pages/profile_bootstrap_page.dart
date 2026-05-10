@@ -43,11 +43,20 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
           onRetry: () => ref.refresh(profileOptionsProvider.future),
           errorTitle: 'Impossible de charger le formulaire',
           builder: (options) => SingleChildScrollView(
-            padding: EdgeInsets.all(24.w),
+            padding: EdgeInsets.symmetric(horizontal: 28.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 40.h),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20.h, bottom: 40.h),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: 120.h,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
                 Text(
                   'Complétez votre profil',
                   style: AppTextStyles.displayMd,
