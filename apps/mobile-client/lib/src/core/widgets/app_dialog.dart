@@ -21,10 +21,11 @@ abstract final class AppDialog {
     required String title,
     required String body,
     required List<AppDialogAction> actions,
+    bool barrierDismissible = true,
   }) {
     return showDialog<T>(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: barrierDismissible,
       builder: (_) => _AppDialogWidget(
         title: title,
         body: body,
@@ -72,7 +73,10 @@ class _AppDialogWidget extends StatelessWidget {
                     ? AppColors.error
                     : AppColors.primary;
                 return AppPressable(
-                  onTap: action.onPressed,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    action.onPressed();
+                  },
                   child: Padding(
                     padding: EdgeInsets.all(8.r),
                     child: Text(

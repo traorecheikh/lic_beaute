@@ -71,20 +71,18 @@ class AppButton extends StatefulWidget {
     double? width,
     double? height,
     Key? key,
-  }) {
-    final btn = AppButton(
-      label: label,
-      onPressed: onPressed,
-      variant: AppButtonVariant.text,
-      isLoading: isLoading,
-      icon: icon,
-      isFullWidth: isFullWidth,
-      width: width,
-      height: height,
-      key: key,
-    );
-    return btn;
-  }
+  }) =>
+      AppButton(
+        label: label,
+        onPressed: onPressed,
+        variant: AppButtonVariant.text,
+        isLoading: isLoading,
+        icon: icon,
+        isFullWidth: isFullWidth,
+        width: width,
+        height: height,
+        key: key,
+      );
 
   final String label;
   final VoidCallback? onPressed;
@@ -104,6 +102,16 @@ class _AppButtonState extends State<AppButton> {
   void _onTapDown(TapDownDetails _) => setState(() => _pressed = true);
   void _onTapUp(TapUpDetails _) => setState(() => _pressed = false);
   void _onTapCancel() => setState(() => _pressed = false);
+
+  @override
+  void didUpdateWidget(AppButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final wasEnabled = !oldWidget.isLoading && oldWidget.onPressed != null;
+    final isNowDisabled = widget.isLoading || widget.onPressed == null;
+    if (wasEnabled && isNowDisabled && _pressed) {
+      setState(() => _pressed = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

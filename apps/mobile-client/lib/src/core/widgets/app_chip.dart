@@ -24,6 +24,7 @@ class AppChip extends StatelessWidget {
 
     return AppPressable(
       onTap: onTap,
+      enabled: onTap != null,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
         decoration: BoxDecoration(
