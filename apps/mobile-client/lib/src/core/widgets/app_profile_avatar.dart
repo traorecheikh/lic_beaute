@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'app_icon.dart';
 
 class AppProfileAvatar extends StatelessWidget {
   final String? url;
@@ -22,7 +23,7 @@ class AppProfileAvatar extends StatelessWidget {
       backgroundColor: AppColors.primaryLight,
       backgroundImage: hasUrl ? CachedNetworkImageProvider(url!) : null,
       child: !hasUrl
-          ? Icon(Icons.person_outline, size: iconSize, color: AppColors.primary)
+          ? AppIcon('user', size: iconSize, color: AppColors.primary)
           : null,
     );
   }
