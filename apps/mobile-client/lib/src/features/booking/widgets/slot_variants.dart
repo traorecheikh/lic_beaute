@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/widgets/app_icon.dart';
 
 // ─── Variant catalogue ────────────────────────────────────────────────────────
 
@@ -572,7 +573,7 @@ class _V5State extends State<V5SlotAccordion> {
                         AnimatedRotation(
                           turns: _open == entry.key ? 0.5 : 0,
                           duration: const Duration(milliseconds: 200),
-                          child: Icon(Icons.expand_more,
+                          child: AppIcon('chevron-down',
                               color: AppColors.onSurfaceVariant, size: 20),
                         ),
                       ]),
@@ -870,8 +871,8 @@ class V8SlotClearList extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                sel ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              AppIcon(
+                sel ? 'check-circle' : 'circle',
                 color: sel ? AppColors.primary : AppColors.outlineVariant,
                 size: 22,
               ),

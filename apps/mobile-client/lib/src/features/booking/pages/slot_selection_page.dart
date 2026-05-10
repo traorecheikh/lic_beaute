@@ -6,7 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../widgets/slot_variants.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../features/appointments/providers/booking_actions_provider.dart';
 import '../../../features/discovery/providers/salon_detail_provider.dart';
@@ -58,14 +61,11 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
   @override
   Widget build(BuildContext context) {
     if (widget.serviceId.isEmpty) {
-      return Scaffold(
-        backgroundColor: AppColors.neutral,
-        appBar: AppBar(
-          leading: IconButton(
-            icon: AppIcon('arrow-left', size: 20),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: const FunnelStepTitle(
+      return AppScaffold(
+        appBar: AppTopBar(
+          showBackButton: true,
+          onBack: () => Navigator.of(context).pop(),
+          titleWidget: const FunnelStepTitle(
             step: 3,
             total: 4,
             title: 'Choisir un créneau',
@@ -89,14 +89,11 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
       salonAvailabilityProvider(_availabilityParams),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: AppIcon('arrow-left', size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const FunnelStepTitle(
+    return AppScaffold(
+      appBar: AppTopBar(
+        showBackButton: true,
+        onBack: () => Navigator.of(context).pop(),
+        titleWidget: const FunnelStepTitle(
           step: 3,
           total: 4,
           title: 'Choisir un créneau',
@@ -122,24 +119,13 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 12.h),
-          child: ElevatedButton(
+          child: AppButton.primary(
             onPressed: _selectedSlot == null ? null : _onConfirm,
-            child: _isRescheduling
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(widget.rescheduleBookingId != null
-                          ? 'Déplacer au ${_selectedSlotLabel()}'
-                          : 'Confirmer · ${_selectedSlotLabel()}'),
-                      gapW8,
-                      AppIcon('chevron-right', size: 16, color: AppColors.white),
-                    ],
-                  ),
+            isLoading: _isRescheduling,
+            label: widget.rescheduleBookingId != null
+                ? 'Déplacer au ${_selectedSlotLabel()}'
+                : 'Confirmer · ${_selectedSlotLabel()}',
+            icon: AppIcon('chevron-right', size: 16, color: AppColors.white),
           ),
         ),
       ),
@@ -259,7 +245,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
         boxShadow: AppShadows.sm,
       ),
       child: Row(children: [
-        _variantNavBtn(Icons.chevron_left,
+        _variantNavBtn('chevron-left',
             () => setState(() => _variant = _variant.prev)),
         Expanded(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -275,13 +261,13 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
             ),
           ]),
         ),
-        _variantNavBtn(Icons.chevron_right,
+        _variantNavBtn('chevron-right',
             () => setState(() => _variant = _variant.next)),
       ]),
     );
   }
 
-  Widget _variantNavBtn(IconData icon, VoidCallback onTap) => GestureDetector(
+  Widget _variantNavBtn(String icon, VoidCallback onTap) => GestureDetector(
         onTap: onTap,
         child: Container(
           width: 36.w,
@@ -290,7 +276,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
             color: AppColors.neutral,
             borderRadius: BorderRadius.circular(18.r),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+          child: Center(child: AppIcon(icon, color: AppColors.primary, size: 20)),
         ),
       );
 
@@ -313,8 +299,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.event_busy_outlined,
-                      size: 48.r, color: AppColors.outlineVariant),
+                  AppIcon('calendar-x', size: 48, color: AppColors.outlineVariant),
                   SizedBox(height: 16.h),
                   Text(
                     'Salon fermé ce jour',
@@ -329,10 +314,10 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 24.h),
-                  OutlinedButton.icon(
+                  AppButton.outline(
                     onPressed: _skipToNextDay,
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Essayer le lendemain'),
+                    label: 'Essayer le lendemain',
+                    icon: AppIcon('arrow-right', size: 16, color: AppColors.primary),
                   ),
                 ],
               ),

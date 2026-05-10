@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../features/discovery/providers/salon_detail_provider.dart';
 import 'app_async_view.dart';
+import 'app_scaffold.dart';
+import 'app_top_bar.dart';
 import '../../features/booking/widgets/funnel_step_bar.dart';
 
 class AppBookingFunnelScaffold extends ConsumerWidget {
@@ -26,10 +28,10 @@ class AppBookingFunnelScaffold extends ConsumerWidget {
     final salonAsync = ref.watch(salonDetailProvider(salonId));
     Future<void> refresh() => ref.refresh(salonDetailProvider(salonId).future);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: FunnelStepTitle(
+    return AppScaffold(
+      appBar: AppTopBar(
+        showBackButton: false,
+        titleWidget: FunnelStepTitle(
           step: step,
           total: 4,
           title: title,
@@ -53,3 +55,4 @@ class AppBookingFunnelScaffold extends ConsumerWidget {
     );
   }
 }
+

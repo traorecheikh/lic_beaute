@@ -1,5 +1,6 @@
 import '../widgets/booking_funnel_shared.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
+import '../../../core/widgets/app_icon.dart';
 
 class ServiceSelectionPage extends ConsumerStatefulWidget {
   final String salonId;
@@ -122,8 +123,7 @@ class _ServiceSelectionPageState extends ConsumerState<ServiceSelectionPage> {
               ],
               SizedBox(height: 16.h),
               Row(children: [
-                Icon(Icons.check_circle_rounded,
-                    color: AppColors.primary, size: 18.r),
+                AppIcon('check-circle', size: 18, color: AppColors.primary),
                 SizedBox(width: 6.w),
                 Text(
                   'Sélectionnée automatiquement',

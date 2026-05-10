@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
 import 'app_async_view.dart';
+import 'app_scaffold.dart';
 import '../../features/discovery/providers/cached_resource.dart';
 
 class AppBookingAsyncScaffold<T> extends ConsumerWidget {
@@ -32,8 +33,7 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
     final detailAsync = ref.watch(provider(bookingId)) as AsyncValue<CachedResource<T>>;
     Future<void> refresh() => ref.refresh(provider(bookingId).future);
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
+    return AppScaffold(
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(
         top: true,

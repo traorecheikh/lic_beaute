@@ -8,6 +8,7 @@ import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_share.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../router/app_router.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
@@ -112,11 +113,7 @@ class _SuccessBody extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Icon(
-                  Icons.check_rounded,
-                  color: AppColors.success,
-                  size: 48.r,
-                ),
+                child: AppIcon('check', size: 48, color: AppColors.success),
               ),
             ),
           ),
@@ -160,12 +157,12 @@ class _SuccessBody extends StatelessWidget {
                 children: [
                   _SummaryRow(icon: "sparkle", label: salonName),
                   SizedBox(height: 12.h),
-                  Divider(height: 1, color: AppColors.outlineVariant),
+                  const AppDivider(),
                   SizedBox(height: 12.h),
                   _SummaryRow(icon: "star", label: serviceName),
                   if (dateLabel.isNotEmpty) ...[
                     SizedBox(height: 12.h),
-                    Divider(height: 1, color: AppColors.outlineVariant),
+                    const AppDivider(),
                     SizedBox(height: 12.h),
                     _SummaryRow(icon: "calendar", label: dateLabel),
                   ],

@@ -11,6 +11,8 @@ import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
@@ -43,9 +45,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
       });
-      return Scaffold(
-        backgroundColor: AppColors.neutral,
-        body: const Center(child: CircularProgressIndicator.adaptive()),
+      return const AppScaffold(
+        body: Center(child: CircularProgressIndicator.adaptive()),
       );
     }
 
@@ -79,10 +80,12 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 0),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: AppIcon('arrow-left', size: 20, color: AppColors.onSurface),
-                  onPressed: () => context.pop(),
-                  tooltip: 'Retour',
+                child: AppPressable(
+                  onTap: () => context.pop(),
+                  child: Padding(
+                    padding: EdgeInsets.all(12.r),
+                    child: AppIcon('arrow-left', size: 20, color: AppColors.onSurface),
+                  ),
                 ),
               ),
             ),
@@ -354,9 +357,9 @@ class _MethodTile extends StatelessWidget {
               ),
             ),
             if (selected)
-              Icon(Icons.check_circle, color: AppColors.primary, size: 22.r)
+              AppIcon('check-circle', color: AppColors.primary, size: 22)
             else
-              Icon(Icons.circle_outlined, color: AppColors.outline, size: 22.r),
+              AppIcon('circle', color: AppColors.outline, size: 22),
           ],
         ),
       ),

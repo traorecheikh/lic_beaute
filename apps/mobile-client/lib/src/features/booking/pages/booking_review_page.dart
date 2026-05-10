@@ -11,7 +11,10 @@ import '../../profile/providers/payment_methods_provider.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/session/session_store.dart';
 import '../../../router/app_router.dart';
@@ -27,13 +30,13 @@ class BookingReviewPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final funnel = ref.watch(bookingFunnelProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
+    return AppScaffold(
+      appBar: AppTopBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: const AppBackButton(),
-        title: const FunnelStepTitle(
+        showBackButton: false,
+        titleWidget: const FunnelStepTitle(
           step: 4,
           total: 4,
           title: 'Confirmation',
@@ -157,7 +160,9 @@ class _PriceCard extends StatelessWidget {
           Text('Détails du paiement', style: AppTextStyles.labelMd),
           gapH16,
           _PriceRow('Prestation', xof(total)),
-          Divider(color: AppColors.outlineVariant, height: 24.h),
+          SizedBox(height: 12.h),
+          const AppDivider(),
+          SizedBox(height: 12.h),
           _PriceRow(
             'Acompte à payer maintenant',
             xof(deposit),
@@ -229,11 +234,7 @@ class _CancellationCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 18.r,
-            color: AppColors.onSurfaceVariant,
-          ),
+          AppIcon('info', size: 18, color: AppColors.onSurfaceVariant),
           SizedBox(width: 10.w),
           Expanded(
             child: Text(

@@ -1,6 +1,7 @@
 import '../widgets/booking_funnel_shared.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/widgets/app_icon.dart';
 
 class StaffSelectionPage extends ConsumerStatefulWidget {
   final String salonId;
@@ -116,11 +117,7 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
                 CircleAvatar(
                   radius: 22.r,
                   backgroundColor: AppColors.primaryLight,
-                  child: Icon(
-                    Icons.group_outlined,
-                    color: AppColors.primary,
-                    size: 20.r,
-                  ),
+                  child: AppIcon('users', size: 20, color: AppColors.primary),
                 ),
                 SizedBox(width: 14.w),
                 Expanded(
@@ -142,11 +139,7 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
                     : null,
                 backgroundColor: AppColors.surfaceVariant,
                 child: s.avatarUrl == null
-                    ? Icon(
-                        Icons.person_outline,
-                        size: 20.r,
-                        color: AppColors.onSurfaceVariant,
-                      )
+                    ? AppIcon('user', size: 20, color: AppColors.onSurfaceVariant)
                     : null,
               ),
               SizedBox(width: 14.w),
@@ -404,9 +397,9 @@ class _AvatarCell extends StatelessWidget {
                         ? CachedNetworkImageProvider(avatarUrl!)
                         : null,
                     child: avatarUrl == null
-                        ? Icon(
-                            isAny ? Icons.group_outlined : Icons.person_outline,
-                            size: 20.r,
+                        ? AppIcon(
+                            isAny ? 'users' : 'user',
+                            size: 20,
                             color: isAny
                                 ? AppColors.primary
                                 : AppColors.onSurfaceVariant,
@@ -424,11 +417,7 @@ class _AvatarCell extends StatelessWidget {
                           color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          Icons.check,
-                          size: 11.r,
-                          color: AppColors.white,
-                        ),
+                        child: AppIcon('check', size: 11, color: AppColors.white),
                       ),
                     ),
                 ],

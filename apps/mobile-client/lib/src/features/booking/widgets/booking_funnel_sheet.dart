@@ -7,7 +7,10 @@ import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../router/app_router.dart';
 import '../../discovery/providers/salon_detail_provider.dart';
 import '../providers/booking_create_provider.dart';
@@ -412,13 +415,16 @@ class _Header extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconButton(
-              icon: AppIcon(
-                step == 0 ? 'close' : 'arrow-left',
-                size: 20,
-                color: AppColors.onSurface,
+            AppPressable(
+              onTap: onBack,
+              child: Padding(
+                padding: EdgeInsets.all(12.r),
+                child: AppIcon(
+                  step == 0 ? 'close' : 'arrow-left',
+                  size: 20,
+                  color: AppColors.onSurface,
+                ),
               ),
-              onPressed: onBack,
             ),
             Expanded(
               child: Text(_kStepTitles[step], style: AppTextStyles.headlineLg),
@@ -458,22 +464,10 @@ class _Cta extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 52.h,
-          child: ElevatedButton(
-            onPressed: enabled ? onTap : null,
-            child: loading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation(AppColors.white),
-                    ),
-                  )
-                : Text(label),
-          ),
+        child: AppButton.primary(
+          onPressed: enabled ? onTap : null,
+          isLoading: loading,
+          label: label,
         ),
       ),
     );
@@ -1040,7 +1034,9 @@ class _ReviewStep extends ConsumerWidget {
               Text('Paiement', style: AppTextStyles.labelMd),
               SizedBox(height: 14.h),
               _PriceLine('Total prestation', '$total XOF'),
-              Divider(color: AppColors.outlineVariant, height: 20.h),
+              SizedBox(height: 10.h),
+              const AppDivider(),
+              SizedBox(height: 10.h),
               _PriceLine('Acompte maintenant', '$deposit XOF', highlight: true),
               gapH4,
               _PriceLine('Reste sur place', '$remaining XOF', muted: true),
@@ -1058,11 +1054,7 @@ class _ReviewStep extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 16.r,
-                color: AppColors.onSurfaceVariant,
-              ),
+              AppIcon('info', size: 16, color: AppColors.onSurfaceVariant),
               gapW8,
               Expanded(
                 child: Text(
@@ -1199,11 +1191,7 @@ class _ServiceCard extends StatelessWidget {
               ),
               child: selected
                   ? Center(
-                      child: Icon(
-                        Icons.check,
-                        color: AppColors.white,
-                        size: 13.r,
-                      ),
+                      child: AppIcon('check', size: 13, color: AppColors.white),
                     )
                   : null,
             ),
@@ -1352,11 +1340,7 @@ class _StaffCard extends StatelessWidget {
               ),
               child: selected
                   ? Center(
-                      child: Icon(
-                        Icons.check,
-                        color: AppColors.white,
-                        size: 13.r,
-                      ),
+                      child: AppIcon('check', size: 13, color: AppColors.white),
                     )
                   : null,
             ),
