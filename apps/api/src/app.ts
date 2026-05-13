@@ -1,10 +1,13 @@
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
+import { join, dirname } from "node:path";
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import sensible from "@fastify/sensible";
+import staticFiles from "@fastify/static";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify from "fastify";
@@ -80,6 +83,18 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
     }
   });
   await registerRoutes(app, databaseRuntime);
+
+  const webDistPath = join(dirname(fileURLToPath(import.meta.url)), "../public");
+  if (existsSync(webDistPath)) {
+    await app.register(staticFiles, {
+      root: webDistPath,
+      wildcard: false,
+      serve: true,
+    });
+    app.get("/*", (_req, reply) => {
+      return reply.sendFile("index.html", webDistPath);
+    });
+  }
 
   return app;
 }

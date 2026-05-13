@@ -60,15 +60,5 @@ services:
       postgres:
         condition: service_healthy
 
-  web:
-    build:
-      context: ../..
-      dockerfile: apps/web/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-
 volumes:
   postgres_data:
