@@ -23,6 +23,8 @@ COPY apps/web apps/web
 COPY tsconfig.base.json ./
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
+ARG DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
+ENV DATABASE_URL=$DATABASE_URL
 RUN pnpm --filter @beauteavenue/contracts build && \
     pnpm --filter @beauteavenue/shared-ts build && \
     pnpm --filter @beauteavenue/web-admin build && \
