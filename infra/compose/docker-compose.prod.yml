@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-beaute_avenue}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-beaute_avenue}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      WEB_ORIGIN: ${WEB_ORIGIN}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-noop}
+      OTP_DRIVER: ${OTP_DRIVER:-noop}
+      PUSH_DRIVER: ${PUSH_DRIVER:-noop}
+      PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-noop}
+      FCM_SERVICE_ACCOUNT_JSON_B64: ${FCM_SERVICE_ACCOUNT_JSON_B64:-}
+      INTECH_API_KEY: ${INTECH_API_KEY:-}
+      INTECH_API_SECRET: ${INTECH_API_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-noop}
+      OTP_DRIVER: ${OTP_DRIVER:-noop}
+      PUSH_DRIVER: ${PUSH_DRIVER:-noop}
+      PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-noop}
+      FCM_SERVICE_ACCOUNT_JSON_B64: ${FCM_SERVICE_ACCOUNT_JSON_B64:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
