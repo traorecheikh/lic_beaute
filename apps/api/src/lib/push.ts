@@ -10,9 +10,10 @@ type FcmServiceAccount = {
 };
 
 function decodeAndValidateFcm(): FcmServiceAccount | null {
+  if (config.pushDriver !== "fcm") return null;
   if (!config.fcmServiceAccountJsonB64) {
     if (config.nodeEnv === "production") {
-      throw new Error("FCM_SERVICE_ACCOUNT_JSON_B64 is required in production");
+      throw new Error("FCM_SERVICE_ACCOUNT_JSON_B64 is required in production when PUSH_DRIVER=fcm");
     }
     logger.warn("[PUSH] FCM_SERVICE_ACCOUNT_JSON_B64 not set — push delivery disabled");
     return null;
