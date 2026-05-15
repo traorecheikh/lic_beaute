@@ -22,15 +22,23 @@ else
   exit 1
 fi
 
-# Clear any migration that was recorded as failed on a previous deploy so it
-# can be re-applied with the current (fixed) SQL.
-echo "[entrypoint] Resolving previously-failed migration if present..."
-$PRISMA_CMD migrate resolve --rolled-back 20260508124500_remove_paytech_provider 2>&1 || true
+echo "[entrypoint] Migration status:"
+$PRISMA_CMD migrate status 2>&1 || true
 
-echo "[entrypoint] Running prisma migrate deploy..."
+echo "[entrypoint] Running prisma migrate deploy (attempt 1)..."
 $PRISMA_CMD migrate deploy 2>&1
 MIGRATE_EXIT=$?
 echo "[entrypoint] migrate deploy exit=$MIGRATE_EXIT"
+
+if [ $MIGRATE_EXIT -ne 0 ]; then
+  echo "[entrypoint] First attempt failed — resolving known failed migration and retrying..."
+  $PRISMA_CMD migrate resolve --rolled-back 20260508124500_remove_paytech_provider 2>&1 || true
+  echo "[entrypoint] Running prisma migrate deploy (attempt 2)..."
+  $PRISMA_CMD migrate deploy 2>&1
+  MIGRATE_EXIT=$?
+  echo "[entrypoint] migrate deploy attempt 2 exit=$MIGRATE_EXIT"
+fi
+
 if [ $MIGRATE_EXIT -ne 0 ]; then
   echo "[entrypoint] migrations FAILED — sleeping 300s to allow log capture"
   sleep 300
