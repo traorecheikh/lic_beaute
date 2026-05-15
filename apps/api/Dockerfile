@@ -44,6 +44,7 @@ COPY --from=build /app/apps/web/dist ./public
 COPY --from=deploy-prep /deploy/api/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./
 COPY --from=build /app/apps/api/prisma ./prisma
+COPY --from=build /app/apps/api/prisma.config.ts ./prisma.config.ts
 COPY apps/api/entrypoint.sh ./entrypoint.sh
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
