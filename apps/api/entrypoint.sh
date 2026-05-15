@@ -33,8 +33,13 @@ if [ $MIGRATE_EXIT -ne 0 ]; then
 fi
 
 echo "[entrypoint] Migrations OK. Starting node dist/index.js..."
-"${@:-node dist/index.js}"
-APP_EXIT=$?
+if [ "$#" -eq 0 ]; then
+  node dist/index.js
+  APP_EXIT=$?
+else
+  "$@"
+  APP_EXIT=$?
+fi
 echo "[entrypoint] app exited with code $APP_EXIT — sleeping 300s to allow log capture"
 sleep 300
 exit $APP_EXIT
