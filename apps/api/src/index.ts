@@ -24,7 +24,10 @@ try {
   process.exit(1);
 }
 
-const app = await createApp({ databaseRuntime });
+const app = await createApp({ databaseRuntime }).catch((err: unknown) => {
+  console.error("[startup] createApp failed:", err instanceof Error ? err.message : String(err));
+  process.exit(1);
+});
 
 try {
   await app.listen({ port: config.apiPort, host: "0.0.0.0" });

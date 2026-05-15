@@ -40,6 +40,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY --from=build /app/apps/api/dist ./dist
+COPY --from=build /app/apps/api/openapi ./openapi
 COPY --from=build /app/apps/web/dist ./public
 COPY --from=deploy-prep /deploy/api/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./
