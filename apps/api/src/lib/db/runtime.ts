@@ -25,8 +25,11 @@ type ResolveDatabaseRuntimeOptions = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function probePostgres(databaseUrl: string) {
+  // Strip Prisma-specific query params (e.g. ?schema=public) — pg.Client passes
+  // unrecognised params to PostgreSQL which rejects them at startup.
+  const cleanUrl = databaseUrl.split("?")[0];
   const client = new Client({
-    connectionString: databaseUrl,
+    connectionString: cleanUrl,
     connectionTimeoutMillis: 1_500
   });
 
