@@ -4,6 +4,7 @@ Monorepo produit pour Beauté Avenue, reconstruit comme **modular monolith** au 
 
 ## Surfaces
 
+
 - `apps/api` : API Fastify + worker + Prisma
 - `apps/web-admin` : back-office et site léger Vue 3
 - `apps/mobile-client` : application Flutter pour les clientes (seule app mobile — l'espace pro est web uniquement)
