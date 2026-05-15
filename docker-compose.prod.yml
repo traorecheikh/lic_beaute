@@ -36,6 +36,9 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    networks:
+      - default
+      - coolify
 
   worker:
     image: ghcr.io/traorecheikh/lic_beaute:latest
@@ -58,3 +61,7 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  coolify:
+    external: true
