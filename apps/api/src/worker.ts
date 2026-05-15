@@ -315,9 +315,9 @@ async function ensureCleanupJob() {
 
 logger.info("Worker started", { pollIntervalMs: config.workerPollIntervalMs });
 
-void ensureNightlyPrestigeJob();
-void ensureNightlyExpiryJob();
-void ensureCleanupJob();
+void ensureNightlyPrestigeJob().catch((err) => logger.warn("[WORKER] ensureNightlyPrestigeJob failed", { err: String(err) }));
+void ensureNightlyExpiryJob().catch((err) => logger.warn("[WORKER] ensureNightlyExpiryJob failed", { err: String(err) }));
+void ensureCleanupJob().catch((err) => logger.warn("[WORKER] ensureCleanupJob failed", { err: String(err) }));
 
 setInterval(() => {
   void pollJobs();

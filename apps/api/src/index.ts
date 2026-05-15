@@ -1,17 +1,28 @@
 import { createApp } from "./app.js";
 import { config, validateConfig } from "./config.js";
-import { resolveDatabaseRuntime } from "./lib/db/runtime.js";
+import { resolveDatabaseRuntime, type DatabaseRuntime } from "./lib/db/runtime.js";
 import "./lib/push.js";
 
-validateConfig();
+try {
+  validateConfig();
+} catch (err) {
+  console.error("[startup] Config validation failed:", err instanceof Error ? err.message : String(err));
+  process.exit(1);
+}
 
-const databaseRuntime = await resolveDatabaseRuntime({
-  nodeEnv: config.nodeEnv,
-  databaseUrl: config.databaseUrl,
-  sqliteDatabasePath: config.sqliteDatabasePath,
-  retries: config.databaseConnectRetries,
-  retryDelayMs: config.databaseConnectRetryDelayMs
-});
+let databaseRuntime: DatabaseRuntime;
+try {
+  databaseRuntime = await resolveDatabaseRuntime({
+    nodeEnv: config.nodeEnv,
+    databaseUrl: config.databaseUrl,
+    sqliteDatabasePath: config.sqliteDatabasePath,
+    retries: config.databaseConnectRetries,
+    retryDelayMs: config.databaseConnectRetryDelayMs
+  });
+} catch (err) {
+  console.error("[startup] Database probe failed:", err instanceof Error ? err.message : String(err));
+  process.exit(1);
+}
 
 const app = await createApp({ databaseRuntime });
 
