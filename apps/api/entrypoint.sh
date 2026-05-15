@@ -22,6 +22,11 @@ else
   exit 1
 fi
 
+# Clear any migration that was recorded as failed on a previous deploy so it
+# can be re-applied with the current (fixed) SQL.
+echo "[entrypoint] Resolving previously-failed migration if present..."
+$PRISMA_CMD migrate resolve --rolled-back 20260508124500_remove_paytech_provider 2>&1 || true
+
 echo "[entrypoint] Running prisma migrate deploy..."
 $PRISMA_CMD migrate deploy 2>&1
 MIGRATE_EXIT=$?
