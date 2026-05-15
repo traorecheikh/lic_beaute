@@ -32,7 +32,7 @@ RUN pnpm --filter @beauteavenue/contracts build && \
 
 # ── produce a self-contained node_modules for prod ───────────────────────────
 FROM build AS deploy-prep
-RUN pnpm --filter @beauteavenue/api --prod deploy /deploy/api
+RUN pnpm --filter @beauteavenue/api --prod deploy --legacy /deploy/api
 
 # ── final runtime image ───────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
