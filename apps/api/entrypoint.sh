@@ -5,4 +5,4 @@ set -e
 # Safe to run on every boot — migrate deploy is idempotent.
 node_modules/.bin/prisma migrate deploy
 
-exec node dist/index.js
+exec "${@:-node dist/index.js}"
