@@ -7,5 +7,5 @@
     "paths": {}
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["prisma/seed.ts", "src/seed-admin.ts"]
+  "exclude": ["prisma/seed.ts"]
 }
