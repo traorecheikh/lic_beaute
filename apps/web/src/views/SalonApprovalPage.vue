@@ -7,9 +7,9 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <button class="btn-primary px-5 py-2.5 flex items-center gap-2" @click="showAddSalonModal = true">
+        <RouterLink to="/admin/salons/new" class="btn-primary px-5 py-2.5 flex items-center gap-2">
           <PlusIcon class="w-4 h-4" /> Créer un salon
-        </button>
+        </RouterLink>
         <div class="relative">
           <input
             v-model="search"
@@ -107,76 +107,6 @@
         </div>
       </div>
     </template>
-    <!-- Add Salon Modal -->
-    <Teleport to="body">
-      <div
-        v-if="showAddSalonModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-espresso/40 backdrop-blur-sm"
-        @click.self="showAddSalonModal = false; resetNewSalon()"
-      >
-        <div class="panel-clean p-8 w-full max-w-xl space-y-6 mx-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-bold text-espresso">Nouveau salon</h3>
-            <button class="text-cocoa/30 hover:text-cocoa transition-colors" @click="showAddSalonModal = false; resetNewSalon()">
-              <XMarkIcon class="w-5 h-5" />
-            </button>
-          </div>
-
-          <!-- Salon info -->
-          <div class="space-y-3">
-            <p class="section-label border-b border-outline-variant/40 pb-2">Informations salon</p>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <label class="section-label">Nom</label>
-                <input v-model="newSalon.name" class="input-shell" placeholder="Ex : Beauty Studio" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="section-label">Catégorie</label>
-                <input v-model="newSalon.category" class="input-shell" placeholder="Ex : Coiffure" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="section-label">Ville</label>
-                <input v-model="newSalon.city" class="input-shell" placeholder="Ex : Dakar" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="section-label">Adresse</label>
-                <input v-model="newSalon.address" class="input-shell" placeholder="Ex : 12 Rue Carnot" />
-              </div>
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Description</label>
-              <textarea v-model="newSalon.description" class="input-shell" rows="2" placeholder="Présentation courte du salon…"></textarea>
-            </div>
-          </div>
-
-          <!-- Gérant -->
-          <div class="space-y-3">
-            <p class="section-label border-b border-outline-variant/40 pb-2">Gérant & accès</p>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <label class="section-label">Nom du gérant</label>
-                <input v-model="newSalon.ownerName" class="input-shell" placeholder="Prénom Nom" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="section-label">Téléphone</label>
-                <input v-model="newSalon.ownerPhone" class="input-shell" placeholder="+221 77 000 0000" />
-              </div>
-              <div class="col-span-2 space-y-1.5">
-                <label class="section-label">Email gérant <span class="text-primary">*</span></label>
-                <input v-model="newSalon.ownerEmail" class="input-shell" type="email" placeholder="gerant@exemple.com" />
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end gap-3 pt-1">
-            <button class="btn-secondary px-5 py-2.5" @click="showAddSalonModal = false; resetNewSalon()">Annuler</button>
-            <button class="btn-primary px-5 py-2.5" :disabled="creating" @click="submitSalon">
-              Créer
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -184,13 +114,12 @@
 import { computed, ref } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
-import { toast } from "vue-sonner";
-import { FunnelIcon, MagnifyingGlassIcon, MapPinIcon, PlusIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { FunnelIcon, MagnifyingGlassIcon, MapPinIcon, PlusIcon } from "@heroicons/vue/24/outline";
 
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { ApiError, createSalon, fetchSalons } from "@/lib/api";
+import { ApiError, fetchSalons } from "@/lib/api";
 import { useAdminAuthStore } from "@/stores/adminAuth";
 
 const auth = useAdminAuthStore();
@@ -199,38 +128,6 @@ const status = ref("pending_review");
 const city = ref("");
 const debouncedSearch = refDebounced(search, 250);
 const debouncedCity = refDebounced(city, 250);
-
-const showAddSalonModal = ref(false);
-const creating = ref(false);
-const newSalon = ref({
-  name: '',
-  category: '',
-  city: '',
-  address: '',
-  description: '',
-  ownerName: '',
-  ownerEmail: '',
-  ownerPhone: ''
-});
-
-function resetNewSalon() {
-  newSalon.value = { name: '', category: '', city: '', address: '', description: '', ownerName: '', ownerEmail: '', ownerPhone: '' };
-}
-
-async function submitSalon() {
-  creating.value = true;
-  try {
-    await createSalon(auth.accessToken ?? "", newSalon.value);
-    toast.success("Salon créé avec succès.");
-    showAddSalonModal.value = false;
-    resetNewSalon();
-    salonsQuery.refetch();
-  } catch (e) {
-    toast.error("Erreur lors de la création.");
-  } finally {
-    creating.value = false;
-  }
-}
 
 const salonsQuery = useQuery({
   queryKey: computed(() => ["admin-salons", debouncedSearch.value, status.value, debouncedCity.value]),

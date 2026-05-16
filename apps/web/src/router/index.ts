@@ -144,6 +144,11 @@ const router = createRouter({
           component: () => import("@/views/SalonApprovalPage.vue")
         },
         {
+          path: "salons/new",
+          name: "admin-salon-create",
+          component: () => import("@/views/SalonCreatePage.vue")
+        },
+        {
           path: "salons/:salonId",
           name: "admin-salon-detail",
           component: () => import("@/views/SalonApprovalDetailPage.vue")
