@@ -21,7 +21,7 @@ COPY packages/shared-ts packages/shared-ts
 COPY apps/api apps/api
 COPY apps/web apps/web
 COPY tsconfig.base.json ./
-ARG VITE_API_URL=/api
+ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 ARG DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 ENV DATABASE_URL=$DATABASE_URL

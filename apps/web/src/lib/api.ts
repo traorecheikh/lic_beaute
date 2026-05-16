@@ -53,7 +53,10 @@ export class ApiError extends Error {
   }
 }
 
-const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3000";
+const _configuredBase = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+const apiBaseUrl = _configuredBase.startsWith("http")
+  ? _configuredBase
+  : (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000") + _configuredBase;
 
 function buildUrl(path: string, query?: Record<string, string | undefined>) {
   const url = new URL(path, apiBaseUrl);
