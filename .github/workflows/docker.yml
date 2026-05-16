@@ -11,6 +11,7 @@ on:
       - 'pnpm-lock.yaml'
       - 'docker-compose.prod.yml'
       - '.dockerignore'
+      - '.github/workflows/docker.yml'
 
 env:
   REGISTRY: ghcr.io
