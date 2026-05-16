@@ -108,7 +108,7 @@
 import { computed, ref } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
-import { FunnelIcon, MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
 
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";

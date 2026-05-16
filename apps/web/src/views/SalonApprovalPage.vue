@@ -112,12 +112,12 @@
       <div
         v-if="showAddSalonModal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-espresso/40 backdrop-blur-sm"
-        @click.self="showAddSalonModal = false"
+        @click.self="showAddSalonModal = false; resetNewSalon()"
       >
         <div class="panel-clean p-8 w-full max-w-xl space-y-6 mx-4">
           <div class="flex items-center justify-between">
             <h3 class="text-base font-bold text-espresso">Nouveau salon</h3>
-            <button class="text-cocoa/30 hover:text-cocoa transition-colors" @click="showAddSalonModal = false">
+            <button class="text-cocoa/30 hover:text-cocoa transition-colors" @click="showAddSalonModal = false; resetNewSalon()">
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
@@ -169,7 +169,7 @@
           </div>
 
           <div class="flex items-center justify-end gap-3 pt-1">
-            <button class="btn-secondary px-5 py-2.5" @click="showAddSalonModal = false">Annuler</button>
+            <button class="btn-secondary px-5 py-2.5" @click="showAddSalonModal = false; resetNewSalon()">Annuler</button>
             <button class="btn-primary px-5 py-2.5" :disabled="creating" @click="submitSalon">
               Créer
             </button>
@@ -213,12 +213,17 @@ const newSalon = ref({
   ownerPhone: ''
 });
 
+function resetNewSalon() {
+  newSalon.value = { name: '', category: '', city: '', address: '', description: '', ownerName: '', ownerEmail: '', ownerPhone: '' };
+}
+
 async function submitSalon() {
   creating.value = true;
   try {
     await createSalon(auth.accessToken ?? "", newSalon.value);
     toast.success("Salon créé avec succès.");
     showAddSalonModal.value = false;
+    resetNewSalon();
     salonsQuery.refetch();
   } catch (e) {
     toast.error("Erreur lors de la création.");

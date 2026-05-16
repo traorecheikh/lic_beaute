@@ -111,11 +111,7 @@ const loginSchema = toTypedSchema(
 );
 
 const { errors, defineField, handleSubmit: withFormSubmit, isSubmitting, setFieldError } = useForm({
-  validationSchema: loginSchema,
-  initialValues: {
-    email: "admin@beauteavenue.local",
-    password: "supersecure"
-  }
+  validationSchema: loginSchema
 });
 
 const [email] = defineField("email");

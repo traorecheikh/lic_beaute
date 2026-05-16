@@ -164,7 +164,6 @@ import { computed, ref } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 import {
   ArrowTrendingUpIcon,
-  ArrowUpRightIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
   ArrowDownTrayIcon

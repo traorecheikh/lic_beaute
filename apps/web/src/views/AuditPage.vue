@@ -83,18 +83,15 @@ import { useAdminAuthStore } from "@/stores/adminAuth";
 const auth = useAdminAuthStore();
 const actor = ref("");
 const entityType = ref("");
-const action = ref("");
 const debouncedActor = refDebounced(actor, 250);
 const debouncedEntityType = refDebounced(entityType, 250);
-const debouncedAction = refDebounced(action, 250);
 
 const auditQuery = useQuery({
-  queryKey: computed(() => ["admin-audit", debouncedActor.value, debouncedEntityType.value, debouncedAction.value]),
+  queryKey: computed(() => ["admin-audit", debouncedActor.value, debouncedEntityType.value]),
   queryFn: () =>
     fetchAuditEvents(auth.accessToken ?? "", {
       actor: debouncedActor.value || undefined,
-      entityType: debouncedEntityType.value || undefined,
-      action: debouncedAction.value || undefined
+      entityType: debouncedEntityType.value || undefined
     }),
   enabled: computed(() => Boolean(auth.accessToken))
 });

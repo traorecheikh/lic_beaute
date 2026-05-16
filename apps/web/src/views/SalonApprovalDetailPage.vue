@@ -14,13 +14,6 @@
       <p class="text-[10px] font-bold text-cocoa/70 uppercase tracking-[0.2em]">Dossier:</p>
       <p class="text-[10px] font-mono font-bold text-espresso/40 bg-white px-2 py-0.5 rounded border border-outline-variant">{{ salonId.substring(0, 8) }}</p>
 
-      <RouterLink 
-        v-if="salonQuery.data.value?.approvalStatus === 'approved'"
-        :to="`/admin/subscriptions/${salonQuery.data.value?.id ?? ''}`" 
-        class="ml-4 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
-      >
-        Voir l'abonnement →
-      </RouterLink>
       </div>
 
     </div>
@@ -41,7 +34,7 @@
         <div class="p-8 md:p-10 border-b border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div class="space-y-4">
             <div class="flex flex-wrap items-center gap-3">
-              <h2 class="text-3xl font-display text-espresso">
+              <h2 class="entity-title">
                 {{ salonQuery.data.value.salonName }}
               </h2>
               <StatusBadge :value="salonQuery.data.value.approvalStatus" />
@@ -236,7 +229,7 @@
                   :class="action === 'request-info' ? 'border-secondary bg-secondary/5 text-espresso font-bold' : 'border-outline-variant bg-white text-cocoa/80 hover:border-secondary/30'"
                 >
                   <input type="radio" v-model="action" value="request-info" class="sr-only" />
-                  <span class="text-[13px]">? Compléments</span>
+                  <QuestionMarkCircleIcon class="w-4 h-4 inline mr-1" /><span class="text-[13px]">Compléments</span>
                 </label>
                 
                 <label 
@@ -299,7 +292,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { CheckIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { CheckIcon, QuestionMarkCircleIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 
 import Modal from "@/components/Modal.vue";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
