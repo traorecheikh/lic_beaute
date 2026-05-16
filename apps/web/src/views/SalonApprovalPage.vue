@@ -114,48 +114,61 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-espresso/40 backdrop-blur-sm"
         @click.self="showAddSalonModal = false"
       >
-        <div class="panel-clean p-8 w-full max-w-md space-y-6 mx-4">
+        <div class="panel-clean p-8 w-full max-w-xl space-y-6 mx-4">
           <div class="flex items-center justify-between">
             <h3 class="text-base font-bold text-espresso">Nouveau salon</h3>
             <button class="text-cocoa/30 hover:text-cocoa transition-colors" @click="showAddSalonModal = false">
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
-          <div class="space-y-4">
-            <div class="space-y-1.5">
-              <label class="section-label">Nom</label>
-              <input v-model="newSalon.name" class="input-shell" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Catégorie</label>
-              <input v-model="newSalon.category" class="input-shell" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Ville</label>
-              <input v-model="newSalon.city" class="input-shell" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Adresse</label>
-              <input v-model="newSalon.address" class="input-shell" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Nom du gérant</label>
-              <input v-model="newSalon.ownerName" class="input-shell" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Email gérant</label>
-              <input v-model="newSalon.ownerEmail" class="input-shell" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Téléphone gérant</label>
-              <input v-model="newSalon.ownerPhone" class="input-shell" />
+
+          <!-- Salon info -->
+          <div class="space-y-3">
+            <p class="section-label border-b border-outline-variant/40 pb-2">Informations salon</p>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="section-label">Nom</label>
+                <input v-model="newSalon.name" class="input-shell" placeholder="Ex : Beauty Studio" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="section-label">Catégorie</label>
+                <input v-model="newSalon.category" class="input-shell" placeholder="Ex : Coiffure" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="section-label">Ville</label>
+                <input v-model="newSalon.city" class="input-shell" placeholder="Ex : Dakar" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="section-label">Adresse</label>
+                <input v-model="newSalon.address" class="input-shell" placeholder="Ex : 12 Rue Carnot" />
+              </div>
             </div>
             <div class="space-y-1.5">
               <label class="section-label">Description</label>
-              <textarea v-model="newSalon.description" class="input-shell" rows="3"></textarea>
+              <textarea v-model="newSalon.description" class="input-shell" rows="2" placeholder="Présentation courte du salon…"></textarea>
             </div>
           </div>
-          <div class="flex items-center justify-end gap-3 pt-2">
+
+          <!-- Gérant -->
+          <div class="space-y-3">
+            <p class="section-label border-b border-outline-variant/40 pb-2">Gérant & accès</p>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="section-label">Nom du gérant</label>
+                <input v-model="newSalon.ownerName" class="input-shell" placeholder="Prénom Nom" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="section-label">Téléphone</label>
+                <input v-model="newSalon.ownerPhone" class="input-shell" placeholder="+221 77 000 0000" />
+              </div>
+              <div class="col-span-2 space-y-1.5">
+                <label class="section-label">Email gérant <span class="text-primary">*</span></label>
+                <input v-model="newSalon.ownerEmail" class="input-shell" type="email" placeholder="gerant@exemple.com" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-1">
             <button class="btn-secondary px-5 py-2.5" @click="showAddSalonModal = false">Annuler</button>
             <button class="btn-primary px-5 py-2.5" :disabled="creating" @click="submitSalon">
               Créer
