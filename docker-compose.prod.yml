@@ -14,6 +14,25 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   api:
     image: ghcr.io/traorecheikh/lic_beaute:latest
     restart: unless-stopped
@@ -32,12 +51,19 @@ services:
       OTP_DRIVER: ${OTP_DRIVER:-noop}
       PUSH_DRIVER: ${PUSH_DRIVER:-noop}
       PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
-      STORAGE_DRIVER: ${STORAGE_DRIVER:-noop}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_PATH: /app/uploads
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-http://localhost:3000}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FCM_SERVICE_ACCOUNT_JSON_B64: ${FCM_SERVICE_ACCOUNT_JSON_B64:-}
       INTECH_API_KEY: ${INTECH_API_KEY:-}
       INTECH_API_SECRET: ${INTECH_API_SECRET:-}
+    volumes:
+      - media_uploads:/app/uploads
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "3000:3000"
@@ -55,11 +81,16 @@ services:
       OTP_DRIVER: ${OTP_DRIVER:-noop}
       PUSH_DRIVER: ${PUSH_DRIVER:-noop}
       PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
-      STORAGE_DRIVER: ${STORAGE_DRIVER:-noop}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_PATH: /app/uploads
       FCM_SERVICE_ACCOUNT_JSON_B64: ${FCM_SERVICE_ACCOUNT_JSON_B64:-}
+    volumes:
+      - media_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
+  redis_data:
+  media_uploads:

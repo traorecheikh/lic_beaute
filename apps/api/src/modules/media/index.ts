@@ -112,6 +112,7 @@ export class MediaController {
           salonId: input.salonId ?? owner?.salonId ?? null,
           uploadedBy: session.sub,
           objectKey,
+          publicUrl: config.storageDriver !== "r2" ? storage.publicUrl(objectKey) : null,
           mimeType: input.mimeType,
           sizeBytes,
           purpose: input.purpose,
@@ -277,8 +278,15 @@ export class MediaController {
       }
 
       const objectKey = asset.finalObjectKey ?? asset.objectKey;
-      if (config.storageDriver === "r2" && asset.publicUrl) {
-        reply.redirect(asset.publicUrl);
+      if (config.storageDriver === "r2" && objectKey) {
+        // Allowlist: object keys are UUIDs + path segments, never contain protocol or domain chars.
+        if (!/^[\w\-.\/]+$/.test(objectKey) || objectKey.includes("..")) {
+          fail(reply, 400, "invalid_key", "Clé de ressource invalide.");
+          return;
+        }
+        const base = new URL(config.mediaPublicBaseUrl);
+        base.pathname = (base.pathname.replace(/\/$/, "") + "/" + objectKey.replace(/^\//, ""));
+        reply.redirect(base.toString());
         return;
       }
       const storage = getStorageAdapter(config.storageDriver, {
