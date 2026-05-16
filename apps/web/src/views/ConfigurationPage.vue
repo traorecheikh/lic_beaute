@@ -57,7 +57,7 @@
                       {{ doc.isRequired ? 'Obligatoire' : 'Optionnel' }}
                     </span>
                     ·
-                    <span :class="doc.enabled ? 'text-green-700 font-semibold' : 'text-cocoa/40'">
+                    <span :class="doc.enabled ? 'text-primary font-semibold' : 'text-cocoa/40'">
                       {{ doc.enabled ? 'Actif' : 'Désactivé' }}
                     </span>
                   </p>

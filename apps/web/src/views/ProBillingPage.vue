@@ -12,8 +12,8 @@
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
           <span class="px-3 py-1 rounded-full bg-primary text-[10px] font-bold uppercase tracking-widest mb-4 inline-block">Plan Actuel</span>
-          <h2 class="text-4xl font-display mb-2">{{ currentPlanLabel }}</h2>
-          <p class="text-white/60 text-sm">{{ subscriptionDescription }}</p>
+          <h2 class="metric-value mb-2">{{ currentPlanLabel }}</h2>
+          <p class="text-white/60 row-meta">{{ subscriptionDescription }}</p>
         </div>
         <div class="flex gap-3">
           <button :disabled="toggleMutation.isPending.value" @click="toggleAutoRenew" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-6 disabled:opacity-60">
@@ -296,8 +296,8 @@ const invoices = computed(() => {
     amountLabel: formatMoneyXof(invoice.amountXof),
     statusLabel: invoice.status === "paid" ? "Payé" : invoice.status,
     statusClass: invoice.status === "paid"
-      ? "px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider"
-      : "px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider"
+      ? "px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider"
+      : "px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider"
   }));
 });
 
@@ -366,6 +366,6 @@ function clearPaymentMethod() {
 function contactSupport() {
   const subject = encodeURIComponent("Support abonnement Beauté Avenue");
   const body = encodeURIComponent("Bonjour,\nJ'ai besoin d'aide concernant mon abonnement/facturation.\nMerci.");
-  window.open(`mailto:support@beauteavenue.com?subject=${subject}&body=${body}`, "_blank", "noopener,noreferrer");
+  window.open(`mailto:support@beauteavenue.sn?subject=${subject}&body=${body}`, "_blank", "noopener,noreferrer");
 }
 </script>

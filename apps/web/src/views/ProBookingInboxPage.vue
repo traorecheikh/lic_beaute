@@ -62,7 +62,7 @@
       <div class="hidden lg:block">
         <div v-if="selectedBooking" class="panel-clean p-8 sticky top-32">
           <div class="text-center mb-8">
-            <div class="w-20 h-20 rounded-full bg-primary/5 mx-auto flex items-center justify-center font-display text-3xl text-primary mb-4 border border-primary/10">
+            <div class="w-20 h-20 rounded-full bg-primary/5 mx-auto flex items-center justify-center font-bold text-3xl text-primary mb-4 border border-primary/10">
               {{ selectedBooking.clientInitials }}
             </div>
             <h3 class="entity-title">{{ selectedBooking.client }}</h3>
@@ -224,11 +224,11 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusStyles: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  confirmed: "bg-blue-100 text-blue-700",
-  in_progress: "bg-purple-100 text-purple-700",
-  completed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700"
+  pending: "bg-secondary/10 text-secondary",
+  confirmed: "bg-primary/10 text-primary",
+  in_progress: "bg-primary/15 text-primary",
+  completed: "bg-neutral-bg text-cocoa/60",
+  cancelled: "bg-error/5 text-error"
 };
 
 function acceptBooking() {

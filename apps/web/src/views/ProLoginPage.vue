@@ -4,8 +4,8 @@
       <RouterLink to="/pro">
         <img src="/logo.png" alt="Beauté Avenue" class="h-12 w-auto mx-auto" />
       </RouterLink>
-      <h2 class="mt-6 text-center text-3xl font-display text-espresso">Accès Professionnel</h2>
-      <p class="mt-2 text-center text-sm text-cocoa/60">
+      <h2 class="mt-6 text-center page-title">Accès Professionnel</h2>
+      <p class="mt-2 text-center row-meta">
         Gérez votre salon et vos réservations.
       </p>
     </div>

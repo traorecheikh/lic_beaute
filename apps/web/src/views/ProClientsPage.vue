@@ -58,7 +58,7 @@
       <div class="hidden lg:block">
         <div v-if="selectedClient" class="panel-clean p-8 sticky top-32">
           <div class="text-center mb-8">
-            <div class="w-20 h-20 rounded-full bg-sand mx-auto flex items-center justify-center font-display text-3xl text-espresso mb-4 border border-outline-variant">
+            <div class="w-20 h-20 rounded-full bg-sand mx-auto flex items-center justify-center font-bold text-3xl text-espresso mb-4 border border-outline-variant">
               {{ selectedClient.initials }}
             </div>
             <h3 class="entity-title">{{ selectedClient.name }}</h3>
@@ -113,7 +113,7 @@
               <label class="section-label block mb-1">Date d'expiration</label>
               <input v-model="benefitForm.expiresAt" type="date" class="input-shell" />
             </div>
-            <p v-if="benefitError" class="text-red-600 text-xs">{{ benefitError }}</p>
+            <p v-if="benefitError" class="text-error row-meta">{{ benefitError }}</p>
             <div class="flex gap-2 pt-1">
               <button @click="showBenefitForm = false; benefitError = null" class="btn-secondary flex-1 py-2.5 text-[11px]">Annuler</button>
               <button @click="submitBenefit" :disabled="benefitSubmitting" class="btn-gold flex-1 py-2.5 text-[11px]">

@@ -52,6 +52,12 @@ export interface AdminSalonDetail {
      * @type {string}
      * @memberof AdminSalonDetail
      */
+    subscriptionId: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminSalonDetail
+     */
     salonName: string;
     /**
      * 
@@ -160,6 +166,7 @@ export type AdminSalonDetailSubscriptionIntentTierEnum = typeof AdminSalonDetail
  */
 export function instanceOfAdminSalonDetail(value: object): value is AdminSalonDetail {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('subscriptionId' in value) || value['subscriptionId'] === undefined) return false;
     if (!('salonName' in value) || value['salonName'] === undefined) return false;
     if (!('category' in value) || value['category'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
@@ -188,6 +195,7 @@ export function AdminSalonDetailFromJSONTyped(json: any, ignoreDiscriminator: bo
     return {
         
         'id': json['id'],
+        'subscriptionId': json['subscriptionId'],
         'salonName': json['salonName'],
         'category': json['category'],
         'city': json['city'],
@@ -217,6 +225,7 @@ export function AdminSalonDetailToJSONTyped(value?: AdminSalonDetail | null, ign
     return {
         
         'id': value['id'],
+        'subscriptionId': value['subscriptionId'],
         'salonName': value['salonName'],
         'category': value['category'],
         'city': value['city'],

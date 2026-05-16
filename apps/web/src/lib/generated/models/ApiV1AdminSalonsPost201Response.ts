@@ -52,6 +52,12 @@ export interface ApiV1AdminSalonsPost201Response {
      * @type {string}
      * @memberof ApiV1AdminSalonsPost201Response
      */
+    subscriptionId: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiV1AdminSalonsPost201Response
+     */
     salonName: string;
     /**
      * 
@@ -166,6 +172,7 @@ export type ApiV1AdminSalonsPost201ResponseSubscriptionIntentTierEnum = typeof A
  */
 export function instanceOfApiV1AdminSalonsPost201Response(value: object): value is ApiV1AdminSalonsPost201Response {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('subscriptionId' in value) || value['subscriptionId'] === undefined) return false;
     if (!('salonName' in value) || value['salonName'] === undefined) return false;
     if (!('category' in value) || value['category'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
@@ -195,6 +202,7 @@ export function ApiV1AdminSalonsPost201ResponseFromJSONTyped(json: any, ignoreDi
     return {
         
         'id': json['id'],
+        'subscriptionId': json['subscriptionId'],
         'salonName': json['salonName'],
         'category': json['category'],
         'city': json['city'],
@@ -225,6 +233,7 @@ export function ApiV1AdminSalonsPost201ResponseToJSONTyped(value?: ApiV1AdminSal
     return {
         
         'id': value['id'],
+        'subscriptionId': value['subscriptionId'],
         'salonName': value['salonName'],
         'category': value['category'],
         'city': value['city'],

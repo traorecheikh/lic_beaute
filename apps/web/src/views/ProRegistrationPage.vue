@@ -6,7 +6,7 @@
         <RouterLink to="/pro" class="inline-block mb-8">
           <img src="/logo.png" alt="Beauté Avenue" class="h-12 w-auto mx-auto" />
         </RouterLink>
-        <h1 class="text-3xl font-display text-espresso mb-2">Inscrivez votre salon</h1>
+        <h1 class="text-3xl font-sans font-bold text-espresso mb-2">Inscrivez votre salon</h1>
         <p class="text-cocoa/60">Rejoignez Beauté Avenue en moins de 5 minutes.</p>
       </div>
 
@@ -29,7 +29,7 @@
       <div class="panel-clean p-8 mb-8">
         <!-- Step 1: Identity -->
         <div v-if="currentStep === 1">
-          <h2 class="text-xl font-display text-espresso mb-6">Étape 1 : Votre Identité</h2>
+          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 1 : Votre Identité</h2>
           <div class="space-y-4">
             <div>
               <label class="section-label mb-2 block">Nom complet</label>
@@ -52,7 +52,7 @@
 
         <!-- Step 2: Salon -->
         <div v-if="currentStep === 2">
-          <h2 class="text-xl font-display text-espresso mb-6">Étape 2 : Votre Salon</h2>
+          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 2 : Votre Salon</h2>
           <div class="space-y-4">
             <div>
               <label class="section-label mb-2 block">Nom du salon</label>
@@ -80,7 +80,7 @@
 
         <!-- Step 3: Services -->
         <div v-if="currentStep === 3">
-          <h2 class="text-xl font-display text-espresso mb-6">Étape 3 : Vos Prestations</h2>
+          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 3 : Vos Prestations</h2>
           <div class="space-y-4">
             <div v-for="(service, index) in form.services" :key="index" class="p-4 bg-neutral-bg rounded-xl relative">
               <button v-if="form.services.length > 1" @click="removeService(index)" class="absolute top-2 right-2 text-error p-1">
@@ -110,7 +110,7 @@
 
         <!-- Step 4: Hours -->
         <div v-if="currentStep === 4">
-          <h2 class="text-xl font-display text-espresso mb-6">Étape 4 : Vos Horaires</h2>
+          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 4 : Vos Horaires</h2>
           <div class="space-y-3">
             <div v-for="day in days" :key="day" class="flex items-center gap-4 py-2">
               <div class="w-24 text-sm font-semibold text-espresso">{{ day }}</div>
@@ -130,7 +130,7 @@
 
         <!-- Step 5: Confirmation -->
         <div v-if="currentStep === 5">
-          <h2 class="text-xl font-display text-espresso mb-6">Étape 5 : Confirmation</h2>
+          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 5 : Confirmation</h2>
           <div class="space-y-6">
             <div class="flex items-center gap-4 p-4 bg-primary/5 rounded-2xl">
               <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

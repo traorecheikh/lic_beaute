@@ -109,10 +109,18 @@ export async function fetchCurrentUser(token: string) {
   });
 }
 
-export async function logoutAdmin(token: string) {
+export async function logoutAdmin(token: string, refreshToken?: string) {
   return request<{ revoked: boolean }>("/api/v1/auth/logout", {
     method: "POST",
-    headers: authHeaders(token)
+    headers: authHeaders(token),
+    body: refreshToken ? JSON.stringify({ refreshToken }) : undefined
+  });
+}
+
+export async function refreshAdminSession(refreshToken: string) {
+  return request<AuthSession>("/api/v1/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ refreshToken })
   });
 }
 

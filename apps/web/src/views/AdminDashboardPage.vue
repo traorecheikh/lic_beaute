@@ -149,7 +149,7 @@
       <footer class="pt-16 pb-12 border-t border-outline-variant/30 mt-10">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"></span>
+            <span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--color-primary),0.3)]"></span>
             <p class="text-[11px] text-cocoa/80 font-bold uppercase tracking-[0.3em]">Système opérationnel</p>
           </div>
           <p class="text-[10px] text-cocoa/20 font-bold uppercase tracking-[0.5em]">Beauté Avenue Ops</p>

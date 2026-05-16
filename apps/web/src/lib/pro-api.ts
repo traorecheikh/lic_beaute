@@ -121,6 +121,12 @@ export async function logoutPro(token: string, refreshToken?: string) {
   }));
 }
 
+export async function refreshProSession(refreshToken: string) {
+  return withApiError(() => getAuthApi().apiV1AuthRefreshPost({
+    refreshInput: { refreshToken }
+  }));
+}
+
 export async function fetchProDashboard(token: string) {
   return withApiError(() => getProApi(token).apiV1ProDashboardGet());
 }

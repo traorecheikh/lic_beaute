@@ -7,7 +7,7 @@
       </div>
       
       <div class="relative mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-5xl md:text-7xl font-display text-white mb-6">Votre salon, vu par des milliers de clients à Dakar</h1>
+        <h1 class="text-5xl md:text-7xl font-sans font-bold text-white mb-6">Votre salon, vu par des milliers de clients à Dakar</h1>
         <p class="mx-auto max-w-2xl text-xl text-white/70 mb-10">Rejoignez la première marketplace de beauté au Sénégal. Gérez votre agenda, vos paiements et votre croissance depuis une plateforme unique.</p>
         
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -20,7 +20,7 @@
     <!-- Benefits Grid -->
     <section class="py-24 mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h2 class="text-4xl font-display text-espresso mb-4">Pourquoi Beauté Avenue ?</h2>
+        <h2 class="text-4xl font-sans font-bold text-espresso mb-4">Pourquoi Beauté Avenue ?</h2>
         <p class="text-cocoa/60">L'outil tout-en-un conçu pour les professionnels de la beauté.</p>
       </div>
 
@@ -29,7 +29,7 @@
           <div class="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
             <component :is="benefit.icon" class="w-8 h-8" />
           </div>
-          <h3 class="text-xl font-display text-espresso mb-3">{{ benefit.title }}</h3>
+          <h3 class="text-xl font-sans font-bold text-espresso mb-3">{{ benefit.title }}</h3>
           <p class="text-sm text-cocoa/60 leading-relaxed">{{ benefit.description }}</p>
         </div>
       </div>
@@ -39,7 +39,7 @@
     <section class="py-24 bg-sand">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="text-4xl font-display text-espresso mb-4">Choisissez votre plan</h2>
+          <h2 class="text-4xl font-sans font-bold text-espresso mb-4">Choisissez votre plan</h2>
           <p class="text-cocoa/60">Standard pour commencer, Premium pour dominer.</p>
         </div>
 
@@ -72,7 +72,7 @@
 
     <!-- CTA Footer -->
     <section class="py-24 text-center">
-      <h2 class="text-4xl font-display text-espresso mb-8">Prêt à transformer votre business ?</h2>
+      <h2 class="text-4xl font-sans font-bold text-espresso mb-8">Prêt à transformer votre business ?</h2>
       <RouterLink to="/pro/register" class="btn-primary text-base px-12 py-4">Démarrer gratuitement</RouterLink>
     </section>
   </div>

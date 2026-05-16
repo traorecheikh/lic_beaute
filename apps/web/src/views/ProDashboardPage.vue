@@ -13,7 +13,7 @@
           <p class="metric-value">{{ kpi.value }}</p>
           <div :class="[
             'text-[10px] font-bold px-2 py-0.5 rounded-full mb-1',
-            kpi.trend === 'up' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            kpi.trend === 'up' ? 'bg-primary/10 text-primary' : 'bg-error/5 text-error'
           ]">
             {{ kpi.delta }}
           </div>
@@ -112,7 +112,7 @@
                   <div class="font-bold text-espresso text-sm">{{ manualForm.clientName }}</div>
                   <div class="text-xs text-cocoa/60">{{ manualForm.clientPhone }}</div>
                 </div>
-                <button @click="clearClientSelection" type="button" class="p-1 text-cocoa/60 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                <button @click="clearClientSelection" type="button" class="p-1 text-cocoa/60 hover:text-error hover:bg-error/5 rounded-full transition-colors">
                   <XMarkIcon class="w-5 h-5" />
                 </button>
               </div>

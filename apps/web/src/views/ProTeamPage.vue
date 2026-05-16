@@ -122,7 +122,7 @@
           <button @click="removeMember(member.id)" class="p-2 hover:bg-neutral-bg rounded-full text-cocoa/60 hover:text-error"><TrashIcon class="w-4 h-4" /></button>
         </div>
 
-        <div class="w-20 h-20 rounded-full bg-sand flex items-center justify-center font-display text-2xl text-espresso mb-4 border-2 border-white shadow-sm overflow-hidden">
+        <div class="w-20 h-20 rounded-full bg-sand flex items-center justify-center font-bold text-2xl text-espresso mb-4 border-2 border-white shadow-sm overflow-hidden">
           <img v-if="teamDisplaySettings.showPhotos && member.avatar" :src="member.avatar" class="w-full h-full object-cover" />
           <span v-else>{{ member.initials }}</span>
         </div>
@@ -140,7 +140,7 @@
         </div>
 
         <div class="w-full pt-4 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-bold">
-          <span :class="member.active ? 'text-green-600' : 'text-cocoa/30'">
+          <span :class="member.active ? 'text-primary' : 'text-cocoa/30'">
             {{ member.active ? '● Actif' : '○ Inactif' }}
           </span>
           <button @click="openPlanning(member.id)" class="text-primary hover:underline uppercase tracking-widest">Voir planning</button>

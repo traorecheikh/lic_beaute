@@ -96,7 +96,7 @@
               <span class="text-cocoa/60">Sous-total</span>
               <span class="font-bold text-espresso tabular-nums">{{ formatMoneyXof(subtotal) }}</span>
             </div>
-            <div v-if="discount > 0" class="flex justify-between text-sm text-green-600">
+            <div v-if="discount > 0" class="flex justify-between text-sm text-primary">
               <span>Remise</span>
               <span class="font-bold tabular-nums">- {{ formatMoneyXof(discount) }}</span>
             </div>

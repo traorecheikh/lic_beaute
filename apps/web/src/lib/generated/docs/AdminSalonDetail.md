@@ -7,6 +7,7 @@
 Name | Type
 ------------ | -------------
 `id` | string
+`subscriptionId` | string
 `salonName` | string
 `category` | string
 `city` | string
@@ -30,6 +31,7 @@ import type { AdminSalonDetail } from ''
 // TODO: Update the object below with actual values
 const example = {
   "id": null,
+  "subscriptionId": null,
   "salonName": null,
   "category": null,
   "city": null,

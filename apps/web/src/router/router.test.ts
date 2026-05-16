@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { useProAuthStore } from "@/stores/proAuth";
 import router from "./index";
 
 function installLocalStorage() {
@@ -66,6 +67,37 @@ describe("router", () => {
 
     expect(router.currentRoute.value.name).toBe("admin-login");
     expect(router.currentRoute.value.query.redirect).toBe("/admin/dashboard");
+    expect(router.currentRoute.value.query.expired).toBeUndefined();
+  });
+
+  it("marks admin redirect as expired when a token was present", async () => {
+    const auth = useAdminAuthStore();
+    auth.$patch({ accessToken: "stale-admin-token", initialized: true, currentUser: null, refreshToken: null });
+
+    await router.push("/admin/dashboard");
+
+    expect(router.currentRoute.value.name).toBe("admin-login");
+    expect(router.currentRoute.value.query.redirect).toBe("/admin/dashboard");
+    expect(router.currentRoute.value.query.expired).toBe("1");
+  });
+
+  it("redirects unauthenticated pro access to pro login", async () => {
+    await router.push("/pro/calendar");
+
+    expect(router.currentRoute.value.name).toBe("pro-login");
+    expect(router.currentRoute.value.query.redirect).toBe("/pro/calendar");
+    expect(router.currentRoute.value.query.expired).toBeUndefined();
+  });
+
+  it("marks pro redirect as expired when a token was present", async () => {
+    const auth = useProAuthStore();
+    auth.$patch({ accessToken: "stale-pro-token", initialized: true, currentUser: null, refreshToken: null, salonName: null });
+
+    await router.push("/pro/calendar");
+
+    expect(router.currentRoute.value.name).toBe("pro-login");
+    expect(router.currentRoute.value.query.redirect).toBe("/pro/calendar");
+    expect(router.currentRoute.value.query.expired).toBe("1");
   });
 
   it("redirects authenticated admins away from login", async () => {

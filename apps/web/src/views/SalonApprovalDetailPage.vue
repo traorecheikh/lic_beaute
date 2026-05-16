@@ -13,6 +13,13 @@
       <div class="flex items-center gap-2">
       <p class="text-[10px] font-bold text-cocoa/70 uppercase tracking-[0.2em]">Dossier:</p>
       <p class="text-[10px] font-mono font-bold text-espresso/40 bg-white px-2 py-0.5 rounded border border-outline-variant">{{ salonId.substring(0, 8) }}</p>
+      <RouterLink
+        v-if="salonQuery.data.value?.subscriptionId"
+        :to="`/admin/subscriptions/${salonQuery.data.value.subscriptionId}`"
+        class="ml-4 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+      >
+        Voir l'abonnement →
+      </RouterLink>
 
       </div>
 
@@ -343,7 +350,7 @@ const decisionMutation = useMutation({
   },
   onSuccess: async () => {
     mutationError.value = "";
-    await queryClient.invalidateQueries({ queryKey: ["admin-pending-salons"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-salons"] });
     await queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
     await queryClient.invalidateQueries({ queryKey: ["admin-salon-detail", salonId.value] });
     toast.success("Décision enregistrée.");
@@ -359,10 +366,6 @@ const errorMessage = computed(() => {
   const error = salonQuery.error.value;
   return error instanceof ApiError ? error.message : "Le dossier demandé est introuvable.";
 });
-
-function scrollToDecision() {
-  document.getElementById('decision-center')?.scrollIntoView({ behavior: 'smooth' });
-}
 
 function resetForm() {
   action.value = "approve";

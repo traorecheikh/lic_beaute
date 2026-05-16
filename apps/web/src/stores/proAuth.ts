@@ -1,11 +1,13 @@
 import type { CurrentUser } from "@/lib/generated";
 import { defineStore } from "pinia";
 
+import { ApiError } from "@/lib/api";
 import {
   fetchProCurrentUser,
   fetchProSalon,
   loginPro,
   logoutPro,
+  refreshProSession,
   verifyProOtp
 } from "@/lib/pro-api";
 
@@ -40,6 +42,26 @@ export const useProAuthStore = defineStore("pro-auth", {
     isOwner: (state) => state.currentUser?.role === "salon_owner"
   },
   actions: {
+    clearSession() {
+      this.accessToken = null;
+      this.refreshToken = null;
+      this.currentUser = null;
+      this.salonName = null;
+    },
+
+    async refreshSessionIfPossible() {
+      if (!this.refreshToken) return false;
+      try {
+        const session = await refreshProSession(this.refreshToken);
+        this.accessToken = session.accessToken;
+        this.refreshToken = session.refreshToken;
+        return true;
+      } catch {
+        this.clearSession();
+        return false;
+      }
+    },
+
     async applySession(accessToken: string, refreshToken: string) {
       this.accessToken = accessToken;
       this.refreshToken = refreshToken;
@@ -60,10 +82,7 @@ export const useProAuthStore = defineStore("pro-auth", {
       try {
         const user = await fetchProCurrentUser(this.accessToken);
         if (!isProRole(user.role)) {
-          this.accessToken = null;
-          this.refreshToken = null;
-          this.currentUser = null;
-          this.salonName = null;
+          this.clearSession();
           this.initialized = true;
           return;
         }
@@ -76,11 +95,30 @@ export const useProAuthStore = defineStore("pro-auth", {
         } catch {
           this.salonName = null;
         }
-      } catch {
-        this.accessToken = null;
-        this.refreshToken = null;
-        this.currentUser = null;
-        this.salonName = null;
+      } catch (error) {
+        const isAuthError = error instanceof ApiError && error.statusCode === 401;
+        if (isAuthError && (await this.refreshSessionIfPossible()) && this.accessToken) {
+          try {
+            const user = await fetchProCurrentUser(this.accessToken);
+            if (!isProRole(user.role)) {
+              this.clearSession();
+              return;
+            }
+            this.currentUser = user;
+            try {
+              const salon = await fetchProSalon(this.accessToken);
+              this.salonName = salon.name;
+            } catch {
+              this.salonName = null;
+            }
+          } catch (retryError) {
+            if (retryError instanceof ApiError && retryError.statusCode === 401) {
+              this.clearSession();
+            }
+          }
+        } else if (isAuthError) {
+          this.clearSession();
+        }
       } finally {
         this.initialized = true;
       }

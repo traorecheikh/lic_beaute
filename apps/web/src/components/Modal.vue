@@ -28,7 +28,7 @@
               class="w-10 h-10 rounded-full bg-neutral-bg flex items-center justify-center text-cocoa/40 hover:text-espresso transition-colors"
               @click="$emit('close')"
             >
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
 
@@ -49,6 +49,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { XMarkIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps<{
   show: boolean;

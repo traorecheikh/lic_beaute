@@ -6,16 +6,18 @@ import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
 import { useAdminAuthStore } from "./adminAuth";
 
-const { fetchCurrentUser, loginAdmin, logoutAdmin } = vi.hoisted(() => ({
+const { fetchCurrentUser, loginAdmin, logoutAdmin, refreshAdminSession } = vi.hoisted(() => ({
   fetchCurrentUser: vi.fn(),
   loginAdmin: vi.fn(),
-  logoutAdmin: vi.fn()
+  logoutAdmin: vi.fn(),
+  refreshAdminSession: vi.fn()
 }));
 
 vi.mock("@/lib/api", () => ({
   fetchCurrentUser,
   loginAdmin,
-  logoutAdmin
+  logoutAdmin,
+  refreshAdminSession
 }));
 
 function installLocalStorage() {
@@ -56,6 +58,7 @@ describe("admin auth store", () => {
     fetchCurrentUser.mockReset();
     loginAdmin.mockReset();
     logoutAdmin.mockReset();
+    refreshAdminSession.mockReset();
   });
 
   it("restores an existing admin session", async () => {
@@ -99,6 +102,7 @@ describe("admin auth store", () => {
       password: "supersecure"
     });
     expect(store.accessToken).toBe("fresh-token");
+    expect(store.refreshToken).toBe("refresh-token");
     expect(store.isAuthenticated).toBe(true);
   });
 
@@ -108,6 +112,7 @@ describe("admin auth store", () => {
     const store = useAdminAuthStore();
     store.$patch({
       accessToken: "fresh-token",
+      refreshToken: "refresh-token",
       currentUser: {
         id: "user-admin",
         fullName: "Platform Admin",
@@ -120,7 +125,7 @@ describe("admin auth store", () => {
 
     await store.logout();
 
-    expect(logoutAdmin).toHaveBeenCalledWith("fresh-token");
+    expect(logoutAdmin).toHaveBeenCalledWith("fresh-token", "refresh-token");
     expect(store.accessToken).toBeNull();
     expect(store.isAuthenticated).toBe(false);
     expect(store.currentUser).toBeNull();

@@ -42,10 +42,10 @@
         <h2 class="section-label">Transactions récentes</h2>
         <div class="flex gap-2">
           <span class="flex items-center gap-1.5 text-[10px] font-bold text-cocoa/40">
-            <div class="w-2 h-2 rounded-full bg-green-500"></div> Terminé
+            <div class="w-2 h-2 rounded-full bg-primary"></div> Terminé
           </span>
           <span class="flex items-center gap-1.5 text-[10px] font-bold text-cocoa/40 ml-4">
-            <div class="w-2 h-2 rounded-full bg-amber-500"></div> En attente
+            <div class="w-2 h-2 rounded-full bg-secondary"></div> En attente
           </span>
         </div>
       </div>
@@ -141,10 +141,10 @@ const transactions = computed(() => {
       amountLabel: formatMoneyXof(event.amountXof),
       status,
       statusClass: status === "Terminé"
-        ? "bg-green-100 text-green-700"
+        ? "bg-primary/10 text-primary"
         : status === "Remboursé"
-          ? "bg-red-100 text-red-700"
-          : "bg-amber-100 text-amber-700"
+          ? "bg-error/5 text-error"
+          : "bg-secondary/10 text-secondary"
     };
   });
 });

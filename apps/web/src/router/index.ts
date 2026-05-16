@@ -186,6 +186,8 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const adminAuth = useAdminAuthStore();
   const proAuth = useProAuthStore();
+  const hadAdminToken = Boolean(adminAuth.accessToken);
+  const hadProToken = Boolean(proAuth.accessToken);
 
   // Restore sessions if not initialized
   if (!adminAuth.initialized) await adminAuth.restoreSession();
@@ -195,7 +197,10 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAdmin && !adminAuth.isAuthenticated) {
     return {
       name: "admin-login",
-      query: { redirect: to.fullPath }
+      query: {
+        redirect: to.fullPath,
+        ...(hadAdminToken ? { expired: "1" } : {})
+      }
     };
   }
 
@@ -203,7 +208,10 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresPro && !proAuth.isAuthenticated) {
     return {
       name: "pro-login",
-      query: { redirect: to.fullPath }
+      query: {
+        redirect: to.fullPath,
+        ...(hadProToken ? { expired: "1" } : {})
+      }
     };
   }
 

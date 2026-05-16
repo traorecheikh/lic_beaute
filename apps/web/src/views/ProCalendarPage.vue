@@ -100,14 +100,14 @@
               :class="[
                 'absolute left-0 right-0 z-[5] cursor-pointer transition-all',
                 selectedBlockedSlotId === slot.id
-                  ? 'bg-red-100/80 border-l-4 border-red-500'
-                  : 'bg-red-50/60 border-l-4 border-red-300 hover:bg-red-100/60'
+                  ? 'bg-error/10 border-l-4 border-error'
+                  : 'bg-error/5 border-l-4 border-error/30 hover:bg-error/10'
               ]"
               :style="{ top: slot.top + 'px', height: slot.height + 'px' }"
             >
               <div class="px-3 py-1.5">
-                <p class="text-[9px] font-bold uppercase tracking-wider text-red-600">Créneau bloqué</p>
-                <p class="text-[10px] text-red-700 font-semibold truncate">{{ slot.reason ?? slot.timeRange }}</p>
+                <p class="text-[9px] font-bold uppercase tracking-wider text-error">Créneau bloqué</p>
+                <p class="text-[10px] text-error/80 font-semibold truncate">{{ slot.reason ?? slot.timeRange }}</p>
               </div>
             </div>
 
@@ -161,14 +161,14 @@
                 :class="[
                   'absolute left-0 right-0 z-[5] cursor-pointer transition-all',
                   selectedBlockedSlotId === slot.id
-                    ? 'bg-red-100/80 border-l-4 border-red-500'
-                    : 'bg-red-50/60 border-l-4 border-red-300 hover:bg-red-100/60'
+                    ? 'bg-error/10 border-l-4 border-error'
+                    : 'bg-error/5 border-l-4 border-error/30 hover:bg-error/10'
                 ]"
                 :style="{ top: slot.top + 'px', height: slot.height + 'px' }"
               >
                 <div class="px-2 py-1">
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-red-600">Bloqué</p>
-                  <p class="text-[9px] text-red-700 font-semibold truncate">{{ slot.reason ?? slot.timeRange }}</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-error">Bloqué</p>
+                  <p class="text-[9px] text-error/80 font-semibold truncate">{{ slot.reason ?? slot.timeRange }}</p>
                 </div>
               </div>
 
@@ -271,10 +271,10 @@
           </div>
 
           <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <div class="panel-clean p-4 bg-red-50/50 border-red-100">
+            <div class="panel-clean p-4 bg-error/5 border-error/10">
               <div class="flex items-center gap-2 mb-3">
-                <div class="w-3 h-3 rounded-full bg-red-400"></div>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-red-600">Bloqué</span>
+                <div class="w-3 h-3 rounded-full bg-error"></div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-error">Bloqué</span>
               </div>
               <p class="row-primary mb-1">{{ selectedBlockedSlot.timeRange }}</p>
               <p class="row-meta">{{ selectedBlockedSlot.dateLabel }}</p>
@@ -364,7 +364,7 @@
                   <div class="font-bold text-espresso text-sm">{{ composeForm.clientName }}</div>
                   <div class="text-xs text-cocoa/60">{{ composeForm.clientPhone }}</div>
                 </div>
-                <button @click="clearClientSelection" class="p-1 text-cocoa/60 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                <button @click="clearClientSelection" class="p-1 text-cocoa/60 hover:text-error hover:bg-error/5 rounded-full transition-colors">
                   <XMarkIcon class="w-5 h-5" />
                 </button>
               </div>
@@ -472,11 +472,11 @@ const router = useRouter();
 const queryClient = useQueryClient();
 
 const tones = [
-  "bg-pink-100 text-pink-700",
-  "bg-blue-100 text-blue-700",
-  "bg-green-100 text-green-700",
-  "bg-amber-100 text-amber-700",
-  "bg-purple-100 text-purple-700"
+  "bg-primary/10 text-primary",
+  "bg-secondary/10 text-secondary",
+  "bg-primary/15 text-primary",
+  "bg-secondary/15 text-secondary",
+  "bg-primary/20 text-primary"
 ];
 
 const hours = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
@@ -863,11 +863,11 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusStyles: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700 border border-amber-200",
-  confirmed: "bg-blue-100 text-blue-700 border border-blue-200",
-  in_progress: "bg-green-100 text-green-700 border border-green-200",
-  completed: "bg-gray-100 text-gray-700 border border-gray-200",
-  cancelled: "bg-red-100 text-red-700 border border-red-200"
+  pending: "bg-secondary/10 text-secondary border border-secondary/20",
+  confirmed: "bg-primary/10 text-primary border border-primary/20",
+  in_progress: "bg-primary/15 text-primary border border-primary/25",
+  completed: "bg-neutral-bg text-cocoa/60 border border-outline-variant",
+  cancelled: "bg-error/5 text-error border border-error/10"
 };
 
 const nextActionLabels: Record<string, string> = {

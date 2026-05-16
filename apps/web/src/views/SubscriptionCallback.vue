@@ -34,12 +34,12 @@ onMounted(async () => {
         <p class="row-meta">Veuillez patienter, nous confirmons votre abonnement.</p>
       </template>
       <template v-else-if="status === 'success'">
-        <p class="page-title text-green-700">Paiement confirmé !</p>
+        <p class="page-title text-primary">Paiement confirmé !</p>
         <p class="row-primary">Votre abonnement premium est maintenant actif.</p>
         <p class="row-meta">Redirection vers votre espace abonnement…</p>
       </template>
       <template v-else>
-        <p class="page-title text-red-700">Paiement échoué</p>
+        <p class="page-title text-error">Paiement échoué</p>
         <p class="row-primary">Le paiement n'a pas pu être confirmé.</p>
         <p class="row-meta">Redirection vers votre espace abonnement…</p>
       </template>

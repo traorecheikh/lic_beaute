@@ -65,7 +65,7 @@
             </button>
           </div>
         </form>
-        <p v-if="formError" class="text-red-600 text-sm mt-4">{{ formError }}</p>
+        <p v-if="formError" class="text-error row-meta mt-4">{{ formError }}</p>
       </div>
     </Transition>
 

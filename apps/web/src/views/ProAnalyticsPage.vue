@@ -24,7 +24,7 @@
         <p class="metric-label mb-1">{{ kpi.label }}</p>
         <div class="flex items-end justify-between">
           <p class="metric-value">{{ kpi.value }}</p>
-          <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-full mb-1', kpi.trend === 'up' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
+          <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-full mb-1', kpi.trend === 'up' ? 'bg-primary/10 text-primary' : 'bg-error/5 text-error']">
             {{ kpi.delta }}
           </span>
         </div>

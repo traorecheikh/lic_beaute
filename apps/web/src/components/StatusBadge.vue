@@ -61,7 +61,7 @@ const styles = computed(() => {
   }
   
   if (['confirmed', 'succeeded', 'approved', 'verified', 'active'].includes(val)) {
-    return "bg-green-50 text-green-700 ring-green-600/20";
+    return "bg-primary/5 text-primary ring-primary/20";
   }
 
   if (['failed', 'cancelled', 'rejected', 'needs_info'].includes(val)) {
