@@ -1,6 +1,9 @@
-import { getPaymentAdapter, getStorageAdapter, getR2Adapter } from "./adapters/index.js";
-import type { R2StorageAdapter } from "./adapters/storage/r2.js";
+import { Job as BullJob, Worker } from "bullmq";
+
+import { getPaymentAdapter, getStorageAdapter } from "./adapters/index.js";
 import { config } from "./config.js";
+import { getQueueRedis } from "./lib/redis.js";
+import { closeJobQueues, enqueueJob, shouldRunBull, type AppJobType } from "./lib/jobs.js";
 import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/db/prisma.js";
 import { sendPushBatch } from "./lib/push.js";
@@ -25,17 +28,15 @@ const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin
 });
 
-type Job = {
+type LocalJob = {
   id: string;
   type: string;
   payloadJson: string;
   attempts: number;
 };
 
-async function handleJob(job: Job): Promise<void> {
-  const payload = JSON.parse(job.payloadJson) as Record<string, string>;
-
-  switch (job.type) {
+async function handleJob(type: AppJobType, payload: Record<string, string>): Promise<void> {
+  switch (type) {
     case "deposit_settlement": {
       const booking = await prisma.booking.findUnique({
         where: { id: payload.bookingId },
@@ -60,7 +61,7 @@ async function handleJob(job: Job): Promise<void> {
           providerReference: payment.providerTxId ?? undefined
         }
       });
-      break;
+      return;
     }
 
     case "refund_reconciliation": {
@@ -92,7 +93,7 @@ async function handleJob(job: Job): Promise<void> {
           }
         });
       }
-      break;
+      return;
     }
 
     case "booking_reminder": {
@@ -107,13 +108,14 @@ async function handleJob(job: Job): Promise<void> {
         "Rappel de réservation",
         `Votre rendez-vous pour ${booking.service.name} est demain.`
       );
-      break;
+      return;
     }
 
     case "media_cleanup": {
+      if (!payload.objectKey) return;
       logger.info("[WORKER] media_cleanup: running", { objectKey: payload.objectKey });
       await storageAdapter.delete(payload.objectKey);
-      break;
+      return;
     }
 
     case "media_review_notify": {
@@ -128,14 +130,14 @@ async function handleJob(job: Job): Promise<void> {
           { type: "media_pending_review", mediaId: payload.mediaId ?? "", salonId: payload.salonId ?? "" }
         );
       }
-      break;
+      return;
     }
 
     case "notification_retry": {
       const notification = await prisma.notification.findUnique({ where: { id: payload.notificationId } });
       if (!notification) return;
       logger.info("[WORKER] notification_retry: noop push driver", { notificationId: notification.id });
-      break;
+      return;
     }
 
     case "subscription_expiry_check": {
@@ -154,10 +156,8 @@ async function handleJob(job: Job): Promise<void> {
       }
       const nextMidnight = new Date();
       nextMidnight.setUTCHours(24, 0, 0, 0);
-      await prisma.job.create({
-        data: { queue: "default", type: "subscription_expiry_check", payloadJson: "{}", runAfter: nextMidnight }
-      });
-      break;
+      await enqueueJob({ type: "subscription_expiry_check", payload: {}, runAfter: nextMidnight });
+      return;
     }
 
     case "platform_settings_cleanup": {
@@ -175,10 +175,8 @@ async function handleJob(job: Job): Promise<void> {
       }
       const nextHour = new Date();
       nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
-      await prisma.job.create({
-        data: { queue: "default", type: "platform_settings_cleanup", payloadJson: "{}", runAfter: nextHour }
-      });
-      break;
+      await enqueueJob({ type: "platform_settings_cleanup", payload: {}, runAfter: nextHour });
+      return;
     }
 
     case "prestige_score_refresh": {
@@ -220,14 +218,47 @@ async function handleJob(job: Job): Promise<void> {
 
       const nextMidnight = new Date();
       nextMidnight.setUTCHours(24, 0, 0, 0);
-      await prisma.job.create({
-        data: { queue: "default", type: "prestige_score_refresh", payloadJson: "{}", runAfter: nextMidnight }
-      });
-      break;
+      await enqueueJob({ type: "prestige_score_refresh", payload: {}, runAfter: nextMidnight });
+      return;
     }
 
     default:
-      logger.warn("[WORKER] unknown job type", { jobType: job.type });
+      logger.warn("[WORKER] unknown job type", { jobType: type });
+      return;
+  }
+}
+
+async function processMirrorJob(type: AppJobType, payload: Record<string, string>) {
+  const payloadJson = JSON.stringify(payload);
+  const mirror = await prisma.job.findFirst({
+    where: { type, payloadJson, status: "pending" },
+    orderBy: { createdAt: "asc" }
+  });
+
+  if (mirror) {
+    await prisma.job.update({ where: { id: mirror.id }, data: { status: "running", lockedAt: new Date() } });
+  }
+
+  try {
+    await handleJob(type, payload);
+    if (mirror) {
+      await prisma.job.update({ where: { id: mirror.id }, data: { status: "completed", lockedAt: null } });
+    }
+  } catch (err) {
+    if (mirror) {
+      const attempts = mirror.attempts + 1;
+      await prisma.job.update({
+        where: { id: mirror.id },
+        data: {
+          status: attempts >= 3 ? "failed" : "pending",
+          attempts,
+          lastError: String(err),
+          runAfter: new Date(Date.now() + attempts * 60_000),
+          lockedAt: null
+        }
+      });
+    }
+    throw err;
   }
 }
 
@@ -244,16 +275,11 @@ async function pollJobs() {
       where: { id: job.id, status: "pending", runAfter: { lte: now } },
       data: { status: "running", lockedAt: new Date() }
     });
-    if (claimed.count === 0) {
-      continue;
-    }
+    if (claimed.count === 0) continue;
 
     try {
-      await handleJob(job);
-      await prisma.job.update({
-        where: { id: job.id },
-        data: { status: "completed", lockedAt: null }
-      });
+      await handleJob(job.type as AppJobType, JSON.parse(job.payloadJson) as Record<string, string>);
+      await prisma.job.update({ where: { id: job.id }, data: { status: "completed", lockedAt: null } });
     } catch (err) {
       const attempts = job.attempts + 1;
       await prisma.job.update({
@@ -271,54 +297,98 @@ async function pollJobs() {
   }
 }
 
-async function ensureNightlyPrestigeJob() {
-  const existing = await prisma.job.findFirst({
-    where: { type: "prestige_score_refresh", status: "pending" }
+async function ensureRecurringSeedJobs() {
+  const pending = await prisma.job.findMany({
+    where: {
+      type: { in: ["prestige_score_refresh", "subscription_expiry_check", "platform_settings_cleanup"] },
+      status: "pending"
+    },
+    select: { type: true }
   });
-  if (!existing) {
+  const existing = new Set(pending.map((p) => p.type));
+
+  if (!existing.has("prestige_score_refresh")) {
     const nextMidnight = new Date();
     nextMidnight.setUTCHours(24, 0, 0, 0);
-    await prisma.job.create({
-      data: { queue: "default", type: "prestige_score_refresh", payloadJson: "{}", runAfter: nextMidnight }
-    });
-    logger.info("[WORKER] Scheduled nightly prestige_score_refresh", { runAfter: nextMidnight });
+    await enqueueJob({ type: "prestige_score_refresh", payload: {}, runAfter: nextMidnight });
   }
-}
 
-async function ensureNightlyExpiryJob() {
-  const existing = await prisma.job.findFirst({
-    where: { type: "subscription_expiry_check", status: "pending" }
-  });
-  if (!existing) {
+  if (!existing.has("subscription_expiry_check")) {
     const nextMidnight = new Date();
     nextMidnight.setUTCHours(24, 0, 0, 0);
-    await prisma.job.create({
-      data: { queue: "default", type: "subscription_expiry_check", payloadJson: "{}", runAfter: nextMidnight }
-    });
-    logger.info("[WORKER] Scheduled nightly subscription_expiry_check", { runAfter: nextMidnight });
+    await enqueueJob({ type: "subscription_expiry_check", payload: {}, runAfter: nextMidnight });
   }
-}
 
-async function ensureCleanupJob() {
-  const existing = await prisma.job.findFirst({
-    where: { type: "platform_settings_cleanup", status: "pending" }
-  });
-  if (!existing) {
+  if (!existing.has("platform_settings_cleanup")) {
     const nextHour = new Date();
     nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
-    await prisma.job.create({
-      data: { queue: "default", type: "platform_settings_cleanup", payloadJson: "{}", runAfter: nextHour }
-    });
-    logger.info("[WORKER] Scheduled platform_settings_cleanup", { runAfter: nextHour });
+    await enqueueJob({ type: "platform_settings_cleanup", payload: {}, runAfter: nextHour });
   }
 }
 
-logger.info("Worker started", { pollIntervalMs: config.workerPollIntervalMs });
+async function startBullWorkers() {
+  const connection = await getQueueRedis();
+  if (!connection) {
+    logger.error("[WORKER] BullMQ mode requested but Redis is unavailable");
+    process.exit(1);
+  }
 
-void ensureNightlyPrestigeJob().catch((err) => logger.warn("[WORKER] ensureNightlyPrestigeJob failed", { err: String(err) }));
-void ensureNightlyExpiryJob().catch((err) => logger.warn("[WORKER] ensureNightlyExpiryJob failed", { err: String(err) }));
-void ensureCleanupJob().catch((err) => logger.warn("[WORKER] ensureCleanupJob failed", { err: String(err) }));
+  const workers: Worker[] = [];
+  const createWorker = (queueName: string, concurrency: number) => {
+    const worker = new Worker(
+      queueName,
+      async (job: BullJob<Record<string, string>>) => {
+        await processMirrorJob(job.name as AppJobType, job.data);
+      },
+      { connection, concurrency }
+    );
+    worker.on("failed", (job, err) => {
+      logger.error("[WORKER] BullMQ job failed", { queue: queueName, jobId: job?.id, name: job?.name, err: String(err) });
+    });
+    workers.push(worker);
+  };
 
-setInterval(() => {
-  void pollJobs();
-}, config.workerPollIntervalMs);
+  createWorker("payments", config.queueConcurrencyPayments);
+  createWorker("notifications", config.queueConcurrencyNotifications);
+  createWorker("maintenance", config.queueConcurrencyMaintenance);
+
+  const shutdown = async (signal: string) => {
+    logger.info("[WORKER] shutting down", { signal });
+    await Promise.all(workers.map((w) => w.close()));
+    await closeJobQueues();
+    await prisma.$disconnect();
+    process.exit(0);
+  };
+
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
+  process.on("SIGINT", () => void shutdown("SIGINT"));
+
+  logger.info("Worker started", {
+    mode: config.workerDriver,
+    queues: ["payments", "notifications", "maintenance"],
+    concurrency: {
+      payments: config.queueConcurrencyPayments,
+      notifications: config.queueConcurrencyNotifications,
+      maintenance: config.queueConcurrencyMaintenance
+    }
+  });
+}
+
+async function main() {
+  await ensureRecurringSeedJobs();
+
+  if (shouldRunBull()) {
+    await startBullWorkers();
+    return;
+  }
+
+  logger.info("Worker started", { mode: "db", pollIntervalMs: config.workerPollIntervalMs });
+  setInterval(() => {
+    void pollJobs();
+  }, config.workerPollIntervalMs);
+}
+
+void main().catch((err) => {
+  logger.error("[WORKER] startup failed", { err: String(err) });
+  process.exit(1);
+});

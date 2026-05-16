@@ -12,12 +12,19 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import { Redis } from "ioredis";
 
 import { config } from "./config.js";
 import type { DatabaseRuntime } from "./lib/db/runtime.js";
 import { setPrisma } from "./lib/db/prisma.js";
 import { registerRoutes } from "./modules/routes.js";
 import type { PrismaClient } from "./generated/prisma/client.js";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    redisEnabled: boolean;
+  }
+}
 
 type CreateAppOptions = {
   databaseRuntime: DatabaseRuntime;
@@ -56,11 +63,46 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
   });
-  await app.register(rateLimit, {
-    global: true,
-    max: 100,
-    timeWindow: "1 minute"
-  });
+  let redisEnabled = false;
+  if (config.redisUrl) {
+    const redis = new Redis(config.redisUrl, {
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: true,
+      lazyConnect: true
+    });
+    try {
+      await redis.connect();
+      await redis.ping();
+      redisEnabled = true;
+      await app.register(rateLimit, {
+        global: true,
+        max: 100,
+        timeWindow: "1 minute",
+        redis
+      });
+      app.addHook("onClose", async () => {
+        await redis.quit();
+      });
+    } catch (err) {
+      app.log.warn(
+        { error: err instanceof Error ? err.message : String(err), redisUrl: config.redisUrl },
+        "Redis unavailable, falling back to in-memory rate limit store"
+      );
+      redis.disconnect();
+      await app.register(rateLimit, {
+        global: true,
+        max: 100,
+        timeWindow: "1 minute"
+      });
+    }
+  } else {
+    await app.register(rateLimit, {
+      global: true,
+      max: 100,
+      timeWindow: "1 minute"
+    });
+  }
+  app.decorate("redisEnabled", redisEnabled);
   await app.register(multipart, {
     limits: {
       fileSize: config.maxUploadBytes,

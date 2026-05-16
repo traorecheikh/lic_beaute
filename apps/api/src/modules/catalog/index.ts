@@ -5,6 +5,8 @@ import { availabilityQuerySchema } from "@beauteavenue/contracts";
 
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { fetchAndComputeAvailableSlots } from "../../lib/availability.js";
+import { getCachedJson, getOrSetCachedJson, setCachedJsonWithTags } from "../../lib/cache.js";
+import { config } from "../../config.js";
 import { fail, ok } from "../../lib/http.js";
 import { prisma } from "../../lib/db/prisma.js";
 
@@ -45,6 +47,24 @@ export class CatalogController {
     const sort = q.sort ?? "rating";
     const minPrice = q.minPrice != null ? parseInt(q.minPrice, 10) : null;
     const maxPrice = q.maxPrice != null ? parseInt(q.maxPrice, 10) : null;
+    const cacheKey = `catalog:list:${JSON.stringify({
+      city: q.city ?? null,
+      category: q.category ?? null,
+      search: q.search ?? null,
+      page,
+      pageSize,
+      lat,
+      lng,
+      sort,
+      minPrice,
+      maxPrice
+    })}`;
+    const cached = await getCachedJson<unknown>(cacheKey);
+    if (cached) {
+      reply.header("x-cache", "HIT");
+      ok(reply, cached);
+      return;
+    }
 
     // ── Nearby: Haversine raw SQL, 5 km hard filter ──────────────────────────
     if (sort === "nearby" && lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
@@ -91,7 +111,7 @@ export class CatalogController {
       `);
 
       const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
-      return ok(reply, {
+      const payload = {
         items: rows.map((r) => ({
           id: r.id, name: r.name, category: r.category, logoUrl: r.logoUrl,
           city: r.city, neighborhood: r.neighborhood, averageRating: Number(r.averageRating),
@@ -103,7 +123,15 @@ export class CatalogController {
           distanceKm: Math.round(Number(r.distance_km) * 10) / 10
         })),
         total, page, pageSize
+      };
+      await setCachedJsonWithTags({
+        key: cacheKey,
+        value: payload,
+        ttlSeconds: config.cacheTtlCatalogSeconds,
+        tags: ["catalog:list"]
       });
+      reply.header("x-cache", "MISS");
+      return ok(reply, payload);
     }
 
     // ── Trending: sorted by booking count (last 30 days) ────────────────────
@@ -143,7 +171,7 @@ export class CatalogController {
       `);
 
       const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
-      return ok(reply, {
+      const payload = {
         items: rows.map((r) => ({
           id: r.id, name: r.name, category: r.category, logoUrl: r.logoUrl,
           city: r.city, neighborhood: r.neighborhood, averageRating: Number(r.averageRating),
@@ -155,7 +183,15 @@ export class CatalogController {
           distanceKm: null
         })),
         total, page, pageSize
+      };
+      await setCachedJsonWithTags({
+        key: cacheKey,
+        value: payload,
+        ttlSeconds: config.cacheTtlCatalogSeconds,
+        tags: ["catalog:list"]
       });
+      reply.header("x-cache", "MISS");
+      return ok(reply, payload);
     }
 
     // ── Default: sort by rating (with optional city/category/search filters) ─
@@ -204,18 +240,33 @@ export class CatalogController {
       prisma.salon.count({ where: whereWithSearch })
     ]);
 
-    ok(reply, {
+    const payload = {
       items: items.map((s) => ({
         ...s,
         featured: s.subscriptionTier === "premium",
         distanceKm: null
       })),
       total, page, pageSize
+    };
+    await setCachedJsonWithTags({
+      key: cacheKey,
+      value: payload,
+      ttlSeconds: config.cacheTtlCatalogSeconds,
+      tags: ["catalog:list"]
     });
+    reply.header("x-cache", "MISS");
+    ok(reply, payload);
   }
 
   async detail(request: FastifyRequest, reply: FastifyReply) {
     const params = request.params as { id: string };
+    const cacheKey = `catalog:salon:${params.id}`;
+    const cached = await getCachedJson<unknown>(cacheKey);
+    if (cached) {
+      reply.header("x-cache", "HIT");
+      ok(reply, cached);
+      return;
+    }
 
     const salon = await prisma.salon.findFirst({
       where: { id: params.id, approvalStatus: "approved", isVisibleInMarketplace: true },
@@ -250,7 +301,7 @@ export class CatalogController {
     const showPhotos = parseBooleanSetting(settingMap[salonTeamShowPhotosKey(salon.id)], false);
     const showDescriptions = parseBooleanSetting(settingMap[salonTeamShowDescriptionsKey(salon.id)], false);
 
-    ok(reply, {
+    const payload = {
       id: salon.id,
       name: salon.name,
       category: salon.category,
@@ -284,7 +335,15 @@ export class CatalogController {
         priceXof: s.priceXof,
         depositRequiredXof: s.depositMode !== "none" ? (s.depositAmountXof ?? null) : null
       }))
+    };
+    await setCachedJsonWithTags({
+      key: cacheKey,
+      value: payload,
+      ttlSeconds: config.cacheTtlCatalogSeconds,
+      tags: ["catalog:list", `catalog:salon:${params.id}`]
     });
+    reply.header("x-cache", "MISS");
+    ok(reply, payload);
   }
 
   async availability(request: FastifyRequest, reply: FastifyReply) {
@@ -324,6 +383,13 @@ export class CatalogController {
     const q = request.query as { page?: string; pageSize?: string };
     const page = Math.max(0, parseInt(q.page ?? "0", 10));
     const pageSize = Math.min(50, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
+    const cacheKey = `catalog:reviews:${params.id}:${page}:${pageSize}`;
+    const cached = await getCachedJson<unknown>(cacheKey);
+    if (cached) {
+      reply.header("x-cache", "HIT");
+      ok(reply, cached);
+      return;
+    }
 
     const salon = await prisma.salon.findFirst({
       where: { id: params.id, approvalStatus: "approved", isVisibleInMarketplace: true },
@@ -345,7 +411,7 @@ export class CatalogController {
       prisma.review.count({ where: { salonId: params.id } })
     ]);
 
-    ok(reply, {
+    const payload = {
       items: reviews.map((r) => ({
         id: r.id,
         rating: r.rating,
@@ -355,27 +421,43 @@ export class CatalogController {
         responseAt: r.responseText ? r.updatedAt.toISOString() : null
       })),
       total
+    };
+    await setCachedJsonWithTags({
+      key: cacheKey,
+      value: payload,
+      ttlSeconds: config.cacheTtlCatalogSeconds,
+      tags: [`catalog:reviews:${params.id}`]
     });
+    reply.header("x-cache", "MISS");
+    ok(reply, payload);
   }
 
   async pricing(_request: FastifyRequest, reply: FastifyReply) {
-    const keys = ["subscription_standard_price_xof", "subscription_premium_price_xof", "commission_rate_percent"];
-    const rows = await prisma.platformSetting.findMany({ where: { key: { in: keys } } });
-    const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-
-    ok(reply, {
-      standard: {
-        tier: "standard",
-        priceXof: parseInt(map["subscription_standard_price_xof"] ?? "15000", 10),
-        label: "Standard"
-      },
-      premium: {
-        tier: "premium",
-        priceXof: parseInt(map["subscription_premium_price_xof"] ?? "25000", 10),
-        label: "Premium"
-      },
-      commissionPercent: parseFloat(map["commission_rate_percent"] ?? "5")
+    const { value, cacheStatus } = await getOrSetCachedJson({
+      key: "catalog:pricing",
+      ttlSeconds: config.cacheTtlCatalogSeconds,
+      tags: ["catalog:pricing"],
+      load: async () => {
+        const keys = ["subscription_standard_price_xof", "subscription_premium_price_xof", "commission_rate_percent"];
+        const rows = await prisma.platformSetting.findMany({ where: { key: { in: keys } } });
+        const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+        return {
+          standard: {
+            tier: "standard",
+            priceXof: parseInt(map["subscription_standard_price_xof"] ?? "15000", 10),
+            label: "Standard"
+          },
+          premium: {
+            tier: "premium",
+            priceXof: parseInt(map["subscription_premium_price_xof"] ?? "25000", 10),
+            label: "Premium"
+          },
+          commissionPercent: parseFloat(map["commission_rate_percent"] ?? "5")
+        };
+      }
     });
+    reply.header("x-cache", cacheStatus);
+    ok(reply, value);
   }
 
   async addFavorite(request: FastifyRequest, reply: FastifyReply) {

@@ -6,11 +6,12 @@ import { getPaymentAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { fetchAndComputeAvailableSlots } from "../../lib/availability.js";
+import { invalidateCacheTags } from "../../lib/cache.js";
 import { fail, ok } from "../../lib/http.js";
+import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
-import type { PrismaClient } from "../../generated/prisma/client.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   intechApiKey: config.intechApiKey,
@@ -22,7 +23,7 @@ const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin
 });
 
-async function scheduleReminders(client: PrismaClient, bookingId: string, startsAt: Date) {
+async function scheduleReminders(bookingId: string, startsAt: Date) {
   const windows = [
     { label: "24h", offsetMs: 24 * 60 * 60 * 1000 },
     { label: "1h", offsetMs: 60 * 60 * 1000 }
@@ -31,14 +32,10 @@ async function scheduleReminders(client: PrismaClient, bookingId: string, starts
   for (const w of windows) {
     const runAfter = new Date(startsAt.getTime() - w.offsetMs);
     if (runAfter.getTime() > Date.now()) {
-      await client.job.create({
-        data: {
-          queue: "notifications",
-          type: "booking_reminder",
-          payloadJson: JSON.stringify({ bookingId, window: w.label }),
-          status: "pending",
-          runAfter
-        }
+      await enqueueJob({
+        type: "booking_reminder",
+        payload: { bookingId, window: w.label },
+        runAfter
       });
     }
   }
@@ -196,7 +193,7 @@ export class BookingController {
       });
 
       try {
-        await scheduleReminders(prisma, result.booking.id, result.booking.startsAt);
+        await scheduleReminders(result.booking.id, result.booking.startsAt);
       } catch (error) {
         logger.error("booking.create: reminder scheduling failed", {
           bookingId: result.booking.id,
@@ -278,13 +275,10 @@ export class BookingController {
         });
 
         if (booking.payments.length > 0) {
-          await tx.job.create({
-            data: {
-              queue: "payments",
-              type: "refund_reconciliation",
-              payloadJson: JSON.stringify({ paymentId: booking.payments[0].id, bookingId: booking.id }),
-              status: "pending"
-            }
+          await enqueueJob({
+            type: "refund_reconciliation",
+            payload: { paymentId: booking.payments[0].id, bookingId: booking.id },
+            dbClient: tx
           });
         }
 
@@ -362,7 +356,7 @@ export class BookingController {
         });
       });
 
-      await scheduleReminders(prisma, booking.id, newStart);
+      await scheduleReminders(booking.id, newStart);
 
       const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { salon: true, service: true, payments: { take: 1 } } });
       ok(reply, bookingSummary(updated!));
@@ -399,6 +393,13 @@ export class BookingController {
       // Update salon average rating
       const agg = await prisma.review.aggregate({ where: { salonId: booking.salonId }, _avg: { rating: true } });
       await prisma.salon.update({ where: { id: booking.salonId }, data: { averageRating: agg._avg.rating ?? 0 } });
+      await invalidateCacheTags([
+        "catalog:list",
+        `catalog:salon:${booking.salonId}`,
+        `catalog:reviews:${booking.salonId}`,
+        "kpi:pro",
+        "kpi:admin"
+      ]);
 
       ok(reply, { id: review.id, rating: review.rating, comment: review.comment, createdAt: review.createdAt.toISOString() }, 201);
     } catch (error) {

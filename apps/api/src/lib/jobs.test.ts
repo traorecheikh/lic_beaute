@@ -1,0 +1,60 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { config } from "../config.js";
+
+const addMock = vi.fn();
+const queueCtorMock = vi.fn();
+
+vi.mock("bullmq", () => ({
+  Queue: class {
+    constructor(...args: unknown[]) {
+      queueCtorMock(...args);
+    }
+    add = addMock;
+    close = vi.fn();
+  }
+}));
+
+vi.mock("./redis.js", () => ({
+  getQueueRedis: vi.fn(async () => ({}))
+}));
+
+describe("enqueueJob", () => {
+  beforeEach(() => {
+    addMock.mockReset();
+    queueCtorMock.mockReset();
+    config.workerDriver = "hybrid";
+    config.redisUrl = "";
+  });
+
+  it("always writes DB mirror job", async () => {
+    const dbCreate = vi.fn(async () => ({}));
+    const { enqueueJob } = await import("./jobs.js");
+
+    await enqueueJob({
+      type: "booking_reminder",
+      payload: { bookingId: "b1", window: "1h" },
+      dbClient: { job: { create: dbCreate } }
+    });
+
+    expect(dbCreate).toHaveBeenCalledTimes(1);
+    expect(addMock).not.toHaveBeenCalled();
+  });
+
+  it("dispatches to BullMQ when enabled", async () => {
+    const dbCreate = vi.fn(async () => ({}));
+    config.redisUrl = "redis://unit-test";
+    config.workerDriver = "hybrid";
+    const { enqueueJob } = await import("./jobs.js");
+
+    await enqueueJob({
+      type: "notification_retry",
+      payload: { notificationId: "n1" },
+      dbClient: { job: { create: dbCreate } }
+    });
+
+    expect(dbCreate).toHaveBeenCalledTimes(1);
+    expect(queueCtorMock).toHaveBeenCalled();
+    expect(addMock).toHaveBeenCalledTimes(1);
+  });
+});

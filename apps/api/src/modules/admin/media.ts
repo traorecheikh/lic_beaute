@@ -6,6 +6,7 @@ import { getStorageAdapter } from "../../adapters/index.js";
 import { R2StorageAdapter } from "../../adapters/storage/r2.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
+import { invalidateCacheTags } from "../../lib/cache.js";
 import { fail, ok } from "../../lib/http.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
@@ -159,6 +160,7 @@ export class AdminMediaController {
             { type: "media_approved", mediaId: asset.id, salonId: asset.salonId }
           );
         }
+        await invalidateCacheTags(["catalog:list", `catalog:salon:${asset.salonId}`, "kpi:pro", "kpi:admin"]);
       }
 
       logger.info("[ADMIN-MEDIA] approved", { mediaId: asset.id, adminId: session.sub });
@@ -209,6 +211,7 @@ export class AdminMediaController {
             { type: "media_rejected", mediaId: asset.id, salonId: asset.salonId, reason: body.reason }
           );
         }
+        await invalidateCacheTags(["catalog:list", `catalog:salon:${asset.salonId}`, "kpi:pro", "kpi:admin"]);
       }
 
       logger.info("[ADMIN-MEDIA] rejected", { mediaId: asset.id, adminId: session.sub, reason: body.reason });

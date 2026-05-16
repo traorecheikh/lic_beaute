@@ -22,7 +22,9 @@ import { mediaPurposeSchema, uploadCompleteInputSchema, uploadIntentInputSchema 
 import { getR2Adapter, getStorageAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
+import { invalidateCacheTags } from "../../lib/cache.js";
 import { fail, ok } from "../../lib/http.js";
+import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
 
@@ -124,13 +126,9 @@ export class MediaController {
         }
       });
 
-      await prisma.job.create({
-        data: {
-          queue: "notifications",
-          type: "media_review_notify",
-          payloadJson: JSON.stringify({ mediaId: asset.id, salonId: asset.salonId }),
-          status: "pending"
-        }
+      await enqueueJob({
+        type: "media_review_notify",
+        payload: { mediaId: asset.id, salonId: asset.salonId ?? "" }
       });
 
       ok(reply, { assetId: asset.id, uploadStatus: "review_pending", reviewStatus: "pending" }, 201);
@@ -227,13 +225,9 @@ export class MediaController {
         });
       }
 
-      await prisma.job.create({
-        data: {
-          queue: "notifications",
-          type: "media_review_notify",
-          payloadJson: JSON.stringify({ mediaId: asset.id, salonId: asset.salonId }),
-          status: "pending"
-        }
+      await enqueueJob({
+        type: "media_review_notify",
+        payload: { mediaId: asset.id, salonId: asset.salonId ?? "" }
       });
 
       ok(reply, { assetId: asset.id, uploadStatus: "review_pending", reviewStatus: "pending" });
@@ -335,10 +329,13 @@ export class MediaController {
 
       await prisma.$transaction(async (tx) => {
         await tx.mediaAsset.update({ where: { id: params.mediaId }, data: { deletedAt: new Date() } });
-        await tx.job.create({
-          data: { queue: "storage", type: "media_cleanup", payloadJson: JSON.stringify({ objectKey: asset.objectKey }), status: "pending" }
+        await enqueueJob({
+          type: "media_cleanup",
+          payload: { objectKey: asset.objectKey },
+          dbClient: tx
         });
       });
+      if (asset.salonId) await invalidateCacheTags([`catalog:salon:${asset.salonId}`]);
 
       ok(reply, { deleted: true });
     } catch (error) {

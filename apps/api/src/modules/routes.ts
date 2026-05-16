@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
+import { config } from "../config.js";
 import type { DatabaseRuntime } from "../lib/db/runtime.js";
 import { AdminController } from "./admin/index.js";
 import { AdminMediaController } from "./admin/media.js";
@@ -25,15 +26,23 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   const adminMedia = new AdminMediaController();
 
   // ── Health ────────────────────────────────────────────────────────────────
-  app.get("/health", async () => ({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    database: {
-      driver: databaseRuntime.driver,
-      mode: databaseRuntime.mode,
-      attempts: databaseRuntime.attempts
-    }
-  }));
+  app.get("/health", async () => {
+    return {
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      database: {
+        driver: databaseRuntime.driver,
+        mode: databaseRuntime.mode,
+        attempts: databaseRuntime.attempts
+      },
+      redis: {
+        status: app.redisEnabled ? "enabled" : "disabled"
+      },
+      worker: {
+        driver: config.workerDriver
+      }
+    };
+  });
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   app.post("/api/v1/auth/register", (req, rep) => auth.register(req, rep));

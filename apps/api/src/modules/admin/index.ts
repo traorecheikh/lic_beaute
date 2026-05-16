@@ -12,6 +12,8 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 
 import { requireRole, HttpAuthError } from "../../lib/auth/index.js";
+import { getOrSetCachedJson, invalidateCacheTags } from "../../lib/cache.js";
+import { config } from "../../config.js";
 import { fail, ok } from "../../lib/http.js";
 import { prisma } from "../../lib/db/prisma.js";
 import {
@@ -59,7 +61,14 @@ export class AdminController {
 
   async dashboard(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    ok(reply, await getAdminDashboard());
+    const { value, cacheStatus } = await getOrSetCachedJson({
+      key: "kpi:admin:dashboard",
+      ttlSeconds: config.cacheTtlKpiSeconds,
+      tags: ["kpi:admin"],
+      load: () => getAdminDashboard()
+    });
+    reply.header("x-cache", cacheStatus);
+    ok(reply, value);
   }
 
   async listPendingSalons(request: FastifyRequest, reply: FastifyReply) {
@@ -89,6 +98,7 @@ export class AdminController {
     const actorName = await this.resolveActorName(token.sub);
     const salon = await approveSalon(params.salonId, actorName);
     if (!salon) { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+    await invalidateCacheTags(["kpi:admin", "kpi:pro", "catalog:list", `catalog:salon:${params.salonId}`]);
     ok(reply, salon);
   }
 
@@ -100,6 +110,7 @@ export class AdminController {
     const actorName = await this.resolveActorName(token.sub);
     const salon = await rejectSalon(params.salonId, body, actorName);
     if (!salon) { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+    await invalidateCacheTags(["kpi:admin", "kpi:pro", "catalog:list", `catalog:salon:${params.salonId}`]);
     ok(reply, salon);
   }
 
@@ -111,6 +122,7 @@ export class AdminController {
     const actorName = await this.resolveActorName(token.sub);
     const salon = await requestSalonInfo(params.salonId, body, actorName);
     if (!salon) { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+    await invalidateCacheTags(["kpi:admin", "kpi:pro"]);
     ok(reply, salon);
   }
 
@@ -119,7 +131,9 @@ export class AdminController {
     if (!token) return;
     const body = adminSalonCreateInputSchema.parse(request.body);
     const actorName = await this.resolveActorName(token.sub);
-    ok(reply, await createSalon(body, actorName));
+    const created = await createSalon(body, actorName);
+    await invalidateCacheTags(["kpi:admin"]);
+    ok(reply, created);
   }
 
   async listSubscriptions(request: FastifyRequest, reply: FastifyReply) {
@@ -148,6 +162,7 @@ export class AdminController {
     const actorName = await this.resolveActorName(token.sub);
     const subscription = await overrideSubscription(params.subscriptionId, body, actorName);
     if (!subscription) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
+    await invalidateCacheTags(["kpi:admin", "kpi:pro"]);
     ok(reply, subscription);
   }
 
@@ -179,7 +194,9 @@ export class AdminController {
     const { key } = request.params as { key: string };
     const { value } = updatePlatformSettingInputSchema.parse(request.body);
     const actorName = await this.resolveActorName(token.sub);
-    ok(reply, await updatePlatformSetting(key, value, actorName));
+    const updated = await updatePlatformSetting(key, value, actorName);
+    await invalidateCacheTags(["kpi:admin", "kpi:pro", "catalog:pricing"]);
+    ok(reply, updated);
   }
 
   async listCategories(request: FastifyRequest, reply: FastifyReply) {

@@ -20,7 +20,9 @@ import { getPaymentAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { fetchAndComputeAvailableSlots } from "../../lib/availability.js";
+import { getOrSetCachedJson, invalidateCacheTags } from "../../lib/cache.js";
 import { fail, handleError, ok } from "../../lib/http.js";
+import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicBillingProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
@@ -271,7 +273,14 @@ export class ProController {
   async dashboard(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, role } = await ensurePro(request);
-      ok(reply, await getProDashboard(salonId, role));
+      const { value, cacheStatus } = await getOrSetCachedJson({
+        key: `kpi:pro:dashboard:${salonId}:${role}`,
+        ttlSeconds: config.cacheTtlKpiSeconds,
+        tags: ["kpi:pro"],
+        load: () => getProDashboard(salonId, role)
+      });
+      reply.header("x-cache", cacheStatus);
+      ok(reply, value);
     } catch (e) { handleError(e, reply); }
   }
 
@@ -429,6 +438,7 @@ export class ProController {
           });
         }
       });
+      await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
       const [salon, owner, settings] = await Promise.all([
         prisma.salon.findUnique({
           where: { id: salonId },
@@ -507,6 +517,7 @@ export class ProController {
       const service = await prisma.service.create({
         data: { salonId, displayOrder: count, ...body }
       });
+      await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
       ok(reply, { id: service.id, name: service.name, category: service.category, durationMinutes: service.durationMinutes, priceXof: service.priceXof, depositMode: service.depositMode, depositAmountXof: service.depositAmountXof, depositPercent: service.depositPercent, isActive: service.isActive, displayOrder: service.displayOrder }, 201);
     } catch (e) { handleError(e, reply); }
   }
@@ -535,6 +546,7 @@ export class ProController {
         fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
       }
       const service = await prisma.service.update({ where: { id: params.serviceId }, data: body });
+      await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
       ok(reply, { id: service.id, name: service.name, category: service.category, durationMinutes: service.durationMinutes, priceXof: service.priceXof, depositMode: service.depositMode, depositAmountXof: service.depositAmountXof, depositPercent: service.depositPercent, isActive: service.isActive, displayOrder: service.displayOrder });
     } catch (e) { handleError(e, reply); }
   }
@@ -547,6 +559,7 @@ export class ProController {
       const existing = await prisma.service.findFirst({ where: { id: params.serviceId, salonId } });
       if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
       await prisma.service.update({ where: { id: params.serviceId }, data: { isActive: false } });
+      await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
       ok(reply, { deleted: true });
     } catch (e) { handleError(e, reply); }
   }
@@ -914,15 +927,17 @@ export class ProController {
   }
 
   async rejectBooking(request: FastifyRequest, reply: FastifyReply) {
-    const { salonId } = await ensurePro(request).catch(() => ({ salonId: "" }));
     await this.transitionBooking(request, reply, ["pending", "confirmed"], "cancelled", "rejected", async (bookingId, tx) => {
       const payment = await tx.payment.findFirst({ where: { bookingId, status: { in: ["authorized", "succeeded"] } } });
       if (payment) {
-        await tx.job.create({
-          data: { queue: "payments", type: "refund_reconciliation", payloadJson: JSON.stringify({ paymentId: payment.id, bookingId }), status: "pending" }
+        await enqueueJob({
+          type: "refund_reconciliation",
+          payload: { paymentId: payment.id, bookingId },
+          dbClient: tx
         });
       }
     });
+    await invalidateCacheTags(["kpi:pro", "kpi:admin"]);
   }
 
   async startBooking(request: FastifyRequest, reply: FastifyReply) {
@@ -931,10 +946,9 @@ export class ProController {
 
   async completeBooking(request: FastifyRequest, reply: FastifyReply) {
     await this.transitionBooking(request, reply, ["in_progress"], "completed", "completed", async (bookingId, tx) => {
-      await tx.job.create({
-        data: { queue: "payments", type: "deposit_settlement", payloadJson: JSON.stringify({ bookingId }), status: "pending" }
-      });
+      await enqueueJob({ type: "deposit_settlement", payload: { bookingId }, dbClient: tx });
     });
+    await invalidateCacheTags(["kpi:pro", "kpi:admin"]);
   }
 
   async createManualBooking(request: FastifyRequest, reply: FastifyReply) {
@@ -1248,15 +1262,13 @@ export class ProController {
             })
           }
         });
-        await tx.job.create({
-          data: {
-            queue: "payments",
-            type: "deposit_settlement",
-            payloadJson: JSON.stringify({ bookingId: booking.id }),
-            status: "pending"
-          }
+        await enqueueJob({
+          type: "deposit_settlement",
+          payload: { bookingId: booking.id },
+          dbClient: tx
         });
       });
+      await invalidateCacheTags(["kpi:pro", "kpi:admin"]);
 
       ok(reply, {
         completed: true,
@@ -1296,6 +1308,7 @@ export class ProController {
       const review = await prisma.review.findFirst({ where: { id: params.reviewId, salonId } });
       if (!review) { fail(reply, 404, "review_not_found", "Avis introuvable."); return; }
       await prisma.review.update({ where: { id: params.reviewId }, data: { responseText: body.responseText, responseByUserId: userId } });
+      await invalidateCacheTags([`catalog:reviews:${salonId}`, "kpi:pro", "kpi:admin"]);
       ok(reply, { updated: true });
     } catch (e) { handleError(e, reply); }
   }
@@ -1313,7 +1326,14 @@ export class ProController {
       }
       const q = request.query as { period?: string };
       const period = (["7d", "30d", "90d"].includes(q.period ?? "") ? q.period : "30d") as "7d" | "30d" | "90d";
-      ok(reply, await getProAnalytics(salonId, period));
+      const { value, cacheStatus } = await getOrSetCachedJson({
+        key: `kpi:pro:analytics:${salonId}:${period}`,
+        ttlSeconds: config.cacheTtlKpiSeconds,
+        tags: ["kpi:pro"],
+        load: () => getProAnalytics(salonId, period)
+      });
+      reply.header("x-cache", cacheStatus);
+      ok(reply, value);
     } catch (e) { handleError(e, reply); }
   }
 
