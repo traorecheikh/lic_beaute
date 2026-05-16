@@ -162,7 +162,7 @@ const dropdownItems = [
   { label: "Équipe", to: "/pro/salon/team", icon: UserGroupIcon, ownerOnly: true },
   { label: "Horaires", to: "/pro/salon/hours", icon: ClockIcon, ownerOnly: true },
   { label: "Abonnement", to: "/pro/subscription", icon: CreditCardIcon, ownerOnly: true },
-  { label: "Mon Compte", to: "/pro/dashboard", icon: UserIcon },
+  { label: "Mon Compte", to: "/pro/account", icon: UserIcon },
 ];
 
 const userInitials = computed(() => {

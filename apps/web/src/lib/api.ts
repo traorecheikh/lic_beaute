@@ -323,3 +323,11 @@ export async function deleteRequiredDocument(token: string, id: string) {
     headers: authHeaders(token)
   });
 }
+
+export async function changePassword(token: string, currentPassword: string, newPassword: string) {
+  return request<CurrentUser>("/api/v1/me", {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify({ currentPassword, newPassword })
+  });
+}

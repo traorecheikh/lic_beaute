@@ -15,6 +15,7 @@ import {
 import { createOtpAdapter, getR2Adapter, getStorageAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
+import { sendEmail } from "../../lib/email.js";
 import { fail, ok } from "../../lib/http.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
@@ -541,7 +542,7 @@ export class AuthController {
           fail(reply, 422, "password_fields_required", "Le mot de passe actuel et le nouveau mot de passe sont requis.");
           return;
         }
-        const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { passwordHash: true } });
+        const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { passwordHash: true, email: true, fullName: true } });
         if (!user?.passwordHash) {
           fail(reply, 422, "no_password_set", "Aucun mot de passe défini pour ce compte.");
           return;
@@ -555,6 +556,13 @@ export class AuthController {
           where: { id: session.sub },
           data: { passwordHash: await argon2.hash(body.newPassword) }
         });
+        if (user.email) {
+          void sendEmail({
+            to: user.email,
+            subject: "Votre mot de passe a été modifié — Beauté Avenue",
+            text: `Bonjour ${user.fullName ?? ""},\n\nVotre mot de passe a bien été modifié. Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.\n\n— Beauté Avenue`
+          });
+        }
       }
 
       await prisma.$transaction(async (tx) => {

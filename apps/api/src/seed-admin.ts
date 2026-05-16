@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client.js";
-import bcrypt from "bcrypt";
+import argon2 from "argon2";
 
 const adapter = new PrismaPg({
   connectionString:
@@ -12,22 +12,26 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const email = "admin@beauteavenue.local";
-  const password = "supersecure";
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const existing = await prisma.user.findFirst({ where: { role: "platform_admin" } });
+  if (existing) {
+    console.log("[seed-admin] platform_admin already exists:", existing.email, "— skipping.");
+    return;
+  }
 
-  const admin = await prisma.user.upsert({
-    where: { email },
-    update: { passwordHash: hashedPassword },
-    create: {
+  const email = process.env.ADMIN_EMAIL ?? "admin@beauteavenue.local";
+  const password = process.env.ADMIN_PASSWORD ?? "supersecure";
+  const passwordHash = await argon2.hash(password);
+
+  const admin = await prisma.user.create({
+    data: {
       fullName: "Chef de Plateforme",
       email,
-      passwordHash: hashedPassword,
+      passwordHash,
       role: "platform_admin"
     }
   });
 
-  console.log("Admin user created/updated:", admin.email);
+  console.log("[seed-admin] platform_admin created:", admin.email);
 }
 
 main()

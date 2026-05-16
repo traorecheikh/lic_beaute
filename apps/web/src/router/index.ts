@@ -110,6 +110,11 @@ const router = createRouter({
           name: "pro-salon-hours",
           meta: { requiresOwner: true },
           component: () => import("@/views/ProHoursPage.vue")
+        },
+        {
+          path: "account",
+          name: "pro-account",
+          component: () => import("@/views/ProAccountPage.vue")
         }
       ]
     },
@@ -167,6 +172,11 @@ const router = createRouter({
           path: "config",
           name: "admin-config",
           component: () => import("@/views/ConfigurationPage.vue")
+        },
+        {
+          path: "account",
+          name: "admin-account",
+          component: () => import("@/views/AdminAccountPage.vue")
         }
       ]
     },

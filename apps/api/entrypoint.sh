@@ -45,7 +45,10 @@ if [ $MIGRATE_EXIT -ne 0 ]; then
   exit $MIGRATE_EXIT
 fi
 
-echo "[entrypoint] Migrations OK. Starting node dist/index.js..."
+echo "[entrypoint] Migrations OK. Seeding admin..."
+node dist/seed-admin.js 2>&1 || echo "[entrypoint] seed-admin.js not found or failed — continuing"
+
+echo "[entrypoint] Starting node dist/index.js..."
 if [ "$#" -eq 0 ]; then
   node dist/index.js
   APP_EXIT=$?

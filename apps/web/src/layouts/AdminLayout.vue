@@ -99,7 +99,8 @@ import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  UserCircleIcon
 } from "@heroicons/vue/24/outline";
 
 import { useAdminAuthStore } from "@/stores/adminAuth";
@@ -113,7 +114,8 @@ const navItems = [
   { label: "Salons",         to: "/admin/salons",         icon: BuildingStorefrontIcon },
   { label: "Abonnements",    to: "/admin/subscriptions",  icon: CreditCardIcon },
   { label: "Audit log",      to: "/admin/audit",          icon: ClipboardDocumentListIcon },
-  { label: "Configuration",  to: "/admin/config",         icon: Cog6ToothIcon }
+  { label: "Configuration",  to: "/admin/config",         icon: Cog6ToothIcon },
+  { label: "Compte",         to: "/admin/account",        icon: UserCircleIcon }
 ] as const;
 
 const userInitials = computed(() => {
