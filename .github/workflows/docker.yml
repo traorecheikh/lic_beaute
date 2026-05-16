@@ -56,3 +56,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Trigger Coolify redeploy
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          curl -fsSL -X GET \
+            "http://159.65.122.15:8000/api/v1/deploy?uuid=h255qm4nj3i832xhkls5270z&force=false" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
