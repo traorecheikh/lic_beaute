@@ -1877,6 +1877,10 @@
           "id": {
             "type": "string"
           },
+          "subscriptionId": {
+            "type": "string",
+            "nullable": true
+          },
           "salonName": {
             "type": "string"
           },
@@ -2039,6 +2043,7 @@
         },
         "required": [
           "id",
+          "subscriptionId",
           "salonName",
           "category",
           "city",
@@ -9659,6 +9664,10 @@
                     "id": {
                       "type": "string"
                     },
+                    "subscriptionId": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "salonName": {
                       "type": "string"
                     },
@@ -9825,6 +9834,7 @@
                   },
                   "required": [
                     "id",
+                    "subscriptionId",
                     "salonName",
                     "category",
                     "city",

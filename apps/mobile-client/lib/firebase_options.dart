@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'beauteavenue-915fa.firebasestorage.app',
     iosBundleId: 'sn.lic.beauteavenu',
   );
+
 }

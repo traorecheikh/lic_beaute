@@ -78,6 +78,7 @@ export const adminSalonServiceSnapshotSchema = z.object({
 
 export const adminSalonDetailSchema = z.object({
   id: z.string(),
+  subscriptionId: z.string().nullable(),
   salonName: z.string(),
   category: z.string(),
   city: z.string(),

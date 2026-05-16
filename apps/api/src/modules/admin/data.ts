@@ -262,7 +262,8 @@ export async function getPendingSalonDetail(salonId: string): Promise<AdminSalon
       staffMembers: { where: { role: "salon_owner" } },
       services: true,
       documents: true,
-      gallery: { orderBy: { position: "asc" } }
+      gallery: { orderBy: { position: "asc" } },
+      subscription: { select: { id: true } }
     }
   });
 
@@ -272,6 +273,7 @@ export async function getPendingSalonDetail(salonId: string): Promise<AdminSalon
 
   return {
     id: salon.id,
+    subscriptionId: salon.subscription?.id ?? null,
     salonName: salon.name,
     category: salon.category,
     city: salon.city,
