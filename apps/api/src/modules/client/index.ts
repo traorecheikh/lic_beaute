@@ -180,7 +180,7 @@ export class ClientAccountController {
           return tx.clientPaymentMethod.create({
             data: {
             userId: session.sub,
-            provider: toDbProvider(body.provider) ?? "intech",
+            provider: toDbProvider(body.provider),
             phoneNumber: normalizedPhone,
               label: body.label ?? null,
               isDefault: hasDefault === 0,

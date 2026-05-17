@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeAvailableSlots } from "./availability.js";
+import { computeAvailableSlots, fetchAndComputeAvailableSlots } from "./availability.js";
 
 const baseHours = { isOpen: true, opensAt: "09:00", closesAt: "17:00" };
 const service30min = { durationMinutes: 30 };
@@ -88,5 +88,123 @@ describe("computeAvailableSlots", () => {
       employees: [{ id: "emp-1", schedulingEnabled: true }]
     });
     expect(slots.every((s) => s.employeeId === "emp-1")).toBe(true);
+  });
+
+  it("returns empty when service duration exceeds open window", () => {
+    const slots = computeAvailableSlots({
+      hours: { isOpen: true, opensAt: "09:00", closesAt: "09:15" },
+      service: { durationMinutes: 30 },
+      date,
+      blockedSlots: [],
+      existingBookings: [],
+      employees: []
+    });
+    expect(slots).toEqual([]);
+  });
+
+  it("blocks unassigned booking when no requested employee", () => {
+    const slots = computeAvailableSlots({
+      hours: { isOpen: true, opensAt: "09:00", closesAt: "10:00" },
+      service: { durationMinutes: 30 },
+      date,
+      blockedSlots: [],
+      existingBookings: [{
+        startsAt: new Date("2026-05-01T09:00:00"),
+        endsAt: new Date("2026-05-01T09:30:00"),
+        employeeId: null
+      }],
+      employees: [{ id: "emp-1", schedulingEnabled: true }]
+    });
+    expect(slots.some((s) => s.startsAt.includes("09:00"))).toBe(false);
+  });
+
+  it("respects requestedEmployeeId and employee blocked slots", () => {
+    const slots = computeAvailableSlots({
+      hours: { isOpen: true, opensAt: "09:00", closesAt: "10:00" },
+      service: { durationMinutes: 30 },
+      date,
+      blockedSlots: [{
+        startsAt: new Date("2026-05-01T09:00:00"),
+        endsAt: new Date("2026-05-01T09:45:00"),
+        scope: "employee",
+        employeeId: "emp-1"
+      }],
+      existingBookings: [],
+      employees: [{ id: "emp-1", schedulingEnabled: true }, { id: "emp-2", schedulingEnabled: false }],
+      requestedEmployeeId: "emp-1"
+    });
+    expect(slots.every((s) => s.employeeId === "emp-1")).toBe(true);
+    expect(slots.some((s) => s.startsAt.includes("09:00"))).toBe(false);
+  });
+
+  it("excludes employee when same employee is already booked on slot overlap", () => {
+    const slots = computeAvailableSlots({
+      hours: { isOpen: true, opensAt: "09:00", closesAt: "10:00" },
+      service: { durationMinutes: 30 },
+      date,
+      blockedSlots: [],
+      existingBookings: [{
+        startsAt: new Date("2026-05-01T09:00:00"),
+        endsAt: new Date("2026-05-01T09:30:00"),
+        employeeId: "emp-1"
+      }],
+      employees: [{ id: "emp-1", schedulingEnabled: true }]
+    });
+    expect(slots.some((s) => s.startsAt.includes("09:00"))).toBe(false);
+  });
+
+  it("fetchAndComputeAvailableSlots maps prisma data and excludes booking id", async () => {
+    const prisma = {
+      salonHours: { findUnique: async () => ({ isOpen: true, opensAt: "09:00", closesAt: "10:00" }) },
+      blockedSlot: { findMany: async () => [] },
+      booking: { findMany: async () => [] },
+      employee: { findMany: async () => [] }
+    } as never;
+    const slots = await fetchAndComputeAvailableSlots(prisma, {
+      salonId: "s1",
+      date: new Date("2026-05-01"),
+      durationMinutes: 30,
+      excludeBookingId: "b1",
+      slotIntervalMinutes: 30
+    });
+    expect(slots.length).toBeGreaterThan(0);
+    expect(slots[0].employeeId).toBeNull();
+  });
+
+  it("fetchAndComputeAvailableSlots maps closed salon hours and omits exclude/id/interval options", async () => {
+    const prisma = {
+      salonHours: { findUnique: async () => null },
+      blockedSlot: { findMany: async () => [] },
+      booking: { findMany: async () => [] },
+      employee: { findMany: async () => [{ id: "emp-1", schedulingEnabled: true }] }
+    } as never;
+    const slots = await fetchAndComputeAvailableSlots(prisma, {
+      salonId: "s1",
+      date: new Date("2026-05-01"),
+      durationMinutes: 30
+    });
+    expect(slots).toEqual([]);
+  });
+
+  it("fetchAndComputeAvailableSlots maps blocked-slot scope fields", async () => {
+    const prisma = {
+      salonHours: { findUnique: async () => ({ isOpen: true, opensAt: "09:00", closesAt: "10:00" }) },
+      blockedSlot: {
+        findMany: async () => [{
+          startsAt: new Date("2026-05-01T09:00:00"),
+          endsAt: new Date("2026-05-01T09:30:00"),
+          scope: "salon",
+          employeeId: null
+        }]
+      },
+      booking: { findMany: async () => [] },
+      employee: { findMany: async () => [] }
+    } as never;
+    const slots = await fetchAndComputeAvailableSlots(prisma, {
+      salonId: "s1",
+      date: new Date("2026-05-01"),
+      durationMinutes: 30
+    });
+    expect(slots.every((s) => !s.startsAt.includes("09:00"))).toBe(true);
   });
 });

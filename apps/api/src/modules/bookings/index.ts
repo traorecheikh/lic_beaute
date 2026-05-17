@@ -186,7 +186,7 @@ export class BookingController {
           payment = await tx.payment.create({
             data: {
               bookingId: booking.id,
-              provider: toDbProvider(body.provider ?? "intech") ?? "intech",
+              provider: toDbProvider(body.provider ?? "intech"),
               status: "pending",
               amountXof: depositAmountXof,
               idempotencyKey: `booking-${booking.id}-deposit`

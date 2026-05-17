@@ -134,4 +134,26 @@ describe("AuthController OTP persistence", () => {
       "Code OTP invalide ou expiré."
     );
   });
+
+  it("creates client account on OTP verify when user is missing", async () => {
+    const phone = "+221770000004";
+    const code = "123456";
+    const codeHash = createHash("sha256")
+      .update(`${phone}:${code}:dev-access-secret`)
+      .digest("hex");
+    mocks.prisma.otpChallenge.findUnique.mockResolvedValue({
+      id: "otp_2",
+      phone: createHash("sha256").update(phone).digest("hex"),
+      codeHash,
+      expiresAt: new Date(Date.now() + 60_000),
+      failedAttempts: 0,
+      createdAt: new Date()
+    });
+    mocks.prisma.user.findUnique.mockResolvedValue(null);
+    mocks.prisma.user.create.mockResolvedValue({ id: "client_new", role: "client", phone });
+
+    await controller.verifyOtp({ body: { phone, code }, headers: { "user-agent": "test-agent/1.0" } } as never, {} as never);
+    expect(mocks.prisma.user.create).toHaveBeenCalled();
+    expect(mocks.ok).toHaveBeenCalled();
+  });
 });

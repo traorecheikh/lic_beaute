@@ -70,9 +70,7 @@ export async function getProAnalytics(
 
   // Approximate occupancy: assume 8-hour workday, 15-min slots
   const totalAvailableSlots = days * 8 * 4;
-  const occupancyPercent = totalAvailableSlots > 0
-    ? Math.min(100, Math.round((completedBookings / totalAvailableSlots) * 100))
-    : 0;
+  const occupancyPercent = Math.min(100, Math.round((completedBookings / totalAvailableSlots) * 100));
 
   return {
     period,

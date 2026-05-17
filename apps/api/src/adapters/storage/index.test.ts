@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createReadStream, writeFileSync } from "node:fs";
+import { Readable } from "node:stream";
 
 describe("NoopStorageAdapter", () => {
   const adapter = new NoopStorageAdapter();
@@ -15,9 +16,9 @@ describe("NoopStorageAdapter", () => {
   });
 
   it("store returns consumed bytes for stream input", async () => {
-    const buf = Buffer.from("stream data");
-    const size = await adapter.store("test/stream.txt", buf);
-    expect(size).toBe(buf.length);
+    const stream = Readable.from(["stream ", "data"]);
+    const size = await adapter.store("test/stream.txt", stream);
+    expect(size).toBe("stream data".length);
   });
 
   it("retrieve returns null", async () => {

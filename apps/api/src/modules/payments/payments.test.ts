@@ -55,8 +55,9 @@ const mocks = vi.hoisted(() => {
   const ok = vi.fn();
   const fail = vi.fn();
   const loggerError = vi.fn();
+  const loggerWarn = vi.fn();
 
-  return { adapter, tx, prisma, requireRole, ok, fail, loggerError };
+  return { adapter, tx, prisma, requireRole, ok, fail, loggerError, loggerWarn };
 });
 
 vi.mock("../../adapters/index.js", () => ({
@@ -90,7 +91,8 @@ vi.mock("../../lib/http.js", () => ({
 
 vi.mock("../../lib/logger.js", () => ({
   logger: {
-    error: mocks.loggerError
+    error: mocks.loggerError,
+    warn: mocks.loggerWarn
   }
 }));
 
@@ -319,6 +321,15 @@ describe("PaymentController", () => {
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 401, "invalid_signature", "Signature invalide.");
   });
 
+  it("rejects webhook payload when parser throws", async () => {
+    mocks.adapter.verifyWebhookSignature.mockReturnValue(true);
+    mocks.adapter.parseWebhook.mockImplementation(() => {
+      throw new Error("bad payload");
+    });
+    await controller.webhookIntech({ body: { any: "payload" }, headers: {} } as never, {} as never);
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 400, "invalid_payload", expect.any(String));
+  });
+
   // --- Subscription charge webhook tests (A5) ---
 
   it("processes subscription charge webhook and creates invoice on succeeded", async () => {
@@ -403,6 +414,29 @@ describe("PaymentController", () => {
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
 
+  it("rejects subscription charge callback when amount mismatches expected", async () => {
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "SUB_REF_MISMATCH",
+      status: "succeeded",
+      amountXof: 5001,
+      metadata: { paymentId: "subcharge_2" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue(null);
+    mocks.prisma.payment.findFirst.mockResolvedValue(null);
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "subcharge_2",
+      subscriptionId: "sub_2",
+      amountXof: 1000,
+      status: "pending",
+      chargeType: "upgrade",
+      providerTxId: null,
+      billingInvoiceId: null,
+      subscription: { salonId: "salon_2", tier: "standard" }
+    });
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "amount_mismatch", expect.any(String));
+  });
+
   it("returns received:true when subscription charge not found", async () => {
     mocks.adapter.parseWebhook.mockReturnValue({
       providerRef: "UNKNOWN",
@@ -446,5 +480,233 @@ describe("PaymentController", () => {
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
+  });
+
+  it("maps refund adapter failures to internal_error", async () => {
+    mocks.requireRole.mockReturnValue({ sub: "owner_1", role: "salon_owner" });
+    mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "salon_1" });
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_1",
+      bookingId: "book_1",
+      amountXof: 12000,
+      status: "succeeded",
+      provider: "intech",
+      providerTxId: "REF_123",
+      webhookSignature: "tok_123",
+      createdAt: new Date("2026-05-05T10:00:00.000Z"),
+      booking: { clientId: "client_1", salonId: "salon_1" }
+    });
+    mocks.prisma.payment.updateMany.mockResolvedValue({ count: 1 });
+    mocks.adapter.requestRefund.mockRejectedValue(new Error("provider down"));
+    await controller.refund({ params: { paymentId: "pay_1" } } as never, {} as never);
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", expect.any(String));
+  });
+
+  it("initiate stores null webhookSignature when redirect URL is invalid and no provider token", async () => {
+    mocks.prisma.payment.findFirst.mockResolvedValue({
+      id: "pay_bad_url",
+      bookingId: "book_1",
+      amountXof: 9000,
+      status: "pending",
+      idempotencyKey: "idem-1",
+      booking: { clientId: "client_1" }
+    });
+    mocks.prisma.user.findUnique.mockResolvedValueOnce({ phone: "771234567" });
+    mocks.adapter.initiateDeposit.mockResolvedValue({
+      providerRef: "REF_BAD",
+      providerToken: undefined,
+      redirectUrl: "not-a-url",
+      expiresAt: new Date("2030-01-01T00:00:00.000Z")
+    });
+
+    await controller.initiate({
+      body: { bookingId: "book_1", provider: "intech", channel: "wave" }
+    } as never, {} as never);
+
+    expect(mocks.prisma.payment.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "pay_bad_url" },
+      data: expect.objectContaining({ providerTxId: "REF_BAD", webhookSignature: null })
+    }));
+  });
+
+  it("webhook uses first value from array headers", async () => {
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "REF_ARRAY",
+      status: "failed",
+      amountXof: 12000,
+      metadata: { paymentId: "pay_1" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_1",
+      bookingId: "book_1",
+      amountXof: 12000,
+      status: "pending",
+      booking: { id: "book_1", clientId: "client_1" }
+    });
+
+    await controller.webhookIntech({
+      body: { ok: true },
+      headers: { "hmac-signature": ["sig1", "sig2"], timestamp: ["123"] }
+    } as never, {} as never);
+
+    expect(mocks.adapter.verifyWebhookSignature).toHaveBeenCalledWith(expect.objectContaining({
+      signature: "sig1",
+      timestamp: "123"
+    }));
+    expect(mocks.tx.booking.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: { depositPaymentStatus: "failed" }
+    }));
+  });
+
+  it("reconcile maps unexpected provider errors to internal_error", async () => {
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_1",
+      bookingId: "book_1",
+      amountXof: 12000,
+      status: "pending",
+      provider: "intech",
+      providerTxId: "REF_123",
+      webhookSignature: "tok_123",
+      createdAt: new Date("2026-05-05T10:00:00.000Z"),
+      booking: { id: "book_1", clientId: "client_1" }
+    });
+    mocks.adapter.fetchPaymentStatus.mockRejectedValue(new Error("provider-timeout"));
+
+    await controller.reconcile({ params: { paymentId: "pay_1" } } as never, {} as never);
+
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", "Erreur interne.");
+  });
+
+  it("rejects webhook metadata binding when providerRef mismatches payment and subscription charge", async () => {
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "REF_NEW",
+      status: "succeeded",
+      amountXof: 5000,
+      metadata: { paymentId: "same-id", externalTransactionId: "ext_1" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "same-id",
+      bookingId: "book_1",
+      amountXof: 5000,
+      status: "pending",
+      providerTxId: "REF_OLD",
+      booking: { id: "book_1", clientId: "client_1" }
+    });
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "same-id",
+      subscriptionId: "sub_1",
+      amountXof: 5000,
+      status: "pending",
+      chargeType: "upgrade",
+      providerTxId: "REF_OLD",
+      billingInvoiceId: null,
+      subscription: { salonId: "salon_1", tier: "standard" }
+    });
+
+    await controller.webhookIntech({
+      body: { ok: true },
+      headers: { "hmac-signature": "sig1", timestamp: "123" }
+    } as never, {} as never);
+
+    expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("webhook succeeded without auto-confirm when booking is not pending marketplace", async () => {
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "REF_NO_AUTO",
+      status: "succeeded",
+      amountXof: 12000,
+      metadata: { paymentId: "pay_no_auto" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_no_auto",
+      bookingId: "book_no_auto",
+      amountXof: 12000,
+      status: "pending",
+      booking: { id: "book_no_auto", clientId: "client_1" }
+    });
+    mocks.tx.booking.findUnique.mockResolvedValue({ status: "confirmed", source: "manual" });
+
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+
+    expect(mocks.tx.booking.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: { depositPaymentStatus: "succeeded" }
+    }));
+  });
+
+  it("webhook succeeded skips held settlement creation when already present", async () => {
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "REF_HELD",
+      status: "succeeded",
+      amountXof: 12000,
+      metadata: { paymentId: "pay_held" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_held",
+      bookingId: "book_held",
+      amountXof: 12000,
+      status: "pending",
+      booking: { id: "book_held", clientId: "client_1" }
+    });
+    mocks.tx.booking.findUnique.mockResolvedValue({ status: "confirmed", source: "manual" });
+    mocks.tx.settlementEvent.findFirst.mockResolvedValueOnce({ id: "existing-held" });
+
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+
+    expect(mocks.tx.settlementEvent.create).not.toHaveBeenCalled();
+  });
+
+  it("subscription renewal extends from current future expiry date", async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "REF_RENEW",
+      status: "succeeded",
+      amountXof: 5000,
+      metadata: { paymentId: "subrenew_1" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue(null);
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "subrenew_1",
+      subscriptionId: "sub_renew",
+      amountXof: 5000,
+      status: "pending",
+      chargeType: "renewal",
+      providerTxId: "REF_RENEW",
+      billingInvoiceId: null,
+      subscription: { salonId: "salon_1", tier: "standard" }
+    });
+    mocks.tx.subscription.findUnique.mockResolvedValue({ salonId: "salon_1", expiresAt: futureExpiry });
+
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+
+    expect(mocks.tx.subscription.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ expiresAt: expect.any(Date) })
+    }));
+  });
+
+  it("subscription upgrade does not sync salon tier when subscription has no salonId", async () => {
+    mocks.adapter.parseWebhook.mockReturnValue({
+      providerRef: "REF_UPGRADE",
+      status: "succeeded",
+      amountXof: 7000,
+      metadata: { paymentId: "subup_1" }
+    });
+    mocks.prisma.payment.findUnique.mockResolvedValue(null);
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "subup_1",
+      subscriptionId: "sub_upgrade",
+      amountXof: 7000,
+      status: "pending",
+      chargeType: "upgrade",
+      providerTxId: "REF_UPGRADE",
+      billingInvoiceId: null,
+      subscription: { salonId: null, tier: "standard" }
+    });
+    mocks.tx.subscription.findUnique.mockResolvedValue({ salonId: null, expiresAt: null });
+
+    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+
+    expect(mocks.tx.salon.update).not.toHaveBeenCalled();
   });
 });

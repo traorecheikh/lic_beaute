@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { extname } from "node:path";
 
 import type { FastifyReply, FastifyRequest } from "fastify";
 
@@ -94,7 +93,7 @@ export class MediaController {
         : (owner?.salonId ?? null);
       const purpose = mediaPurposeSchema.parse(purposeValue);
 
-      const fileExt = mimeToExt(mimeType) || extname(originalFilename) || ".bin";
+      const fileExt = mimeToExt(mimeType);
       const objectKey = `incoming/${randomUUID()}${fileExt}`;
       const ownerType = owner?.salonId ? "salon" : "user";
       const ownerId = owner?.salonId ?? session.sub;
