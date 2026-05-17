@@ -38,6 +38,9 @@ const mocks = vi.hoisted(() => {
       findFirst: vi.fn(),
       update: vi.fn()
     },
+    session: {
+      deleteMany: vi.fn()
+    },
     pushToken: {
       deleteMany: vi.fn()
     },
@@ -202,15 +205,21 @@ describe("ClientAccountController concurrency/error mapping", () => {
 
   it("deletes account and anonymizes PII", async () => {
     mocks.requireRole.mockReturnValue({ sub: "client_1", role: "client" });
+    mocks.prisma.user.update.mockResolvedValue({});
+    mocks.prisma.session.deleteMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.pushToken.deleteMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.clientAddress.deleteMany.mockResolvedValue({ count: 0 });
     mocks.prisma.$transaction.mockResolvedValue(undefined);
 
     const mockReply = { status: vi.fn().mockReturnValue({ send: vi.fn() }) };
     await controller.deleteAccount({} as never, mockReply as never);
 
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.user.update).toHaveBeenCalledWith({
       where: { id: "client_1" },
       data: { fullName: "Deleted User", email: "deleted+client_1@beauteavenue.local", phone: null }
     });
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({ where: { userId: "client_1" } });
     expect(mocks.prisma.pushToken.deleteMany).toHaveBeenCalledWith({ where: { userId: "client_1" } });
     expect(mocks.prisma.clientAddress.deleteMany).toHaveBeenCalledWith({ where: { userId: "client_1" } });
     expect(mockReply.status).toHaveBeenCalledWith(204);
