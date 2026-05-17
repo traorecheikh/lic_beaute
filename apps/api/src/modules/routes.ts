@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import type { FastifyInstance } from "fastify";
 
 import { config } from "../config.js";
@@ -101,9 +102,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
       for await (const chunk of payload) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string));
       const raw = Buffer.concat(chunks);
       (request as typeof request & { rawBody: string }).rawBody = raw.toString("utf-8");
-      const { Readable } = await import("node:stream");
-      const stream = Readable.from(raw) as typeof payload;
-      return stream;
+      return Readable.from(raw) as typeof payload;
     }
   }, (req, rep) => payments.webhookIntech(req, rep));
   app.post("/api/v1/payments/:paymentId/refund", (req, rep) => payments.refund(req, rep));
