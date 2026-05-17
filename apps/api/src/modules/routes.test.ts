@@ -2,7 +2,7 @@ import { Readable } from "node:stream";
 
 import { describe, expect, it, vi } from "vitest";
 
-type Route = { method: string; path: string; opts?: unknown; handler?: (...args: never[]) => unknown };
+type Route = { method: string; path: string; opts?: unknown; handler?: (...args: any[]) => unknown };
 
 function makeApp() {
   const routes: Route[] = [];
@@ -10,11 +10,11 @@ function makeApp() {
     app: {
       redisEnabled: true,
       get: (path: string, optsOrHandler: unknown, maybeHandler?: Route["handler"]) => {
-        if (typeof optsOrHandler === "function") routes.push({ method: "GET", path, handler: optsOrHandler });
+        if (typeof optsOrHandler === "function") routes.push({ method: "GET", path, handler: optsOrHandler as Route["handler"] });
         else routes.push({ method: "GET", path, opts: optsOrHandler, handler: maybeHandler });
       },
       post: (path: string, optsOrHandler: unknown, maybeHandler?: Route["handler"]) => {
-        if (typeof optsOrHandler === "function") routes.push({ method: "POST", path, handler: optsOrHandler });
+        if (typeof optsOrHandler === "function") routes.push({ method: "POST", path, handler: optsOrHandler as Route["handler"] });
         else routes.push({ method: "POST", path, opts: optsOrHandler, handler: maybeHandler });
       },
       patch: (path: string, handler: Route["handler"]) => routes.push({ method: "PATCH", path, handler }),

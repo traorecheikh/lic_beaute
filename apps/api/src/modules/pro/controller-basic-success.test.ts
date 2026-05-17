@@ -160,7 +160,14 @@ describe("ProController basic success", () => {
     await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, rep);
     await c.listPayouts({} as never, rep);
     await c.listInvoices({} as never, rep);
-    await c.downloadInvoicePdf({ params: { invoiceId: "i1" } } as never, { ...rep, type: vi.fn(() => ({ header: vi.fn(() => ({ send: vi.fn() })) })) } as never);
+    const pdfReply = {
+      header: vi.fn(() => pdfReply),
+      code: vi.fn(() => pdfReply),
+      send: vi.fn(() => pdfReply),
+      status: vi.fn(() => pdfReply),
+      type: vi.fn(() => ({ header: vi.fn(() => ({ send: vi.fn() })) }))
+    } as never;
+    await c.downloadInvoicePdf({ params: { invoiceId: "i1" } } as never, pdfReply);
 
     expect(mocks.ok).toHaveBeenCalled();
   });

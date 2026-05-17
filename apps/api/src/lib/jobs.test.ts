@@ -78,7 +78,7 @@ describe("enqueueJob", () => {
     const dbCreate = vi.fn(async () => ({}));
     const dbFindFirst = vi.fn(async () => null);
     config.redisUrl = "redis://unit-test";
-    config.workerDriver = "polling";
+    config.workerDriver = "db";
     const { enqueueJob } = await import("./jobs.js");
     await enqueueJob({
       type: "notification_retry",

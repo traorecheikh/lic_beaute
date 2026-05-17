@@ -54,7 +54,7 @@ describe("createApp unit", () => {
     expect(fastifyCtor).toHaveBeenCalledTimes(1);
     expect(app.register).toHaveBeenCalled();
     const registerCalls = app.register.mock.calls;
-    const rateLimitCall = registerCalls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.global === true);
+    const rateLimitCall = registerCalls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.global === true) as any[] | undefined;
     expect(rateLimitCall?.[1]?.max).toBe(100);
 
     expect(hooks.onSend).toBeDefined();
@@ -95,7 +95,7 @@ describe("createApp unit", () => {
     expect(created).toBe(app);
     expect(connect).toHaveBeenCalled();
     expect(ping).toHaveBeenCalled();
-    const rateLimitCall = app.register.mock.calls.find((c: any[]) => c[1]?.redis);
+    const rateLimitCall = app.register.mock.calls.find((c: any[]) => c[1]?.redis) as any[] | undefined;
     expect(rateLimitCall?.[1]?.max).toBe(100);
     expect(app.decorate).toHaveBeenCalledWith("redisEnabled", true);
 
@@ -193,7 +193,7 @@ describe("createApp unit", () => {
     await mod.createApp({
       databaseRuntime: { driver: "sqlite", mode: "fallback", attempts: 1, url: null, filePath: null, reason: "test" }
     });
-    const rateLimitCall = app.register.mock.calls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.global === true);
+    const rateLimitCall = app.register.mock.calls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.global === true) as any[] | undefined;
     expect(rateLimitCall?.[1]?.max).toBe(50);
   });
 
@@ -221,7 +221,8 @@ describe("createApp unit", () => {
     expect(getRoutes).toContain("/*");
     const catchAll = app.get.mock.calls.find((c: any[]) => c[0] === "/*")?.[1];
     const sendFile = vi.fn();
-    await catchAll({}, { sendFile });
+    expect(catchAll).toBeTypeOf("function");
+    await catchAll?.({}, { sendFile });
     expect(sendFile).toHaveBeenCalled();
     expect(created).toBe(app);
   });

@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => {
     payment: { aggregate: vi.fn() },
     booking: { count: vi.fn(), groupBy: vi.fn() },
     salon: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
-    subscription: { count: vi.fn(), upsert: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn() },
+    subscription: { count: vi.fn(), upsert: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
     auditLog: { count: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
     user: { findUnique: vi.fn() },
     platformSetting: { create: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },

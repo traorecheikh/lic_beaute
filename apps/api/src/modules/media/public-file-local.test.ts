@@ -57,14 +57,14 @@ describe("MediaController getPublicFile local storage branches", () => {
   });
 
   it("returns 404 when storage object is missing", async () => {
-    const reply = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() } as never;
+    const reply: any = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() };
     mocks.storage.retrieve.mockResolvedValueOnce(null);
     await c.getPublicFile({ params: { mediaId: "m1" } } as never, reply);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 404, "media_not_found", expect.any(String));
   });
 
   it("streams file when storage returns bytes", async () => {
-    const reply = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() } as never;
+    const reply: any = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() };
     const data = Buffer.from("img");
     mocks.storage.retrieve.mockResolvedValueOnce(data);
     await c.getPublicFile({ params: { mediaId: "m1" } } as never, reply);
@@ -73,7 +73,7 @@ describe("MediaController getPublicFile local storage branches", () => {
   });
 
   it("uses objectKey when finalObjectKey is null", async () => {
-    const reply = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() } as never;
+    const reply: any = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() };
     mocks.prisma.mediaAsset.findUnique.mockResolvedValueOnce({
       id: "m2",
       deletedAt: null,
@@ -89,7 +89,7 @@ describe("MediaController getPublicFile local storage branches", () => {
   });
 
   it("maps unexpected retrieve errors to internal_error", async () => {
-    const reply = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() } as never;
+    const reply: any = { type: vi.fn(() => reply), header: vi.fn(() => reply), send: vi.fn(), redirect: vi.fn() };
     mocks.storage.retrieve.mockRejectedValueOnce(new Error("disk down"));
     await c.getPublicFile({ params: { mediaId: "m1" } } as never, reply);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", expect.any(String));

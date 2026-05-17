@@ -134,12 +134,12 @@ describe("Pro forced branches", () => {
 
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "salon_owner" });
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1", phone: "+221770000000" });
-    mocks.prisma.booking = { findFirst: vi.fn().mockResolvedValue({
+    (mocks.prisma as any).booking = { findFirst: vi.fn().mockResolvedValue({
       id: "b1",
       status: "confirmed",
       service: { priceXof: 10000 },
       payments: []
-    }) } as any;
+    }) };
     const settlementCreate = vi.fn();
     mocks.prisma.$transaction.mockImplementation(async (cb: any) => cb({
       booking: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
