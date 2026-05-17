@@ -28,7 +28,8 @@ export class PaymentController {
 
       const payment = await prisma.payment.findFirst({
         where: { bookingId: body.bookingId, status: "pending" },
-        include: { booking: true }
+        include: { booking: true },
+        orderBy: { createdAt: "desc" }
       });
       if (!payment) { fail(reply, 404, "payment_not_found", "Aucun paiement en attente pour cette réservation."); return; }
       if (payment.booking.clientId !== session.sub) { fail(reply, 403, "forbidden", "Accès interdit."); return; }
@@ -371,33 +372,25 @@ export class PaymentController {
 
   private async _claimReconcileWindow(paymentId: string): Promise<{ allowed: true } | { allowed: false; retryAfterMs: number }> {
     const key = `payment:reconcile:last:${paymentId}`;
+    const minInterval = config.paymentReconcileMinIntervalMs;
     const now = Date.now();
 
-    const existing = await prisma.platformSetting.findUnique({
-      where: { key },
-      select: { value: true }
-    });
-
-    const lastTs = existing ? Number(existing.value) : 0;
-    if (Number.isFinite(lastTs) && lastTs > 0) {
-      const elapsed = now - lastTs;
-      if (elapsed < config.paymentReconcileMinIntervalMs) {
-        return { allowed: false, retryAfterMs: config.paymentReconcileMinIntervalMs - elapsed };
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.platformSetting.findUnique({ where: { key }, select: { value: true } });
+      const lastTs = existing ? Number(existing.value) : 0;
+      if (Number.isFinite(lastTs) && lastTs > 0) {
+        const elapsed = now - lastTs;
+        if (elapsed < minInterval) {
+          return { allowed: false as const, retryAfterMs: minInterval - elapsed };
+        }
       }
-    }
-
-    await prisma.platformSetting.upsert({
-      where: { key },
-      create: {
-        group: "payment_runtime",
-        key,
-        value: String(now),
-        description: `Last reconcile timestamp for payment ${paymentId}`
-      },
-      update: { value: String(now) }
+      await tx.platformSetting.upsert({
+        where: { key },
+        create: { group: "payment_runtime", key, value: String(now), description: `Last reconcile timestamp for payment ${paymentId}` },
+        update: { value: String(now) }
+      });
+      return { allowed: true as const };
     });
-
-    return { allowed: true };
   }
 
   private _extractCheckoutToken(redirectUrl: string): string | null {

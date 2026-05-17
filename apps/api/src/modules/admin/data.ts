@@ -585,10 +585,19 @@ export async function overrideSubscription(
       });
     }
 
-    if (input.action === "mark_charge_resolved" && input.metadata?.subscriptionChargeId) {
+    if (input.action === "mark_charge_resolved") {
+      const chargeId = input.metadata?.subscriptionChargeId;
+      const providerRef = input.metadata?.providerReference;
+      if (!chargeId || !providerRef) {
+        throw Object.assign(new Error("mark_charge_resolved requires subscriptionChargeId and providerReference"), { _status: 422 });
+      }
+      const charge = await tx.subscriptionCharge.findUnique({ where: { id: chargeId } });
+      if (!charge || charge.subscriptionId !== subscriptionId) {
+        throw Object.assign(new Error("charge_not_found"), { _status: 422 });
+      }
       await tx.subscriptionCharge.update({
-        where: { id: input.metadata.subscriptionChargeId },
-        data: { status: "succeeded" }
+        where: { id: chargeId },
+        data: { status: "succeeded", providerTxId: providerRef }
       });
     }
 
@@ -604,11 +613,12 @@ export async function overrideSubscription(
     });
 
     if (input.action === "grant_complimentary_premium") {
-      const count = await tx.billingInvoice.count({ where: { subscriptionId } });
+      const year = new Date().getFullYear();
+      const suffix = randomBytes(4).toString("hex").toUpperCase();
       await tx.billingInvoice.create({
         data: {
           subscriptionId,
-          invoiceNumber: `BA-${new Date().getFullYear()}-COMP-${count + 1}`,
+          invoiceNumber: `BA-${year}-COMP-${suffix}`,
           amountXof: 0,
           status: "comped",
           pdfUrl: ""

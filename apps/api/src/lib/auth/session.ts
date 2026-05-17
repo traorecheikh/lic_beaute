@@ -34,6 +34,8 @@ export function verifyRefreshToken(token: string): { sub: string } {
   return { sub: payload.sub };
 }
 
+const VALID_ROLES: readonly AccessTokenRole[] = ["platform_admin", "client", "salon_owner", "salon_staff"];
+
 export function verifyAccessToken(token: string): AccessTokenPayload {
   const payload = jwt.verify(token, config.jwtAccessSecret);
 
@@ -41,7 +43,8 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
     typeof payload !== "object" ||
     payload === null ||
     typeof payload.sub !== "string" ||
-    typeof payload.role !== "string"
+    typeof payload.role !== "string" ||
+    !VALID_ROLES.includes(payload.role as AccessTokenRole)
   ) {
     throw new Error("invalid_access_token");
   }

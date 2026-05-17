@@ -79,17 +79,25 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
         if (existingRefund) return;
 
         // Atomically claim the refund slot: if another worker races here, only one will win
+        const originalStatus = payment.status as "authorized" | "succeeded";
         const claimed = await prisma.payment.updateMany({
           where: { id: payment.id, status: { in: ["authorized", "succeeded"] } },
           data: { status: "refunded" }
         });
         if (claimed.count === 0) return; // lost the race — another worker already refunded
 
-        const refund = await paymentAdapter.requestRefund({
-          providerRef: payment.providerTxId,
-          amountXof: payment.amountXof,
-          reason: "booking_cancelled"
-        });
+        let refund: Awaited<ReturnType<typeof paymentAdapter.requestRefund>>;
+        try {
+          refund = await paymentAdapter.requestRefund({
+            providerRef: payment.providerTxId,
+            amountXof: payment.amountXof,
+            reason: "booking_cancelled"
+          });
+        } catch (providerErr) {
+          // Roll back status so next job retry can re-attempt the external call
+          await prisma.payment.update({ where: { id: payment.id }, data: { status: originalStatus } });
+          throw providerErr;
+        }
         await prisma.booking.update({
           where: { id: payment.bookingId },
           data: { depositPaymentStatus: "refunded" }
@@ -326,7 +334,7 @@ async function ensureRecurringSeedJobs() {
   const pending = await prisma.job.findMany({
     where: {
       type: { in: ["prestige_score_refresh", "subscription_expiry_check", "platform_settings_cleanup"] },
-      status: "pending"
+      status: { in: ["pending", "running"] }
     },
     select: { type: true }
   });

@@ -29,12 +29,13 @@ describe("enqueueJob", () => {
 
   it("always writes DB mirror job", async () => {
     const dbCreate = vi.fn(async () => ({}));
+    const dbFindFirst = vi.fn(async () => null);
     const { enqueueJob } = await import("./jobs.js");
 
     await enqueueJob({
       type: "booking_reminder",
       payload: { bookingId: "b1", window: "1h" },
-      dbClient: { job: { create: dbCreate } }
+      dbClient: { job: { create: dbCreate, findFirst: dbFindFirst } }
     });
 
     expect(dbCreate).toHaveBeenCalledTimes(1);
@@ -43,6 +44,7 @@ describe("enqueueJob", () => {
 
   it("dispatches to BullMQ when enabled", async () => {
     const dbCreate = vi.fn(async () => ({}));
+    const dbFindFirst = vi.fn(async () => null);
     config.redisUrl = "redis://unit-test";
     config.workerDriver = "hybrid";
     const { enqueueJob } = await import("./jobs.js");
@@ -50,7 +52,7 @@ describe("enqueueJob", () => {
     await enqueueJob({
       type: "notification_retry",
       payload: { notificationId: "n1" },
-      dbClient: { job: { create: dbCreate } }
+      dbClient: { job: { create: dbCreate, findFirst: dbFindFirst } }
     });
 
     expect(dbCreate).toHaveBeenCalledTimes(1);

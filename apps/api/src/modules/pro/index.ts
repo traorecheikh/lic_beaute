@@ -1251,7 +1251,13 @@ export class ProController {
       const params = request.params as { bookingId: string };
       const body = proCheckoutCompleteInputSchema.parse(request.body);
 
-      const booking = await prisma.booking.findFirst({ where: { id: params.bookingId, salonId } });
+      const booking = await prisma.booking.findFirst({
+        where: { id: params.bookingId, salonId },
+        include: {
+          service: { select: { priceXof: true } },
+          payments: { where: { status: { in: ["authorized", "succeeded"] } }, take: 1, orderBy: { createdAt: "desc" } }
+        }
+      });
       if (!booking) {
         fail(reply, 404, "booking_not_found", "Réservation introuvable.");
         return;
@@ -1261,15 +1267,18 @@ export class ProController {
         return;
       }
 
-      const subtotalXof = body.lineItems.reduce((sum, item) => sum + item.amountXof, 0);
-      const chargedXof = Math.max(0, subtotalXof - body.discountXof);
+      // Authoritative subtotal from service record, not caller-supplied line items
+      const subtotalXof = booking.service.priceXof;
+      const depositPaidXof = booking.payments[0]?.amountXof ?? 0;
+      const discountXof = Math.min(body.discountXof ?? 0, subtotalXof);
+      const balanceXof = Math.max(0, subtotalXof - depositPaidXof - discountXof);
 
       await prisma.$transaction(async (tx) => {
         const claimed = await tx.booking.updateMany({
           where: { id: booking.id, status: { in: ["confirmed", "in_progress"] } },
           data: { status: "completed" }
         });
-        if (claimed.count === 0) throw Object.assign(new Error("already_completed"), { _http: [409, "already_completed", "Cette réservation a déjà été encaissée."] });
+        if (claimed.count === 0) throw new HttpAuthError(409, "already_completed", "Cette réservation a déjà été encaissée.");
         await tx.bookingEvent.create({
           data: {
             bookingId: booking.id,
@@ -1277,13 +1286,20 @@ export class ProController {
             eventType: "checkout_completed",
             fromStatus: booking.status,
             toStatus: "completed",
-            payloadJson: JSON.stringify({
-              paymentMethod: body.paymentMethod,
-              lineItems: body.lineItems,
-              discountXof: body.discountXof
-            })
+            payloadJson: JSON.stringify({ paymentMethod: body.paymentMethod, discountXof, balanceXof })
           }
         });
+        if (balanceXof > 0) {
+          await tx.settlementEvent.create({
+            data: {
+              bookingId: booking.id,
+              paymentId: null,
+              eventType: "balance_collected",
+              amountXof: balanceXof,
+              providerReference: `manual-${body.paymentMethod ?? "cash"}`
+            }
+          });
+        }
         await enqueueJob({
           type: "deposit_settlement",
           payload: { bookingId: booking.id },
@@ -1292,12 +1308,7 @@ export class ProController {
       });
       await invalidateCacheTags(["kpi:pro", "kpi:admin"]);
 
-      ok(reply, {
-        completed: true,
-        bookingId: booking.id,
-        status: "completed",
-        chargedXof
-      });
+      ok(reply, { completed: true, bookingId: booking.id, status: "completed", subtotalXof, depositPaidXof, discountXof, balanceXof });
     } catch (e) { handleError(e, reply); }
   }
 
@@ -1473,12 +1484,19 @@ export class ProController {
       const billingMonth = new Date().toISOString().slice(0, 7);
       const idempotencyKey = `sub-${sub.id}-${body.action}-${billingMonth}`;
 
-      const charge = await prisma.subscriptionCharge.create({
-        data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "intech", amountXof, idempotencyKey, chargeType: body.action }
+      // Re-use an existing non-failed charge for this idempotency key to avoid zombie charges (#27)
+      const existing = await prisma.subscriptionCharge.findFirst({
+        where: { idempotencyKey, status: { not: "failed" } }
       });
+      if (existing?.providerTxId) {
+        ok(reply, { redirectUrl: null, chargeId: existing.id, resumed: true });
+        return;
+      }
 
+      // Initiate external payment first, then persist (#27 / #28)
+      const tempChargeId = `pending-${Date.now()}`;
       const result = await paymentAdapter.initiateDeposit({
-        paymentId: charge.id,
+        paymentId: existing?.id ?? tempChargeId,
         amountXof,
         description: `Abonnement ${body.action}`,
         callbackUrl: `${config.webOrigin}/pro/subscription/callback`,
@@ -1486,7 +1504,14 @@ export class ProController {
         phone: owner?.phone ?? undefined
       });
 
-      await prisma.subscriptionCharge.update({ where: { id: charge.id }, data: { providerTxId: result.providerRef } });
+      const charge = existing
+        ? await prisma.subscriptionCharge.update({
+            where: { id: existing.id },
+            data: { providerTxId: result.providerRef }
+          })
+        : await prisma.subscriptionCharge.create({
+            data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "intech", amountXof, idempotencyKey, chargeType: body.action, providerTxId: result.providerRef }
+          });
 
       ok(reply, { redirectUrl: result.redirectUrl, chargeId: charge.id });
     } catch (e) { handleError(e, reply); }

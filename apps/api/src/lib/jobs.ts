@@ -34,6 +34,7 @@ const JOB_QUEUE: Record<AppJobType, AppQueueName> = {
 
 type JobDbClient = {
   job: {
+    findFirst: (args: { where: { type: string; payloadJson: string; status: string }; select: { id: true } }) => Promise<{ id: string } | null>;
     create: (args: {
       data: {
         queue: string;
@@ -91,15 +92,21 @@ export async function enqueueJob(input: {
   const queueName = JOB_QUEUE[input.type];
   const payloadJson = JSON.stringify(input.payload);
 
-  await db.job.create({
-    data: {
-      queue: queueName,
-      type: input.type,
-      payloadJson,
-      status: input.status ?? "pending",
-      runAfter
-    }
+  const existingPending = await db.job.findFirst({
+    where: { type: input.type, payloadJson, status: "pending" },
+    select: { id: true }
   });
+  if (!existingPending) {
+    await db.job.create({
+      data: {
+        queue: queueName,
+        type: input.type,
+        payloadJson,
+        status: input.status ?? "pending",
+        runAfter
+      }
+    });
+  }
 
   if (!shouldRunBull()) return;
   const queue = await getQueue(queueName);

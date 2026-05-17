@@ -180,7 +180,8 @@ export const adminSubscriptionOverrideSchema = z
     metadata: z
       .object({
         internalTicket: z.string().trim().min(1).optional(),
-        subscriptionChargeId: z.string().trim().min(1).optional()
+        subscriptionChargeId: z.string().trim().min(1).optional(),
+        providerReference: z.string().trim().min(1).optional()
       })
       .partial()
       .optional()

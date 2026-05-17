@@ -70,6 +70,23 @@ export function validateConfig() {
     ) {
       issues.push("DATABASE_URL uses default development credentials");
     }
+    if (config.webOrigin === "*") {
+      issues.push("WEB_ORIGIN must not be '*' in production — CORS would be fully open");
+    }
+    if (!config.webOrigin.startsWith("https://")) {
+      issues.push(`WEB_ORIGIN must start with https:// in production, got: ${config.webOrigin}`);
+    }
+    if (config.paymentDriver === "intech") {
+      if (!config.intechCallbackHmacEnabled) {
+        issues.push("INTECH_CALLBACK_HMAC_ENABLED must be true in production — webhook integrity is disabled");
+      }
+      if (!config.intechApiKey) {
+        issues.push("INTECH_API_KEY is required when PAYMENT_DRIVER=intech");
+      }
+      if (!config.intechHmacSecretKey) {
+        issues.push("INTECH_HMAC_SECRET_KEY is required when PAYMENT_DRIVER=intech");
+      }
+    }
     if (issues.length > 0) {
       throw new Error(
         `Production config validation failed:\n${issues.map((i) => `- ${i}`).join("\n")}`

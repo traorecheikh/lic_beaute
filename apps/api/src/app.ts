@@ -60,7 +60,12 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   await app.register(cookie);
   await app.register(sensible);
   await app.register(helmet, {
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"]
+      }
+    },
     crossOriginEmbedderPolicy: false
   });
   let redisEnabled = false;

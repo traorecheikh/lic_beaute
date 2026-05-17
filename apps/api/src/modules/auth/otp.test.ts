@@ -14,7 +14,9 @@ const mocks = vi.hoisted(() => {
     session: {
       create: vi.fn(),
       findFirst: vi.fn(),
-      delete: vi.fn()
+      delete: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn()
     },
     platformSetting: {
       upsert: vi.fn(),
@@ -62,6 +64,8 @@ describe("AuthController OTP persistence", () => {
     mocks.prisma.user.findUnique.mockResolvedValue(null);
     mocks.prisma.platformSetting.deleteMany.mockResolvedValue({ count: 1 });
     mocks.prisma.session.create.mockResolvedValue({ id: "sess_1" });
+    mocks.prisma.session.findMany.mockResolvedValue([]);
+    mocks.prisma.session.deleteMany.mockResolvedValue({ count: 0 });
   });
 
   it("persists OTP challenge in database-backed setting store", async () => {

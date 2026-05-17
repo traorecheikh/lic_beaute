@@ -83,6 +83,7 @@ enum SettlementEventType {
   held
   released
   refunded
+  balance_collected
 }
 
 enum ClientContactChannel {

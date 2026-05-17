@@ -31,7 +31,24 @@ const OTP_KEY_PREFIX = "otp:challenge:";
 const OTP_RATE_LIMIT_MAX = 3;
 const OTP_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 3 per 15 min per phone
 const OTP_MAX_ATTEMPTS = 5;
+const MAX_SESSIONS_PER_USER = 10;
 type OtpChallenge = { codeHash: string; expiresAt: number; failedAttempts?: number };
+
+function hashRefreshToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+async function pruneExcessSessions(userId: string): Promise<void> {
+  const sessions = await prisma.session.findMany({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { id: true }
+  });
+  if (sessions.length >= MAX_SESSIONS_PER_USER) {
+    const excess = sessions.slice(0, sessions.length - MAX_SESSIONS_PER_USER + 1);
+    await prisma.session.deleteMany({ where: { id: { in: excess.map((s) => s.id) } } });
+  }
+}
 
 function generateOtpCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -299,10 +316,11 @@ export class AuthController {
       });
 
       const tokens = signSession(result.user.id, "salon_owner");
+      await pruneExcessSessions(result.user.id);
       await prisma.session.create({
         data: {
           userId: result.user.id,
-          refreshToken: tokens.refreshToken,
+          refreshToken: hashRefreshToken(tokens.refreshToken),
           clientType: "web",
           expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
         }
@@ -369,10 +387,11 @@ export class AuthController {
     await prisma.platformSetting.deleteMany({ where: { key: lockoutKey } });
 
     const tokens = signSession(user.id, user.role);
+    await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
         userId: user.id,
-        refreshToken: tokens.refreshToken,
+        refreshToken: hashRefreshToken(tokens.refreshToken),
         clientType: "web",
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
@@ -456,10 +475,11 @@ export class AuthController {
     }
 
     const tokens = signSession(user.id, user.role);
+    await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
         userId: user.id,
-        refreshToken: tokens.refreshToken,
+        refreshToken: hashRefreshToken(tokens.refreshToken),
         clientType: "app",
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
@@ -479,7 +499,7 @@ export class AuthController {
     }
 
     const session = await prisma.session.findFirst({
-      where: { refreshToken: body.refreshToken, userId: payload.sub }
+      where: { refreshToken: hashRefreshToken(body.refreshToken), userId: payload.sub }
     });
     if (!session || session.expiresAt < new Date()) {
       fail(reply, 401, "session_expired", "Session expirée.");
@@ -498,7 +518,7 @@ export class AuthController {
     await prisma.session.create({
       data: {
         userId: user.id,
-        refreshToken: tokens.refreshToken,
+        refreshToken: hashRefreshToken(tokens.refreshToken),
         clientType: session.clientType,
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
@@ -511,12 +531,13 @@ export class AuthController {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
       const body = refreshInputSchema.safeParse(request.body);
       if (body.success) {
+        // Targeted logout: delete only the session matching this refresh token.
         await prisma.session.deleteMany({
-          where: { userId: session.sub, refreshToken: body.data.refreshToken }
+          where: { userId: session.sub, refreshToken: hashRefreshToken(body.data.refreshToken) }
         });
-      } else {
-        await prisma.session.deleteMany({ where: { userId: session.sub } });
       }
+      // If no valid refresh token is provided, do not delete all sessions —
+      // a compromised access token should not be able to evict all other devices.
     } catch {
       // logout is best-effort — always succeed
     }

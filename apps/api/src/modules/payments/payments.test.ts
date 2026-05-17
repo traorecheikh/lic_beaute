@@ -19,7 +19,8 @@ const mocks = vi.hoisted(() => {
     subscriptionCharge: { update: vi.fn() },
     billingInvoice: { create: vi.fn().mockResolvedValue({ id: "inv_new" }) },
     subscription: { update: vi.fn(), findUnique: vi.fn() },
-    salon: { update: vi.fn() }
+    salon: { update: vi.fn() },
+    platformSetting: { findUnique: vi.fn(), upsert: vi.fn() }
   };
 
   const prisma = {
@@ -107,6 +108,8 @@ describe("PaymentController", () => {
     mocks.tx.booking.findUnique.mockResolvedValue({ status: "pending", source: "marketplace" });
     mocks.prisma.platformSetting.findUnique.mockResolvedValue(null);
     mocks.prisma.platformSetting.upsert.mockResolvedValue({ key: "k", value: String(Date.now()) });
+    mocks.tx.platformSetting.findUnique.mockResolvedValue(null);
+    mocks.tx.platformSetting.upsert.mockResolvedValue({ key: "k", value: String(Date.now()) });
   });
 
   it("processes webhook once and creates a single held settlement event", async () => {
@@ -197,8 +200,8 @@ describe("PaymentController", () => {
     await controller.reconcile({ params: { paymentId: "pay_1" } } as never, {} as never);
 
     expect(mocks.adapter.fetchPaymentStatus).toHaveBeenCalledWith({ providerToken: "tok_123" });
-    expect(mocks.prisma.platformSetting.upsert).toHaveBeenCalledTimes(1);
-    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.tx.platformSetting.upsert).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(2);
     expect(mocks.tx.payment.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "pay_1" },
       data: expect.objectContaining({ status: "succeeded" })
@@ -211,7 +214,7 @@ describe("PaymentController", () => {
 
   it("throttles reconcile calls within guard window", async () => {
     const lastTs = Date.now();
-    mocks.prisma.platformSetting.findUnique.mockResolvedValue({ value: String(lastTs) });
+    mocks.tx.platformSetting.findUnique.mockResolvedValue({ value: String(lastTs) });
     mocks.prisma.payment.findUnique.mockResolvedValue({
       id: "pay_1",
       bookingId: "book_1",

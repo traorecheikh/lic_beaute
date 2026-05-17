@@ -150,6 +150,20 @@ export class BookingController {
       const depositAmountXof = calcDepositAmount(service);
 
       const result = await prisma.$transaction(async (tx) => {
+        // Re-check slot availability inside transaction to close TOCTOU window
+        const conflicts = await tx.booking.count({
+          where: {
+            salonId: body.salonId,
+            status: { in: ["pending", "confirmed", "in_progress"] },
+            startsAt: { lt: endsAt },
+            endsAt: { gt: startsAt },
+            ...(body.employeeId ? { employeeId: body.employeeId } : {})
+          }
+        });
+        if (conflicts > 0) {
+          throw new HttpAuthError(422, "slot_unavailable", "Ce créneau n'est plus disponible.");
+        }
+
         const booking = await tx.booking.create({
           data: {
             clientId: session.sub,

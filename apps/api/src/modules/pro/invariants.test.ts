@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => {
     bookingEvent: { create: vi.fn() },
     auditLog: { create: vi.fn() },
     payment: { findFirst: vi.fn() },
-    job: { create: vi.fn() }
+    job: { create: vi.fn(), findFirst: vi.fn() }
   };
 
   const prisma = {

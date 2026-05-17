@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => {
     booking: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     payment: { create: vi.fn() },
     bookingEvent: { create: vi.fn() },
-    job: { updateMany: vi.fn(), create: vi.fn() },
+    job: { updateMany: vi.fn(), create: vi.fn(), findFirst: vi.fn() },
     auditLog: { create: vi.fn() }
   };
 

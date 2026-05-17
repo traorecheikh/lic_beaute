@@ -192,6 +192,11 @@ export class AdminController {
     const token = this.ensureAdmin(request, reply);
     if (!token) return;
     const { key } = request.params as { key: string };
+    const RESERVED_PREFIXES = ["otp:", "auth:", "security:"];
+    if (RESERVED_PREFIXES.some((p) => key.startsWith(p))) {
+      fail(reply, 403, "reserved_key", "Cette clé est réservée au système et ne peut pas être modifiée via l'API.");
+      return;
+    }
     const { value } = updatePlatformSettingInputSchema.parse(request.body);
     const actorName = await this.resolveActorName(token.sub);
     const updated = await updatePlatformSetting(key, value, actorName);
