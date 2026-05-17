@@ -75,7 +75,10 @@ export function validateConfig() {
     if (config.webOrigin === "*") {
       issues.push("WEB_ORIGIN must not be '*' in production — CORS would be fully open");
     }
-    if (!config.webOrigin.startsWith("https://")) {
+    const isStagingOrigin =
+      /\.(sslip\.io|nip\.io)(:\d+)?$/.test(config.webOrigin) ||
+      /^https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?\/?$/.test(config.webOrigin);
+    if (!isStagingOrigin && !config.webOrigin.startsWith("https://")) {
       issues.push(`WEB_ORIGIN must start with https:// in production, got: ${config.webOrigin}`);
     }
     if (config.paymentDriver === "intech") {
