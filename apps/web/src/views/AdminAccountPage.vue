@@ -1,14 +1,34 @@
 <template>
-  <div class="max-w-lg">
-    <h2 class="page-title mb-1">Mon Compte</h2>
-    <p class="row-meta mb-8">{{ auth.currentUser?.email }}</p>
+  <div class="space-y-8">
+    <header class="flex items-end justify-between gap-6">
+      <div>
+        <h2 class="page-title">Mon Compte</h2>
+        <p class="row-meta mt-1">Paramètres de sécurité administrateur.</p>
+      </div>
+    </header>
 
-    <div class="panel-clean p-6">
-      <h3 class="section-label mb-5">Changer le mot de passe</h3>
+    <section class="panel-clean p-6 md:p-8 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-2xl bg-sand flex items-center justify-center border border-outline-variant">
+        <UserCircleIcon class="w-7 h-7 text-cocoa/70" />
+      </div>
+      <div class="min-w-0">
+        <p class="row-primary truncate">{{ auth.currentUser?.fullName ?? "Compte administrateur" }}</p>
+        <p class="row-meta truncate">{{ auth.currentUser?.email ?? "Email non renseigné" }}</p>
+      </div>
+    </section>
 
-      <form @submit.prevent="submit" class="space-y-4">
+    <section class="panel-clean p-6 md:p-8">
+      <div class="flex items-center justify-between gap-4 mb-6">
         <div>
-          <label class="section-label mb-2 block">Mot de passe actuel</label>
+          <h3 class="row-primary">Sécurité</h3>
+          <p class="row-meta mt-1">Modification du mot de passe de connexion.</p>
+        </div>
+        <KeyIcon class="w-5 h-5 text-cocoa/40" />
+      </div>
+
+      <form @submit.prevent="submit" class="space-y-5">
+        <div class="space-y-1.5">
+          <label class="section-label block">Mot de passe actuel</label>
           <input
             v-model="form.currentPassword"
             type="password"
@@ -19,42 +39,47 @@
           />
         </div>
 
-        <div>
-          <label class="section-label mb-2 block">Nouveau mot de passe</label>
-          <input
-            v-model="form.newPassword"
-            type="password"
-            autocomplete="new-password"
-            class="input-shell"
-            placeholder="••••••••"
-            :disabled="loading"
-          />
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="section-label block">Nouveau mot de passe</label>
+            <input
+              v-model="form.newPassword"
+              type="password"
+              autocomplete="new-password"
+              class="input-shell"
+              placeholder="••••••••"
+              :disabled="loading"
+            />
+          </div>
 
-        <div>
-          <label class="section-label mb-2 block">Confirmer le nouveau mot de passe</label>
-          <input
-            v-model="form.confirm"
-            type="password"
-            autocomplete="new-password"
-            class="input-shell"
-            placeholder="••••••••"
-            :disabled="loading"
-          />
+          <div class="space-y-1.5">
+            <label class="section-label block">Confirmation</label>
+            <input
+              v-model="form.confirm"
+              type="password"
+              autocomplete="new-password"
+              class="input-shell"
+              placeholder="••••••••"
+              :disabled="loading"
+            />
+          </div>
         </div>
 
         <p v-if="error" class="text-[11px] font-bold text-error uppercase tracking-wider">{{ error }}</p>
 
-        <button type="submit" class="btn-primary w-full" :disabled="loading">
-          {{ loading ? "Enregistrement…" : "Mettre à jour" }}
-        </button>
+        <div class="pt-2 flex justify-end">
+          <button type="submit" class="btn-primary min-w-[220px]" :disabled="loading">
+            {{ loading ? "Enregistrement…" : "Mettre à jour" }}
+          </button>
+        </div>
       </form>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
+import { KeyIcon, UserCircleIcon } from "@heroicons/vue/24/outline";
 import { toast } from "vue-sonner";
 
 import { changePassword } from "@/lib/api";
