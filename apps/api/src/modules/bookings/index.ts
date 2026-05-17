@@ -35,6 +35,7 @@ async function scheduleReminders(bookingId: string, startsAt: Date) {
       await enqueueJob({
         type: "booking_reminder",
         payload: { bookingId, window: w.label },
+        bookingId,
         runAfter
       });
     }
@@ -294,7 +295,7 @@ export class BookingController {
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "cancelled", fromStatus: booking.status, toStatus: "cancelled" }
         });
         await tx.job.updateMany({
-          where: { type: "booking_reminder", payloadJson: { contains: `"bookingId":"${booking.id}"` }, status: "pending" },
+          where: { type: "booking_reminder", bookingId: booking.id, status: "pending" },
           data: { status: "cancelled" }
         });
 
@@ -302,6 +303,7 @@ export class BookingController {
           await enqueueJob({
             type: "refund_reconciliation",
             payload: { paymentId: booking.payments[0].id, bookingId: booking.id },
+            bookingId: booking.id,
             dbClient: tx
           });
         }
@@ -381,7 +383,7 @@ export class BookingController {
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "rescheduled", payloadJson: JSON.stringify({ newStartsAt: newStart }) }
         });
         await tx.job.updateMany({
-          where: { type: "booking_reminder", payloadJson: { contains: `"bookingId":"${booking.id}"` }, status: "pending" },
+          where: { type: "booking_reminder", bookingId: booking.id, status: "pending" },
           data: { status: "cancelled" }
         });
       });

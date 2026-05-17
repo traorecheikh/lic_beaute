@@ -44,6 +44,15 @@ const mocks = vi.hoisted(() => {
     pushToken: {
       deleteMany: vi.fn()
     },
+    clientProfile: {
+      deleteMany: vi.fn()
+    },
+    clientBenefit: {
+      deleteMany: vi.fn()
+    },
+    booking: {
+      updateMany: vi.fn()
+    },
     clientVoucherRedemption: {
       findUnique: vi.fn(),
       count: vi.fn(),
@@ -209,6 +218,9 @@ describe("ClientAccountController concurrency/error mapping", () => {
     mocks.prisma.session.deleteMany.mockResolvedValue({ count: 0 });
     mocks.prisma.pushToken.deleteMany.mockResolvedValue({ count: 0 });
     mocks.prisma.clientAddress.deleteMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.clientProfile.deleteMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.clientBenefit.deleteMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.booking.updateMany.mockResolvedValue({ count: 0 });
     mocks.prisma.$transaction.mockResolvedValue(undefined);
 
     const mockReply = { status: vi.fn().mockReturnValue({ send: vi.fn() }) };

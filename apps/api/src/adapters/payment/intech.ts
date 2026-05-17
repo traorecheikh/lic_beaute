@@ -115,7 +115,10 @@ export class IntechAdapter implements PaymentAdapter {
         this._toString(txData.redirectUrl),
         this._extractHttpUrl(this._toString(txData.notificationMessage))
       ])
-      ?? `${this.baseOrigin}/payment/callback?status=pending`;
+      ?? null;
+    if (!redirectUrl) {
+      throw new Error(`intech: no redirect URL in provider response for transaction ${providerRef}`);
+    }
 
     return {
       redirectUrl,

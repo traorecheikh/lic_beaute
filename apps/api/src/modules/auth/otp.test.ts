@@ -18,9 +18,16 @@ const mocks = vi.hoisted(() => {
       findMany: vi.fn(),
       deleteMany: vi.fn()
     },
-    platformSetting: {
+    otpChallenge: {
       upsert: vi.fn(),
       findUnique: vi.fn(),
+      deleteMany: vi.fn(),
+      update: vi.fn()
+    },
+    platformSetting: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
       deleteMany: vi.fn()
     },
     salon: { create: vi.fn() },
@@ -62,56 +69,63 @@ describe("AuthController OTP persistence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.user.findUnique.mockResolvedValue(null);
-    mocks.prisma.platformSetting.deleteMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.otpChallenge.upsert.mockResolvedValue({});
+    mocks.prisma.otpChallenge.deleteMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.platformSetting.findUnique.mockResolvedValue(null);
+    mocks.prisma.platformSetting.upsert.mockResolvedValue({});
+    mocks.prisma.platformSetting.update.mockResolvedValue({});
+    mocks.prisma.platformSetting.deleteMany.mockResolvedValue({ count: 0 });
     mocks.prisma.session.create.mockResolvedValue({ id: "sess_1" });
     mocks.prisma.session.findMany.mockResolvedValue([]);
     mocks.prisma.session.deleteMany.mockResolvedValue({ count: 0 });
   });
 
-  it("persists OTP challenge in database-backed setting store", async () => {
-    await controller.requestOtp({ body: { phone: "+221770000001" } } as never, {
+  it("persists OTP challenge in OtpChallenge table", async () => {
+    await controller.requestOtp({ body: { phone: "+221770000001" }, headers: {} } as never, {
       code: vi.fn().mockReturnThis(),
       send: vi.fn()
     } as never);
 
-    expect(mocks.prisma.platformSetting.upsert).toHaveBeenCalled();
-    const upsertArg = mocks.prisma.platformSetting.upsert.mock.calls.at(-1)![0];
-    expect(upsertArg.where.key).toContain("otp:challenge:");
-    const parsed = JSON.parse(upsertArg.create.value as string);
-    expect(parsed).toEqual(
-      expect.objectContaining({
-        codeHash: expect.any(String),
-        expiresAt: expect.any(Number)
-      })
-    );
-    expect(parsed.codeHash).toHaveLength(64);
+    expect(mocks.prisma.otpChallenge.upsert).toHaveBeenCalled();
+    const upsertArg = mocks.prisma.otpChallenge.upsert.mock.calls.at(-1)![0];
+    // phone is hashed (sha256) before storage
+    expect(upsertArg.where.phone).toHaveLength(64);
+    expect(upsertArg.create.codeHash).toHaveLength(64);
+    expect(upsertArg.create.expiresAt).toBeInstanceOf(Date);
+    expect(upsertArg.create.failedAttempts).toBe(0);
     expect(mocks.otpSend).toHaveBeenCalledTimes(1);
   });
 
-  it("verifies OTP challenge from persistent store and clears it", async () => {
+  it("verifies OTP challenge from OtpChallenge table and clears it", async () => {
     const phone = "+221770000002";
     const code = "123456";
+    const hashedPhone = createHash("sha256").update(phone).digest("hex");
     const codeHash = createHash("sha256")
       .update(`${phone}:${code}:dev-access-secret`)
       .digest("hex");
 
-    mocks.prisma.platformSetting.findUnique.mockResolvedValue({
-      value: JSON.stringify({ codeHash, expiresAt: Date.now() + 60_000 })
+    mocks.prisma.otpChallenge.findUnique.mockResolvedValue({
+      id: "otp_1",
+      phone: hashedPhone,
+      codeHash,
+      expiresAt: new Date(Date.now() + 60_000),
+      failedAttempts: 0,
+      createdAt: new Date()
     });
     mocks.prisma.user.findUnique.mockResolvedValue({ id: "client_1", role: "client", phone });
 
-    await controller.verifyOtp({ body: { phone, code } } as never, {} as never);
+    await controller.verifyOtp({ body: { phone, code }, headers: { "user-agent": "test-agent/1.0" } } as never, {} as never);
 
-    expect(mocks.prisma.platformSetting.deleteMany).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.otpChallenge.deleteMany).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.session.create).toHaveBeenCalledTimes(1);
     expect(mocks.ok).toHaveBeenCalledTimes(1);
     expect(mocks.fail).not.toHaveBeenCalled();
   });
 
   it("rejects invalid OTP when no persistent challenge exists", async () => {
-    mocks.prisma.platformSetting.findUnique.mockResolvedValue(null);
+    mocks.prisma.otpChallenge.findUnique.mockResolvedValue(null);
 
-    await controller.verifyOtp({ body: { phone: "+221770000003", code: "000000" } } as never, {} as never);
+    await controller.verifyOtp({ body: { phone: "+221770000003", code: "000000" }, headers: {} } as never, {} as never);
 
     expect(mocks.fail).toHaveBeenCalledWith(
       expect.anything(),

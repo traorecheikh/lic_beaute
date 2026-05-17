@@ -518,13 +518,25 @@ export class ClientAccountController {
     try {
       const session = requireRole(request, ["client"]);
       await prisma.$transaction([
+        // Anonymize PII on the user record itself.
         prisma.user.update({
           where: { id: session.sub },
           data: { fullName: "Deleted User", email: `deleted+${session.sub}@beauteavenue.local`, phone: null }
         }),
+        // Wipe profile (city, avatar, preferences).
+        prisma.clientProfile.deleteMany({ where: { userId: session.sub } }),
+        // Remove all auth material.
         prisma.session.deleteMany({ where: { userId: session.sub } }),
         prisma.pushToken.deleteMany({ where: { userId: session.sub } }),
-        prisma.clientAddress.deleteMany({ where: { userId: session.sub } })
+        // Remove contact data.
+        prisma.clientAddress.deleteMany({ where: { userId: session.sub } }),
+        // Remove loyalty/benefit data not needed post-deletion.
+        prisma.clientBenefit.deleteMany({ where: { userId: session.sub } }),
+        // Clear free-text notes on bookings to remove operator-entered PII.
+        prisma.booking.updateMany({
+          where: { clientId: session.sub },
+          data: { clientNote: null }
+        })
       ]);
       reply.status(204).send();
     } catch (error) {

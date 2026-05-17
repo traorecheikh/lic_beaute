@@ -89,24 +89,30 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
         await redis.quit();
       });
     } catch (err) {
-      app.log.warn(
+      const level = config.nodeEnv === "production" ? "error" : "warn";
+      app.log[level](
         { error: err instanceof Error ? err.message : String(err), redisUrl: config.redisUrl },
-        "Redis unavailable, falling back to in-memory rate limit store"
+        "Redis unavailable — using in-memory rate limiter (reduced capacity, not distributed)"
       );
       redis.disconnect();
+      // Tighter limits for in-memory fallback: not distributed, lower ceiling.
       await app.register(rateLimit, {
         global: true,
-        max: 100,
+        max: 50,
         timeWindow: "1 minute"
       });
     }
   } else {
     await app.register(rateLimit, {
       global: true,
-      max: 100,
+      max: config.nodeEnv === "production" ? 50 : 100,
       timeWindow: "1 minute"
     });
   }
+  // Propagate Fastify's built-in request ID to every response for correlation.
+  app.addHook("onSend", async (request, reply) => {
+    reply.header("x-request-id", request.id);
+  });
   app.decorate("redisEnabled", redisEnabled);
   await app.register(multipart, {
     limits: {

@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import argon2 from "argon2";
 
 import {
@@ -17,6 +17,7 @@ import { formatMoneyXof } from "@beauteavenue/shared-ts";
 
 import { sendEmail } from "../../lib/email.js";
 import { logger } from "../../lib/logger.js";
+import { config } from "../../config.js";
 import { toPublicBillingProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
 
@@ -386,7 +387,8 @@ export async function requestSalonInfo(salonId: string, input: AdminSalonDecisio
 }
 
 export async function createSalon(data: AdminSalonCreateInput, actorName: string) {
-  const temporaryPassword = randomBytes(12).toString("base64url").slice(0, 16);
+  // Placeholder password — never exposed to anyone; owner sets theirs via setup link.
+  const internalPassword = randomBytes(32).toString("hex");
 
   const salon = await prisma.salon.create({
     data: {
@@ -404,7 +406,7 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
           email: data.ownerEmail,
           phone: data.ownerPhone,
           role: "salon_owner",
-          passwordHash: await argon2.hash(temporaryPassword)
+          passwordHash: await argon2.hash(internalPassword)
         }
       }
     }
@@ -414,6 +416,24 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
     data: { salonId: salon.id, tier: "standard", status: "active" }
   });
 
+  // Generate a one-time 72h setup token and store its hash in platformSetting.
+  const owner = await prisma.user.findUnique({ where: { email: data.ownerEmail }, select: { id: true } });
+  const setupLink = await (async () => {
+    if (!owner) return null;
+    const rawToken = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
+    await prisma.platformSetting.create({
+      data: {
+        group: "security",
+        key: `auth:setup:${owner.id}`,
+        value: JSON.stringify({ tokenHash, expiresAt }),
+        description: "Account setup token (single-use)"
+      }
+    });
+    return `${config.webOrigin}/pro/setup-account?token=${rawToken}&email=${encodeURIComponent(data.ownerEmail)}`;
+  })();
+
   await writeAuditLog({
     action: "salon.created",
     summary: `Salon ${salon.name} créé manuellement.`,
@@ -421,17 +441,15 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
     entityId: salon.id,
     actorName,
     severity: "info",
-    // Never include temporaryPassword in audit payload
     payloadJson: JSON.stringify({ name: data.name, ownerEmail: data.ownerEmail, city: data.city }),
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
   });
 
-  // Deliver the temporary password via email — never in the API response body
   await sendEmail({
     to: data.ownerEmail,
-    subject: "Bienvenue sur Beauté Avenue — Vos identifiants de connexion",
-    text: `Bonjour ${data.ownerName},\n\nVotre espace pro a été créé.\nEmail : ${data.ownerEmail}\nMot de passe temporaire : ${temporaryPassword}\n\nVeuillez changer votre mot de passe dès votre première connexion.\n\nL'équipe Beauté Avenue`
-  }).catch((err) => logger.error("createSalon: failed to send credentials email", { err: String(err), ownerEmail: data.ownerEmail }));
+    subject: "Bienvenue sur Beauté Avenue — Activez votre espace pro",
+    text: `Bonjour ${data.ownerName},\n\nVotre espace pro Beauté Avenue a été créé.\n\nActivez votre compte en définissant votre mot de passe via le lien ci-dessous (valable 72h) :\n${setupLink ?? "(lien non disponible — contactez l'administrateur)"}\n\n— L'équipe Beauté Avenue`
+  }).catch((err) => logger.error("createSalon: failed to send setup email", { err: String(err), ownerEmail: data.ownerEmail }));
 
   return await getPendingSalonDetail(salon.id);
 }

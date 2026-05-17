@@ -1,3 +1,4 @@
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -52,6 +53,40 @@ function salonTeamShowPhotosKey(salonId: string) {
 
 function salonTeamShowDescriptionsKey(salonId: string) {
   return `salon:${salonId}:team_show_descriptions`;
+}
+
+const BILLING_ENC_PREFIX = "enc:v1:";
+
+function getBillingKey(): Buffer {
+  const raw = config.billingAccountSecret;
+  if (!raw) {
+    if (config.nodeEnv === "production") {
+      throw new Error("BILLING_ACCOUNT_SECRET must be set in production");
+    }
+    return Buffer.alloc(32, "dev");
+  }
+  return Buffer.from(raw.slice(0, 64), "hex").subarray(0, 32);
+}
+
+function encryptBillingAccount(plaintext: string): string {
+  const key = getBillingKey();
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${BILLING_ENC_PREFIX}${iv.toString("hex")}${tag.toString("hex")}${encrypted.toString("hex")}`;
+}
+
+function decryptBillingAccount(stored: string): string {
+  if (!stored.startsWith(BILLING_ENC_PREFIX)) return stored; // legacy plaintext
+  const hex = stored.slice(BILLING_ENC_PREFIX.length);
+  const key = getBillingKey();
+  const iv = Buffer.from(hex.slice(0, 24), "hex");
+  const tag = Buffer.from(hex.slice(24, 56), "hex");
+  const data = Buffer.from(hex.slice(56), "hex");
+  const decipher = createDecipheriv("aes-256-gcm", key, iv, { authTagLength: 16 });
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8");
 }
 
 function salonBillingProviderKey(salonId: string) {
@@ -1387,7 +1422,8 @@ export class ProController {
       const settingMap = toSettingMap(settings);
       const rawProvider = settingMap[salonBillingProviderKey(salonId)];
       const provider = toPublicBillingProvider(rawProvider ?? sub.billingProvider);
-      const accountNumber = settingMap[salonBillingAccountKey(salonId)];
+      const encryptedAccountNumber = settingMap[salonBillingAccountKey(salonId)];
+      const accountNumber = encryptedAccountNumber ? decryptBillingAccount(encryptedAccountNumber) : null;
       const billingMethod = provider && accountNumber
         ? { provider, accountNumberMasked: maskAccountNumber(accountNumber) }
         : null;
@@ -1442,10 +1478,10 @@ export class ProController {
               create: {
                 group: "salon_billing",
                 key: accountKey,
-                value: body.billingMethod.accountNumber.trim(),
+                value: encryptBillingAccount(body.billingMethod.accountNumber.trim()),
                 description: `Billing account number for salon ${salonId}`
               },
-              update: { value: body.billingMethod.accountNumber.trim() }
+              update: { value: encryptBillingAccount(body.billingMethod.accountNumber.trim()) }
             });
           }
         }

@@ -333,7 +333,11 @@ export class CatalogController {
         category: s.category,
         durationMinutes: s.durationMinutes,
         priceXof: s.priceXof,
-        depositRequiredXof: s.depositMode !== "none" ? (s.depositAmountXof ?? null) : null
+        depositRequiredXof: s.depositMode === "fixed"
+          ? (s.depositAmountXof ?? null)
+          : s.depositMode === "percent" && s.depositPercent
+            ? Math.round((s.depositPercent / 100) * s.priceXof)
+            : null
       }))
     };
     await setCachedJsonWithTags({

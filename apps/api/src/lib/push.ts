@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { config } from "../config.js";
 import { logger } from "./logger.js";
+import { prisma } from "./db/prisma.js";
 
 type FcmServiceAccount = {
   project_id: string;
@@ -124,6 +125,13 @@ export async function sendPush(
     if (!resp.ok) {
       const text = await resp.text().catch(() => "");
       logger.error("[PUSH] FCM delivery failed", { pushToken, status: resp.status, body: text });
+      // Hard failures (404 = unregistered, 400 = invalid token) mean the token is dead.
+      if (resp.status === 404 || resp.status === 400) {
+        await prisma.pushToken.updateMany({
+          where: { token: pushToken, revokedAt: null },
+          data: { revokedAt: new Date() }
+        }).catch(() => {});
+      }
       return;
     }
 

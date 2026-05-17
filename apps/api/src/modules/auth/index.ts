@@ -27,12 +27,10 @@ const otpAdapter = createOtpAdapter(config.otpDriver, {
   atSenderId: config.atSenderId
 });
 const OTP_TTL_MS = 5 * 60 * 1000;
-const OTP_KEY_PREFIX = "otp:challenge:";
 const OTP_RATE_LIMIT_MAX = 3;
-const OTP_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 3 per 15 min per phone
+const OTP_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 const MAX_SESSIONS_PER_USER = 10;
-type OtpChallenge = { codeHash: string; expiresAt: number; failedAttempts?: number };
 
 function hashRefreshToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -58,50 +56,38 @@ function hashValue(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function otpStorageKey(phone: string): string {
-  return `${OTP_KEY_PREFIX}${hashValue(phone)}`;
-}
-
 function otpCodeHash(phone: string, code: string): string {
   return hashValue(`${phone}:${code}:${config.jwtAccessSecret}`);
 }
 
+function uaHash(request: FastifyRequest): string | null {
+  const ua = request.headers["user-agent"];
+  return ua ? hashValue(ua) : null;
+}
+
 async function persistOtpChallenge(phone: string, code: string) {
-  const key = otpStorageKey(phone);
-  const value = JSON.stringify({
-    codeHash: otpCodeHash(phone, code),
-    expiresAt: Date.now() + OTP_TTL_MS
-  });
-  await prisma.platformSetting.upsert({
-    where: { key },
+  await prisma.otpChallenge.upsert({
+    where: { phone: hashValue(phone) },
     create: {
-      group: "security",
-      key,
-      value,
-      description: "OTP challenge storage"
+      phone: hashValue(phone),
+      codeHash: otpCodeHash(phone, code),
+      expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      failedAttempts: 0
     },
-    update: { value }
+    update: {
+      codeHash: otpCodeHash(phone, code),
+      expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      failedAttempts: 0
+    }
   });
 }
 
-async function readOtpChallenge(phone: string): Promise<OtpChallenge | null> {
-  const key = otpStorageKey(phone);
-  const row = await prisma.platformSetting.findUnique({
-    where: { key },
-    select: { value: true }
-  });
-  if (!row) return null;
-  try {
-    const parsed = JSON.parse(row.value) as { codeHash?: string; expiresAt?: number };
-    if (!parsed.codeHash || typeof parsed.expiresAt !== "number") return null;
-    return { codeHash: parsed.codeHash, expiresAt: parsed.expiresAt };
-  } catch {
-    return null;
-  }
+async function readOtpChallenge(phone: string) {
+  return prisma.otpChallenge.findUnique({ where: { phone: hashValue(phone) } });
 }
 
 async function clearOtpChallenge(phone: string) {
-  await prisma.platformSetting.deleteMany({ where: { key: otpStorageKey(phone) } });
+  await prisma.otpChallenge.deleteMany({ where: { phone: hashValue(phone) } });
 }
 
 async function checkOtpRateLimit(phone: string): Promise<{ allowed: false; retryAfterSeconds: number } | { allowed: true }> {
@@ -322,6 +308,7 @@ export class AuthController {
           userId: result.user.id,
           refreshToken: hashRefreshToken(tokens.refreshToken),
           clientType: "web",
+          userAgentHash: uaHash(request),
           expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
         }
       });
@@ -393,6 +380,7 @@ export class AuthController {
         userId: user.id,
         refreshToken: hashRefreshToken(tokens.refreshToken),
         clientType: "web",
+        userAgentHash: uaHash(request),
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
     });
@@ -435,19 +423,19 @@ export class AuthController {
     const body = otpVerifySchema.parse(request.body);
     const entry = await readOtpChallenge(body.phone);
     const codeHash = otpCodeHash(body.phone, body.code);
-    const valid = !!entry && entry.expiresAt > Date.now() && constantTimeEquals(entry.codeHash, codeHash);
+    const notExpired = !!entry && entry.expiresAt.getTime() > Date.now();
+    const valid = notExpired && constantTimeEquals(entry!.codeHash, codeHash);
 
     if (!valid) {
-      if (entry && entry.expiresAt > Date.now()) {
-        const attempts = (entry.failedAttempts ?? 0) + 1;
+      if (entry && notExpired) {
+        const attempts = entry.failedAttempts + 1;
         if (attempts >= OTP_MAX_ATTEMPTS) {
           await clearOtpChallenge(body.phone);
           fail(reply, 429, "otp_locked", "Trop de tentatives. Veuillez demander un nouveau code.");
         } else {
-          const key = otpStorageKey(body.phone);
-          await prisma.platformSetting.update({
-            where: { key },
-            data: { value: JSON.stringify({ codeHash: entry.codeHash, expiresAt: entry.expiresAt, failedAttempts: attempts }) }
+          await prisma.otpChallenge.update({
+            where: { phone: hashValue(body.phone) },
+            data: { failedAttempts: attempts }
           });
           fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
         }
@@ -481,6 +469,7 @@ export class AuthController {
         userId: user.id,
         refreshToken: hashRefreshToken(tokens.refreshToken),
         clientType: "app",
+        userAgentHash: uaHash(request),
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
     });
@@ -506,6 +495,15 @@ export class AuthController {
       return;
     }
 
+    // Verify user-agent binding if the session was created with one.
+    if (session.userAgentHash) {
+      const currentUaHash = uaHash(request);
+      if (!currentUaHash || currentUaHash !== session.userAgentHash) {
+        fail(reply, 401, "device_mismatch", "Refresh interdit depuis un client différent.");
+        return;
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user) {
       fail(reply, 401, "user_not_found", "Utilisateur introuvable.");
@@ -520,6 +518,7 @@ export class AuthController {
         userId: user.id,
         refreshToken: hashRefreshToken(tokens.refreshToken),
         clientType: session.clientType,
+        userAgentHash: session.userAgentHash,
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
     });

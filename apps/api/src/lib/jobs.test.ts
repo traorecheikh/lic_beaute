@@ -35,7 +35,7 @@ describe("enqueueJob", () => {
     await enqueueJob({
       type: "booking_reminder",
       payload: { bookingId: "b1", window: "1h" },
-      dbClient: { job: { create: dbCreate, findFirst: dbFindFirst } }
+      dbClient: { job: { create: dbCreate, findFirst: dbFindFirst, updateMany: vi.fn(async () => ({ count: 0 })) } }
     });
 
     expect(dbCreate).toHaveBeenCalledTimes(1);
@@ -52,7 +52,7 @@ describe("enqueueJob", () => {
     await enqueueJob({
       type: "notification_retry",
       payload: { notificationId: "n1" },
-      dbClient: { job: { create: dbCreate, findFirst: dbFindFirst } }
+      dbClient: { job: { create: dbCreate, findFirst: dbFindFirst, updateMany: vi.fn(async () => ({ count: 0 })) } }
     });
 
     expect(dbCreate).toHaveBeenCalledTimes(1);

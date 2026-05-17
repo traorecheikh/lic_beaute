@@ -35,11 +35,13 @@ const JOB_QUEUE: Record<AppJobType, AppQueueName> = {
 type JobDbClient = {
   job: {
     findFirst: (args: { where: { type: string; payloadJson: string; status: string }; select: { id: true } }) => Promise<{ id: string } | null>;
+    updateMany: (args: { where: { bookingId?: string; type?: string; status?: string; payloadJson?: { contains: string } }; data: { status: string } }) => Promise<{ count: number }>;
     create: (args: {
       data: {
         queue: string;
         type: string;
         payloadJson: string;
+        bookingId?: string | null;
         status: string;
         runAfter: Date;
       };
@@ -81,6 +83,7 @@ export async function closeJobQueues() {
 export async function enqueueJob(input: {
   type: AppJobType;
   payload: Record<string, unknown>;
+  bookingId?: string;
   runAfter?: Date;
   status?: string;
   attempts?: number;
@@ -102,6 +105,7 @@ export async function enqueueJob(input: {
         queue: queueName,
         type: input.type,
         payloadJson,
+        bookingId: input.bookingId ?? null,
         status: input.status ?? "pending",
         runAfter
       }

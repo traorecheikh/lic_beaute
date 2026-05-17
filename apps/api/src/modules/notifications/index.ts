@@ -4,6 +4,7 @@ import { pushTokenRegisterSchema } from "@beauteavenue/contracts";
 
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { fail, ok } from "../../lib/http.js";
+import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
 import { sendPush } from "../../lib/push.js";
 
@@ -87,6 +88,14 @@ export class NotificationController {
       if (existing && existing.revokedAt === null && existing.userId !== session.sub) {
         fail(reply, 409, "token_owned", "Ce token appartient déjà à un autre compte.");
         return;
+      }
+
+      if (existing && existing.userId !== session.sub) {
+        logger.warn("[PUSH] push token reassigned between users", {
+          token: body.token.slice(-8),
+          previousUserId: existing.userId,
+          newUserId: session.sub
+        });
       }
 
       await prisma.pushToken.upsert({

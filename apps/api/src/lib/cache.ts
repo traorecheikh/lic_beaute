@@ -2,8 +2,12 @@ import { config } from "../config.js";
 import { logger } from "./logger.js";
 import { getCacheRedis } from "./redis.js";
 
+function versionedKey(key: string) {
+  return `${config.cacheVersion}:${key}`;
+}
+
 function tagKey(tag: string) {
-  return `cache:tag:${tag}`;
+  return `cache:tag:${config.cacheVersion}:${tag}`;
 }
 
 export async function getOrSetCachedJson<T>(input: {
@@ -19,16 +23,17 @@ export async function getOrSetCachedJson<T>(input: {
   if (!redis) return { value: await input.load(), cacheStatus: "BYPASS" };
 
   try {
-    const cached = await redis.get(input.key);
+    const resolvedKey = versionedKey(input.key);
+    const cached = await redis.get(resolvedKey);
     if (cached) {
       return { value: JSON.parse(cached) as T, cacheStatus: "HIT" };
     }
 
     const value = await input.load();
     const serialized = JSON.stringify(value);
-    await redis.set(input.key, serialized, "EX", input.ttlSeconds);
+    await redis.set(resolvedKey, serialized, "EX", input.ttlSeconds);
     for (const tag of input.tags) {
-      await redis.sadd(tagKey(tag), input.key);
+      await redis.sadd(tagKey(tag), resolvedKey);
       await redis.expire(tagKey(tag), Math.max(input.ttlSeconds, 120));
     }
     return { value, cacheStatus: "MISS" };
@@ -43,7 +48,7 @@ export async function getCachedJson<T>(key: string): Promise<T | null> {
   const redis = await getCacheRedis();
   if (!redis) return null;
   try {
-    const cached = await redis.get(key);
+    const cached = await redis.get(versionedKey(key));
     if (!cached) return null;
     return JSON.parse(cached) as T;
   } catch (err) {
@@ -62,9 +67,10 @@ export async function setCachedJsonWithTags<T>(input: {
   const redis = await getCacheRedis();
   if (!redis) return;
   try {
-    await redis.set(input.key, JSON.stringify(input.value), "EX", input.ttlSeconds);
+    const resolvedKey = versionedKey(input.key);
+    await redis.set(resolvedKey, JSON.stringify(input.value), "EX", input.ttlSeconds);
     for (const tag of input.tags) {
-      await redis.sadd(tagKey(tag), input.key);
+      await redis.sadd(tagKey(tag), resolvedKey);
       await redis.expire(tagKey(tag), Math.max(input.ttlSeconds, 120));
     }
   } catch (err) {
