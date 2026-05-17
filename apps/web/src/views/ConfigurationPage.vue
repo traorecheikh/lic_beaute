@@ -419,14 +419,14 @@ import {
 } from '@heroicons/vue/24/outline';
 import { useAdminAuthStore } from '@/stores/adminAuth';
 import {
-  createRequiredDocument,
-  createSalonCategory,
-  deleteRequiredDocument,
-  deleteSalonCategory,
+  deletePlatformRequiredDocument as deleteRequiredDocument,
+  deletePlatformCategory as deleteSalonCategory,
   fetchPlatformSettings,
-  fetchRequiredDocuments,
-  fetchSalonCategories,
-  updatePlatformSetting
+  fetchPlatformRequiredDocuments as fetchRequiredDocuments,
+  fetchPlatformCategories as fetchSalonCategories,
+  updatePlatformSetting,
+  upsertPlatformCategory,
+  upsertPlatformRequiredDocument
 } from '@/lib/api';
 import type { PlatformSetting } from '@beauteavenue/contracts';
 
@@ -671,7 +671,7 @@ const deleteCatMutation = useMutation({
 
 const addDocMutation = useMutation({
   mutationFn: (data: { label: string; slug: string; type: string; isRequired: boolean }) =>
-    createRequiredDocument(token.value, {
+    upsertPlatformRequiredDocument(token.value, {
       label: data.label,
       slug: data.slug,
       type: data.type as 'image' | 'pdf' | 'any',
@@ -691,7 +691,7 @@ const addDocMutation = useMutation({
 
 const addCatMutation = useMutation({
   mutationFn: (data: { name: string; slug: string }) =>
-    createSalonCategory(token.value, { name: data.name, slug: data.slug }),
+    upsertPlatformCategory(token.value, { name: data.name, slug: data.slug }),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['config-categories'] });
     showAddCatModal.value = false;

@@ -1,7 +1,9 @@
 import { Job as BullJob, Worker } from "bullmq";
 
 import { getPaymentAdapter, getStorageAdapter } from "./adapters/index.js";
-import { config } from "./config.js";
+import { config, validateConfig } from "./config.js";
+
+validateConfig();
 import { getQueueRedis } from "./lib/redis.js";
 import { closeJobQueues, enqueueJob, shouldRunBull, type AppJobType } from "./lib/jobs.js";
 import { logger } from "./lib/logger.js";
@@ -262,7 +264,19 @@ async function processMirrorJob(type: AppJobType, payload: Record<string, string
   }
 }
 
+async function reclaimStuckJobs() {
+  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000);
+  const result = await prisma.job.updateMany({
+    where: { status: "running", lockedAt: { lt: staleThreshold } },
+    data: { status: "pending", lockedAt: null }
+  });
+  if (result.count > 0) {
+    logger.warn("[WORKER] reclaimed stuck jobs", { count: result.count });
+  }
+}
+
 async function pollJobs() {
+  await reclaimStuckJobs();
   const now = new Date();
   const jobs = await prisma.job.findMany({
     where: { status: "pending", runAfter: { lte: now } },

@@ -290,47 +290,6 @@ export async function deletePlatformRequiredDocument(token: string, id: string) 
   });
 }
 
-export async function fetchSalonCategories(token: string) {
-  return request<PlatformSalonCategory[]>("/api/v1/admin/config/categories", {
-    headers: authHeaders(token)
-  });
-}
-
-export async function createSalonCategory(token: string, data: UpsertSalonCategoryInput) {
-  return request<PlatformSalonCategory>("/api/v1/admin/config/categories", {
-    method: "POST",
-    headers: authHeaders(token),
-    body: JSON.stringify(data)
-  });
-}
-
-export async function deleteSalonCategory(token: string, id: string) {
-  return request<PlatformSalonCategory>(`/api/v1/admin/config/categories/${id}`, {
-    method: "DELETE",
-    headers: authHeaders(token)
-  });
-}
-
-export async function fetchRequiredDocuments(token: string) {
-  return request<PlatformRequiredDocument[]>("/api/v1/admin/config/documents", {
-    headers: authHeaders(token)
-  });
-}
-
-export async function createRequiredDocument(token: string, data: UpsertRequiredDocumentInput) {
-  return request<PlatformRequiredDocument>("/api/v1/admin/config/documents", {
-    method: "POST",
-    headers: authHeaders(token),
-    body: JSON.stringify(data)
-  });
-}
-
-export async function deleteRequiredDocument(token: string, id: string) {
-  return request<PlatformRequiredDocument>(`/api/v1/admin/config/documents/${id}`, {
-    method: "DELETE",
-    headers: authHeaders(token)
-  });
-}
 
 export async function changePassword(token: string, currentPassword: string, newPassword: string) {
   return request<CurrentUser>("/api/v1/me", {

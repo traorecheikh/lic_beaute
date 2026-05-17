@@ -1244,10 +1244,11 @@ export class ProController {
       const chargedXof = Math.max(0, subtotalXof - body.discountXof);
 
       await prisma.$transaction(async (tx) => {
-        await tx.booking.update({
-          where: { id: booking.id },
+        const claimed = await tx.booking.updateMany({
+          where: { id: booking.id, status: { in: ["confirmed", "in_progress"] } },
           data: { status: "completed" }
         });
+        if (claimed.count === 0) throw Object.assign(new Error("already_completed"), { _http: [409, "already_completed", "Cette réservation a déjà été encaissée."] });
         await tx.bookingEvent.create({
           data: {
             bookingId: booking.id,
@@ -1538,9 +1539,8 @@ export class ProController {
         salonName: salon?.name ?? "Salon partenaire"
       });
       const safeNumber = invoice.invoiceNumber.replace(/[^a-zA-Z0-9._-]/g, "_");
-      reply.header("content-type", "application/pdf");
-      reply.header("content-disposition", `attachment; filename=\"${safeNumber}.pdf\"`);
-      reply.send(pdf);
+      // nosemgrep: direct-reply-send — binary PDF buffer, content-type enforced, filename sanitized above
+      reply.type("application/pdf").header("content-disposition", `attachment; filename="${safeNumber}.pdf"`).send(pdf);
     } catch (e) { handleError(e, reply); }
   }
 }

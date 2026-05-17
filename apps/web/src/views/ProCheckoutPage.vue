@@ -174,7 +174,6 @@ const router = useRouter();
 const auth = useProAuthStore();
 
 const items = ref<Array<{ name: string; price: number }>>([]);
-const discountCode = ref("");
 const discount = ref(0);
 const selectedMethod = ref("cash");
 
@@ -253,36 +252,6 @@ function removeItem(index: number) {
   items.value.splice(index, 1);
 }
 
-function applyDiscount() {
-  const raw = discountCode.value.trim().toUpperCase();
-  if (!raw) {
-    discount.value = 0;
-    toast.info("Remise réinitialisée.");
-    return;
-  }
-
-  let nextDiscount = 0;
-
-  if (/^\d+$/.test(raw)) {
-    nextDiscount = Number(raw);
-  } else if (/^\d+%$/.test(raw)) {
-    const percent = Number(raw.replace("%", ""));
-    nextDiscount = Math.round(subtotal.value * (percent / 100));
-  } else if (/^BIENVENUE\d+$/.test(raw)) {
-    const percent = Number(raw.replace("BIENVENUE", ""));
-    nextDiscount = Math.round(subtotal.value * (percent / 100));
-  } else if (/^VIP\d+$/.test(raw)) {
-    const percent = Number(raw.replace("VIP", ""));
-    nextDiscount = Math.round(subtotal.value * (percent / 100));
-  } else {
-    toast.error("Code de remise invalide. Utilisez par exemple BIENVENUE10 ou 5000.");
-    return;
-  }
-
-  const maxDiscount = Math.max(0, subtotal.value - deposit.value);
-  discount.value = Math.max(0, Math.min(nextDiscount, maxDiscount));
-  toast.success(`Remise appliquée: ${formatMoneyXof(discount.value)}.`);
-}
 
 function completeCheckout() {
   if (!items.value.some((item) => item.name.trim().length > 0)) {

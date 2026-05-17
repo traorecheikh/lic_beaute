@@ -514,6 +514,7 @@ export class ClientAccountController {
           where: { id: session.sub },
           data: { fullName: "Deleted User", email: `deleted+${session.sub}@beauteavenue.local`, phone: null }
         }),
+        prisma.session.deleteMany({ where: { userId: session.sub } }),
         prisma.pushToken.deleteMany({ where: { userId: session.sub } }),
         prisma.clientAddress.deleteMany({ where: { userId: session.sub } })
       ]);

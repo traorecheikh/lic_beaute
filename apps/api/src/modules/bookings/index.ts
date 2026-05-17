@@ -380,19 +380,20 @@ export class BookingController {
       const existing = await prisma.review.findUnique({ where: { bookingId: params.bookingId } });
       if (existing) { fail(reply, 409, "review_exists", "Avis déjà soumis pour cette réservation."); return; }
 
-      const review = await prisma.review.create({
-        data: {
-          bookingId: params.bookingId,
-          salonId: booking.salonId,
-          clientId: session.sub,
-          rating: body.rating,
-          comment: body.comment ?? null
-        }
+      const review = await prisma.$transaction(async (tx) => {
+        const created = await tx.review.create({
+          data: {
+            bookingId: params.bookingId,
+            salonId: booking.salonId,
+            clientId: session.sub,
+            rating: body.rating,
+            comment: body.comment ?? null
+          }
+        });
+        const agg = await tx.review.aggregate({ where: { salonId: booking.salonId }, _avg: { rating: true } });
+        await tx.salon.update({ where: { id: booking.salonId }, data: { averageRating: agg._avg.rating ?? 0 } });
+        return created;
       });
-
-      // Update salon average rating
-      const agg = await prisma.review.aggregate({ where: { salonId: booking.salonId }, _avg: { rating: true } });
-      await prisma.salon.update({ where: { id: booking.salonId }, data: { averageRating: agg._avg.rating ?? 0 } });
       await invalidateCacheTags([
         "catalog:list",
         `catalog:salon:${booking.salonId}`,

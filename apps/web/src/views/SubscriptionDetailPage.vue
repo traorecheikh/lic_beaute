@@ -278,7 +278,6 @@ const selectedReasonKey = ref<string>("commercial_gesture");
 const customReason = ref("");
 const effectiveAt = ref("");
 const expiresAt = ref("");
-const internalTicket = ref("");
 const selectedFile = ref<File | null>(null);
 const mutationError = ref("");
 
@@ -332,9 +331,7 @@ const overrideMutation = useMutation({
       reason: finalReason,
       effectiveAt: effectiveAt.value ? new Date(effectiveAt.value).toISOString() : undefined,
       expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : undefined,
-      metadata: {
-        internalTicket: internalTicket.value || undefined
-      }
+      metadata: {}
     });
   },
   onSuccess: async () => {
