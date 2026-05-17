@@ -59,14 +59,19 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   });
   await app.register(cookie);
   await app.register(sensible);
+  const httpsOrigin = config.webOrigin.startsWith("https://");
   await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
-        frameAncestors: ["'none'"]
+        frameAncestors: ["'none'"],
+        // upgrade-insecure-requests forces the browser to load all assets over HTTPS.
+        // On HTTP-only deployments this silently breaks every JS/CSS asset → white page.
+        upgradeInsecureRequests: httpsOrigin ? [] : null
       }
     },
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    strictTransportSecurity: httpsOrigin
   });
   let redisEnabled = false;
   if (config.redisUrl) {
