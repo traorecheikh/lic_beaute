@@ -99,6 +99,10 @@ export class BookingController {
 
       const salon = await prisma.salon.findUnique({ where: { id: body.salonId } });
       if (!salon) { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+      if (salon.approvalStatus !== "approved") {
+        fail(reply, 422, "salon_not_approved", "Ce salon n'est pas encore approuvé.");
+        return;
+      }
       if (!salon.canReceiveBookings) {
         fail(reply, 422, "salon_not_accepting", "Ce salon n'accepte pas les réservations pour l'instant.");
         return;
@@ -265,7 +269,13 @@ export class BookingController {
       }
 
       await prisma.$transaction(async (tx) => {
-        await tx.booking.update({ where: { id: booking.id }, data: { status: "cancelled" } });
+        const claimed = await tx.booking.updateMany({
+          where: { id: booking.id, status: { in: ["pending", "confirmed"] } },
+          data: { status: "cancelled" }
+        });
+        if (claimed.count === 0) {
+          throw new HttpAuthError(409, "status_conflict", "Statut modifié en parallèle. Réessayez.");
+        }
         await tx.bookingEvent.create({
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "cancelled", fromStatus: booking.status, toStatus: "cancelled" }
         });
@@ -346,7 +356,13 @@ export class BookingController {
       }
 
       await prisma.$transaction(async (tx) => {
-        await tx.booking.update({ where: { id: booking.id }, data: { startsAt: newStart, endsAt: newEnd } });
+        const claimed = await tx.booking.updateMany({
+          where: { id: booking.id, status: { in: ["pending", "confirmed"] } },
+          data: { startsAt: newStart, endsAt: newEnd }
+        });
+        if (claimed.count === 0) {
+          throw new HttpAuthError(409, "status_conflict", "Statut modifié en parallèle. Réessayez.");
+        }
         await tx.bookingEvent.create({
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "rescheduled", payloadJson: JSON.stringify({ newStartsAt: newStart }) }
         });

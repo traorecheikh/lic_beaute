@@ -72,6 +72,19 @@ function maskAccountNumber(value: string) {
   return `${"*".repeat(Math.max(3, trimmed.length - 4))}${trimmed.slice(-4)}`;
 }
 
+function calcDepositAmount(service: {
+  depositMode: string;
+  depositAmountXof: number | null;
+  depositPercent: number | null;
+  priceXof: number;
+}): number {
+  if (service.depositMode === "fixed") return service.depositAmountXof ?? 0;
+  if (service.depositMode === "percent") {
+    return Math.round(((service.depositPercent ?? 0) / 100) * service.priceXof);
+  }
+  return 0;
+}
+
 function parseBooleanSetting(value: string | undefined, fallback: boolean) {
   if (!value) return fallback;
   const normalized = value.trim().toLowerCase();
@@ -895,7 +908,13 @@ export class ProController {
       }
 
       await prisma.$transaction(async (tx) => {
-        await tx.booking.update({ where: { id: booking.id }, data: { status: toStatus as never } });
+        const claimed = await tx.booking.updateMany({
+          where: { id: booking.id, status: { in: allowedFrom as never[] } },
+          data: { status: toStatus as never }
+        });
+        if (claimed.count === 0) {
+          throw new HttpAuthError(409, "status_conflict", "Statut modifié en parallèle. Réessayez.");
+        }
         await tx.bookingEvent.create({ data: { bookingId: booking.id, actorUserId: userId, eventType, fromStatus: booking.status, toStatus } });
         await tx.auditLog.create({
           data: {
@@ -1031,6 +1050,7 @@ export class ProController {
           }
         }
 
+        const depositAmountXof = calcDepositAmount(service);
         const b = await tx.booking.create({
           data: {
             clientId: resolvedClientId,
@@ -1041,7 +1061,8 @@ export class ProController {
             endsAt,
             status: "confirmed",
             source: "manual",
-            depositAmountXof: 0,
+            depositAmountXof,
+            depositPaymentStatus: depositAmountXof > 0 ? "succeeded" : "pending",
             clientNote: body.clientName && !body.clientId ? `Nouveau client: ${body.clientName}` : null
           }
         });

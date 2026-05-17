@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const tx = {
-    booking: { create: vi.fn(), update: vi.fn() },
+    booking: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     payment: { create: vi.fn() },
     bookingEvent: { create: vi.fn() },
     job: { updateMany: vi.fn(), create: vi.fn() },
@@ -82,7 +82,8 @@ describe("BookingController invariants", () => {
       depositAmountXof: null,
       depositPercent: null
     });
-    mocks.prisma.salon.findUnique.mockResolvedValue({ id: "salon_1", canReceiveBookings: true });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ id: "salon_1", approvalStatus: "approved", canReceiveBookings: true });
+    mocks.tx.booking.updateMany.mockResolvedValue({ count: 1 });
   });
 
   it("rejects marketplace booking in the past", async () => {
@@ -193,6 +194,10 @@ describe("BookingController invariants", () => {
       params: { bookingId: "book_cancel_1" }
     } as never, {} as never);
 
+    expect(mocks.tx.booking.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: "book_cancel_1" }),
+      data: { status: "cancelled" }
+    }));
     expect(mocks.tx.auditLog.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         action: "booking_cancelled_by_client",

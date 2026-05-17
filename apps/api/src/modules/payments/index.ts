@@ -292,6 +292,16 @@ export class PaymentController {
         return;
       }
 
+      // Atomic claim: prevents concurrent double-refund
+      const claimed = await prisma.payment.updateMany({
+        where: { id: payment.id, status: { in: ["authorized", "succeeded"] } },
+        data: { status: "refunded" }
+      });
+      if (claimed.count === 0) {
+        fail(reply, 409, "already_refunded", "Ce paiement a déjà été remboursé.");
+        return;
+      }
+
       const refund = await paymentAdapter.requestRefund({
         providerRef: payment.providerTxId,
         amountXof: payment.amountXof,
@@ -299,7 +309,7 @@ export class PaymentController {
       });
 
       await prisma.$transaction(async (tx) => {
-        await tx.payment.update({ where: { id: payment.id }, data: { status: "refunded" } });
+        // Status already updated via atomic claim above; only persist side effects.
         await tx.booking.update({
           where: { id: payment.bookingId },
           data: { depositPaymentStatus: "refunded" }

@@ -744,6 +744,8 @@ export async function updatePlatformSetting(key: string, value: string, actorNam
     update: { value }
   });
 
+  const SENSITIVE_KEY_PATTERNS = ["secret", "key", "token", "password", "credential", "api_key", "hmac"];
+  const isSensitive = SENSITIVE_KEY_PATTERNS.some((p) => key.toLowerCase().includes(p));
   await writeAuditLog({
     action: "config.setting_updated",
     summary: `Paramètre ${key} mis à jour.`,
@@ -751,7 +753,7 @@ export async function updatePlatformSetting(key: string, value: string, actorNam
     entityId: setting.id,
     actorName,
     severity: "info",
-    payloadJson: JSON.stringify({ key, value }),
+    payloadJson: JSON.stringify({ key, value: isSensitive ? "[REDACTED]" : value }),
     relatedLinks: []
   });
 

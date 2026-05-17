@@ -88,19 +88,18 @@ export class MediaController {
       }
 
       const owner = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true } });
-      const input = {
-        salonId: typeof salonIdValue === "string" && salonIdValue.length > 0 ? salonIdValue : undefined,
-        purpose: mediaPurposeSchema.parse(purposeValue),
-        mimeType,
-        originalFilename
-      };
+      // Non-admin callers cannot assign a foreign salonId — always use their own.
+      const resolvedSalonId = session.role === "platform_admin"
+        ? (typeof salonIdValue === "string" && salonIdValue.length > 0 ? salonIdValue : owner?.salonId ?? null)
+        : (owner?.salonId ?? null);
+      const purpose = mediaPurposeSchema.parse(purposeValue);
 
-      const fileExt = mimeToExt(input.mimeType) || extname(input.originalFilename) || ".bin";
+      const fileExt = mimeToExt(mimeType) || extname(originalFilename) || ".bin";
       const objectKey = `incoming/${randomUUID()}${fileExt}`;
       const ownerType = owner?.salonId ? "salon" : "user";
       const ownerId = owner?.salonId ?? session.sub;
 
-      const sizeBytes = await storage.store(objectKey, file.file, input.mimeType);
+      const sizeBytes = await storage.store(objectKey, file.file, mimeType);
       if (sizeBytes <= 0 || sizeBytes > config.maxUploadBytes) {
         await storage.delete(objectKey).catch(() => {});
         fail(reply, 422, "invalid_upload_size", "Fichier invalide ou vide.");
@@ -111,14 +110,14 @@ export class MediaController {
         data: {
           ownerType,
           ownerId,
-          salonId: input.salonId ?? owner?.salonId ?? null,
+          salonId: resolvedSalonId,
           uploadedBy: session.sub,
           objectKey,
           publicUrl: config.storageDriver !== "r2" ? storage.publicUrl(objectKey) : null,
-          mimeType: input.mimeType,
+          mimeType,
           sizeBytes,
-          purpose: input.purpose,
-          originalFilename: input.originalFilename,
+          purpose,
+          originalFilename,
           fileExt,
           uploadStatus: "review_pending",
           reviewStatus: "pending",
@@ -164,6 +163,10 @@ export class MediaController {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
       const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true } });
+      // Non-admin callers cannot assign a foreign salonId — always use their own.
+      const resolvedSalonId = session.role === "platform_admin"
+        ? (body.salonId ?? user?.salonId ?? null)
+        : (user?.salonId ?? null);
       const ownerType = user?.salonId ? "salon" : "user";
       const ownerId = user?.salonId ?? session.sub;
 
@@ -171,7 +174,7 @@ export class MediaController {
         data: {
           ownerType,
           ownerId,
-          salonId: body.salonId ?? user?.salonId ?? null,
+          salonId: resolvedSalonId,
           uploadedBy: session.sub,
           objectKey,
           mimeType: body.mimeType,
@@ -306,10 +309,24 @@ export class MediaController {
   }
 
   async get(request: FastifyRequest, reply: FastifyReply) {
-    const params = request.params as { mediaId: string };
-    const asset = await prisma.mediaAsset.findUnique({ where: { id: params.mediaId } });
-    if (!asset || asset.deletedAt) { fail(reply, 404, "media_not_found", "Fichier introuvable."); return; }
-    ok(reply, { id: asset.id, publicUrl: asset.publicUrl, mimeType: asset.mimeType, createdAt: asset.createdAt.toISOString() });
+    try {
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const params = request.params as { mediaId: string };
+      const asset = await prisma.mediaAsset.findUnique({ where: { id: params.mediaId } });
+      if (!asset || asset.deletedAt) { fail(reply, 404, "media_not_found", "Fichier introuvable."); return; }
+
+      const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true, role: true } });
+      const isOwner =
+        (asset.ownerType === "user" && asset.ownerId === session.sub) ||
+        (asset.ownerType === "salon" && user?.salonId === asset.ownerId) ||
+        user?.role === "platform_admin";
+      if (!isOwner) { fail(reply, 403, "forbidden", "Accès interdit."); return; }
+
+      ok(reply, { id: asset.id, publicUrl: asset.publicUrl, mimeType: asset.mimeType, createdAt: asset.createdAt.toISOString() });
+    } catch (err) {
+      if (err instanceof HttpAuthError) { fail(reply, err.statusCode, err.code, err.message); return; }
+      throw err;
+    }
   }
 
   async delete(request: FastifyRequest, reply: FastifyReply) {

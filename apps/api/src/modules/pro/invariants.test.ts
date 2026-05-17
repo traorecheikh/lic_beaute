@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const tx = {
-    booking: { update: vi.fn() },
+    booking: { update: vi.fn(), updateMany: vi.fn() },
     bookingEvent: { create: vi.fn() },
     auditLog: { create: vi.fn() },
     payment: { findFirst: vi.fn() },
@@ -53,10 +53,10 @@ vi.mock("../../lib/auth/index.js", () => {
   };
 });
 
-vi.mock("../../lib/http.js", () => ({
-  ok: mocks.ok,
-  fail: mocks.fail
-}));
+vi.mock("../../lib/http.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/http.js")>();
+  return { ...actual, ok: mocks.ok, fail: mocks.fail };
+});
 
 vi.mock("../../lib/logger.js", () => ({
   logger: { error: mocks.loggerError }
@@ -202,6 +202,7 @@ describe("ProController invariants", () => {
       salonId: "salon_1",
       status: "confirmed"
     });
+    mocks.tx.booking.updateMany.mockResolvedValue({ count: 1 });
     mocks.tx.payment.findFirst.mockResolvedValue({
       id: "pay_1"
     });

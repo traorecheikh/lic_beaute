@@ -26,7 +26,8 @@ const mocks = vi.hoisted(() => {
     payment: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      updateMany: vi.fn()
     },
     subscriptionCharge: {
       findUnique: vi.fn(),
@@ -291,10 +292,14 @@ describe("PaymentController", () => {
       booking: { clientId: "client_1", salonId: "salon_1" }
     });
     mocks.adapter.requestRefund.mockResolvedValue({ refundRef: "refund-REF_123" });
+    mocks.prisma.payment.updateMany.mockResolvedValue({ count: 1 });
 
     await controller.refund({ params: { paymentId: "pay_1" } } as never, {} as never);
 
-    expect(mocks.tx.payment.update).toHaveBeenCalledWith({ where: { id: "pay_1" }, data: { status: "refunded" } });
+    expect(mocks.prisma.payment.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: "pay_1" }),
+      data: { status: "refunded" }
+    }));
     expect(mocks.tx.booking.update).toHaveBeenCalledWith({
       where: { id: "book_1" },
       data: { depositPaymentStatus: "refunded" }

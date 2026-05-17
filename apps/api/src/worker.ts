@@ -156,11 +156,13 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
         where: { status: "active", expiresAt: { lt: new Date() } }
       });
       for (const sub of expired) {
-        await prisma.subscription.update({ where: { id: sub.id }, data: { status: "expired" } });
-        await prisma.salon.update({
-          where: { id: sub.salonId },
-          data: { subscriptionTier: "standard" }
-        });
+        await prisma.$transaction([
+          prisma.subscription.update({ where: { id: sub.id }, data: { status: "expired" } }),
+          prisma.salon.update({
+            where: { id: sub.salonId },
+            data: { subscriptionTier: "standard", isVisibleInMarketplace: false, canReceiveBookings: false }
+          })
+        ]);
       }
       if (expired.length > 0) {
         logger.info("[WORKER] subscription_expiry_check: expired", { count: expired.length });

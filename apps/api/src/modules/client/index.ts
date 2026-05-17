@@ -304,6 +304,14 @@ export class ClientAccountController {
         fail(reply, 404, "client_not_found", "Client introuvable.");
         return;
       }
+      const hasVisited = await prisma.booking.findFirst({
+        where: { clientId: body.clientId, salonId: actor.salonId },
+        select: { id: true }
+      });
+      if (!hasVisited) {
+        fail(reply, 403, "client_not_a_customer", "Ce client n'a pas de réservation dans votre salon.");
+        return;
+      }
       const created = await prisma.clientBenefit.create({
         data: {
           userId: client.id,

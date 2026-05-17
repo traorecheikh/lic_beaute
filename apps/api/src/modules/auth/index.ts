@@ -30,7 +30,8 @@ const OTP_TTL_MS = 5 * 60 * 1000;
 const OTP_KEY_PREFIX = "otp:challenge:";
 const OTP_RATE_LIMIT_MAX = 3;
 const OTP_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 3 per 15 min per phone
-type OtpChallenge = { codeHash: string; expiresAt: number };
+const OTP_MAX_ATTEMPTS = 5;
+type OtpChallenge = { codeHash: string; expiresAt: number; failedAttempts?: number };
 
 function generateOtpCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -418,7 +419,22 @@ export class AuthController {
     const valid = !!entry && entry.expiresAt > Date.now() && constantTimeEquals(entry.codeHash, codeHash);
 
     if (!valid) {
-      fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
+      if (entry && entry.expiresAt > Date.now()) {
+        const attempts = (entry.failedAttempts ?? 0) + 1;
+        if (attempts >= OTP_MAX_ATTEMPTS) {
+          await clearOtpChallenge(body.phone);
+          fail(reply, 429, "otp_locked", "Trop de tentatives. Veuillez demander un nouveau code.");
+        } else {
+          const key = otpStorageKey(body.phone);
+          await prisma.platformSetting.update({
+            where: { key },
+            data: { value: JSON.stringify({ codeHash: entry.codeHash, expiresAt: entry.expiresAt, failedAttempts: attempts }) }
+          });
+          fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
+        }
+      } else {
+        fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
+      }
       return;
     }
     await clearOtpChallenge(body.phone);
@@ -554,9 +570,10 @@ export class AuthController {
           fail(reply, 401, "invalid_current_password", "Mot de passe actuel incorrect.");
           return;
         }
-        await prisma.user.update({
-          where: { id: session.sub },
-          data: { passwordHash: await argon2.hash(body.newPassword) }
+        const newHash = await argon2.hash(body.newPassword!);
+        await prisma.$transaction(async (tx) => {
+          await tx.user.update({ where: { id: session.sub }, data: { passwordHash: newHash } });
+          await tx.session.deleteMany({ where: { userId: session.sub } });
         });
         if (user.email) {
           void sendEmail({
