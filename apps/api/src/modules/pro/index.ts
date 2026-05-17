@@ -550,7 +550,10 @@ export class ProController {
       if (!ownerOnly(role, reply)) return;
       const body = proServiceCreateInputSchema.parse(request.body);
       if (body.depositMode !== "none") {
-        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, subscription: { select: { status: true } } } });
+        if (salon?.subscription?.status !== "active") {
+          fail(reply, 403, "subscription_inactive", "Abonnement inactif ou expiré."); return;
+        }
         if (salon?.subscriptionTier !== "premium") {
           fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
         }
@@ -579,7 +582,10 @@ export class ProController {
       const existing = await prisma.service.findFirst({ where: { id: params.serviceId, salonId } });
       if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
       if (body.depositMode !== undefined && body.depositMode !== "none") {
-        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, subscription: { select: { status: true } } } });
+        if (salon?.subscription?.status !== "active") {
+          fail(reply, 403, "subscription_inactive", "Abonnement inactif ou expiré."); return;
+        }
         if (salon?.subscriptionTier !== "premium") {
           fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
         }
@@ -977,7 +983,45 @@ export class ProController {
   }
 
   async acceptBooking(request: FastifyRequest, reply: FastifyReply) {
-    await this.transitionBooking(request, reply, ["pending"], "confirmed", "accepted");
+    try {
+      const { salonId } = await ensurePro(request);
+      const params = request.params as { bookingId: string };
+      const booking = await prisma.booking.findFirst({
+        where: { id: params.bookingId, salonId },
+        include: {
+          payments: {
+            where: { status: { in: ["authorized", "succeeded"] } },
+            take: 1
+          }
+        }
+      });
+      if (!booking) { fail(reply, 404, "booking_not_found", "Réservation introuvable."); return; }
+      if (booking.depositAmountXof > 0 && booking.payments.length === 0) {
+        fail(
+          reply,
+          422,
+          "deposit_not_paid",
+          "Acompte non payé. La réservation reste en attente jusqu'au paiement."
+        );
+        return;
+      }
+    } catch (e) {
+      handleError(e, reply);
+      return;
+    }
+    await this.transitionBooking(request, reply, ["pending"], "confirmed", "accepted", async (bookingId, tx) => {
+      const b = await tx.booking.findUnique({ where: { id: bookingId }, select: { startsAt: true, clientId: true } });
+      if (!b) return;
+      const now = Date.now();
+      const runAfter24h = new Date(b.startsAt.getTime() - 24 * 60 * 60 * 1000);
+      const runAfter1h = new Date(b.startsAt.getTime() - 60 * 60 * 1000);
+      if (runAfter24h.getTime() > now) {
+        await enqueueJob({ type: "booking_reminder", payload: { bookingId, window: "24h" }, bookingId, runAfter: runAfter24h, dbClient: tx });
+      }
+      if (runAfter1h.getTime() > now) {
+        await enqueueJob({ type: "booking_reminder", payload: { bookingId, window: "1h" }, bookingId, runAfter: runAfter1h, dbClient: tx });
+      }
+    });
   }
 
   async rejectBooking(request: FastifyRequest, reply: FastifyReply) {
@@ -1387,7 +1431,10 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
-      const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
+      const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, subscription: { select: { status: true } } } });
+      if (salon?.subscription?.status !== "active") {
+        fail(reply, 403, "subscription_inactive", "Abonnement inactif ou expiré."); return;
+      }
       if (salon?.subscriptionTier !== "premium") {
         fail(reply, 402, "premium_required", "Les statistiques avancées sont réservées aux salons Premium.");
         return;
@@ -1433,6 +1480,7 @@ export class ProController {
         status: sub.status,
         renewsAt: sub.renewedAt?.toISOString() ?? null,
         expiresAt: sub.expiresAt?.toISOString() ?? null,
+        gracePeriodEndsAt: sub.gracePeriodEndsAt?.toISOString() ?? null,
         isComplimentary: sub.isComplimentary,
         autoRenew: sub.autoRenew,
         billingMethod

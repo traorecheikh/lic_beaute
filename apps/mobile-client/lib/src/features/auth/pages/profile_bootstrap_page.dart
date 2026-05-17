@@ -82,8 +82,20 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                 SizedBox(height: 48.h),
                 AppButton.primary(
                   onPressed: _saving ? null : _submit,
-                  label: 'Commencer l’aventure',
+                  label: "Commencer l’aventure",
                   isLoading: _saving,
+                ),
+                gapH16,
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.go(AppRoutes.home),
+                    child: Text(
+                      "Passer pour l’instant",
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -20,7 +20,7 @@ describe("sendEmail", () => {
 
   it("warns on unknown driver", async () => {
     vi.resetModules();
-    vi.doMock("../config.js", () => ({ config: { emailDriver: "smtp" } }));
+    vi.doMock("../config.js", () => ({ config: { emailDriver: "unknown_driver" } }));
     const loggerModule = await import("./logger.js");
     const { sendEmail: sendEmailDynamic } = await import("./email.js");
     const warnSpy = vi.spyOn(loggerModule.logger, "warn").mockImplementation(() => undefined);
@@ -28,7 +28,7 @@ describe("sendEmail", () => {
     await sendEmailDynamic({ to: "b@x.com", subject: "Hi", text: "Body" });
 
     expect(warnSpy).toHaveBeenCalledWith("[EMAIL] unknown driver, falling back to noop", {
-      driver: "smtp"
+      driver: "unknown_driver"
     });
     warnSpy.mockRestore();
   });

@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <h2 class="page-title">Journal d'audit</h2>
 
-      <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex flex-col sm:flex-row flex-wrap gap-3">
         <div class="relative">
           <input
             v-model="actor"
@@ -20,6 +20,24 @@
           />
           <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cocoa/40 pointer-events-none" />
         </div>
+        <select v-model="actionFilter" class="input-shell bg-white h-10 border-outline-variant/60 rounded-full text-[12px] px-4">
+          <option value="">Toutes actions</option>
+          <option value="create">Création</option>
+          <option value="update">Modification</option>
+          <option value="delete">Suppression</option>
+          <option value="approve">Approbation</option>
+          <option value="reject">Refus</option>
+        </select>
+        <input
+          v-model="fromDate"
+          type="date"
+          class="input-shell bg-white h-10 border-outline-variant/60 rounded-full text-[12px] px-4"
+        />
+        <input
+          v-model="toDate"
+          type="date"
+          class="input-shell bg-white h-10 border-outline-variant/60 rounded-full text-[12px] px-4"
+        />
       </div>
     </header>
 
@@ -83,15 +101,21 @@ import { useAdminAuthStore } from "@/stores/adminAuth";
 const auth = useAdminAuthStore();
 const actor = ref("");
 const entityType = ref("");
+const actionFilter = ref("");
+const fromDate = ref("");
+const toDate = ref("");
 const debouncedActor = refDebounced(actor, 250);
 const debouncedEntityType = refDebounced(entityType, 250);
 
 const auditQuery = useQuery({
-  queryKey: computed(() => ["admin-audit", debouncedActor.value, debouncedEntityType.value]),
+  queryKey: computed(() => ["admin-audit", debouncedActor.value, debouncedEntityType.value, actionFilter.value, fromDate.value, toDate.value]),
   queryFn: () =>
     fetchAuditEvents(auth.accessToken ?? "", {
       actor: debouncedActor.value || undefined,
-      entityType: debouncedEntityType.value || undefined
+      entityType: debouncedEntityType.value || undefined,
+      action: actionFilter.value || undefined,
+      from: fromDate.value || undefined,
+      to: toDate.value || undefined
     }),
   enabled: computed(() => Boolean(auth.accessToken))
 });

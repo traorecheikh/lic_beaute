@@ -224,7 +224,7 @@ describe("ProController invariants", () => {
   // ─── Deposit premium gate ────────────────────────────────────────────────
 
   it("rejects deposit creation when salon is standard tier", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard", subscription: { status: "active" } });
 
     await controller.createService({
       body: { name: "Test", category: "Hair", durationMinutes: 30, priceXof: 5000, depositMode: "fixed", depositAmountXof: 2000 }
@@ -239,7 +239,7 @@ describe("ProController invariants", () => {
   });
 
   it("rejects deposit update when salon is standard tier", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard", subscription: { status: "active" } });
 
     await controller.updateService({
       params: { serviceId: "svc_1" },
@@ -255,7 +255,7 @@ describe("ProController invariants", () => {
   });
 
   it("allows deposit creation when salon is premium tier", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium", subscription: { status: "active" } });
     mocks.prisma.service.count.mockResolvedValue(5);
     mocks.prisma.service.create.mockResolvedValue({
       id: "svc_new", name: "Test", category: "Hair", durationMinutes: 30,

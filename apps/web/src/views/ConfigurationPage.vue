@@ -717,6 +717,10 @@ function submitNewDoc() {
 
 function submitNewCat() {
   if (!newCat.name || !newCat.slug) { toast.error('Nom et slug sont requis.'); return; }
+  const exists = (categoriesQuery.data.value ?? []).some(
+    (c) => c.name.trim().toLowerCase() === newCat.name.trim().toLowerCase() || c.slug === newCat.slug.trim()
+  );
+  if (exists) { toast.error('Cette catégorie existe déjà.'); return; }
   addCatMutation.mutate({ ...newCat });
 }
 </script>

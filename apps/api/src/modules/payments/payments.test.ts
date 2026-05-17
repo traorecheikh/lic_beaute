@@ -48,6 +48,7 @@ const mocks = vi.hoisted(() => {
     user: {
       findUnique: vi.fn()
     },
+    job: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
     $transaction: vi.fn(async (fn: (txArg: typeof tx) => Promise<void>) => fn(tx))
   };
 
@@ -107,7 +108,7 @@ describe("PaymentController", () => {
     mocks.adapter.verifyWebhookSignature.mockReturnValue(true);
     mocks.tx.settlementEvent.findFirst.mockResolvedValue(null);
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "salon_1" });
-    mocks.tx.booking.findUnique.mockResolvedValue({ status: "pending", source: "marketplace" });
+    mocks.tx.booking.findUnique.mockResolvedValue({ status: "pending", source: "marketplace", startsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), clientId: "client_1", client: { email: "test@test.com" }, service: { name: "Coupe" } });
     mocks.prisma.platformSetting.findUnique.mockResolvedValue(null);
     mocks.prisma.platformSetting.upsert.mockResolvedValue({ key: "k", value: String(Date.now()) });
     mocks.tx.platformSetting.findUnique.mockResolvedValue(null);

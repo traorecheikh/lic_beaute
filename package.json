@@ -20,6 +20,10 @@
     "openapi:generate:web": "pnpm --filter @beauteavenue/web-admin openapi:generate",
     "openapi:generate:all": "pnpm openapi:generate && pnpm openapi:generate:web && pnpm openapi:generate:mobile",
     "docker:up": "docker compose -f infra/compose/docker-compose.yml up --build",
-    "docker:down": "docker compose -f infra/compose/docker-compose.yml down -v"
+    "docker:up:detached": "docker compose -f infra/compose/docker-compose.yml up -d --build",
+    "docker:down": "docker compose -f infra/compose/docker-compose.yml down -v",
+    "local:dev": "pnpm docker:up:detached && pnpm db:migrate && pnpm db:seed && pnpm dev",
+    "test:live:api": "pnpm docker:up:detached && pnpm db:migrate && pnpm db:seed && bash scripts/qa/live-api-smoke.sh",
+    "test:live:flows": "pnpm docker:up:detached && pnpm db:migrate && pnpm db:seed && pnpm --filter @beauteavenue/web-admin test:e2e:flow && pnpm --filter @beauteavenue/web-admin test:e2e:panel"
   }
 }

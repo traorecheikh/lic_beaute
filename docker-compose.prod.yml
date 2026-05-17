@@ -58,8 +58,16 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       WEB_ORIGIN: ${WEB_ORIGIN}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-noop}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@beauteavenue.sn}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
       OTP_DRIVER: ${OTP_DRIVER:-noop}
-      PUSH_DRIVER: ${PUSH_DRIVER:-noop}
+      AT_API_KEY: ${AT_API_KEY:-}
+      AT_USERNAME: ${AT_USERNAME:-}
+      PUSH_DRIVER: ${PUSH_DRIVER:-fcm}
       PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       STORAGE_PATH: /app/uploads
@@ -92,8 +100,16 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-noop}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@beauteavenue.sn}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
       OTP_DRIVER: ${OTP_DRIVER:-noop}
-      PUSH_DRIVER: ${PUSH_DRIVER:-noop}
+      AT_API_KEY: ${AT_API_KEY:-}
+      AT_USERNAME: ${AT_USERNAME:-}
+      PUSH_DRIVER: ${PUSH_DRIVER:-fcm}
       PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       STORAGE_PATH: /app/uploads

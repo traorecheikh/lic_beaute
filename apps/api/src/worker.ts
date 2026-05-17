@@ -8,6 +8,7 @@ import { getQueueRedis } from "./lib/redis.js";
 import { closeJobQueues, enqueueJob, shouldRunBull, type AppJobType } from "./lib/jobs.js";
 import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/db/prisma.js";
+import { sendEmail } from "./lib/email.js";
 import { sendPushBatch } from "./lib/push.js";
 import { sendNotification } from "./modules/notifications/index.js";
 
@@ -122,11 +123,21 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
       });
       if (!booking || !["pending", "confirmed"].includes(booking.status)) return;
 
+      const windowLabel = payload.window === "1h" ? "dans 1 heure" : "demain";
       await sendNotification(
         booking.clientId,
         "Rappel de réservation",
-        `Votre rendez-vous pour ${booking.service.name} est demain.`
-      );
+        `Votre rendez-vous pour ${booking.service.name} est ${windowLabel}.`
+      ).catch((err) => logger.warn("[WORKER] push reminder failed", { bookingId: booking.id, err }));
+
+      if (booking.client.email) {
+        await sendEmail({
+          to: booking.client.email,
+          subject: `Rappel — Votre RDV pour ${booking.service.name} ${windowLabel}`,
+          text: `Bonjour,\n\nRappel : votre rendez-vous pour "${booking.service.name}" est prévu ${windowLabel}.\n\nÀ bientôt sur BeautéAvenue.`,
+          html: `<p>Bonjour,</p><p>Rappel : votre rendez-vous pour <strong>${booking.service.name}</strong> est prévu <strong>${windowLabel}</strong>.</p><p>À bientôt sur BeautéAvenue.</p>`
+        }).catch((err) => logger.warn("[WORKER] reminder email failed", { to: booking.client.email, err }));
+      }
       return;
     }
 
@@ -153,28 +164,77 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
     }
 
     case "notification_retry": {
-      const notification = await prisma.notification.findUnique({ where: { id: payload.notificationId } });
+      const notification = await prisma.notification.findUnique({
+        where: { id: payload.notificationId }
+      });
       if (!notification) return;
-      logger.info("[WORKER] notification_retry: noop push driver", { notificationId: notification.id });
+
+      await sendNotification(
+        notification.userId,
+        notification.title,
+        notification.body
+      ).catch((err) => logger.warn("[WORKER] notification_retry failed", { notificationId: notification.id, err }));
       return;
     }
 
     case "subscription_expiry_check": {
-      const expired = await prisma.subscription.findMany({
-        where: { status: "active", expiresAt: { lt: new Date() } }
+      const now = new Date();
+      const graceDurationMs = 3 * 24 * 60 * 60 * 1000;
+
+      // Step 1: active → past_due (grace starts)
+      const toGrace = await prisma.subscription.findMany({
+        where: { status: "active", expiresAt: { lt: now }, gracePeriodEndsAt: null },
+        include: { salon: { select: { id: true, staffMembers: { where: { role: "salon_owner" }, select: { email: true }, take: 1 } } } }
       });
-      for (const sub of expired) {
+      for (const sub of toGrace) {
+        const gracePeriodEndsAt = new Date(now.getTime() + graceDurationMs);
+        await prisma.subscription.update({
+          where: { id: sub.id },
+          data: { status: "past_due", gracePeriodEndsAt }
+          // isVisibleInMarketplace stays true during grace
+        });
+        const ownerEmail = sub.salon.staffMembers[0]?.email;
+        if (ownerEmail) {
+          await sendEmail({
+            to: ownerEmail,
+            subject: "Votre abonnement BeautéAvenue expire dans 3 jours",
+            text: `Bonjour,\n\nVotre abonnement a expiré. Vous disposez de 3 jours (jusqu'au ${gracePeriodEndsAt.toLocaleDateString("fr-FR")}) pour renouveler avant que votre salon ne soit suspendu.\n\nRenouvelez sur https://beauteavenue.sn/pro/subscription`,
+            html: `<p>Bonjour,</p><p>Votre abonnement a expiré. Vous disposez de <strong>3 jours</strong> (jusqu'au ${gracePeriodEndsAt.toLocaleDateString("fr-FR")}) pour renouveler avant que votre salon ne soit suspendu.</p><p><a href="https://beauteavenue.sn/pro/subscription">Renouveler maintenant</a></p>`
+          }).catch((err) => logger.warn("[WORKER] grace email failed", { to: ownerEmail, err }));
+        }
+      }
+      if (toGrace.length > 0) {
+        logger.info("[WORKER] subscription_expiry_check: grace started", { count: toGrace.length });
+      }
+
+      // Step 2: past_due → expired (grace over)
+      const toExpire = await prisma.subscription.findMany({
+        where: { status: "past_due", gracePeriodEndsAt: { lt: now } },
+        include: { salon: { select: { id: true, staffMembers: { where: { role: "salon_owner" }, select: { email: true }, take: 1 } } } }
+      });
+      for (const sub of toExpire) {
         await prisma.$transaction([
           prisma.subscription.update({ where: { id: sub.id }, data: { status: "expired" } }),
           prisma.salon.update({
             where: { id: sub.salonId },
-            data: { subscriptionTier: "standard", isVisibleInMarketplace: false, canReceiveBookings: false }
+            data: { isVisibleInMarketplace: false, canReceiveBookings: false }
+            // DO NOT touch subscriptionTier — both standard and premium are paid tiers
           })
         ]);
+        const ownerEmail = sub.salon.staffMembers[0]?.email;
+        if (ownerEmail) {
+          await sendEmail({
+            to: ownerEmail,
+            subject: "Votre salon BeautéAvenue est suspendu",
+            text: `Bonjour,\n\nVotre abonnement a expiré et votre salon est maintenant suspendu. Pour le réactiver, renouvelez votre abonnement sur https://beauteavenue.sn/pro/subscription`,
+            html: `<p>Bonjour,</p><p>Votre abonnement a expiré et votre salon est maintenant <strong>suspendu</strong>.</p><p><a href="https://beauteavenue.sn/pro/subscription">Réactiver mon abonnement</a></p>`
+          }).catch((err) => logger.warn("[WORKER] expired email failed", { to: ownerEmail, err }));
+        }
       }
-      if (expired.length > 0) {
-        logger.info("[WORKER] subscription_expiry_check: expired", { count: expired.length });
+      if (toExpire.length > 0) {
+        logger.info("[WORKER] subscription_expiry_check: expired", { count: toExpire.length });
       }
+
       const nextMidnight = new Date();
       nextMidnight.setUTCHours(24, 0, 0, 0);
       await enqueueJob({ type: "subscription_expiry_check", payload: {}, runAfter: nextMidnight });

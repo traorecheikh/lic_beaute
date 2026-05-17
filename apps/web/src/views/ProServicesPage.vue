@@ -96,6 +96,9 @@
           </tr>
         </tbody>
       </table>
+      <div v-if="services.length === 0" class="px-6 py-12 text-center">
+        <p class="row-meta">Aucune prestation. Cliquez sur "Nouvelle prestation" pour commencer.</p>
+      </div>
     </div>
 
     <div class="mt-8 panel-clean p-6 bg-primary/5 border-primary/10 flex items-center justify-between">
@@ -279,6 +282,7 @@ function submitService() {
 }
 
 function deleteService(id: string) {
+  if (!confirm('Supprimer cette prestation ? Cette action est irréversible.')) return;
   deleteMutation.mutate(id);
 }
 

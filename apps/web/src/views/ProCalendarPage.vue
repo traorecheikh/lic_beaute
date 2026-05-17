@@ -968,6 +968,17 @@ watch(
   { immediate: true }
 );
 
+// Staff members only see their own bookings — auto-set filter on load
+watch(
+  () => auth.isOwner,
+  (isOwner) => {
+    if (!isOwner && auth.currentUser?.id) {
+      selectedEmployeeId.value = auth.currentUser.id;
+    }
+  },
+  { immediate: true }
+);
+
 watch(
   () => route.query,
   (query) => {

@@ -62,7 +62,10 @@ describe("ProController branches", () => {
   });
 
   it("transition returns booking_not_found and invalid_status", async () => {
-    mocks.prisma.booking.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "b1", status: "completed" });
+    mocks.prisma.booking.findFirst
+      .mockResolvedValueOnce(null) // accept pre-check -> 404
+      .mockResolvedValueOnce({ id: "b1", status: "completed", depositAmountXof: 0, payments: [] }) // accept pre-check
+      .mockResolvedValueOnce({ id: "b1", status: "completed" }); // transitionBooking check
     await c.acceptBooking({ params: { bookingId: "b1" } } as never, rep);
     await c.acceptBooking({ params: { bookingId: "b1" } } as never, rep);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 404, "booking_not_found", expect.any(String));

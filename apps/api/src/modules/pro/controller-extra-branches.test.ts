@@ -256,10 +256,10 @@ describe("ProController extra branches", () => {
   });
 
   it("createService enforces premium and deposit rules", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard", subscription: { status: "active" } });
     await c.createService({ body: { name: "S", category: "hair", durationMinutes: 30, priceXof: 1000, depositMode: "fixed", depositAmountXof: 500 } } as never, {} as never);
 
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium", subscription: { status: "active" } });
     await c.createService({ body: { name: "S", category: "hair", durationMinutes: 30, priceXof: 1000, depositMode: "fixed" } } as never, {} as never);
     await c.createService({ body: { name: "S", category: "hair", durationMinutes: 30, priceXof: 1000, depositMode: "percent" } } as never, {} as never);
 

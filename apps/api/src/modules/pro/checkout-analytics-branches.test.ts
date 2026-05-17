@@ -110,7 +110,7 @@ describe("Pro checkout/analytics branches", () => {
   });
 
   it("analytics defaults period to 30d when query period is missing", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium", subscription: { status: "active" } });
     mocks.getOrSetCachedJson.mockResolvedValue({ value: { ok: true }, cacheStatus: "MISS" });
     await c.analytics({ query: {} } as never, { header: vi.fn() } as never);
     expect(mocks.getOrSetCachedJson).toHaveBeenCalledWith(expect.objectContaining({

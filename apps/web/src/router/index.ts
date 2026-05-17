@@ -115,6 +115,11 @@ const router = createRouter({
           path: "account",
           name: "pro-account",
           component: () => import("@/views/ProAccountPage.vue")
+        },
+        {
+          path: "approval-status",
+          name: "pro-approval-status",
+          component: () => import("@/views/ProApprovalStatusPage.vue")
         }
       ]
     },

@@ -98,6 +98,16 @@
       </div>
     </header>
 
+    <div v-if="gracePeriodEndsAt && !graceBannerDismissed" class="bg-amber-50 border-b border-amber-200 px-4 py-3 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-[1480px] flex items-center justify-between gap-4">
+        <p class="text-sm font-semibold text-amber-800">
+          Votre abonnement a expiré. Vous disposez encore de <strong>{{ graceDaysLeft }} jour{{ graceDaysLeft === 1 ? '' : 's' }}</strong> avant la suspension de votre salon.
+          <RouterLink to="/pro/subscription" class="underline ml-1">Renouveler maintenant →</RouterLink>
+        </p>
+        <button @click="graceBannerDismissed = true" class="shrink-0 text-amber-600 hover:text-amber-900 text-lg font-bold leading-none">×</button>
+      </div>
+    </div>
+
     <main>
       <div class="mx-auto max-w-[1480px] px-4 pb-12 pt-8 sm:px-6 lg:px-8">
         <RouterView v-slot="{ Component }">
@@ -139,6 +149,8 @@ import {
   TicketIcon
 } from "@heroicons/vue/24/outline";
 
+import { useQuery } from "@tanstack/vue-query";
+import { fetchProSubscription } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 
 const auth = useProAuthStore();
@@ -146,6 +158,26 @@ const route = useRoute();
 const router = useRouter();
 const menuOpen = ref(false);
 const menuRoot = ref<HTMLElement | null>(null);
+const graceBannerDismissed = ref(false);
+
+const subQuery = useQuery({
+  queryKey: ["pro-subscription", "layout"],
+  queryFn: () => fetchProSubscription(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner)),
+  staleTime: 5 * 60 * 1000
+});
+
+const gracePeriodEndsAt = computed(() => {
+  const v = (subQuery.data.value as Record<string, unknown> | undefined)?.gracePeriodEndsAt;
+  if (!v || typeof v !== "string") return null;
+  const d = new Date(v);
+  return d > new Date() ? d : null;
+});
+
+const graceDaysLeft = computed(() => {
+  if (!gracePeriodEndsAt.value) return null;
+  return Math.ceil((gracePeriodEndsAt.value.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+});
 
 const centerNavItems = [
   { label: "Agenda", to: "/pro/calendar", icon: CalendarIcon },

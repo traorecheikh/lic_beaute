@@ -600,16 +600,16 @@ describe("ProController deep branches", () => {
     mocks.prisma.review.findFirst.mockResolvedValue({ id: "r1" });
     await c.respondToReview({ params: { reviewId: "r1" }, body: { responseText: "Merci" } } as never, reply);
 
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard", subscription: { status: "active" } });
     await c.analytics({ query: { period: "7d" } } as never, reply);
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium", subscription: { status: "active" } });
     mocks.getOrSetCachedJson.mockImplementation(async (input: any) => ({
       value: await input.load(),
       cacheStatus: "MISS"
     }));
     mocks.getProAnalytics.mockResolvedValue({ bookingCount: 1 });
     await c.analytics({ query: { period: "90d" } } as never, reply);
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium", subscription: { status: "active" } });
     mocks.getOrSetCachedJson.mockResolvedValueOnce({ value: { bookingCount: 2 }, cacheStatus: "HIT" });
     await c.analytics({ query: { period: "bad-period" } } as never, reply);
 
@@ -666,18 +666,37 @@ describe("ProController deep branches", () => {
   });
 
   it("acceptBooking succeeds without afterHook", async () => {
-    mocks.prisma.booking.findFirst.mockResolvedValue({ id: "b-accept", status: "pending" });
+    mocks.prisma.booking.findFirst
+      .mockResolvedValueOnce({ id: "b-accept", status: "pending", depositAmountXof: 0, payments: [] })
+      .mockResolvedValueOnce({ id: "b-accept", status: "pending" });
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: any) => cb({
-      booking: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      booking: { updateMany: vi.fn().mockResolvedValue({ count: 1 }), findUnique: vi.fn().mockResolvedValue({ startsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), clientId: "c1" }) },
       bookingEvent: { create: vi.fn() },
       auditLog: { create: vi.fn() },
       payment: { findFirst: vi.fn().mockResolvedValue(null) },
       settlementEvent: { create: vi.fn() },
       subscription: { update: vi.fn() },
-      platformSetting: { upsert: vi.fn(), deleteMany: vi.fn() }
+      platformSetting: { upsert: vi.fn(), deleteMany: vi.fn() },
+      job: { create: vi.fn() }
     }));
     await c.acceptBooking({ params: { bookingId: "b-accept" } } as never, reply);
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { status: "confirmed" });
+  });
+
+  it("acceptBooking blocks confirmation when deposit is required but unpaid", async () => {
+    mocks.prisma.booking.findFirst.mockResolvedValue({
+      id: "b-accept-unpaid",
+      status: "pending",
+      depositAmountXof: 10000,
+      payments: []
+    });
+    await c.acceptBooking({ params: { bookingId: "b-accept-unpaid" } } as never, reply);
+    expect(mocks.fail).toHaveBeenCalledWith(
+      expect.anything(),
+      422,
+      "deposit_not_paid",
+      expect.stringContaining("Acompte non payé")
+    );
   });
 
   it("rejectBooking afterHook enqueues refund reconciliation when payment exists", async () => {

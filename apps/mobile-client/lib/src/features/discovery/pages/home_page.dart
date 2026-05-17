@@ -13,6 +13,7 @@ import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../router/app_router.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../auth/widgets/auth_required_sheet.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/salon_list_provider.dart';
@@ -358,7 +359,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Dakar',
+                    ref.watch(currentUserProvider).asData?.value?.city ?? 'Dakar',
                     style: AppTextStyles.overline.copyWith(
                       color: AppColors.primaryLight,
                       letterSpacing: 2,

@@ -249,6 +249,21 @@
               </div>
             </div>
 
+            <div v-if="action === 'request-info' && (requiredDocsQuery.data.value ?? []).length > 0" class="space-y-2">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-cocoa/70 px-1">Documents requis</span>
+              <div class="space-y-2 mt-1">
+                <label
+                  v-for="doc in requiredDocsQuery.data.value ?? []"
+                  :key="doc.id"
+                  class="flex items-center gap-3 cursor-pointer rounded-xl border border-outline-variant/40 px-4 py-3 hover:border-secondary/40 transition"
+                  :class="selectedDocTypes.includes(doc.id) ? 'border-secondary bg-secondary/5' : ''"
+                >
+                  <input type="checkbox" :value="doc.id" v-model="selectedDocTypes" class="accent-secondary w-4 h-4" />
+                  <span class="text-sm text-espresso font-semibold">{{ doc.label }}</span>
+                </label>
+              </div>
+            </div>
+
             <label class="block space-y-3">
               <span class="text-[10px] font-bold uppercase tracking-widest text-cocoa/70 px-1">Motif</span>
               <textarea
@@ -308,6 +323,7 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import {
   ApiError,
   approveSalonRequest,
+  fetchPlatformRequiredDocuments,
   fetchSalonDetail,
   rejectSalonRequest,
   requestSalonInfo
@@ -333,16 +349,32 @@ const salonQuery = useQuery({
   enabled: computed(() => Boolean(auth.accessToken))
 });
 
+const requiredDocsQuery = useQuery({
+  queryKey: ["admin-config-documents"],
+  queryFn: () => fetchPlatformRequiredDocuments(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken))
+});
+
+const selectedDocTypes = ref<string[]>([]);
+
 const decisionMutation = useMutation({
   mutationFn: async () => {
     if (action.value === "approve") {
       return approveSalonRequest(auth.accessToken ?? "", salonId.value);
     }
 
-    const payload = { reason: reason.value.trim() };
-    if (!payload.reason) {
+    let fullReason = reason.value.trim();
+    if (action.value === "request-info" && selectedDocTypes.value.length > 0) {
+      const docs = requiredDocsQuery.data.value ?? [];
+      const labels = selectedDocTypes.value.map((id) => docs.find((d) => d.id === id)?.label).filter(Boolean);
+      if (labels.length > 0) {
+        fullReason = `${fullReason ? fullReason + "\n\n" : ""}Documents requis :\n${labels.map((l) => `• ${l}`).join("\n")}`;
+      }
+    }
+    if (!fullReason) {
       throw new Error("Le motif est requis pour cette action.");
     }
+    const payload = { reason: fullReason };
 
     return action.value === "reject"
       ? rejectSalonRequest(auth.accessToken ?? "", salonId.value, payload)

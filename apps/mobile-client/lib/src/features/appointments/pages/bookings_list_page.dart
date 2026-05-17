@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
@@ -167,12 +168,23 @@ class _BookingTab extends StatelessWidget {
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.55,
               child: Center(
-                child: AppEmptyState(
-                  icon: 'calendar',
-                  title: 'Aucun rendez-vous',
-                  subtitle:
-                      'Vos réservations à venir et passées apparaîtront ici.',
-                  compact: true,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppEmptyState(
+                      icon: 'calendar',
+                      title: 'Aucun rendez-vous',
+                      subtitle:
+                          'Vos réservations à venir et passées apparaîtront ici.',
+                      compact: true,
+                    ),
+                    gapH16,
+                    AppButton.primary(
+                      label: 'Découvrir des salons',
+                      onPressed: () => context.go(AppRoutes.home),
+                      isFullWidth: false,
+                    ),
+                  ],
                 ),
               ),
             ),

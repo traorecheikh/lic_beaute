@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => {
     platformSetting: { findUnique: vi.fn(), upsert: vi.fn() },
     subscriptionCharge: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     subscription: { update: vi.fn() },
+    job: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
     $transaction: vi.fn()
   };
   return { requireRole, ok, fail, logger, adapter, prisma };
@@ -58,7 +59,7 @@ describe("PaymentController", () => {
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "client" });
     mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb({
       payment: { update: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-      booking: { update: vi.fn(), findUnique: vi.fn().mockResolvedValue({ status: "pending", source: "marketplace" }) },
+      booking: { update: vi.fn(), findUnique: vi.fn().mockResolvedValue({ status: "pending", source: "marketplace", startsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), clientId: "client_1", client: { email: "test@test.com" }, service: { name: "Coupe" } }) },
       settlementEvent: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
       bookingEvent: { create: vi.fn() },
       auditLog: { create: vi.fn() },
@@ -232,7 +233,7 @@ describe("PaymentController", () => {
 
     const tx = {
       payment: { update: vi.fn() },
-      booking: { findUnique: vi.fn().mockResolvedValue({ status: "pending", source: "marketplace" }), update: vi.fn() },
+      booking: { findUnique: vi.fn().mockResolvedValue({ status: "pending", source: "marketplace", startsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), clientId: "client_1", client: { email: "test@test.com" }, service: { name: "Coupe" } }), update: vi.fn() },
       settlementEvent: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
       bookingEvent: { create: vi.fn() },
       auditLog: { create: vi.fn() },
@@ -557,16 +558,17 @@ describe("PaymentController", () => {
     expect(tx.booking.update).toHaveBeenCalledWith({ where: { id: "b_refund_branch" }, data: { depositPaymentStatus: "refunded" } });
   });
 
-  it("payment status update for authorized does not touch booking status/deposit", async () => {
+  it("payment status update for authorized updates deposit and auto-confirms pending booking", async () => {
     const tx = {
       payment: { update: vi.fn() },
-      booking: { update: vi.fn(), findUnique: vi.fn() },
+      booking: { update: vi.fn(), findUnique: vi.fn().mockResolvedValue({ status: "pending", startsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), clientId: "c1", client: { email: "c@test.com" }, service: { name: "Coupe" } }) },
       settlementEvent: { findFirst: vi.fn(), create: vi.fn() },
       bookingEvent: { create: vi.fn() },
       auditLog: { create: vi.fn() },
       subscriptionCharge: { update: vi.fn() },
       billingInvoice: { create: vi.fn() },
-      subscription: { findUnique: vi.fn(), update: vi.fn() }
+      subscription: { findUnique: vi.fn(), update: vi.fn() },
+      job: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() }
     };
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
     await (c as any)._applyPaymentStatus(
@@ -575,7 +577,18 @@ describe("PaymentController", () => {
       "{}",
       undefined
     );
-    expect(tx.booking.update).not.toHaveBeenCalled();
+    expect(tx.booking.update).toHaveBeenCalledWith({
+      where: { id: "b_authorized" },
+      data: { depositPaymentStatus: "authorized", status: "confirmed" }
+    });
+    expect(tx.bookingEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        bookingId: "b_authorized",
+        eventType: "auto_confirmed_after_payment",
+        fromStatus: "pending",
+        toStatus: "confirmed"
+      })
+    });
     expect(tx.settlementEvent.create).not.toHaveBeenCalled();
   });
 });

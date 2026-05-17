@@ -217,6 +217,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         AppSnackbar.success(context, 'Code OTP envoyé.');
       },
       fallback: 'Envoi OTP impossible.',
+      errorMapper: parseOtpError,
     );
     if (mounted) setState(() => _submitting = false);
   }
@@ -240,9 +241,9 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         if (!context.mounted) return;
         // ignore: use_build_context_synchronously
         await navigateAfterAuth(context, ref);
-        },
-
+      },
       fallback: 'Vérification OTP impossible.',
+      errorMapper: parseOtpError,
     );
     if (mounted) setState(() => _submitting = false);
   }

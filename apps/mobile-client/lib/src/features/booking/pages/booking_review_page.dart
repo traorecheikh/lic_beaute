@@ -347,16 +347,24 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                     if (defaultChannel != null) {
                       setState(() => _isProcessingPayment = true);
                       try {
-                        final url = await ref
+                        final paymentResult = await ref
                             .read(paymentInitiateProvider.notifier)
                             .initiate(
                               bookingId: booking.id,
                               channel: defaultChannel,
                             );
+                        final url = paymentResult?['redirectUrl'] as String?;
+                        final paymentId = paymentResult?['paymentId'] as String?;
                         if (!context.mounted) return;
                         if (url != null) {
                           final uri = Uri.parse(url);
                           if (uri.scheme == 'mock') {
+                            if (paymentId != null && paymentId.isNotEmpty) {
+                              await ref
+                                  .read(paymentInitiateProvider.notifier)
+                                  .reconcile(paymentId);
+                            }
+                            if (!context.mounted) return;
                             context.pushReplacement(AppRoutes.success(booking.id));
                             return;
                           }
@@ -374,7 +382,9 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                           }
                         }
                       } catch (e) {
-                        // Silently fallback to handoff page on error
+                        if (context.mounted) {
+                          AppSnackbar.error(context, 'Paiement échoué. Réessayez sur la page suivante.');
+                        }
                       } finally {
                         if (mounted) {
                           setState(() => _isProcessingPayment = false);

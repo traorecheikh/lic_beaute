@@ -15,6 +15,12 @@ class _ServiceSelectionPageState extends ConsumerState<ServiceSelectionPage> {
   String? _selectedServiceId;
 
   @override
+  void initState() {
+    super.initState();
+    debugPrint('[BOOKING_SERVICE] open salonId=${widget.salonId}');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AppBookingFunnelScaffold(
       salonId: widget.salonId,
@@ -28,15 +34,29 @@ class _ServiceSelectionPageState extends ConsumerState<ServiceSelectionPage> {
       ),
       builder: (salon) {
         final services = salon.services.toList();
+        debugPrint(
+          '[BOOKING_SERVICE] render salonId=${widget.salonId} services=${services.length}',
+        );
         if (services.isEmpty) {
           return Center(
             child: Padding(
               padding: EdgeInsets.all(24.w),
-              child: Text(
-                'Aucune prestation disponible pour ce salon.',
-                style: AppTextStyles.bodyMd
-                    .copyWith(color: AppColors.onSurfaceVariant),
-                textAlign: TextAlign.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Aucune prestation disponible pour ce salon.',
+                    style: AppTextStyles.bodyMd
+                        .copyWith(color: AppColors.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                  gapH16,
+                  AppButton.outline(
+                    label: 'Retour',
+                    onPressed: () => Navigator.of(context).pop(),
+                    isFullWidth: false,
+                  ),
+                ],
               ),
             ),
           );

@@ -1,5 +1,6 @@
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'package:flutter/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../../booking/utils/booking_format.dart';
+import '../../../core/utils/status_labels.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../../discovery/providers/salon_detail_provider.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
@@ -52,21 +54,25 @@ class BookingDetailPage extends ConsumerWidget {
         final totalAmountXof = resource.priceXof ?? fallbackPrice;
         final depositAmountXof = resource.depositXof ?? fallbackDeposit;
         final hasDeposit = depositAmountXof > 0;
-        final isDepositPaid =
-            hasDeposit &&
-            (resource.depositPaymentStatus == 'authorized' ||
-                resource.depositPaymentStatus == 'succeeded' ||
-                resource.depositPaymentStatus == 'refunded');
+        final depositPaidXof = (resource.depositPaidXof ?? 0).clamp(
+          0,
+          depositAmountXof,
+        );
+        final isDepositPaid = hasDeposit && depositPaidXof > 0;
         final depositLabel = !hasDeposit
             ? 'Aucun acompte'
             : (isDepositPaid ? 'Acompte payé' : 'Acompte requis');
         final remainingXof = totalAmountXof == null
             ? null
-            : (totalAmountXof - (isDepositPaid ? depositAmountXof : 0)).clamp(
+            : (totalAmountXof - depositPaidXof).clamp(
                 0,
                 999999999,
               );
 
+        final isPastNotClosed = bookingIsPastNotClosed(
+          status: resource.status,
+          endsAt: resource.endsAt,
+        );
         final isCancelled =
             resource.status == 'cancelled' || resource.status == 'completed';
 
@@ -79,7 +85,11 @@ class BookingDetailPage extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 40.h),
               child: Column(
                 children: [
-                  _StatusHeader(status: resource.status, bookingId: bookingId),
+                  _StatusHeader(
+                    status: resource.status,
+                    bookingId: bookingId,
+                    endsAt: resource.endsAt,
+                  ),
                   gapH20,
                   _InfoSection(
                     title: 'Où et quand',
@@ -145,8 +155,10 @@ class BookingDetailPage extends ConsumerWidget {
                             children: [
                               _PriceRow(
                                 label: depositLabel,
-                                value: xof(depositAmountXof),
-                                isDeposit: hasDeposit,
+                                value: xof(
+                                  isDepositPaid ? depositPaidXof : depositAmountXof,
+                                ),
+                                isDeposit: hasDeposit && isDepositPaid,
                               ),
                               if (remainingXof != null) ...[
                                 SizedBox(height: 12.h),
@@ -164,13 +176,27 @@ class BookingDetailPage extends ConsumerWidget {
                     ],
                   ),
                   SizedBox(height: 24.h),
-                  if (isPast || resource.status == 'completed') ...[
+                  if (isPastNotClosed) ...[
+                    _RatingPromptCard(bookingId: bookingId),
+                    SizedBox(height: 16.h),
+                  ],
+                  if (isPast || resource.status == 'completed' || isPastNotClosed) ...[
                     Row(
                       children: [
                         Expanded(
                           child: AppButton.outline(
-                            onPressed: () =>
-                                context.push(AppRoutes.bookingService),
+                            onPressed: () {
+                              if (salonId.isEmpty) {
+                                AppSnackbar.error(
+                                  context,
+                                  'Salon introuvable. Ouvrez la fiche salon pour réserver.',
+                                );
+                                return;
+                              }
+                              context.push(
+                                '${AppRoutes.bookingService}?salonId=$salonId',
+                              );
+                            },
                             label: 'Réserver à nouveau',
                           ),
                         ),
@@ -198,7 +224,23 @@ class BookingDetailPage extends ConsumerWidget {
                         SizedBox(width: 12.w),
                         Expanded(
                           child: AppButton.primary(
-                            onPressed: () {}, // Action itinéraire placeholder
+                            onPressed: () async {
+                              final addr = Uri.encodeComponent(
+                                resource.data?['salonAddress'] as String? ?? '',
+                              );
+                              final appleUrl = Uri.parse('maps://?q=$addr');
+                              final googleUrl = Uri.parse(
+                                'https://maps.google.com/?q=$addr',
+                              );
+                              if (await canLaunchUrl(appleUrl)) {
+                                await launchUrl(appleUrl);
+                              } else {
+                                await launchUrl(
+                                  googleUrl,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              }
+                            },
                             label: 'Itinéraire',
                           ),
                         ),
@@ -258,14 +300,20 @@ class BookingDetailPage extends ConsumerWidget {
 }
 
 class _StatusHeader extends StatelessWidget {
-  const _StatusHeader({required this.status, required this.bookingId});
+  const _StatusHeader({
+    required this.status,
+    required this.bookingId,
+    this.endsAt,
+  });
 
   final String status;
   final String bookingId;
+  final DateTime? endsAt;
 
   @override
   Widget build(BuildContext context) {
-    final isSuccess = status == 'confirmed' || status == 'completed';
+    final isPastNotClosed = bookingIsPastNotClosed(status: status, endsAt: endsAt);
+    final isSuccess = (status == 'confirmed' || status == 'completed') && !isPastNotClosed;
     final isCancelled = status == 'cancelled';
 
     final iconColor = isSuccess
@@ -276,16 +324,9 @@ class _StatusHeader extends StatelessWidget {
         : (isCancelled
               ? AppColors.errorContainer
               : AppColors.secondaryContainer);
-    final icon = isSuccess
-        ? 'check'
-        : (isCancelled ? 'close' : 'clock');
+    final icon = isSuccess ? 'check' : (isCancelled ? 'close' : 'clock');
 
-    final title = switch (status) {
-      'confirmed' => 'Rendez-vous confirmé',
-      'completed' => 'Rendez-vous terminé',
-      'cancelled' => 'Rendez-vous annulé',
-      _ => 'En attente de confirmation',
-    };
+    final title = bookingStatusHeadline(status, endsAt: endsAt);
 
     return Container(
       width: double.infinity,
@@ -392,6 +433,62 @@ class _DetailRow extends StatelessWidget {
                 ],
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingPromptCard extends StatelessWidget {
+  const _RatingPromptCard({required this.bookingId});
+
+  final String bookingId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24.r),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Comment s\'était ce rendez-vous ?',
+            style: AppTextStyles.labelLg,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (i) {
+              return AppPressable(
+                onTap: () {
+                  AppHaptics.medium();
+                  context.push(AppRoutes.review(bookingId));
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w),
+                  child: AppIcon(
+                    'star',
+                    size: 30,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              );
+            }),
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            'Touchez une étoile pour laisser un avis',
+            style: AppTextStyles.bodySm.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

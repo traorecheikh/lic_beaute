@@ -5,10 +5,13 @@ import { paymentInitiateInputSchema } from "@beauteavenue/contracts";
 import { getPaymentAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
+import { sendEmail } from "../../lib/email.js";
 import { fail, ok } from "../../lib/http.js";
+import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
+import { sendNotification } from "../notifications/index.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   intechApiKey: config.intechApiKey,
@@ -424,6 +427,9 @@ export class PaymentController {
     if (payment.status === newStatus) return;
     if (payment.status === "refunded") return;
 
+    type AutoConfirmedMeta = { bookingId: string; startsAt: Date; clientId: string; clientEmail: string | null; serviceName: string };
+    const autoConfirmedCapture: AutoConfirmedMeta[] = [];
+
     await prisma.$transaction(async (tx) => {
       await tx.payment.update({
         where: { id: payment.id },
@@ -433,17 +439,23 @@ export class PaymentController {
         }
       });
 
-      if (newStatus === "succeeded") {
+      if (newStatus === "authorized" || newStatus === "succeeded") {
         const booking = await tx.booking.findUnique({
           where: { id: payment.bookingId },
-          select: { status: true, source: true }
+          select: {
+            status: true,
+            startsAt: true,
+            clientId: true,
+            client: { select: { email: true } },
+            service: { select: { name: true } }
+          }
         });
-        const shouldAutoConfirm = booking?.status === "pending" && booking.source === "marketplace";
+        const shouldAutoConfirm = booking?.status === "pending";
 
         await tx.booking.update({
           where: { id: payment.bookingId },
           data: {
-            depositPaymentStatus: "succeeded",
+            depositPaymentStatus: newStatus,
             ...(shouldAutoConfirm ? { status: "confirmed" } : {})
           }
         });
@@ -458,24 +470,35 @@ export class PaymentController {
               payloadJson: JSON.stringify({ paymentId: payment.id })
             }
           });
+          if (booking) {
+            autoConfirmedCapture.push({
+              bookingId: payment.bookingId,
+              startsAt: booking.startsAt,
+              clientId: booking.clientId,
+              clientEmail: booking.client.email,
+              serviceName: booking.service.name
+            });
+          }
         }
 
-        const existingSettlement = await tx.settlementEvent.findFirst({
-          where: {
-            paymentId: payment.id,
-            eventType: "held"
-          }
-        });
-        if (!existingSettlement) {
-          await tx.settlementEvent.create({
-            data: {
-              bookingId: payment.bookingId,
+        if (newStatus === "succeeded") {
+          const existingSettlement = await tx.settlementEvent.findFirst({
+            where: {
               paymentId: payment.id,
-              eventType: "held",
-              amountXof: payment.amountXof,
-              providerReference: providerRefOverride
+              eventType: "held"
             }
           });
+          if (!existingSettlement) {
+            await tx.settlementEvent.create({
+              data: {
+                bookingId: payment.bookingId,
+                paymentId: payment.id,
+                eventType: "held",
+                amountXof: payment.amountXof,
+                providerReference: providerRefOverride
+              }
+            });
+          }
         }
       } else if (newStatus === "failed" || newStatus === "refunded") {
         await tx.booking.update({
@@ -496,6 +519,33 @@ export class PaymentController {
         }
       });
     });
+
+    const autoConfirmedMeta = autoConfirmedCapture[0];
+    if (autoConfirmedMeta) {
+      const meta = autoConfirmedMeta;
+      const runAfter24h = new Date(meta.startsAt.getTime() - 24 * 60 * 60 * 1000);
+      const runAfter1h = new Date(meta.startsAt.getTime() - 60 * 60 * 1000);
+      const now = Date.now();
+      if (runAfter24h.getTime() > now) {
+        await enqueueJob({ type: "booking_reminder", payload: { bookingId: meta.bookingId, window: "24h" }, bookingId: meta.bookingId, runAfter: runAfter24h });
+      }
+      if (runAfter1h.getTime() > now) {
+        await enqueueJob({ type: "booking_reminder", payload: { bookingId: meta.bookingId, window: "1h" }, bookingId: meta.bookingId, runAfter: runAfter1h });
+      }
+
+      await sendNotification(meta.clientId, "Réservation confirmée", `Votre RDV pour ${meta.serviceName} est confirmé.`).catch((err) =>
+        logger.warn("[PAYMENT] push notification failed", { clientId: meta.clientId, err })
+      );
+
+      if (meta.clientEmail) {
+        await sendEmail({
+          to: meta.clientEmail,
+          subject: "Votre réservation est confirmée — BeautéAvenue",
+          text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur BeautéAvenue.`,
+          html: `<p>Bonjour,</p><p>Votre réservation pour <strong>${meta.serviceName}</strong> est confirmée.</p><p>À très bientôt sur BeautéAvenue.</p>`
+        }).catch((err) => logger.warn("[PAYMENT] confirmation email failed", { to: meta.clientEmail, err }));
+      }
+    }
   }
 
   private async _applySubscriptionChargeStatus(
