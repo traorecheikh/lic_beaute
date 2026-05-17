@@ -15,6 +15,8 @@ import {
 } from "@beauteavenue/contracts";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 
+import { sendEmail } from "../../lib/email.js";
+import { logger } from "../../lib/logger.js";
 import { toPublicBillingProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
 
@@ -419,11 +421,19 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
     entityId: salon.id,
     actorName,
     severity: "info",
-    payloadJson: JSON.stringify(data),
+    // Never include temporaryPassword in audit payload
+    payloadJson: JSON.stringify({ name: data.name, ownerEmail: data.ownerEmail, city: data.city }),
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
   });
 
-  return { ...await getPendingSalonDetail(salon.id), temporaryPassword };
+  // Deliver the temporary password via email — never in the API response body
+  await sendEmail({
+    to: data.ownerEmail,
+    subject: "Bienvenue sur Beauté Avenue — Vos identifiants de connexion",
+    text: `Bonjour ${data.ownerName},\n\nVotre espace pro a été créé.\nEmail : ${data.ownerEmail}\nMot de passe temporaire : ${temporaryPassword}\n\nVeuillez changer votre mot de passe dès votre première connexion.\n\nL'équipe Beauté Avenue`
+  }).catch((err) => logger.error("createSalon: failed to send credentials email", { err: String(err), ownerEmail: data.ownerEmail }));
+
+  return await getPendingSalonDetail(salon.id);
 }
 
 // ─── Subscriptions ────────────────────────────────────────────────────────────
@@ -547,6 +557,7 @@ export async function overrideSubscription(
       break;
     case "resume_subscription":
       updateData.status = "active";
+      updateData.autoRenew = true;
       break;
     case "terminate_subscription":
       updateData.status = "cancelled";
@@ -564,6 +575,13 @@ export async function overrideSubscription(
       await tx.salon.update({
         where: { id: sub.salonId },
         data: { isVisibleInMarketplace: false, canReceiveBookings: false }
+      });
+    }
+
+    if (input.action === "resume_subscription") {
+      await tx.salon.update({
+        where: { id: sub.salonId },
+        data: { isVisibleInMarketplace: true, canReceiveBookings: true }
       });
     }
 

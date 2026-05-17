@@ -160,8 +160,8 @@ export class IntechAdapter implements PaymentAdapter {
       if (!this._safeCompareHex(expectedHash, receivedHash)) {
         throw new Error("Invalid Intech callback hash");
       }
-    } else if (this.hmacEnabled && transactionId && externalTransactionId) {
-      // Missing callback hash while identifiers are present is suspicious when HMAC is on.
+    } else if (transactionId && externalTransactionId) {
+      // Callback hash is always required when both identifiers are present — regardless of HMAC transport setting.
       throw new Error("Missing Intech callback hash — reject without integrity proof");
     }
 

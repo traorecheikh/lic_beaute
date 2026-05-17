@@ -270,7 +270,7 @@ export class BookingController {
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "cancelled", fromStatus: booking.status, toStatus: "cancelled" }
         });
         await tx.job.updateMany({
-          where: { type: "booking_reminder", payloadJson: { contains: booking.id }, status: "pending" },
+          where: { type: "booking_reminder", payloadJson: { contains: `"bookingId":"${booking.id}"` }, status: "pending" },
           data: { status: "cancelled" }
         });
 
@@ -351,7 +351,7 @@ export class BookingController {
           data: { bookingId: booking.id, actorUserId: session.sub, eventType: "rescheduled", payloadJson: JSON.stringify({ newStartsAt: newStart }) }
         });
         await tx.job.updateMany({
-          where: { type: "booking_reminder", payloadJson: { contains: booking.id }, status: "pending" },
+          where: { type: "booking_reminder", payloadJson: { contains: `"bookingId":"${booking.id}"` }, status: "pending" },
           data: { status: "cancelled" }
         });
       });

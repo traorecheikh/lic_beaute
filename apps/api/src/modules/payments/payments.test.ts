@@ -18,7 +18,8 @@ const mocks = vi.hoisted(() => {
     auditLog: { create: vi.fn() },
     subscriptionCharge: { update: vi.fn() },
     billingInvoice: { create: vi.fn().mockResolvedValue({ id: "inv_new" }) },
-    subscription: { update: vi.fn() }
+    subscription: { update: vi.fn(), findUnique: vi.fn() },
+    salon: { update: vi.fn() }
   };
 
   const prisma = {
@@ -332,6 +333,7 @@ describe("PaymentController", () => {
       subscription: { salonId: "salon_1", tier: "standard" }
     });
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
+    mocks.tx.subscription.findUnique.mockResolvedValue({ salonId: "salon_1", expiresAt: null });
 
     await controller.webhookIntech({ body: { any: "payload" }, headers: {} } as never, {} as never);
 

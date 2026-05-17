@@ -152,7 +152,8 @@ export class PaymentController {
   }
 
   private async _handleWebhook(request: FastifyRequest, reply: FastifyReply) {
-    const rawBody = JSON.stringify(request.body);
+    // Use raw bytes captured before JSON parsing; fall back to re-serialized body if hook missed.
+    const rawBody = (request as typeof request & { rawBody?: string }).rawBody ?? JSON.stringify(request.body);
     const headers = request.headers ?? {};
     const hmacSignature = this._headerAsString(headers["hmac-signature"]);
     const hmacTimestamp = this._headerAsString(headers.timestamp);
@@ -170,6 +171,7 @@ export class PaymentController {
     try {
       event = paymentAdapter.parseWebhook(rawBody);
     } catch (err) {
+      logger.warn("Webhook payload rejected", { err: String(err) });
       fail(reply, 400, "invalid_payload", "Payload invalide.");
       return;
     }
@@ -193,7 +195,7 @@ export class PaymentController {
           ]
         };
 
-    const payment = paymentIdFromMetadata
+    const paymentCandidate = paymentIdFromMetadata
       ? await prisma.payment.findUnique({
           where: { id: paymentIdFromMetadata },
           include: { booking: true }
@@ -202,6 +204,13 @@ export class PaymentController {
           where: fallbackWhere,
           include: { booking: true }
         });
+
+    // When looking up by metadata.paymentId, verify the provider ref matches to prevent
+    // a spoofed paymentId from attaching a callback to an unrelated record.
+    const payment = paymentIdFromMetadata && paymentCandidate
+      ? (paymentCandidate.providerTxId == null || paymentCandidate.providerTxId === event.providerRef ? paymentCandidate : null)
+      : paymentCandidate;
+
     if (!payment) {
       // Fallback: subscription charge lookup
       const subChargeFallbackWhere = externalTransactionId
@@ -213,7 +222,7 @@ export class PaymentController {
           }
         : { providerTxId: event.providerRef };
 
-      const subCharge = paymentIdFromMetadata
+      const subChargeCandidate = paymentIdFromMetadata
         ? await prisma.subscriptionCharge.findUnique({
             where: { id: paymentIdFromMetadata },
             include: { subscription: true }
@@ -223,7 +232,22 @@ export class PaymentController {
             include: { subscription: true }
           });
 
+      // Same providerRef binding check for subscription charges
+      const subCharge = paymentIdFromMetadata && subChargeCandidate
+        ? (subChargeCandidate.providerTxId == null || subChargeCandidate.providerTxId === event.providerRef ? subChargeCandidate : null)
+        : subChargeCandidate;
+
       if (subCharge) {
+        // Amount guard: reject if callback amount is present and diverges by more than 1 XOF (rounding)
+        if (event.amountXof > 0 && Math.abs(event.amountXof - subCharge.amountXof) > 1) {
+          logger.error("Webhook amount mismatch for subscriptionCharge", {
+            chargeId: subCharge.id,
+            expected: subCharge.amountXof,
+            received: event.amountXof
+          });
+          fail(reply, 422, "amount_mismatch", "Montant du callback incohérent.");
+          return;
+        }
         await this._applySubscriptionChargeStatus(subCharge, event.status, event.providerRef, rawBody);
         ok(reply, { received: true });
         return;
@@ -233,6 +257,16 @@ export class PaymentController {
       return;
     }
 
+    // Amount guard: reject if callback amount is present and diverges by more than 1 XOF (rounding)
+    if (event.amountXof > 0 && Math.abs(event.amountXof - payment.amountXof) > 1) {
+      logger.error("Webhook amount mismatch for payment", {
+        paymentId: payment.id,
+        expected: payment.amountXof,
+        received: event.amountXof
+      });
+      fail(reply, 422, "amount_mismatch", "Montant du callback incohérent.");
+      return;
+    }
     await this._applyPaymentStatus(payment, event.status, rawBody, event.providerRef);
 
     ok(reply, { received: true });
@@ -497,16 +531,33 @@ export class PaymentController {
           data: { invoiceId: invoice.id }
         });
 
+        const sub = await tx.subscription.findUnique({
+          where: { id: charge.subscriptionId },
+          select: { salonId: true, expiresAt: true }
+        });
+
+        // Extend from current expiresAt (not now) to preserve already-paid time on early renewal
+        const baseDate = sub?.expiresAt && sub.expiresAt > new Date() ? sub.expiresAt : new Date();
+        const isUpgrade = charge.chargeType === "upgrade";
+
         await tx.subscription.update({
           where: { id: charge.subscriptionId },
           data: {
-            tier: "premium",
+            ...(isUpgrade ? { tier: "premium" } : {}),
             status: "active",
             expiresAt: charge.chargeType === "renewal"
-              ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              ? new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000)
               : undefined
           }
         });
+
+        // Sync Salon.subscriptionTier on upgrade to prevent entitlement split-brain
+        if (isUpgrade && sub?.salonId) {
+          await tx.salon.update({
+            where: { id: sub.salonId },
+            data: { subscriptionTier: "premium" }
+          });
+        }
       }
 
       await tx.auditLog.create({

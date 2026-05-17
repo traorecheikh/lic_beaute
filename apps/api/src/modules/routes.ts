@@ -94,7 +94,18 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/payments/deposits/initiate", (req, rep) => payments.initiate(req, rep));
   app.get("/api/v1/payments/:paymentId", (req, rep) => payments.status(req, rep));
   app.post("/api/v1/payments/:paymentId/reconcile", (req, rep) => payments.reconcile(req, rep));
-  app.post("/api/v1/payments/webhooks/intech", (req, rep) => payments.webhookIntech(req, rep));
+  app.post("/api/v1/payments/webhooks/intech", {
+    // Capture raw body before JSON parsing so HMAC is verified against original bytes
+    preParsing: async (request, _reply, payload) => {
+      const chunks: Buffer[] = [];
+      for await (const chunk of payload) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string));
+      const raw = Buffer.concat(chunks);
+      (request as typeof request & { rawBody: string }).rawBody = raw.toString("utf-8");
+      const { Readable } = await import("node:stream");
+      const stream = Readable.from(raw) as typeof payload;
+      return stream;
+    }
+  }, (req, rep) => payments.webhookIntech(req, rep));
   app.post("/api/v1/payments/:paymentId/refund", (req, rep) => payments.refund(req, rep));
 
   // ── Pro ───────────────────────────────────────────────────────────────────

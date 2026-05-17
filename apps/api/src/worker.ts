@@ -42,7 +42,8 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
     case "deposit_settlement": {
       const booking = await prisma.booking.findUnique({
         where: { id: payload.bookingId },
-        include: { payments: { where: { status: { in: ["succeeded", "authorized"] } }, take: 1 } }
+        // Only release fully settled payments — "authorized" is not captured yet
+        include: { payments: { where: { status: "succeeded" }, take: 1 } }
       });
       if (!booking) return;
 
@@ -71,20 +72,28 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
       if (!payment || !payment.providerTxId) return;
 
       if (["authorized", "succeeded"].includes(payment.status)) {
+        // Dedupe check BEFORE calling external provider to prevent duplicate refund attempts
+        const existingRefund = await prisma.settlementEvent.findFirst({
+          where: { paymentId: payment.id, eventType: "refunded" }
+        });
+        if (existingRefund) return;
+
+        // Atomically claim the refund slot: if another worker races here, only one will win
+        const claimed = await prisma.payment.updateMany({
+          where: { id: payment.id, status: { in: ["authorized", "succeeded"] } },
+          data: { status: "refunded" }
+        });
+        if (claimed.count === 0) return; // lost the race — another worker already refunded
+
         const refund = await paymentAdapter.requestRefund({
           providerRef: payment.providerTxId,
           amountXof: payment.amountXof,
           reason: "booking_cancelled"
         });
-        await prisma.payment.update({ where: { id: payment.id }, data: { status: "refunded" } });
         await prisma.booking.update({
           where: { id: payment.bookingId },
           data: { depositPaymentStatus: "refunded" }
         });
-        const existingRefund = await prisma.settlementEvent.findFirst({
-          where: { paymentId: payment.id, eventType: "refunded" }
-        });
-        if (existingRefund) return;
         await prisma.settlementEvent.create({
           data: {
             bookingId: payment.bookingId,

@@ -1440,11 +1440,17 @@ export class ProController {
       }
 
       const priceRows = await prisma.platformSetting.findMany({
-        where: { key: { in: ["subscription_premium_price_xof"] } }
+        where: { key: { in: ["subscription_premium_price_xof", "subscription_standard_price_xof"] } }
       });
       const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
-      const amountXof = parseInt(priceMap["subscription_premium_price_xof"] ?? "25000", 10);
-      const idempotencyKey = `sub-${sub.id}-${body.action}-${Date.now()}`;
+      // Renewal price is based on current tier; upgrade always charges premium price
+      const priceKey = (body.action === "renewal" && sub.tier === "standard")
+        ? "subscription_standard_price_xof"
+        : "subscription_premium_price_xof";
+      const amountXof = parseInt(priceMap[priceKey] ?? "25000", 10);
+      // Stable idempotency key: month-scoped so retries within same billing cycle deduplicate
+      const billingMonth = new Date().toISOString().slice(0, 7);
+      const idempotencyKey = `sub-${sub.id}-${body.action}-${billingMonth}`;
 
       const charge = await prisma.subscriptionCharge.create({
         data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "intech", amountXof, idempotencyKey, chargeType: body.action }
