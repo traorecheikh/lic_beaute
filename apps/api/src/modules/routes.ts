@@ -45,11 +45,13 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   });
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  app.post("/api/v1/auth/register", (req, rep) => auth.register(req, rep));
-  app.post("/api/v1/auth/login", (req, rep) => auth.login(req, rep));
-  app.post("/api/v1/auth/otp/request", (req, rep) => auth.requestOtp(req, rep));
-  app.post("/api/v1/auth/otp/verify", (req, rep) => auth.verifyOtp(req, rep));
-  app.post("/api/v1/auth/refresh", (req, rep) => auth.refresh(req, rep));
+  const authLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
+  const otpLimit = { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } };
+  app.post("/api/v1/auth/register", authLimit, (req, rep) => auth.register(req, rep));
+  app.post("/api/v1/auth/login", authLimit, (req, rep) => auth.login(req, rep));
+  app.post("/api/v1/auth/otp/request", otpLimit, (req, rep) => auth.requestOtp(req, rep));
+  app.post("/api/v1/auth/otp/verify", otpLimit, (req, rep) => auth.verifyOtp(req, rep));
+  app.post("/api/v1/auth/refresh", authLimit, (req, rep) => auth.refresh(req, rep));
   app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
   app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));

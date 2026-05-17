@@ -329,7 +329,9 @@ export class AuthController {
           fail(reply, 423, "account_locked", `Compte temporairement verrouillé. Réessayez dans ${remainingMinutes} minute(s).`);
           return;
         }
-      } catch {}
+      } catch (parseErr) {
+        logger.warn("auth: malformed lockout entry, treating as unlocked", { key: lockoutKey, err: String(parseErr) });
+      }
     }
 
     const valid = await argon2.verify(user.passwordHash, body.password);
@@ -433,7 +435,7 @@ export class AuthController {
     }
     if (!user) {
       user = await prisma.user.create({
-        data: { fullName: body.phone, phone: body.phone, role: "client" }
+        data: { fullName: "Nouveau client", phone: body.phone, role: "client" }
       });
     }
 
