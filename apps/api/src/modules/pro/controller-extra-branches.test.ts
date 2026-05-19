@@ -545,7 +545,8 @@ describe("ProController extra branches", () => {
         description: null,
         isActive: true,
         schedulingEnabled: true,
-        specialties: [{ serviceId: "svc1" }, { serviceId: "svc2" }]
+        specialties: [{ serviceId: "svc1" }, { serviceId: "svc2" }],
+        user: { email: "emp@x.com", phone: "771234567", role: "salon_staff" }
       }
     ]);
     await c.listStaff({} as never, {} as never);
@@ -562,7 +563,7 @@ describe("ProController extra branches", () => {
 
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) =>
       cb({
-        user: { findUnique: vi.fn().mockResolvedValue({ id: "uX", salonId: "other", role: "salon_staff" }), create: vi.fn(), update: vi.fn() },
+        user: { findFirst: vi.fn().mockResolvedValue({ id: "uX", salonId: "other", role: "salon_staff" }), create: vi.fn(), update: vi.fn() },
         employee: { create: vi.fn() },
         employeeSpecialty: { createMany: vi.fn(), deleteMany: vi.fn() }
       })
@@ -573,7 +574,7 @@ describe("ProController extra branches", () => {
 
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) =>
       cb({
-        user: { findUnique: vi.fn().mockResolvedValue({ id: "uY", salonId: "s1", role: "salon_owner" }), create: vi.fn(), update: vi.fn() },
+        user: { findFirst: vi.fn().mockResolvedValue({ id: "uY", salonId: "s1", role: "salon_owner" }), create: vi.fn(), update: vi.fn() },
         employee: { create: vi.fn() },
         employeeSpecialty: { createMany: vi.fn(), deleteMany: vi.fn() }
       })

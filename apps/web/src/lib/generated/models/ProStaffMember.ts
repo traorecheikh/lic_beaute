@@ -42,6 +42,24 @@ export interface ProStaffMember {
      * @type {string}
      * @memberof ProStaffMember
      */
+    email: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProStaffMember
+     */
+    phone: string | null;
+    /**
+     * 
+     * @type {ProStaffMemberRoleEnum}
+     * @memberof ProStaffMember
+     */
+    role: ProStaffMemberRoleEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProStaffMember
+     */
     avatarUrl: string | null;
     /**
      * 
@@ -69,6 +87,18 @@ export interface ProStaffMember {
     serviceIds: Array<string>;
 }
 
+
+/**
+ * @export
+ */
+export const ProStaffMemberRoleEnum = {
+    SalonStaff: 'salon_staff',
+    SalonManager: 'salon_manager',
+    SalonOwner: 'salon_owner'
+} as const;
+export type ProStaffMemberRoleEnum = typeof ProStaffMemberRoleEnum[keyof typeof ProStaffMemberRoleEnum];
+
+
 /**
  * Check if a given object implements the ProStaffMember interface.
  */
@@ -76,6 +106,9 @@ export function instanceOfProStaffMember(value: object): value is ProStaffMember
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('userId' in value) || value['userId'] === undefined) return false;
     if (!('displayName' in value) || value['displayName'] === undefined) return false;
+    if (!('email' in value) || value['email'] === undefined) return false;
+    if (!('phone' in value) || value['phone'] === undefined) return false;
+    if (!('role' in value) || value['role'] === undefined) return false;
     if (!('avatarUrl' in value) || value['avatarUrl'] === undefined) return false;
     if (!('description' in value) || value['description'] === undefined) return false;
     if (!('isActive' in value) || value['isActive'] === undefined) return false;
@@ -97,6 +130,9 @@ export function ProStaffMemberFromJSONTyped(json: any, ignoreDiscriminator: bool
         'id': json['id'],
         'userId': json['userId'],
         'displayName': json['displayName'],
+        'email': json['email'],
+        'phone': json['phone'],
+        'role': json['role'],
         'avatarUrl': json['avatarUrl'],
         'description': json['description'],
         'isActive': json['isActive'],
@@ -119,6 +155,9 @@ export function ProStaffMemberToJSONTyped(value?: ProStaffMember | null, ignoreD
         'id': value['id'],
         'userId': value['userId'],
         'displayName': value['displayName'],
+        'email': value['email'],
+        'phone': value['phone'],
+        'role': value['role'],
         'avatarUrl': value['avatarUrl'],
         'description': value['description'],
         'isActive': value['isActive'],

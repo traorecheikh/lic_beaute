@@ -53,8 +53,27 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
+  const allowedOrigins = new Set([config.webOrigin]);
+  if (config.nodeEnv === "development") {
+    allowedOrigins.add("http://localhost:5174");
+    allowedOrigins.add("http://127.0.0.1:5174");
+  }
   await app.register(cors, {
-    origin: config.webOrigin,
+    origin(origin, cb) {
+      if (!origin) {
+        cb(null, true);
+        return;
+      }
+      if (allowedOrigins.has(origin)) {
+        cb(null, true);
+        return;
+      }
+      if (config.nodeEnv === "development" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        cb(null, true);
+        return;
+      }
+      cb(null, false);
+    },
     credentials: true
   });
   await app.register(cookie);
@@ -103,14 +122,14 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
       // Tighter limits for in-memory fallback: not distributed, lower ceiling.
       await app.register(rateLimit, {
         global: true,
-        max: 50,
+        max: config.nodeEnv === "production" ? 50 : 2000,
         timeWindow: "1 minute"
       });
     }
   } else {
     await app.register(rateLimit, {
       global: true,
-      max: config.nodeEnv === "production" ? 50 : 100,
+      max: config.nodeEnv === "production" ? 50 : 2000,
       timeWindow: "1 minute"
     });
   }

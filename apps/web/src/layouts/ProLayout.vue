@@ -3,11 +3,11 @@
     <header class="sticky top-0 z-[100] border-b border-outline-variant/50 bg-surface/95 backdrop-blur-xl">
       <div class="mx-auto flex max-w-[1480px] items-center gap-8 px-4 py-3 sm:px-6 lg:px-8">
         <!-- Left: Logo + Salon name -->
-        <div class="flex items-center gap-4 shrink-0">
-          <RouterLink to="/pro/calendar" class="flex items-center gap-3 transition hover:opacity-80">
-            <img src="/logo.png" alt="Beauté Avenue" class="h-8 w-auto object-contain" />
+        <div class="flex items-center gap-5 shrink-0">
+          <RouterLink to="/pro/calendar" class="flex items-center gap-4 transition hover:opacity-80">
+            <img src="/logo.png" alt="Beauté Avenue" class="h-10 w-auto object-contain" />
             <div class="hidden sm:block">
-              <p class="text-sm font-bold tracking-tight text-espresso font-display">
+              <p class="text-[17px] font-medium-bold tracking-tight text-espresso font-sans">
                 {{ auth.salonName ?? "Mon Salon" }}
               </p>
             </div>
@@ -18,7 +18,7 @@
         <nav class="flex min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto no-scrollbar">
           <template v-for="item in centerNavItems" :key="item.to">
             <RouterLink
-              v-if="!item.ownerOnly || auth.isOwner"
+              v-if="(!item.ownerOnly || auth.isOwner) && (!item.managerOnly || auth.isManager)"
               :to="item.to"
               :class="[
                 'inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold tracking-tight transition whitespace-nowrap',
@@ -48,7 +48,7 @@
           <div class="flex items-center gap-3">
             <div class="hidden text-right lg:block">
               <p class="text-[13px] font-bold text-espresso leading-none mb-0.5">{{ auth.currentUser?.fullName }}</p>
-              <p class="text-[11px] font-semibold text-cocoa/40 uppercase tracking-wider">{{ auth.currentUser?.role === 'salon_owner' ? 'Propriétaire' : 'Staff' }}</p>
+              <p class="text-[11px] font-semibold text-cocoa/40 uppercase tracking-wider">{{ userRoleLabel }}</p>
             </div>
             
             <div ref="menuRoot" class="relative">
@@ -71,7 +71,7 @@
                   
                   <template v-for="item in dropdownItems" :key="item.to">
                     <RouterLink
-                      v-if="!item.ownerOnly || auth.isOwner"
+                      v-if="(!item.ownerOnly || auth.isOwner) && (!item.managerOnly || auth.isManager)"
                       :to="item.to"
                       @click="menuOpen = false"
                       class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-cocoa/60 transition hover:bg-neutral-bg hover:text-espresso"
@@ -98,7 +98,7 @@
       </div>
     </header>
 
-    <div v-if="gracePeriodEndsAt && !graceBannerDismissed" class="bg-amber-50 border-b border-amber-200 px-4 py-3 sm:px-6 lg:px-8">
+    <div v-if="gracePeriodEndsAt && !graceBannerDismissed" data-testid="grace-banner" class="bg-amber-50 border-b border-amber-200 px-4 py-3 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-[1480px] flex items-center justify-between gap-4">
         <p class="text-sm font-semibold text-amber-800">
           Votre abonnement a expiré. Vous disposez encore de <strong>{{ graceDaysLeft }} jour{{ graceDaysLeft === 1 ? '' : 's' }}</strong> avant la suspension de votre salon.
@@ -150,7 +150,7 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import { useQuery } from "@tanstack/vue-query";
-import { fetchProSubscription } from "@/lib/pro-api";
+import { fetchProSalon, fetchProSubscription } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 
 const auth = useProAuthStore();
@@ -167,10 +167,17 @@ const subQuery = useQuery({
   staleTime: 5 * 60 * 1000
 });
 
+const salonQuery = useQuery({
+  queryKey: ["pro-salon", "layout"],
+  queryFn: () => fetchProSalon(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken)),
+  staleTime: 60 * 1000
+});
+
 const gracePeriodEndsAt = computed(() => {
   const v = (subQuery.data.value as Record<string, unknown> | undefined)?.gracePeriodEndsAt;
-  if (!v || typeof v !== "string") return null;
-  const d = new Date(v);
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v as string);
   return d > new Date() ? d : null;
 });
 
@@ -182,17 +189,16 @@ const graceDaysLeft = computed(() => {
 const centerNavItems = [
   { label: "Agenda", to: "/pro/calendar", icon: CalendarIcon },
   { label: "Clients", to: "/pro/clients", icon: UsersIcon },
-  { label: "Ventes", to: "/pro/payouts", icon: BanknotesIcon },
+  { label: "Ventes", to: "/pro/payouts", icon: BanknotesIcon, ownerOnly: true },
   { label: "Inbox", to: "/pro/bookings/inbox", icon: InboxIcon },
-  { label: "Rapports", to: "/pro/analytics", icon: ChartBarIcon, ownerOnly: true },
-  { label: "Services", to: "/pro/salon/services", icon: Squares2X2Icon, ownerOnly: true },
-  // { label: "Codes Promo", to: "/pro/vouchers", icon: TicketIcon, ownerOnly: true },
+  { label: "Rapports", to: "/pro/analytics", icon: ChartBarIcon, managerOnly: true },
+  { label: "Services", to: "/pro/salon/services", icon: Squares2X2Icon, managerOnly: true },
 ];
 
 const dropdownItems = [
   { label: "Profil Salon", to: "/pro/salon/profile", icon: BuildingStorefrontIcon, ownerOnly: true },
-  { label: "Équipe", to: "/pro/salon/team", icon: UserGroupIcon, ownerOnly: true },
-  { label: "Horaires", to: "/pro/salon/hours", icon: ClockIcon, ownerOnly: true },
+  { label: "Équipe", to: "/pro/salon/team", icon: UserGroupIcon, managerOnly: true },
+  { label: "Horaires", to: "/pro/salon/hours", icon: ClockIcon, managerOnly: true },
   { label: "Abonnement", to: "/pro/subscription", icon: CreditCardIcon, ownerOnly: true },
   { label: "Mon Compte", to: "/pro/account", icon: UserIcon },
 ];
@@ -201,6 +207,12 @@ const userInitials = computed(() => {
   const fullName = auth.currentUser?.fullName?.trim();
   if (!fullName) return "BA";
   return fullName.split(/\s+/).slice(0, 2).map(n => n[0].toUpperCase()).join("");
+});
+
+const userRoleLabel = computed(() => {
+  if (auth.currentUser?.role === "salon_owner") return "Propriétaire";
+  if (auth.currentUser?.role === "salon_manager") return "Manager";
+  return "Staff";
 });
 
 function isNavItemActive(path: string) {
@@ -237,9 +249,23 @@ onBeforeUnmount(() => {
 });
 
 watch(
+  () => (salonQuery.data.value as any)?.approvalStatus,
+  (status: string | undefined) => {
+    if (status && status !== "approved" && route.path !== "/pro/approval-status") {
+      router.replace("/pro/approval-status");
+    }
+  },
+  { immediate: true }
+);
+
+watch(
   () => route.fullPath,
   () => {
     menuOpen.value = false;
+    const status = (salonQuery.data.value as any)?.approvalStatus as string | undefined;
+    if (status && status !== "approved" && route.path !== "/pro/approval-status") {
+      router.replace("/pro/approval-status");
+    }
   }
 );
 </script>

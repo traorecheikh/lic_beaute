@@ -1,164 +1,266 @@
 <template>
-  <div class="min-h-screen bg-neutral-bg py-12 px-4 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-2xl">
+  <div class="min-h-screen bg-neutral-bg py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased">
+    <div class="mx-auto max-w-3xl">
       <!-- Header -->
-      <div class="text-center mb-12">
-        <RouterLink to="/pro" class="inline-block mb-8">
-          <img src="/logo.png" alt="Beauté Avenue" class="h-12 w-auto mx-auto" />
+      <div class="text-center mb-16">
+        <RouterLink to="/pro" class="inline-block mb-10">
+          <img src="/logo.png" alt="Beauté Avenue" class="h-14 w-auto mx-auto" />
         </RouterLink>
-        <h1 class="text-3xl font-sans font-bold text-espresso mb-2">Inscrivez votre salon</h1>
-        <p class="text-cocoa/60">Rejoignez Beauté Avenue en moins de 5 minutes.</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.4em] text-cocoa/40 mb-4">Étape {{ currentStep }} sur 5</p>
+        <h1 class="text-[42px] font-medium-bold text-espresso leading-tight tracking-tight">
+          {{ stepTitles[currentStep - 1] }}
+        </h1>
+        <p class="text-[17px] text-cocoa/60 mt-4 max-w-lg mx-auto leading-relaxed">
+          {{ stepSubtitles[currentStep - 1] }}
+        </p>
       </div>
 
       <!-- Stepper -->
-      <div class="flex items-center justify-between mb-12 relative">
-        <div class="absolute top-1/2 left-0 w-full h-0.5 bg-outline-variant -translate-y-1/2 -z-10"></div>
+      <div class="flex items-center justify-center gap-3 mb-16">
         <div 
           v-for="step in 5" 
           :key="step"
           :class="[
-            'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all',
-            currentStep >= step ? 'bg-primary text-white' : 'bg-surface text-cocoa/40 border border-outline-variant'
+            'h-1.5 rounded-full transition-all duration-500',
+            currentStep === step ? 'w-12 bg-primary' : currentStep > step ? 'w-4 bg-primary/40' : 'w-4 bg-outline-variant'
           ]"
-        >
-          {{ step }}
-        </div>
+        ></div>
       </div>
 
-      <!-- Form Steps -->
-      <div class="panel-clean p-8 mb-8">
-        <!-- Step 1: Identity -->
-        <div v-if="currentStep === 1">
-          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 1 : Votre Identité</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="section-label mb-2 block">Nom complet</label>
-              <input type="text" v-model="form.fullName" class="input-shell" placeholder="Marie Diop" />
+      <!-- Form Content -->
+      <div class="panel-clean p-10 mb-12 shadow-xl shadow-espresso/5 border-none">
+        
+        <!-- Step 1: Identity & Salon -->
+        <div v-if="currentStep === 1" class="space-y-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <label class="section-label mb-3 block">Nom du salon</label>
+              <input type="text" v-model="form.salonName" class="input-shell text-lg py-4" placeholder="Beauté Divine" />
             </div>
             <div>
-              <label class="section-label mb-2 block">Email professionnel</label>
-              <input type="email" v-model="form.email" class="input-shell" placeholder="marie@monsalon.com" />
-            </div>
-            <div>
-              <label class="section-label mb-2 block">Téléphone (+221)</label>
-              <input type="tel" v-model="form.phone" class="input-shell" placeholder="77 123 45 67" />
-            </div>
-            <div>
-              <label class="section-label mb-2 block">Mot de passe</label>
-              <input type="password" v-model="form.password" class="input-shell" placeholder="••••••••" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 2: Salon -->
-        <div v-if="currentStep === 2">
-          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 2 : Votre Salon</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="section-label mb-2 block">Nom du salon</label>
-              <input type="text" v-model="form.salonName" class="input-shell" placeholder="Beauté Divine" />
-            </div>
-            <div>
-              <label class="section-label mb-2 block">Catégorie</label>
-              <select v-model="form.category" class="input-shell">
-                <option value="">Sélectionnez une catégorie</option>
-                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="section-label mb-2 block">Ville</label>
-              <select v-model="form.city" class="input-shell">
+              <label class="section-label mb-3 block">Ville</label>
+              <select v-model="form.city" class="input-shell text-lg py-4 h-[60px]">
                 <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
               </select>
             </div>
             <div>
-              <label class="section-label mb-2 block">Adresse précise</label>
-              <textarea v-model="form.address" class="input-shell h-24" placeholder="Quartier Plateau, Rue des Poilus..."></textarea>
+              <label class="section-label mb-3 block">Email professionnel</label>
+              <input type="email" v-model="form.email" class="input-shell text-lg py-4" placeholder="contact@monsalon.com" />
+            </div>
+            <div>
+              <label class="section-label mb-3 block">Nom complet du gérant</label>
+              <input type="text" v-model="form.fullName" class="input-shell text-lg py-4" placeholder="Marie Diop" />
+            </div>
+            <div>
+              <label class="section-label mb-3 block">Téléphone (+221)</label>
+              <input type="tel" v-model="form.phone" class="input-shell text-lg py-4" placeholder="77 123 45 67" />
+            </div>
+            <div>
+              <label class="section-label mb-3 block">Adresse précise</label>
+              <input type="text" v-model="form.address" class="input-shell text-lg py-4" placeholder="Rue des Poilus, Zone A..." />
+            </div>
+            <div>
+              <label class="section-label mb-3 block">Quartier <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
+              <input type="text" v-model="form.neighborhood" class="input-shell text-lg py-4" placeholder="Plateau, Mermoz, Almadies…" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="section-label mb-3 block">Description du salon <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
+              <textarea v-model="form.description" rows="3" class="input-shell text-lg py-4 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label class="section-label mb-3 block">Mot de passe</label>
+              <input type="password" v-model="form.password" class="input-shell text-lg py-4" placeholder="••••••••" />
             </div>
           </div>
         </div>
 
-        <!-- Step 3: Services -->
-        <div v-if="currentStep === 3">
-          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 3 : Vos Prestations</h2>
-          <div class="space-y-4">
-            <div v-for="(service, index) in form.services" :key="index" class="p-4 bg-neutral-bg rounded-xl relative">
-              <button v-if="form.services.length > 1" @click="removeService(index)" class="absolute top-2 right-2 text-error p-1">
-                <XMarkIcon class="w-4 h-4" />
-              </button>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                  <label class="section-label mb-1 block">Nom du service</label>
-                  <input type="text" v-model="service.name" class="input-shell" placeholder="Brushing" />
-                </div>
-                <div>
-                  <label class="section-label mb-1 block">Durée (min)</label>
-                  <input type="number" v-model="service.duration" class="input-shell" placeholder="45" />
-                </div>
-                <div>
-                  <label class="section-label mb-1 block">Prix (FCFA)</label>
-                  <input type="number" v-model="service.price" class="input-shell" placeholder="15000" />
-                </div>
+        <!-- Step 2: Categories -->
+        <div v-if="currentStep === 2">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <button 
+              v-for="cat in categoryOptions" 
+              :key="cat.name"
+              @click="form.category = cat.name"
+              :class="[
+                'p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 text-center group',
+                form.category === cat.name 
+                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' 
+                  : 'border-outline-variant bg-white hover:border-primary/30'
+              ]"
+            >
+              <div :class="[
+                'w-14 h-14 rounded-2xl flex items-center justify-center transition-all',
+                form.category === cat.name ? 'bg-primary text-white scale-110' : 'bg-neutral-bg text-cocoa/40 group-hover:bg-primary/10 group-hover:text-primary'
+              ]">
+                <component :is="cat.icon" class="w-7 h-7" />
               </div>
-            </div>
-            <button @click="addService" class="btn-secondary w-full py-3 border-dashed border-2 ring-0">
-              <PlusIcon class="w-4 h-4 mr-2" />
-              Ajouter une prestation
+              <span :class="[
+                'text-[15px] font-medium-bold tracking-tight',
+                form.category === cat.name ? 'text-espresso' : 'text-cocoa/60'
+              ]">{{ cat.name }}</span>
             </button>
           </div>
         </div>
 
-        <!-- Step 4: Hours -->
-        <div v-if="currentStep === 4">
-          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 4 : Vos Horaires</h2>
-          <div class="space-y-3">
-            <div v-for="day in days" :key="day" class="flex items-center gap-4 py-2">
-              <div class="w-24 text-sm font-semibold text-espresso">{{ day }}</div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" v-model="form.hours[day].open" class="sr-only peer">
-                <div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-              <div v-if="form.hours[day].open" class="flex items-center gap-2 flex-1">
-                <input type="time" v-model="form.hours[day].start" class="input-shell py-1 px-2" />
-                <span class="text-cocoa/40">à</span>
-                <input type="time" v-model="form.hours[day].end" class="input-shell py-1 px-2" />
+        <!-- Step 3: Team Size -->
+        <div v-if="currentStep === 3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button 
+              v-for="size in teamSizeOptions" 
+              :key="size.label"
+              @click="form.teamSize = size.label"
+              :class="[
+                'p-8 rounded-2xl border-2 transition-all flex flex-col items-center gap-5 text-center group',
+                form.teamSize === size.label 
+                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' 
+                  : 'border-outline-variant bg-white hover:border-primary/30'
+              ]"
+            >
+              <div class="flex items-center gap-1">
+                <div 
+                  v-for="i in size.dots" 
+                  :key="i"
+                  :class="[
+                    'w-3 h-3 rounded-full',
+                    form.teamSize === size.label ? 'bg-primary' : 'bg-outline-variant group-hover:bg-primary/30'
+                  ]"
+                ></div>
               </div>
-              <div v-else class="flex-1 text-sm text-cocoa/40 italic">Fermé</div>
+              <div>
+                <span :class="[
+                  'text-lg font-medium-bold tracking-tight block',
+                  form.teamSize === size.label ? 'text-espresso' : 'text-cocoa/60'
+                ]">{{ size.label }}</span>
+                <span class="text-xs text-cocoa/40 font-bold uppercase tracking-widest mt-1 block">{{ size.desc }}</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 4: Subscription Intent -->
+        <div v-if="currentStep === 4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <button 
+              @click="form.subscriptionIntentTier = 'standard'"
+              :class="[
+                'p-8 rounded-3xl border-2 text-left transition-all relative overflow-hidden',
+                form.subscriptionIntentTier === 'standard' 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-outline-variant bg-white hover:border-primary/20'
+              ]"
+            >
+              <div v-if="form.subscriptionIntentTier === 'standard'" class="absolute top-4 right-4 text-primary">
+                <CheckCircleIcon class="w-6 h-6" />
+              </div>
+              <h3 class="text-sm font-bold uppercase tracking-widest text-cocoa/60 mb-2">Plan Standard</h3>
+              <p class="text-2xl font-medium-bold text-espresso mb-6">Gratuit</p>
+              <ul class="space-y-3">
+                <li class="flex items-center gap-3 text-sm text-cocoa/80">
+                  <CheckIcon class="w-4 h-4 text-primary" />
+                  Agenda & Réservations
+                </li>
+                <li class="flex items-center gap-3 text-sm text-cocoa/80">
+                  <CheckIcon class="w-4 h-4 text-primary" />
+                  Base clients
+                </li>
+              </ul>
+            </button>
+
+            <button 
+              @click="form.subscriptionIntentTier = 'premium'"
+              :class="[
+                'p-8 rounded-3xl border-2 text-left transition-all relative overflow-hidden',
+                form.subscriptionIntentTier === 'premium' 
+                  ? 'border-secondary bg-secondary/5' 
+                  : 'border-outline-variant bg-white hover:border-secondary/20'
+              ]"
+            >
+              <div v-if="form.subscriptionIntentTier === 'premium'" class="absolute top-4 right-4 text-secondary">
+                <CheckCircleIcon class="w-6 h-6" />
+              </div>
+              <div class="absolute -right-8 -top-8 w-24 h-24 bg-secondary/10 rounded-full blur-2xl"></div>
+              <h3 class="text-sm font-bold uppercase tracking-widest text-secondary mb-2">Plan Premium</h3>
+              <p class="text-2xl font-medium-bold text-espresso mb-6">25 000 F <span class="text-sm text-cocoa/40">/mois</span></p>
+              <ul class="space-y-3">
+                <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
+                  <StarIcon class="w-4 h-4 text-secondary" />
+                  Acomptes automatisés
+                </li>
+                <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
+                  <StarIcon class="w-4 h-4 text-secondary" />
+                  Marketing & SMS
+                </li>
+                <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
+                  <StarIcon class="w-4 h-4 text-secondary" />
+                  Visibilité prioritaire
+                </li>
+              </ul>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 5: Documents -->
+        <div v-if="currentStep === 5" class="space-y-8">
+          <div class="bg-primary/5 rounded-2xl p-6 border border-primary/10 mb-8">
+            <p class="text-sm text-espresso leading-relaxed">
+              Pour des raisons de sécurité et de conformité, nous devons vérifier l'existence légale de votre établissement.
+            </p>
+          </div>
+
+          <div class="space-y-6">
+            <div v-for="(doc, index) in requiredDocs" :key="doc.label" class="panel-clean p-6 border-dashed border-2 flex flex-col md:flex-row items-center gap-6">
+              <div class="flex-1 text-center md:text-left">
+                <h3 class="text-[15px] font-medium-bold text-espresso mb-1">{{ doc.label }}</h3>
+                <p class="text-xs text-cocoa/60">{{ doc.desc }}</p>
+              </div>
+              
+              <div class="shrink-0 w-full md:w-auto">
+                <div v-if="doc.fileUrl" class="flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-xl text-primary font-bold text-xs">
+                  <DocumentCheckIcon class="w-4 h-4" />
+                  Document ajouté
+                  <button @click="removeDoc(index)" class="ml-2 text-cocoa/40 hover:text-error transition">
+                    <XMarkIcon class="w-4 h-4" />
+                  </button>
+                </div>
+                <label v-else class="btn-secondary w-full md:w-auto px-6 py-2.5 text-[11px] cursor-pointer">
+                  <span>Téléverser</span>
+                  <input type="file" @change="handleFileUpload($event, index)" class="sr-only" accept="image/*,.pdf" />
+                </label>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 5: Confirmation -->
-        <div v-if="currentStep === 5">
-          <h2 class="text-xl font-sans font-bold text-espresso mb-6">Étape 5 : Confirmation</h2>
-          <div class="space-y-6">
-            <div class="flex items-center gap-4 p-4 bg-primary/5 rounded-2xl">
-              <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <BuildingStorefrontIcon class="w-6 h-6" />
-              </div>
-              <div>
-                <p class="font-bold text-espresso">{{ form.salonName }}</p>
-                <p class="text-sm text-cocoa/60">{{ form.category }} • {{ form.city }}</p>
-              </div>
-            </div>
-            
-            <div class="panel-clean p-4 border-dashed">
-              <p class="text-sm text-cocoa/60 leading-relaxed italic">
-                En cliquant sur "Terminer", vous acceptez nos conditions d'utilisation. Votre salon sera soumis à validation par notre équipe (généralement sous 24h).
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Navigation -->
-      <div class="flex items-center justify-between gap-4">
-        <button v-if="currentStep > 1" @click="currentStep--" class="btn-secondary px-8">Retour</button>
-        <div v-else></div>
+      <div class="flex items-center justify-center gap-4">
+        <button 
+          v-if="currentStep > 1" 
+          @click="currentStep--" 
+          class="btn-secondary px-10 py-4 h-[60px] ring-0 border-none hover:bg-white transition-all font-medium-bold"
+        >
+          Retour
+        </button>
         
-        <button v-if="currentStep < 5" @click="currentStep++" class="btn-primary flex-1 sm:flex-none px-12">Continuer</button>
-        <button v-else @click="submitRegistration" :disabled="loading" class="btn-primary flex-1 sm:flex-none px-12">
-          {{ loading ? 'Chargement...' : 'Terminer' }}
+        <button 
+          v-if="currentStep < 5" 
+          @click="nextStep" 
+          class="btn-primary flex-1 max-w-xs py-4 h-[60px] text-lg font-medium-bold shadow-xl shadow-primary/20"
+        >
+          Continuer
+        </button>
+        <button
+          v-else
+          @click="submitRegistration"
+          :disabled="loading"
+          class="btn-primary flex-1 max-w-xs py-4 h-[60px] text-lg font-medium-bold shadow-xl shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <svg v-if="loading" class="animate-spin w-5 h-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
+            <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span>{{ loading ? 'Finalisation en cours…' : 'Ouvrir mon salon' }}</span>
         </button>
       </div>
     </div>
@@ -166,33 +268,121 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { 
-  XMarkIcon, 
+import {
+  XMarkIcon,
   PlusIcon,
-  BuildingStorefrontIcon
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  StarIcon,
+  CheckIcon,
+  ScissorsIcon,
+  SparklesIcon,
+  PaintBrushIcon,
+  ShoppingBagIcon,
+  UserGroupIcon,
+  DocumentCheckIcon
 } from "@heroicons/vue/24/outline";
 import { getErrorMessage } from "@/lib/errors";
 import { registerProOwner } from "@/lib/pro-api";
+import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories } from "@/lib/api";
 
 const router = useRouter();
 const currentStep = ref(1);
 const loading = ref(false);
+const docsLoading = ref(false);
 
-const categories = ["Coiffure", "Barbershop", "Esthétique", "Ongles", "Spa", "Maquillage"];
-const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];
-const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-const dayOfWeekByLabel: Record<string, number> = {
-  Lundi: 1,
-  Mardi: 2,
-  Mercredi: 3,
-  Jeudi: 4,
-  Vendredi: 5,
-  Samedi: 6,
-  Dimanche: 0
+const stepTitles = [
+  "Inscrivez votre salon",
+  "Que proposez-vous ?",
+  "Quelle est la taille de votre équipe ?",
+  "Choisissez votre plan",
+  "Pièces justificatives"
+];
+
+const stepSubtitles = [
+  "Commençons par faire connaissance. Votre salon sera configuré en quelques minutes.",
+  "Sélectionnez la catégorie principale qui définit le mieux votre activité.",
+  "Cela nous permet d'adapter l'agenda et la gestion des ressources.",
+  "Sélectionnez le plan qui correspond le mieux à vos besoins actuels.",
+  "Téléversez les documents nécessaires pour la validation de votre compte."
+];
+
+const CATEGORY_ICON_MAP: Record<string, ReturnType<typeof Object.values>[number]> = {
+  Coiffure: ScissorsIcon,
+  Barbier: ScissorsIcon,
+  Barbershop: ScissorsIcon,
+  Esthétique: SparklesIcon,
+  Spa: SparklesIcon,
+  Maquillage: ShoppingBagIcon,
+  Ongles: PaintBrushIcon,
 };
+
+const categoryOptions = ref<{ name: string; icon: unknown }[]>([
+  { name: "Coiffure", icon: ScissorsIcon },
+  { name: "Esthétique", icon: SparklesIcon },
+  { name: "Barbier", icon: ScissorsIcon },
+  { name: "Ongles", icon: PaintBrushIcon },
+  { name: "Spa", icon: SparklesIcon },
+  { name: "Maquillage", icon: ShoppingBagIcon },
+]);
+
+async function loadCategories() {
+  try {
+    const cats = await fetchPublicCategories();
+    if (cats.length > 0) {
+      categoryOptions.value = cats.map((c) => ({
+        name: c.name,
+        icon: CATEGORY_ICON_MAP[c.name] ?? BuildingStorefrontIcon,
+      }));
+      if (!categoryOptions.value.find((c) => c.name === form.category)) {
+        form.category = categoryOptions.value[0]?.name ?? "";
+      }
+    }
+  } catch {
+    // keep local fallback
+  }
+}
+
+const teamSizeOptions = [
+  { label: "Juste moi", desc: "1 collaborateur", dots: 1 },
+  { label: "Petite équipe", desc: "2 à 5 collaborateurs", dots: 3 },
+  { label: "Moyenne équipe", desc: "6 à 15 collaborateurs", dots: 5 },
+  { label: "Grande équipe", desc: "16+ collaborateurs", dots: 10 }
+];
+
+const requiredDocs = ref([
+  { label: "Registre de Commerce", desc: "Copie du RCCM ou équivalent", fileUrl: "" },
+  { label: "Pièce d'Identité du Gérant", desc: "CNI, Passeport ou Permis", fileUrl: "" }
+]);
+
+// Fetch required docs from API when user reaches step 5
+async function loadRequiredDocs() {
+  if (docsLoading.value) return;
+  docsLoading.value = true;
+  try {
+    const docs = await fetchPublicRegistrationDocs();
+    if (docs.length > 0) {
+      requiredDocs.value = docs.map((d) => ({
+        label: d.label,
+        desc: d.description ?? "",
+        fileUrl: ""
+      }));
+    }
+  } catch {
+    // keep hardcoded fallback
+  } finally {
+    docsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  void loadCategories();
+});
+
+const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];
 
 const form = reactive({
   fullName: "",
@@ -200,47 +390,55 @@ const form = reactive({
   phone: "",
   password: "",
   salonName: "",
-  category: "",
+  category: "Coiffure",
   city: "Dakar",
   address: "",
-  services: [
-    { name: "", duration: 30, price: 5000 }
-  ],
-  hours: days.reduce((acc, day) => {
-    acc[day] = { open: true, start: "09:00", end: "19:00" };
-    return acc;
-  }, {} as any)
+  neighborhood: "",
+  description: "",
+  teamSize: "Juste moi",
+  subscriptionIntentTier: "standard" as "standard" | "premium"
 });
 
-function addService() {
-  form.services.push({ name: "", duration: 30, price: 5000 });
+function nextStep() {
+  if (currentStep.value === 1) {
+    if (!form.fullName || !form.email || !form.phone || !form.password || !form.salonName || !form.address) {
+      toast.error("Veuillez remplir tous les champs.");
+      return;
+    }
+  }
+  currentStep.value++;
+  if (currentStep.value === 5) {
+    void loadRequiredDocs();
+  }
 }
 
-function removeService(index: number) {
-  form.services.splice(index, 1);
+async function handleFileUpload(event: Event, index: number) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  const toastId = toast.loading("Téléversement du document...");
+  try {
+    const asset = await uploadRegistrationDoc(file);
+    requiredDocs.value[index].fileUrl = asset.url;
+    toast.success("Document ajouté.", { id: toastId });
+  } catch (err) {
+    toast.error(getErrorMessage(err, "Échec du téléversement."), { id: toastId });
+  }
+}
+
+function removeDoc(index: number) {
+  requiredDocs.value[index].fileUrl = "";
 }
 
 async function submitRegistration() {
   const email = form.email.trim();
   const phone = form.phone.replace(/\s+/g, "");
-  const fullName = form.fullName.trim();
-  const salonName = form.salonName.trim();
-
-  if (!fullName || !email || !phone || !form.password || !salonName || !form.category || !form.city || !form.address.trim()) {
-    toast.error("Veuillez compléter tous les champs obligatoires.");
-    return;
-  }
-
-  const validServices = form.services
-    .map((service) => ({
-      name: service.name.trim(),
-      durationMinutes: Number(service.duration),
-      priceXof: Number(service.price)
-    }))
-    .filter((service) => service.name && service.durationMinutes > 0 && service.priceXof >= 0);
-
-  if (validServices.length === 0) {
-    toast.error("Ajoutez au moins une prestation valide.");
+  
+  // Mandatory documents check
+  const missingDocs = requiredDocs.value.some(d => !d.fileUrl);
+  if (missingDocs) {
+    toast.error("Veuillez téléverser tous les documents requis.");
     return;
   }
 
@@ -248,35 +446,36 @@ async function submitRegistration() {
   try {
     await registerProOwner({
       type: "salon_owner",
-      fullName,
+      fullName: form.fullName.trim(),
       email,
       phone,
       password: form.password,
+      subscriptionIntentTier: form.subscriptionIntentTier,
       salon: {
-        name: salonName,
+        name: form.salonName.trim(),
         category: form.category,
         city: form.city,
         address: form.address.trim(),
-        description: ""
+        neighborhood: form.neighborhood.trim() || undefined,
+        description: form.description.trim() || `${form.category} à ${form.city}`,
       },
-      services: validServices.map((service) => ({
-        name: service.name,
-        durationMinutes: service.durationMinutes,
-        priceXof: service.priceXof,
-        depositMode: "none" as const
+      hours: [0, 1, 2, 3, 4, 5, 6].map(d => ({
+        dayOfWeek: d,
+        isOpen: d !== 0,
+        opensAt: "09:00",
+        closesAt: "19:00"
       })),
-      hours: days.map((day) => ({
-        dayOfWeek: dayOfWeekByLabel[day],
-        isOpen: Boolean(form.hours[day].open),
-        opensAt: form.hours[day].open ? form.hours[day].start : undefined,
-        closesAt: form.hours[day].open ? form.hours[day].end : undefined
+      services: [],
+      documents: requiredDocs.value.map(d => ({
+        label: d.label,
+        fileUrl: d.fileUrl
       }))
     });
 
-    toast.success("Salon créé avec succès ! Vous pouvez maintenant vous connecter.");
+    toast.success("Votre dossier a été soumis. Veuillez vous connecter pour suivre son avancement.");
     await router.push({
       path: "/pro/login",
-      query: { email }
+      query: { email, registered: "1" }
     });
   } catch (error) {
     toast.error(getErrorMessage(error, "Inscription impossible pour le moment."));

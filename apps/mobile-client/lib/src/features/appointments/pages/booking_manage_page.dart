@@ -61,16 +61,6 @@ class BookingManagePage extends ConsumerWidget {
                 ),
                 gapH16,
                 _OptionCard(
-                  icon: 'user-plus',
-                  title: 'Changer de prestataire',
-                  subtitle: 'Contactez le salon pour modifier le prestataire.',
-                  onTap: () => AppSnackbar.info(
-                    context,
-                    'Contactez le salon directement pour changer de prestataire.',
-                  ),
-                ),
-                gapH16,
-                _OptionCard(
                   icon: 'close',
                   title: 'Annuler le rendez-vous',
                   subtitle: 'Si vous ne pouvez plus venir.',

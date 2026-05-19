@@ -34,13 +34,17 @@
             </div>
 
             <div class="text-sm">
-              <a href="#" class="font-semibold text-primary hover:text-primary/80">Mot de passe oublié ?</a>
+              <button type="button" @click="toast.info('Réinitialisation par e-mail disponible prochainement.')" class="font-semibold text-primary hover:text-primary/80">Mot de passe oublié ?</button>
             </div>
           </div>
 
           <div>
-            <button type="submit" :disabled="loading" class="btn-primary w-full py-3">
-              {{ loading ? 'Connexion...' : 'Se connecter' }}
+            <button type="submit" :disabled="loading" class="btn-primary w-full py-3 flex items-center justify-center gap-2">
+              <svg v-if="loading" class="animate-spin w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
+                <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span>{{ loading ? 'Connexion en cours…' : 'Se connecter' }}</span>
             </button>
           </div>
         </form>
@@ -96,9 +100,22 @@ async function handleLogin() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (typeof route.query.email === "string") {
     email.value = route.query.email;
+  }
+
+  if (typeof route.query.inviteToken === "string") {
+    loading.value = true;
+    try {
+      await auth.loginWithInviteToken(route.query.inviteToken);
+      toast.success(`Bienvenue ${auth.currentUser?.fullName ?? ""}`.trim());
+      await router.push("/pro/calendar");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Lien d'invitation invalide ou expiré."));
+    } finally {
+      loading.value = false;
+    }
   }
 });
 </script>

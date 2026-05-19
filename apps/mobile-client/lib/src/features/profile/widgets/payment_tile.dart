@@ -21,7 +21,7 @@ class PaymentTile extends StatelessWidget {
   });
 
   final PaymentMethodRecord method;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final VoidCallback? onDefault;
   final VoidCallback? onDelete;
 
@@ -96,19 +96,20 @@ class PaymentTile extends StatelessWidget {
                   ],
                 ),
               ),
-              AppPressable(
-                onTap: onTap,
-                child: Padding(
-                  padding: EdgeInsets.all(12.r),
-                  child: AppIcon('edit', size: 20, color: AppColors.onSurfaceVariant),
+              if (onTap != null)
+                AppPressable(
+                  onTap: onTap,
+                  child: Padding(
+                    padding: EdgeInsets.all(12.r),
+                    child: AppIcon('edit', size: 20, color: AppColors.onSurfaceVariant),
+                  ),
                 ),
-              ),
             ],
           ),
           gapH12,
-          Row(
-            children: [
-              AppButton.outline(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final defaultButton = AppButton.outline(
                 label: 'Définir par défaut',
                 onPressed: onDefault == null
                     ? null
@@ -116,10 +117,10 @@ class PaymentTile extends StatelessWidget {
                         AppHaptics.light();
                         onDefault!();
                       },
-                isFullWidth: false,
-              ),
-              const Spacer(),
-              AppButton.outline(
+                isFullWidth: true,
+              );
+
+              final deleteButton = AppButton.outline(
                 label: 'Supprimer',
                 onPressed: onDelete == null
                     ? null
@@ -127,9 +128,17 @@ class PaymentTile extends StatelessWidget {
                         AppHaptics.light();
                         onDelete!();
                       },
-                isFullWidth: false,
-              ),
-            ],
+                isFullWidth: true,
+              );
+
+              return Column(
+                children: [
+                  defaultButton,
+                  gapH8,
+                  deleteButton,
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -137,27 +146,15 @@ class PaymentTile extends StatelessWidget {
   }
 
   static String _resolveChannel(String provider, String? label) {
-    if (provider == 'wave' ||
-        provider == 'orange_money' ||
-        provider == 'free_money') {
-      return provider;
-    }
+    if (provider == 'wave' || provider == 'orange_money') return provider;
     if (provider == 'om') return 'orange_money';
     final normalized = (label ?? '').toLowerCase();
     if (normalized.contains('orange')) return 'orange_money';
-    if (normalized.contains('free')) return 'free_money';
     return 'wave';
   }
 
   static String _displayTitle(String channel) {
-    switch (channel) {
-      case 'orange_money':
-        return 'Orange Money';
-      case 'free_money':
-        return 'Free Money';
-      default:
-        return 'Wave';
-    }
+    return channel == 'orange_money' ? 'Orange Money' : 'Wave';
   }
 
   static String? _logoAsset(String channel) {

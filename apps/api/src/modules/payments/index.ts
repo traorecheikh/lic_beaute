@@ -79,7 +79,7 @@ export class PaymentController {
 
   async status(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
       const params = request.params as { paymentId: string };
       const payment = await prisma.payment.findUnique({
         where: { id: params.paymentId },
@@ -107,7 +107,7 @@ export class PaymentController {
 
   async reconcile(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
       const params = request.params as { paymentId: string };
       const payment = await prisma.payment.findUnique({
         where: { id: params.paymentId },
@@ -349,7 +349,7 @@ export class PaymentController {
   }
 
   private async _canAccessPayment(
-    session: { sub: string; role: "platform_admin" | "client" | "salon_owner" | "salon_staff" },
+    session: { sub: string; role: "platform_admin" | "client" | "salon_owner" | "salon_staff" | "salon_manager" },
     payment: { booking: { clientId: string; salonId: string } },
     reply: FastifyReply
   ) {

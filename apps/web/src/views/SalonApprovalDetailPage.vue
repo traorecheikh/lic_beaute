@@ -98,27 +98,43 @@
       <div class="grid grid-cols-12 gap-8">
         <!-- Details & Documents (7 cols) -->
         <div class="col-span-12 lg:col-span-7 space-y-8">
-          <section class="space-y-4">
-            <h3 class="text-[11px] font-bold text-cocoa/60 uppercase tracking-[0.3em] px-2">Pièces Justificatives</h3>
-            <div class="grid gap-3">
+          <section class="space-y-6">
+            <div class="flex items-center justify-between px-2">
+              <h3 class="text-[11px] font-bold text-cocoa/40 uppercase tracking-[0.3em]">Pièces Justificatives</h3>
+              <span class="text-[10px] font-bold text-cocoa/30 uppercase tracking-widest">{{ salonQuery.data.value.documents.length }} documents</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <article
                 v-for="document in salonQuery.data.value.documents"
                 :key="document.label"
-                class="bg-white rounded-2xl border border-outline-variant p-5 flex items-center justify-between group hover:border-primary/30 transition-colors"
+                class="bg-white rounded-3xl border border-outline-variant p-2 flex flex-col group hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-espresso/5"
               >
-                <div class="space-y-1">
-                  <p class="text-[13px] font-semibold text-espresso">{{ document.label }}</p>
-                  <p v-if="document.note" class="text-[12px] text-cocoa/80 italic">{{ document.note }}</p>
+                <div 
+                  class="aspect-[4/3] rounded-2xl bg-neutral-bg overflow-hidden relative mb-4 cursor-pointer"
+                  @click="selectedDoc = document"
+                >
+                  <img 
+                    v-if="document.fileUrl" 
+                    :src="document.fileUrl" 
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <div v-else class="absolute inset-0 flex items-center justify-center text-cocoa/20">
+                    <DocumentIcon class="w-12 h-12" />
+                  </div>
+                  <div class="absolute inset-0 bg-espresso/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div class="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest text-espresso shadow-lg">
+                      Agrandir le document
+                    </div>
+                  </div>
                 </div>
-                <div class="flex items-center gap-4">
-                  <StatusBadge :value="document.status" />
-                  <button 
-                    class="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-cocoa/70 hover:bg-primary/10 hover:text-primary transition-all"
-                    :disabled="!document.fileUrl"
-                    @click="selectedDoc = document"
-                  >
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  </button>
+
+                <div class="px-4 pb-4 space-y-3">
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="text-[14px] font-medium-bold text-espresso leading-tight">{{ document.label }}</p>
+                    <StatusBadge :value="document.status" class="scale-90 origin-right shrink-0" />
+                  </div>
+                  <p v-if="document.note" class="text-[12px] text-cocoa/60 italic leading-relaxed">{{ document.note }}</p>
                 </div>
               </article>
             </div>
@@ -264,8 +280,28 @@
               </div>
             </div>
 
+            <label v-if="action !== 'approve'" class="block space-y-3">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-cocoa/70 px-1">Motif prédéfini</span>
+              <div class="flex flex-wrap gap-2 mt-1">
+                <button
+                  v-for="motif in predefinedMotifs[action]"
+                  :key="motif"
+                  type="button"
+                  @click="reason = motif"
+                  :class="[
+                    'px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all',
+                    reason === motif
+                      ? (action === 'reject' ? 'border-error bg-error/10 text-error' : 'border-secondary bg-secondary/10 text-secondary')
+                      : 'border-outline-variant bg-white text-cocoa/60 hover:border-primary/30'
+                  ]"
+                >
+                  {{ motif }}
+                </button>
+              </div>
+            </label>
+
             <label class="block space-y-3">
-              <span class="text-[10px] font-bold uppercase tracking-widest text-cocoa/70 px-1">Motif</span>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-cocoa/70 px-1">Motif {{ action !== 'approve' ? 'personnalisé' : '' }}</span>
               <textarea
                 v-model="reason"
                 class="w-full bg-white border border-outline-variant rounded-2xl px-5 py-3.5 text-sm text-espresso focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[52px]"
@@ -314,7 +350,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { CheckIcon, QuestionMarkCircleIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { CheckIcon, QuestionMarkCircleIcon, XMarkIcon, DocumentIcon } from "@heroicons/vue/24/outline";
 
 import Modal from "@/components/Modal.vue";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
@@ -342,6 +378,23 @@ const action = ref<"approve" | "reject" | "request-info">("approve");
 const reason = ref("");
 const mutationError = ref("");
 const selectedDoc = ref<any>(null);
+
+const predefinedMotifs: Record<"reject" | "request-info", string[]> = {
+  "reject": [
+    "Documents non conformes ou illisibles",
+    "Établissement non enregistré légalement",
+    "Activité non éligible à la plateforme",
+    "Adresse introuvable ou incorrecte",
+    "Identité du gérant non vérifiable"
+  ],
+  "request-info": [
+    "RCCM manquant ou expiré",
+    "Photo de la pièce d'identité floue",
+    "Adresse précise du salon requise",
+    "Numéro de téléphone professionnel requis",
+    "Description du salon insuffisante"
+  ]
+};
 
 const salonQuery = useQuery({
   queryKey: computed(() => ["admin-salon-detail", salonId.value]),

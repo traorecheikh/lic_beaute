@@ -115,18 +115,12 @@ final prestigeProvider =
     FutureProvider<List<SalonSummaryListResponseItemsInner>>(
       retry: (retryCount, error) => null,
       (ref) async {
-  final api = ref.read(apiClientProvider).getSalonsApi();
-  final response = await retryWithBackoff(
-    () => api.apiV1SalonsGet(
-      sort: 'rating',
-      pageSize: '20',
-    ),
-  );
-      return (response.data?.items.toList() ?? [])
-          .where((s) => s.isPrestige)
-          .take(8)
-          .toList();
-    },
+        final api = ref.read(apiClientProvider).getSalonsApi();
+        final response = await retryWithBackoff(
+          () => api.apiV1SalonsGet(sort: 'prestige', pageSize: '8'),
+        );
+        return response.data?.items.toList() ?? [];
+      },
     );
 
 // Convenience: wraps a Position into a distance badge string

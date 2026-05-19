@@ -128,7 +128,14 @@ class _AppButtonState extends State<AppButton> {
     );
 
     final Widget labelWidget =
-        widget.isLoading ? indicator : Text(widget.label);
+        widget.isLoading
+            ? indicator
+            : Text(
+                widget.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+              );
 
     final Widget content = widget.icon != null && !widget.isLoading
         ? Row(
@@ -199,10 +206,12 @@ class _AppButtonState extends State<AppButton> {
       child: button,
     );
 
-    if (widget.isFullWidth || widget.width != null || widget.height != null) {
+    final fixedHeight = widget.height ??
+        (widget.variant == AppButtonVariant.text ? null : 56.h);
+    if (widget.isFullWidth || widget.width != null || fixedHeight != null) {
       return SizedBox(
         width: widget.width ?? (widget.isFullWidth ? double.infinity : null),
-        height: widget.height,
+        height: fixedHeight,
         child: button,
       );
     }

@@ -267,6 +267,18 @@ export async function deleteProStaff(token: string, employeeId: string) {
   return withApiError(() => getProApi(token).apiV1ProStaffEmployeeIdDelete({ employeeId }));
 }
 
+export async function resendProStaffInvite(token: string, employeeId: string): Promise<{ sent: boolean; email: string }> {
+  const response = await fetch(`${apiBaseUrl}/api/v1/pro/staff/${employeeId}/resend-invite`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({ message: "Envoi impossible." })) as { code?: string; message?: string };
+    throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Envoi impossible.");
+  }
+  return response.json() as Promise<{ sent: boolean; email: string }>;
+}
+
 export async function fetchProHours(token: string) {
   return withApiError(() => getProApi(token).apiV1ProHoursGet());
 }
@@ -339,4 +351,19 @@ export async function downloadProInvoicePdf(token: string, invoiceId: string) {
 
 export async function fetchProPayouts(token: string) {
   return withApiError(() => getProApi(token).apiV1ProPayoutsGet());
+}
+
+export async function redeemStaffInviteToken(inviteToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/staff-invite/redeem`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: inviteToken })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Lien invalide ou expiré." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Lien invalide ou expiré.");
+    }
+    return response.json() as Promise<{ accessToken: string; refreshToken: string }>;
+  });
 }

@@ -22,7 +22,7 @@ class SalonListCard extends StatelessWidget {
     super.key,
   });
 
-  final SalonSummary? salon;
+  final Object? salon;
   final String? name, category, location, rating, imageUrl;
   final VoidCallback onTap;
   final Widget? trailing;
@@ -34,11 +34,11 @@ class SalonListCard extends StatelessWidget {
     final h = height ?? 96.h;
     final r = radius ?? 20.r;
 
-    final displayName = salon?.name ?? name ?? '';
-    final displayCategory = salon?.category ?? category ?? '';
-    final displayLocation = salon?.city ?? location ?? '';
-    final displayRating = salon?.averageRating.toStringAsFixed(1) ?? rating ?? '0.0';
-    final displayImageUrl = salon?.logoUrl ?? imageUrl ?? '';
+    final displayName = _salonName(salon) ?? name ?? '';
+    final displayCategory = _salonCategory(salon) ?? category ?? '';
+    final displayLocation = _salonCity(salon) ?? location ?? '';
+    final displayRating = _salonRating(salon) ?? rating ?? '0.0';
+    final displayImageUrl = _salonLogoUrl(salon) ?? imageUrl ?? '';
 
     return GestureDetector(
       onTap: onTap,
@@ -123,3 +123,33 @@ class SalonListCard extends StatelessWidget {
     );
   }
 }
+
+String? _salonName(Object? salon) => switch (salon) {
+  SalonSummary s => s.name,
+  SalonSummaryListResponseItemsInner s => s.name,
+  _ => null,
+};
+
+String? _salonCategory(Object? salon) => switch (salon) {
+  SalonSummary s => s.category,
+  SalonSummaryListResponseItemsInner s => s.category,
+  _ => null,
+};
+
+String? _salonCity(Object? salon) => switch (salon) {
+  SalonSummary s => s.city,
+  SalonSummaryListResponseItemsInner s => s.city,
+  _ => null,
+};
+
+String? _salonRating(Object? salon) => switch (salon) {
+  SalonSummary s => s.averageRating.toStringAsFixed(1),
+  SalonSummaryListResponseItemsInner s => s.averageRating.toStringAsFixed(1),
+  _ => null,
+};
+
+String? _salonLogoUrl(Object? salon) => switch (salon) {
+  SalonSummary s => s.logoUrl,
+  SalonSummaryListResponseItemsInner s => s.logoUrl,
+  _ => null,
+};

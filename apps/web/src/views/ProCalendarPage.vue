@@ -39,7 +39,7 @@
           <option value="completed">Terminés</option>
           <option value="cancelled">Annulés</option>
         </select>
-        <select v-model="selectedEmployeeId" class="input-shell py-2 text-[11px] min-w-[140px]">
+        <select v-if="auth.isManager" v-model="selectedEmployeeId" class="input-shell py-2 text-[11px] min-w-[140px]">
           <option value="all">Toute l'équipe</option>
           <option v-for="staff in staffMembers" :key="staff.id" :value="staff.id">{{ staff.name }}</option>
         </select>
@@ -545,7 +545,7 @@ const servicesQuery = useQuery({
 const staffQuery = useQuery({
   queryKey: ["pro-staff", "calendar"],
   queryFn: () => fetchProStaff(auth.accessToken ?? ""),
-  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager))
 });
 
 const clientsQuery = useQuery({
@@ -970,10 +970,17 @@ watch(
 
 // Staff members only see their own bookings — auto-set filter on load
 watch(
-  () => auth.isOwner,
-  (isOwner) => {
-    if (!isOwner && auth.currentUser?.id) {
-      selectedEmployeeId.value = auth.currentUser.id;
+  () => auth.isManager,
+  (isManager) => {
+    if (!isManager && auth.currentUser?.id) {
+      // Find the employee ID linked to this user ID
+      const me = staffMembers.value.find(s => s.id === auth.currentUser?.id || s.name === auth.currentUser?.fullName);
+      if (me) {
+        selectedEmployeeId.value = me.id;
+      } else {
+        // Fallback to current user ID which is often the employee ID in this context
+        selectedEmployeeId.value = auth.currentUser?.id ?? "all";
+      }
     }
   },
   { immediate: true }

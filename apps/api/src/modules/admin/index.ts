@@ -22,6 +22,7 @@ import {
   deleteRequiredDocument,
   getAdminDashboard,
   getAuditDetail,
+  listEmailAuditEvents,
   getPendingSalonDetail,
   getPlatformSettings,
   getSubscriptionDetail,
@@ -180,6 +181,16 @@ export class AdminController {
     ok(reply, event);
   }
 
+  async listEmailAudit(request: FastifyRequest, reply: FastifyReply) {
+    if (!this.ensureAdmin(request, reply)) return;
+    const filters = z.object({
+      status: z.string().optional(),
+      driver: z.string().optional(),
+      to: z.string().optional()
+    }).parse(request.query);
+    ok(reply, await listEmailAuditEvents(filters));
+  }
+
   // ── Configuration ────────────────────────────────────────────────────────
 
   async listSettings(request: FastifyRequest, reply: FastifyReply) {
@@ -227,6 +238,14 @@ export class AdminController {
 
   async listDocuments(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
+    ok(reply, await listRequiredDocuments());
+  }
+
+  async listCategoriesPublic(_request: FastifyRequest, reply: FastifyReply) {
+    ok(reply, await listSalonCategories());
+  }
+
+  async listDocumentsPublic(_request: FastifyRequest, reply: FastifyReply) {
     ok(reply, await listRequiredDocuments());
   }
 

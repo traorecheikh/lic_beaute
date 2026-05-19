@@ -45,7 +45,7 @@ Future<CachedResource<SalonDetail>> _fetchSalonDetail(
   }
 }
 
-final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
+final salonDetailProvider = FutureProvider.autoDispose.family<SalonDetail?, String>((
   ref,
   salonId,
 ) async {
@@ -54,7 +54,7 @@ final salonDetailProvider = FutureProvider.family<SalonDetail?, String>((
 });
 
 final salonDetailResourceProvider =
-    FutureProvider.family<CachedResource<SalonDetail>, String>((
+    FutureProvider.autoDispose.family<CachedResource<SalonDetail>, String>((
       ref,
       salonId,
     ) async {

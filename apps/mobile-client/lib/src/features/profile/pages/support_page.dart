@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_contacts.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_top_bar.dart';
@@ -36,7 +37,7 @@ class SupportPage extends StatelessWidget {
             subtitle: 'Réponse en moins de 5 minutes',
             onTap: () {
               AppHaptics.select();
-              _launchUrl('https://wa.me/221770000000');
+              _launchUrl(AppContacts.supportWhatsApp);
             },
           ),
           gapH12,
@@ -46,17 +47,17 @@ class SupportPage extends StatelessWidget {
             subtitle: 'Lun-Sam, 9h à 19h',
             onTap: () {
               AppHaptics.select();
-              _launchUrl('tel:+221338000000');
+              _launchUrl(AppContacts.supportTelUri);
             },
           ),
           gapH12,
           SupportTile(
             icon: 'mail',
             title: 'Email',
-            subtitle: 'support@beauteavenue.com',
+            subtitle: AppContacts.supportEmail,
             onTap: () {
               AppHaptics.select();
-              _launchUrl('mailto:support@beauteavenue.com');
+              _launchUrl(AppContacts.supportEmailUri);
             },
           ),
           SizedBox(height: 32.h),

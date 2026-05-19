@@ -55,7 +55,7 @@ describe("createApp unit", () => {
     expect(app.register).toHaveBeenCalled();
     const registerCalls = app.register.mock.calls;
     const rateLimitCall = registerCalls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.global === true) as any[] | undefined;
-    expect(rateLimitCall?.[1]?.max).toBe(100);
+    expect(rateLimitCall?.[1]?.max).toBe(2000);
 
     expect(hooks.onSend).toBeDefined();
     const header = vi.fn();
@@ -137,7 +137,7 @@ describe("createApp unit", () => {
 
     expect(app.log.warn).toHaveBeenCalled();
     expect(disconnect).toHaveBeenCalled();
-    const fallbackCall = app.register.mock.calls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.max === 50);
+    const fallbackCall = app.register.mock.calls.find((c: any[]) => c[1]?.timeWindow === "1 minute" && c[1]?.max === 2000);
     expect(fallbackCall).toBeTruthy();
     expect(app.decorate).toHaveBeenCalledWith("redisEnabled", false);
   });

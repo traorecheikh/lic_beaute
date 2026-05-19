@@ -11,9 +11,11 @@ Name | Type
 `email` | string
 `phone` | string
 `password` | string
+`subscriptionIntentTier` | string
 `salon` | [RegisterInputAnyOf1Salon](RegisterInputAnyOf1Salon.md)
 `services` | [Array&lt;RegisterInputAnyOf1ServicesInner&gt;](RegisterInputAnyOf1ServicesInner.md)
 `hours` | [Array&lt;RegisterInputAnyOf1HoursInner&gt;](RegisterInputAnyOf1HoursInner.md)
+`documents` | [Array&lt;RegisterInputAnyOf1DocumentsInner&gt;](RegisterInputAnyOf1DocumentsInner.md)
 
 ## Example
 
@@ -27,9 +29,11 @@ const example = {
   "email": null,
   "phone": null,
   "password": null,
+  "subscriptionIntentTier": null,
   "salon": null,
   "services": null,
   "hours": null,
+  "documents": null,
 } satisfies RegisterInput
 
 console.log(example)

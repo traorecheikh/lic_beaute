@@ -27,7 +27,10 @@
           </div>
           <div class="space-y-1.5">
             <label class="section-label">Catégorie <span class="text-primary">*</span></label>
-            <input v-model="form.category" class="input-shell" placeholder="Ex : Coiffure" required />
+            <select v-model="form.category" class="input-shell h-[42px]" required>
+              <option value="" disabled>Sélectionnez une catégorie</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
+            </select>
           </div>
           <div class="space-y-1.5">
             <label class="section-label">Ville <span class="text-primary">*</span></label>
@@ -77,20 +80,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useQueryClient } from "@tanstack/vue-query";
 import { toast } from "vue-sonner";
 import { ArrowLeftIcon } from "@heroicons/vue/24/outline";
 
-import { ApiError, createSalon } from "@/lib/api";
+import { ApiError, createSalon, fetchPlatformCategories } from "@/lib/api";
 import { useAdminAuthStore } from "@/stores/adminAuth";
 
 const auth = useAdminAuthStore();
 const router = useRouter();
 const queryClient = useQueryClient();
 
+const categories = ref<{ id: string; name: string }[]>([]);
 const submitting = ref(false);
+
+onMounted(async () => {
+  try {
+    categories.value = await fetchPlatformCategories(auth.accessToken ?? "");
+  } catch {
+    // leave empty — user can still type if categories fail to load
+  }
+});
 const errorMsg = ref("");
 const form = ref({
   name: "",

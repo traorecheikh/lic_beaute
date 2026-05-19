@@ -45,7 +45,7 @@ describe("ProController createStaff success branches", () => {
   it("creates staff by updating existing same-salon user", async () => {
     const tx = {
       user: {
-        findUnique: vi.fn().mockResolvedValue({ id: "u_existing", salonId: "s1", role: "salon_staff" }),
+        findFirst: vi.fn().mockResolvedValue({ id: "u_existing", salonId: "s1", role: "salon_staff" }),
         update: vi.fn().mockResolvedValue({ id: "u_existing" }),
         create: vi.fn()
       },
@@ -76,7 +76,7 @@ describe("ProController createStaff success branches", () => {
   it("creates staff by creating a new user when phone does not exist", async () => {
     const tx = {
       user: {
-        findUnique: vi.fn().mockResolvedValue(null),
+        findFirst: vi.fn().mockResolvedValue(null),
         update: vi.fn(),
         create: vi.fn().mockResolvedValue({ id: "u_new" })
       },
@@ -107,7 +107,7 @@ describe("ProController createStaff success branches", () => {
   it("maps conflict when existing phone belongs to another salon", async () => {
     const tx = {
       user: {
-        findUnique: vi.fn().mockResolvedValue({ id: "uX", salonId: "other", role: "salon_staff" }),
+        findFirst: vi.fn().mockResolvedValue({ id: "uX", salonId: "other", role: "salon_staff" }),
         update: vi.fn(),
         create: vi.fn()
       },
@@ -125,7 +125,7 @@ describe("ProController createStaff success branches", () => {
   it("maps conflict when existing phone belongs to salon owner", async () => {
     const tx = {
       user: {
-        findUnique: vi.fn().mockResolvedValue({ id: "uY", salonId: "s1", role: "salon_owner" }),
+        findFirst: vi.fn().mockResolvedValue({ id: "uY", salonId: "s1", role: "salon_owner" }),
         update: vi.fn(),
         create: vi.fn()
       },

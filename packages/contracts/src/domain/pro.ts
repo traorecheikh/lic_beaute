@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { bookingStatusSchema, subscriptionStatusSchema, subscriptionTierSchema } from "./enums.js";
+import { bookingStatusSchema, salonApprovalStatusSchema, subscriptionStatusSchema, subscriptionTierSchema } from "./enums.js";
 import { reviewSchema } from "./review.js";
 
 // ─── Salon profile ────────────────────────────────────────────────────────────
@@ -34,6 +34,7 @@ export const proSalonProfileSchema = z.object({
   subscriptionTier: subscriptionTierSchema,
   isVisibleInMarketplace: z.boolean(),
   canReceiveBookings: z.boolean(),
+  approvalStatus: salonApprovalStatusSchema,
   teamDisplay: proTeamDisplaySchema,
   gallery: z.array(z.string()),
   hours: z.array(proSalonHourSchema)
@@ -87,6 +88,9 @@ export const proStaffMemberSchema = z.object({
   id: z.string(),
   userId: z.string(),
   displayName: z.string(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  role: z.enum(["salon_staff", "salon_manager", "salon_owner"]),
   avatarUrl: z.string().nullable(),
   description: z.string().nullable(),
   isActive: z.boolean(),
@@ -95,8 +99,11 @@ export const proStaffMemberSchema = z.object({
 });
 
 export const proStaffCreateInputSchema = z.object({
-  phone: z.string().min(8).max(20),
+  phone: z.string().min(8).max(20).optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(8).optional(),
   fullName: z.string().min(2),
+  role: z.enum(["salon_staff", "salon_manager"]).default("salon_staff"),
   avatarUrl: z.string().max(1000).nullable().optional(),
   description: z.string().max(240).nullable().optional(),
   serviceIds: z.array(z.string()).optional().default([])
@@ -104,6 +111,9 @@ export const proStaffCreateInputSchema = z.object({
 
 export const proStaffUpdateInputSchema = z.object({
   displayName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().min(8).max(20).optional(),
+  role: z.enum(["salon_staff", "salon_manager"]).optional(),
   avatarUrl: z.string().max(1000).nullable().optional(),
   description: z.string().max(240).nullable().optional(),
   isActive: z.boolean().optional(),
@@ -219,6 +229,7 @@ export const proSubscriptionSchema = z.object({
   status: subscriptionStatusSchema,
   renewsAt: z.string().datetime().nullable(),
   expiresAt: z.string().datetime().nullable(),
+  gracePeriodEndsAt: z.string().datetime().nullable(),
   isComplimentary: z.boolean(),
   autoRenew: z.boolean(),
   billingMethod: z

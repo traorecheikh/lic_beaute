@@ -1,6 +1,8 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from "node:crypto";
+import argon2 from "argon2";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Prisma } from "../../generated/prisma/client.js";
+import type { Role } from "../../generated/prisma/enums.js";
 
 import {
   proBlockedSlotCreateInputSchema,
@@ -18,6 +20,7 @@ import {
 } from "@beauteavenue/contracts";
 
 import { getPaymentAdapter } from "../../adapters/index.js";
+import { sendEmail } from "../../lib/email.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { fetchAndComputeAvailableSlots } from "../../lib/availability.js";
@@ -301,7 +304,7 @@ function buildInvoicePdfBuffer(input: {
 }
 
 async function ensurePro(request: FastifyRequest) {
-  const { sub, role } = requireRole(request, ["salon_owner", "salon_staff"]);
+  const { sub, role } = requireRole(request, ["salon_owner", "salon_manager", "salon_staff"]);
   const user = await prisma.user.findUnique({ where: { id: sub }, select: { salonId: true } });
   if (!user?.salonId) throw new HttpAuthError(403, "not_in_salon", "Vous n'êtes associé à aucun salon.");
   return { userId: sub, salonId: user.salonId, role };
@@ -315,17 +318,25 @@ function ownerOnly(role: string, reply: FastifyReply): boolean {
   return true;
 }
 
+function managerOrOwner(role: string, reply: FastifyReply): boolean {
+  if (role !== "salon_owner" && role !== "salon_manager") {
+    fail(reply, 403, "manager_forbidden", "Action réservée aux gestionnaires.");
+    return false;
+  }
+  return true;
+}
+
 export class ProController {
   // ─── Dashboard ─────────────────────────────────────────────────────────────
 
   async dashboard(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { salonId, role } = await ensurePro(request);
+      const { salonId, role, userId } = await ensurePro(request);
       const { value, cacheStatus } = await getOrSetCachedJson({
-        key: `kpi:pro:dashboard:${salonId}:${role}`,
+        key: `kpi:pro:dashboard:${salonId}:${role}:${userId}`,
         ttlSeconds: config.cacheTtlKpiSeconds,
         tags: ["kpi:pro"],
-        load: () => getProDashboard(salonId, role)
+        load: () => getProDashboard(salonId, role, userId)
       });
       reply.header("x-cache", cacheStatus);
       ok(reply, value);
@@ -372,6 +383,7 @@ export class ProController {
         averageRating: salon.averageRating,
         subscriptionTier: salon.subscriptionTier, isVisibleInMarketplace: salon.isVisibleInMarketplace,
         canReceiveBookings: salon.canReceiveBookings,
+        approvalStatus: salon.approvalStatus,
         teamDisplay: { showPhotos, showDescriptions },
         gallery: salon.gallery.map((g) => g.url),
         hours: salon.salonHours.map((h) => ({ dayOfWeek: h.dayOfWeek, isOpen: h.isOpen, opensAt: h.opensAt, closesAt: h.closesAt }))
@@ -622,16 +634,29 @@ export class ProController {
 
   async listStaff(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { salonId, role } = await ensurePro(request);
-      if (!ownerOnly(role, reply)) return;
+      const { salonId, userId, role } = await ensurePro(request);
+      const where: Prisma.EmployeeWhereInput = { salonId };
+      
+      // Staff can only see themselves in the list (for profile/settings)
+      // Managers and owners see everyone
+      if (role === "salon_staff") {
+        where.userId = userId;
+      }
+
       const staff = await prisma.employee.findMany({
-        where: { salonId },
-        include: { specialties: { select: { serviceId: true } } }
+        where,
+        include: { 
+          specialties: { select: { serviceId: true } },
+          user: { select: { email: true, phone: true, role: true } }
+        }
       });
       ok(reply, staff.map((e) => ({
         id: e.id,
         userId: e.userId,
         displayName: e.displayName,
+        email: e.user.email,
+        phone: e.user.phone,
+        role: e.user.role,
         avatarUrl: e.avatarUrl,
         description: e.description,
         isActive: e.isActive,
@@ -644,7 +669,7 @@ export class ProController {
   async createStaff(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, role } = await ensurePro(request);
-      if (!ownerOnly(role, reply)) return;
+      if (!managerOrOwner(role, reply)) return;
       const body = proStaffCreateInputSchema.parse(request.body);
       const normalizedAvatarUrl = body.avatarUrl?.trim() ? body.avatarUrl.trim() : null;
       const normalizedDescription = body.description?.trim() ? body.description.trim() : null;
@@ -667,7 +692,15 @@ export class ProController {
       }
 
       const result = await prisma.$transaction(async (tx) => {
-        const existing = await tx.user.findUnique({ where: { phone: body.phone } });
+        const existing = await tx.user.findFirst({
+          where: {
+            OR: [
+              body.phone ? { phone: body.phone } : null,
+              body.email ? { email: body.email } : null
+            ].filter(Boolean) as Prisma.UserWhereInput[]
+          }
+        });
+
         if (existing && existing.salonId && existing.salonId !== salonId) {
           throw new HttpAuthError(409, "user_in_other_salon", "Cet utilisateur appartient à un autre salon.");
         }
@@ -675,13 +708,29 @@ export class ProController {
           throw new HttpAuthError(422, "cannot_staff_owner", "Impossible d'ajouter un propriétaire de salon comme employé.");
         }
 
+        const passwordHash = body.password ? await argon2.hash(body.password) : undefined;
+
         const user = existing
           ? await tx.user.update({
               where: { id: existing.id },
-              data: { fullName: body.fullName, role: "salon_staff", salonId }
+              data: { 
+                fullName: body.fullName, 
+                role: body.role as Role, 
+                salonId,
+                email: body.email ?? existing.email,
+                phone: body.phone ?? existing.phone,
+                passwordHash: passwordHash ?? existing.passwordHash
+              }
             })
           : await tx.user.create({
-              data: { fullName: body.fullName, phone: body.phone, role: "salon_staff", salonId }
+              data: { 
+                fullName: body.fullName, 
+                phone: body.phone, 
+                email: body.email,
+                passwordHash,
+                role: body.role as Role, 
+                salonId 
+              }
             });
 
         const employee = await tx.employee.create({
@@ -700,13 +749,16 @@ export class ProController {
           });
         }
 
-        return { employee, serviceIds: body.serviceIds };
+        return { employee, user, serviceIds: body.serviceIds };
       });
 
       ok(reply, {
         id: result.employee.id,
         userId: result.employee.userId,
         displayName: result.employee.displayName,
+        email: result.user.email,
+        phone: result.user.phone,
+        role: result.user.role,
         avatarUrl: result.employee.avatarUrl,
         description: result.employee.description,
         isActive: result.employee.isActive,
@@ -719,10 +771,13 @@ export class ProController {
   async updateStaff(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, role } = await ensurePro(request);
-      if (!ownerOnly(role, reply)) return;
+      if (!managerOrOwner(role, reply)) return;
       const params = request.params as { employeeId: string };
       const body = proStaffUpdateInputSchema.parse(request.body);
-      const existing = await prisma.employee.findFirst({ where: { id: params.employeeId, salonId } });
+      const existing = await prisma.employee.findFirst({ 
+        where: { id: params.employeeId, salonId },
+        include: { user: true }
+      });
       if (!existing) { fail(reply, 404, "employee_not_found", "Employé introuvable."); return; }
       const photoRequired = await isTeamPhotoRequiredForSalon(salonId);
       const nextAvatar = body.avatarUrl === undefined
@@ -756,6 +811,18 @@ export class ProController {
             schedulingEnabled: body.schedulingEnabled
           }
         });
+
+        if (body.role !== undefined || body.email !== undefined || body.phone !== undefined) {
+          await tx.user.update({
+            where: { id: existing.userId },
+            data: {
+              role: body.role as Role | undefined,
+              email: body.email,
+              phone: body.phone
+            }
+          });
+        }
+
         if (body.serviceIds !== undefined) {
           await tx.employeeSpecialty.deleteMany({ where: { employeeId: params.employeeId } });
           if (body.serviceIds.length > 0) {
@@ -779,6 +846,51 @@ export class ProController {
       if (!existing) { fail(reply, 404, "employee_not_found", "Employé introuvable."); return; }
       await prisma.employee.update({ where: { id: params.employeeId }, data: { isActive: false } });
       ok(reply, { deleted: true });
+    } catch (e) { handleError(e, reply); }
+  }
+
+  async resendStaffInvite(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!managerOrOwner(role, reply)) return;
+      const params = request.params as { employeeId: string };
+      const employee = await prisma.employee.findFirst({
+        where: { id: params.employeeId, salonId },
+        include: { user: true, salon: { select: { name: true } } }
+      });
+      if (!employee) { fail(reply, 404, "employee_not_found", "Employé introuvable."); return; }
+      if (!employee.user.email) {
+        fail(reply, 422, "no_email", "Cet employé n'a pas d'adresse e-mail. Ajoutez-en une pour lui envoyer une invitation.");
+        return;
+      }
+
+      // Generate a short-lived signed invite token (stateless, no DB write)
+      const jwt = await import("jsonwebtoken");
+      const token = jwt.default.sign(
+        { sub: employee.user.id, type: "staff_invite" },
+        config.jwtInviteSecret,
+        { expiresIn: "24h" }
+      );
+
+      const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${encodeURIComponent(token)}`;
+      const staffName = employee.user.fullName;
+      const salonName = employee.salon.name;
+      await sendEmail({
+        to: employee.user.email,
+        subject: `Votre accès à ${salonName} — Beauté Avenue`,
+        text: [
+          `Bonjour ${staffName},`,
+          ``,
+          `${salonName} vous a invité(e) à rejoindre l'espace professionnel Beauté Avenue.`,
+          ``,
+          `Accédez à votre compte (lien valable 24h) :`,
+          loginUrl,
+          ``,
+          `Si vous ne connaissez pas ce salon, ignorez ce message.`
+        ].join("\n")
+      });
+
+      ok(reply, { sent: true, email: employee.user.email });
     } catch (e) { handleError(e, reply); }
   }
 
@@ -874,13 +986,24 @@ export class ProController {
 
   async listBookings(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { salonId } = await ensurePro(request);
+      const { salonId, userId, role } = await ensurePro(request);
       const q = request.query as { status?: string; date?: string; page?: string; pageSize?: string };
       const page = Math.max(0, parseInt(q.page ?? "0", 10));
       const pageSize = Math.min(50, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
 
-      const where: Record<string, unknown> = { salonId };
-      if (q.status) where.status = q.status;
+      const where: Prisma.BookingWhereInput = { salonId };
+      
+      if (role === "salon_staff") {
+        const employee = await prisma.employee.findFirst({ where: { userId, salonId } });
+        if (employee) {
+          where.employeeId = employee.id;
+        } else {
+          // If for some reason staff has no employee record, they see nothing
+          where.id = "none";
+        }
+      }
+
+      if (q.status) where.status = q.status as any;
       if (q.date) {
         const d = new Date(q.date + "T00:00:00");
         const next = new Date(d); next.setDate(next.getDate() + 1);

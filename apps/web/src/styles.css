@@ -22,8 +22,9 @@
   --color-error: #BA1A1A;
 
   /* ── Typography ──────────────────────────────────────────────── */
-  --font-display: "Cormorant Garamond", serif;
-  --font-sans: "Inter", sans-serif;
+  --font-display: "TT Commons Pro", "Inter", sans-serif;
+  --font-sans: "TT Commons Pro", "Inter", sans-serif;
+  --font-weight-medium-bold: 620;
 
   /* ── Rounded ─────────────────────────────────────────────────── */
   --radius-xs: 4px;
@@ -50,22 +51,22 @@
 
 @utility page-title {
   /* "Pilotage", "Salons", "Abonnements" — every list page header */
-  @apply font-display text-2xl font-bold tracking-tight text-espresso;
+  @apply font-display text-[32px] font-medium-bold tracking-[-0.01em] text-espresso leading-[1.2];
 }
 
 @utility entity-title {
   /* Salon name, subscription name on detail pages */
-  @apply font-display text-2xl font-bold tracking-tight text-espresso;
+  @apply font-display text-[32px] font-medium-bold tracking-[-0.01em] text-espresso leading-[1.2];
 }
 
 @utility section-label {
   /* "Pièces Justificatives", "Top croissance" — section dividers */
-  @apply font-sans text-[10px] font-semibold uppercase tracking-[0.25em] text-cocoa/80;
+  @apply font-sans text-[11px] font-bold uppercase tracking-[0.3em] text-cocoa/50;
 }
 
 @utility row-primary {
   /* Primary text in list rows and table cells */
-  @apply font-sans text-[14px] font-semibold text-espresso;
+  @apply font-sans text-[14px] font-medium-bold text-espresso;
 }
 
 @utility row-meta {

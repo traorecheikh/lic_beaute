@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => {
     },
     service: {
       findMany: vi.fn()
+    },
+    employee: {
+      findFirst: vi.fn().mockResolvedValue(null)
     }
   };
   return { prisma };
@@ -29,7 +32,7 @@ describe("pro data", () => {
     mocks.prisma.booking.count.mockResolvedValueOnce(2).mockResolvedValueOnce(5);
     mocks.prisma.payment.aggregate.mockResolvedValue({ _sum: { amountXof: 25000 } });
 
-    const result = await getProDashboard("s1", "salon_owner");
+    const result = await getProDashboard("s1", "salon_owner", "u1");
 
     expect(result).toEqual({
       pendingBookingCount: 2,
@@ -41,7 +44,7 @@ describe("pro data", () => {
   it("getProDashboard skips revenue for non-owner", async () => {
     mocks.prisma.booking.count.mockResolvedValueOnce(1).mockResolvedValueOnce(3);
 
-    const result = await getProDashboard("s1", "salon_staff");
+    const result = await getProDashboard("s1", "salon_staff", "u1");
 
     expect(result.totalRevenueXof).toBeNull();
     expect(mocks.prisma.payment.aggregate).not.toHaveBeenCalled();

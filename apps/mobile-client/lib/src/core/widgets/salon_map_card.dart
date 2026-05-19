@@ -117,7 +117,7 @@ class SalonMapCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const AppIcon('map', size: 14, color: AppColors.white70),
+                    const AppIcon('map-pin', size: 14, color: AppColors.white70),
                     SizedBox(width: 6.w),
                     Expanded(
                       child: Text(

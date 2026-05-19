@@ -8,6 +8,7 @@ import {
   fetchProSalon,
   loginPro,
   logoutPro,
+  redeemStaffInviteToken,
   refreshProSession,
   verifyProOtp
 } from "@/lib/pro-api";
@@ -20,8 +21,8 @@ export type ProAuthState = {
   initialized: boolean;
 };
 
-function isProRole(role: CurrentUser["role"]): role is "salon_owner" | "salon_staff" {
-  return role === "salon_owner" || role === "salon_staff";
+function isProRole(role: CurrentUser["role"]): role is "salon_owner" | "salon_manager" | "salon_staff" {
+  return role === "salon_owner" || role === "salon_manager" || role === "salon_staff";
 }
 
 export const useProAuthStore = defineStore("pro-auth", () => {
@@ -29,18 +30,21 @@ export const useProAuthStore = defineStore("pro-auth", () => {
   const refreshToken = ref<string | null>(null);
   const currentUser = ref<CurrentUser | null>(null);
   const salonName = ref<string | null>(null);
+  const salonApprovalStatus = ref<string | null>(null);
   const initialized = ref(false);
 
   const isAuthenticated = computed(() =>
     Boolean(accessToken.value && currentUser.value && isProRole(currentUser.value.role))
   );
   const isOwner = computed(() => currentUser.value?.role === "salon_owner");
+  const isManager = computed(() => currentUser.value?.role === "salon_manager" || currentUser.value?.role === "salon_owner");
 
   function clearSession() {
     accessToken.value = null;
     refreshToken.value = null;
     currentUser.value = null;
     salonName.value = null;
+    salonApprovalStatus.value = null;
   }
 
   async function refreshSessionIfPossible(): Promise<boolean> {
@@ -82,10 +86,12 @@ export const useProAuthStore = defineStore("pro-auth", () => {
       }
       currentUser.value = user;
       try {
-        const salon = await fetchProSalon(accessToken.value);
+        const salon = await fetchProSalon(accessToken.value) as any;
         salonName.value = salon.name;
+        salonApprovalStatus.value = (salon.approvalStatus as string) ?? null;
       } catch {
         salonName.value = null;
+        salonApprovalStatus.value = null;
       }
     } catch (error) {
       const isAuthError = error instanceof ApiError && error.statusCode === 401;
@@ -98,10 +104,12 @@ export const useProAuthStore = defineStore("pro-auth", () => {
           }
           currentUser.value = user;
           try {
-            const salon = await fetchProSalon(accessToken.value);
+            const salon = await fetchProSalon(accessToken.value) as any;
             salonName.value = salon.name;
+            salonApprovalStatus.value = (salon.approvalStatus as string) ?? null;
           } catch {
             salonName.value = null;
+            salonApprovalStatus.value = null;
           }
         } catch (retryError) {
           if (retryError instanceof ApiError && retryError.statusCode === 401) {
@@ -126,6 +134,11 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     await applySession(session.accessToken, session.refreshToken);
   }
 
+  async function loginWithInviteToken(inviteToken: string) {
+    const session = await redeemStaffInviteToken(inviteToken);
+    await applySession(session.accessToken, session.refreshToken);
+  }
+
   async function logout() {
     const token = accessToken.value;
     const refresh = refreshToken.value;
@@ -146,12 +159,15 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     initialized,
     isAuthenticated,
     isOwner,
+    isManager,
+    salonApprovalStatus,
     clearSession,
     refreshSessionIfPossible,
     applySession,
     restoreSession,
     login,
     loginWithOtp,
+    loginWithInviteToken,
     logout
   };
 }, {

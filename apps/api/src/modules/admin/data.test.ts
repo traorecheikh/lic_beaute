@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => {
     salon: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
     subscription: { count: vi.fn(), upsert: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
     auditLog: { count: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
-    user: { findUnique: vi.fn() },
+    emailAudit: { findMany: vi.fn() },
+    user: { findUnique: vi.fn(), findFirst: vi.fn() },
     platformSetting: { create: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },
     platformSalonCategory: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
     platformRequiredDocument: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
@@ -40,6 +41,7 @@ import {
   getPlatformSettings,
   getSubscriptionDetail,
   listAuditEvents,
+  listEmailAuditEvents,
   listPendingSalons,
   listRequiredDocuments,
   listSalonCategories,
@@ -506,6 +508,30 @@ describe("admin data module", () => {
     await upsertRequiredDocument({ label: "ID", slug: "id", type: "pdf", isRequired: true }, "Admin");
     mocks.prisma.platformRequiredDocument.delete.mockResolvedValue({ id: "d1", label: "ID" });
     await deleteRequiredDocument("d1", "Admin");
+  });
+
+  it("listEmailAuditEvents maps rows and applies filters", async () => {
+    mocks.prisma.emailAudit.findMany.mockResolvedValueOnce([
+      {
+        id: "ea1",
+        to: "owner@example.com",
+        subject: "Subject",
+        driver: "smtp",
+        status: "sent",
+        errorMessage: null,
+        createdAt: new Date()
+      }
+    ]);
+    const out = await listEmailAuditEvents({ status: "sent", driver: "smtp", to: "owner" });
+    expect(out.total).toBe(1);
+    expect(out.items[0]?.to).toBe("owner@example.com");
+    expect(mocks.prisma.emailAudit.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        status: "sent",
+        driver: "smtp",
+        to: expect.any(Object)
+      })
+    }));
   });
 
   it("listAuditEvents applies actor/entity/action filters together", async () => {

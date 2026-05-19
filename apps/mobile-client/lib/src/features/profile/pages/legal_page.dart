@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/constants/app_contacts.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -11,6 +14,25 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 class LegalPage extends StatelessWidget {
   const LegalPage({super.key});
 
+  static const _documents = [
+    (
+      title: 'Conditions Générales d\'Utilisation',
+      subject: 'CGU - Beauté Avenue',
+    ),
+    (
+      title: 'Politique de Confidentialité',
+      subject: 'Politique de confidentialité - Beauté Avenue',
+    ),
+    (
+      title: 'Mentions Légales',
+      subject: 'Mentions légales - Beauté Avenue',
+    ),
+    (
+      title: 'Gestion des Cookies',
+      subject: 'Politique cookies - Beauté Avenue',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -18,10 +40,9 @@ class LegalPage extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.all(24.w),
         children: [
-          _buildLegalTile(context, 'Conditions Générales d\'Utilisation'),
-          _buildLegalTile(context, 'Politique de Confidentialité'),
-          _buildLegalTile(context, 'Mentions Légales'),
-          _buildLegalTile(context, 'Gestion des Cookies'),
+          ..._documents.map(
+            (doc) => _buildLegalTile(context, doc.title, doc.subject),
+          ),
           gapH32,
           Center(
             child: Column(
@@ -56,11 +77,27 @@ class LegalPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLegalTile(BuildContext context, String title) {
+  Widget _buildLegalTile(
+    BuildContext context,
+    String title,
+    String subject,
+  ) {
     return AppPressable(
-      onTap: () {
+      onTap: () async {
         AppHaptics.light();
-        AppSnackbar.info(context, 'Document bientôt disponible.');
+        final uri = Uri.parse(
+          '${AppContacts.supportEmailUri}?subject=${Uri.encodeComponent(subject)}',
+        );
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          if (context.mounted) {
+            AppSnackbar.info(
+              context,
+              'Contactez-nous à ${AppContacts.supportEmail}',
+            );
+          }
+        }
       },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 14.h),

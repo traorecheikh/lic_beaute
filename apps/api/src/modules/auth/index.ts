@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 import {
@@ -49,7 +49,7 @@ async function pruneExcessSessions(userId: string): Promise<void> {
 }
 
 function generateOtpCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 function hashValue(value: string): string {
@@ -230,7 +230,7 @@ export class AuthController {
       await prisma.session.create({
         data: {
           userId: user.id,
-          refreshToken: tokens.refreshToken,
+          refreshToken: hashRefreshToken(tokens.refreshToken),
           clientType: "app",
           expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
         }
@@ -266,6 +266,7 @@ export class AuthController {
             city: body.salon.city,
             address: body.salon.address,
             description: body.salon.description ?? "",
+            subscriptionIntentTier: body.subscriptionIntentTier ?? "standard",
             approvalStatus: "pending_review"
           }
         });
@@ -274,6 +275,17 @@ export class AuthController {
           where: { id: user.id },
           data: { salonId: salon.id }
         });
+
+        if (body.documents && body.documents.length > 0) {
+          await tx.salonDocument.createMany({
+            data: body.documents.map((doc) => ({
+              salonId: salon.id,
+              label: doc.label,
+              fileUrl: doc.fileUrl,
+              status: "pending_review"
+            }))
+          });
+        }
 
         await tx.service.createMany({
           data: body.services.map((s, i) => ({
@@ -312,6 +324,16 @@ export class AuthController {
           expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
         }
       });
+      void sendEmail({
+        to: body.email,
+        subject: "Inscription reçue — Beauté Avenue Pro",
+        text:
+          `Bonjour ${body.fullName},\n\n` +
+          `Votre dossier pour "${body.salon.name}" a bien été enregistré sur Beauté Avenue.\n` +
+          `Statut actuel : en attente de validation.\n\n` +
+          `Vous pouvez vous connecter pour suivre l'évolution de votre dossier.\n\n` +
+          `— L'équipe Beauté Avenue`
+      }).catch((err) => logger.error("auth.register salon_owner: failed to send welcome email", { err: String(err), to: body.email }));
       ok(reply, tokens, 201);
     }
   }
@@ -648,6 +670,49 @@ export class AuthController {
     } catch (error) {
       if (error instanceof HttpAuthError) {
         fail(reply, error.statusCode, error.code, error.message);
+      } else {
+        fail(reply, 500, "internal_error", "Erreur interne.");
+      }
+    }
+  }
+
+  async redeemStaffInvite(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { token } = request.body as { token?: string };
+      if (!token || typeof token !== "string") {
+        fail(reply, 400, "missing_token", "Token manquant.");
+        return;
+      }
+      let payload: { sub?: string; type?: string };
+      try {
+        const jwt = await import("jsonwebtoken");
+        payload = jwt.default.verify(token, config.jwtInviteSecret) as { sub?: string; type?: string };
+      } catch {
+        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide ou expiré.");
+        return;
+      }
+      if (payload.type !== "staff_invite" || !payload.sub) {
+        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide.");
+        return;
+      }
+      const user = await prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, role: true }
+      });
+      if (!user || !["salon_staff", "salon_manager", "salon_owner"].includes(user.role)) {
+        fail(reply, 403, "forbidden", "Ce compte n'a pas accès à l'espace professionnel.");
+        return;
+      }
+      await pruneExcessSessions(user.id);
+      const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
+      await pruneExcessSessions(user.id);
+      await prisma.session.create({
+        data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
+      });
+      ok(reply, session);
+    } catch (e) {
+      if (e instanceof HttpAuthError) {
+        fail(reply, e.statusCode, e.code, e.message);
       } else {
         fail(reply, 500, "internal_error", "Erreur interne.");
       }

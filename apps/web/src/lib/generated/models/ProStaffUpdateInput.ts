@@ -30,6 +30,24 @@ export interface ProStaffUpdateInput {
      * @type {string}
      * @memberof ProStaffUpdateInput
      */
+    email?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProStaffUpdateInput
+     */
+    phone?: string;
+    /**
+     * 
+     * @type {ProStaffUpdateInputRoleEnum}
+     * @memberof ProStaffUpdateInput
+     */
+    role?: ProStaffUpdateInputRoleEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProStaffUpdateInput
+     */
     avatarUrl?: string | null;
     /**
      * 
@@ -57,6 +75,17 @@ export interface ProStaffUpdateInput {
     serviceIds?: Array<string>;
 }
 
+
+/**
+ * @export
+ */
+export const ProStaffUpdateInputRoleEnum = {
+    SalonStaff: 'salon_staff',
+    SalonManager: 'salon_manager'
+} as const;
+export type ProStaffUpdateInputRoleEnum = typeof ProStaffUpdateInputRoleEnum[keyof typeof ProStaffUpdateInputRoleEnum];
+
+
 /**
  * Check if a given object implements the ProStaffUpdateInput interface.
  */
@@ -75,6 +104,9 @@ export function ProStaffUpdateInputFromJSONTyped(json: any, ignoreDiscriminator:
     return {
         
         'displayName': json['displayName'] == null ? undefined : json['displayName'],
+        'email': json['email'] == null ? undefined : json['email'],
+        'phone': json['phone'] == null ? undefined : json['phone'],
+        'role': json['role'] == null ? undefined : json['role'],
         'avatarUrl': json['avatarUrl'] == null ? undefined : json['avatarUrl'],
         'description': json['description'] == null ? undefined : json['description'],
         'isActive': json['isActive'] == null ? undefined : json['isActive'],
@@ -95,6 +127,9 @@ export function ProStaffUpdateInputToJSONTyped(value?: ProStaffUpdateInput | nul
     return {
         
         'displayName': value['displayName'],
+        'email': value['email'],
+        'phone': value['phone'],
+        'role': value['role'],
         'avatarUrl': value['avatarUrl'],
         'description': value['description'],
         'isActive': value['isActive'],

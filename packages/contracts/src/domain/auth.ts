@@ -83,15 +83,21 @@ export const salonOwnerRegisterInputSchema = z.object({
   email: z.string().email(),
   phone: z.string().min(8).max(20),
   password: z.string().min(8),
+  subscriptionIntentTier: z.enum(["standard", "premium"]).optional(),
   salon: z.object({
     name: z.string().min(2),
     category: z.string(),
     city: z.string(),
     address: z.string(),
+    neighborhood: z.string().optional(),
     description: z.string().optional()
   }),
   services: z.array(serviceCreateInputSchema).min(1),
-  hours: z.array(hourInputSchema).length(7)
+  hours: z.array(hourInputSchema).length(7),
+  documents: z.array(z.object({
+    label: z.string(),
+    fileUrl: z.string().url()
+  })).optional()
 });
 
 export const registerInputSchema = z.discriminatedUnion("type", [

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hive_ce/hive_ce.dart';
 
 import '../core/constants/storage_keys.dart';
+import '../core/reactivity/app_reactivity.dart';
 import '../core/session/session_store.dart';
 import '../features/appointments/pages/booking_detail_page.dart';
 import '../features/appointments/pages/booking_manage_page.dart';
@@ -131,6 +132,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: sessionListenable,
+    observers: [_AppRouteRefreshObserver(ref)],
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final location = state.matchedLocation;
@@ -291,25 +293,59 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Booking funnel (full-screen, no shell) ────────────────────────────
       GoRoute(
         path: AppRoutes.bookingService,
-        builder: (_, state) => ServiceSelectionPage(
-          salonId: state.uri.queryParameters['salonId'] ?? '',
-        ),
+        builder: (_, state) {
+          final salonId = state.uri.queryParameters['salonId'];
+          if (salonId == null || salonId.isEmpty) {
+            return const _BookingRouteErrorPage(
+              title: 'Réservation indisponible',
+              message:
+                  'Le salon est manquant. Revenez à la fiche salon puis relancez la réservation.',
+            );
+          }
+          return ServiceSelectionPage(salonId: salonId);
+        },
       ),
       GoRoute(
         path: AppRoutes.bookingStaff,
-        builder: (_, state) => StaffSelectionPage(
-          salonId: state.uri.queryParameters['salonId'] ?? '',
-          serviceId: state.uri.queryParameters['serviceId'],
-        ),
+        builder: (_, state) {
+          final salonId = state.uri.queryParameters['salonId'];
+          final serviceId = state.uri.queryParameters['serviceId'];
+          if (salonId == null ||
+              salonId.isEmpty ||
+              serviceId == null ||
+              serviceId.isEmpty) {
+            return const _BookingRouteErrorPage(
+              title: 'Réservation incomplète',
+              message:
+                  'La prestation ou le salon est manquant. Reprenez la réservation depuis la fiche salon.',
+            );
+          }
+          return StaffSelectionPage(salonId: salonId, serviceId: serviceId);
+        },
       ),
       GoRoute(
         path: AppRoutes.bookingSlot,
-        builder: (_, state) => SlotSelectionPage(
-          serviceId: state.uri.queryParameters['serviceId'] ?? '',
-          salonId: state.uri.queryParameters['salonId'] ?? '',
-          employeeId: state.uri.queryParameters['employeeId'],
-          rescheduleBookingId: state.uri.queryParameters['rescheduleBookingId'],
-        ),
+        builder: (_, state) {
+          final salonId = state.uri.queryParameters['salonId'];
+          final serviceId = state.uri.queryParameters['serviceId'];
+          if (salonId == null ||
+              salonId.isEmpty ||
+              serviceId == null ||
+              serviceId.isEmpty) {
+            return const _BookingRouteErrorPage(
+              title: 'Créneau indisponible',
+              message:
+                  'Le créneau ne peut pas être chargé sans salon et prestation. Reprenez la réservation.',
+            );
+          }
+          return SlotSelectionPage(
+            serviceId: serviceId,
+            salonId: salonId,
+            employeeId: state.uri.queryParameters['employeeId'],
+            rescheduleBookingId:
+                state.uri.queryParameters['rescheduleBookingId'],
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.bookingReview,
@@ -349,4 +385,76 @@ class _SessionListenable extends ChangeNotifier {
     _ref.listen<SessionState>(sessionProvider, (_, _) => notifyListeners());
   }
   final Ref _ref;
+}
+
+class _AppRouteRefreshObserver extends NavigatorObserver {
+  _AppRouteRefreshObserver(this._ref);
+
+  final Ref _ref;
+  DateTime _lastRefresh = DateTime.fromMillisecondsSinceEpoch(0);
+
+  void _refresh() {
+    final now = DateTime.now();
+    if (now.difference(_lastRefresh) < const Duration(milliseconds: 350)) {
+      return;
+    }
+    _lastRefresh = now;
+    _ref.read(appReactivityProvider).refreshAll();
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _refresh();
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _refresh();
+    super.didPop(route, previousRoute);
+  }
+}
+
+class _BookingRouteErrorPage extends StatelessWidget {
+  const _BookingRouteErrorPage({required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 15),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () => GoRouter.of(context).go(AppRoutes.home),
+                  child: const Text('Retour à l’accueil'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

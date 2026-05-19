@@ -11,6 +11,7 @@ import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
+import '../models/account_models.dart';
 import '../providers/payment_methods_provider.dart';
 import '../widgets/payment_tile.dart';
 import '../widgets/profile_card_shell.dart';
@@ -29,7 +30,6 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   static const Map<String, String> _channelLabels = {
     'wave': 'Wave',
     'orange_money': 'Orange Money',
-    'free_money': 'Free Money',
   };
 
   @override
@@ -61,7 +61,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                 icon: 'star',
                 title: 'Aucun moyen de paiement',
                 subtitle:
-                    'Enregistrez un numéro Wave, Orange Money ou Free Money pour simplifier vos réservations.',
+                    'Enregistrez un numéro Wave ou Orange Money pour simplifier vos réservations.',
               )
             else
               ...methods.map(
@@ -69,7 +69,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   padding: EdgeInsets.only(bottom: 12.h),
                   child: PaymentTile(
                     method: method,
-                    onTap: () {},
+                    onTap: () => _showEditSheet(context, method),
                     onDelete: () => _deleteMethod(method.id),
                     onDefault: method.isDefault
                         ? null
@@ -88,7 +88,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   AppDropdown<String>(
                     label: 'Opérateur',
                     value: _channel,
-                    items: const ['wave', 'orange_money', 'free_money'],
+                    items: const ['wave', 'orange_money'],
                     itemLabel: (v) => _channelLabels[v] ?? v,
                     onChanged: (val) => setState(() => _channel = val),
                   ),
@@ -110,6 +110,97 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         ),
       ),
     );
+  }
+
+  void _showEditSheet(BuildContext context, PaymentMethodRecord method) {
+    final phoneController = TextEditingController(text: method.phoneNumber);
+    final labelController = TextEditingController(text: method.label ?? '');
+    bool saving = false;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                20.w,
+                24.h,
+                20.w,
+                MediaQuery.viewInsetsOf(ctx).bottom + 32.h,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Modifier le moyen de paiement',
+                      style: AppTextStyles.labelLg),
+                  SizedBox(height: 20.h),
+                  AppPhoneField(
+                    controller: phoneController,
+                    labelText: 'Numéro de téléphone',
+                  ),
+                  gapH16,
+                  TextField(
+                    controller: labelController,
+                    decoration: InputDecoration(
+                      labelText: 'Libellé (optionnel)',
+                      hintText: 'ex : Mon Wave principal',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                    maxLength: 60,
+                  ),
+                  SizedBox(height: 8.h),
+                  AppButton.primary(
+                    label: 'Enregistrer',
+                    isLoading: saving,
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            setSheetState(() => saving = true);
+                            try {
+                              await ref
+                                  .read(paymentMethodsProvider.notifier)
+                                  .updateMethod(
+                                    method.id,
+                                    phoneNumber: phoneController.text.trim(),
+                                    label: labelController.text.trim().isEmpty
+                                        ? null
+                                        : labelController.text.trim(),
+                                  );
+                              if (context.mounted) {
+                                Navigator.of(sheetContext).pop();
+                                AppSnackbar.success(
+                                  context,
+                                  'Moyen de paiement mis à jour.',
+                                );
+                              }
+                            } catch (error) {
+                              setSheetState(() => saving = false);
+                              if (context.mounted) {
+                                await context.handleHttpError(
+                                    error, 'Mise à jour impossible.');
+                              }
+                            }
+                          },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      phoneController.dispose();
+      labelController.dispose();
+    });
   }
 
   Future<void> _addMethod() async {

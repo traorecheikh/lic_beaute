@@ -59,6 +59,12 @@ export interface ProSubscription {
     expiresAt: Date | null;
     /**
      * 
+     * @type {Date}
+     * @memberof ProSubscription
+     */
+    gracePeriodEndsAt: Date | null;
+    /**
+     * 
      * @type {boolean}
      * @memberof ProSubscription
      */
@@ -110,6 +116,7 @@ export function instanceOfProSubscription(value: object): value is ProSubscripti
     if (!('status' in value) || value['status'] === undefined) return false;
     if (!('renewsAt' in value) || value['renewsAt'] === undefined) return false;
     if (!('expiresAt' in value) || value['expiresAt'] === undefined) return false;
+    if (!('gracePeriodEndsAt' in value) || value['gracePeriodEndsAt'] === undefined) return false;
     if (!('isComplimentary' in value) || value['isComplimentary'] === undefined) return false;
     if (!('autoRenew' in value) || value['autoRenew'] === undefined) return false;
     if (!('billingMethod' in value) || value['billingMethod'] === undefined) return false;
@@ -131,6 +138,7 @@ export function ProSubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boo
         'status': json['status'],
         'renewsAt': (json['renewsAt'] == null ? null : new Date(json['renewsAt'])),
         'expiresAt': (json['expiresAt'] == null ? null : new Date(json['expiresAt'])),
+        'gracePeriodEndsAt': (json['gracePeriodEndsAt'] == null ? null : new Date(json['gracePeriodEndsAt'])),
         'isComplimentary': json['isComplimentary'],
         'autoRenew': json['autoRenew'],
         'billingMethod': ProSubscriptionBillingMethodFromJSON(json['billingMethod']),
@@ -153,6 +161,7 @@ export function ProSubscriptionToJSONTyped(value?: ProSubscription | null, ignor
         'status': value['status'],
         'renewsAt': value['renewsAt'] == null ? value['renewsAt'] : value['renewsAt'].toISOString(),
         'expiresAt': value['expiresAt'] == null ? value['expiresAt'] : value['expiresAt'].toISOString(),
+        'gracePeriodEndsAt': value['gracePeriodEndsAt'] == null ? value['gracePeriodEndsAt'] : value['gracePeriodEndsAt'].toISOString(),
         'isComplimentary': value['isComplimentary'],
         'autoRenew': value['autoRenew'],
         'billingMethod': ProSubscriptionBillingMethodToJSON(value['billingMethod']),

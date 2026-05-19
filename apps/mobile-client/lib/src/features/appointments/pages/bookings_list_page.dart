@@ -1,4 +1,6 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,6 +24,31 @@ class BookingsListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(bookingsListProvider);
     Future<void> refreshBookings() => ref.refresh(bookingsListProvider.future);
+    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+
+    final tabBar = TabBar(
+      indicatorSize: TabBarIndicatorSize.tab,
+      dividerColor: Colors.transparent,
+      splashFactory: NoSplash.splashFactory,
+      overlayColor: WidgetStateProperty.all(Colors.transparent),
+      indicator: isIOS
+          ? BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12.r),
+              boxShadow: AppShadows.card,
+            )
+          : UnderlineTabIndicator(
+              borderSide: BorderSide(color: AppColors.primary, width: 3),
+            ),
+      indicatorPadding: isIOS ? EdgeInsets.all(4.r) : EdgeInsets.zero,
+      labelColor: isIOS ? AppColors.onSurface : AppColors.primary,
+      unselectedLabelColor: AppColors.onSurfaceVariant,
+      labelStyle: AppTextStyles.labelLg,
+      tabs: const [
+        Tab(text: 'À VENIR'),
+        Tab(text: 'PASSÉS'),
+      ],
+    );
 
     return DefaultTabController(
       length: 2,
@@ -45,22 +72,79 @@ class BookingsListPage extends ConsumerWidget {
             SliverPersistentHeader(
               pinned: true,
               delegate: _TabBarDelegate(
-                TabBar(
-                  indicatorColor: AppColors.primary,
-                  indicatorWeight: 3,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.onSurfaceVariant,
-                  labelStyle: AppTextStyles.labelLg,
-                  tabs: const [
-                    Tab(text: 'À VENIR'),
-                    Tab(text: 'PASSÉS'),
-                  ],
-                ),
+                isIOS
+                    ? Builder(
+                        builder: (context) {
+                          final controller = DefaultTabController.of(context);
+                          return AnimatedBuilder(
+                            animation: controller.animation ?? controller,
+                            builder: (context, _) {
+                              return Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  20.w,
+                                  10.h,
+                                  20.w,
+                                  10.h,
+                                ),
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceVariant,
+                                    borderRadius: BorderRadius.circular(14.r),
+                                  ),
+                                  child: CupertinoSlidingSegmentedControl<int>(
+                                    groupValue: controller.index,
+                                    backgroundColor: AppColors.surfaceVariant,
+                                    thumbColor: AppColors.surface,
+                                    padding: EdgeInsets.all(4.r),
+                                    onValueChanged: (value) {
+                                      if (value == null) return;
+                                      controller.animateTo(value);
+                                    },
+                                    children: {
+                                      0: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12.h,
+                                        ),
+                                        child: Text(
+                                          'À VENIR',
+                                          textAlign: TextAlign.center,
+                                          style: AppTextStyles.labelLg.copyWith(
+                                            color: controller.index == 0
+                                                ? AppColors.onSurface
+                                                : AppColors.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ),
+                                      1: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12.h,
+                                        ),
+                                        child: Text(
+                                          'PASSÉS',
+                                          textAlign: TextAlign.center,
+                                          style: AppTextStyles.labelLg.copyWith(
+                                            color: controller.index == 1
+                                                ? AppColors.onSurface
+                                                : AppColors.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ),
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      )
+                    : tabBar,
+                extent: isIOS ? 72.h : tabBar.preferredSize.height,
               ),
             ),
           ],
           body: AppAsyncView(
             value: bookingsAsync,
+            keepDataOnReload: true,
             errorTitle: 'Impossible de charger les rendez-vous',
             serverTitle: 'Le suivi des rendez-vous est indisponible',
             onRetry: refreshBookings,
@@ -113,14 +197,15 @@ class BookingsListPage extends ConsumerWidget {
 }
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  _TabBarDelegate(this._tabBar);
+  _TabBarDelegate(this._tabBar, {required this.extent});
 
-  final TabBar _tabBar;
+  final Widget _tabBar;
+  final double extent;
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
+  double get minExtent => extent;
   @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  double get maxExtent => extent;
 
   @override
   Widget build(
@@ -176,13 +261,14 @@ class _BookingTab extends StatelessWidget {
                       title: 'Aucun rendez-vous',
                       subtitle:
                           'Vos réservations à venir et passées apparaîtront ici.',
-                      compact: true,
+                      compact: false,
                     ),
                     gapH16,
                     AppButton.primary(
                       label: 'Découvrir des salons',
                       onPressed: () => context.go(AppRoutes.home),
                       isFullWidth: false,
+                      width: 220.w,
                     ),
                   ],
                 ),

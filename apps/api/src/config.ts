@@ -16,6 +16,7 @@ export const config = {
   databaseConnectRetryDelayMs: Number(process.env.DATABASE_CONNECT_RETRY_DELAY_MS ?? 750),
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret",
+  jwtInviteSecret: process.env.JWT_INVITE_SECRET ?? "dev-invite-secret",
   jwtAccessTtlSeconds: Number(process.env.JWT_ACCESS_TTL_SECONDS ?? 900),
   jwtRefreshTtlSeconds: Number(process.env.JWT_REFRESH_TTL_SECONDS ?? 2592000),
   emailDriver: process.env.EMAIL_DRIVER ?? "noop",
@@ -71,6 +72,21 @@ export function validateConfig() {
     }
     if (config.jwtRefreshSecret === "dev-refresh-secret") {
       issues.push("JWT_REFRESH_SECRET is the development default");
+    }
+    if (config.jwtInviteSecret === "dev-invite-secret") {
+      issues.push("JWT_INVITE_SECRET is the development default");
+    }
+    if (config.paymentDriver === "mock") {
+      issues.push("PAYMENT_DRIVER=mock in production — all payments will silently succeed without real money");
+    }
+    if (config.storageDriver === "noop") {
+      issues.push("STORAGE_DRIVER=noop in production — all uploaded files will be silently discarded");
+    }
+    if (config.otpDriver === "noop") {
+      issues.push("OTP_DRIVER=noop in production — any OTP code will authenticate any phone number");
+    }
+    if (config.emailDriver === "noop") {
+      issues.push("EMAIL_DRIVER=noop in production — no emails will be sent (invites, confirmations, alerts)");
     }
     if (
       config.databaseUrl ===

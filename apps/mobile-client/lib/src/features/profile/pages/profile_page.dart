@@ -163,11 +163,6 @@ class ProfilePage extends ConsumerWidget {
                     //   label: 'Mes bons et codes',
                     //   onTap: () => context.push(AppRoutes.profileVouchers),
                     // ),
-                    _MenuTile(
-                      icon: 'star',
-                      label: 'Mes abonnements',
-                      onTap: () => context.push(AppRoutes.profileMemberships),
-                    ),
                     SizedBox(height: 30.h),
                     _MenuTile(
                       icon: 'help-circle',

@@ -19,115 +19,175 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  final PageController _pageController = PageController();
+  final _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingSlide> _slides = [
-    const _OnboardingSlide(
+  static const _slides = [
+    _SlideData(
       title: 'Découvrez les meilleurs salons',
-      subtitle: 'Accédez à une sélection exclusive de salons de beauté et de bien-être autour de vous.',
+      subtitle:
+          'Une sélection exclusive de salons de beauté et de bien-être, triés pour vous.',
       imagePath: 'assets/onboarding/onboarding_1.svg',
     ),
-    const _OnboardingSlide(
-      title: 'Réservez en un clin d\'œil',
-      subtitle: 'Choisissez votre prestation, votre professionnel et votre créneau en quelques secondes.',
+    _SlideData(
+      title: 'Réservez en quelques secondes',
+      subtitle:
+          'Choisissez votre prestation, votre professionnel et votre créneau sans friction.',
       imagePath: 'assets/onboarding/onboarding_2.svg',
     ),
-    const _OnboardingSlide(
+    _SlideData(
       title: 'Vivez l\'expérience Beauté Avenue',
-      subtitle: 'Profitez d\'un service irréprochable et gérez vos rendez-vous en toute sérénité.',
+      subtitle:
+          'Gérez vos rendez-vous, laissez des avis et fidélisez-vous à vos adresses préférées.',
       imagePath: 'assets/onboarding/onboarding_3.svg',
     ),
   ];
 
-  void _onNext() {
-    if (_currentPage < _slides.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      _completeOnboarding();
-    }
-  }
-
-  Future<void> _completeOnboarding() async {
-    final box = Hive.box(StorageKeys.settingsBox);
+  Future<void> _complete() async {
+    final box = Hive.box<dynamic>(StorageKeys.settingsBox);
     await box.put(StorageKeys.onboardingCompleted, true);
     if (!mounted) return;
     context.go(AppRoutes.auth);
   }
 
+  void _next() {
+    if (_currentPage < _slides.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _complete();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLast = _currentPage == _slides.length - 1;
+
     return AppScaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) => setState(() => _currentPage = index),
-            itemCount: _slides.length,
-            itemBuilder: (context, index) => _slides[index],
-          ),
-          
-          // Navigation top
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10.h,
-            right: 20.w,
-            child: Semantics(
-              button: true,
-              label: 'Passer l\'onboarding',
-              child: AppPressable(
-                onTap: _completeOnboarding,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  child: Text(
-                    'Passer',
-                    style: AppTextStyles.labelMd.copyWith(
-                      color: AppColors.onSurfaceVariant,
+          const AuthBrandBackground(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Hero zone: full SVG on the circles background
+              Expanded(
+                flex: 58,
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (i) => setState(() => _currentPage = i),
+                  itemCount: _slides.length,
+                  itemBuilder: (_, i) => _HeroSlide(slide: _slides[i]),
+                ),
+              ),
+
+              // Card zone: title + subtitle + dots + button
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(28.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      blurRadius: 40,
+                      offset: const Offset(0, -12),
                     ),
+                  ],
+                ),
+                padding: EdgeInsets.fromLTRB(28.w, 28.h, 28.w, 0),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Dot indicators
+                      Row(
+                        children: List.generate(
+                          _slides.length,
+                          (i) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 240),
+                            margin: EdgeInsets.only(right: 6.w),
+                            height: 6.h,
+                            width: _currentPage == i ? 20.w : 6.w,
+                            decoration: BoxDecoration(
+                              color: _currentPage == i
+                                  ? AppColors.primary
+                                  : AppColors.outline.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(3.r),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 18.h),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 240),
+                        child: Column(
+                          key: ValueKey(_currentPage),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _slides[_currentPage].title,
+                              style: AppTextStyles.headlineLg,
+                            ),
+                            SizedBox(height: 10.h),
+                            Text(
+                              _slides[_currentPage].subtitle,
+                              style: AppTextStyles.bodyMd.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                                height: 1.55,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                      Row(
+                        children: [
+                          if (!isLast)
+                            AppPressable(
+                              onTap: _complete,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 4.w,
+                                  vertical: 8.h,
+                                ),
+                                child: Text(
+                                  'Passer',
+                                  style: AppTextStyles.labelMd.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (!isLast) const Spacer(),
+                          Expanded(
+                            flex: isLast ? 1 : 0,
+                            child: AuthPrimaryButton(
+                              label: isLast ? 'COMMENCER' : 'SUIVANT',
+                              loading: false,
+                              onTap: _next,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ),
-
-          // Navigation bottom
-          Positioned(
-            bottom: 20.h,
-            left: 28.w,
-            right: 28.w,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _slides.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: EdgeInsets.symmetric(horizontal: 4.w),
-                        height: 8.h,
-                        width: _currentPage == index ? 24.w : 8.w,
-                        decoration: BoxDecoration(
-                          color: _currentPage == index 
-                              ? AppColors.primary 
-                              : AppColors.outline.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 48.h),
-                  AuthPrimaryButton(
-                    label: _currentPage == _slides.length - 1 ? 'COMMENCER' : 'SUIVANT',
-                    loading: false,
-                    onTap: _onNext,
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -135,8 +195,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 }
 
-class _OnboardingSlide extends StatelessWidget {
-  const _OnboardingSlide({
+class _HeroSlide extends StatelessWidget {
+  const _HeroSlide({required this.slide});
+  final _SlideData slide;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(32.w, MediaQuery.paddingOf(context).top + 16.h, 32.w, 24.h),
+      child: SvgPicture.asset(
+        slide.imagePath,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+}
+
+class _SlideData {
+  const _SlideData({
     required this.title,
     required this.subtitle,
     required this.imagePath,
@@ -145,39 +221,4 @@ class _OnboardingSlide extends StatelessWidget {
   final String title;
   final String subtitle;
   final String imagePath;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 40.w),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: 320.h,
-            width: double.infinity,
-            child: SvgPicture.asset(
-              imagePath,
-              fit: BoxFit.contain,
-            ),
-          ),
-          SizedBox(height: 60.h),
-          Text(
-            title,
-            style: AppTextStyles.displaySm,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            subtitle,
-            style: AppTextStyles.bodyLg.copyWith(
-              color: AppColors.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 120.h), // Space for indicator and button
-        ],
-      ),
-    );
-  }
 }

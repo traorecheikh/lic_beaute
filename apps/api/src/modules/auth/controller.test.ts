@@ -18,7 +18,8 @@ const mocks = vi.hoisted(() => {
   const verifyRefreshToken = vi.fn();
   const otpSend = vi.fn();
   const argon2 = { hash: vi.fn(), verify: vi.fn() };
-  return { prisma, ok, fail, requireRole, signSession, verifyRefreshToken, otpSend, argon2 };
+  const sendEmail = vi.fn().mockResolvedValue(undefined);
+  return { prisma, ok, fail, requireRole, signSession, verifyRefreshToken, otpSend, argon2, sendEmail };
 });
 
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
@@ -41,7 +42,7 @@ vi.mock("../../adapters/index.js", async (importOriginal) => {
     getStorageAdapter: vi.fn(() => ({}))
   };
 });
-vi.mock("../../lib/email.js", () => ({ sendEmail: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("../../lib/email.js", () => ({ sendEmail: mocks.sendEmail }));
 
 import { AuthController } from "./index.js";
 
@@ -53,6 +54,7 @@ describe("AuthController", () => {
     mocks.signSession.mockReturnValue({ accessToken: "a", refreshToken: "r", expiresInSeconds: 900 });
     mocks.prisma.session.findMany.mockResolvedValue([]);
     mocks.prisma.session.create.mockResolvedValue({});
+    mocks.sendEmail.mockResolvedValue(undefined);
   });
 
   it("register client success", async () => {

@@ -31,6 +31,12 @@ export interface AdminSubscriptionOverrideInputMetadata {
      * @memberof AdminSubscriptionOverrideInputMetadata
      */
     subscriptionChargeId?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminSubscriptionOverrideInputMetadata
+     */
+    providerReference?: string;
 }
 
 /**
@@ -52,6 +58,7 @@ export function AdminSubscriptionOverrideInputMetadataFromJSONTyped(json: any, i
         
         'internalTicket': json['internalTicket'] == null ? undefined : json['internalTicket'],
         'subscriptionChargeId': json['subscriptionChargeId'] == null ? undefined : json['subscriptionChargeId'],
+        'providerReference': json['providerReference'] == null ? undefined : json['providerReference'],
     };
 }
 
@@ -68,6 +75,7 @@ export function AdminSubscriptionOverrideInputMetadataToJSONTyped(value?: AdminS
         
         'internalTicket': value['internalTicket'],
         'subscriptionChargeId': value['subscriptionChargeId'],
+        'providerReference': value['providerReference'],
     };
 }
 

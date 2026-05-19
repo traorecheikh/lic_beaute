@@ -9,6 +9,9 @@ Name | Type
 `id` | string
 `userId` | string
 `displayName` | string
+`email` | string
+`phone` | string
+`role` | string
 `avatarUrl` | string
 `description` | string
 `isActive` | boolean
@@ -25,6 +28,9 @@ const example = {
   "id": null,
   "userId": null,
   "displayName": null,
+  "email": null,
+  "phone": null,
+  "role": null,
   "avatarUrl": null,
   "description": null,
   "isActive": null,

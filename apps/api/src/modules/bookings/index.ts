@@ -68,8 +68,13 @@ function bookingSummary(booking: {
   depositAmountXof: number;
   depositPaymentStatus: string;
   paymentProvider: string | null;
-  payments: Array<{ id: string }>;
+  payments: Array<{ id: string; status?: string; amountXof?: number; provider?: string }>;
 }) {
+  const latestPayment = booking.payments[0];
+  const depositPaidXof = booking.payments
+    .filter((p) => p.status === "authorized" || p.status === "succeeded")
+    .reduce((sum, p) => sum + (p.amountXof ?? 0), 0);
+
   return {
     id: booking.id,
     salonId: booking.salonId,
@@ -81,9 +86,12 @@ function bookingSummary(booking: {
     status: booking.status,
     source: booking.source,
     depositAmountXof: booking.depositAmountXof,
+    depositPaidXof,
     depositPaymentStatus: booking.depositPaymentStatus,
-    paymentProvider: booking.paymentProvider ? toPublicGatewayProvider(booking.paymentProvider) : null,
-    paymentId: booking.payments[0]?.id ?? null
+    paymentProvider: booking.paymentProvider
+      ? toPublicGatewayProvider(booking.paymentProvider)
+      : (latestPayment?.provider ? toPublicGatewayProvider(latestPayment.provider) : null),
+    paymentId: latestPayment?.id ?? null
   };
 }
 
@@ -208,7 +216,7 @@ export class BookingController {
 
       const full = await prisma.booking.findUnique({
         where: { id: result.booking.id },
-        include: { salon: true, service: true, payments: { take: 1 } }
+        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } } }
       });
 
       try {
@@ -233,7 +241,7 @@ export class BookingController {
       const session = requireRole(request, ["client"]);
       const bookings = await prisma.booking.findMany({
         where: { clientId: session.sub },
-        include: { salon: true, service: true, payments: { take: 1 } },
+        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } } },
         orderBy: { startsAt: "desc" }
       });
       ok(reply, { items: bookings.map(bookingSummary), total: bookings.length });
@@ -249,10 +257,10 @@ export class BookingController {
       const params = request.params as { bookingId: string };
       const booking = await prisma.booking.findFirst({
         where: { id: params.bookingId, clientId: session.sub },
-        include: { salon: true, service: true, payments: true }
+        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } } }
       });
       if (!booking) { fail(reply, 404, "booking_not_found", "Réservation introuvable."); return; }
-      ok(reply, bookingSummary({ ...booking, payments: booking.payments.slice(0, 1) }));
+      ok(reply, bookingSummary(booking));
     } catch (error) {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
       fail(reply, 500, "internal_error", "Erreur interne.");

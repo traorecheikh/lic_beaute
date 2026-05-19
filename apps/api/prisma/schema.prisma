@@ -13,6 +13,7 @@ datasource db {
 enum Role {
   client
   salon_staff
+  salon_manager
   salon_owner
   platform_admin
 }
@@ -359,6 +360,16 @@ model AuditLog {
   payloadJson      String   @default("{}")
   relatedLinksJson String   @default("[]")
   createdAt        DateTime @default(now())
+}
+
+model EmailAudit {
+  id           String   @id @default(cuid())
+  to           String
+  subject      String
+  driver       String
+  status       String
+  errorMessage String?
+  createdAt    DateTime @default(now())
 }
 
 model SalonDocument {

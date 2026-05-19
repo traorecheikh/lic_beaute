@@ -274,6 +274,7 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
                           serviceName: service.name,
                           price: service.priceXof.toInt(),
                           durationMinutes: service.durationMinutes,
+                          depositAmount: service.depositRequiredXof?.toInt() ?? 0,
                         );
                       },
                     ),

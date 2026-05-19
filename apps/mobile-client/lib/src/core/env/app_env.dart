@@ -6,7 +6,10 @@ abstract final class AppEnv {
   static Future<void> load() async {}
 
   // App-level config (no .env): set this per build flavor/profile.
-  static const String apiBaseUrlOverride = 'http://h255qm4nj3i832xhkls5270z.159.65.122.15.sslip.io';
+  // static const String apiBaseUrlOverride =
+  //     'http://h255qm4nj3i832xhkls5270z.159.65.122.15.sslip.io';
+  static const String apiBaseUrlOverride =
+      'http://127.0.0.1:3000';
   static const MediaUploadStrategy mediaUploadStrategy =
       MediaUploadStrategy.apiMultipart;
 

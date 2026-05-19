@@ -24,13 +24,31 @@ export interface ProStaffCreateInput {
      * @type {string}
      * @memberof ProStaffCreateInput
      */
-    phone: string;
+    phone?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProStaffCreateInput
+     */
+    email?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProStaffCreateInput
+     */
+    password?: string;
     /**
      * 
      * @type {string}
      * @memberof ProStaffCreateInput
      */
     fullName: string;
+    /**
+     * 
+     * @type {ProStaffCreateInputRoleEnum}
+     * @memberof ProStaffCreateInput
+     */
+    role?: ProStaffCreateInputRoleEnum;
     /**
      * 
      * @type {string}
@@ -51,11 +69,21 @@ export interface ProStaffCreateInput {
     serviceIds?: Array<string>;
 }
 
+
+/**
+ * @export
+ */
+export const ProStaffCreateInputRoleEnum = {
+    SalonStaff: 'salon_staff',
+    SalonManager: 'salon_manager'
+} as const;
+export type ProStaffCreateInputRoleEnum = typeof ProStaffCreateInputRoleEnum[keyof typeof ProStaffCreateInputRoleEnum];
+
+
 /**
  * Check if a given object implements the ProStaffCreateInput interface.
  */
 export function instanceOfProStaffCreateInput(value: object): value is ProStaffCreateInput {
-    if (!('phone' in value) || value['phone'] === undefined) return false;
     if (!('fullName' in value) || value['fullName'] === undefined) return false;
     return true;
 }
@@ -70,8 +98,11 @@ export function ProStaffCreateInputFromJSONTyped(json: any, ignoreDiscriminator:
     }
     return {
         
-        'phone': json['phone'],
+        'phone': json['phone'] == null ? undefined : json['phone'],
+        'email': json['email'] == null ? undefined : json['email'],
+        'password': json['password'] == null ? undefined : json['password'],
         'fullName': json['fullName'],
+        'role': json['role'] == null ? undefined : json['role'],
         'avatarUrl': json['avatarUrl'] == null ? undefined : json['avatarUrl'],
         'description': json['description'] == null ? undefined : json['description'],
         'serviceIds': json['serviceIds'] == null ? undefined : json['serviceIds'],
@@ -90,7 +121,10 @@ export function ProStaffCreateInputToJSONTyped(value?: ProStaffCreateInput | nul
     return {
         
         'phone': value['phone'],
+        'email': value['email'],
+        'password': value['password'],
         'fullName': value['fullName'],
+        'role': value['role'],
         'avatarUrl': value['avatarUrl'],
         'description': value['description'],
         'serviceIds': value['serviceIds'],

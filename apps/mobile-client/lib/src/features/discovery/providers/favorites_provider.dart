@@ -41,7 +41,7 @@ class FavoritesState {
 class FavoritesNotifier extends Notifier<FavoritesState> {
   @override
   FavoritesState build() {
-    _load();
+    Future.microtask(_load);
     return const FavoritesState();
   }
 

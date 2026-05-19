@@ -17,6 +17,7 @@ class AppAsyncView<T> extends StatelessWidget {
     this.onRetry,
     this.loadingWidget,
     this.sliver = false,
+    this.keepDataOnReload = false,
     super.key,
   });
 
@@ -27,10 +28,13 @@ class AppAsyncView<T> extends StatelessWidget {
   final Future<void> Function()? onRetry;
   final Widget? loadingWidget;
   final bool sliver;
+  // When true, keeps showing previous data during a reload instead of a spinner.
+  final bool keepDataOnReload;
 
   @override
   Widget build(BuildContext context) {
     return value.when(
+      skipLoadingOnReload: keepDataOnReload,
       loading: () => _wrap(
         loadingWidget ?? const Center(child: CircularProgressIndicator.adaptive()),
       ),

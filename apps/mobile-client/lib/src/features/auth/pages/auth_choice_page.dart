@@ -10,6 +10,7 @@ import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../router/app_router.dart';
+import '../widgets/auth_form_widgets.dart';
 
 class AuthChoicePage extends StatelessWidget {
   const AuthChoicePage({super.key});
@@ -23,7 +24,7 @@ class AuthChoicePage extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const _FlatBackground(),
+          const AuthBrandBackground(),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 28.w),
@@ -247,52 +248,3 @@ class _SignUpOptionTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _FlatBackground extends StatelessWidget {
-  const _FlatBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: MediaQuery.sizeOf(context),
-      painter: _BrandCirclesPainter(),
-    );
-  }
-}
-
-class _BrandCirclesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    void circle(double cx, double cy, double r, Color color) =>
-        canvas.drawCircle(Offset(cx, cy), r, Paint()..color = color);
-
-    circle(
-      size.width * 0.88,
-      size.height * -0.04,
-      size.width * 0.72,
-      AppColors.primary.withValues(alpha: 0.07),
-    );
-    circle(
-      size.width * -0.10,
-      size.height * 0.12,
-      size.width * 0.45,
-      AppColors.secondary.withValues(alpha: 0.08),
-    );
-    circle(
-      size.width * 1.05,
-      size.height * 0.38,
-      size.width * 0.28,
-      AppColors.primaryMid.withValues(alpha: 0.05),
-    );
-    circle(
-      size.width * 0.75,
-      size.height * 0.28,
-      size.width * 0.06,
-      AppColors.secondary.withValues(alpha: 0.08),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

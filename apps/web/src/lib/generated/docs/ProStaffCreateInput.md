@@ -7,7 +7,10 @@
 Name | Type
 ------------ | -------------
 `phone` | string
+`email` | string
+`password` | string
 `fullName` | string
+`role` | string
 `avatarUrl` | string
 `description` | string
 `serviceIds` | Array&lt;string&gt;
@@ -20,7 +23,10 @@ import type { ProStaffCreateInput } from ''
 // TODO: Update the object below with actual values
 const example = {
   "phone": null,
+  "email": null,
+  "password": null,
   "fullName": null,
+  "role": null,
   "avatarUrl": null,
   "description": null,
   "serviceIds": null,

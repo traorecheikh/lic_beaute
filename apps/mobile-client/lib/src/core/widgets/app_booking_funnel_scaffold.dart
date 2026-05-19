@@ -26,6 +26,9 @@ class AppBookingFunnelScaffold extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final salonAsync = ref.watch(salonDetailProvider(salonId));
+    debugPrint(
+      '[BOOKING_SCAFFOLD] salonId=$salonId loading=${salonAsync.isLoading} hasError=${salonAsync.hasError} hasValue=${salonAsync.hasValue}',
+    );
     Future<void> refresh() => ref.refresh(salonDetailProvider(salonId).future);
 
     return AppScaffold(
@@ -55,4 +58,3 @@ class AppBookingFunnelScaffold extends ConsumerWidget {
     );
   }
 }
-

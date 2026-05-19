@@ -134,14 +134,14 @@ export class CatalogController {
       return ok(reply, payload);
     }
 
-    // ── Trending: sorted by booking count (last 30 days) ────────────────────
+    // ── Trending: weighted recency score (last 7 days count 3×, 8–30 days 1×) ─
     if (sort === "trending") {
       type TrendingRow = {
         id: string; name: string; category: string; logoUrl: string | null;
         city: string; neighborhood: string | null; averageRating: number;
         latitude: number | null; longitude: number | null; subscriptionTier: string;
         isPrestige: boolean; prestigeScore: number | null;
-        booking_count: bigint; total_count: bigint;
+        trending_score: number; total_count: bigint;
       };
 
       const cityParam = q.city ?? null;
@@ -152,12 +152,19 @@ export class CatalogController {
         SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
                s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore",
-               COUNT(b.id) AS booking_count,
+               (
+                 COUNT(b7.id) * 3 + COUNT(b30.id)
+               )::float AS trending_score,
                COUNT(*) OVER() AS total_count
         FROM "Salon" s
         ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
-        LEFT JOIN "Booking" b ON b."salonId" = s.id
-          AND b."createdAt" > NOW() - INTERVAL '30 days'
+        LEFT JOIN "Booking" b7 ON b7."salonId" = s.id
+          AND b7."createdAt" > NOW() - INTERVAL '7 days'
+          AND b7.status NOT IN ('cancelled')
+        LEFT JOIN "Booking" b30 ON b30."salonId" = s.id
+          AND b30."createdAt" > NOW() - INTERVAL '30 days'
+          AND b30."createdAt" <= NOW() - INTERVAL '7 days'
+          AND b30.status NOT IN ('cancelled')
         WHERE s."approvalStatus" = 'approved'
           AND s."isVisibleInMarketplace" = true
           ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
@@ -166,7 +173,7 @@ export class CatalogController {
           ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}` : Prisma.empty}
           ${searchParam ? Prisma.sql`AND (s.name ILIKE ${"%" + searchParam + "%"} OR EXISTS (SELECT 1 FROM "Service" svc WHERE svc."salonId" = s.id AND svc."isActive" = true AND svc.name ILIKE ${"%" + searchParam + "%"}))` : Prisma.empty}
         GROUP BY s.id
-        ORDER BY booking_count DESC, s."averageRating" DESC
+        ORDER BY trending_score DESC, s."averageRating" DESC
         LIMIT ${pageSize} OFFSET ${page * pageSize}
       `);
 
@@ -187,6 +194,46 @@ export class CatalogController {
       await setCachedJsonWithTags({
         key: cacheKey,
         value: payload,
+        ttlSeconds: config.cacheTtlCatalogSeconds,
+        tags: ["catalog:list"]
+      });
+      reply.header("x-cache", "MISS");
+      return ok(reply, payload);
+    }
+
+    // ── Prestige: sorted by prestigeScore DESC, then rating DESC ─────────────
+    if (sort === "prestige") {
+      const [items, total] = await Promise.all([
+        prisma.salon.findMany({
+          where: {
+            approvalStatus: "approved",
+            isVisibleInMarketplace: true,
+            isPrestige: true,
+            ...(q.city && { city: q.city })
+          },
+          select: {
+            id: true, name: true, category: true, logoUrl: true, city: true,
+            neighborhood: true, averageRating: true, latitude: true, longitude: true,
+            subscriptionTier: true, isPrestige: true, prestigeScore: true
+          },
+          orderBy: [{ prestigeScore: "desc" }, { averageRating: "desc" }],
+          take: pageSize,
+          skip: page * pageSize
+        }),
+        prisma.salon.count({
+          where: { approvalStatus: "approved", isVisibleInMarketplace: true, isPrestige: true }
+        })
+      ]);
+      const payload = {
+        items: items.map((s) => ({
+          ...s,
+          featured: s.subscriptionTier === "premium",
+          distanceKm: null
+        })),
+        total, page, pageSize
+      };
+      await setCachedJsonWithTags({
+        key: cacheKey, value: payload,
         ttlSeconds: config.cacheTtlCatalogSeconds,
         tags: ["catalog:list"]
       });

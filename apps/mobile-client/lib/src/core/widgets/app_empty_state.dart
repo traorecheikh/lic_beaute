@@ -58,7 +58,7 @@ class AppEmptyState extends StatelessWidget {
           if (action != null && actionLabel != null) ...[
             SizedBox(height: 18.h),
             SizedBox(
-              width: compact ? double.infinity : 200.w,
+              width: compact ? double.infinity : 260.w,
               child: AppButton.primary(label: actionLabel!, onPressed: action!),
             ),
           ],

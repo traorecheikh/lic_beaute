@@ -2,14 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../features/appointments/providers/bookings_list_provider.dart';
-import '../../features/discovery/providers/salon_detail_provider.dart';
-import '../../features/discovery/providers/salon_list_provider.dart';
-import '../../features/notifications/providers/notifications_provider.dart';
-import '../../features/profile/providers/benefits_provider.dart';
-import '../../features/profile/providers/payment_methods_provider.dart';
-import '../../features/profile/providers/profile_provider.dart';
-// Promos hidden — import '../../features/profile/providers/vouchers_provider.dart';
+import '../reactivity/app_reactivity.dart';
 import '../network/connectivity_provider.dart';
 import '../sync/app_outbox.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
@@ -37,19 +30,7 @@ class _AppConnectivityRecoveryState
       if (previous == false && next == true) {
         _showRecoveryCue();
         ref.read(outboxProvider.notifier).flush();
-        ref.invalidate(salonListProvider);
-        ref.invalidate(bookingsListProvider);
-        ref.invalidate(salonDetailProvider);
-        ref.invalidate(salonDetailResourceProvider);
-        ref.invalidate(salonAvailabilityProvider);
-        ref.invalidate(salonReviewsProvider);
-        ref.invalidate(bookingDetailProvider);
-        ref.invalidate(bookingDetailResourceProvider);
-        ref.invalidate(profileProvider);
-        ref.invalidate(paymentMethodsProvider);
-        ref.invalidate(benefitsProvider);
-        // Promos hidden — ref.invalidate(vouchersProvider);
-        ref.invalidate(notificationsProvider);
+        ref.read(appReactivityProvider).refreshAll();
       }
     });
   }

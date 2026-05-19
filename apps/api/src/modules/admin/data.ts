@@ -67,6 +67,13 @@ function buildEntitlements(tier: "standard" | "premium") {
   ];
 }
 
+async function getSalonOwnerContact(salonId: string) {
+  return prisma.user.findFirst({
+    where: { salonId, role: "salon_owner" },
+    select: { email: true, fullName: true }
+  });
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function getAdminDashboard(): Promise<AdminDashboard> {
@@ -337,6 +344,21 @@ export async function approveSalon(salonId: string, actorName: string) {
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
   });
 
+  const owner = await getSalonOwnerContact(salonId);
+  if (owner?.email) {
+    await sendEmail({
+      to: owner.email,
+      subject: "Votre salon est approuvé sur Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Excellente nouvelle: le salon "${salon.name}" a été approuvé.\n` +
+        `Votre espace pro est maintenant activé.\n\n` +
+        `— L'équipe Beauté Avenue`
+    }).catch((err) =>
+      logger.error("approveSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
+    );
+  }
+
   return getPendingSalonDetail(updated.id);
 }
 
@@ -360,6 +382,22 @@ export async function rejectSalon(salonId: string, input: AdminSalonDecisionInpu
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
   });
 
+  const owner = await getSalonOwnerContact(salonId);
+  if (owner?.email) {
+    await sendEmail({
+      to: owner.email,
+      subject: "Dossier salon refusé — Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Le dossier du salon "${salon.name}" a été refusé.\n` +
+        `Motif: ${input.reason}\n\n` +
+        `Vous pouvez corriger les éléments demandés puis soumettre à nouveau.\n\n` +
+        `— L'équipe Beauté Avenue`
+    }).catch((err) =>
+      logger.error("rejectSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
+    );
+  }
+
   return getPendingSalonDetail(salonId);
 }
 
@@ -382,6 +420,22 @@ export async function requestSalonInfo(salonId: string, input: AdminSalonDecisio
     payloadJson: JSON.stringify({ reason: input.reason }),
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
   });
+
+  const owner = await getSalonOwnerContact(salonId);
+  if (owner?.email) {
+    await sendEmail({
+      to: owner.email,
+      subject: "Informations complémentaires requises — Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Votre dossier pour "${salon.name}" nécessite des informations complémentaires.\n` +
+        `Détail: ${input.reason}\n\n` +
+        `Connectez-vous à votre espace pro pour mettre à jour votre dossier.\n\n` +
+        `— L'équipe Beauté Avenue`
+    }).catch((err) =>
+      logger.error("requestSalonInfo: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
+    );
+  }
 
   return getPendingSalonDetail(salonId);
 }
@@ -667,6 +721,27 @@ export async function overrideSubscription(
     }
   });
 
+  const owner = await getSalonOwnerContact(sub.salonId);
+  if (owner?.email) {
+    await sendEmail({
+      to: owner.email,
+      subject: "Mise à jour abonnement salon — Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Votre abonnement pour "${sub.salon.name}" a été mis à jour par l'administration.\n` +
+        `Action: ${input.action}\n` +
+        `Motif: ${input.reason}\n\n` +
+        `Consultez votre espace pro pour voir le statut actuel.\n\n` +
+        `— L'équipe Beauté Avenue`
+    }).catch((err) =>
+      logger.error("overrideSubscription: failed to send subscription email", {
+        err: String(err),
+        ownerEmail: owner.email,
+        subscriptionId
+      })
+    );
+  }
+
   return getSubscriptionDetail(subscriptionId);
 }
 
@@ -693,6 +768,31 @@ export async function listAuditEvents(filters: { actor?: string; entityType?: st
       actorName: e.actorName,
       createdAt: e.createdAt.toISOString(),
       severity: e.severity as "info" | "warning" | "critical"
+    })),
+    total: events.length
+  };
+}
+
+export async function listEmailAuditEvents(filters: { status?: string; driver?: string; to?: string }) {
+  const events = await prisma.emailAudit.findMany({
+    where: {
+      ...(filters.status && { status: filters.status }),
+      ...(filters.driver && { driver: filters.driver }),
+      ...(filters.to && { to: { contains: filters.to, mode: "insensitive" } })
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200
+  });
+
+  return {
+    items: events.map((e) => ({
+      id: e.id,
+      to: e.to,
+      subject: e.subject,
+      driver: e.driver,
+      status: e.status,
+      errorMessage: e.errorMessage,
+      createdAt: e.createdAt.toISOString()
     })),
     total: events.length
   };

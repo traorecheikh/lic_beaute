@@ -8,13 +8,14 @@ All URIs are relative to *http://localhost:3000*
 | [**apiV1MediaMediaIdDelete**](MediaApi.md#apiv1mediamediaiddelete) | **DELETE** /api/v1/media/{mediaId} | Soft-delete a media asset |
 | [**apiV1MediaMediaIdGet**](MediaApi.md#apiv1mediamediaidget) | **GET** /api/v1/media/{mediaId} | Retrieve media metadata |
 | [**apiV1MediaUploadIntentPost**](MediaApi.md#apiv1mediauploadintentpostoperation) | **POST** /api/v1/media/upload-intent | Request a presigned PUT URL for direct R2 upload |
+| [**apiV1MediaUploadPost**](MediaApi.md#apiv1mediauploadpost) | **POST** /api/v1/media/upload | Upload media through API (adapter-aware: local/noop/r2) |
 | [**apiV1SalonsSalonIdPublicMediaGet**](MediaApi.md#apiv1salonssalonidpublicmediaget) | **GET** /api/v1/salons/{salonId}/public-media | Get public media for a salon |
 
 
 
 ## apiV1MediaMediaIdCompletePost
 
-> ApiV1MediaMediaIdCompletePost200Response apiV1MediaMediaIdCompletePost(mediaId)
+> ApiV1MediaUploadPost201Response apiV1MediaMediaIdCompletePost(mediaId)
 
 Confirm upload completed — triggers admin review
 
@@ -61,7 +62,7 @@ example().catch(console.error);
 
 ### Return type
 
-[**ApiV1MediaMediaIdCompletePost200Response**](ApiV1MediaMediaIdCompletePost200Response.md)
+[**ApiV1MediaUploadPost201Response**](ApiV1MediaUploadPost201Response.md)
 
 ### Authorization
 
@@ -286,6 +287,81 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **201** | Presigned upload intent |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiV1MediaUploadPost
+
+> ApiV1MediaUploadPost201Response apiV1MediaUploadPost(purpose, file, salonId)
+
+Upload media through API (adapter-aware: local/noop/r2)
+
+### Example
+
+```ts
+import {
+  Configuration,
+  MediaApi,
+} from '';
+import type { ApiV1MediaUploadPostRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new MediaApi(config);
+
+  const body = {
+    // string
+    purpose: purpose_example,
+    // any (optional)
+    file: ...,
+    // string (optional)
+    salonId: salonId_example,
+  } satisfies ApiV1MediaUploadPostRequest;
+
+  try {
+    const data = await api.apiV1MediaUploadPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **purpose** | `salon_cover`, `salon_logo`, `salon_gallery`, `kyc_document`, `avatar` |  | [Defaults to `undefined`] [Enum: salon_cover, salon_logo, salon_gallery, kyc_document, avatar] |
+| **file** | `any` |  | [Optional] [Defaults to `undefined`] |
+| **salonId** | `string` |  | [Optional] [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiV1MediaUploadPost201Response**](ApiV1MediaUploadPost201Response.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `multipart/form-data`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **201** | Upload accepted and pending review |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

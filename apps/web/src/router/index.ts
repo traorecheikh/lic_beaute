@@ -225,6 +225,18 @@ router.beforeEach(async (to) => {
     };
   }
 
+  // Approval guard — block access to pro features until salon is approved
+  const approvalStatus = proAuth.salonApprovalStatus;
+  if (
+    to.meta.requiresPro &&
+    proAuth.isAuthenticated &&
+    to.name !== "pro-approval-status" &&
+    approvalStatus !== null &&
+    approvalStatus !== "approved"
+  ) {
+    return { name: "pro-approval-status" };
+  }
+
   // Owner protection
   if (to.meta.requiresOwner && !proAuth.isOwner) {
     return { name: "pro-calendar" };

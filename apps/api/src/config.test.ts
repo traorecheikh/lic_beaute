@@ -98,9 +98,16 @@ describe("config", () => {
       NODE_ENV: "production",
       JWT_ACCESS_SECRET: "prod-access",
       JWT_REFRESH_SECRET: "prod-refresh",
+      JWT_INVITE_SECRET: "prod-invite",
       WEB_ORIGIN: "https://admin.example.com",
       DATABASE_URL: "postgresql://prod/prod",
-      PAYMENT_DRIVER: "mock"
+      PAYMENT_DRIVER: "intech",
+      INTECH_CALLBACK_HMAC_ENABLED: "true",
+      INTECH_API_KEY: "api-key",
+      INTECH_HMAC_SECRET_KEY: "hmac-secret",
+      STORAGE_DRIVER: "r2",
+      OTP_DRIVER: "africastalking",
+      EMAIL_DRIVER: "smtp"
     });
 
     expect(() => validateConfig()).not.toThrow();
@@ -111,12 +118,16 @@ describe("config", () => {
       NODE_ENV: "production",
       JWT_ACCESS_SECRET: "prod-access",
       JWT_REFRESH_SECRET: "prod-refresh",
+      JWT_INVITE_SECRET: "prod-invite",
       WEB_ORIGIN: "https://admin.example.com",
       DATABASE_URL: "postgresql://prod/prod",
       PAYMENT_DRIVER: "intech",
       INTECH_CALLBACK_HMAC_ENABLED: "true",
       INTECH_API_KEY: "api-key",
-      INTECH_HMAC_SECRET_KEY: "hmac-secret"
+      INTECH_HMAC_SECRET_KEY: "hmac-secret",
+      STORAGE_DRIVER: "r2",
+      OTP_DRIVER: "africastalking",
+      EMAIL_DRIVER: "smtp"
     });
     expect(() => validateConfig()).not.toThrow();
   });

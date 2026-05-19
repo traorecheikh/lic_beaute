@@ -8,6 +8,7 @@ Name | Type
 ------------ | -------------
 `internalTicket` | string
 `subscriptionChargeId` | string
+`providerReference` | string
 
 ## Example
 
@@ -18,6 +19,7 @@ import type { AdminSubscriptionOverrideInputMetadata } from ''
 const example = {
   "internalTicket": null,
   "subscriptionChargeId": null,
+  "providerReference": null,
 } satisfies AdminSubscriptionOverrideInputMetadata
 
 console.log(example)

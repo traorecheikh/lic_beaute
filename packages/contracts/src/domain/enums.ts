@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const roleSchema = z.enum(["client", "salon_staff", "salon_owner", "platform_admin"]);
+export const roleSchema = z.enum(["client", "salon_staff", "salon_manager", "salon_owner", "platform_admin"]);
 export const salonApprovalStatusSchema = z.enum([
   "pending_review",
   "needs_info",

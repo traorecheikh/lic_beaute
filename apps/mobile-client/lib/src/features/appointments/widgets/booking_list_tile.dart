@@ -91,7 +91,11 @@ class BookingListTile extends ConsumerWidget {
               ],
             ),
           ),
-          BookingStatusChip(label: booking.status.name, isUpcoming: isUpcoming),
+          BookingStatusChip(
+            status: booking.status.name,
+            endsAt: booking.endsAt.toLocal(),
+            isUpcoming: isUpcoming,
+          ),
         ],
       ),
     );

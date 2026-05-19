@@ -97,6 +97,13 @@
                 "type": "string",
                 "minLength": 8
               },
+              "subscriptionIntentTier": {
+                "type": "string",
+                "enum": [
+                  "standard",
+                  "premium"
+                ]
+              },
               "salon": {
                 "type": "object",
                 "properties": {
@@ -111,6 +118,9 @@
                     "type": "string"
                   },
                   "address": {
+                    "type": "string"
+                  },
+                  "neighborhood": {
                     "type": "string"
                   },
                   "description": {
@@ -199,6 +209,26 @@
                 },
                 "minItems": 7,
                 "maxItems": 7
+              },
+              "documents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "fileUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "fileUrl"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "required": [
@@ -403,6 +433,7 @@
             "enum": [
               "client",
               "salon_staff",
+              "salon_manager",
               "salon_owner",
               "platform_admin"
             ]
@@ -2471,6 +2502,10 @@
               "subscriptionChargeId": {
                 "type": "string",
                 "minLength": 1
+              },
+              "providerReference": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "additionalProperties": false
@@ -2762,6 +2797,15 @@
           "canReceiveBookings": {
             "type": "boolean"
           },
+          "approvalStatus": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "needs_info",
+              "approved",
+              "rejected"
+            ]
+          },
           "teamDisplay": {
             "type": "object",
             "properties": {
@@ -2833,6 +2877,7 @@
           "subscriptionTier",
           "isVisibleInMarketplace",
           "canReceiveBookings",
+          "approvalStatus",
           "teamDisplay",
           "gallery",
           "hours"
@@ -3069,6 +3114,22 @@
           "displayName": {
             "type": "string"
           },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "salon_staff",
+              "salon_manager",
+              "salon_owner"
+            ]
+          },
           "avatarUrl": {
             "type": "string",
             "nullable": true
@@ -3094,6 +3155,9 @@
           "id",
           "userId",
           "displayName",
+          "email",
+          "phone",
+          "role",
           "avatarUrl",
           "description",
           "isActive",
@@ -3110,9 +3174,25 @@
             "minLength": 8,
             "maxLength": 20
           },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
           "fullName": {
             "type": "string",
             "minLength": 2
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "salon_staff",
+              "salon_manager"
+            ],
+            "default": "salon_staff"
           },
           "avatarUrl": {
             "type": "string",
@@ -3133,7 +3213,6 @@
           }
         },
         "required": [
-          "phone",
           "fullName"
         ],
         "additionalProperties": false
@@ -3143,6 +3222,22 @@
         "properties": {
           "displayName": {
             "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "salon_staff",
+              "salon_manager"
+            ]
           },
           "avatarUrl": {
             "type": "string",
@@ -4039,6 +4134,11 @@
             "format": "date-time",
             "nullable": true
           },
+          "gracePeriodEndsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "isComplimentary": {
             "type": "boolean"
           },
@@ -4073,6 +4173,7 @@
           "status",
           "renewsAt",
           "expiresAt",
+          "gracePeriodEndsAt",
           "isComplimentary",
           "autoRenew",
           "billingMethod"

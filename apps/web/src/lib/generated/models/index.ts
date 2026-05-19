@@ -153,6 +153,7 @@ export * from './RefreshInput';
 export * from './RegisterInput';
 export * from './RegisterInputAnyOf';
 export * from './RegisterInputAnyOf1';
+export * from './RegisterInputAnyOf1DocumentsInner';
 export * from './RegisterInputAnyOf1HoursInner';
 export * from './RegisterInputAnyOf1Salon';
 export * from './RegisterInputAnyOf1ServicesInner';

@@ -16,6 +16,14 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
   String? _selectedStaffId = 'any';
   bool _isResolvingAny = false;
 
+  @override
+  void initState() {
+    super.initState();
+    debugPrint(
+      '[BOOKING_STAFF] open salonId=${widget.salonId} serviceId=${widget.serviceId}',
+    );
+  }
+
   String? get _resolvedServiceId {
     if (widget.serviceId != null && widget.serviceId!.isNotEmpty) {
       return widget.serviceId;
@@ -46,6 +54,9 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
         final staff = (serviceId != null && serviceId.isNotEmpty)
             ? allStaff.where((s) => s.serviceIds.contains(serviceId)).toList()
             : allStaff;
+        debugPrint(
+          '[BOOKING_STAFF] render salonId=${widget.salonId} serviceId=$serviceId staff=${staff.length}',
+        );
 
         final showPhotos = salon.teamDisplay.showPhotos;
         final showDesc = salon.teamDisplay.showDescriptions;

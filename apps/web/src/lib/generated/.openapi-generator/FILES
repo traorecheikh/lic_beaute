@@ -73,9 +73,9 @@ docs/ApiV1MePaymentMethodsGet200Response.md
 docs/ApiV1MePaymentMethodsGet200ResponseItemsInner.md
 docs/ApiV1MeVouchersGet200Response.md
 docs/ApiV1MeVouchersGet200ResponseItemsInner.md
-docs/ApiV1MediaMediaIdCompletePost200Response.md
 docs/ApiV1MediaUploadIntentPost201Response.md
 docs/ApiV1MediaUploadIntentPostRequest.md
+docs/ApiV1MediaUploadPost201Response.md
 docs/ApiV1NotificationsGet200Response.md
 docs/ApiV1NotificationsGet200ResponseItemsInner.md
 docs/ApiV1NotificationsIdReadPost200Response.md
@@ -175,6 +175,7 @@ docs/RefreshInput.md
 docs/RegisterInput.md
 docs/RegisterInputAnyOf.md
 docs/RegisterInputAnyOf1.md
+docs/RegisterInputAnyOf1DocumentsInner.md
 docs/RegisterInputAnyOf1HoursInner.md
 docs/RegisterInputAnyOf1Salon.md
 docs/RegisterInputAnyOf1ServicesInner.md
@@ -250,9 +251,9 @@ models/ApiV1MePaymentMethodsGet200Response.ts
 models/ApiV1MePaymentMethodsGet200ResponseItemsInner.ts
 models/ApiV1MeVouchersGet200Response.ts
 models/ApiV1MeVouchersGet200ResponseItemsInner.ts
-models/ApiV1MediaMediaIdCompletePost200Response.ts
 models/ApiV1MediaUploadIntentPost201Response.ts
 models/ApiV1MediaUploadIntentPostRequest.ts
+models/ApiV1MediaUploadPost201Response.ts
 models/ApiV1NotificationsGet200Response.ts
 models/ApiV1NotificationsGet200ResponseItemsInner.ts
 models/ApiV1NotificationsIdReadPost200Response.ts
@@ -342,6 +343,7 @@ models/RefreshInput.ts
 models/RegisterInput.ts
 models/RegisterInputAnyOf.ts
 models/RegisterInputAnyOf1.ts
+models/RegisterInputAnyOf1DocumentsInner.ts
 models/RegisterInputAnyOf1HoursInner.ts
 models/RegisterInputAnyOf1Salon.ts
 models/RegisterInputAnyOf1ServicesInner.ts

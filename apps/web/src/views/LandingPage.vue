@@ -2,11 +2,11 @@
   <div class="min-h-screen bg-[#FDFDFD] text-espresso font-sans antialiased selection:bg-primary/20">
     
     <!-- Navigation -->
-    <nav class="absolute top-0 inset-x-0 z-50 h-18 flex items-center bg-white/90 backdrop-blur-sm border-b border-outline-variant/40">
+    <nav class="absolute top-0 inset-x-0 z-50 h-20 flex items-center bg-white/90 backdrop-blur-sm border-b border-outline-variant/40">
       <div class="max-w-7xl mx-auto w-full px-8 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <img src="/logo.png" alt="Beauté Avenue" class="h-7 w-auto object-contain" />
-          <span class="font-sans text-[15px] font-semibold tracking-tight text-espresso">Beauté Avenue</span>
+        <div class="flex items-center gap-3.5">
+          <img src="/logo.png" alt="Beauté Avenue" class="h-9 w-auto object-contain" />
+          <span class="font-sans text-[18px] font-medium-bold tracking-tight text-espresso">Beauté Avenue</span>
         </div>
 
         <div class="flex items-center gap-6">
@@ -27,12 +27,12 @@
         <!-- Left: Copy & Actions -->
         <div class="lg:col-span-6 space-y-10 z-10">
           <div class="space-y-5">
-            <p class="font-sans text-[11px] font-semibold uppercase tracking-[0.35em] text-cocoa">Beauté · Dakar · Abidjan</p>
-            <h1 class="text-[64px] md:text-[80px] text-espresso leading-[1.0] tracking-[-0.02em]">
+            <p class="font-sans text-[11px] font-bold uppercase tracking-[0.4em] text-cocoa/40">Beauté · Dakar · Abidjan</p>
+            <h1 class="text-[72px] md:text-[92px] text-espresso leading-[0.95] tracking-[-0.03em] font-medium-bold">
               L'excellence,<br />
               <em class="not-italic text-primary">au bout des doigts.</em>
             </h1>
-            <p class="font-sans text-[17px] text-cocoa leading-relaxed max-w-[480px]">
+            <p class="font-sans text-[18px] text-cocoa/70 leading-relaxed max-w-[480px]">
               Découvrez les salons d'exception en Afrique de l'Ouest. Réservez, payez l'acompte, vivez l'expérience.
             </p>
           </div>
@@ -201,8 +201,7 @@
             <div class="space-y-5">
               <p class="text-[10px] font-bold uppercase tracking-widest text-espresso">Support</p>
               <ul class="space-y-2">
-                <li><a href="#" class="text-[12px] font-medium text-cocoa hover:text-primary transition-colors">Documentation</a></li>
-                <li><a href="#" class="text-[12px] font-medium text-cocoa hover:text-primary transition-colors">Contact</a></li>
+                <li><a href="mailto:support@beauteavenue.sn" class="text-[12px] font-medium text-cocoa hover:text-primary transition-colors">Contact</a></li>
               </ul>
             </div>
             <div class="space-y-5">

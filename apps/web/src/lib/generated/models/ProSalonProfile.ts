@@ -132,6 +132,12 @@ export interface ProSalonProfile {
     canReceiveBookings: boolean;
     /**
      * 
+     * @type {ProSalonProfileApprovalStatusEnum}
+     * @memberof ProSalonProfile
+     */
+    approvalStatus: ProSalonProfileApprovalStatusEnum;
+    /**
+     * 
      * @type {SalonDetailTeamDisplay}
      * @memberof ProSalonProfile
      */
@@ -160,6 +166,17 @@ export const ProSalonProfileSubscriptionTierEnum = {
 } as const;
 export type ProSalonProfileSubscriptionTierEnum = typeof ProSalonProfileSubscriptionTierEnum[keyof typeof ProSalonProfileSubscriptionTierEnum];
 
+/**
+ * @export
+ */
+export const ProSalonProfileApprovalStatusEnum = {
+    PendingReview: 'pending_review',
+    NeedsInfo: 'needs_info',
+    Approved: 'approved',
+    Rejected: 'rejected'
+} as const;
+export type ProSalonProfileApprovalStatusEnum = typeof ProSalonProfileApprovalStatusEnum[keyof typeof ProSalonProfileApprovalStatusEnum];
+
 
 /**
  * Check if a given object implements the ProSalonProfile interface.
@@ -181,6 +198,7 @@ export function instanceOfProSalonProfile(value: object): value is ProSalonProfi
     if (!('subscriptionTier' in value) || value['subscriptionTier'] === undefined) return false;
     if (!('isVisibleInMarketplace' in value) || value['isVisibleInMarketplace'] === undefined) return false;
     if (!('canReceiveBookings' in value) || value['canReceiveBookings'] === undefined) return false;
+    if (!('approvalStatus' in value) || value['approvalStatus'] === undefined) return false;
     if (!('teamDisplay' in value) || value['teamDisplay'] === undefined) return false;
     if (!('gallery' in value) || value['gallery'] === undefined) return false;
     if (!('hours' in value) || value['hours'] === undefined) return false;
@@ -213,6 +231,7 @@ export function ProSalonProfileFromJSONTyped(json: any, ignoreDiscriminator: boo
         'subscriptionTier': json['subscriptionTier'],
         'isVisibleInMarketplace': json['isVisibleInMarketplace'],
         'canReceiveBookings': json['canReceiveBookings'],
+        'approvalStatus': json['approvalStatus'],
         'teamDisplay': SalonDetailTeamDisplayFromJSON(json['teamDisplay']),
         'gallery': json['gallery'],
         'hours': ((json['hours'] as Array<any>).map(ProSalonProfileHoursInnerFromJSON)),
@@ -246,6 +265,7 @@ export function ProSalonProfileToJSONTyped(value?: ProSalonProfile | null, ignor
         'subscriptionTier': value['subscriptionTier'],
         'isVisibleInMarketplace': value['isVisibleInMarketplace'],
         'canReceiveBookings': value['canReceiveBookings'],
+        'approvalStatus': value['approvalStatus'],
         'teamDisplay': SalonDetailTeamDisplayToJSON(value['teamDisplay']),
         'gallery': value['gallery'],
         'hours': ((value['hours'] as Array<any>).map(ProSalonProfileHoursInnerToJSON)),

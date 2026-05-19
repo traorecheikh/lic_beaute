@@ -52,7 +52,22 @@
         </div>
         <div>
           <label class="section-label mb-2 block">Téléphone</label>
-          <input v-model="createForm.phone" class="input-shell" placeholder="+221771234567" :disabled="Boolean(editingMemberId)" />
+          <input v-model="createForm.phone" class="input-shell" placeholder="+221771234567" />
+        </div>
+        <div>
+          <label class="section-label mb-2 block">Email professionnel (optionnel)</label>
+          <input v-model="createForm.email" class="input-shell" placeholder="awa@monsalon.sn" />
+        </div>
+        <div>
+          <label class="section-label mb-2 block">Rôle</label>
+          <select v-model="createForm.role" class="input-shell">
+            <option value="salon_staff">Staff (Calendrier & Clients)</option>
+            <option value="salon_manager">Manager (Gestion complète hors facturation)</option>
+          </select>
+        </div>
+        <div v-if="!editingMemberId">
+          <label class="section-label mb-2 block">Mot de passe provisoire</label>
+          <input type="password" v-model="createForm.password" class="input-shell" placeholder="••••••••" />
         </div>
         <div v-if="teamDisplaySettings.showPhotos" class="md:col-span-2">
           <label class="section-label mb-2 block">Photo du collaborateur</label>
@@ -118,6 +133,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="member in team" :key="member.id" class="panel-clean p-6 flex flex-col items-center text-center group relative">
         <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition flex gap-1">
+          <button
+            v-if="member.email && member.role !== 'salon_owner'"
+            @click="resendInviteMutation.mutate(member.id)"
+            :disabled="resendInviteMutation.isPending.value"
+            class="p-2 hover:bg-neutral-bg rounded-full text-cocoa/60 hover:text-primary"
+            title="Renvoyer l'invitation"
+          >
+            <EnvelopeIcon class="w-4 h-4" />
+          </button>
           <button @click="editMember(member)" class="p-2 hover:bg-neutral-bg rounded-full text-cocoa/60 hover:text-espresso"><PencilIcon class="w-4 h-4" /></button>
           <button @click="removeMember(member.id)" class="p-2 hover:bg-neutral-bg rounded-full text-cocoa/60 hover:text-error"><TrashIcon class="w-4 h-4" /></button>
         </div>
@@ -128,7 +152,7 @@
         </div>
 
         <h3 class="row-primary text-base mb-1">{{ member.name }}</h3>
-        <p class="row-meta uppercase tracking-widest text-[10px] font-bold mb-4">{{ member.role }}</p>
+        <p class="row-meta uppercase tracking-widest text-[10px] font-bold mb-4">{{ member.roleLabel }}</p>
         <p v-if="teamDisplaySettings.showDescriptions && member.description" class="row-meta mb-4 leading-relaxed">
           {{ member.description }}
         </p>
@@ -166,9 +190,10 @@ import { toast } from "vue-sonner";
 import {
   PlusIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  EnvelopeIcon
 } from "@heroicons/vue/24/outline";
-import { createProStaff, deleteProStaff, fetchProSalon, fetchProServices, fetchProStaff, updateProSalon, updateProStaff, uploadProMedia } from "@/lib/pro-api";
+import { createProStaff, deleteProStaff, fetchProSalon, fetchProServices, fetchProStaff, resendProStaffInvite, updateProSalon, updateProStaff, uploadProMedia } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -185,6 +210,9 @@ const teamDisplaySettings = reactive({
 const createForm = reactive({
   fullName: "",
   phone: "",
+  email: "",
+  password: "",
+  role: "salon_staff" as "salon_staff" | "salon_manager",
   avatarUrl: "",
   description: "",
   serviceIds: [] as string[],
@@ -195,19 +223,19 @@ const createForm = reactive({
 const servicesQuery = useQuery({
   queryKey: ["pro-services"],
   queryFn: () => fetchProServices(auth.accessToken ?? ""),
-  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager))
 });
 
 const staffQuery = useQuery({
   queryKey: ["pro-staff"],
   queryFn: () => fetchProStaff(auth.accessToken ?? ""),
-  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager))
 });
 
 const salonQuery = useQuery({
   queryKey: ["pro-salon"],
   queryFn: () => fetchProSalon(auth.accessToken ?? ""),
-  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager))
 });
 
 const teamSettingsMutation = useMutation({
@@ -238,6 +266,9 @@ const createMutation = useMutation({
     createProStaff(auth.accessToken ?? "", {
       fullName: createForm.fullName.trim(),
       phone: createForm.phone.replace(/\s+/g, ""),
+      email: createForm.email.trim() || undefined,
+      password: createForm.password.trim() || undefined,
+      role: createForm.role,
       avatarUrl: createForm.avatarUrl.trim() ? createForm.avatarUrl.trim() : null,
       description: createForm.description.trim() ? createForm.description.trim() : null,
       serviceIds: createForm.serviceIds
@@ -256,6 +287,9 @@ const updateMutation = useMutation({
   mutationFn: () =>
     updateProStaff(auth.accessToken ?? "", editingMemberId.value ?? "", {
       displayName: createForm.fullName.trim(),
+      email: createForm.email.trim() || undefined,
+      phone: createForm.phone.replace(/\s+/g, ""),
+      role: createForm.role,
       avatarUrl: createForm.avatarUrl.trim() ? createForm.avatarUrl.trim() : null,
       description: createForm.description.trim() ? createForm.description.trim() : null,
       isActive: createForm.isActive,
@@ -283,6 +317,16 @@ const uploadAvatarMutation = useMutation({
   }
 });
 
+const resendInviteMutation = useMutation({
+  mutationFn: (employeeId: string) => resendProStaffInvite(auth.accessToken ?? "", employeeId),
+  onSuccess: (result) => {
+    toast.success(`Invitation renvoyée à ${result.email}.`);
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Envoi impossible pour le moment."));
+  }
+});
+
 const availableServices = computed(() => servicesQuery.data.value ?? []);
 
 const serviceById = computed(() => {
@@ -296,11 +340,19 @@ const team = computed(() => {
       .slice(0, 2)
       .map((name) => name[0]?.toUpperCase() ?? "")
       .join("");
+    
+    let roleLabel = "Staff";
+    if (member.role === "salon_manager") roleLabel = "Manager";
+    if (member.role === "salon_owner") roleLabel = "Propriétaire";
+
     return {
       id: member.id,
       name: member.displayName,
+      email: member.email,
+      phone: member.phone,
       initials,
-      role: member.schedulingEnabled ? "Disponible" : "Hors planning",
+      role: member.role,
+      roleLabel,
       specialties: member.serviceIds.map((serviceId) => serviceById.value.get(serviceId) ?? "Service"),
       active: member.isActive,
       schedulingEnabled: member.schedulingEnabled,
@@ -419,6 +471,9 @@ function removeMember(id: string) {
 function editMember(member: {
   id: string;
   name: string;
+  email?: string | null;
+  phone?: string | null;
+  role: string;
   active: boolean;
   schedulingEnabled: boolean;
   serviceIds: string[];
@@ -428,7 +483,9 @@ function editMember(member: {
   showCreateForm.value = true;
   editingMemberId.value = member.id;
   createForm.fullName = member.name;
-  createForm.phone = "";
+  createForm.email = member.email ?? "";
+  createForm.phone = member.phone ?? "";
+  createForm.role = member.role === "salon_manager" ? "salon_manager" : "salon_staff";
   createForm.avatarUrl = member.avatar ?? "";
   createForm.description = member.description ?? "";
   createForm.serviceIds = [...member.serviceIds];

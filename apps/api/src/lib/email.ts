@@ -8,10 +8,36 @@ export type EmailMessage = {
   html?: string;
 };
 
+async function writeEmailAudit(
+  message: EmailMessage,
+  status: "sent" | "failed" | "skipped",
+  errorMessage?: string
+) {
+  try {
+    const { prisma } = await import("./db/prisma.js");
+    await prisma.emailAudit.create({
+      data: {
+        to: message.to,
+        subject: message.subject,
+        driver: config.emailDriver,
+        status,
+        errorMessage: errorMessage ?? null
+      }
+    });
+  } catch (err) {
+    logger.warn("[EMAIL:audit] write failed", {
+      to: message.to,
+      subject: message.subject,
+      err: String(err)
+    });
+  }
+}
+
 export async function sendEmail(message: EmailMessage): Promise<void> {
   switch (config.emailDriver) {
     case "noop":
       logger.info("[EMAIL:noop] would send email", { to: message.to, subject: message.subject });
+      await writeEmailAudit(message, "skipped");
       return;
 
     case "resend": {
@@ -26,9 +52,11 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
       });
       if (error) {
         logger.error("[EMAIL:resend] send failed", { to: message.to, error });
+        await writeEmailAudit(message, "failed", error.message);
         throw new Error(`Resend error: ${error.message}`);
       }
       logger.info("[EMAIL:resend] sent", { to: message.to, subject: message.subject });
+      await writeEmailAudit(message, "sent");
       return;
     }
 
@@ -48,10 +76,12 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
         html: message.html,
       });
       logger.info("[EMAIL:smtp] sent", { to: message.to, subject: message.subject });
+      await writeEmailAudit(message, "sent");
       return;
     }
 
     default:
       logger.warn("[EMAIL] unknown driver, falling back to noop", { driver: config.emailDriver });
+      await writeEmailAudit(message, "skipped", "unknown_driver");
   }
 }

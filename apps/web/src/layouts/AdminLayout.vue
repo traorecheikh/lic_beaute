@@ -4,11 +4,11 @@
       <div class="mx-auto flex max-w-[1480px] items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <RouterLink
           to="/admin/dashboard"
-          class="flex min-w-0 items-center gap-4 transition hover:opacity-80"
+          class="flex min-w-0 items-center gap-5 transition hover:opacity-80"
         >
           <img src="/logo.png" alt="Beauté Avenue" class="h-10 w-auto object-contain" />
           <div class="min-w-0">
-            <p class="text-lg font-bold tracking-tight text-white font-display">Beauté Avenue</p>
+            <p class="text-[19px] font-medium-bold tracking-tight text-white font-sans">Beauté Avenue</p>
           </div>
         </RouterLink>
 

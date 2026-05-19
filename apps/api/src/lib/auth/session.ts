@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 import { config } from "../../config.js";
 
-export type AccessTokenRole = "platform_admin" | "client" | "salon_owner" | "salon_staff";
+export type AccessTokenRole = "platform_admin" | "client" | "salon_owner" | "salon_staff" | "salon_manager";
 
 export type AccessTokenPayload = {
   sub: string;
@@ -34,7 +34,7 @@ export function verifyRefreshToken(token: string): { sub: string } {
   return { sub: payload.sub };
 }
 
-const VALID_ROLES: readonly AccessTokenRole[] = ["platform_admin", "client", "salon_owner", "salon_staff"];
+const VALID_ROLES: readonly AccessTokenRole[] = ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"];
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
   const payload = jwt.verify(token, config.jwtAccessSecret);

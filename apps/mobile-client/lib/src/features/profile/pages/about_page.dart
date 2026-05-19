@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_contacts.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_top_bar.dart';
 
@@ -52,7 +53,7 @@ class AboutPage extends StatelessWidget {
             _InfoCard(
               title: 'Contactez-nous',
               body:
-                  "contact@beauteavenue.sn\n+221 77 000 00 00\nDakar, Sénégal",
+                  "${AppContacts.supportEmail}\n${AppContacts.supportPhone}\nDakar, Sénégal",
             ),
             gapH32,
             Text(

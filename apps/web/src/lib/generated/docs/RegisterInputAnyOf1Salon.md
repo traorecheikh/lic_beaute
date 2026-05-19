@@ -10,6 +10,7 @@ Name | Type
 `category` | string
 `city` | string
 `address` | string
+`neighborhood` | string
 `description` | string
 
 ## Example
@@ -23,6 +24,7 @@ const example = {
   "category": null,
   "city": null,
   "address": null,
+  "neighborhood": null,
   "description": null,
 } satisfies RegisterInputAnyOf1Salon
 

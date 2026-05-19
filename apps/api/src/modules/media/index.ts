@@ -93,6 +93,27 @@ export class MediaController {
         : (owner?.salonId ?? null);
       const purpose = mediaPurposeSchema.parse(purposeValue);
 
+      // Media limit check
+      if (resolvedSalonId && purpose === "salon_gallery") {
+        const salon = await prisma.salon.findUnique({
+          where: { id: resolvedSalonId },
+          select: { subscriptionTier: true }
+        });
+        const currentCount = await prisma.mediaAsset.count({
+          where: { salonId: resolvedSalonId, purpose: "salon_gallery", deletedAt: null }
+        });
+
+        if (salon?.subscriptionTier === "standard" && currentCount >= 3) {
+          fail(reply, 422, "gallery_limit_reached", "Limite de 3 photos atteinte pour le plan Standard.");
+          return;
+        }
+
+        if (salon?.subscriptionTier === "premium" && currentCount >= 50) {
+          fail(reply, 422, "gallery_limit_reached", "Limite de 50 photos atteinte.");
+          return;
+        }
+      }
+
       const fileExt = mimeToExt(mimeType);
       const objectKey = `incoming/${randomUUID()}${fileExt}`;
       const ownerType = owner?.salonId ? "salon" : "user";
@@ -166,6 +187,28 @@ export class MediaController {
       const resolvedSalonId = session.role === "platform_admin"
         ? (body.salonId ?? user?.salonId ?? null)
         : (user?.salonId ?? null);
+
+      // Media limit check
+      if (resolvedSalonId && body.purpose === "salon_gallery") {
+        const salon = await prisma.salon.findUnique({
+          where: { id: resolvedSalonId },
+          select: { subscriptionTier: true }
+        });
+        const currentCount = await prisma.mediaAsset.count({
+          where: { salonId: resolvedSalonId, purpose: "salon_gallery", deletedAt: null }
+        });
+
+        if (salon?.subscriptionTier === "standard" && currentCount >= 3) {
+          fail(reply, 422, "gallery_limit_reached", "Limite de 3 photos atteinte pour le plan Standard.");
+          return;
+        }
+
+        if (salon?.subscriptionTier === "premium" && currentCount >= 50) {
+          fail(reply, 422, "gallery_limit_reached", "Limite de 50 photos atteinte.");
+          return;
+        }
+      }
+
       const ownerType = user?.salonId ? "salon" : "user";
       const ownerId = user?.salonId ?? session.sub;
 
@@ -356,6 +399,34 @@ export class MediaController {
       ok(reply, { deleted: true });
     } catch (error) {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      fail(reply, 500, "internal_error", "Erreur interne.");
+    }
+  }
+
+  async uploadRegistrationDoc(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      requireRole(request, ["salon_owner"]);
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        r2AccountId: config.r2AccountId,
+        r2AccessKeyId: config.r2AccessKeyId,
+        r2SecretAccessKey: config.r2SecretAccessKey,
+        r2Bucket: config.r2Bucket,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
+      const file = await request.file({ limits: { files: 1, fileSize: 5 * 1024 * 1024 } });
+      if (!file) { fail(reply, 400, "file_required", "Aucun fichier reçu."); return; }
+      if (!ALLOWED_UPLOAD_MIME_TYPES.has(file.mimetype)) {
+        fail(reply, 415, "unsupported_media_type", "Type de fichier non supporté.");
+        return;
+      }
+      const objectKey = `registration/${randomUUID()}${mimeToExt(file.mimetype)}`;
+      const sizeBytes = await storage.store(objectKey, file.file, file.mimetype);
+      if (sizeBytes <= 0) { fail(reply, 422, "invalid_upload_size", "Fichier invalide ou vide."); return; }
+      const url = storage.publicUrl(objectKey);
+      ok(reply, { url }, 201);
+    } catch (error) {
+      logger.error("Registration doc upload error", { error: String(error) });
       fail(reply, 500, "internal_error", "Erreur interne.");
     }
   }

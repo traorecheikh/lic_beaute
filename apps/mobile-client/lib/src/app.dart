@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'core/reactivity/app_reactivity.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_connectivity_banner.dart';
 import 'core/widgets/app_connectivity_recovery.dart';
@@ -27,12 +28,14 @@ class ClientApp extends ConsumerWidget {
         themeMode: ThemeMode.system,
         routerConfig: router,
         builder: (context, routedChild) {
-          return AppConnectivityRecovery(
-            child: Stack(
-              children: [
-                routedChild ?? const SizedBox.shrink(),
-                const AppConnectivityBanner(),
-              ],
+          return _AppLifecycleRefresh(
+            child: AppConnectivityRecovery(
+              child: Stack(
+                children: [
+                  routedChild ?? const SizedBox.shrink(),
+                  const AppConnectivityBanner(),
+                ],
+              ),
             ),
           );
         },
@@ -45,4 +48,39 @@ class ClientApp extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _AppLifecycleRefresh extends ConsumerStatefulWidget {
+  const _AppLifecycleRefresh({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_AppLifecycleRefresh> createState() =>
+      _AppLifecycleRefreshState();
+}
+
+class _AppLifecycleRefreshState extends ConsumerState<_AppLifecycleRefresh>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(appReactivityProvider).refreshAll();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

@@ -12,13 +12,23 @@ function endOfToday() {
   return d;
 }
 
-export async function getProDashboard(salonId: string, role: string) {
+export async function getProDashboard(salonId: string, role: string, userId: string) {
   const today = startOfToday();
   const todayEnd = endOfToday();
 
+  const where: any = { salonId };
+  if (role === "salon_staff") {
+    const employee = await prisma.employee.findFirst({ where: { userId, salonId } });
+    if (employee) {
+      where.employeeId = employee.id;
+    } else {
+      where.id = "none";
+    }
+  }
+
   const [pendingBookingCount, todayBookingCount, completedPayments] = await Promise.all([
-    prisma.booking.count({ where: { salonId, status: "pending" } }),
-    prisma.booking.count({ where: { salonId, startsAt: { gte: today, lte: todayEnd } } }),
+    prisma.booking.count({ where: { ...where, status: "pending" } }),
+    prisma.booking.count({ where: { ...where, startsAt: { gte: today, lte: todayEnd } } }),
     role === "salon_owner"
       ? prisma.payment.aggregate({
           where: { booking: { salonId }, status: "succeeded" },

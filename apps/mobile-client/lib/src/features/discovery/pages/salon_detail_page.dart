@@ -42,8 +42,35 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
   }
 
   void _showBookingSheet(BuildContext context) {
+    final salonId = widget.salonId.trim();
+    if (salonId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Salon introuvable.')),
+      );
+      return;
+    }
+
+    debugPrint('[BOOKING_CTA] tap salonId=$salonId');
     ref.read(bookingFunnelProvider.notifier).reset();
-    context.push('${AppRoutes.bookingService}?salonId=${widget.salonId}');
+    ref
+        .read(salonDetailProvider(salonId).future)
+        .timeout(const Duration(seconds: 12))
+        .then((_) {
+          debugPrint('[BOOKING_CTA] prefetch_ok salonId=$salonId -> bookingService');
+          if (!context.mounted) return;
+          context.push('${AppRoutes.bookingService}?salonId=$salonId');
+        })
+        .catchError((_) {
+          debugPrint('[BOOKING_CTA] prefetch_failed salonId=$salonId');
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Impossible d’ouvrir la réservation. Vérifiez votre connexion.',
+              ),
+            ),
+          );
+        });
   }
 
   void _openGallery(BuildContext context, List<String> images, int index) {

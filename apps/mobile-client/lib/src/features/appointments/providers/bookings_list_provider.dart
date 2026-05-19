@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:built_value/serializer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +13,14 @@ import '../../discovery/providers/cached_resource.dart';
 final bookingsListProvider =
     FutureProvider<CachedResource<BookingSummaryListResponse>>((ref) async {
       final session = ref.watch(sessionProvider);
+      // Keep loading while session is restoring to avoid a flash of empty state
+      if (session.isRestoring) {
+        final c = Completer<CachedResource<BookingSummaryListResponse>>();
+        ref.onDispose(() {
+          if (!c.isCompleted) c.completeError('disposed', StackTrace.empty);
+        });
+        return c.future;
+      }
       if (!session.isAuthenticated) {
         return const CachedResource(data: null, isStale: false);
       }

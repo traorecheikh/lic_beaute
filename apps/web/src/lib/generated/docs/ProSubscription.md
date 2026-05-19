@@ -11,6 +11,7 @@ Name | Type
 `status` | string
 `renewsAt` | Date
 `expiresAt` | Date
+`gracePeriodEndsAt` | Date
 `isComplimentary` | boolean
 `autoRenew` | boolean
 `billingMethod` | [ProSubscriptionBillingMethod](ProSubscriptionBillingMethod.md)
@@ -27,6 +28,7 @@ const example = {
   "status": null,
   "renewsAt": null,
   "expiresAt": null,
+  "gracePeriodEndsAt": null,
   "isComplimentary": null,
   "autoRenew": null,
   "billingMethod": null,

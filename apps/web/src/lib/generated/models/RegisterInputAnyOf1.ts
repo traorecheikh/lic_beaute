@@ -27,6 +27,13 @@ import {
     RegisterInputAnyOf1SalonToJSON,
     RegisterInputAnyOf1SalonToJSONTyped,
 } from './RegisterInputAnyOf1Salon';
+import type { RegisterInputAnyOf1DocumentsInner } from './RegisterInputAnyOf1DocumentsInner';
+import {
+    RegisterInputAnyOf1DocumentsInnerFromJSON,
+    RegisterInputAnyOf1DocumentsInnerFromJSONTyped,
+    RegisterInputAnyOf1DocumentsInnerToJSON,
+    RegisterInputAnyOf1DocumentsInnerToJSONTyped,
+} from './RegisterInputAnyOf1DocumentsInner';
 import type { RegisterInputAnyOf1ServicesInner } from './RegisterInputAnyOf1ServicesInner';
 import {
     RegisterInputAnyOf1ServicesInnerFromJSON,
@@ -73,6 +80,12 @@ export interface RegisterInputAnyOf1 {
     password: string;
     /**
      * 
+     * @type {RegisterInputAnyOf1SubscriptionIntentTierEnum}
+     * @memberof RegisterInputAnyOf1
+     */
+    subscriptionIntentTier?: RegisterInputAnyOf1SubscriptionIntentTierEnum;
+    /**
+     * 
      * @type {RegisterInputAnyOf1Salon}
      * @memberof RegisterInputAnyOf1
      */
@@ -89,6 +102,12 @@ export interface RegisterInputAnyOf1 {
      * @memberof RegisterInputAnyOf1
      */
     hours: Array<RegisterInputAnyOf1HoursInner>;
+    /**
+     * 
+     * @type {Array<RegisterInputAnyOf1DocumentsInner>}
+     * @memberof RegisterInputAnyOf1
+     */
+    documents?: Array<RegisterInputAnyOf1DocumentsInner>;
 }
 
 
@@ -99,6 +118,15 @@ export const RegisterInputAnyOf1TypeEnum = {
     SalonOwner: 'salon_owner'
 } as const;
 export type RegisterInputAnyOf1TypeEnum = typeof RegisterInputAnyOf1TypeEnum[keyof typeof RegisterInputAnyOf1TypeEnum];
+
+/**
+ * @export
+ */
+export const RegisterInputAnyOf1SubscriptionIntentTierEnum = {
+    Standard: 'standard',
+    Premium: 'premium'
+} as const;
+export type RegisterInputAnyOf1SubscriptionIntentTierEnum = typeof RegisterInputAnyOf1SubscriptionIntentTierEnum[keyof typeof RegisterInputAnyOf1SubscriptionIntentTierEnum];
 
 
 /**
@@ -131,9 +159,11 @@ export function RegisterInputAnyOf1FromJSONTyped(json: any, ignoreDiscriminator:
         'email': json['email'],
         'phone': json['phone'],
         'password': json['password'],
+        'subscriptionIntentTier': json['subscriptionIntentTier'] == null ? undefined : json['subscriptionIntentTier'],
         'salon': RegisterInputAnyOf1SalonFromJSON(json['salon']),
         'services': ((json['services'] as Array<any>).map(RegisterInputAnyOf1ServicesInnerFromJSON)),
         'hours': ((json['hours'] as Array<any>).map(RegisterInputAnyOf1HoursInnerFromJSON)),
+        'documents': json['documents'] == null ? undefined : ((json['documents'] as Array<any>).map(RegisterInputAnyOf1DocumentsInnerFromJSON)),
     };
 }
 
@@ -153,9 +183,11 @@ export function RegisterInputAnyOf1ToJSONTyped(value?: RegisterInputAnyOf1 | nul
         'email': value['email'],
         'phone': value['phone'],
         'password': value['password'],
+        'subscriptionIntentTier': value['subscriptionIntentTier'],
         'salon': RegisterInputAnyOf1SalonToJSON(value['salon']),
         'services': ((value['services'] as Array<any>).map(RegisterInputAnyOf1ServicesInnerToJSON)),
         'hours': ((value['hours'] as Array<any>).map(RegisterInputAnyOf1HoursInnerToJSON)),
+        'documents': value['documents'] == null ? undefined : ((value['documents'] as Array<any>).map(RegisterInputAnyOf1DocumentsInnerToJSON)),
     };
 }
 

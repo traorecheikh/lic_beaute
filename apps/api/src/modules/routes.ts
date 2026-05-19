@@ -46,13 +46,19 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   });
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const authLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
-  const otpLimit = { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } };
+  const isDevOrTest = process.env.NODE_ENV !== "production";
+  const authLimit = { config: { rateLimit: { max: isDevOrTest ? 2000 : 10, timeWindow: "1 minute" } } };
+  const otpLimit = { config: { rateLimit: { max: isDevOrTest ? 2000 : 5, timeWindow: "1 minute" } } };
   app.post("/api/v1/auth/register", authLimit, (req, rep) => auth.register(req, rep));
   app.post("/api/v1/auth/login", authLimit, (req, rep) => auth.login(req, rep));
+  const uploadDocLimit = { config: { rateLimit: { max: isDevOrTest ? 2000 : 20, timeWindow: "1 minute" } } };
+  app.post("/api/v1/auth/upload-registration-doc", uploadDocLimit, (req, rep) => media.uploadRegistrationDoc(req, rep));
+  app.get("/api/v1/platform/registration-docs", (req, rep) => admin.listDocumentsPublic(req, rep));
+  app.get("/api/v1/platform/categories", (req, rep) => admin.listCategoriesPublic(req, rep));
   app.post("/api/v1/auth/otp/request", otpLimit, (req, rep) => auth.requestOtp(req, rep));
   app.post("/api/v1/auth/otp/verify", otpLimit, (req, rep) => auth.verifyOtp(req, rep));
   app.post("/api/v1/auth/refresh", authLimit, (req, rep) => auth.refresh(req, rep));
+  app.post("/api/v1/auth/staff-invite/redeem", authLimit, (req, rep) => auth.redeemStaffInvite(req, rep));
   app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
   app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));
@@ -119,6 +125,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/pro/staff", (req, rep) => pro.createStaff(req, rep));
   app.patch("/api/v1/pro/staff/:employeeId", (req, rep) => pro.updateStaff(req, rep));
   app.delete("/api/v1/pro/staff/:employeeId", (req, rep) => pro.deleteStaff(req, rep));
+  app.post("/api/v1/pro/staff/:employeeId/resend-invite", (req, rep) => pro.resendStaffInvite(req, rep));
   app.get("/api/v1/pro/hours", (req, rep) => pro.getHours(req, rep));
   app.put("/api/v1/pro/hours", (req, rep) => pro.updateHours(req, rep));
   app.get("/api/v1/pro/blocked-slots", (req, rep) => pro.listBlockedSlots(req, rep));
@@ -182,6 +189,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/admin/subscriptions/:subscriptionId", (req, rep) => admin.subscriptionDetail(req, rep));
   app.post("/api/v1/admin/subscriptions/:subscriptionId/override", (req, rep) => admin.overrideSubscription(req, rep));
   app.get("/api/v1/admin/audit", (req, rep) => admin.listAudit(req, rep));
+  app.get("/api/v1/admin/audit/email", (req, rep) => admin.listEmailAudit(req, rep));
   app.get("/api/v1/admin/audit/:auditId", (req, rep) => admin.auditDetail(req, rep));
   app.get("/api/v1/admin/config/settings", (req, rep) => admin.listSettings(req, rep));
   app.patch("/api/v1/admin/config/settings/:key", (req, rep) => admin.updateSetting(req, rep));

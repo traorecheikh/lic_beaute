@@ -335,6 +335,7 @@ class _ServiceSelectionPageState extends ConsumerState<ServiceSelectionPage> {
       serviceName: selected.name,
       price: selected.priceXof.toInt(),
       durationMinutes: selected.durationMinutes,
+      depositAmount: selected.depositRequiredXof?.toInt() ?? 0,
     );
     context.push(
       '${AppRoutes.bookingStaff}?serviceId=$_selectedServiceId&salonId=${widget.salonId}',

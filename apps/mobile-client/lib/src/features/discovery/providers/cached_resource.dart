@@ -22,9 +22,13 @@ extension BookingMapExtension on CachedResource<Map<String, dynamic>> {
       (data?['depositPaymentStatus'] as String?) ?? 'pending';
   int? get priceXof => (data?['totalAmountXof'] as num?)?.toInt();
   int? get depositXof => (data?['depositAmountXof'] as num?)?.toInt();
+  int? get depositPaidXof => (data?['depositPaidXof'] as num?)?.toInt();
   DateTime? get startsAt => data?['startsAt'] == null
       ? null
       : DateTime.tryParse(data?['startsAt'] as String)?.toLocal();
+  DateTime? get endsAt => data?['endsAt'] == null
+      ? null
+      : DateTime.tryParse(data?['endsAt'] as String)?.toLocal();
 
   List<String> get _months => const [
     'jan',

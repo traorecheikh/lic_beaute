@@ -79,12 +79,14 @@ class BookingFunnelNotifier extends Notifier<BookingFunnelState> {
     required String serviceName,
     required int price,
     required int durationMinutes,
+    int? depositAmount,
   }) {
     state = state.copyWith(
       serviceId: serviceId,
       serviceName: serviceName,
       servicePrice: price,
       serviceDurationMinutes: durationMinutes,
+      depositAmount: depositAmount ?? 0,
       clearEmployee: true,
       clearSlot: true,
     );

@@ -1,5 +1,10 @@
 <template>
   <div>
+    <div v-if="!auth.isManager" class="panel-clean p-12 text-center">
+      <p class="row-primary mb-2">Accès restreint</p>
+      <p class="row-meta">Les analyses sont réservées au propriétaire et au manager du salon.</p>
+    </div>
+    <template v-else>
     <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 class="page-title mb-2">Analyses & Rapports</h1>
@@ -93,7 +98,7 @@
       </div>
 
       <div class="panel-clean p-8">
-        <h2 class="section-label mb-6">Taux de fidélisation</h2>
+        <h2 class="section-label mb-6">Taux de complétion</h2>
         <div class="flex items-center gap-8">
           <div class="relative w-32 h-32">
             <svg class="w-full h-full" viewBox="0 0 36 36">
@@ -105,12 +110,13 @@
             </div>
           </div>
           <div class="flex-1 space-y-2">
-            <p class="text-sm text-espresso font-semibold">Clients récurrents</p>
-            <p class="text-xs text-cocoa/60 leading-relaxed">Presque la moitié de vos clients reviennent sous 30 jours.</p>
+            <p class="text-sm text-espresso font-semibold">RDV terminés / total</p>
+            <p class="text-xs text-cocoa/60 leading-relaxed">Proportion des réservations effectivement complétées sur la période.</p>
           </div>
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -130,7 +136,7 @@ const period = ref<"7d" | "30d" | "90d">("30d");
 const analyticsQuery = useQuery({
   queryKey: computed(() => ["pro-analytics", period.value]),
   queryFn: () => fetchProAnalytics(auth.accessToken ?? "", period.value),
-  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager))
 });
 
 const kpis = computed(() => {
@@ -151,9 +157,9 @@ const kpis = computed(() => {
 
 const revenueData = computed(() => {
   const revenue = analyticsQuery.data.value?.totalRevenueXof ?? 0;
-  if (revenue <= 0) return [10, 18, 22, 30, 38, 42, 50];
+  if (revenue <= 0) return [0, 0, 0, 0, 0, 0, 0];
   const base = Math.max(12, Math.min(85, Math.round(revenue / 100_000)));
-  return [base - 8, base - 3, base + 2, base + 8, base + 4, base + 10, base + 6];
+  return [base, base, base, base, base, base, base];
 });
 
 const topServices = computed(() => {

@@ -7,6 +7,9 @@
 Name | Type
 ------------ | -------------
 `displayName` | string
+`email` | string
+`phone` | string
+`role` | string
 `avatarUrl` | string
 `description` | string
 `isActive` | boolean
@@ -21,6 +24,9 @@ import type { ProStaffUpdateInput } from ''
 // TODO: Update the object below with actual values
 const example = {
   "displayName": null,
+  "email": null,
+  "phone": null,
+  "role": null,
   "avatarUrl": null,
   "description": null,
   "isActive": null,

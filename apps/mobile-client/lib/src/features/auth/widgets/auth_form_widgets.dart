@@ -29,42 +29,120 @@ class AuthPageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroHeight = MediaQuery.sizeOf(context).height * 0.38;
     return AppScaffold(
       appBar: AppTopBar(
         backgroundColor: AppColors.transparent,
         showBackButton: false,
         leading: leading ?? const AppBackButton(),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(28.w, 0, 28.w, 48.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Padding(
-                padding: EdgeInsets.only(top: 20.h, bottom: 40.h),
-                child: Image.asset(
-                  'assets/logo.png',
-                  height: 120.h,
-                  fit: BoxFit.contain,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AuthBrandBackground(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Hero zone: branding on the circles background
+              SizedBox(
+                height: heroHeight,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 28.w),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/logo.png',
+                        height: 72.h,
+                        fit: BoxFit.contain,
+                      ),
+                      SizedBox(height: 20.h),
+                      Text(
+                        title,
+                        style: AppTextStyles.displayMd,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Text(title, style: AppTextStyles.displayMd),
-            gapH8,
-            Text(
-              subtitle,
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+              // Form card: floats up from the bottom
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28.r),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        blurRadius: 40,
+                        offset: const Offset(0, -12),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      24.w,
+                      32.h,
+                      24.w,
+                      MediaQuery.viewInsetsOf(context).bottom + 32.h,
+                    ),
+                    child: body,
+                  ),
+                ),
               ),
-            ),
-            SizedBox(height: 48.h),
-            body,
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
+}
+
+/// Shared brand circle background used across all auth and onboarding screens.
+class AuthBrandBackground extends StatelessWidget {
+  const AuthBrandBackground({super.key, this.intensity = 1.0});
+
+  final double intensity;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: MediaQuery.sizeOf(context),
+      painter: _BrandCirclesPainter(intensity: intensity),
+    );
+  }
+}
+
+class _BrandCirclesPainter extends CustomPainter {
+  const _BrandCirclesPainter({this.intensity = 1.0});
+
+  final double intensity;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    void circle(double cx, double cy, double r, Color color) =>
+        canvas.drawCircle(Offset(cx, cy), r, Paint()..color = color.withValues(alpha: color.a * intensity));
+
+    circle(size.width * 0.88, size.height * -0.04, size.width * 0.72, AppColors.primary.withValues(alpha: 0.13));
+    circle(size.width * -0.10, size.height * 0.12, size.width * 0.45, AppColors.secondary.withValues(alpha: 0.14));
+    circle(size.width * 1.05, size.height * 0.38, size.width * 0.28, AppColors.primaryMid.withValues(alpha: 0.09));
+    circle(size.width * 0.75, size.height * 0.28, size.width * 0.06, AppColors.secondary.withValues(alpha: 0.15));
+    circle(size.width * 0.15, size.height * 0.88, size.width * 0.40, AppColors.primary.withValues(alpha: 0.06));
+  }
+
+  @override
+  bool shouldRepaint(covariant _BrandCirclesPainter old) => old.intensity != intensity;
 }
 
 /// Rounded filled text field with editorial label and proper border states

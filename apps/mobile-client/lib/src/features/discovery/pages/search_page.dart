@@ -203,115 +203,124 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
             ),
           ),
-          gapH12,
-
-          // Category chips
-          salonsAsync.maybeWhen(
-            data: (resource) {
-              if (categories.isEmpty) return const SizedBox.shrink();
-              return SizedBox(
-                height: 40.h,
-                child: ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
-                  separatorBuilder: (_, _) => gapW8,
-                  itemBuilder: (_, i) {
-                    final cat = categories[i];
-                    final active = _activeCategory == cat;
-                    return GestureDetector(
-                      onTap: () =>
-                          setState(() => _activeCategory = active ? null : cat),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 8.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.primary : AppColors.surface,
-                          borderRadius: BorderRadius.circular(12.r),
-                          boxShadow: active ? null : AppShadows.sm,
-                        ),
-                        child: Text(
-                          cat,
-                          style: AppTextStyles.labelMd.copyWith(
-                            color: active
-                                ? AppColors.white
-                                : AppColors.onSurface,
+          // Results — only show when the user has typed or selected a filter
+          Expanded(
+            child: _query.isEmpty && _activeCategory == null
+                ? _SearchIdleState(
+                    categories: categories,
+                    onCategoryTap: (cat) => setState(() => _activeCategory = cat),
+                  )
+                : Column(
+                    children: [
+                      // Category chips — only shown when actively searching
+                      if (categories.isNotEmpty) ...[
+                        SizedBox(
+                          height: 40.h,
+                          child: ListView.separated(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: categories.length,
+                            separatorBuilder: (_, _) => gapW8,
+                            itemBuilder: (_, i) {
+                              final cat = categories[i];
+                              final active = _activeCategory == cat;
+                              return GestureDetector(
+                                onTap: () => setState(
+                                    () => _activeCategory = active ? null : cat),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 160),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 8.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: active
+                                        ? AppColors.primary
+                                        : AppColors.surface,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    boxShadow: active ? null : AppShadows.sm,
+                                  ),
+                                  child: Text(
+                                    cat,
+                                    style: AppTextStyles.labelMd.copyWith(
+                                      color: active
+                                          ? AppColors.white
+                                          : AppColors.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-            orElse: () => const SizedBox.shrink(),
-          ),
-          gapH12,
+                        gapH12,
+                      ],
+                      Expanded(
+                        child: AppAsyncView(
+                          value: salonsAsync,
+                          keepDataOnReload: true,
+                          errorTitle: 'Impossible de charger les salons',
+                          serverTitle: 'La recherche est indisponible',
+                          onRetry: refreshSalons,
+                          builder: (resource) {
+                            final all =
+                                resource.data?.items.toList() ??
+                                const <SalonSummaryListResponseItemsInner>[];
+                            final results = all.where((s) {
+                              final q = _query.toLowerCase();
+                              final matchQ =
+                                  q.isEmpty ||
+                                  s.name.toLowerCase().contains(q) ||
+                                  s.category.toLowerCase().contains(q) ||
+                                  (s.neighborhood ?? '').toLowerCase().contains(q) ||
+                                  s.city.toLowerCase().contains(q);
+                              final matchCat =
+                                  _activeCategory == null ||
+                                  s.category == _activeCategory;
+                              return matchQ && matchCat;
+                            }).toList();
 
-          // Results
-          Expanded(
-            child: AppAsyncView(
-              value: salonsAsync,
-              errorTitle: 'Impossible de charger les salons',
-              serverTitle: 'La recherche est indisponible',
-              onRetry: refreshSalons,
-              builder: (resource) {
-                final all =
-                    resource.data?.items.toList() ??
-                    const <SalonSummaryListResponseItemsInner>[];
-                final results = all.where((s) {
-                  final q = _query.toLowerCase();
-                  final matchQ =
-                      q.isEmpty ||
-                      s.name.toLowerCase().contains(q) ||
-                      s.category.toLowerCase().contains(q) ||
-                      (s.neighborhood ?? '').toLowerCase().contains(q) ||
-                      s.city.toLowerCase().contains(q);
-                  final matchCat =
-                      _activeCategory == null || s.category == _activeCategory;
-
-                  return matchQ && matchCat;
-                }).toList();
-
-                return RefreshIndicator.adaptive(
-                  color: AppColors.primary,
-                  onRefresh: refreshSalons,
-                  child: AppSalonListView(
-                    items: results,
-                    isStale: resource.isStale,
-                    cachedAt: resource.cachedAt,
-                    emptyState: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.55,
-                      child: const Center(
-                        child: EmptySearchState(
-                          icon: 'search',
-                          title: 'Aucun résultat',
-                          subtitle:
-                              'Essayez un autre terme ou une autre catégorie.',
+                            return RefreshIndicator.adaptive(
+                              color: AppColors.primary,
+                              onRefresh: refreshSalons,
+                              child: AppSalonListView(
+                                items: results,
+                                isStale: resource.isStale,
+                                cachedAt: resource.cachedAt,
+                                emptyState: SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.55,
+                                  child: const Center(
+                                    child: EmptySearchState(
+                                      icon: 'search',
+                                      title: 'Aucun résultat',
+                                      subtitle:
+                                          'Essayez un autre terme ou une autre catégorie.',
+                                    ),
+                                  ),
+                                ),
+                                itemBuilder: (context, i, salon) => SalonListCard(
+                                  salon: salon,
+                                  onTap: () =>
+                                      context.push(AppRoutes.salon(salon.id)),
+                                  height: 88.h,
+                                  radius: 18.r,
+                                  trailing: Padding(
+                                    padding: EdgeInsets.only(right: 14.w),
+                                    child: AppIcon(
+                                      'chevron-right',
+                                      size: 16,
+                                      color: AppColors.outline,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    ),
-                    itemBuilder: (context, i, salon) => SalonListCard(
-                      salon: salon,
-                      onTap: () => context.push(AppRoutes.salon(salon.id)),
-                      height: 88.h,
-                      radius: 18.r,
-                      trailing: Padding(
-                        padding: EdgeInsets.only(right: 14.w),
-                        child: AppIcon(
-                          'chevron-right',
-                          size: 16,
-                          color: AppColors.outline,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -393,6 +402,105 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     );
     if (!mounted || selected == null) return;
     setState(() => _activeCategory = selected.isEmpty ? null : selected);
+  }
+}
+
+class _SearchIdleState extends StatelessWidget {
+  const _SearchIdleState({
+    this.categories = const [],
+    this.onCategoryTap,
+  });
+
+  final List<String> categories;
+  final void Function(String)? onCategoryTap;
+
+  static const _popularCategories = [
+    'Coiffure',
+    'Esthétique',
+    'Ongles',
+    'Spa',
+    'Maquillage',
+    'Barbier',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final suggestions = categories.isNotEmpty
+        ? categories.take(8).toList()
+        : _popularCategories;
+
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(28.w, 28.h, 28.w, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: AppIconBox(
+                circle: true,
+                size: 64.r,
+                color: AppColors.primaryLight,
+                child: AppIcon('search', size: 26, color: AppColors.primary),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'Trouvez votre salon',
+              style: AppTextStyles.headlineSm,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Tapez un nom, un quartier, ou choisissez une catégorie ci-dessous.',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32.h),
+            Text(
+              'CATÉGORIES POPULAIRES',
+              style: AppTextStyles.labelSm.copyWith(
+                color: AppColors.onSurfaceVariant,
+                letterSpacing: 1.2,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: suggestions.map((cat) {
+                return GestureDetector(
+                  onTap: () => onCategoryTap?.call(cat),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 10.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: AppShadows.sm,
+                      border: Border.all(
+                        color: AppColors.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      cat,
+                      style: AppTextStyles.labelMd.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -100,6 +100,7 @@ export interface CurrentUser {
 export const CurrentUserRoleEnum = {
     Client: 'client',
     SalonStaff: 'salon_staff',
+    SalonManager: 'salon_manager',
     SalonOwner: 'salon_owner',
     PlatformAdmin: 'platform_admin'
 } as const;

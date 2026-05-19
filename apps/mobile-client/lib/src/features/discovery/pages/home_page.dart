@@ -57,6 +57,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final bottomNavClearance = bottomInset + 92.h;
     final nearbyAsync = ref.watch(nearbyProvider);
     final topRatedAsync = ref.watch(topRatedProvider);
     final trendingAsync = ref.watch(trendingProvider);
@@ -193,11 +195,35 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ],
 
-            // Prestige — always #2 (or #1 when no nearby)
+            // Trending — #2 (horizontal carousel, before prestige)
             if (!showGlobalLoading && !showGlobalError)
-            if (prestigeAsync.asData?.value.isNotEmpty == true ||
-                prestigeAsync.isLoading ||
-                prestigeAsync.hasError) ...[
+            if (hasTrendingData || trendingAsync.isLoading) ...[
+              _SectionHeaderSliver(
+                title: 'Tendance',
+                action: 'Tout voir',
+                onAction: () => context.push(AppRoutes.salonsTrending),
+              ),
+              _TrendingSalonSliver(salonsAsync: trendingAsync, onRetry: refreshAll),
+            ],
+
+            // Top-rated — always visible
+            if (!showGlobalLoading && !showGlobalError)
+            _SectionHeaderSliver(
+              title: 'Les mieux notés',
+              action: 'Tout voir',
+              onAction: () => context.push(AppRoutes.salonsTopRated),
+            ),
+            if (!showGlobalLoading && !showGlobalError)
+            _SalonListSliver(
+              salonsAsync: topRatedAsync,
+              take: 3,
+              showDistance: false,
+              onRetry: refreshAll,
+            ),
+
+            // Prestige — horizontal carousel at the bottom
+            if (!showGlobalLoading && !showGlobalError)
+            if (hasPrestigeData || prestigeAsync.isLoading || prestigeAsync.hasError) ...[
               _SectionHeaderSliver(
                 title: 'Adresses prestige',
                 action: 'Tout voir',
@@ -221,32 +247,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ],
 
-            // Top-rated — always visible
-            if (!showGlobalLoading && !showGlobalError)
-            _SectionHeaderSliver(
-              title: 'Les mieux notés',
-              action: 'Tout voir',
-              onAction: () => context.push(AppRoutes.salonsTopRated),
-            ),
-            if (!showGlobalLoading && !showGlobalError)
-            _SalonListSliver(
-              salonsAsync: topRatedAsync,
-              take: 3,
-              showDistance: false,
-              onRetry: refreshAll,
-            ),
-
-            // Trending — horizontal carousel (distinct card style)
-            if (!showGlobalLoading && !showGlobalError)
-            _SectionHeaderSliver(
-              title: 'Tendance',
-              action: 'Tout voir',
-              onAction: () => context.push(AppRoutes.salonsTrending),
-            ),
-            if (!showGlobalLoading && !showGlobalError)
-            _TrendingSalonSliver(salonsAsync: trendingAsync, onRetry: refreshAll),
-
-            SliverPadding(padding: EdgeInsets.only(bottom: 100.h)),
+            SliverPadding(padding: EdgeInsets.only(bottom: bottomNavClearance)),
           ],
         ),
       ),

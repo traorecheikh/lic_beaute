@@ -22,6 +22,7 @@ Name | Type
 `subscriptionTier` | string
 `isVisibleInMarketplace` | boolean
 `canReceiveBookings` | boolean
+`approvalStatus` | string
 `teamDisplay` | [SalonDetailTeamDisplay](SalonDetailTeamDisplay.md)
 `gallery` | Array&lt;string&gt;
 `hours` | [Array&lt;ProSalonProfileHoursInner&gt;](ProSalonProfileHoursInner.md)
@@ -49,6 +50,7 @@ const example = {
   "subscriptionTier": null,
   "isVisibleInMarketplace": null,
   "canReceiveBookings": null,
+  "approvalStatus": null,
   "teamDisplay": null,
   "gallery": null,
   "hours": null,

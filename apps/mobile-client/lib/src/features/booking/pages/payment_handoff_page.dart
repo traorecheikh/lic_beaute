@@ -34,7 +34,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   static const Map<String, String> _channelLabels = {
     'wave': 'Wave',
     'orange_money': 'Orange Money',
-    'free_money': 'Free Money',
   };
 
   @override
@@ -168,8 +167,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                     id: 'wave',
                     label: 'Wave',
                     subtitle: 'Paiement mobile rapide',
-                    icon: 'sparkle',
-                    iconColor: const Color(0xFF1DB0F5),
+                    logoAsset: 'assets/wave.png',
                     selected: _selectedMethod == 'wave',
                     onTap: () => setState(() => _selectedMethod = 'wave'),
                   ),
@@ -178,21 +176,10 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                     id: 'orange_money',
                     label: 'Orange Money',
                     subtitle: 'Paiement mobile Orange',
-                    icon: 'star',
-                    iconColor: const Color(0xFFFF6B00),
+                    logoAsset: 'assets/om.png',
                     selected: _selectedMethod == 'orange_money',
                     onTap: () =>
                         setState(() => _selectedMethod = 'orange_money'),
-                  ),
-                  SizedBox(height: 10.h),
-                  _MethodTile(
-                    id: 'free_money',
-                    label: 'Free Money',
-                    subtitle: 'Paiement mobile Free',
-                    icon: 'user',
-                    iconColor: const Color(0xFF16A34A),
-                    selected: _selectedMethod == 'free_money',
-                    onTap: () => setState(() => _selectedMethod = 'free_money'),
                   ),
                 ],
               ),
@@ -218,13 +205,18 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   Future<void> _pay() async {
     setState(() => _isProcessing = true);
     try {
-      final url = await ref
+      final paymentResult = await ref
           .read(paymentInitiateProvider.notifier)
           .initiate(bookingId: widget.bookingId, channel: _selectedMethod!);
+      final url = paymentResult?['redirectUrl'] as String?;
+      final paymentId = paymentResult?['paymentId'] as String?;
       if (!context.mounted) return;
       if (url != null) {
         final uri = Uri.parse(url);
         if (uri.scheme == 'mock') {
+          if (paymentId != null && paymentId.isNotEmpty) {
+            await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
+          }
           if (!mounted) return;
           context.pushReplacement(AppRoutes.success(widget.bookingId));
           return;
@@ -289,7 +281,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     if (_channelLabels.containsKey(provider)) return provider;
     final label = (method.label as String?)?.toLowerCase() ?? '';
     if (label.contains('orange')) return 'orange_money';
-    if (label.contains('free')) return 'free_money';
     if (label.contains('wave')) return 'wave';
     if (provider == 'om') return 'orange_money';
     return null;
@@ -301,14 +292,13 @@ class _MethodTile extends StatelessWidget {
     required this.id,
     required this.label,
     required this.subtitle,
-    required this.icon,
-    required this.iconColor,
+    required this.logoAsset,
     required this.selected,
     required this.onTap,
   });
 
-  final String id, label, subtitle, icon;
-  final Color iconColor;
+  final String id, label, subtitle;
+  final String logoAsset;
   final bool selected;
   final VoidCallback onTap;
 
@@ -335,10 +325,14 @@ class _MethodTile extends StatelessWidget {
               width: 44.r,
               height: 44.r,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
+                color: AppColors.surfaceVariant,
                 shape: BoxShape.circle,
               ),
-              child: Center(child: AppIcon(icon, color: iconColor, size: 22)),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: EdgeInsets.all(8.r),
+                child: Image.asset(logoAsset, fit: BoxFit.contain),
+              ),
             ),
             SizedBox(width: 14.w),
             Expanded(

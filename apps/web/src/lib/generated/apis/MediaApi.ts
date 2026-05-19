@@ -19,11 +19,6 @@ import {
     ApiErrorToJSON,
 } from '../models/ApiError';
 import {
-    type ApiV1MediaMediaIdCompletePost200Response,
-    ApiV1MediaMediaIdCompletePost200ResponseFromJSON,
-    ApiV1MediaMediaIdCompletePost200ResponseToJSON,
-} from '../models/ApiV1MediaMediaIdCompletePost200Response';
-import {
     type ApiV1MediaUploadIntentPost201Response,
     ApiV1MediaUploadIntentPost201ResponseFromJSON,
     ApiV1MediaUploadIntentPost201ResponseToJSON,
@@ -33,6 +28,11 @@ import {
     ApiV1MediaUploadIntentPostRequestFromJSON,
     ApiV1MediaUploadIntentPostRequestToJSON,
 } from '../models/ApiV1MediaUploadIntentPostRequest';
+import {
+    type ApiV1MediaUploadPost201Response,
+    ApiV1MediaUploadPost201ResponseFromJSON,
+    ApiV1MediaUploadPost201ResponseToJSON,
+} from '../models/ApiV1MediaUploadPost201Response';
 import {
     type ApiV1SalonsSalonIdPublicMediaGet200Response,
     ApiV1SalonsSalonIdPublicMediaGet200ResponseFromJSON,
@@ -63,6 +63,12 @@ export interface ApiV1MediaMediaIdGetRequest {
 
 export interface ApiV1MediaUploadIntentPostOperationRequest {
     apiV1MediaUploadIntentPostRequest: ApiV1MediaUploadIntentPostRequest;
+}
+
+export interface ApiV1MediaUploadPostRequest {
+    purpose: ApiV1MediaUploadPostPurposeEnum;
+    file?: any | null;
+    salonId?: string;
 }
 
 export interface ApiV1SalonsSalonIdPublicMediaGetRequest {
@@ -112,17 +118,17 @@ export class MediaApi extends runtime.BaseAPI {
     /**
      * Confirm upload completed — triggers admin review
      */
-    async apiV1MediaMediaIdCompletePostRaw(requestParameters: ApiV1MediaMediaIdCompletePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1MediaMediaIdCompletePost200Response>> {
+    async apiV1MediaMediaIdCompletePostRaw(requestParameters: ApiV1MediaMediaIdCompletePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1MediaUploadPost201Response>> {
         const requestOptions = await this.apiV1MediaMediaIdCompletePostRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1MediaMediaIdCompletePost200ResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1MediaUploadPost201ResponseFromJSON(jsonValue));
     }
 
     /**
      * Confirm upload completed — triggers admin review
      */
-    async apiV1MediaMediaIdCompletePost(requestParameters: ApiV1MediaMediaIdCompletePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1MediaMediaIdCompletePost200Response> {
+    async apiV1MediaMediaIdCompletePost(requestParameters: ApiV1MediaMediaIdCompletePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1MediaUploadPost201Response> {
         const response = await this.apiV1MediaMediaIdCompletePostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -289,6 +295,85 @@ export class MediaApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for apiV1MediaUploadPost without sending the request
+     */
+    async apiV1MediaUploadPostRequestOpts(requestParameters: ApiV1MediaUploadPostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['purpose'] == null) {
+            throw new runtime.RequiredError(
+                'purpose',
+                'Required parameter "purpose" was null or undefined when calling apiV1MediaUploadPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'multipart/form-data' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['file'] != null) {
+            formParams.append('file', requestParameters['file'] as any);
+                    }
+
+        if (requestParameters['purpose'] != null) {
+            formParams.append('purpose', requestParameters['purpose'] as any);
+        }
+
+        if (requestParameters['salonId'] != null) {
+            formParams.append('salonId', requestParameters['salonId'] as any);
+        }
+
+
+        let urlPath = `/api/v1/media/upload`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * Upload media through API (adapter-aware: local/noop/r2)
+     */
+    async apiV1MediaUploadPostRaw(requestParameters: ApiV1MediaUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1MediaUploadPost201Response>> {
+        const requestOptions = await this.apiV1MediaUploadPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1MediaUploadPost201ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Upload media through API (adapter-aware: local/noop/r2)
+     */
+    async apiV1MediaUploadPost(requestParameters: ApiV1MediaUploadPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1MediaUploadPost201Response> {
+        const response = await this.apiV1MediaUploadPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for apiV1SalonsSalonIdPublicMediaGet without sending the request
      */
     async apiV1SalonsSalonIdPublicMediaGetRequestOpts(requestParameters: ApiV1SalonsSalonIdPublicMediaGetRequest): Promise<runtime.RequestOpts> {
@@ -334,3 +419,15 @@ export class MediaApi extends runtime.BaseAPI {
     }
 
 }
+
+/**
+ * @export
+ */
+export const ApiV1MediaUploadPostPurposeEnum = {
+    SalonCover: 'salon_cover',
+    SalonLogo: 'salon_logo',
+    SalonGallery: 'salon_gallery',
+    KycDocument: 'kyc_document',
+    Avatar: 'avatar'
+} as const;
+export type ApiV1MediaUploadPostPurposeEnum = typeof ApiV1MediaUploadPostPurposeEnum[keyof typeof ApiV1MediaUploadPostPurposeEnum];

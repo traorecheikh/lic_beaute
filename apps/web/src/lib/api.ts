@@ -22,6 +22,16 @@ type PaginatedResponse<T> = {
   total: number;
 };
 
+export type EmailAuditItem = {
+  id: string;
+  to: string;
+  subject: string;
+  driver: string;
+  status: string;
+  errorMessage: string | null;
+  createdAt: string;
+};
+
 type AdminSubscriptionListResponse = {
   summary: {
     premiumCount: number;
@@ -222,6 +232,14 @@ export async function fetchAuditDetail(token: string, auditId: string) {
   });
 }
 
+export async function fetchEmailAuditEvents(token: string, query: Record<string, string | undefined>) {
+  return request<PaginatedResponse<EmailAuditItem>>(
+    "/api/v1/admin/audit/email",
+    { headers: authHeaders(token) },
+    query
+  );
+}
+
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 type PublicPricing = {
@@ -290,6 +308,28 @@ export async function deletePlatformRequiredDocument(token: string, id: string) 
   });
 }
 
+
+export async function fetchPublicRegistrationDocs(): Promise<{ id: string; label: string; description?: string }[]> {
+  return request<{ id: string; label: string; description?: string }[]>("/api/v1/platform/registration-docs", { method: "GET" });
+}
+
+export async function fetchPublicCategories(): Promise<{ id: string; name: string }[]> {
+  return request<{ id: string; name: string }[]>("/api/v1/platform/categories", { method: "GET" });
+}
+
+export async function uploadRegistrationDoc(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch(`${apiBaseUrl}/api/v1/auth/upload-registration-doc`, {
+    method: "POST",
+    body: formData
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({})) as { message?: string };
+    throw new ApiError(response.status, "upload_failed", payload.message ?? "Téléversement impossible.");
+  }
+  return response.json() as Promise<{ url: string }>;
+}
 
 export async function changePassword(token: string, currentPassword: string, newPassword: string) {
   return request<CurrentUser>("/api/v1/me", {

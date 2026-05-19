@@ -48,6 +48,12 @@ export interface RegisterInputAnyOf1Salon {
      * @type {string}
      * @memberof RegisterInputAnyOf1Salon
      */
+    neighborhood?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RegisterInputAnyOf1Salon
+     */
     description?: string;
 }
 
@@ -76,6 +82,7 @@ export function RegisterInputAnyOf1SalonFromJSONTyped(json: any, ignoreDiscrimin
         'category': json['category'],
         'city': json['city'],
         'address': json['address'],
+        'neighborhood': json['neighborhood'] == null ? undefined : json['neighborhood'],
         'description': json['description'] == null ? undefined : json['description'],
     };
 }
@@ -95,6 +102,7 @@ export function RegisterInputAnyOf1SalonToJSONTyped(value?: RegisterInputAnyOf1S
         'category': value['category'],
         'city': value['city'],
         'address': value['address'],
+        'neighborhood': value['neighborhood'],
         'description': value['description'],
     };
 }

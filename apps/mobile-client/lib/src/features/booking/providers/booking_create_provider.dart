@@ -47,7 +47,7 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   @override
   Future<Map<String, dynamic>?> build() async => null;
 
-  Future<String?> initiate({
+  Future<Map<String, dynamic>?> initiate({
     required String bookingId,
     required String channel,
   }) async {
@@ -64,7 +64,12 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
       );
       return response.data;
     });
-    return state.asData?.value?['redirectUrl'] as String?;
+    return state.asData?.value;
+  }
+
+  Future<void> reconcile(String paymentId) async {
+    final dio = ref.read(dioProvider);
+    await dio.post('/api/v1/payments/$paymentId/reconcile', data: const {});
   }
 }
 
