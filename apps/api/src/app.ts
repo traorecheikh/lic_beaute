@@ -139,6 +139,23 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
     reply.header("x-request-id", request.id);
   });
   app.decorate("redisEnabled", redisEnabled);
+
+  // Allow DELETE (and other bodyless) requests that mistakenly carry
+  // Content-Type: application/json with no body (FST_ERR_CTP_EMPTY_JSON_BODY).
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
+    const raw = body as string;
+    if (!raw || raw.trim() === "") {
+      done(null, undefined);
+      return;
+    }
+    try {
+      done(null, JSON.parse(raw));
+    } catch {
+      const err = Object.assign(new Error("Invalid JSON body"), { statusCode: 400 });
+      done(err, undefined);
+    }
+  });
+
   await app.register(multipart, {
     limits: {
       fileSize: config.maxUploadBytes,

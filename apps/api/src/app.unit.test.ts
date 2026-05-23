@@ -15,6 +15,7 @@ function makeAppStub() {
       hooks[name].push(fn);
       return app;
     }),
+    addContentTypeParser: vi.fn(),
     decorate: vi.fn(),
     get: vi.fn((path: string, _h: (...args: any[]) => any) => {
       getRoutes.push(path);

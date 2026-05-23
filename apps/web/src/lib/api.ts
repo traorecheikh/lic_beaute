@@ -86,7 +86,7 @@ async function request<T>(path: string, options: RequestInit = {}, query?: Recor
   const response = await fetch(buildUrl(path, query), {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(options.body != null ? { "Content-Type": "application/json" } : {}),
       ...(options.headers ?? {})
     }
   });
