@@ -1,5 +1,5 @@
 services:
-  postgres:
+  beauteave-db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -13,8 +13,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_internal
 
-  redis:
+  beauteave-redis:
     image: redis:7-alpine
     restart: unless-stopped
     command:
@@ -32,6 +34,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - app_internal
 
   api:
     image: ghcr.io/traorecheikh/lic_beaute:latest
@@ -53,7 +57,7 @@ services:
       - traefik.http.services.beauteavenue.loadbalancer.server.url=http://api:3000
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@beauteave-db:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       WEB_ORIGIN: ${WEB_ORIGIN}
@@ -72,7 +76,7 @@ services:
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       STORAGE_PATH: /app/uploads
       MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-http://localhost:3000}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_URL: ${REDIS_URL:-redis://beauteave-redis:6379}
       CACHE_ENABLED: ${CACHE_ENABLED:-true}
       CACHE_TTL_CATALOG_SECONDS: ${CACHE_TTL_CATALOG_SECONDS:-45}
       CACHE_TTL_KPI_SECONDS: ${CACHE_TTL_KPI_SECONDS:-20}
@@ -82,11 +86,12 @@ services:
     volumes:
       - media_uploads:/app/uploads
     depends_on:
-      postgres:
+      beauteave-db:
         condition: service_healthy
-      redis:
+      beauteave-redis:
         condition: service_healthy
     networks:
+      - app_internal
       - coolify
 
   worker:
@@ -96,7 +101,7 @@ services:
     command: ["node", "dist/worker.js"]
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@beauteave-db:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-noop}
@@ -113,7 +118,7 @@ services:
       PAYMENT_DRIVER: ${PAYMENT_DRIVER:-mock}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       STORAGE_PATH: /app/uploads
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_URL: ${REDIS_URL:-redis://beauteave-redis:6379}
       WORKER_DRIVER: ${WORKER_DRIVER:-hybrid}
       QUEUE_CONCURRENCY_PAYMENTS: ${QUEUE_CONCURRENCY_PAYMENTS:-3}
       QUEUE_CONCURRENCY_NOTIFICATIONS: ${QUEUE_CONCURRENCY_NOTIFICATIONS:-8}
@@ -122,12 +127,16 @@ services:
     volumes:
       - media_uploads:/app/uploads
     depends_on:
-      postgres:
+      beauteave-db:
         condition: service_healthy
-      redis:
+      beauteave-redis:
         condition: service_healthy
+    networks:
+      - app_internal
 
 networks:
+  app_internal:
+    driver: bridge
   coolify:
     external: true
 
