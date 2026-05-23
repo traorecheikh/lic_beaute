@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import {
+  paymentProviderSchema,
+  paymentStatusSchema,
   salonApprovalStatusSchema,
   subscriptionStatusSchema,
   subscriptionTierSchema
@@ -251,4 +253,40 @@ export type AdminSubscriptionOverrideInput = z.infer<typeof adminSubscriptionOve
 export type BillingInvoice = z.infer<typeof billingInvoiceSchema>;
 export type AdminAuditFilters = z.infer<typeof adminAuditFiltersSchema>;
 export type AdminAuditSummary = z.infer<typeof adminAuditSummarySchema>;
+export const adminManualExtendInputSchema = z.object({
+  amountXof: z.number().int().positive(),
+  durationDays: z.number().int().positive(),
+  reason: z.string().trim().min(3).max(500),
+  reference: z.string().trim().min(1).max(200),
+  effectiveDate: z.string().datetime().optional()
+});
+
+export const adminManualExtendResponseSchema = z.object({
+  id: z.string(),
+  subscriptionId: z.string(),
+  salonId: z.string(),
+  previousExpiresAt: z.string().datetime().nullable(),
+  newExpiresAt: z.string().datetime(),
+  amountXof: z.number().int().positive(),
+  durationDays: z.number().int().positive(),
+  reference: z.string(),
+  chargeId: z.string(),
+  invoiceId: z.string()
+});
+
+export const adminSubscriptionChargeStatusSchema = z.object({
+  chargeId: z.string(),
+  status: paymentStatusSchema,
+  provider: paymentProviderSchema,
+  amountXof: z.number().int().nonnegative(),
+  chargeType: z.enum(["upgrade", "renewal"]),
+  subscriptionId: z.string(),
+  subscriptionStatus: subscriptionStatusSchema,
+  tier: subscriptionTierSchema,
+  expiresAt: z.string().datetime().nullable()
+});
+
+export type AdminManualExtendInput = z.infer<typeof adminManualExtendInputSchema>;
+export type AdminManualExtendResponse = z.infer<typeof adminManualExtendResponseSchema>;
+export type AdminSubscriptionChargeStatus = z.infer<typeof adminSubscriptionChargeStatusSchema>;
 export type AdminAuditDetail = z.infer<typeof adminAuditDetailSchema>;

@@ -267,8 +267,9 @@ export const proSubscriptionCheckoutInputSchema = z.object({
 });
 
 export const proSubscriptionCheckoutResultSchema = z.object({
-  redirectUrl: z.string().url(),
-  chargeId: z.string()
+  redirectUrl: z.string().url().nullable(),
+  chargeId: z.string(),
+  resumed: z.boolean().optional()
 });
 
 export const proInvoiceSchema = z.object({

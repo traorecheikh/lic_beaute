@@ -689,6 +689,29 @@ export class PaymentController {
     if (charge.status === newStatus) return;
     if (charge.status === "refunded") return;
 
+    // Capture owner contact before transaction for email notification
+    let ownerContact: { email: string | null; fullName: string | null; salonName: string | null } = { email: null, fullName: null, salonName: null };
+    try {
+      const sub = await prisma.subscription.findUnique({
+        where: { id: charge.subscriptionId },
+        select: {
+          salon: { select: { id: true, name: true } },
+          tier: true
+        }
+      });
+      if (sub) {
+        const owner = await prisma.user.findFirst({
+          where: { salonId: sub.salon.id, role: "salon_owner" },
+          select: { email: true, fullName: true }
+        });
+        if (owner) {
+          ownerContact = { email: owner.email, fullName: owner.fullName, salonName: sub.salon?.name ?? null };
+        }
+      }
+    } catch {
+      // Email is non-critical; continue processing
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.subscriptionCharge.update({
         where: { id: charge.id },
@@ -751,6 +774,46 @@ export class PaymentController {
         }
       });
     });
+
+    // Send email notification after transaction completes
+    if (ownerContact.email) {
+      const ownerName = ownerContact.fullName ?? "";
+      const salonName = ownerContact.salonName ?? "Votre salon";
+
+      if (newStatus === "succeeded") {
+        const chargeTypeLabel = charge.chargeType === "upgrade" ? "Passage Premium" : "Renouvellement";
+        await sendEmail({
+          to: ownerContact.email,
+          subject: "Paiement abonnement confirmé — Beauté Avenue",
+          text:
+            `Bonjour ${ownerName},\n\n` +
+            `Le paiement de votre abonnement pour "${salonName}" a été confirmé.\n` +
+            `Type: ${chargeTypeLabel}\n` +
+            `Montant: ${(charge.amountXof / 100).toLocaleString("fr-FR")} FCFA\n\n` +
+            `Consultez votre espace pro pour voir votre abonnement.\n\n` +
+            `— L'équipe Beauté Avenue`
+        }).catch((err) =>
+          logger.warn("_applySubscriptionChargeStatus: success email failed", {
+            err: String(err), chargeId: charge.id
+          })
+        );
+      } else if (newStatus === "failed") {
+        await sendEmail({
+          to: ownerContact.email,
+          subject: "Paiement abonnement échoué — Beauté Avenue",
+          text:
+            `Bonjour ${ownerName},\n\n` +
+            `Le paiement de votre abonnement pour "${salonName}" a échoué.\n` +
+            `Montant: ${(charge.amountXof / 100).toLocaleString("fr-FR")} FCFA\n\n` +
+            `Veuillez réessayer depuis votre espace abonnement.\n\n` +
+            `— L'équipe Beauté Avenue`
+        }).catch((err) =>
+          logger.warn("_applySubscriptionChargeStatus: failure email failed", {
+            err: String(err), chargeId: charge.id
+          })
+        );
+      }
+    }
   }
 
   private async _resolveRefundPhone(bookingId: string): Promise<string | null> {

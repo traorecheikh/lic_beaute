@@ -1676,6 +1676,34 @@ export class ProController {
     } catch (e) { handleError(e, reply); }
   }
 
+  async getChargeStatus(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!ownerOnly(role, reply)) return;
+      const params = request.params as { chargeId: string };
+      const sub = await prisma.subscription.findUnique({ where: { salonId } });
+      if (!sub) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
+      const charge = await prisma.subscriptionCharge.findUnique({
+        where: { id: params.chargeId },
+        include: { subscription: { select: { status: true, tier: true, expiresAt: true } } }
+      });
+      if (!charge || charge.subscriptionId !== sub.id) {
+        fail(reply, 404, "charge_not_found", "Paiement introuvable."); return;
+      }
+      ok(reply, {
+        chargeId: charge.id,
+        status: charge.status,
+        provider: charge.provider,
+        amountXof: charge.amountXof,
+        chargeType: charge.chargeType,
+        subscriptionId: charge.subscriptionId,
+        subscriptionStatus: charge.subscription?.status ?? sub.status,
+        tier: charge.subscription?.tier ?? sub.tier,
+        expiresAt: charge.subscription?.expiresAt?.toISOString() ?? null
+      });
+    } catch (e) { handleError(e, reply); }
+  }
+
   async subscriptionCheckout(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { userId, salonId, role } = await ensurePro(request);
@@ -1697,11 +1725,15 @@ export class ProController {
         where: { key: { in: ["subscription_premium_price_xof", "subscription_standard_price_xof"] } }
       });
       const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
-      // Renewal price is based on current tier; upgrade always charges premium price
       const priceKey = (body.action === "renewal" && sub.tier === "standard")
         ? "subscription_standard_price_xof"
         : "subscription_premium_price_xof";
-      const amountXof = parseInt(priceMap[priceKey] ?? "25000", 10);
+      const priceStr = priceMap[priceKey];
+      if (!priceStr) {
+        fail(reply, 500, "pricing_not_configured", "Le prix de l'abonnement n'est pas configuré. Contactez l'administrateur.");
+        return;
+      }
+      const amountXof = parseInt(priceStr, 10);
       // Stable idempotency key: month-scoped so retries within same billing cycle deduplicate
       const billingMonth = new Date().toISOString().slice(0, 7);
       const idempotencyKey = `sub-${sub.id}-${body.action}-${billingMonth}`;

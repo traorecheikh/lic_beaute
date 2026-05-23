@@ -745,6 +745,139 @@ export async function overrideSubscription(
   return getSubscriptionDetail(subscriptionId);
 }
 
+// ─── Manual extension (out-of-app payment) ────────────────────────────────────
+
+export async function manualExtendSubscription(
+  subscriptionId: string,
+  input: import("@beauteavenue/contracts").AdminManualExtendInput,
+  actorName: string
+) {
+  const sub = await prisma.subscription.findUnique({
+    where: { id: subscriptionId },
+    include: { salon: { select: { id: true, name: true } } }
+  });
+  if (!sub) return null;
+
+  const now = new Date();
+  const effectiveDate = input.effectiveDate ? new Date(input.effectiveDate) : now;
+
+  const currentExpiry = sub.expiresAt && sub.expiresAt > now ? sub.expiresAt : now;
+  const newExpiresAt = new Date(currentExpiry.getTime() + input.durationDays * 24 * 60 * 60 * 1000);
+
+  let chargeId = "";
+  let invoiceId = "";
+
+  await prisma.$transaction(async (tx) => {
+    if (sub.status === "inactive" || sub.status === "paused") {
+      await tx.salon.update({
+        where: { id: sub.salon.id },
+        data: { isVisibleInMarketplace: true, canReceiveBookings: true }
+      });
+    }
+
+    const year = new Date().getFullYear();
+    const suffix = randomBytes(4).toString("hex").toUpperCase();
+    const invoice = await tx.billingInvoice.create({
+      data: {
+        subscriptionId,
+        invoiceNumber: `BA-${year}-MANUAL-${suffix}`,
+        amountXof: input.amountXof,
+        status: "paid",
+        pdfUrl: ""
+      }
+    });
+    invoiceId = invoice.id;
+
+    const charge = await tx.subscriptionCharge.create({
+      data: {
+        subscriptionId,
+        provider: "manual",
+        status: "succeeded",
+        amountXof: input.amountXof,
+        chargeType: "renewal",
+        idempotencyKey: `manual-ext-${randomBytes(8).toString("hex")}`,
+        invoiceId: invoice.id
+      }
+    });
+    chargeId = charge.id;
+
+    await tx.subscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: "active",
+        expiresAt: newExpiresAt,
+        renewedAt: effectiveDate,
+        billingProvider: "manual",
+        autoRenew: false
+      }
+    });
+
+    await tx.subscriptionEvent.create({
+      data: {
+        subscriptionId,
+        eventType: "manual_extend",
+        summary: input.reason,
+        actorName,
+        source: "admin",
+        payloadPreview: `Manual extension: ${input.amountXof} XOF, ${input.durationDays} days, ref: ${input.reference}`
+      }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        action: "subscription.manual_extend",
+        summary: `Extension manuelle de ${input.durationDays} jours pour ${sub.salon.name} (${input.amountXof} XOF).`,
+        entityType: "subscription",
+        entityId: subscriptionId,
+        actorName,
+        severity: "info",
+        payloadJson: JSON.stringify(input),
+        relatedLinksJson: JSON.stringify([
+          { label: sub.salon.name, href: `/admin/subscriptions/${subscriptionId}` }
+        ])
+      }
+    });
+  });
+
+  const owner = await getSalonOwnerContact(sub.salon.id);
+  if (owner?.email) {
+    const expiryLabel = newExpiresAt.toLocaleDateString("fr-FR", {
+      year: "numeric", month: "long", day: "numeric"
+    });
+    await sendEmail({
+      to: owner.email,
+      subject: "Abonnement prolongé — Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Votre abonnement pour "${sub.salon.name}" a été prolongé manuellement.\n` +
+        `Montant: ${(input.amountXof / 100).toLocaleString("fr-FR")} FCFA\n` +
+        `Durée: ${input.durationDays} jours\n` +
+        `Nouvelle date d'expiration: ${expiryLabel}\n` +
+        `Motif: ${input.reason}\n` +
+        `Référence: ${input.reference}\n\n` +
+        `Consultez votre espace pro pour voir votre abonnement.\n\n` +
+        `— L'équipe Beauté Avenue`
+    }).catch((err) =>
+      logger.error("manualExtendSubscription: failed to send email", {
+        err: String(err), ownerEmail: owner.email, subscriptionId
+      })
+    );
+  }
+
+  return {
+    id: sub.id,
+    subscriptionId,
+    salonId: sub.salon.id,
+    previousExpiresAt: sub.expiresAt?.toISOString() ?? null,
+    newExpiresAt: newExpiresAt.toISOString(),
+    amountXof: input.amountXof,
+    durationDays: input.durationDays,
+    reference: input.reference,
+    chargeId,
+    invoiceId
+  };
+}
+
 // ─── Audit log ────────────────────────────────────────────────────────────────
 
 export async function listAuditEvents(filters: { actor?: string; entityType?: string; action?: string }) {

@@ -161,6 +161,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/pro/subscription", (req, rep) => pro.getSubscription(req, rep));
   app.patch("/api/v1/pro/subscription", (req, rep) => pro.updateSubscription(req, rep));
   app.post("/api/v1/pro/subscription/checkout", (req, rep) => pro.subscriptionCheckout(req, rep));
+  app.get("/api/v1/pro/subscription/charge/:chargeId/status", (req, rep) => pro.getChargeStatus(req, rep));
   app.get("/api/v1/pro/payouts", (req, rep) => pro.listPayouts(req, rep));
   app.get("/api/v1/pro/invoices", (req, rep) => pro.listInvoices(req, rep));
   app.get("/api/v1/pro/invoices/:invoiceId/pdf", (req, rep) => pro.downloadInvoicePdf(req, rep));
@@ -199,6 +200,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/admin/subscriptions", (req, rep) => admin.listSubscriptions(req, rep));
   app.get("/api/v1/admin/subscriptions/:subscriptionId", (req, rep) => admin.subscriptionDetail(req, rep));
   app.post("/api/v1/admin/subscriptions/:subscriptionId/override", (req, rep) => admin.overrideSubscription(req, rep));
+  app.post("/api/v1/admin/subscriptions/:subscriptionId/manual-extend", (req, rep) => admin.manualExtendSubscription(req, rep));
   app.get("/api/v1/admin/audit", (req, rep) => admin.listAudit(req, rep));
   app.get("/api/v1/admin/audit/email", (req, rep) => admin.listEmailAudit(req, rep));
   app.get("/api/v1/admin/audit/:auditId", (req, rep) => admin.auditDetail(req, rep));

@@ -32,6 +32,7 @@ import {
   listRequiredDocuments,
   listSalonCategories,
   listSubscriptions,
+  manualExtendSubscription,
   overrideSubscription,
   rejectSalon,
   requestSalonInfo,
@@ -165,6 +166,18 @@ export class AdminController {
     if (!subscription) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
     await invalidateCacheTags(["kpi:admin", "kpi:pro"]);
     ok(reply, subscription);
+  }
+
+  async manualExtendSubscription(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    const params = request.params as { subscriptionId: string };
+    const body = (await import("@beauteavenue/contracts")).adminManualExtendInputSchema.parse(request.body);
+    const actorName = await this.resolveActorName(token.sub);
+    const result = await manualExtendSubscription(params.subscriptionId, body, actorName);
+    if (!result) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
+    await invalidateCacheTags(["kpi:admin", "kpi:pro"]);
+    ok(reply, result);
   }
 
   async listAudit(request: FastifyRequest, reply: FastifyReply) {

@@ -95,7 +95,10 @@ describe("Pro forced branches", () => {
       autoRenew: true,
       billingProvider: "manual"
     });
-    mocks.prisma.platformSetting.findMany.mockResolvedValue([]);
+    mocks.prisma.platformSetting.findMany.mockResolvedValue([
+      { key: "subscription_premium_price_xof", value: "25000" },
+      { key: "subscription_standard_price_xof", value: "15000" }
+    ]);
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
     mocks.paymentAdapter.initiateDeposit.mockResolvedValue({ providerRef: "pref-x", redirectUrl: "https://pay", expiresAt: new Date() });
     mocks.prisma.subscriptionCharge.create.mockResolvedValue({ id: "ch-x" });
