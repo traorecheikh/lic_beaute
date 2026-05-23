@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => {
   const ok = vi.fn();
   const fail = vi.fn();
   const logger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
-  const adapter: Record<string, ReturnType<typeof vi.fn> | undefined> = {
+  const adapter: Record<string, ReturnType<typeof vi.fn>> = {
     initiateDeposit: vi.fn(),
     executePayment: vi.fn(),
     getAvailableMethods: vi.fn(),
