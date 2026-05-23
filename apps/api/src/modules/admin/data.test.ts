@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => {
     auditLog: { count: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
     emailAudit: { findMany: vi.fn() },
     user: { findUnique: vi.fn(), findFirst: vi.fn() },
-    platformSetting: { create: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },
+    platformSetting: { create: vi.fn(), findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn() },
     platformSalonCategory: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
     platformRequiredDocument: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
     subscriptionCharge: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },

@@ -192,10 +192,35 @@
         <div>
           <label class="section-label mb-2 block">Fournisseur</label>
           <select v-model="paymentMethodForm.provider" class="input-shell">
-            <option value="intech">Intech (Mobile Money)</option>
-            <option value="manual">Manuel (hors ligne)</option>
+            <option v-if="features?.billingProviders?.intech" value="intech">Intech (Mobile Money)</option>
+            <option v-if="features?.billingProviders?.paydunya" value="paydunya">PayDunya (Carte ou Mobile Money)</option>
+            <option v-if="features?.billingProviders?.manual" value="manual">Manuel (hors ligne)</option>
           </select>
         </div>
+        <!-- PayDunya country + method sub-selection -->
+        <template v-if="paymentMethodForm.provider === 'paydunya'">
+          <div>
+            <label class="section-label mb-2 block">Pays</label>
+            <select v-model="paymentMethodForm.country" class="input-shell">
+              <option value="sn">Sénégal</option>
+              <option value="ci">Côte d'Ivoire</option>
+              <option value="ml">Mali</option>
+              <option value="bf">Burkina Faso</option>
+              <option value="bj">Bénin</option>
+              <option value="tg">Togo</option>
+              <option value="cm">Cameroun</option>
+            </select>
+          </div>
+          <div>
+            <label class="section-label mb-2 block">Méthode</label>
+            <select v-model="paymentMethodForm.method" class="input-shell">
+              <option value="wave">Wave</option>
+              <option value="orange_money">Orange Money</option>
+              <option value="free_money">Free Money</option>
+              <option v-if="features?.billingProviders?.card" value="paydunya_card">Carte bancaire</option>
+            </select>
+          </div>
+        </template>
         <div>
           <label class="section-label mb-2 block">Numéro de compte</label>
           <input
@@ -256,6 +281,7 @@ import {
   downloadProInvoicePdf,
   fetchProInvoices,
   fetchProSubscription,
+  fetchProSubscriptionFeatures,
   updateProSubscription
 } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
@@ -268,18 +294,29 @@ const queryClient = useQueryClient();
 const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3000";
 const showPaymentMethodModal = ref(false);
 const paymentMethodForm = reactive({
-  provider: "intech" as "intech" | "manual",
-  accountNumber: ""
+  provider: "paydunya" as string,
+  accountNumber: "",
+  country: "sn",
+  method: "wave"
 });
 
-const providerLabelMap: Record<"intech" | "manual", string> = {
-  intech: "Intech",
-  manual: "Manuel"
+const features = computed(() => featuresQuery.data.value);
+
+const providerLabelMap: Record<string, string> = {
+  paydunya: "PayDunya (Carte ou Mobile Money)",
+  intech: "Intech (Mobile Money)",
+  manual: "Manuel (hors ligne)"
 };
 
 const subscriptionQuery = useQuery({
   queryKey: ["pro-subscription"],
   queryFn: () => fetchProSubscription(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+});
+
+const featuresQuery = useQuery({
+  queryKey: ["pro-subscription-features"],
+  queryFn: () => fetchProSubscriptionFeatures(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
 });
 
@@ -301,12 +338,9 @@ const toggleMutation = useMutation({
 });
 
 const paymentMethodMutation = useMutation({
-  mutationFn: () =>
+  mutationFn: (billingMethod: Record<string, unknown>) =>
     updateProSubscription(auth.accessToken ?? "", {
-      billingMethod: {
-        provider: paymentMethodForm.provider,
-        accountNumber: paymentMethodForm.accountNumber.trim()
-      }
+      billingMethod: billingMethod as { provider: string; accountNumber: string }
     }),
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
@@ -374,36 +408,42 @@ const renewsInDays = computed<number | null>(() => {
   return diff >= 0 ? diff : null;
 });
 
-const planTiers = [
-  {
-    tier: "standard",
-    label: "Standard",
-    priceLabel: "15 000 XOF",
-    features: [
-      { label: "Agenda illimité", included: true },
-      { label: "Gestion de l'équipe", included: true },
-      { label: "Paiements Mobile Money", included: true },
-      { label: "Rapports financiers", included: false },
-      { label: "Export CSV", included: false },
-      { label: "Badge « Vérifié »", included: false },
-      { label: "Support prioritaire 24/7", included: false }
-    ]
-  },
-  {
-    tier: "premium",
-    label: "Premium",
-    priceLabel: "30 000 XOF",
-    features: [
-      { label: "Agenda illimité", included: true },
-      { label: "Gestion de l'équipe", included: true },
-      { label: "Paiements Mobile Money", included: true },
-      { label: "Rapports financiers", included: true },
-      { label: "Export CSV", included: true },
-      { label: "Badge « Vérifié »", included: true },
-      { label: "Support prioritaire 24/7", included: true }
-    ]
-  }
-] as const;
+const planTiers = computed(() => {
+  const apiTiers = featuresQuery.data.value?.planTiers;
+  if (apiTiers && apiTiers.length > 0) return apiTiers;
+
+  // Fallback while loading
+  return [
+    {
+      tier: "standard" as const,
+      label: "Standard",
+      priceLabel: "15 000 XOF",
+      features: [
+        { label: "Agenda illimité", included: true },
+        { label: "Gestion de l'équipe", included: true },
+        { label: "Acompte client", included: false },
+        { label: "Rapports financiers", included: false },
+        { label: "Export CSV", included: false },
+        { label: "Badge « Vérifié »", included: false },
+        { label: "Support prioritaire 24/7", included: false }
+      ]
+    },
+    {
+      tier: "premium" as const,
+      label: "Premium",
+      priceLabel: "30 000 XOF",
+      features: [
+        { label: "Agenda illimité", included: true },
+        { label: "Gestion de l'équipe", included: true },
+        { label: "Acompte client", included: true },
+        { label: "Rapports financiers", included: true },
+        { label: "Export CSV", included: true },
+        { label: "Badge « Vérifié »", included: true },
+        { label: "Support prioritaire 24/7", included: true }
+      ]
+    }
+  ];
+});
 
 const currentPlanLabel = computed(() => {
   const tier = subscriptionQuery.data.value?.tier ?? "standard";
@@ -491,7 +531,15 @@ function savePaymentMethod() {
     toast.error("Le numéro de compte est requis.");
     return;
   }
-  paymentMethodMutation.mutate();
+  const billingMethod: Record<string, unknown> = {
+    provider: paymentMethodForm.provider,
+    accountNumber: paymentMethodForm.accountNumber.trim()
+  };
+  if (paymentMethodForm.provider === "paydunya") {
+    billingMethod.country = paymentMethodForm.country;
+    billingMethod.method = paymentMethodForm.method;
+  }
+  paymentMethodMutation.mutate(billingMethod);
 }
 
 function clearPaymentMethod() {

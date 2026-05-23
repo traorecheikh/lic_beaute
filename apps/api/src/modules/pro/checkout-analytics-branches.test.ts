@@ -13,7 +13,8 @@ const mocks = vi.hoisted(() => {
     user: { findUnique: vi.fn() },
     booking: { findFirst: vi.fn() },
     salon: { findUnique: vi.fn() },
-    $transaction: vi.fn()
+    $transaction: vi.fn(),
+    platformSetting: { findMany: vi.fn().mockResolvedValue([]) },
   };
   return { requireRole, fail, ok, handleError, getOrSetCachedJson, getProAnalytics, invalidateCacheTags, enqueueJob, prisma };
 });

@@ -143,6 +143,37 @@ function escapePdfText(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
+type FeatureFlags = {
+  depositsEnabled: boolean;
+  depositsTierRequired: "standard" | "premium";
+  analyticsEnabled: boolean;
+  analyticsTierRequired: "standard" | "premium";
+  autoRenewEnabled: boolean;
+  billingPaydunya: boolean;
+  billingIntech: boolean;
+  billingManual: boolean;
+  cardPayments: boolean;
+};
+
+async function getFeatureFlags(): Promise<FeatureFlags> {
+  const rows = await prisma.platformSetting.findMany({
+    where: { group: "subscription_features" },
+    select: { key: true, value: true }
+  });
+  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  return {
+    depositsEnabled: parseBooleanSetting(map["feature_deposits_enabled"], true),
+    depositsTierRequired: map["feature_deposits_tier_required"] === "standard" ? "standard" : "premium",
+    analyticsEnabled: parseBooleanSetting(map["feature_analytics_enabled"], true),
+    analyticsTierRequired: map["feature_analytics_tier_required"] === "standard" ? "standard" : "premium",
+    autoRenewEnabled: parseBooleanSetting(map["feature_auto_renew_enabled"], true),
+    billingPaydunya: parseBooleanSetting(map["feature_billing_paydunya"], false),
+    billingIntech: parseBooleanSetting(map["feature_billing_intech"], true),
+    billingManual: parseBooleanSetting(map["feature_billing_manual"], true),
+    cardPayments: parseBooleanSetting(map["feature_card_payments"], false),
+  };
+}
+
 function buildInvoicePdfBuffer(input: {
   invoiceNumber: string;
   issuedAt: string;
@@ -574,11 +605,16 @@ export class ProController {
       if (!ownerOnly(role, reply)) return;
       const body = proServiceCreateInputSchema.parse(request.body);
       if (body.depositMode !== "none") {
+        const flags = await getFeatureFlags();
+        if (!flags.depositsEnabled) {
+          fail(reply, 422, "deposits_disabled", "Les acomptes sont désactivés pour le moment.");
+          return;
+        }
         const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, subscription: { select: { status: true } } } });
         if (salon?.subscription?.status !== "active") {
           fail(reply, 403, "subscription_inactive", "Abonnement inactif ou expiré."); return;
         }
-        if (salon?.subscriptionTier !== "premium") {
+        if (flags.depositsTierRequired === "premium" && salon?.subscriptionTier !== "premium") {
           fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
         }
       }
@@ -606,11 +642,16 @@ export class ProController {
       const existing = await prisma.service.findFirst({ where: { id: params.serviceId, salonId } });
       if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
       if (body.depositMode !== undefined && body.depositMode !== "none") {
+        const flags = await getFeatureFlags();
+        if (!flags.depositsEnabled) {
+          fail(reply, 422, "deposits_disabled", "Les acomptes sont désactivés pour le moment.");
+          return;
+        }
         const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, subscription: { select: { status: true } } } });
         if (salon?.subscription?.status !== "active") {
           fail(reply, 403, "subscription_inactive", "Abonnement inactif ou expiré."); return;
         }
-        if (salon?.subscriptionTier !== "premium") {
+        if (flags.depositsTierRequired === "premium" && salon?.subscriptionTier !== "premium") {
           fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
         }
       }
@@ -1601,11 +1642,16 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      const flags = await getFeatureFlags();
+      if (!flags.analyticsEnabled) {
+        fail(reply, 422, "analytics_disabled", "Les rapports sont désactivés pour le moment.");
+        return;
+      }
       const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, subscription: { select: { status: true } } } });
       if (salon?.subscription?.status !== "active") {
         fail(reply, 403, "subscription_inactive", "Abonnement inactif ou expiré."); return;
       }
-      if (salon?.subscriptionTier !== "premium") {
+      if (flags.analyticsTierRequired === "premium" && salon?.subscriptionTier !== "premium") {
         fail(reply, 402, "premium_required", "Les statistiques avancées sont réservées aux salons Premium.");
         return;
       }
@@ -1619,6 +1665,75 @@ export class ProController {
       });
       reply.header("x-cache", cacheStatus);
       ok(reply, value);
+    } catch (e) { handleError(e, reply); }
+  }
+
+  // ─── Subscription Features ───────────────────────────────────────────────
+
+  async getSubscriptionFeatures(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!ownerOnly(role, reply)) return;
+      const flags = await getFeatureFlags();
+      const salon = await prisma.salon.findUnique({
+        where: { id: salonId },
+        select: { subscriptionTier: true }
+      });
+      const tier = salon?.subscriptionTier ?? "standard";
+      const isPremium = tier === "premium";
+
+      const priceRows = await prisma.platformSetting.findMany({
+        where: { key: { in: ["subscription_standard_price_xof", "subscription_premium_price_xof"] } }
+      });
+      const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
+
+      ok(reply, {
+        deposits: {
+          enabled: flags.depositsEnabled,
+          available: flags.depositsEnabled && (flags.depositsTierRequired === "standard" || isPremium)
+        },
+        analytics: {
+          enabled: flags.analyticsEnabled,
+          available: flags.analyticsEnabled && (flags.analyticsTierRequired === "standard" || isPremium)
+        },
+        autoRenew: { enabled: flags.autoRenewEnabled },
+        billingProviders: {
+          paydunya: flags.billingPaydunya,
+          intech: flags.billingIntech,
+          manual: flags.billingManual,
+          card: flags.cardPayments
+        },
+        planTiers: [
+          {
+            tier: "standard",
+            label: "Standard",
+            priceLabel: `${priceMap["subscription_standard_price_xof"] ?? "15 000"} XOF`,
+            features: [
+              { label: "Agenda illimité", included: true },
+              { label: "Gestion de l'équipe", included: true },
+              { label: "Acompte client", included: flags.depositsEnabled && (flags.depositsTierRequired === "standard") },
+              { label: "Rapports financiers", included: flags.analyticsEnabled && (flags.analyticsTierRequired === "standard") },
+              { label: "Export CSV", included: false },
+              { label: "Badge « Vérifié »", included: false },
+              { label: "Support prioritaire 24/7", included: false }
+            ]
+          },
+          {
+            tier: "premium",
+            label: "Premium",
+            priceLabel: `${priceMap["subscription_premium_price_xof"] ?? "30 000"} XOF`,
+            features: [
+              { label: "Agenda illimité", included: true },
+              { label: "Gestion de l'équipe", included: true },
+              { label: "Acompte client", included: flags.depositsEnabled },
+              { label: "Rapports financiers", included: flags.analyticsEnabled },
+              { label: "Export CSV", included: true },
+              { label: "Badge « Vérifié »", included: true },
+              { label: "Support prioritaire 24/7", included: true }
+            ]
+          }
+        ]
+      });
     } catch (e) { handleError(e, reply); }
   }
 
@@ -1642,7 +1757,7 @@ export class ProController {
       const encryptedAccountNumber = settingMap[salonBillingAccountKey(salonId)];
       const accountNumber = encryptedAccountNumber ? decryptBillingAccount(encryptedAccountNumber) : null;
       const billingMethod = provider && accountNumber
-        ? { provider, accountNumberMasked: maskAccountNumber(accountNumber) }
+        ? { provider, accountNumberMasked: maskAccountNumber(accountNumber), country: null, method: null }
         : null;
       ok(reply, {
         id: sub.id,
@@ -1701,6 +1816,21 @@ export class ProController {
               },
               update: { value: encryptBillingAccount(body.billingMethod.accountNumber.trim()) }
             });
+            // Store country/method for PayDunya billing
+            if (body.billingMethod.country) {
+              await tx.platformSetting.upsert({
+                where: { key: `salon:${salonId}:billing_country` },
+                create: { group: "salon_billing", key: `salon:${salonId}:billing_country`, value: body.billingMethod.country, description: `Billing country for salon ${salonId}` },
+                update: { value: body.billingMethod.country }
+              });
+            }
+            if (body.billingMethod.method) {
+              await tx.platformSetting.upsert({
+                where: { key: `salon:${salonId}:billing_method` },
+                create: { group: "salon_billing", key: `salon:${salonId}:billing_method`, value: body.billingMethod.method, description: `Billing method for salon ${salonId}` },
+                update: { value: body.billingMethod.method }
+              });
+            }
           }
         }
       });

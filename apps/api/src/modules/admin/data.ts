@@ -57,12 +57,31 @@ async function writeAuditLog(entry: {
   });
 }
 
-function buildEntitlements(tier: "standard" | "premium") {
+function parseBooleanSetting(value: string | undefined, fallback: boolean) {
+  if (!value) return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "true" || normalized === "1" || normalized === "yes") return true;
+  if (normalized === "false" || normalized === "0" || normalized === "no") return false;
+  return fallback;
+}
+
+async function buildEntitlements(tier: "standard" | "premium") {
   const isPremium = tier === "premium";
+  const rows = await prisma.platformSetting.findMany({
+    where: { group: "subscription_features" },
+    select: { key: true, value: true }
+  });
+  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  const depositsEnabled = parseBooleanSetting(map["feature_deposits_enabled"], true);
+  const depositsTierRequired = map["feature_deposits_tier_required"] === "standard" ? "standard" : "premium";
+  const analyticsEnabled = parseBooleanSetting(map["feature_analytics_enabled"], true);
+  const analyticsTierRequired = map["feature_analytics_tier_required"] === "standard" ? "standard" : "premium";
+
   return [
     { label: "Badge Premium", enabled: isPremium, note: null },
     { label: "Mise en avant", enabled: isPremium, note: isPremium ? "Recommandé dans la découverte." : null },
-    { label: "Acompte client", enabled: isPremium, note: isPremium ? "Actif sur services éligibles." : null },
+    { label: "Acompte client", enabled: depositsEnabled && (depositsTierRequired === "standard" || isPremium), note: depositsEnabled ? (isPremium ? "Actif sur services éligibles." : null) : "Désactivé par l'administrateur." },
+    { label: "Rapports financiers", enabled: analyticsEnabled && (analyticsTierRequired === "standard" || isPremium), note: null },
     { label: "Galerie étendue", enabled: isPremium, note: isPremium ? null : "Limité à 3 photos." }
   ];
 }
@@ -570,7 +589,7 @@ export async function getSubscriptionDetail(subscriptionId: string): Promise<Adm
     isComplimentary: sub.isComplimentary,
     startedAt: sub.startedAt.toISOString(),
     renewedAt: sub.renewedAt?.toISOString() ?? null,
-    entitlements: buildEntitlements(sub.tier as "standard" | "premium"),
+    entitlements: await buildEntitlements(sub.tier as "standard" | "premium"),
     events: sub.events.map((e) => ({
       id: e.id,
       eventType: e.eventType,

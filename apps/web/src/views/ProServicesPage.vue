@@ -104,7 +104,7 @@
             <div class="flex items-start justify-between mb-6">
               <div>
                 <h3 class="text-xl font-bold text-espresso">{{ editingServiceId ? "Modifier la prestation" : "Nouvelle prestation" }}</h3>
-                <p class="text-[12px] text-cocoa/50 font-semibold uppercase tracking-widest mt-1">Étape {{ wizardStep }} sur 3</p>
+                <p class="text-[12px] text-cocoa/50 font-semibold uppercase tracking-widest mt-1">Étape {{ wizardStep }} sur {{ depositsAvailable ? 3 : 2 }}</p>
               </div>
               <button @click="cancelCreateService" class="p-2 hover:bg-neutral-bg rounded-full transition">
                 <XMarkIcon class="w-5 h-5 text-cocoa/40" />
@@ -114,7 +114,7 @@
             <!-- Step indicator -->
             <div class="flex items-center gap-2">
               <div
-                v-for="step in 3"
+                v-for="step in (depositsAvailable ? 3 : 2)"
                 :key="step"
                 class="flex items-center gap-2"
               >
@@ -139,7 +139,7 @@
                 >
                   {{ ['Identité', 'Tarification', 'Acompte'][step - 1] }}
                 </span>
-                <div v-if="step < 3" class="flex-1 h-px bg-outline-variant/60 mx-2 w-8"></div>
+                <div v-if="step < (depositsAvailable ? 3 : 2)" class="flex-1 h-px bg-outline-variant/60 mx-2 w-8"></div>
               </div>
             </div>
           </div>
@@ -224,8 +224,8 @@
               </div>
             </div>
 
-            <!-- Step 3: Deposit -->
-            <div v-if="wizardStep === 3" class="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <!-- Step 3: Deposit (only if available for this subscription) -->
+            <div v-if="wizardStep === 3 && depositsAvailable" class="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <!-- Service preview -->
               <div class="flex items-center gap-4 bg-neutral-bg/40 rounded-2xl px-5 py-4 border border-outline-variant/40">
                 <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -307,6 +307,13 @@
                 </button>
               </div>
             </div>
+            <!-- else: no deposit step, show submit on step 2 -->
+            <div v-if="wizardStep === 2 && !depositsAvailable" class="flex gap-3 pt-2">
+              <button type="button" @click="wizardStep = 1" class="btn-secondary h-[52px] px-6 text-sm">← Retour</button>
+              <button type="button" @click="submitService" :disabled="actionPending" class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20">
+                {{ actionPendingLabel }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -331,7 +338,7 @@ import {
   CheckIcon,
   InformationCircleIcon
 } from "@heroicons/vue/24/outline";
-import { createProService, deleteProService, fetchProServices, updateProService } from "@/lib/pro-api";
+import { createProService, deleteProService, fetchProServices, fetchProSubscriptionFeatures, updateProService } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -362,6 +369,17 @@ const servicesQuery = useQuery({
   queryKey: ["pro-services"],
   queryFn: () => fetchProServices(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken))
+});
+
+const featuresQuery = useQuery({
+  queryKey: ["pro-subscription-features"],
+  queryFn: () => fetchProSubscriptionFeatures(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken))
+});
+
+const depositsAvailable = computed(() => {
+  const f = featuresQuery.data.value as { deposits?: { available: boolean } } | undefined;
+  return f?.deposits?.available ?? false;
 });
 
 const deleteMutation = useMutation({
@@ -483,7 +501,13 @@ function cancelCreateService() {
 }
 
 function nextStep() {
-  if (wizardStep.value < 3) wizardStep.value++;
+  const maxStep = depositsAvailable.value ? 3 : 2;
+  if (wizardStep.value < maxStep) {
+    wizardStep.value++;
+  } else if (!depositsAvailable.value) {
+    // Last step reached and no deposit step: submit directly
+    submitService();
+  }
 }
 
 function submitService() {

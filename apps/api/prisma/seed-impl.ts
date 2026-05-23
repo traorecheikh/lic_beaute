@@ -793,6 +793,15 @@ async function main() {
     { group: "payment_methods", key: "paydunya_enabled_orange_senegal", value: "true", description: "Orange Money Sénégal activé" },
     { group: "payment_methods", key: "paydunya_enabled_free_senegal", value: "true", description: "Free Money Sénégal activé" },
     { group: "payment_methods", key: "paydunya_enabled_wizall_senegal", value: "true", description: "Wizall Sénégal activé" },
+    { group: "subscription_features", key: "feature_deposits_enabled", value: "true", description: "Activer les acomptes clients" },
+    { group: "subscription_features", key: "feature_deposits_tier_required", value: "premium", description: "Niveau requis pour les acomptes" },
+    { group: "subscription_features", key: "feature_analytics_enabled", value: "true", description: "Activer les rapports financiers" },
+    { group: "subscription_features", key: "feature_analytics_tier_required", value: "premium", description: "Niveau requis pour les rapports" },
+    { group: "subscription_features", key: "feature_auto_renew_enabled", value: "true", description: "Activer le renouvellement automatique" },
+    { group: "subscription_features", key: "feature_billing_paydunya", value: "false", description: "Afficher PayDunya comme mode de facturation" },
+    { group: "subscription_features", key: "feature_billing_intech", value: "true", description: "Afficher Intech comme mode de facturation" },
+    { group: "subscription_features", key: "feature_billing_manual", value: "true", description: "Afficher le mode manuel" },
+    { group: "subscription_features", key: "feature_card_payments", value: "false", description: "Activer l'option carte bancaire" },
   ];
   for (const s of platformSettings) {
     await prisma.platformSetting.upsert({ where: { key: s.key }, update: s, create: s });

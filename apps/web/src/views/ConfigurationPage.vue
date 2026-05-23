@@ -128,25 +128,6 @@
             </div>
           </div>
 
-          <!-- Payment env-vars callout -->
-          <div
-            v-if="activeTab === 'payment_methods'"
-            class="flex items-start gap-3 p-4 rounded-xl bg-espresso/[0.04] border border-espresso/10"
-          >
-            <LockClosedIcon class="w-4 h-4 text-espresso/50 shrink-0 mt-0.5" />
-            <div>
-              <p class="text-[12px] font-bold text-espresso">Identifiants marchands — variables d'environnement uniquement</p>
-              <p class="text-[11px] text-cocoa/60 mt-0.5 leading-relaxed">
-                Les clés API PayDunya sont configurées via
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">PAYDUNYA_MASTER_KEY</code>,
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">PAYDUNYA_PRIVATE_KEY</code>,
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">PAYDUNYA_TOKEN</code>
-                dans le fichier <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">.env</code> du serveur.
-                Ne jamais stocker des secrets dans la base de données.
-              </p>
-            </div>
-          </div>
-
           <!-- Notifications SMS note -->
           <div
             v-if="activeTab === 'notifications'"
@@ -414,6 +395,7 @@ import {
   InformationCircleIcon,
   LockClosedIcon,
   PlusIcon,
+  SparklesIcon,
   TagIcon,
   TrashIcon,
   XMarkIcon
@@ -492,6 +474,88 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     min: 1,
     max: 72,
     unit: 'h'
+  },
+  // ── Feature flags (subscription_features group) ─────────────────────────
+  feature_deposits_enabled: {
+    label: 'Acomptes clients',
+    description: 'Activer la fonctionnalité d\'acomptes pour les réservations en ligne.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  feature_deposits_tier_required: {
+    label: 'Niveau requis — acomptes',
+    description: 'Quel abonnement est nécessaire pour proposer des acomptes clients ?',
+    type: 'select',
+    options: [
+      { value: 'premium', label: 'Premium uniquement' },
+      { value: 'standard', label: 'Standard et Premium' }
+    ]
+  },
+  feature_analytics_enabled: {
+    label: 'Rapports financiers',
+    description: 'Activer les statistiques avancées et rapports financiers pour les salons.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  feature_analytics_tier_required: {
+    label: 'Niveau requis — rapports',
+    description: 'Quel abonnement est nécessaire pour accéder aux rapports financiers ?',
+    type: 'select',
+    options: [
+      { value: 'premium', label: 'Premium uniquement' },
+      { value: 'standard', label: 'Standard et Premium' }
+    ]
+  },
+  feature_auto_renew_enabled: {
+    label: 'Renouvellement automatique',
+    description: 'Activer la possibilité de renouvellement automatique des abonnements.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  feature_billing_paydunya: {
+    label: 'Mode de facturation — PayDunya',
+    description: 'Afficher PayDunya comme option de mode de paiement pour la facturation.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Afficher' },
+      { value: 'false', label: 'Masquer' }
+    ]
+  },
+  feature_billing_intech: {
+    label: 'Mode de facturation — Intech',
+    description: 'Afficher Intech comme option de mode de paiement pour la facturation.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Afficher' },
+      { value: 'false', label: 'Masquer' }
+    ]
+  },
+  feature_billing_manual: {
+    label: 'Mode de facturation — Manuel',
+    description: 'Afficher le mode manuel (hors ligne) comme option de mode de paiement.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Afficher' },
+      { value: 'false', label: 'Masquer' }
+    ]
+  },
+  feature_card_payments: {
+    label: 'Paiement par carte bancaire',
+    description: 'Activer l\'option carte bancaire dans PayDunya (nécessaire pour le renouvellement automatique).',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
   },
   support_email: {
     label: 'Email du support',
@@ -577,12 +641,13 @@ const tabs = [
   { id: 'categories',       label: 'Catégories Salons',       description: "Catégories disponibles lors de l'inscription d'un partenaire.", icon: TagIcon },
   { id: 'pricing',          label: 'Tarification & Frais',    description: 'Règles financières appliquées aux réservations et abonnements.', icon: CurrencyDollarIcon },
   { id: 'payment_methods',  label: 'Moyens de Paiement',      description: 'Activer/désactiver les méthodes de paiement PayDunya.',         icon: CreditCardIcon },
+  { id: 'subscription_features', label: 'Fonctionnalités',    description: 'Activer/désactiver les fonctionnalités par niveau d\'abonnement.', icon: SparklesIcon },
   { id: 'general',          label: 'Paramètres Généraux',     description: 'Coordonnées du support et règles opérationnelles globales.',     icon: Cog6ToothIcon },
 ];
 
 const activeTab = ref('documents');
 const currentTab = computed(() => tabs.find(t => t.id === activeTab.value));
-const isSettingsTab = computed(() => ['pricing', 'payment_methods', 'general'].includes(activeTab.value));
+const isSettingsTab = computed(() => ['pricing', 'payment_methods', 'subscription_features', 'general'].includes(activeTab.value));
 
 // ── Queries ────────────────────────────────────────────────────────────────
 

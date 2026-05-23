@@ -235,21 +235,24 @@ export const proSubscriptionSchema = z.object({
   billingMethod: z
     .object({
       provider: z.enum(["paydunya", "intech", "manual"]),
-      accountNumberMasked: z.string()
+      accountNumberMasked: z.string(),
+      country: z.string().nullable().optional(),
+      method: z.string().nullable().optional()
     })
     .nullable()
+});
+
+export const proBillingMethodSchema = z.object({
+  provider: z.enum(["paydunya", "intech", "manual"]),
+  accountNumber: z.string().trim().min(8).max(20),
+  country: z.string().length(2).optional(),
+  method: z.string().optional()
 });
 
 export const proSubscriptionUpdateInputSchema = z
   .object({
     autoRenew: z.boolean().optional(),
-    billingMethod: z
-      .object({
-        provider: z.enum(["paydunya", "intech", "manual"]),
-        accountNumber: z.string().trim().min(8).max(20)
-      })
-      .nullable()
-      .optional()
+    billingMethod: proBillingMethodSchema.nullable().optional()
   })
   .superRefine((value, ctx) => {
     if (value.autoRenew === undefined && value.billingMethod === undefined) {
@@ -407,6 +410,7 @@ export type ProTopService = z.infer<typeof proTopServiceSchema>;
 export type ProAnalytics = z.infer<typeof proAnalyticsSchema>;
 export type ProSubscription = z.infer<typeof proSubscriptionSchema>;
 export type ProSubscriptionUpdateInput = z.infer<typeof proSubscriptionUpdateInputSchema>;
+export type ProBillingMethod = z.infer<typeof proBillingMethodSchema>;
 export type ProSubscriptionCheckoutInput = z.infer<typeof proSubscriptionCheckoutInputSchema>;
 export type ProSubscriptionCheckoutResult = z.infer<typeof proSubscriptionCheckoutResultSchema>;
 export type ProInvoice = z.infer<typeof proInvoiceSchema>;

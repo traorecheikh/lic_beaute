@@ -17,6 +17,12 @@ const mocks = vi.hoisted(() => {
     salonHours: { findUnique: vi.fn() },
     salon: { findUnique: vi.fn() },
     booking: { findMany: vi.fn(), findFirst: vi.fn() },
+    platformSetting: { findMany: vi.fn().mockResolvedValue([
+      { key: "feature_deposits_enabled", value: "true" },
+      { key: "feature_deposits_tier_required", value: "premium" },
+      { key: "feature_analytics_enabled", value: "true" },
+      { key: "feature_analytics_tier_required", value: "premium" },
+    ]) },
     $transaction: vi.fn(async (fn: (txArg: typeof tx) => Promise<unknown>) => fn(tx))
   };
 

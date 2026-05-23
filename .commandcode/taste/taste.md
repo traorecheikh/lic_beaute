@@ -12,6 +12,9 @@
 # ui
 - Display form validation errors as field-level inline messages with red borders on the specific input fields, not as a generic message below the form. Confidence: 0.65
 
+# architecture
+- Expose business rules (subscription features, payment method availability, deposit settings, auto-renewal, reports access) as admin-configurable settings that can be changed without code changes or redeployment. Confidence: 0.88
+
 # deployment
 - For staging deployments, use the project's actual configured drivers/services (email, OTP, payment) instead of defaulting to `noop` or `mock` placeholders. Confidence: 0.60
 - Configure services (email, payment, OTP drivers) via environment variables, not by patching compiled files or source code. Confidence: 0.85

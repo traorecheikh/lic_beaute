@@ -338,6 +338,20 @@ export async function fetchProSubscription(token: string) {
   return withApiError(() => getProApi(token).apiV1ProSubscriptionGet());
 }
 
+export async function fetchProSubscriptionFeatures(token: string) {
+  const cfg = getConfiguration(token);
+  const basePath = cfg.basePath ?? "";
+  const response = await fetch(`${basePath}/api/v1/pro/subscription/features`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json"
+    }
+  });
+  if (!response.ok) throw new ApiError(response.status, "fetch_features_failed", await response.text());
+  return response.json();
+}
+
 export async function updateProSubscription(token: string, payload: ProSubscriptionUpdateInput) {
   return withApiError(() => getProApi(token).apiV1ProSubscriptionPatch({
     proSubscriptionUpdateInput: payload

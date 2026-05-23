@@ -23,7 +23,7 @@ const mocks = vi.hoisted(() => {
     subscriptionCharge: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
     billingInvoice: { findMany: vi.fn(), findFirst: vi.fn() },
     salon: { findUnique: vi.fn() },
-    platformSetting: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
+    platformSetting: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
     settlementEvent: { findMany: vi.fn(), create: vi.fn() },
     payment: { findFirst: vi.fn() },
     blockedSlot: { findMany: vi.fn(), create: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },

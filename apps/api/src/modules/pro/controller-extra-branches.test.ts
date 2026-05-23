@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => {
     employeeSpecialty: { createMany: vi.fn(), deleteMany: vi.fn() },
     service: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     salonHours: { upsert: vi.fn() },
-    platformSetting: { findUnique: vi.fn(), findMany: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
+    platformSetting: { findUnique: vi.fn(), findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn(), deleteMany: vi.fn() },
     salonGalleryImage: { deleteMany: vi.fn(), createMany: vi.fn() },
     blockedSlot: { create: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
     auditLog: { create: vi.fn() },
