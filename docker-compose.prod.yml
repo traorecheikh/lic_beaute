@@ -86,8 +86,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-      - "3000:3000"
+    networks:
+      - coolify
 
   worker:
     image: ghcr.io/traorecheikh/lic_beaute:latest
@@ -126,6 +126,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+networks:
+  coolify:
+    external: true
 
 volumes:
   postgres_data:
