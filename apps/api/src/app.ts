@@ -10,7 +10,7 @@ import sensible from "@fastify/sensible";
 import staticFiles from "@fastify/static";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import Fastify from "fastify";
+import Fastify, { type FastifyError } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 import { Redis } from "ioredis";
 
@@ -52,6 +52,23 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+
+  // Normalise Zod/Fastify validation errors to a human-readable single message.
+  app.setErrorHandler((error: FastifyError, _request, reply) => {
+    if (error.validation) {
+      let msg = "Données invalides.";
+      try {
+        const issues = JSON.parse(error.message) as Array<{ message?: string }>;
+        if (Array.isArray(issues) && issues[0]?.message) msg = issues[0].message;
+      } catch {
+        if (error.message && !error.message.startsWith("[")) msg = error.message;
+      }
+      reply.status(400).send({ statusCode: 400, code: "validation_error", error: "Bad Request", message: msg });
+      return;
+    }
+    // Re-raise to let Fastify handle everything else (rate limit 429, etc.)
+    reply.send(error);
+  });
 
   const allowedOrigins = new Set([config.webOrigin]);
   if (config.nodeEnv === "development") {
@@ -194,11 +211,11 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
     await app.register(staticFiles, {
       root: webDistPath,
       wildcard: false,
-      decorateReply: false,
+      decorateReply: true,
       serve: true,
     });
     app.get("/*", (_req, reply) => {
-      return reply.sendFile("index.html", webDistPath);
+      return reply.sendFile("index.html");
     });
   }
 

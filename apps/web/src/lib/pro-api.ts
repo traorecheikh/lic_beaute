@@ -423,6 +423,21 @@ export async function redeemStaffInviteToken(inviteToken: string): Promise<{ acc
   });
 }
 
+export async function resetProPassword(token: string, email: string, password: string): Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, email, password })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Lien invalide ou expiré." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Lien invalide ou expiré.");
+    }
+    return response.json() as Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }>;
+  });
+}
+
 export async function setupProAccount(token: string, email: string, password: string): Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }> {
   return withApiError(async () => {
     const response = await fetch(`${apiBaseUrl}/api/v1/auth/setup-account`, {

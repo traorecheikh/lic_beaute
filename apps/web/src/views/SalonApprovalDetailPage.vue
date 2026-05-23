@@ -86,7 +86,18 @@
           </div>
           <div class="space-y-1">
             <p class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest">E-mail</p>
-            <p class="text-[13px] font-semibold text-espresso">{{ salonQuery.data.value.owner.email }}</p>
+            <div class="flex items-center gap-2">
+              <p class="text-[13px] font-semibold text-espresso">{{ salonQuery.data.value.owner.email }}</p>
+              <button
+                v-if="salonQuery.data.value.approvalStatus === 'approved'"
+                type="button"
+                :disabled="resetPwdMutation.isPending.value || resetConfirm"
+                class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors disabled:opacity-40 shrink-0"
+                @click="sendPasswordResetLink"
+              >
+                {{ resetPwdMutation.isPending.value ? '…' : resetConfirm ? 'Confirmer ?' : 'Réinit.' }}
+              </button>
+            </div>
           </div>
           <div class="space-y-1">
             <p class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest">Date Soumission</p>
@@ -362,7 +373,8 @@ import {
   fetchPlatformRequiredDocuments,
   fetchSalonDetail,
   rejectSalonRequest,
-  requestSalonInfo
+  requestSalonInfo,
+  sendPasswordReset
 } from "@/lib/api";
 import { formatDateTime } from "@/lib/date";
 import { getErrorMessage } from "@/lib/errors";
@@ -446,6 +458,34 @@ const decisionMutation = useMutation({
     toast.error(mutationError.value);
   }
 });
+
+const resetConfirm = ref(false);
+let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined;
+
+const resetPwdMutation = useMutation({
+  mutationFn: () => sendPasswordReset(auth.accessToken ?? "", salonId.value),
+  onSuccess: () => {
+    resetConfirm.value = false;
+    const ownerEmail = salonQuery.data.value?.owner.email ?? "";
+    toast.success(`Lien envoyé à ${ownerEmail}`);
+  },
+  onError: (error) => {
+    resetConfirm.value = false;
+    toast.error(getErrorMessage(error, "Envoi impossible."));
+  }
+});
+
+function sendPasswordResetLink() {
+  if (!resetConfirm.value) {
+    resetConfirm.value = true;
+    clearTimeout(resetConfirmTimer);
+    resetConfirmTimer = setTimeout(() => { resetConfirm.value = false; }, 4000);
+    return;
+  }
+  resetConfirm.value = false;
+  clearTimeout(resetConfirmTimer);
+  resetPwdMutation.mutate();
+}
 
 const errorMessage = computed(() => {
   const error = salonQuery.error.value;

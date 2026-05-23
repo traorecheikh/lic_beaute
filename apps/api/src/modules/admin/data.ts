@@ -1111,3 +1111,50 @@ export async function deleteRequiredDocument(id: string, actorName: string) {
 
   return doc;
 }
+
+export async function sendPasswordReset(salonId: string, actorName: string): Promise<void> {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    include: { staffMembers: { where: { role: "salon_owner" }, take: 1 } }
+  });
+  if (!salon) throw new Error("salon_not_found");
+
+  const owner = salon.staffMembers[0];
+  if (!owner) throw new Error("owner_not_found");
+  const ownerEmail = owner.email ?? "";
+  const ownerName = owner.fullName ?? "Gérant";
+
+  const rawToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
+
+  await prisma.platformSetting.upsert({
+    where: { key: `auth:reset:${owner.id}` },
+    create: {
+      group: "security",
+      key: `auth:reset:${owner.id}`,
+      value: JSON.stringify({ tokenHash, expiresAt }),
+      description: "Password reset token (single-use)"
+    },
+    update: { value: JSON.stringify({ tokenHash, expiresAt }) }
+  });
+
+  const resetLink = `${config.webOrigin}/pro/reset-password?token=${rawToken}&email=${encodeURIComponent(ownerEmail)}`;
+
+  await sendEmail({
+    to: ownerEmail,
+    subject: "Beauté Avenue — Réinitialisation de votre mot de passe",
+    text: `Bonjour ${ownerName},\n\nVotre administrateur a initié une réinitialisation de votre mot de passe.\n\nCliquez sur le lien ci-dessous pour définir un nouveau mot de passe (valable 72h) :\n${resetLink}\n\n— L'équipe Beauté Avenue`
+  });
+
+  await writeAuditLog({
+    action: "user.password_reset_sent",
+    summary: `Lien de réinitialisation envoyé à ${ownerEmail} (${salon.name}).`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify({ ownerEmail, salonId }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+}

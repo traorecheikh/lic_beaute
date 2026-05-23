@@ -39,7 +39,8 @@ import {
   updatePlatformSetting,
   upsertRequiredDocument,
   upsertSalonCategory,
-  createSalon
+  createSalon,
+  sendPasswordReset
 } from "./data.js";
 
 export class AdminController {
@@ -276,5 +277,21 @@ export class AdminController {
     const { id } = request.params as { id: string };
     const actorName = await this.resolveActorName(token.sub);
     ok(reply, await deleteRequiredDocument(id, actorName));
+  }
+
+  async sendPasswordReset(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    const { salonId } = request.params as { salonId: string };
+    const actorName = await this.resolveActorName(token.sub);
+    try {
+      await sendPasswordReset(salonId, actorName);
+      ok(reply, { sent: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "internal_error";
+      if (msg === "salon_not_found") { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+      if (msg === "owner_not_found") { fail(reply, 422, "owner_not_found", "Aucun gérant trouvé pour ce salon."); return; }
+      fail(reply, 500, "internal_error", "Erreur lors de l'envoi du lien.");
+    }
   }
 }
