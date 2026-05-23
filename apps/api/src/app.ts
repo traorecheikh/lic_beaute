@@ -83,6 +83,7 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
+        connectSrc: ["'self'"],
         frameAncestors: ["'none'"],
         // upgrade-insecure-requests forces the browser to load all assets over HTTPS.
         // On HTTP-only deployments this silently breaks every JS/CSS asset → white page.

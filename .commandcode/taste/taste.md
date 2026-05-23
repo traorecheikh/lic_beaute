@@ -7,3 +7,8 @@
 
 # workflow
 - Validate fixes by running the Docker build locally before committing and pushing. Confidence: 0.85
+- When a user asks how to access/verify something on a server they have SSH to, execute the command and show the result instead of just explaining the command. Confidence: 0.75
+
+# deployment
+- For staging deployments, use the project's actual configured drivers/services (email, OTP, payment) instead of defaulting to `noop` or `mock` placeholders. Confidence: 0.60
+- Configure services (email, payment, OTP drivers) via environment variables, not by patching compiled files or source code. Confidence: 0.85
