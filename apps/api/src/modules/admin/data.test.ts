@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => {
     platformSetting: { create: vi.fn(), findMany: vi.fn(), upsert: vi.fn() },
     platformSalonCategory: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
     platformRequiredDocument: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
-    subscriptionCharge: { findUnique: vi.fn(), update: vi.fn() },
+    subscriptionCharge: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
     subscriptionEvent: { create: vi.fn() },
     billingInvoice: { create: vi.fn() },
     $transaction: vi.fn()
@@ -47,6 +47,7 @@ import {
   listSalonCategories,
   listSalons,
   listSubscriptions,
+  manualExtendSubscription,
   overrideSubscription,
   rejectSalon,
   requestSalonInfo,
@@ -460,6 +461,98 @@ describe("admin data module", () => {
     });
     await overrideSubscription("sube", { action: "pause_subscription", reason: "pause", effectiveAt: "2030-02-01T00:00:00.000Z" }, "Admin");
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it("manualExtendSubscription creates charge+invoice, extends expiry, sends email", async () => {
+    mocks.prisma.subscription.findUnique.mockResolvedValue({
+      id: "sub_me",
+      salonId: "s_me",
+      status: "inactive",
+      tier: "standard",
+      expiresAt: null,
+      salon: { id: "s_me", name: "Salon Manu" }
+    });
+    mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<void>) => {
+      const tx = {
+        subscription: { update: vi.fn().mockResolvedValue({}) },
+        salon: { update: vi.fn().mockResolvedValue({}) },
+        subscriptionCharge: { create: vi.fn().mockResolvedValue({ id: "ch_me1" }) },
+        billingInvoice: { create: vi.fn().mockResolvedValue({ id: "inv_me1" }) },
+        subscriptionEvent: { create: vi.fn().mockResolvedValue({}) },
+        auditLog: { create: vi.fn().mockResolvedValue({}) }
+      };
+      await cb(tx);
+    });
+    mocks.prisma.user.findFirst.mockResolvedValue({ email: "owner@test.com", fullName: "Owner" });
+    mocks.sendEmail.mockResolvedValue(undefined);
+
+    const result = await manualExtendSubscription("sub_me", {
+      amountXof: 50000,
+      durationDays: 30,
+      reason: "Paiement hors-ligne pour mars",
+      reference: "VIREMENT-2026-05"
+    }, "Admin");
+
+    expect(result).not.toBeNull();
+    expect(result?.subscriptionId).toBe("sub_me");
+    expect(result?.amountXof).toBe(50000);
+    expect(result?.durationDays).toBe(30);
+    expect(result?.reference).toBe("VIREMENT-2026-05");
+    expect(result?.chargeId).toBeTruthy();
+    expect(result?.invoiceId).toBeTruthy();
+    expect(result?.previousExpiresAt).toBeNull();
+    expect(mocks.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "owner@test.com", subject: expect.stringContaining("prolongé") })
+    );
+  });
+
+  it("manualExtendSubscription returns null for missing subscription", async () => {
+    mocks.prisma.subscription.findUnique.mockResolvedValue(null);
+    const result = await manualExtendSubscription("missing", {
+      amountXof: 25000,
+      durationDays: 30,
+      reason: "Test",
+      reference: "REF-1"
+    }, "Admin");
+    expect(result).toBeNull();
+  });
+
+  it("manualExtendSubscription extends from current expiry when still active", async () => {
+    const futureExpiry = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+    mocks.prisma.subscription.findUnique.mockResolvedValue({
+      id: "sub_me_active",
+      salonId: "s_me",
+      status: "active",
+      tier: "premium",
+      expiresAt: futureExpiry,
+      salon: { id: "s_me", name: "Salon Actif" }
+    });
+    mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<void>) => {
+      const tx = {
+        subscription: { update: vi.fn().mockResolvedValue({}) },
+        salon: { update: vi.fn().mockResolvedValue({}) },
+        subscriptionCharge: { create: vi.fn().mockResolvedValue({ id: "ch_me2" }) },
+        billingInvoice: { create: vi.fn().mockResolvedValue({ id: "inv_me2" }) },
+        subscriptionEvent: { create: vi.fn().mockResolvedValue({}) },
+        auditLog: { create: vi.fn().mockResolvedValue({}) }
+      };
+      await cb(tx);
+    });
+    mocks.prisma.user.findFirst.mockResolvedValue(null); // No email
+    mocks.sendEmail.mockClear();
+
+    const result = await manualExtendSubscription("sub_me_active", {
+      amountXof: 25000,
+      durationDays: 30,
+      reason: "Prolongation salon actif",
+      reference: "EXT-2026"
+    }, "Admin");
+
+    expect(result).not.toBeNull();
+    // Should extend from future expiry, not from now
+    const expectedNewExpiry = new Date(futureExpiry.getTime() + 30 * 24 * 60 * 60 * 1000);
+    expect(new Date(result!.newExpiresAt).getTime()).toBeGreaterThan(Date.now() + 40 * 24 * 60 * 60 * 1000);
+    expect(mocks.sendEmail).not.toHaveBeenCalled(); // No owner email
   });
 
   it("audit/settings/config helpers work", async () => {
