@@ -61,13 +61,8 @@ export const config = {
   mediaPublicBaseUrl: process.env.MEDIA_PUBLIC_BASE_URL ?? "https://media.beauteavenu.com"
 };
 
-const isStagingOrigin =
-  /\.(sslip\.io|nip\.io)(:\d+)?$/.test(config.webOrigin) ||
-  /^https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?\/?$/.test(config.webOrigin);
-
 export function validateConfig() {
   if (config.nodeEnv !== "development" && config.nodeEnv !== "test") {
-    const isRealProd = !isStagingOrigin;
     const issues: string[] = [];
     if (config.jwtAccessSecret === "dev-access-secret") {
       issues.push("JWT_ACCESS_SECRET is the development default");
@@ -75,19 +70,19 @@ export function validateConfig() {
     if (config.jwtRefreshSecret === "dev-refresh-secret") {
       issues.push("JWT_REFRESH_SECRET is the development default");
     }
-    if (config.jwtInviteSecret === "dev-invite-secret" && isRealProd) {
+    if (config.jwtInviteSecret === "dev-invite-secret") {
       issues.push("JWT_INVITE_SECRET is the development default");
     }
-    if (config.paymentDriver === "mock" && isRealProd) {
+    if (config.paymentDriver === "mock") {
       issues.push("PAYMENT_DRIVER=mock in production — all payments will silently succeed without real money");
     }
-    if (config.storageDriver === "noop" && isRealProd) {
+    if (config.storageDriver === "noop") {
       issues.push("STORAGE_DRIVER=noop in production — all uploaded files will be silently discarded");
     }
-    if (config.otpDriver === "noop" && isRealProd) {
+    if (config.otpDriver === "noop") {
       issues.push("OTP_DRIVER=noop in production — any OTP code will authenticate any phone number");
     }
-    if (config.emailDriver === "noop" && isRealProd) {
+    if (config.emailDriver === "noop") {
       issues.push("EMAIL_DRIVER=noop in production — no emails will be sent (invites, confirmations, alerts)");
     }
     if (
@@ -99,6 +94,9 @@ export function validateConfig() {
     if (config.webOrigin === "*") {
       issues.push("WEB_ORIGIN must not be '*' in production — CORS would be fully open");
     }
+    const isStagingOrigin =
+      /\.(sslip\.io|nip\.io)(:\d+)?$/.test(config.webOrigin) ||
+      /^https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?\/?$/.test(config.webOrigin);
     if (!isStagingOrigin && !config.webOrigin.startsWith("https://")) {
       issues.push(`WEB_ORIGIN must start with https:// in production, got: ${config.webOrigin}`);
     }
