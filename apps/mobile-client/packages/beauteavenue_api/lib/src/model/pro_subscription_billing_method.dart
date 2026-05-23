@@ -18,7 +18,7 @@ part 'pro_subscription_billing_method.g.dart';
 abstract class ProSubscriptionBillingMethod implements Built<ProSubscriptionBillingMethod, ProSubscriptionBillingMethodBuilder> {
   @BuiltValueField(wireName: r'provider')
   ProSubscriptionBillingMethodProviderEnum get provider;
-  // enum providerEnum {  intech,  manual,  };
+  // enum providerEnum {  paydunya,  intech,  manual,  };
 
   @BuiltValueField(wireName: r'accountNumberMasked')
   String get accountNumberMasked;
@@ -124,6 +124,8 @@ class _$ProSubscriptionBillingMethodSerializer implements PrimitiveSerializer<Pr
 
 class ProSubscriptionBillingMethodProviderEnum extends EnumClass {
 
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const ProSubscriptionBillingMethodProviderEnum paydunya = _$proSubscriptionBillingMethodProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'intech')
   static const ProSubscriptionBillingMethodProviderEnum intech = _$proSubscriptionBillingMethodProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'manual')

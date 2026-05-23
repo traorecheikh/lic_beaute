@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **status** | **String** |  | 
 **renewsAt** | [**DateTime**](DateTime.md) |  | 
 **expiresAt** | [**DateTime**](DateTime.md) |  | 
+**gracePeriodEndsAt** | [**DateTime**](DateTime.md) |  | 
 **isComplimentary** | **bool** |  | 
 **autoRenew** | **bool** |  | 
 **billingMethod** | [**ProSubscriptionBillingMethod**](ProSubscriptionBillingMethod.md) |  | 

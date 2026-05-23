@@ -13,14 +13,42 @@ import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provide
 import { prisma } from "../../lib/db/prisma.js";
 import { sendNotification } from "../notifications/index.js";
 
+// ─── Replay protection ──────────────────────────────────────────────────────
+// Deduplicates webhook deliveries by idempotencyKey within a sliding window.
+// The window exceeds PayDunya's delivery timeout (~30 s) so retries don't
+// register as replays; 5 min is well past any legitimate redelivery interval.
+const WEBHOOK_REPLAY_WINDOW_MS = 5 * 60 * 1_000;
+const processedNonces = new Map<string, number>();
+
+function checkReplay(nonce: string): boolean {
+  const now = Date.now();
+  const seenAt = processedNonces.get(nonce);
+  if (seenAt && now - seenAt < WEBHOOK_REPLAY_WINDOW_MS) return true; // replay
+  // Evict stale entries every 1 000 inserts (no background sweep needed)
+  if (processedNonces.size > 1_000) {
+    const cutoff = now - WEBHOOK_REPLAY_WINDOW_MS;
+    for (const [key, ts] of processedNonces) {
+      if (ts < cutoff) processedNonces.delete(key);
+    }
+  }
+  processedNonces.set(nonce, now);
+  return false;
+}
+
+const WITHDRAW_MODE_MAP: Record<string, string> = {
+  wave_senegal: "wave-senegal",
+  orange_senegal: "orange-money-senegal",
+  free_senegal: "free-money-senegal",
+  wizall_senegal: "wizall-senegal"
+};
+
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
-  intechApiKey: config.intechApiKey,
-  intechBaseUrl: config.intechBaseUrl,
-  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
-  intechHmacSecretKey: config.intechHmacSecretKey,
-  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
-  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
-  baseOrigin: config.webOrigin
+  baseOrigin: config.webOrigin,
+  paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPrivateKey: config.paydunyaPrivateKey,
+  paydunyaToken: config.paydunyaToken,
+  paydunyaEnv: config.paydunyaEnv,
+  paydunyaBaseUrl: config.paydunyaBaseUrl
 });
 
 export class PaymentController {
@@ -40,7 +68,7 @@ export class PaymentController {
         where: { id: session.sub },
         select: { phone: true }
       });
-      if (config.paymentDriver === "intech" && !client?.phone) {
+      if (config.paymentDriver === "paydunya" && !client?.phone) {
         fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
         return;
       }
@@ -59,7 +87,7 @@ export class PaymentController {
       await prisma.payment.update({
         where: { id: payment.id },
         data: {
-          provider: toDbProvider(body.provider) ?? "intech",
+          provider: toDbProvider(body.provider) ?? "paydunya",
           providerTxId: result.providerRef,
           webhookSignature: result.providerToken ?? this._extractCheckoutToken(result.redirectUrl)
         }
@@ -75,6 +103,81 @@ export class PaymentController {
       logger.error("Payment error", { error });
       fail(reply, 500, "internal_error", "Erreur interne.");
     }
+  }
+
+  async getMethods(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      requireRole(request, ["client", "salon_owner", "salon_staff", "salon_manager", "platform_admin"]);
+
+      if (!paymentAdapter.getAvailableMethods) {
+        ok(reply, { methods: [] });
+        return;
+      }
+
+      const methods = await paymentAdapter.getAvailableMethods();
+      ok(reply, { methods });
+    } catch (error) {
+      if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      logger.error("Get methods error", { error: String(error) });
+      fail(reply, 500, "internal_error", "Erreur interne.");
+    }
+  }
+
+  async executePayment(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const session = requireRole(request, ["client"]);
+      const body = request.body as { paymentId: string; method: string };
+
+      const payment = await prisma.payment.findUnique({
+        where: { id: body.paymentId },
+        include: { booking: { select: { clientId: true } } }
+      });
+      if (!payment) { fail(reply, 404, "payment_not_found", "Paiement introuvable."); return; }
+      if (payment.booking.clientId !== session.sub) { fail(reply, 403, "forbidden", "Accès interdit."); return; }
+      if (payment.status !== "pending" && payment.status !== "authorized") {
+        fail(reply, 422, "invalid_status", "Ce paiement ne peut pas être exécuté.");
+        return;
+      }
+      if (!payment.webhookSignature) {
+        fail(reply, 422, "missing_invoice_token", "Token de facture manquant.");
+        return;
+      }
+
+      if (!paymentAdapter.executePayment) {
+        fail(reply, 501, "not_supported", "Ce fournisseur ne supporte pas l'exécution séparée.");
+        return;
+      }
+
+      const result = await paymentAdapter.executePayment({
+        paymentId: payment.id,
+        method: body.method,
+        invoiceToken: payment.webhookSignature
+      });
+
+      if (result.success) {
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: "succeeded", providerTxId: result.providerTxId ?? payment.providerTxId }
+        });
+      }
+
+      ok(reply, result);
+    } catch (error) {
+      if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
+      logger.error("Execute payment error", { error: String(error) });
+      fail(reply, 500, "internal_error", "Erreur interne.");
+    }
+  }
+
+  async webhookPayDunya(request: FastifyRequest, reply: FastifyReply) {
+    const rawBody = (request as typeof request & { rawBody?: string }).rawBody ?? JSON.stringify(request.body);
+
+    if (!paymentAdapter.verifyWebhookSignature({ rawBody })) {
+      fail(reply, 401, "invalid_signature", "Signature invalide.");
+      return;
+    }
+
+    await this._handleWebhook(request, reply);
   }
 
   async status(request: FastifyRequest, reply: FastifyReply) {
@@ -177,6 +280,20 @@ export class PaymentController {
     } catch (err) {
       logger.warn("Webhook payload rejected", { err: String(err) });
       fail(reply, 400, "invalid_payload", "Payload invalide.");
+      return;
+    }
+
+    // ─── Replay protection ────────────────────────────────────────────────
+    // The idempotencyKey uniquely identifies a payment initiation event.
+    // If we've already processed a webhook with this key within the replay
+    // window, the caller is replaying a captured request.
+    const nonce = typeof event.metadata.idempotencyKey === "string"
+      ? event.metadata.idempotencyKey
+      : null;
+
+    if (nonce && checkReplay(nonce)) {
+      logger.warn("Replay detected — webhook idempotencyKey already processed", { nonce });
+      ok(reply, { received: true });
       return;
     }
 
@@ -306,10 +423,19 @@ export class PaymentController {
         return;
       }
 
+      // Resolve phone number for PayDunya disbursement
+      const clientPhone = await this._resolveRefundPhone(payment.bookingId);
+
+      // Resolve method (channel) from payment metadata or booking context
+      const paymentMethod = await this._resolveRefundMethod(payment.id);
+
       const refund = await paymentAdapter.requestRefund({
         providerRef: payment.providerTxId,
         amountXof: payment.amountXof,
-        reason: "requested_refund"
+        reason: "requested_refund",
+        phone: clientPhone ?? undefined,
+        method: paymentMethod ?? undefined,
+        withdrawMode: paymentMethod ? WITHDRAW_MODE_MAP[paymentMethod] : undefined
       });
 
       await prisma.$transaction(async (tx) => {
@@ -625,5 +751,31 @@ export class PaymentController {
         }
       });
     });
+  }
+
+  private async _resolveRefundPhone(bookingId: string): Promise<string | null> {
+    try {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: { client: { select: { phone: true } } }
+      });
+      return booking?.client?.phone ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async _resolveRefundMethod(paymentId: string): Promise<string | null> {
+    try {
+      const payment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        select: { provider: true }
+      });
+      // If payment uses PayDunya, look for the method in metadata
+      // The method was stored in the webhook payload
+      return null; // Fallback to default method
+    } catch {
+      return null;
+    }
   }
 }

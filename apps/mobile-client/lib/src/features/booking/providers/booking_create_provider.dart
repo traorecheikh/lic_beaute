@@ -58,7 +58,7 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
         '/api/v1/payments/deposits/initiate',
         data: {
           'bookingId': bookingId,
-          'provider': 'intech',
+          'provider': 'paydunya',
           'channel': channel,
         },
       );

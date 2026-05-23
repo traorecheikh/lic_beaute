@@ -13,6 +13,9 @@ part 'pro_staff_update_input.g.dart';
 ///
 /// Properties:
 /// * [displayName] 
+/// * [email] 
+/// * [phone] 
+/// * [role] 
 /// * [avatarUrl] 
 /// * [description] 
 /// * [isActive] 
@@ -22,6 +25,16 @@ part 'pro_staff_update_input.g.dart';
 abstract class ProStaffUpdateInput implements Built<ProStaffUpdateInput, ProStaffUpdateInputBuilder> {
   @BuiltValueField(wireName: r'displayName')
   String? get displayName;
+
+  @BuiltValueField(wireName: r'email')
+  String? get email;
+
+  @BuiltValueField(wireName: r'phone')
+  String? get phone;
+
+  @BuiltValueField(wireName: r'role')
+  ProStaffUpdateInputRoleEnum? get role;
+  // enum roleEnum {  salon_staff,  salon_manager,  };
 
   @BuiltValueField(wireName: r'avatarUrl')
   String? get avatarUrl;
@@ -66,6 +79,27 @@ class _$ProStaffUpdateInputSerializer implements PrimitiveSerializer<ProStaffUpd
       yield serializers.serialize(
         object.displayName,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.email != null) {
+      yield r'email';
+      yield serializers.serialize(
+        object.email,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.phone != null) {
+      yield r'phone';
+      yield serializers.serialize(
+        object.phone,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.role != null) {
+      yield r'role';
+      yield serializers.serialize(
+        object.role,
+        specifiedType: const FullType(ProStaffUpdateInputRoleEnum),
       );
     }
     if (object.avatarUrl != null) {
@@ -133,6 +167,27 @@ class _$ProStaffUpdateInputSerializer implements PrimitiveSerializer<ProStaffUpd
           ) as String;
           result.displayName = valueDes;
           break;
+        case r'email':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.email = valueDes;
+          break;
+        case r'phone':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.phone = valueDes;
+          break;
+        case r'role':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(ProStaffUpdateInputRoleEnum),
+          ) as ProStaffUpdateInputRoleEnum;
+          result.role = valueDes;
+          break;
         case r'avatarUrl':
           final valueDes = serializers.deserialize(
             value,
@@ -197,5 +252,20 @@ class _$ProStaffUpdateInputSerializer implements PrimitiveSerializer<ProStaffUpd
     );
     return result.build();
   }
+}
+
+class ProStaffUpdateInputRoleEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'salon_staff')
+  static const ProStaffUpdateInputRoleEnum salonStaff = _$proStaffUpdateInputRoleEnum_salonStaff;
+  @BuiltValueEnumConst(wireName: r'salon_manager')
+  static const ProStaffUpdateInputRoleEnum salonManager = _$proStaffUpdateInputRoleEnum_salonManager;
+
+  static Serializer<ProStaffUpdateInputRoleEnum> get serializer => _$proStaffUpdateInputRoleEnumSerializer;
+
+  const ProStaffUpdateInputRoleEnum._(String name): super(name);
+
+  static BuiltSet<ProStaffUpdateInputRoleEnum> get values => _$proStaffUpdateInputRoleEnumValues;
+  static ProStaffUpdateInputRoleEnum valueOf(String name) => _$proStaffUpdateInputRoleEnumValueOf(name);
 }
 

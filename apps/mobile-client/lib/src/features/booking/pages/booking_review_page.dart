@@ -22,7 +22,6 @@ import '../providers/booking_create_provider.dart';
 import '../providers/booking_funnel_provider.dart';
 import '../utils/booking_format.dart';
 import '../widgets/funnel_step_bar.dart';
-
 class BookingReviewPage extends ConsumerWidget {
   const BookingReviewPage({super.key});
 
@@ -257,11 +256,6 @@ class _ConfirmBar extends ConsumerStatefulWidget {
 
 class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
   bool _isProcessingPayment = false;
-  static const Map<String, String> _channelLabels = {
-    'wave': 'Wave',
-    'orange_money': 'Orange Money',
-    'free_money': 'Free Money',
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -274,8 +268,8 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
     final defaultMethod = methodsAsync.asData?.value
         .where((m) => m.isDefault)
         .firstOrNull;
-    final defaultChannel = _channelFromMethod(defaultMethod);
-    final hasStoredPaymentMethod = (methodsAsync.asData?.value.isNotEmpty ?? false);
+    final hasStoredPaymentMethod =
+        (methodsAsync.asData?.value.isNotEmpty ?? false);
     final hasDefault = defaultMethod != null;
 
     return AppBottomBar(
@@ -296,10 +290,15 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                       if (error is DioException) {
                         final statusCode = error.response?.statusCode;
                         final code =
-                            (error.response?.data as Map<String, dynamic>?)?['code'] as String?;
+                            (error.response?.data as Map<String, dynamic>?)?[
+                                'code'] as String?;
 
-                        if (statusCode == 401 || statusCode == 403 || code == 'invalid_token') {
-                          await ref.read(sessionProvider.notifier).logout();
+                        if (statusCode == 401 ||
+                            statusCode == 403 ||
+                            code == 'invalid_token') {
+                          await ref
+                              .read(sessionProvider.notifier)
+                              .logout();
                           if (!context.mounted) return;
                           context.go(AppRoutes.auth);
                           AppSnackbar.info(
@@ -319,9 +318,7 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                       }
                       AppSnackbar.error(
                         context,
-                        bookingCreateErrorMessage(
-                          error,
-                        ),
+                        bookingCreateErrorMessage(error),
                       );
                       return;
                     }
@@ -331,7 +328,8 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                     final depositAmount = booking.depositAmountXof.toInt();
 
                     if (depositAmount <= 0) {
-                      context.pushReplacement(AppRoutes.success(booking.id));
+                      context.pushReplacement(
+                          AppRoutes.success(booking.id));
                       return;
                     }
 
@@ -340,21 +338,24 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                         context,
                         'Aucun compte de paiement configuré. Réservation envoyée, confirmation manuelle par le salon.',
                       );
-                      context.pushReplacement(AppRoutes.bookingDetailPath(booking.id));
+                      context.pushReplacement(
+                          AppRoutes.bookingDetailPath(booking.id));
                       return;
                     }
 
-                    if (defaultChannel != null) {
+                    if (defaultMethod != null) {
                       setState(() => _isProcessingPayment = true);
                       try {
                         final paymentResult = await ref
                             .read(paymentInitiateProvider.notifier)
                             .initiate(
                               bookingId: booking.id,
-                              channel: defaultChannel,
+                              channel: 'wave_senegal',
                             );
-                        final url = paymentResult?['redirectUrl'] as String?;
-                        final paymentId = paymentResult?['paymentId'] as String?;
+                        final url =
+                            paymentResult?['redirectUrl'] as String?;
+                        final paymentId =
+                            paymentResult?['paymentId'] as String?;
                         if (!context.mounted) return;
                         if (url != null) {
                           final uri = Uri.parse(url);
@@ -365,7 +366,8 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                                   .reconcile(paymentId);
                             }
                             if (!context.mounted) return;
-                            context.pushReplacement(AppRoutes.success(booking.id));
+                            context.pushReplacement(
+                                AppRoutes.success(booking.id));
                             return;
                           }
                           if (await canLaunchUrl(uri)) {
@@ -383,11 +385,13 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          AppSnackbar.error(context, 'Paiement échoué. Réessayez sur la page suivante.');
+                          AppSnackbar.error(context,
+                              'Paiement échoué. Réessayez sur la page suivante.');
                         }
                       } finally {
                         if (mounted) {
-                          setState(() => _isProcessingPayment = false);
+                          setState(
+                              () => _isProcessingPayment = false);
                         }
                       }
                     }
@@ -401,18 +405,15 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
             label: !requiresDepositPayment
                 ? 'Confirmer la réservation'
                 : !hasStoredPaymentMethod
-                ? 'Confirmer (validation manuelle)'
-                : defaultChannel != null
-                ? "Payer avec ${_channelLabels[defaultChannel] ?? defaultChannel}"
-                : "Confirmer & Payer l'acompte",
+                    ? 'Confirmer (validation manuelle)'
+                    : hasDefault
+                        ? "Payer l'acompte"
+                        : "Confirmer & Payer l'acompte",
           ),
           if (hasDefault && requiresDepositPayment) ...[
             gapH8,
             GestureDetector(
               onTap: () {
-                // To allow changing, we just let them go to handoff after booking creation
-                // But since booking isn't created yet, we can't just push handoff.
-                // It's simpler to instruct them to tap the button, or they can change default in profile.
                 AppSnackbar.info(
                   context,
                   "Vous pouvez modifier votre compte principal dans le profil.",
@@ -430,17 +431,5 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
         ],
       ),
     );
-  }
-
-  String? _channelFromMethod(dynamic method) {
-    if (method == null) return null;
-    final provider = method.provider as String? ?? '';
-    if (_channelLabels.containsKey(provider)) return provider;
-    final label = (method.label as String?)?.toLowerCase() ?? '';
-    if (label.contains('orange')) return 'orange_money';
-    if (label.contains('free')) return 'free_money';
-    if (label.contains('wave')) return 'wave';
-    if (provider == 'om') return 'orange_money';
-    return null;
   }
 }

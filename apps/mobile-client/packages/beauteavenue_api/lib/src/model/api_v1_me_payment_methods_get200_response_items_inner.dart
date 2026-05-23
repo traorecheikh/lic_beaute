@@ -27,7 +27,7 @@ abstract class ApiV1MePaymentMethodsGet200ResponseItemsInner implements Built<Ap
 
   @BuiltValueField(wireName: r'provider')
   ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum get provider;
-  // enum providerEnum {  intech,  };
+  // enum providerEnum {  intech,  paydunya,  };
 
   @BuiltValueField(wireName: r'phoneNumber')
   String get phoneNumber;
@@ -224,6 +224,8 @@ class ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum extends EnumClas
 
   @BuiltValueEnumConst(wireName: r'intech')
   static const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum intech = _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum paydunya = _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_paydunya;
 
   static Serializer<ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum> get serializer => _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnumSerializer;
 

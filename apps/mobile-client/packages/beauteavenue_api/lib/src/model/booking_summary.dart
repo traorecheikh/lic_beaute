@@ -64,7 +64,7 @@ abstract class BookingSummary implements Built<BookingSummary, BookingSummaryBui
 
   @BuiltValueField(wireName: r'paymentProvider')
   BookingSummaryPaymentProviderEnum? get paymentProvider;
-  // enum paymentProviderEnum {  intech,  };
+  // enum paymentProviderEnum {  intech,  paydunya,  };
 
   @BuiltValueField(wireName: r'paymentId')
   String? get paymentId;
@@ -348,6 +348,8 @@ class BookingSummaryPaymentProviderEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'intech')
   static const BookingSummaryPaymentProviderEnum intech = _$bookingSummaryPaymentProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const BookingSummaryPaymentProviderEnum paydunya = _$bookingSummaryPaymentProviderEnum_paydunya;
 
   static Serializer<BookingSummaryPaymentProviderEnum> get serializer => _$bookingSummaryPaymentProviderEnumSerializer;
 

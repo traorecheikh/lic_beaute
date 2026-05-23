@@ -789,6 +789,10 @@ async function main() {
     { group: "pricing", key: "cancellation_window_hours", value: "24", description: "Cancellation penalty window" },
     { group: "pricing", key: "subscription_standard_price_xof", value: "15000", description: "Standard Price" },
     { group: "pricing", key: "subscription_premium_price_xof", value: "25000", description: "Premium Price" },
+    { group: "payment_methods", key: "paydunya_enabled_wave_senegal", value: "true", description: "Wave Sénégal activé" },
+    { group: "payment_methods", key: "paydunya_enabled_orange_senegal", value: "true", description: "Orange Money Sénégal activé" },
+    { group: "payment_methods", key: "paydunya_enabled_free_senegal", value: "true", description: "Free Money Sénégal activé" },
+    { group: "payment_methods", key: "paydunya_enabled_wizall_senegal", value: "true", description: "Wizall Sénégal activé" },
   ];
   for (const s of platformSettings) {
     await prisma.platformSetting.upsert({ where: { key: s.key }, update: s, create: s });

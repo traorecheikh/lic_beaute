@@ -1,6 +1,7 @@
 import type { PaymentAdapter } from "./payment/index.js";
 import { IntechAdapter } from "./payment/intech.js";
 import { MockPaymentAdapter } from "./payment/mock.js";
+import { PayDunyaAdapter } from "./payment/paydunya.js";
 import type { OtpAdapter } from "./otp/index.js";
 import { AfricasTalkingOtpAdapter, NoopOtpAdapter } from "./otp/index.js";
 import type { StorageAdapter } from "./storage/index.js";
@@ -95,13 +96,12 @@ let _paymentAdapter: PaymentAdapter | null = null;
 export function getPaymentAdapter(
   driver: string,
   config: {
-    intechApiKey?: string;
-    intechBaseUrl?: string;
-    intechCallbackHmacEnabled?: boolean;
-    intechHmacSecretKey?: string;
-    intechHmacMaxAgeMs?: number;
-    intechRequestTimeoutMs?: number;
     baseOrigin: string;
+    paydunyaMasterKey?: string;
+    paydunyaPrivateKey?: string;
+    paydunyaToken?: string;
+    paydunyaEnv?: string;
+    paydunyaBaseUrl?: string;
   }
 ): PaymentAdapter {
   if (_paymentAdapter) return _paymentAdapter;
@@ -112,31 +112,28 @@ export function getPaymentAdapter(
 export function createPaymentAdapter(
   driver: string,
   config: {
-    intechApiKey?: string;
-    intechBaseUrl?: string;
-    intechCallbackHmacEnabled?: boolean;
-    intechHmacSecretKey?: string;
-    intechHmacMaxAgeMs?: number;
-    intechRequestTimeoutMs?: number;
     baseOrigin: string;
+    paydunyaMasterKey?: string;
+    paydunyaPrivateKey?: string;
+    paydunyaToken?: string;
+    paydunyaEnv?: string;
+    paydunyaBaseUrl?: string;
   }
 ): PaymentAdapter {
   switch (driver) {
     case "mock":
       return new MockPaymentAdapter();
-    case "intech": {
-      const apiKey = config.intechApiKey;
-      if (!apiKey) {
-        throw new Error("INTECH_API_KEY required for intech driver");
+    case "paydunya": {
+      if (!config.paydunyaMasterKey || !config.paydunyaPrivateKey || !config.paydunyaToken) {
+        throw new Error("PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY, and PAYDUNYA_TOKEN required for paydunya driver");
       }
-      return new IntechAdapter(
-        apiKey,
+      return new PayDunyaAdapter(
+        config.paydunyaMasterKey,
+        config.paydunyaPrivateKey,
+        config.paydunyaToken,
         config.baseOrigin,
-        config.intechBaseUrl ?? "https://api.intech.sn",
-        config.intechCallbackHmacEnabled ?? false,
-        config.intechHmacSecretKey ?? "",
-        config.intechHmacMaxAgeMs ?? 5 * 60 * 1000,
-        config.intechRequestTimeoutMs ?? 65_000
+        (config.paydunyaEnv ?? "sandbox") as "sandbox" | "production",
+        config.paydunyaBaseUrl ?? "https://app.paydunya.com"
       );
     }
     default:

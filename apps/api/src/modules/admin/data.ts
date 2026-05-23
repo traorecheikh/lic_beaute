@@ -854,6 +854,9 @@ export async function getAuditDetail(auditId: string): Promise<AdminAuditDetail 
 const HIDDEN_SETTING_KEYS = new Set([
   "intech_api_key",
   "intech_api_secret",
+  "paydunya_master_key",
+  "paydunya_private_key",
+  "paydunya_token",
   "platform_name"
 ]);
 

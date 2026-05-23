@@ -14,27 +14,27 @@ async function loadConfigWithEnv(env: Record<string, string | undefined>) {
 
 describe("config", () => {
   it("uses development defaults", async () => {
-    const { config } = await loadConfigWithEnv({ NODE_ENV: "development", WEB_ORIGIN: undefined });
+    const { config } = await loadConfigWithEnv({ PAYMENT_DRIVER: undefined, NODE_ENV: "development", WEB_ORIGIN: undefined });
     expect(config.nodeEnv).toBe("development");
     expect(config.apiPort).toBe(3000);
     expect(config.webOrigin).toBe("http://localhost:5174");
     expect(config.cacheEnabled).toBe(true);
-    expect(config.intechCallbackHmacEnabled).toBe(false);
+    expect(config.paymentDriver).toBe("mock");
   });
 
   it("parses typed env values", async () => {
     const { config } = await loadConfigWithEnv({
+      PAYMENT_DRIVER: "paydunya",
       NODE_ENV: "test",
       API_PORT: "4100",
       CACHE_ENABLED: "false",
-      INTECH_CALLBACK_HMAC_ENABLED: "true",
       QUEUE_CONCURRENCY_PAYMENTS: "7",
       MAX_UPLOAD_BYTES: "123"
     });
 
     expect(config.apiPort).toBe(4100);
     expect(config.cacheEnabled).toBe(false);
-    expect(config.intechCallbackHmacEnabled).toBe(true);
+    expect(config.paymentDriver).toBe("paydunya");
     expect(config.queueConcurrencyPayments).toBe(7);
     expect(config.maxUploadBytes).toBe(123);
   });
@@ -56,36 +56,22 @@ describe("config", () => {
     expect(() => validateConfig()).toThrowError(/Production config validation failed/);
   });
 
-  it("validateConfig enforces intech requirements", async () => {
+  it("validateConfig enforces paydunya requirements", async () => {
     const { validateConfig } = await loadConfigWithEnv({
       NODE_ENV: "production",
       JWT_ACCESS_SECRET: "x",
       JWT_REFRESH_SECRET: "y",
       WEB_ORIGIN: "https://admin.example.com",
       DATABASE_URL: "postgresql://prod/prod",
-      PAYMENT_DRIVER: "intech",
-      INTECH_CALLBACK_HMAC_ENABLED: "false",
-      INTECH_API_KEY: "",
-      INTECH_HMAC_SECRET_KEY: ""
+      PAYMENT_DRIVER: "paydunya",
+      PAYDUNYA_MASTER_KEY: "",
+      PAYDUNYA_PRIVATE_KEY: "",
+      PAYDUNYA_TOKEN: ""
     });
 
-    expect(() => validateConfig()).toThrowError(/INTECH_CALLBACK_HMAC_ENABLED must be true/);
-  });
-
-  it("validateConfig surfaces API key and HMAC key requirements when callback HMAC is enabled", async () => {
-    const { validateConfig } = await loadConfigWithEnv({
-      NODE_ENV: "production",
-      JWT_ACCESS_SECRET: "x",
-      JWT_REFRESH_SECRET: "y",
-      WEB_ORIGIN: "https://admin.example.com",
-      DATABASE_URL: "postgresql://prod/prod",
-      PAYMENT_DRIVER: "intech",
-      INTECH_CALLBACK_HMAC_ENABLED: "true",
-      INTECH_API_KEY: "",
-      INTECH_HMAC_SECRET_KEY: ""
-    });
-    expect(() => validateConfig()).toThrowError(/INTECH_API_KEY is required/);
-    expect(() => validateConfig()).toThrowError(/INTECH_HMAC_SECRET_KEY is required/);
+    expect(() => validateConfig()).toThrowError(/PAYDUNYA_MASTER_KEY is required/);
+    expect(() => validateConfig()).toThrowError(/PAYDUNYA_PRIVATE_KEY is required/);
+    expect(() => validateConfig()).toThrowError(/PAYDUNYA_TOKEN is required/);
   });
 
   it("reads NODE_ENV fallback when env var is missing", async () => {
@@ -101,34 +87,15 @@ describe("config", () => {
       JWT_INVITE_SECRET: "prod-invite",
       WEB_ORIGIN: "https://admin.example.com",
       DATABASE_URL: "postgresql://prod/prod",
-      PAYMENT_DRIVER: "intech",
-      INTECH_CALLBACK_HMAC_ENABLED: "true",
-      INTECH_API_KEY: "api-key",
-      INTECH_HMAC_SECRET_KEY: "hmac-secret",
+      PAYMENT_DRIVER: "paydunya",
+      PAYDUNYA_MASTER_KEY: "master-key",
+      PAYDUNYA_PRIVATE_KEY: "private-key",
+      PAYDUNYA_TOKEN: "token",
       STORAGE_DRIVER: "r2",
       OTP_DRIVER: "africastalking",
       EMAIL_DRIVER: "smtp"
     });
 
-    expect(() => validateConfig()).not.toThrow();
-  });
-
-  it("validateConfig passes for production intech config with required keys", async () => {
-    const { validateConfig } = await loadConfigWithEnv({
-      NODE_ENV: "production",
-      JWT_ACCESS_SECRET: "prod-access",
-      JWT_REFRESH_SECRET: "prod-refresh",
-      JWT_INVITE_SECRET: "prod-invite",
-      WEB_ORIGIN: "https://admin.example.com",
-      DATABASE_URL: "postgresql://prod/prod",
-      PAYMENT_DRIVER: "intech",
-      INTECH_CALLBACK_HMAC_ENABLED: "true",
-      INTECH_API_KEY: "api-key",
-      INTECH_HMAC_SECRET_KEY: "hmac-secret",
-      STORAGE_DRIVER: "r2",
-      OTP_DRIVER: "africastalking",
-      EMAIL_DRIVER: "smtp"
-    });
     expect(() => validateConfig()).not.toThrow();
   });
 });

@@ -64,7 +64,7 @@ abstract class BookingSummaryListResponseItemsInner implements Built<BookingSumm
 
   @BuiltValueField(wireName: r'paymentProvider')
   BookingSummaryListResponseItemsInnerPaymentProviderEnum? get paymentProvider;
-  // enum paymentProviderEnum {  intech,  };
+  // enum paymentProviderEnum {  intech,  paydunya,  };
 
   @BuiltValueField(wireName: r'paymentId')
   String? get paymentId;
@@ -348,6 +348,8 @@ class BookingSummaryListResponseItemsInnerPaymentProviderEnum extends EnumClass 
 
   @BuiltValueEnumConst(wireName: r'intech')
   static const BookingSummaryListResponseItemsInnerPaymentProviderEnum intech = _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const BookingSummaryListResponseItemsInnerPaymentProviderEnum paydunya = _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_paydunya;
 
   static Serializer<BookingSummaryListResponseItemsInnerPaymentProviderEnum> get serializer => _$bookingSummaryListResponseItemsInnerPaymentProviderEnumSerializer;
 

@@ -30,14 +30,11 @@ export const config = {
   pushDriver: process.env.PUSH_DRIVER ?? "fcm",
   fcmServiceAccountJsonB64: process.env.FCM_SERVICE_ACCOUNT_JSON_B64 ?? "",
   paymentDriver: process.env.PAYMENT_DRIVER ?? "mock",
-  intechApiKey: process.env.INTECH_API_KEY ?? "",
-  intechApiSecret: process.env.INTECH_API_SECRET ?? "",
-  intechEnv: (process.env.INTECH_ENV as "test" | "prod") ?? "test",
-  intechBaseUrl: process.env.INTECH_BASE_URL ?? "https://api.intech.sn",
-  intechCallbackHmacEnabled: (process.env.INTECH_CALLBACK_HMAC_ENABLED ?? "false") === "true",
-  intechHmacSecretKey: process.env.INTECH_HMAC_SECRET_KEY ?? "",
-  intechHmacMaxAgeMs: Number(process.env.INTECH_HMAC_MAX_AGE_MS ?? 5 * 60 * 1000),
-  intechRequestTimeoutMs: Number(process.env.INTECH_REQUEST_TIMEOUT_MS ?? 65_000),
+  paydunyaMasterKey: process.env.PAYDUNYA_MASTER_KEY ?? "",
+  paydunyaPrivateKey: process.env.PAYDUNYA_PRIVATE_KEY ?? "",
+  paydunyaToken: process.env.PAYDUNYA_TOKEN ?? "",
+  paydunyaEnv: (process.env.PAYDUNYA_ENV as "sandbox" | "production") ?? "sandbox",
+  paydunyaBaseUrl: process.env.PAYDUNYA_BASE_URL ?? "https://app.paydunya.com",
   atApiKey: process.env.AT_API_KEY ?? "",
   atUsername: process.env.AT_USERNAME ?? "",
   atSenderId: process.env.AT_SENDER_ID,
@@ -103,15 +100,15 @@ export function validateConfig() {
     if (!isStagingOrigin && !config.webOrigin.startsWith("https://")) {
       issues.push(`WEB_ORIGIN must start with https:// in production, got: ${config.webOrigin}`);
     }
-    if (config.paymentDriver === "intech") {
-      if (!config.intechCallbackHmacEnabled) {
-        issues.push("INTECH_CALLBACK_HMAC_ENABLED must be true in production — webhook integrity is disabled");
+    if (config.paymentDriver === "paydunya") {
+      if (!config.paydunyaMasterKey) {
+        issues.push("PAYDUNYA_MASTER_KEY is required when PAYMENT_DRIVER=paydunya");
       }
-      if (!config.intechApiKey) {
-        issues.push("INTECH_API_KEY is required when PAYMENT_DRIVER=intech");
+      if (!config.paydunyaPrivateKey) {
+        issues.push("PAYDUNYA_PRIVATE_KEY is required when PAYMENT_DRIVER=paydunya");
       }
-      if (!config.intechHmacSecretKey) {
-        issues.push("INTECH_HMAC_SECRET_KEY is required when PAYMENT_DRIVER=intech");
+      if (!config.paydunyaToken) {
+        issues.push("PAYDUNYA_TOKEN is required when PAYMENT_DRIVER=paydunya");
       }
     }
     if (issues.length > 0) {

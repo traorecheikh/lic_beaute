@@ -9,6 +9,7 @@ import 'package:beauteavenue_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | 
+**subscriptionId** | **String** |  | 
 **salonName** | **String** |  | 
 **category** | **String** |  | 
 **city** | **String** |  | 

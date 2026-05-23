@@ -37,13 +37,12 @@ vi.mock("../../adapters/index.js", () => ({ getPaymentAdapter: vi.fn(() => mocks
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../config.js", () => ({
   config: {
-    paymentDriver: "intech",
-    intechApiKey: "key",
-    intechBaseUrl: "https://api.example.com",
-    intechCallbackHmacEnabled: false,
-    intechHmacSecretKey: "",
-    intechHmacMaxAgeMs: 300000,
-    intechRequestTimeoutMs: 10000,
+    paymentDriver: "paydunya",
+    paydunyaMasterKey: "master-key",
+    paydunyaPrivateKey: "private-key",
+    paydunyaToken: "token",
+    paydunyaEnv: "sandbox",
+    paydunyaBaseUrl: "https://sandbox.paydunya.com",
     paymentReconcileMinIntervalMs: 60000,
     webOrigin: "https://web.example.com"
   }
@@ -71,7 +70,7 @@ describe("PaymentController", () => {
 
   it("initiate returns 404 when pending payment missing", async () => {
     mocks.prisma.payment.findFirst.mockResolvedValue(null);
-    await c.initiate({ body: { bookingId: "b1", provider: "intech" } } as never, {} as never);
+    await c.initiate({ body: { bookingId: "b1", provider: "paydunya" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 404, "payment_not_found", expect.any(String));
   });
 
@@ -83,11 +82,11 @@ describe("PaymentController", () => {
       idempotencyKey: "k",
       booking: { clientId: "u2" }
     });
-    await c.initiate({ body: { bookingId: "b1", provider: "intech" } } as never, {} as never);
+    await c.initiate({ body: { bookingId: "b1", provider: "paydunya" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 403, "forbidden", expect.any(String));
   });
 
-  it("initiate requires phone for intech", async () => {
+  it("initiate requires phone for paydunya", async () => {
     mocks.prisma.payment.findFirst.mockResolvedValue({
       id: "p3",
       bookingId: "b3",
@@ -96,7 +95,7 @@ describe("PaymentController", () => {
       booking: { clientId: "u1" }
     });
     mocks.prisma.user.findUnique.mockResolvedValue(null);
-    await c.initiate({ body: { bookingId: "b3", provider: "intech" } } as never, {} as never);
+    await c.initiate({ body: { bookingId: "b3", provider: "paydunya" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "phone_required", expect.any(String));
   });
 
@@ -113,7 +112,7 @@ describe("PaymentController", () => {
       id: "p9",
       status: "succeeded",
       amountXof: 2000,
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "ref9",
       createdAt: new Date(),
       booking: { clientId: "u2", salonId: "s1" }
@@ -137,7 +136,7 @@ describe("PaymentController", () => {
     expect(mocks.ok).toHaveBeenCalled();
   });
 
-  it("initiate defaults db provider and forwards undefined phone on parsed non-intech payload", async () => {
+  it("initiate defaults db provider and forwards undefined phone on parsed non-paydunya payload", async () => {
     const cfgMod = await import("../../config.js");
     const prevDriver = cfgMod.config.paymentDriver;
     cfgMod.config.paymentDriver = "wave" as never;
@@ -159,7 +158,7 @@ describe("PaymentController", () => {
     await c.initiate({ body: { bookingId: "ignored-by-parse-spy" } } as never, {} as never);
     expect(mocks.adapter.initiateDeposit).toHaveBeenCalledWith(expect.objectContaining({ phone: undefined }));
     expect(mocks.prisma.payment.update).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ provider: "intech" })
+      data: expect.objectContaining({ provider: "paydunya" })
     }));
     parseSpy.mockRestore();
     cfgMod.config.paymentDriver = prevDriver;

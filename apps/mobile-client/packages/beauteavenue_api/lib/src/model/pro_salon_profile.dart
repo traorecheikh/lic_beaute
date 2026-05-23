@@ -30,6 +30,7 @@ part 'pro_salon_profile.g.dart';
 /// * [subscriptionTier] 
 /// * [isVisibleInMarketplace] 
 /// * [canReceiveBookings] 
+/// * [approvalStatus] 
 /// * [teamDisplay] 
 /// * [gallery] 
 /// * [hours] 
@@ -83,6 +84,10 @@ abstract class ProSalonProfile implements Built<ProSalonProfile, ProSalonProfile
 
   @BuiltValueField(wireName: r'canReceiveBookings')
   bool get canReceiveBookings;
+
+  @BuiltValueField(wireName: r'approvalStatus')
+  ProSalonProfileApprovalStatusEnum get approvalStatus;
+  // enum approvalStatusEnum {  pending_review,  needs_info,  approved,  rejected,  };
 
   @BuiltValueField(wireName: r'teamDisplay')
   SalonDetailTeamDisplay get teamDisplay;
@@ -195,6 +200,11 @@ class _$ProSalonProfileSerializer implements PrimitiveSerializer<ProSalonProfile
     yield serializers.serialize(
       object.canReceiveBookings,
       specifiedType: const FullType(bool),
+    );
+    yield r'approvalStatus';
+    yield serializers.serialize(
+      object.approvalStatus,
+      specifiedType: const FullType(ProSalonProfileApprovalStatusEnum),
     );
     yield r'teamDisplay';
     yield serializers.serialize(
@@ -352,6 +362,13 @@ class _$ProSalonProfileSerializer implements PrimitiveSerializer<ProSalonProfile
           ) as bool;
           result.canReceiveBookings = valueDes;
           break;
+        case r'approvalStatus':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(ProSalonProfileApprovalStatusEnum),
+          ) as ProSalonProfileApprovalStatusEnum;
+          result.approvalStatus = valueDes;
+          break;
         case r'teamDisplay':
           final valueDes = serializers.deserialize(
             value,
@@ -415,5 +432,24 @@ class ProSalonProfileSubscriptionTierEnum extends EnumClass {
 
   static BuiltSet<ProSalonProfileSubscriptionTierEnum> get values => _$proSalonProfileSubscriptionTierEnumValues;
   static ProSalonProfileSubscriptionTierEnum valueOf(String name) => _$proSalonProfileSubscriptionTierEnumValueOf(name);
+}
+
+class ProSalonProfileApprovalStatusEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'pending_review')
+  static const ProSalonProfileApprovalStatusEnum pendingReview = _$proSalonProfileApprovalStatusEnum_pendingReview;
+  @BuiltValueEnumConst(wireName: r'needs_info')
+  static const ProSalonProfileApprovalStatusEnum needsInfo = _$proSalonProfileApprovalStatusEnum_needsInfo;
+  @BuiltValueEnumConst(wireName: r'approved')
+  static const ProSalonProfileApprovalStatusEnum approved = _$proSalonProfileApprovalStatusEnum_approved;
+  @BuiltValueEnumConst(wireName: r'rejected')
+  static const ProSalonProfileApprovalStatusEnum rejected = _$proSalonProfileApprovalStatusEnum_rejected;
+
+  static Serializer<ProSalonProfileApprovalStatusEnum> get serializer => _$proSalonProfileApprovalStatusEnumSerializer;
+
+  const ProSalonProfileApprovalStatusEnum._(String name): super(name);
+
+  static BuiltSet<ProSalonProfileApprovalStatusEnum> get values => _$proSalonProfileApprovalStatusEnumValues;
+  static ProSalonProfileApprovalStatusEnum valueOf(String name) => _$proSalonProfileApprovalStatusEnumValueOf(name);
 }
 

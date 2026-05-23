@@ -75,13 +75,13 @@ import 'package:beauteavenue_api/src/model/api_v1_me_payment_methods_get200_resp
 import 'package:beauteavenue_api/src/model/api_v1_me_payment_methods_get200_response_items_inner.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_vouchers_get200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_vouchers_get200_response_items_inner.dart';
-import 'package:beauteavenue_api/src/model/api_v1_media_media_id_complete_post200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_media_upload_intent_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_media_upload_intent_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_media_upload_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_notifications_get200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_notifications_get200_response_items_inner.dart';
 import 'package:beauteavenue_api/src/model/api_v1_notifications_id_read_post200_response.dart';
-import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_intech_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_paydunya_post200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_pro_vouchers_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_push_tokens_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_salons_id_availability_get200_response_inner.dart';
@@ -167,6 +167,7 @@ import 'package:beauteavenue_api/src/model/refresh_input.dart';
 import 'package:beauteavenue_api/src/model/register_input.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1.dart';
+import 'package:beauteavenue_api/src/model/register_input_any_of1_documents_inner.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1_hours_inner.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1_salon.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1_services_inner.dart';
@@ -244,13 +245,13 @@ part 'serializers.g.dart';
   ApiV1MePaymentMethodsGet200ResponseItemsInner,
   ApiV1MeVouchersGet200Response,
   ApiV1MeVouchersGet200ResponseItemsInner,
-  ApiV1MediaMediaIdCompletePost200Response,
   ApiV1MediaUploadIntentPost201Response,
   ApiV1MediaUploadIntentPostRequest,
+  ApiV1MediaUploadPost201Response,
   ApiV1NotificationsGet200Response,
   ApiV1NotificationsGet200ResponseItemsInner,
   ApiV1NotificationsIdReadPost200Response,
-  ApiV1PaymentsWebhooksIntechPost200Response,
+  ApiV1PaymentsWebhooksPaydunyaPost200Response,
   ApiV1ProVouchersPost201Response,
   ApiV1PushTokensPost201Response,
   ApiV1SalonsIdAvailabilityGet200ResponseInner,
@@ -336,6 +337,7 @@ part 'serializers.g.dart';
   RegisterInput,
   RegisterInputAnyOf,
   RegisterInputAnyOf1,
+  RegisterInputAnyOf1DocumentsInner,
   RegisterInputAnyOf1HoursInner,
   RegisterInputAnyOf1Salon,
   RegisterInputAnyOf1ServicesInner,

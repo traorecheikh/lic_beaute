@@ -113,7 +113,7 @@ describe("Pro forced branches", () => {
       return {
         ...actual,
         proCheckoutCompleteInputSchema: {
-          parse: vi.fn(() => ({ lineItems: [{ name: "Service", amountXof: 10000 }] }))
+          parse: vi.fn(() => ({ paymentMethod: "cash", lineItems: [{ name: "Service", amountXof: 10000 }] }))
         }
       };
     });

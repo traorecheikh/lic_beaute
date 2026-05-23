@@ -521,7 +521,8 @@
             "items": {
               "type": "string",
               "enum": [
-                "intech"
+                "intech",
+                "paydunya"
               ]
             }
           }
@@ -543,7 +544,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ]
           },
           "phoneNumber": {
@@ -585,7 +587,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ]
           },
           "phoneNumber": {
@@ -1387,7 +1390,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ]
           },
           "channel": {
@@ -1395,7 +1399,44 @@
             "enum": [
               "wave",
               "orange_money",
-              "free_money"
+              "free_money",
+              "paydunya_card",
+              "paydunya_airtel",
+              "paydunya_expresso",
+              "paydunya_free",
+              "paydunya_mpesa",
+              "paydunya_ng_airtel",
+              "paydunya_ng_mtn",
+              "paydunya_ng_9mobile",
+              "paydunya_ng_glo",
+              "paydunya_sam_airtel",
+              "paydunya_sam_mtn",
+              "paydunya_sam_safaricom",
+              "paydunya_tigo_rw",
+              "paydunya_airtel_rw",
+              "paydunya_mtn_rw",
+              "paydunya_mtn_ug",
+              "paydunya_airtel_ug",
+              "paydunya_orange_ml",
+              "paydunya_mtn_ci",
+              "paydunya_mtn_gh",
+              "paydunya_vodafone_gh",
+              "paydunya_airteltigo_gh",
+              "paydunya_tm_ci",
+              "paydunya_moov_tg",
+              "paydunya_togocel_tg",
+              "paydunya_wari_sn",
+              "paydunya_wave_sn",
+              "paydunya_cb_ci",
+              "paydunya_orange_sn",
+              "paydunya_free_sn",
+              "paydunya_yup_bj",
+              "paydunya_mtn_bj",
+              "paydunya_moov_ci",
+              "paydunya_orange_cm",
+              "paydunya_mtn_cm",
+              "paydunya_nexttel_cm",
+              "paydunya_camtel_cm"
             ]
           }
         },
@@ -1462,7 +1503,8 @@
           "paymentProvider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ],
             "nullable": true
           },
@@ -1549,7 +1591,8 @@
                 "paymentProvider": {
                   "type": "string",
                   "enum": [
-                    "intech"
+                    "intech",
+                    "paydunya"
                   ],
                   "nullable": true
                 },
@@ -2139,6 +2182,7 @@
           "billingProvider": {
             "type": "string",
             "enum": [
+              "paydunya",
               "intech",
               "manual"
             ],
@@ -2230,6 +2274,7 @@
                 "billingProvider": {
                   "type": "string",
                   "enum": [
+                    "paydunya",
                     "intech",
                     "manual"
                   ],
@@ -2306,6 +2351,7 @@
           "billingProvider": {
             "type": "string",
             "enum": [
+              "paydunya",
               "intech",
               "manual"
             ],
@@ -4151,6 +4197,7 @@
               "provider": {
                 "type": "string",
                 "enum": [
+                  "paydunya",
                   "intech",
                   "manual"
                 ]
@@ -4192,6 +4239,7 @@
               "provider": {
                 "type": "string",
                 "enum": [
+                  "paydunya",
                   "intech",
                   "manual"
                 ]
@@ -4225,10 +4273,11 @@
           "provider": {
             "type": "string",
             "enum": [
+              "paydunya",
               "intech",
               "manual"
             ],
-            "default": "intech"
+            "default": "paydunya"
           }
         },
         "required": [
@@ -4327,7 +4376,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ]
           },
           "channel": {
@@ -4335,7 +4385,44 @@
             "enum": [
               "wave",
               "orange_money",
-              "free_money"
+              "free_money",
+              "paydunya_card",
+              "paydunya_airtel",
+              "paydunya_expresso",
+              "paydunya_free",
+              "paydunya_mpesa",
+              "paydunya_ng_airtel",
+              "paydunya_ng_mtn",
+              "paydunya_ng_9mobile",
+              "paydunya_ng_glo",
+              "paydunya_sam_airtel",
+              "paydunya_sam_mtn",
+              "paydunya_sam_safaricom",
+              "paydunya_tigo_rw",
+              "paydunya_airtel_rw",
+              "paydunya_mtn_rw",
+              "paydunya_mtn_ug",
+              "paydunya_airtel_ug",
+              "paydunya_orange_ml",
+              "paydunya_mtn_ci",
+              "paydunya_mtn_gh",
+              "paydunya_vodafone_gh",
+              "paydunya_airteltigo_gh",
+              "paydunya_tm_ci",
+              "paydunya_moov_tg",
+              "paydunya_togocel_tg",
+              "paydunya_wari_sn",
+              "paydunya_wave_sn",
+              "paydunya_cb_ci",
+              "paydunya_orange_sn",
+              "paydunya_free_sn",
+              "paydunya_yup_bj",
+              "paydunya_mtn_bj",
+              "paydunya_moov_ci",
+              "paydunya_orange_cm",
+              "paydunya_mtn_cm",
+              "paydunya_nexttel_cm",
+              "paydunya_camtel_cm"
             ]
           }
         },
@@ -4389,7 +4476,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ]
           },
           "providerTxId": {
@@ -4434,7 +4522,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech"
+              "intech",
+              "paydunya"
             ]
           },
           "providerTxId": {
@@ -5034,7 +5123,8 @@
                           "provider": {
                             "type": "string",
                             "enum": [
-                              "intech"
+                              "intech",
+                              "paydunya"
                             ]
                           },
                           "phoneNumber": {
@@ -8139,6 +8229,105 @@
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/api/v1/payments/methods": {
+      "get": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Get available payment methods from the active provider",
+        "responses": {
+          "200": {
+            "description": "Available payment methods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaydunyaMethodListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/deposits/execute": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Execute a payment with a specific method (two-step flow)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaydunyaExecutePaymentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentInitiateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/webhooks/paydunya": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "PayDunya payment webhook callback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentWebhookBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "received"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/payments/{paymentId}/reconcile": {

@@ -61,20 +61,20 @@ describe("adapters index", () => {
     expect(r2.constructor.name).toBe("R2StorageAdapter");
   });
 
-  it("creates payment adapters and validates intech API key", async () => {
+  it("creates payment adapters and validates PayDunya master key", async () => {
     const mod = await import("./index.js");
     expect(() =>
-      mod.createPaymentAdapter("intech", {
+      mod.createPaymentAdapter("paydunya", {
         baseOrigin: "http://localhost:3000"
       })
-    ).toThrow(/INTECH_API_KEY/);
+    ).toThrow(/PAYDUNYA_MASTER_KEY/);
     const mock = mod.createPaymentAdapter("mock", { baseOrigin: "http://localhost:3000" });
     expect(mock.constructor.name).toBe("MockPaymentAdapter");
     const cached = mod.getPaymentAdapter("mock", { baseOrigin: "http://localhost:3000" });
-    expect(cached).toBe(mod.getPaymentAdapter("intech", { baseOrigin: "http://localhost:3000", intechApiKey: "x" }));
+    expect(cached).toBe(mod.getPaymentAdapter("mock", { baseOrigin: "http://localhost:3000" }));
   });
 
-  it("covers payment/otp factory default and intech success branches", async () => {
+  it("covers payment/otp factory default and paydunya success branches", async () => {
     const mod = await import("./index.js");
     const otp = mod.createOtpAdapter("at", { atApiKey: "k", atUsername: "u", atSenderId: "SENDER" });
     expect(otp.constructor.name).toBe("AfricasTalkingOtpAdapter");
@@ -82,24 +82,14 @@ describe("adapters index", () => {
     const fallbackPayment = mod.createPaymentAdapter("unknown", { baseOrigin: "http://localhost:3000" });
     expect(fallbackPayment.constructor.name).toBe("MockPaymentAdapter");
 
-    const intech = mod.createPaymentAdapter("intech", {
+    const paydunya = mod.createPaymentAdapter("paydunya", {
       baseOrigin: "http://localhost:3000",
-      intechApiKey: "api-key",
-      intechBaseUrl: "https://api.intech.sn",
-      intechCallbackHmacEnabled: true,
-      intechHmacSecretKey: "secret",
-      intechHmacMaxAgeMs: 1000,
-      intechRequestTimeoutMs: 2000
+      paydunyaMasterKey: "master-key",
+      paydunyaPrivateKey: "private-key",
+      paydunyaToken: "token",
+      paydunyaEnv: "sandbox",
+      paydunyaBaseUrl: "https://sandbox.paydunya.com"
     });
-    expect(intech.constructor.name).toBe("IntechAdapter");
-  });
-
-  it("creates intech adapter with default optional config values", async () => {
-    const mod = await import("./index.js");
-    const intech = mod.createPaymentAdapter("intech", {
-      baseOrigin: "http://localhost:3000",
-      intechApiKey: "api-key"
-    });
-    expect(intech.constructor.name).toBe("IntechAdapter");
+    expect(paydunya.constructor.name).toBe("PayDunyaAdapter");
   });
 });

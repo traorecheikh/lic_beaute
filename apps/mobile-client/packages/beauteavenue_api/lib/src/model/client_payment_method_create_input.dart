@@ -19,7 +19,7 @@ part 'client_payment_method_create_input.g.dart';
 abstract class ClientPaymentMethodCreateInput implements Built<ClientPaymentMethodCreateInput, ClientPaymentMethodCreateInputBuilder> {
   @BuiltValueField(wireName: r'provider')
   ClientPaymentMethodCreateInputProviderEnum get provider;
-  // enum providerEnum {  intech,  };
+  // enum providerEnum {  intech,  paydunya,  };
 
   @BuiltValueField(wireName: r'phoneNumber')
   String get phoneNumber;
@@ -145,6 +145,8 @@ class ClientPaymentMethodCreateInputProviderEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'intech')
   static const ClientPaymentMethodCreateInputProviderEnum intech = _$clientPaymentMethodCreateInputProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const ClientPaymentMethodCreateInputProviderEnum paydunya = _$clientPaymentMethodCreateInputProviderEnum_paydunya;
 
   static Serializer<ClientPaymentMethodCreateInputProviderEnum> get serializer => _$clientPaymentMethodCreateInputProviderEnumSerializer;
 

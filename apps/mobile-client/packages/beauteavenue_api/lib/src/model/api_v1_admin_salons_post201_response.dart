@@ -16,6 +16,7 @@ part 'api_v1_admin_salons_post201_response.g.dart';
 ///
 /// Properties:
 /// * [id] 
+/// * [subscriptionId] 
 /// * [salonName] 
 /// * [category] 
 /// * [city] 
@@ -35,6 +36,9 @@ part 'api_v1_admin_salons_post201_response.g.dart';
 abstract class ApiV1AdminSalonsPost201Response implements Built<ApiV1AdminSalonsPost201Response, ApiV1AdminSalonsPost201ResponseBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
+
+  @BuiltValueField(wireName: r'subscriptionId')
+  String? get subscriptionId;
 
   @BuiltValueField(wireName: r'salonName')
   String get salonName;
@@ -110,6 +114,11 @@ class _$ApiV1AdminSalonsPost201ResponseSerializer implements PrimitiveSerializer
     yield serializers.serialize(
       object.id,
       specifiedType: const FullType(String),
+    );
+    yield r'subscriptionId';
+    yield object.subscriptionId == null ? null : serializers.serialize(
+      object.subscriptionId,
+      specifiedType: const FullType.nullable(String),
     );
     yield r'salonName';
     yield serializers.serialize(
@@ -215,6 +224,14 @@ class _$ApiV1AdminSalonsPost201ResponseSerializer implements PrimitiveSerializer
             specifiedType: const FullType(String),
           ) as String;
           result.id = valueDes;
+          break;
+        case r'subscriptionId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.subscriptionId = valueDes;
           break;
         case r'salonName':
           final valueDes = serializers.deserialize(

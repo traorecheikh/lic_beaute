@@ -15,6 +15,9 @@ part 'pro_staff_member.g.dart';
 /// * [id] 
 /// * [userId] 
 /// * [displayName] 
+/// * [email] 
+/// * [phone] 
+/// * [role] 
 /// * [avatarUrl] 
 /// * [description] 
 /// * [isActive] 
@@ -30,6 +33,16 @@ abstract class ProStaffMember implements Built<ProStaffMember, ProStaffMemberBui
 
   @BuiltValueField(wireName: r'displayName')
   String get displayName;
+
+  @BuiltValueField(wireName: r'email')
+  String? get email;
+
+  @BuiltValueField(wireName: r'phone')
+  String? get phone;
+
+  @BuiltValueField(wireName: r'role')
+  ProStaffMemberRoleEnum get role;
+  // enum roleEnum {  salon_staff,  salon_manager,  salon_owner,  };
 
   @BuiltValueField(wireName: r'avatarUrl')
   String? get avatarUrl;
@@ -83,6 +96,21 @@ class _$ProStaffMemberSerializer implements PrimitiveSerializer<ProStaffMember> 
     yield serializers.serialize(
       object.displayName,
       specifiedType: const FullType(String),
+    );
+    yield r'email';
+    yield object.email == null ? null : serializers.serialize(
+      object.email,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'phone';
+    yield object.phone == null ? null : serializers.serialize(
+      object.phone,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'role';
+    yield serializers.serialize(
+      object.role,
+      specifiedType: const FullType(ProStaffMemberRoleEnum),
     );
     yield r'avatarUrl';
     yield object.avatarUrl == null ? null : serializers.serialize(
@@ -153,6 +181,29 @@ class _$ProStaffMemberSerializer implements PrimitiveSerializer<ProStaffMember> 
           ) as String;
           result.displayName = valueDes;
           break;
+        case r'email':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.email = valueDes;
+          break;
+        case r'phone':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.phone = valueDes;
+          break;
+        case r'role':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(ProStaffMemberRoleEnum),
+          ) as ProStaffMemberRoleEnum;
+          result.role = valueDes;
+          break;
         case r'avatarUrl':
           final valueDes = serializers.deserialize(
             value,
@@ -217,5 +268,22 @@ class _$ProStaffMemberSerializer implements PrimitiveSerializer<ProStaffMember> 
     );
     return result.build();
   }
+}
+
+class ProStaffMemberRoleEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'salon_staff')
+  static const ProStaffMemberRoleEnum salonStaff = _$proStaffMemberRoleEnum_salonStaff;
+  @BuiltValueEnumConst(wireName: r'salon_manager')
+  static const ProStaffMemberRoleEnum salonManager = _$proStaffMemberRoleEnum_salonManager;
+  @BuiltValueEnumConst(wireName: r'salon_owner')
+  static const ProStaffMemberRoleEnum salonOwner = _$proStaffMemberRoleEnum_salonOwner;
+
+  static Serializer<ProStaffMemberRoleEnum> get serializer => _$proStaffMemberRoleEnumSerializer;
+
+  const ProStaffMemberRoleEnum._(String name): super(name);
+
+  static BuiltSet<ProStaffMemberRoleEnum> get values => _$proStaffMemberRoleEnumValues;
+  static ProStaffMemberRoleEnum valueOf(String name) => _$proStaffMemberRoleEnumValueOf(name);
 }
 

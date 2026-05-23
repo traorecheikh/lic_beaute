@@ -44,6 +44,7 @@ describe("BookingController", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "client" });
+    mocks.enqueueJob.mockResolvedValue(undefined);
     mocks.fetchSlots.mockResolvedValue([{ startsAt: new Date(Date.now() + 3600_000).toISOString() }]);
     mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb({
       booking: { count: vi.fn().mockResolvedValue(0), create: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },

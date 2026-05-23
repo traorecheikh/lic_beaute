@@ -139,6 +139,7 @@ describe("ProController extra branches", () => {
 
   it("updateSalon falls back to owner phone when public phone setting is absent", async () => {
     mocks.prisma.employee.count.mockResolvedValue(0);
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium", approvalStatus: "approved", name: "Salon A" });
     mocks.prisma.salon.findUnique.mockResolvedValueOnce({
       id: "s1",
       name: "Salon A",
@@ -204,6 +205,7 @@ describe("ProController extra branches", () => {
   });
 
   it("updateSalon supports partial payload without optional setting/gallery fields", async () => {
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium", approvalStatus: "approved", name: "Salon Partial" });
     mocks.prisma.salon.findUnique.mockResolvedValueOnce({
       id: "s1",
       name: "Salon Partial",

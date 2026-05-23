@@ -42,7 +42,7 @@ abstract class AdminSubscriptionListResponseItemsInner implements Built<AdminSub
 
   @BuiltValueField(wireName: r'billingProvider')
   AdminSubscriptionListResponseItemsInnerBillingProviderEnum? get billingProvider;
-  // enum billingProviderEnum {  intech,  manual,  };
+  // enum billingProviderEnum {  paydunya,  intech,  manual,  };
 
   @BuiltValueField(wireName: r'expiresAt')
   DateTime? get expiresAt;
@@ -278,6 +278,8 @@ class AdminSubscriptionListResponseItemsInnerStatusEnum extends EnumClass {
 
 class AdminSubscriptionListResponseItemsInnerBillingProviderEnum extends EnumClass {
 
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const AdminSubscriptionListResponseItemsInnerBillingProviderEnum paydunya = _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'intech')
   static const AdminSubscriptionListResponseItemsInnerBillingProviderEnum intech = _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'manual')

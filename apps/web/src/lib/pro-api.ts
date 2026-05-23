@@ -2,13 +2,13 @@ import {
   AuthApi,
   Configuration,
   MediaApi,
+  NotificationsApi,
   ProApi,
   type ApiV1MediaUploadIntentPostRequestPurposeEnum,
   type ApiV1ProBookingsGetRequest,
   type EmailLoginInput,
   type OtpRequestInput,
   type OtpVerifyInput,
-  type ProCheckoutCompleteInput,
   type ProBlockedSlotCreateInput,
   type ProSalonProfileHoursInner,
   type ProSalonUpdateInput,
@@ -179,11 +179,43 @@ export async function fetchProCheckout(token: string, bookingId: string) {
   return withApiError(() => getProApi(token).apiV1ProCheckoutBookingIdGet({ bookingId }));
 }
 
-export async function completeProCheckout(token: string, bookingId: string, payload: ProCheckoutCompleteInput) {
-  return withApiError(() => getProApi(token).apiV1ProCheckoutBookingIdCompletePost({
-    bookingId,
-    proCheckoutCompleteInput: payload
-  }));
+export async function completeProCheckout(token: string, bookingId: string, payload: {
+  paymentMethod: "cash" | "intech" | "other";
+  softpayMethod?: string;
+  discountXof: number;
+  lineItems: Array<{ name: string; amountXof: number }>;
+}) {
+  const cfg = getConfiguration(token);
+  const basePath = cfg.basePath ?? "";
+  const response = await fetch(`${basePath}/api/v1/pro/checkout/${bookingId}/complete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new ApiError("checkout_complete_failed", text);
+  }
+  return response.json();
+}
+
+export async function fetchPaymentMethods(token: string) {
+  // GET /api/v1/payments/methods — not yet in generated client
+  const cfg = getConfiguration(token);
+  const basePath = cfg.basePath ?? "";
+  const response = await fetch(`${basePath}/api/v1/payments/methods`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json"
+    }
+  });
+  if (!response.ok) throw new ApiError("get_payment_methods_failed", await response.text());
+  return response.json();
 }
 
 export async function fetchProSalon(token: string) {
@@ -353,6 +385,29 @@ export async function fetchProPayouts(token: string) {
   return withApiError(() => getProApi(token).apiV1ProPayoutsGet());
 }
 
+function getNotificationsApi(token: string) {
+  return new NotificationsApi(getConfiguration(token));
+}
+
+export async function fetchNotificationsUnreadCount(token: string): Promise<number> {
+  return withApiError(async () => {
+    const result = await getNotificationsApi(token).apiV1NotificationsGet({});
+    return (result as unknown as { unreadCount: number }).unreadCount ?? 0;
+  });
+}
+
+export async function fetchNotifications(token: string) {
+  return withApiError(() => getNotificationsApi(token).apiV1NotificationsGet());
+}
+
+export async function markNotificationRead(token: string, id: string) {
+  return withApiError(() => getNotificationsApi(token).apiV1NotificationsIdReadPost({ id }));
+}
+
+export async function markAllNotificationsRead(token: string) {
+  return withApiError(() => getNotificationsApi(token).apiV1NotificationsReadAllPost());
+}
+
 export async function redeemStaffInviteToken(inviteToken: string): Promise<{ accessToken: string; refreshToken: string }> {
   return withApiError(async () => {
     const response = await fetch(`${apiBaseUrl}/api/v1/auth/staff-invite/redeem`, {
@@ -367,3 +422,4 @@ export async function redeemStaffInviteToken(inviteToken: string): Promise<{ acc
     return response.json() as Promise<{ accessToken: string; refreshToken: string }>;
   });
 }
+

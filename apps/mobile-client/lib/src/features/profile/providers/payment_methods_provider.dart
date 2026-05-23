@@ -135,7 +135,7 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
           items = [
             PaymentMethodRecord(
               id: 'pending-${entry.id}',
-              provider: entry.payload['provider'] as String? ?? 'intech',
+              provider: entry.payload['provider'] as String? ?? 'paydunya',
               phoneNumber: entry.payload['phoneNumber'] as String? ?? '',
               label: entry.payload['label'] as String?,
               isDefault: items.every((item) => !item.isDefault),

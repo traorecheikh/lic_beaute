@@ -13,17 +13,30 @@ part 'pro_staff_create_input.g.dart';
 ///
 /// Properties:
 /// * [phone] 
+/// * [email] 
+/// * [password] 
 /// * [fullName] 
+/// * [role] 
 /// * [avatarUrl] 
 /// * [description] 
 /// * [serviceIds] 
 @BuiltValue()
 abstract class ProStaffCreateInput implements Built<ProStaffCreateInput, ProStaffCreateInputBuilder> {
   @BuiltValueField(wireName: r'phone')
-  String get phone;
+  String? get phone;
+
+  @BuiltValueField(wireName: r'email')
+  String? get email;
+
+  @BuiltValueField(wireName: r'password')
+  String? get password;
 
   @BuiltValueField(wireName: r'fullName')
   String get fullName;
+
+  @BuiltValueField(wireName: r'role')
+  ProStaffCreateInputRoleEnum? get role;
+  // enum roleEnum {  salon_staff,  salon_manager,  };
 
   @BuiltValueField(wireName: r'avatarUrl')
   String? get avatarUrl;
@@ -40,6 +53,7 @@ abstract class ProStaffCreateInput implements Built<ProStaffCreateInput, ProStaf
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProStaffCreateInputBuilder b) => b
+      ..role = ProStaffCreateInputRoleEnum.valueOf('salon_staff')
       ..serviceIds = ListBuilder();
 
   @BuiltValueSerializer(custom: true)
@@ -58,16 +72,39 @@ class _$ProStaffCreateInputSerializer implements PrimitiveSerializer<ProStaffCre
     ProStaffCreateInput object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'phone';
-    yield serializers.serialize(
-      object.phone,
-      specifiedType: const FullType(String),
-    );
+    if (object.phone != null) {
+      yield r'phone';
+      yield serializers.serialize(
+        object.phone,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.email != null) {
+      yield r'email';
+      yield serializers.serialize(
+        object.email,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.password != null) {
+      yield r'password';
+      yield serializers.serialize(
+        object.password,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'fullName';
     yield serializers.serialize(
       object.fullName,
       specifiedType: const FullType(String),
     );
+    if (object.role != null) {
+      yield r'role';
+      yield serializers.serialize(
+        object.role,
+        specifiedType: const FullType(ProStaffCreateInputRoleEnum),
+      );
+    }
     if (object.avatarUrl != null) {
       yield r'avatarUrl';
       yield serializers.serialize(
@@ -119,12 +156,33 @@ class _$ProStaffCreateInputSerializer implements PrimitiveSerializer<ProStaffCre
           ) as String;
           result.phone = valueDes;
           break;
+        case r'email':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.email = valueDes;
+          break;
+        case r'password':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.password = valueDes;
+          break;
         case r'fullName':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(String),
           ) as String;
           result.fullName = valueDes;
+          break;
+        case r'role':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(ProStaffCreateInputRoleEnum),
+          ) as ProStaffCreateInputRoleEnum;
+          result.role = valueDes;
           break;
         case r'avatarUrl':
           final valueDes = serializers.deserialize(
@@ -176,5 +234,20 @@ class _$ProStaffCreateInputSerializer implements PrimitiveSerializer<ProStaffCre
     );
     return result.build();
   }
+}
+
+class ProStaffCreateInputRoleEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'salon_staff')
+  static const ProStaffCreateInputRoleEnum salonStaff = _$proStaffCreateInputRoleEnum_salonStaff;
+  @BuiltValueEnumConst(wireName: r'salon_manager')
+  static const ProStaffCreateInputRoleEnum salonManager = _$proStaffCreateInputRoleEnum_salonManager;
+
+  static Serializer<ProStaffCreateInputRoleEnum> get serializer => _$proStaffCreateInputRoleEnumSerializer;
+
+  const ProStaffCreateInputRoleEnum._(String name): super(name);
+
+  static BuiltSet<ProStaffCreateInputRoleEnum> get values => _$proStaffCreateInputRoleEnumValues;
+  static ProStaffCreateInputRoleEnum valueOf(String name) => _$proStaffCreateInputRoleEnumValueOf(name);
 }
 

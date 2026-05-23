@@ -25,11 +25,13 @@ class PaymentMethodsPage extends ConsumerStatefulWidget {
 
 class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   final _phoneController = TextEditingController();
-  String _channel = 'wave';
+  String _channel = 'wave_senegal';
   bool _saving = false;
   static const Map<String, String> _channelLabels = {
-    'wave': 'Wave',
-    'orange_money': 'Orange Money',
+    'wave_senegal': 'Wave Sénégal',
+    'orange_senegal': 'Orange Money Sénégal',
+    'free_senegal': 'Free Money Sénégal',
+    'wizall_senegal': 'Wizall Sénégal',
   };
 
   @override
@@ -61,7 +63,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                 icon: 'star',
                 title: 'Aucun moyen de paiement',
                 subtitle:
-                    'Enregistrez un numéro Wave ou Orange Money pour simplifier vos réservations.',
+                    'Enregistrez un compte mobile money pour simplifier vos réservations.',
               )
             else
               ...methods.map(
@@ -88,7 +90,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   AppDropdown<String>(
                     label: 'Opérateur',
                     value: _channel,
-                    items: const ['wave', 'orange_money'],
+                    items: _channelLabels.keys.toList(),
                     itemLabel: (v) => _channelLabels[v] ?? v,
                     onChanged: (val) => setState(() => _channel = val),
                   ),
@@ -215,7 +217,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       await ref
           .read(paymentMethodsProvider.notifier)
           .add(
-            provider: 'intech',
+            provider: 'paydunya',
             phoneNumber: phone,
             label: _channelLabels[_channel],
           );

@@ -9,7 +9,7 @@ export const bookingStatuses = [
   "cancelled"
 ] as const;
 
-export const paymentProviders = ["intech"] as const;
+export const paymentProviders = ["intech", "paydunya"] as const;
 
 export function formatMoneyXof(amount: number) {
   return new Intl.NumberFormat("fr-SN", {

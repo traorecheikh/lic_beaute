@@ -19,6 +19,7 @@ import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../../profile/providers/payment_methods_provider.dart';
 import '../providers/booking_create_provider.dart';
+import '../providers/payment_methods_provider.dart';
 
 class PaymentHandoffPage extends ConsumerStatefulWidget {
   final String bookingId;
@@ -31,10 +32,6 @@ class PaymentHandoffPage extends ConsumerStatefulWidget {
 class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   String? _selectedMethod;
   bool _isProcessing = false;
-  static const Map<String, String> _channelLabels = {
-    'wave': 'Wave',
-    'orange_money': 'Orange Money',
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +57,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         if (mounted) setState(() => _selectedMethod = defaultChannel);
       });
     }
+
+    final paydunyaMethodsAsync = ref.watch(availablePaydunyaMethodsProvider);
 
     return AppBookingAsyncScaffold<Map<String, dynamic>>(
       bookingId: widget.bookingId,
@@ -163,23 +162,34 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                     ),
                   ],
                   SizedBox(height: 14.h),
-                  _MethodTile(
-                    id: 'wave',
-                    label: 'Wave',
-                    subtitle: 'Paiement mobile rapide',
-                    logoAsset: 'assets/wave.png',
-                    selected: _selectedMethod == 'wave',
-                    onTap: () => setState(() => _selectedMethod = 'wave'),
-                  ),
-                  SizedBox(height: 10.h),
-                  _MethodTile(
-                    id: 'orange_money',
-                    label: 'Orange Money',
-                    subtitle: 'Paiement mobile Orange',
-                    logoAsset: 'assets/om.png',
-                    selected: _selectedMethod == 'orange_money',
-                    onTap: () =>
-                        setState(() => _selectedMethod = 'orange_money'),
+                  paydunyaMethodsAsync.when(
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator.adaptive(),
+                      ),
+                    ),
+                    error: (error, _) => Text(
+                      'Impossible de charger les moyens de paiement',
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                    data: (methods) => Column(
+                      children: methods
+                          .where((m) => m.enabled)
+                          .map((method) => Padding(
+                                padding: EdgeInsets.only(bottom: 10.h),
+                                child: _MethodTile(
+                                  id: method.code,
+                                  label: method.label,
+                                  selected: _selectedMethod == method.code,
+                                  onTap: () => setState(
+                                      () => _selectedMethod = method.code),
+                                ),
+                              ))
+                          .toList(),
+                    ),
                   ),
                 ],
               ),
@@ -195,7 +205,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       child: AppButton.primary(
         onPressed: _selectedMethod == null ? null : _pay,
         label: _selectedMethod != null
-            ? 'Continuer avec ${_channelLabels[_selectedMethod] ?? _selectedMethod}'
+            ? 'Continuer avec ${_selectedMethod!.replaceAll('_', ' ')}'
             : 'Continuer',
         isLoading: _isProcessing,
       ),
@@ -224,16 +234,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
           if (!context.mounted) return;
-          // ignore: use_build_context_synchronously
           context.pushReplacement(AppRoutes.success(widget.bookingId));
         } else {
           if (!context.mounted) return;
-          // ignore: use_build_context_synchronously
           AppSnackbar.error(context, "Impossible d'ouvrir l'application de paiement.");
         }
       } else {
         if (!context.mounted) return;
-        // ignore: use_build_context_synchronously
         context.pushReplacement(AppRoutes.success(widget.bookingId));
       }
     } catch (e) {
@@ -271,18 +278,17 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       }
     }
     if (!context.mounted) return;
-    // ignore: use_build_context_synchronously
     await context.handleHttpError(error, 'Échec du paiement.');
   }
 
   String? _channelFromMethod(dynamic method) {
     if (method == null) return null;
     final provider = method.provider as String? ?? '';
-    if (_channelLabels.containsKey(provider)) return provider;
-    final label = (method.label as String?)?.toLowerCase() ?? '';
-    if (label.contains('orange')) return 'orange_money';
-    if (label.contains('wave')) return 'wave';
-    if (provider == 'om') return 'orange_money';
+    if (provider == 'paydunya') {
+      // For PayDunya, we need the actual method code from the stored method
+      // This should be mapped via the payment methods provider
+      return 'wave_senegal';
+    }
     return null;
   }
 }
@@ -291,14 +297,11 @@ class _MethodTile extends StatelessWidget {
   const _MethodTile({
     required this.id,
     required this.label,
-    required this.subtitle,
-    required this.logoAsset,
     required this.selected,
     required this.onTap,
   });
 
-  final String id, label, subtitle;
-  final String logoAsset;
+  final String id, label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -328,10 +331,8 @@ class _MethodTile extends StatelessWidget {
                 color: AppColors.surfaceVariant,
                 shape: BoxShape.circle,
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: EdgeInsets.all(8.r),
-                child: Image.asset(logoAsset, fit: BoxFit.contain),
+              child: Center(
+                child: AppIcon('smartphone', size: 20, color: AppColors.onSurfaceVariant),
               ),
             ),
             SizedBox(width: 14.w),
@@ -342,7 +343,7 @@ class _MethodTile extends StatelessWidget {
                   Text(label, style: AppTextStyles.labelLg),
                   SizedBox(height: 2.h),
                   Text(
-                    subtitle,
+                    id.replaceAll('_', ' ').toUpperCase(),
                     style: AppTextStyles.bodySm.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),

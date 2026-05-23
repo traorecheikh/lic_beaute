@@ -2085,6 +2085,70 @@ export const openApiSpec = {
         }
       })
     },
+    "/api/v1/payments/methods": {
+      get: withBearer({
+        tags: ["payments"],
+        summary: "Get available payment methods from the active provider",
+        responses: {
+          200: {
+            description: "Available payment methods",
+            content: {
+              "application/json": {
+                schema: ref("PaydunyaMethodListResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/payments/deposits/execute": {
+      post: withBearer({
+        tags: ["payments"],
+        summary: "Execute a payment with a specific method (two-step flow)",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("PaydunyaExecutePaymentInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Payment execution result",
+            content: {
+              "application/json": {
+                schema: ref("PaymentInitiateResponse")
+              }
+            }
+          }
+        }
+      })
+    },
+    "/api/v1/payments/webhooks/paydunya": {
+      post: {
+        tags: ["payments"],
+        summary: "PayDunya payment webhook callback",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("PaymentWebhookBody")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Webhook accepted",
+            content: {
+              "application/json": {
+                schema: toOpenApiSchema(z.object({ received: z.boolean() }))
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/payments/{paymentId}/reconcile": {
       post: withBearer({
         tags: ["payments"],

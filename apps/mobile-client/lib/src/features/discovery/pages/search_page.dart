@@ -1,4 +1,5 @@
-import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,20 +32,31 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   final _controller = TextEditingController();
   final _focus = FocusNode();
   String _query = '';
+  String _debouncedQuery = '';
   String? _activeCategory;
   bool _filterPromptHandled = false;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(
-      () => setState(() => _query = _controller.text.trim()),
-    );
+    _controller.addListener(_onQueryChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _focus.requestFocus());
+  }
+
+  void _onQueryChanged() {
+    final raw = _controller.text.trim();
+    setState(() => _query = raw);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) setState(() => _debouncedQuery = raw);
+    });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    _controller.removeListener(_onQueryChanged);
     _controller.dispose();
     _focus.dispose();
     super.dispose();
@@ -52,14 +64,20 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final salonsAsync = ref.watch(salonListProvider);
-    Future<void> refreshSalons() => ref.refresh(salonListProvider.future);
-    final categories =
-        (salonsAsync.asData?.value.data?.items.toList() ?? const [])
-            .map((s) => s.category)
-            .toSet()
-            .toList()
-          ..sort();
+    final searchKey = (query: _debouncedQuery, category: _activeCategory);
+    final salonsAsync = ref.watch(salonSearchProvider(searchKey));
+    Future<void> refreshSalons() =>
+        ref.refresh(salonSearchProvider(searchKey).future);
+
+    // Category suggestions come from the full list (idle state) or are static
+    final categories = const [
+      'Coiffure',
+      'Esthétique',
+      'Ongles',
+      'Spa',
+      'Maquillage',
+      'Barbier',
+    ];
 
     _maybeOpenFiltersFromRoute(context, categories);
 
@@ -262,31 +280,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           errorTitle: 'Impossible de charger les salons',
                           serverTitle: 'La recherche est indisponible',
                           onRetry: refreshSalons,
-                          builder: (resource) {
-                            final all =
-                                resource.data?.items.toList() ??
-                                const <SalonSummaryListResponseItemsInner>[];
-                            final results = all.where((s) {
-                              final q = _query.toLowerCase();
-                              final matchQ =
-                                  q.isEmpty ||
-                                  s.name.toLowerCase().contains(q) ||
-                                  s.category.toLowerCase().contains(q) ||
-                                  (s.neighborhood ?? '').toLowerCase().contains(q) ||
-                                  s.city.toLowerCase().contains(q);
-                              final matchCat =
-                                  _activeCategory == null ||
-                                  s.category == _activeCategory;
-                              return matchQ && matchCat;
-                            }).toList();
-
+                          builder: (results) {
                             return RefreshIndicator.adaptive(
                               color: AppColors.primary,
                               onRefresh: refreshSalons,
                               child: AppSalonListView(
                                 items: results,
-                                isStale: resource.isStale,
-                                cachedAt: resource.cachedAt,
+                                isStale: false,
+                                cachedAt: null,
                                 emptyState: SizedBox(
                                   height:
                                       MediaQuery.of(context).size.height * 0.55,

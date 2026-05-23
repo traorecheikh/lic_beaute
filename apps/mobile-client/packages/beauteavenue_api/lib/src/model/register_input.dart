@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:beauteavenue_api/src/model/register_input_any_of1_documents_inner.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1_hours_inner.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1.dart';
@@ -23,9 +24,11 @@ part 'register_input.g.dart';
 /// * [email] 
 /// * [phone] 
 /// * [password] 
+/// * [subscriptionIntentTier] 
 /// * [salon] 
 /// * [services] 
 /// * [hours] 
+/// * [documents] 
 @BuiltValue()
 abstract class RegisterInput implements Built<RegisterInput, RegisterInputBuilder> {
   /// Any Of [RegisterInputAnyOf], [RegisterInputAnyOf1]
@@ -94,5 +97,20 @@ class RegisterInputTypeEnum extends EnumClass {
 
   static BuiltSet<RegisterInputTypeEnum> get values => _$registerInputTypeEnumValues;
   static RegisterInputTypeEnum valueOf(String name) => _$registerInputTypeEnumValueOf(name);
+}
+
+class RegisterInputSubscriptionIntentTierEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'standard')
+  static const RegisterInputSubscriptionIntentTierEnum standard = _$registerInputSubscriptionIntentTierEnum_standard;
+  @BuiltValueEnumConst(wireName: r'premium')
+  static const RegisterInputSubscriptionIntentTierEnum premium = _$registerInputSubscriptionIntentTierEnum_premium;
+
+  static Serializer<RegisterInputSubscriptionIntentTierEnum> get serializer => _$registerInputSubscriptionIntentTierEnumSerializer;
+
+  const RegisterInputSubscriptionIntentTierEnum._(String name): super(name);
+
+  static BuiltSet<RegisterInputSubscriptionIntentTierEnum> get values => _$registerInputSubscriptionIntentTierEnumValues;
+  static RegisterInputSubscriptionIntentTierEnum valueOf(String name) => _$registerInputSubscriptionIntentTierEnumValueOf(name);
 }
 

@@ -10,9 +10,9 @@ import 'package:dio/dio.dart';
 
 import 'package:beauteavenue_api/src/api_util.dart';
 import 'package:beauteavenue_api/src/model/api_error.dart';
-import 'package:beauteavenue_api/src/model/api_v1_media_media_id_complete_post200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_media_upload_intent_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_media_upload_intent_post_request.dart';
+import 'package:beauteavenue_api/src/model/api_v1_media_upload_post201_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_salons_salon_id_public_media_get200_response.dart';
 import 'package:beauteavenue_api/src/model/deleted_response.dart';
 import 'package:beauteavenue_api/src/model/media_asset.dart';
@@ -37,9 +37,9 @@ class MediaApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [ApiV1MediaMediaIdCompletePost200Response] as data
+  /// Returns a [Future] containing a [Response] with a [ApiV1MediaUploadPost201Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ApiV1MediaMediaIdCompletePost200Response>> apiV1MediaMediaIdCompletePost({ 
+  Future<Response<ApiV1MediaUploadPost201Response>> apiV1MediaMediaIdCompletePost({ 
     required String mediaId,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -75,14 +75,14 @@ class MediaApi {
       onReceiveProgress: onReceiveProgress,
     );
 
-    ApiV1MediaMediaIdCompletePost200Response? _responseData;
+    ApiV1MediaUploadPost201Response? _responseData;
 
     try {
       final rawResponse = _response.data;
       _responseData = rawResponse == null ? null : _serializers.deserialize(
         rawResponse,
-        specifiedType: const FullType(ApiV1MediaMediaIdCompletePost200Response),
-      ) as ApiV1MediaMediaIdCompletePost200Response;
+        specifiedType: const FullType(ApiV1MediaUploadPost201Response),
+      ) as ApiV1MediaUploadPost201Response;
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -94,7 +94,7 @@ class MediaApi {
       );
     }
 
-    return Response<ApiV1MediaMediaIdCompletePost200Response>(
+    return Response<ApiV1MediaUploadPost201Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -358,6 +358,114 @@ class MediaApi {
     }
 
     return Response<ApiV1MediaUploadIntentPost201Response>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Upload media through API (adapter-aware: local/noop/r2)
+  /// 
+  ///
+  /// Parameters:
+  /// * [purpose] 
+  /// * [file] 
+  /// * [salonId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ApiV1MediaUploadPost201Response] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ApiV1MediaUploadPost201Response>> apiV1MediaUploadPost({ 
+    required String purpose,
+    JsonObject? file,
+    String? salonId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/media/upload';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'multipart/form-data',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      _bodyData = FormData.fromMap(<String, dynamic>{
+        r'file': encodeFormParameter(_serializers, file, const FullType(JsonObject)),
+        r'purpose': encodeFormParameter(_serializers, purpose, const FullType(String)),
+        if (salonId != null) r'salonId': encodeFormParameter(_serializers, salonId, const FullType(String)),
+      });
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ApiV1MediaUploadPost201Response? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ApiV1MediaUploadPost201Response),
+      ) as ApiV1MediaUploadPost201Response;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ApiV1MediaUploadPost201Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

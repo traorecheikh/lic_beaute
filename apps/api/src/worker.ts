@@ -22,13 +22,12 @@ const storageAdapter = getStorageAdapter(config.storageDriver, {
 });
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
-  intechApiKey: config.intechApiKey,
-  intechBaseUrl: config.intechBaseUrl,
-  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
-  intechHmacSecretKey: config.intechHmacSecretKey,
-  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
-  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
-  baseOrigin: config.webOrigin
+  baseOrigin: config.webOrigin,
+  paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPrivateKey: config.paydunyaPrivateKey,
+  paydunyaToken: config.paydunyaToken,
+  paydunyaEnv: config.paydunyaEnv,
+  paydunyaBaseUrl: config.paydunyaBaseUrl
 });
 
 type LocalJob = {
@@ -38,11 +37,11 @@ type LocalJob = {
   attempts: number;
 };
 
-async function handleJob(type: AppJobType, payload: Record<string, string>): Promise<void> {
+export async function handleJob(type: AppJobType, payload: Record<string, unknown>): Promise<void> {
   switch (type) {
     case "deposit_settlement": {
       const booking = await prisma.booking.findUnique({
-        where: { id: payload.bookingId },
+        where: { id: payload.bookingId as string },
         // Only release fully settled payments — "authorized" is not captured yet
         include: { payments: { where: { status: "succeeded" }, take: 1 } }
       });
@@ -69,7 +68,7 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
     }
 
     case "refund_reconciliation": {
-      const payment = await prisma.payment.findUnique({ where: { id: payload.paymentId } });
+      const payment = await prisma.payment.findUnique({ where: { id: payload.paymentId as string } });
       if (!payment || !payment.providerTxId) return;
 
       if (["authorized", "succeeded"].includes(payment.status)) {
@@ -89,10 +88,19 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
 
         let refund: Awaited<ReturnType<typeof paymentAdapter.requestRefund>>;
         try {
+          // Resolve phone number for PayDunya disbursement
+          const clientPhone = config.paymentDriver === "paydunya"
+            ? await prisma.booking.findUnique({
+                where: { id: payment.bookingId },
+                select: { client: { select: { phone: true } } }
+              }).then((b) => b?.client?.phone ?? null)
+            : null;
+
           refund = await paymentAdapter.requestRefund({
             providerRef: payment.providerTxId,
             amountXof: payment.amountXof,
-            reason: "booking_cancelled"
+            reason: "booking_cancelled",
+            phone: clientPhone ?? undefined
           });
         } catch (providerErr) {
           // Roll back status so next job retry can re-attempt the external call
@@ -118,7 +126,7 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
 
     case "booking_reminder": {
       const booking = await prisma.booking.findUnique({
-        where: { id: payload.bookingId },
+        where: { id: payload.bookingId as string },
         include: { client: true, service: true }
       });
       if (!booking || !["pending", "confirmed"].includes(booking.status)) return;
@@ -141,10 +149,89 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
       return;
     }
 
+    case "new_booking_salon": {
+      const booking = await prisma.booking.findUnique({
+        where: { id: payload.bookingId as string },
+        include: { service: true, client: { select: { fullName: true } } }
+      });
+      if (!booking) return;
+
+      const salonStaff = await prisma.user.findMany({
+        where: { salonId: booking.salonId, role: { in: ["salon_owner", "salon_manager"] } },
+        select: { id: true, email: true }
+      });
+      const title = "Nouvelle réservation";
+      const clientName = booking.client?.fullName ?? "Un client";
+      const serviceName = booking.service.name;
+      const startsLabel = new Date(booking.startsAt).toLocaleString("fr-FR", {
+        weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"
+      });
+      const notifBody = `${clientName} — ${serviceName}`;
+      await Promise.all(salonStaff.map((u) =>
+        sendNotification(u.id, title, notifBody).catch((err) =>
+          logger.warn("[WORKER] new_booking_salon notify failed", { userId: u.id, err })
+        )
+      ));
+      const ownerEmail = salonStaff.find((u) => u.email)?.email;
+      if (ownerEmail) {
+        await sendEmail({
+          to: ownerEmail,
+          subject: `Nouvelle réservation — ${serviceName}`,
+          text: `Bonjour,\n\n${clientName} vient de réserver "${serviceName}" pour le ${startsLabel}.\n\nConsultez l'agenda sur votre espace pro.\n\n— L'équipe Beauté Avenue`
+        }).catch((err) => logger.warn("[WORKER] new_booking_salon email failed", { to: ownerEmail, err }));
+      }
+      return;
+    }
+
+    case "salon_submitted_admin": {
+      const adminTokens = await prisma.pushToken.findMany({
+        where: { revokedAt: null, role: "platform_admin" }
+      });
+      const adminUsers = await prisma.user.findMany({
+        where: { role: "platform_admin" },
+        select: { id: true, email: true }
+      });
+      const salonName = payload.salonName ?? "Nouveau salon";
+      const salonId = (payload.salonId as string | undefined) ?? "";
+      const isResubmission = payload.resubmission === true;
+      const notifTitle = isResubmission ? "Dossier mis à jour" : "Nouveau dossier à valider";
+      const notifBody = isResubmission
+        ? `${salonName} a fourni les informations demandées.`
+        : `${salonName} attend votre validation.`;
+
+      await Promise.all(adminUsers.map((u) =>
+        prisma.notification.create({ data: { userId: u.id, title: notifTitle, body: notifBody, channel: "push" } })
+          .catch(() => {})
+      ));
+      const tokens = adminTokens.map((t) => t.token);
+      if (tokens.length > 0) {
+        await sendPushBatch(
+          tokens,
+          { title: notifTitle, body: notifBody },
+          { type: "salon_pending_review", salonId }
+        ).catch((err) => logger.warn("[WORKER] salon_submitted_admin push failed", { err }));
+      }
+      const emailSubject = isResubmission
+        ? `[Beauté Avenue] Dossier mis à jour — ${salonName}`
+        : `[Beauté Avenue] Nouveau dossier à valider — ${salonName}`;
+      const emailText = isResubmission
+        ? `Le salon "${salonName}" a fourni les informations complémentaires demandées et attend votre validation.\n\nConnectez-vous au backoffice : /admin/salons/${salonId}`
+        : `Un nouveau salon "${salonName}" a soumis son dossier et attend votre approbation.\n\nConnectez-vous au backoffice : /admin/salons/${salonId}`;
+      await Promise.all(
+        adminUsers
+          .filter((u) => u.email)
+          .map((u) =>
+            sendEmail({ to: u.email!, subject: emailSubject, text: emailText })
+              .catch((err) => logger.warn("[WORKER] salon_submitted_admin email failed", { to: u.email, err }))
+          )
+      );
+      return;
+    }
+
     case "media_cleanup": {
       if (!payload.objectKey) return;
       logger.info("[WORKER] media_cleanup: running", { objectKey: payload.objectKey });
-      await storageAdapter.delete(payload.objectKey);
+      await storageAdapter.delete(payload.objectKey as string);
       return;
     }
 
@@ -157,7 +244,7 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
         await sendPushBatch(
           tokens,
           { title: "Nouvelle photo à vérifier", body: "Un fichier attend votre approbation." },
-          { type: "media_pending_review", mediaId: payload.mediaId ?? "", salonId: payload.salonId ?? "" }
+          { type: "media_pending_review", mediaId: (payload.mediaId as string | undefined) ?? "", salonId: (payload.salonId as string | undefined) ?? "" }
         );
       }
       return;
@@ -165,7 +252,7 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
 
     case "notification_retry": {
       const notification = await prisma.notification.findUnique({
-        where: { id: payload.notificationId }
+        where: { id: payload.notificationId as string }
       });
       if (!notification) return;
 
@@ -261,41 +348,29 @@ async function handleJob(type: AppJobType, payload: Record<string, string>): Pro
     }
 
     case "prestige_score_refresh": {
-      const salons = await prisma.salon.findMany({
-        where: { approvalStatus: "approved", isVisibleInMarketplace: true },
-        select: {
-          id: true,
-          averageRating: true,
-          subscriptionTier: true,
-          canReceiveBookings: true,
-          _count: { select: { reviews: true, gallery: true } }
-        }
-      });
-
-      const THRESHOLD = 0.3;
-      const updates = salons.map((s) => {
-        const ratingScore = (s.averageRating * Math.log(s._count.reviews + 1)) / 15;
-        const availScore = s.canReceiveBookings ? 1 : 0;
-        const photoScore = Math.min(s._count.gallery, 10) / 10;
-        const premiumBonus = s.subscriptionTier === "premium" ? 1 : 0;
-
-        const score =
-          0.45 * ratingScore +
-          0.25 * availScore +
-          0.15 * photoScore +
-          0.15 * premiumBonus;
-
-        return prisma.salon.update({
-          where: { id: s.id },
-          data: {
-            prestigeScore: Math.round(score * 1000) / 1000,
-            isPrestige: s.subscriptionTier === "premium" && score >= THRESHOLD
-          }
-        });
-      });
-
-      await prisma.$transaction(updates);
-      logger.info("[WORKER] prestige_score_refresh: updated", { count: salons.length });
+      // Single raw SQL UPDATE — scales to 100k salons without N round-trips or OOM.
+      // Formula: 0.45×ratingScore + 0.25×availability + 0.15×photoScore + 0.15×premiumBonus
+      const result = await prisma.$executeRaw`
+        UPDATE "Salon" s SET
+          "prestigeScore" = sub.score,
+          "isPrestige" = (s."subscriptionTier" = 'premium' AND sub.score >= 0.3)
+        FROM (
+          SELECT
+            s2.id,
+            ROUND(CAST(
+              0.45 * ((s2."averageRating" * LN(GREATEST(COALESCE(rc.cnt, 0), 0) + 1)) / 15.0)
+              + 0.25 * CASE WHEN s2."canReceiveBookings" THEN 1.0 ELSE 0.0 END
+              + 0.15 * LEAST(COALESCE(gc.cnt, 0)::float / 10.0, 1.0)
+              + 0.15 * CASE WHEN s2."subscriptionTier" = 'premium' THEN 1.0 ELSE 0.0 END
+            AS numeric), 3) AS score
+          FROM "Salon" s2
+          LEFT JOIN (SELECT "salonId", COUNT(*)::int AS cnt FROM "Review" GROUP BY "salonId") rc ON rc."salonId" = s2.id
+          LEFT JOIN (SELECT "salonId", COUNT(*)::int AS cnt FROM "SalonGalleryImage" GROUP BY "salonId") gc ON gc."salonId" = s2.id
+          WHERE s2."approvalStatus" = 'approved' AND s2."isVisibleInMarketplace" = true
+        ) sub
+        WHERE s.id = sub.id
+      `;
+      logger.info("[WORKER] prestige_score_refresh: updated", { count: result });
 
       const nextMidnight = new Date();
       nextMidnight.setUTCHours(24, 0, 0, 0);

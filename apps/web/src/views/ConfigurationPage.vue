@@ -130,16 +130,17 @@
 
           <!-- Payment env-vars callout -->
           <div
-            v-if="activeTab === 'payment'"
+            v-if="activeTab === 'payment_methods'"
             class="flex items-start gap-3 p-4 rounded-xl bg-espresso/[0.04] border border-espresso/10"
           >
             <LockClosedIcon class="w-4 h-4 text-espresso/50 shrink-0 mt-0.5" />
             <div>
               <p class="text-[12px] font-bold text-espresso">Identifiants marchands — variables d'environnement uniquement</p>
               <p class="text-[11px] text-cocoa/60 mt-0.5 leading-relaxed">
-                Les clés API Intech sont configurées via
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">INTECH_API_KEY</code>,
-                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">INTECH_API_SECRET</code>
+                Les clés API PayDunya sont configurées via
+                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">PAYDUNYA_MASTER_KEY</code>,
+                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">PAYDUNYA_PRIVATE_KEY</code>,
+                <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">PAYDUNYA_TOKEN</code>
                 dans le fichier <code class="font-mono text-[10px] bg-espresso/[0.08] px-1 py-0.5 rounded">.env</code> du serveur.
                 Ne jamais stocker des secrets dans la base de données.
               </p>
@@ -520,6 +521,42 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     min: 1,
     max: 14,
     unit: 'jours'
+  },
+  paydunya_enabled_wave_senegal: {
+    label: 'Wave Sénégal',
+    description: 'Paiements via Wave (Orange Money Mobile).',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  paydunya_enabled_orange_senegal: {
+    label: 'Orange Money Sénégal',
+    description: 'Paiements via Orange Money Sénégal.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  paydunya_enabled_free_senegal: {
+    label: 'Free Money Sénégal',
+    description: 'Paiements via Free Money Sénégal.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  paydunya_enabled_wizall_senegal: {
+    label: 'Wizall Sénégal',
+    description: 'Paiements via Wizall Sénégal.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
   }
 };
 
@@ -536,15 +573,16 @@ const token = computed(() => auth.accessToken ?? '');
 // ── Tabs ───────────────────────────────────────────────────────────────────
 
 const tabs = [
-  { id: 'documents',     label: 'Pièces Justificatives',  description: "Documents demandés lors de l'inscription d'un partenaire.",     icon: DocumentTextIcon },
-  { id: 'categories',    label: 'Catégories Salons',       description: "Catégories disponibles lors de l'inscription d'un partenaire.", icon: TagIcon },
-  { id: 'pricing',       label: 'Tarification & Frais',    description: 'Règles financières appliquées aux réservations et abonnements.', icon: CurrencyDollarIcon },
-  { id: 'general',       label: 'Paramètres Généraux',     description: 'Coordonnées du support et règles opérationnelles globales.',     icon: Cog6ToothIcon },
+  { id: 'documents',        label: 'Pièces Justificatives',  description: "Documents demandés lors de l'inscription d'un partenaire.",     icon: DocumentTextIcon },
+  { id: 'categories',       label: 'Catégories Salons',       description: "Catégories disponibles lors de l'inscription d'un partenaire.", icon: TagIcon },
+  { id: 'pricing',          label: 'Tarification & Frais',    description: 'Règles financières appliquées aux réservations et abonnements.', icon: CurrencyDollarIcon },
+  { id: 'payment_methods',  label: 'Moyens de Paiement',      description: 'Activer/désactiver les méthodes de paiement PayDunya.',         icon: CreditCardIcon },
+  { id: 'general',          label: 'Paramètres Généraux',     description: 'Coordonnées du support et règles opérationnelles globales.',     icon: Cog6ToothIcon },
 ];
 
 const activeTab = ref('documents');
 const currentTab = computed(() => tabs.find(t => t.id === activeTab.value));
-const isSettingsTab = computed(() => ['pricing', 'general'].includes(activeTab.value));
+const isSettingsTab = computed(() => ['pricing', 'payment_methods', 'general'].includes(activeTab.value));
 
 // ── Queries ────────────────────────────────────────────────────────────────
 

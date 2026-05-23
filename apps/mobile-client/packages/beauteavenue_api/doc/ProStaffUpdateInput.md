@@ -9,6 +9,9 @@ import 'package:beauteavenue_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **displayName** | **String** |  | [optional] 
+**email** | **String** |  | [optional] 
+**phone** | **String** |  | [optional] 
+**role** | **String** |  | [optional] 
 **avatarUrl** | **String** |  | [optional] 
 **description** | **String** |  | [optional] 
 **isActive** | **bool** |  | [optional] 

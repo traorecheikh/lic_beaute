@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **category** | **String** |  | 
 **city** | **String** |  | 
 **address** | **String** |  | 
+**neighborhood** | **String** |  | [optional] 
 **description** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

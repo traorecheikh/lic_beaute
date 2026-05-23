@@ -123,6 +123,25 @@ final prestigeProvider =
       },
     );
 
+/// Server-side search: delegates filtering to the API to avoid loading all
+/// salons on device. Uses [FutureProviderFamily] keyed by (query, category).
+final salonSearchProvider = FutureProvider.family<
+    List<SalonSummaryListResponseItemsInner>,
+    ({String query, String? category})>(
+  retry: (_, __) => null,
+  (ref, params) async {
+    final api = ref.read(apiClientProvider).getSalonsApi();
+    final response = await retryWithBackoff(
+      () => api.apiV1SalonsGet(
+        search: params.query.isEmpty ? null : params.query,
+        category: params.category,
+        pageSize: '50',
+      ),
+    );
+    return response.data?.items.toList() ?? [];
+  },
+);
+
 // Convenience: wraps a Position into a distance badge string
 String? distanceBadge(SalonSummaryListResponseItemsInner salon) {
   final d = salon.distanceKm;

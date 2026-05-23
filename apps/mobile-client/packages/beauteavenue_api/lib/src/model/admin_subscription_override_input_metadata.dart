@@ -13,6 +13,7 @@ part 'admin_subscription_override_input_metadata.g.dart';
 /// Properties:
 /// * [internalTicket] 
 /// * [subscriptionChargeId] 
+/// * [providerReference] 
 @BuiltValue()
 abstract class AdminSubscriptionOverrideInputMetadata implements Built<AdminSubscriptionOverrideInputMetadata, AdminSubscriptionOverrideInputMetadataBuilder> {
   @BuiltValueField(wireName: r'internalTicket')
@@ -20,6 +21,9 @@ abstract class AdminSubscriptionOverrideInputMetadata implements Built<AdminSubs
 
   @BuiltValueField(wireName: r'subscriptionChargeId')
   String? get subscriptionChargeId;
+
+  @BuiltValueField(wireName: r'providerReference')
+  String? get providerReference;
 
   AdminSubscriptionOverrideInputMetadata._();
 
@@ -55,6 +59,13 @@ class _$AdminSubscriptionOverrideInputMetadataSerializer implements PrimitiveSer
       yield r'subscriptionChargeId';
       yield serializers.serialize(
         object.subscriptionChargeId,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.providerReference != null) {
+      yield r'providerReference';
+      yield serializers.serialize(
+        object.providerReference,
         specifiedType: const FullType(String),
       );
     }
@@ -94,6 +105,13 @@ class _$AdminSubscriptionOverrideInputMetadataSerializer implements PrimitiveSer
             specifiedType: const FullType(String),
           ) as String;
           result.subscriptionChargeId = valueDes;
+          break;
+        case r'providerReference':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.providerReference = valueDes;
           break;
         default:
           unhandled.add(key);

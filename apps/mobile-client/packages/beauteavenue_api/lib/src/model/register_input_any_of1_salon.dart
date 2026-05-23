@@ -15,6 +15,7 @@ part 'register_input_any_of1_salon.g.dart';
 /// * [category] 
 /// * [city] 
 /// * [address] 
+/// * [neighborhood] 
 /// * [description] 
 @BuiltValue()
 abstract class RegisterInputAnyOf1Salon implements Built<RegisterInputAnyOf1Salon, RegisterInputAnyOf1SalonBuilder> {
@@ -29,6 +30,9 @@ abstract class RegisterInputAnyOf1Salon implements Built<RegisterInputAnyOf1Salo
 
   @BuiltValueField(wireName: r'address')
   String get address;
+
+  @BuiltValueField(wireName: r'neighborhood')
+  String? get neighborhood;
 
   @BuiltValueField(wireName: r'description')
   String? get description;
@@ -76,6 +80,13 @@ class _$RegisterInputAnyOf1SalonSerializer implements PrimitiveSerializer<Regist
       object.address,
       specifiedType: const FullType(String),
     );
+    if (object.neighborhood != null) {
+      yield r'neighborhood';
+      yield serializers.serialize(
+        object.neighborhood,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.description != null) {
       yield r'description';
       yield serializers.serialize(
@@ -133,6 +144,13 @@ class _$RegisterInputAnyOf1SalonSerializer implements PrimitiveSerializer<Regist
             specifiedType: const FullType(String),
           ) as String;
           result.address = valueDes;
+          break;
+        case r'neighborhood':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.neighborhood = valueDes;
           break;
         case r'description':
           final valueDes = serializers.deserialize(

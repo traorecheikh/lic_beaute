@@ -96,6 +96,8 @@ export class CatalogController {
           AND s."isVisibleInMarketplace" = true
           AND s.latitude IS NOT NULL
           AND s.longitude IS NOT NULL
+          AND s.latitude BETWEEN ${lat - 0.045} AND ${lat + 0.045}
+          AND s.longitude BETWEEN ${lng - 0.065} AND ${lng + 0.065}
           ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
           ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}` : Prisma.empty}
           ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}` : Prisma.empty}
@@ -148,23 +150,24 @@ export class CatalogController {
       const categoryParam = q.category ?? null;
       const searchParam = q.search ?? null;
 
+      // Pre-aggregate bookings once per salon to avoid double-join explosion.
+      // A single pass with CASE WHEN is O(bookings_30d) vs O(salons × bookings²).
       const rows = await prisma.$queryRaw<TrendingRow[]>(Prisma.sql`
-        SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
+        SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
                s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore",
-               (
-                 COUNT(b7.id) * 3 + COUNT(b30.id)
-               )::float AS trending_score,
+               COALESCE(t.score, 0)::float AS trending_score,
                COUNT(*) OVER() AS total_count
         FROM "Salon" s
         ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
-        LEFT JOIN "Booking" b7 ON b7."salonId" = s.id
-          AND b7."createdAt" > NOW() - INTERVAL '7 days'
-          AND b7.status NOT IN ('cancelled')
-        LEFT JOIN "Booking" b30 ON b30."salonId" = s.id
-          AND b30."createdAt" > NOW() - INTERVAL '30 days'
-          AND b30."createdAt" <= NOW() - INTERVAL '7 days'
-          AND b30.status NOT IN ('cancelled')
+        LEFT JOIN (
+          SELECT "salonId",
+            SUM(CASE WHEN "createdAt" > NOW() - INTERVAL '7 days' THEN 3 ELSE 1 END) AS score
+          FROM "Booking"
+          WHERE "createdAt" > NOW() - INTERVAL '30 days'
+            AND status NOT IN ('cancelled')
+          GROUP BY "salonId"
+        ) t ON t."salonId" = s.id
         WHERE s."approvalStatus" = 'approved'
           AND s."isVisibleInMarketplace" = true
           ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
@@ -172,7 +175,7 @@ export class CatalogController {
           ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}` : Prisma.empty}
           ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}` : Prisma.empty}
           ${searchParam ? Prisma.sql`AND (s.name ILIKE ${"%" + searchParam + "%"} OR EXISTS (SELECT 1 FROM "Service" svc WHERE svc."salonId" = s.id AND svc."isActive" = true AND svc.name ILIKE ${"%" + searchParam + "%"}))` : Prisma.empty}
-        GROUP BY s.id
+        GROUP BY s.id, t.score
         ORDER BY trending_score DESC, s."averageRating" DESC
         LIMIT ${pageSize} OFFSET ${page * pageSize}
       `);

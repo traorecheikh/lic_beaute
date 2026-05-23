@@ -111,7 +111,7 @@
           </div>
 
           <label class="section-label mb-4 block">Mode de paiement</label>
-          <div class="grid grid-cols-2 gap-2 mb-8">
+          <div class="grid grid-cols-2 gap-2 mb-8" v-if="!methodsQuery.isPending.value">
             <button 
               v-for="method in paymentMethods" 
               :key="method.id"
@@ -126,6 +126,11 @@
               <component :is="method.icon" class="w-6 h-6" />
               <span class="text-[10px] font-bold uppercase tracking-wider">{{ method.label }}</span>
             </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mb-8" v-else>
+            <div class="p-3 rounded-xl border-2 border-outline-variant/50 flex items-center justify-center">
+              <span class="section-label">Chargement...</span>
+            </div>
           </div>
 
           <div class="space-y-3">
@@ -162,12 +167,19 @@ import {
   CheckCircleIcon,
   PaperAirplaneIcon,
   BanknotesIcon,
-  WalletIcon,
+  CreditCardIcon,
   EllipsisHorizontalCircleIcon
 } from "@heroicons/vue/24/outline";
-import { completeProCheckout, fetchProCheckout } from "@/lib/pro-api";
+import { completeProCheckout, fetchProCheckout, fetchPaymentMethods } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
+
+interface PayMethod {
+  code: string;
+  country: string;
+  label: string;
+  enabled: boolean;
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -177,11 +189,37 @@ const items = ref<Array<{ name: string; price: number }>>([]);
 const discount = ref(0);
 const selectedMethod = ref("cash");
 
-const paymentMethods = [
-  { id: "cash", label: "Espèces", icon: BanknotesIcon },
-  { id: "intech", label: "Mobile Money (Intech)", icon: WalletIcon },
-  { id: "other", label: "Autre", icon: EllipsisHorizontalCircleIcon },
-];
+const methodsQuery = useQuery({
+  queryKey: ["payment-methods"],
+  queryFn: () => fetchPaymentMethods(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken)),
+  staleTime: 5 * 60 * 1000
+});
+
+const softpayMethods = computed<PayMethod[]>(() => {
+  const data = methodsQuery.data.value;
+  if (!data?.methods) return [];
+  return data.methods.filter((m: PayMethod) => m.enabled);
+});
+
+const paymentMethods = computed(() => {
+  const base = [
+    { id: "cash", label: "Espèces", icon: BanknotesIcon, softpayCode: undefined },
+  ];
+
+  const mobileMethods = softpayMethods.value.map((m) => ({
+    id: `softpay-${m.code}`,
+    label: m.label,
+    icon: CreditCardIcon,
+    softpayCode: m.code
+  }));
+
+  return [
+    ...base,
+    ...mobileMethods,
+    { id: "other", label: "Autre", icon: EllipsisHorizontalCircleIcon, softpayCode: undefined },
+  ];
+});
 
 const checkoutQuery = useQuery({
   queryKey: computed(() => ["pro-checkout", route.params.bookingId]),
@@ -190,9 +228,12 @@ const checkoutQuery = useQuery({
 });
 
 const completeMutation = useMutation({
-  mutationFn: () =>
-    completeProCheckout(auth.accessToken ?? "", String(route.params.bookingId), {
-      paymentMethod: selectedMethod.value as "cash" | "intech" | "other",
+  mutationFn: () => {
+    const selected = paymentMethods.value.find((m) => m.id === selectedMethod.value);
+    const isSoftpay = selectedMethod.value.startsWith("softpay-");
+    return completeProCheckout(auth.accessToken ?? "", String(route.params.bookingId), {
+      paymentMethod: isSoftpay ? "intech" : (selectedMethod.value as "cash" | "intech" | "other"),
+      softpayMethod: isSoftpay ? selected?.softpayCode : undefined,
       discountXof: discount.value,
       lineItems: items.value
         .map((item) => ({
@@ -200,7 +241,8 @@ const completeMutation = useMutation({
           amountXof: Math.max(0, Number(item.price || 0))
         }))
         .filter((item) => item.name.length > 0)
-    }),
+    });
+  },
   onSuccess: async () => {
     toast.success("Paiement enregistré avec succès.");
     await router.push("/pro/calendar");

@@ -48,7 +48,7 @@ function isPrismaKnownError(error: unknown): error is { code: string } {
 
 function serializePaymentMethod(method: {
   id: string;
-  provider: "intech" | "manual";
+  provider: "intech" | "paydunya" | "manual";
   phoneNumber: string;
   label: string | null;
   isDefault: boolean;

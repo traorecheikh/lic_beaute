@@ -17,6 +17,7 @@ import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { sendEmail } from "../../lib/email.js";
 import { fail, ok } from "../../lib/http.js";
+import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
 import { signSession, verifyRefreshToken } from "../../lib/auth/session.js";
@@ -324,6 +325,11 @@ export class AuthController {
           expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
         }
       });
+      void enqueueJob({
+        type: "salon_submitted_admin",
+        payload: { salonId: result.salon.id, salonName: result.salon.name, resubmission: false }
+      }).catch((err) => logger.warn("auth.register: salon_submitted_admin enqueue failed", { err }));
+
       void sendEmail({
         to: body.email,
         subject: "Inscription reçue — Beauté Avenue Pro",

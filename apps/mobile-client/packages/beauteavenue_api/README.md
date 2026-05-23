@@ -129,15 +129,19 @@ Class | Method | HTTP request | Description
 [*MediaApi*](doc/MediaApi.md) | [**apiV1MediaMediaIdDelete**](doc/MediaApi.md#apiv1mediamediaiddelete) | **DELETE** /api/v1/media/{mediaId} | Soft-delete a media asset
 [*MediaApi*](doc/MediaApi.md) | [**apiV1MediaMediaIdGet**](doc/MediaApi.md#apiv1mediamediaidget) | **GET** /api/v1/media/{mediaId} | Retrieve media metadata
 [*MediaApi*](doc/MediaApi.md) | [**apiV1MediaUploadIntentPost**](doc/MediaApi.md#apiv1mediauploadintentpost) | **POST** /api/v1/media/upload-intent | Request a presigned PUT URL for direct R2 upload
+[*MediaApi*](doc/MediaApi.md) | [**apiV1MediaUploadPost**](doc/MediaApi.md#apiv1mediauploadpost) | **POST** /api/v1/media/upload | Upload media through API (adapter-aware: local/noop/r2)
 [*MediaApi*](doc/MediaApi.md) | [**apiV1SalonsSalonIdPublicMediaGet**](doc/MediaApi.md#apiv1salonssalonidpublicmediaget) | **GET** /api/v1/salons/{salonId}/public-media | Get public media for a salon
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsGet**](doc/NotificationsApi.md#apiv1notificationsget) | **GET** /api/v1/notifications | List notifications
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsIdReadPost**](doc/NotificationsApi.md#apiv1notificationsidreadpost) | **POST** /api/v1/notifications/{id}/read | Mark one notification as read
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsReadAllPost**](doc/NotificationsApi.md#apiv1notificationsreadallpost) | **POST** /api/v1/notifications/read-all | Mark all notifications as read
+[*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsDepositsExecutePost**](doc/PaymentsApi.md#apiv1paymentsdepositsexecutepost) | **POST** /api/v1/payments/deposits/execute | Execute a payment with a specific method (two-step flow)
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsDepositsInitiatePost**](doc/PaymentsApi.md#apiv1paymentsdepositsinitiatepost) | **POST** /api/v1/payments/deposits/initiate | Initiate deposit payment for a booking
+[*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsMethodsGet**](doc/PaymentsApi.md#apiv1paymentsmethodsget) | **GET** /api/v1/payments/methods | Get available payment methods from the active provider
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdGet**](doc/PaymentsApi.md#apiv1paymentspaymentidget) | **GET** /api/v1/payments/{paymentId} | Get payment status
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdReconcilePost**](doc/PaymentsApi.md#apiv1paymentspaymentidreconcilepost) | **POST** /api/v1/payments/{paymentId}/reconcile | Manually reconcile a payment (admin or pro)
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdRefundPost**](doc/PaymentsApi.md#apiv1paymentspaymentidrefundpost) | **POST** /api/v1/payments/{paymentId}/refund | Refund a payment
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsWebhooksIntechPost**](doc/PaymentsApi.md#apiv1paymentswebhooksintechpost) | **POST** /api/v1/payments/webhooks/intech | Intech payment webhook callback
+[*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsWebhooksPaydunyaPost**](doc/PaymentsApi.md#apiv1paymentswebhookspaydunyapost) | **POST** /api/v1/payments/webhooks/paydunya | PayDunya payment webhook callback
 [*ProApi*](doc/ProApi.md) | [**apiV1ProAnalyticsGet**](doc/ProApi.md#apiv1proanalyticsget) | **GET** /api/v1/pro/analytics | Get salon analytics
 [*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsGet**](doc/ProApi.md#apiv1problockedslotsget) | **GET** /api/v1/pro/blocked-slots | List blocked slots
 [*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsPost**](doc/ProApi.md#apiv1problockedslotspost) | **POST** /api/v1/pro/blocked-slots | Create blocked slot
@@ -245,13 +249,13 @@ Class | Method | HTTP request | Description
  - [ApiV1MePaymentMethodsGet200ResponseItemsInner](doc/ApiV1MePaymentMethodsGet200ResponseItemsInner.md)
  - [ApiV1MeVouchersGet200Response](doc/ApiV1MeVouchersGet200Response.md)
  - [ApiV1MeVouchersGet200ResponseItemsInner](doc/ApiV1MeVouchersGet200ResponseItemsInner.md)
- - [ApiV1MediaMediaIdCompletePost200Response](doc/ApiV1MediaMediaIdCompletePost200Response.md)
  - [ApiV1MediaUploadIntentPost201Response](doc/ApiV1MediaUploadIntentPost201Response.md)
  - [ApiV1MediaUploadIntentPostRequest](doc/ApiV1MediaUploadIntentPostRequest.md)
+ - [ApiV1MediaUploadPost201Response](doc/ApiV1MediaUploadPost201Response.md)
  - [ApiV1NotificationsGet200Response](doc/ApiV1NotificationsGet200Response.md)
  - [ApiV1NotificationsGet200ResponseItemsInner](doc/ApiV1NotificationsGet200ResponseItemsInner.md)
  - [ApiV1NotificationsIdReadPost200Response](doc/ApiV1NotificationsIdReadPost200Response.md)
- - [ApiV1PaymentsWebhooksIntechPost200Response](doc/ApiV1PaymentsWebhooksIntechPost200Response.md)
+ - [ApiV1PaymentsWebhooksPaydunyaPost200Response](doc/ApiV1PaymentsWebhooksPaydunyaPost200Response.md)
  - [ApiV1ProVouchersPost201Response](doc/ApiV1ProVouchersPost201Response.md)
  - [ApiV1PushTokensPost201Response](doc/ApiV1PushTokensPost201Response.md)
  - [ApiV1SalonsIdAvailabilityGet200ResponseInner](doc/ApiV1SalonsIdAvailabilityGet200ResponseInner.md)
@@ -337,6 +341,7 @@ Class | Method | HTTP request | Description
  - [RegisterInput](doc/RegisterInput.md)
  - [RegisterInputAnyOf](doc/RegisterInputAnyOf.md)
  - [RegisterInputAnyOf1](doc/RegisterInputAnyOf1.md)
+ - [RegisterInputAnyOf1DocumentsInner](doc/RegisterInputAnyOf1DocumentsInner.md)
  - [RegisterInputAnyOf1HoursInner](doc/RegisterInputAnyOf1HoursInner.md)
  - [RegisterInputAnyOf1Salon](doc/RegisterInputAnyOf1Salon.md)
  - [RegisterInputAnyOf1ServicesInner](doc/RegisterInputAnyOf1ServicesInner.md)

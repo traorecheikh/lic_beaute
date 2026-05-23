@@ -16,6 +16,7 @@ part 'admin_salon_detail.g.dart';
 ///
 /// Properties:
 /// * [id] 
+/// * [subscriptionId] 
 /// * [salonName] 
 /// * [category] 
 /// * [city] 
@@ -34,6 +35,9 @@ part 'admin_salon_detail.g.dart';
 abstract class AdminSalonDetail implements Built<AdminSalonDetail, AdminSalonDetailBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
+
+  @BuiltValueField(wireName: r'subscriptionId')
+  String? get subscriptionId;
 
   @BuiltValueField(wireName: r'salonName')
   String get salonName;
@@ -106,6 +110,11 @@ class _$AdminSalonDetailSerializer implements PrimitiveSerializer<AdminSalonDeta
     yield serializers.serialize(
       object.id,
       specifiedType: const FullType(String),
+    );
+    yield r'subscriptionId';
+    yield object.subscriptionId == null ? null : serializers.serialize(
+      object.subscriptionId,
+      specifiedType: const FullType.nullable(String),
     );
     yield r'salonName';
     yield serializers.serialize(
@@ -206,6 +215,14 @@ class _$AdminSalonDetailSerializer implements PrimitiveSerializer<AdminSalonDeta
             specifiedType: const FullType(String),
           ) as String;
           result.id = valueDes;
+          break;
+        case r'subscriptionId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.subscriptionId = valueDes;
           break;
         case r'salonName':
           final valueDes = serializers.deserialize(

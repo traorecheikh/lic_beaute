@@ -11,6 +11,9 @@ Name | Type | Description | Notes
 **id** | **String** |  | 
 **userId** | **String** |  | 
 **displayName** | **String** |  | 
+**email** | **String** |  | 
+**phone** | **String** |  | 
+**role** | **String** |  | 
 **avatarUrl** | **String** |  | 
 **description** | **String** |  | 
 **isActive** | **bool** |  | 

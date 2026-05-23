@@ -11,6 +11,8 @@ export type AppJobType =
   | "deposit_settlement"
   | "refund_reconciliation"
   | "booking_reminder"
+  | "new_booking_salon"
+  | "salon_submitted_admin"
   | "media_cleanup"
   | "media_review_notify"
   | "notification_retry"
@@ -24,6 +26,8 @@ const JOB_QUEUE: Record<AppJobType, AppQueueName> = {
   deposit_settlement: "payments",
   refund_reconciliation: "payments",
   booking_reminder: "notifications",
+  new_booking_salon: "notifications",
+  salon_submitted_admin: "notifications",
   media_cleanup: "maintenance",
   media_review_notify: "notifications",
   notification_retry: "notifications",

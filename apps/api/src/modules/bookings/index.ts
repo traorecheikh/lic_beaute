@@ -14,13 +14,12 @@ import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provide
 import { prisma } from "../../lib/db/prisma.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
-  intechApiKey: config.intechApiKey,
-  intechBaseUrl: config.intechBaseUrl,
-  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
-  intechHmacSecretKey: config.intechHmacSecretKey,
-  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
-  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
-  baseOrigin: config.webOrigin
+  baseOrigin: config.webOrigin,
+  paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPrivateKey: config.paydunyaPrivateKey,
+  paydunyaToken: config.paydunyaToken,
+  paydunyaEnv: config.paydunyaEnv,
+  paydunyaBaseUrl: config.paydunyaBaseUrl
 });
 
 async function scheduleReminders(bookingId: string, startsAt: Date) {
@@ -194,7 +193,7 @@ export class BookingController {
           payment = await tx.payment.create({
             data: {
               bookingId: booking.id,
-              provider: toDbProvider(body.provider ?? "intech") ?? "intech",
+              provider: toDbProvider(body.provider ?? "paydunya") ?? "paydunya",
               status: "pending",
               amountXof: depositAmountXof,
               idempotencyKey: `booking-${booking.id}-deposit`
@@ -227,6 +226,12 @@ export class BookingController {
           error
         });
       }
+
+      void enqueueJob({
+        type: "new_booking_salon",
+        payload: { bookingId: result.booking.id },
+        bookingId: result.booking.id
+      }).catch((err) => logger.warn("booking.create: new_booking_salon enqueue failed", { err }));
 
       ok(reply, bookingSummary(full!), 201);
     } catch (error) {

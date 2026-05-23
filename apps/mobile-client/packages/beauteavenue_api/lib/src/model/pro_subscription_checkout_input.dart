@@ -22,7 +22,7 @@ abstract class ProSubscriptionCheckoutInput implements Built<ProSubscriptionChec
 
   @BuiltValueField(wireName: r'provider')
   ProSubscriptionCheckoutInputProviderEnum? get provider;
-  // enum providerEnum {  intech,  manual,  };
+  // enum providerEnum {  paydunya,  intech,  manual,  };
 
   ProSubscriptionCheckoutInput._();
 
@@ -30,7 +30,7 @@ abstract class ProSubscriptionCheckoutInput implements Built<ProSubscriptionChec
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProSubscriptionCheckoutInputBuilder b) => b
-      ..provider = ProSubscriptionCheckoutInputProviderEnum.valueOf('intech');
+      ..provider = ProSubscriptionCheckoutInputProviderEnum.valueOf('paydunya');
 
   @BuiltValueSerializer(custom: true)
   static Serializer<ProSubscriptionCheckoutInput> get serializer => _$ProSubscriptionCheckoutInputSerializer();
@@ -143,6 +143,8 @@ class ProSubscriptionCheckoutInputActionEnum extends EnumClass {
 
 class ProSubscriptionCheckoutInputProviderEnum extends EnumClass {
 
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const ProSubscriptionCheckoutInputProviderEnum paydunya = _$proSubscriptionCheckoutInputProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'intech')
   static const ProSubscriptionCheckoutInputProviderEnum intech = _$proSubscriptionCheckoutInputProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'manual')

@@ -24,6 +24,7 @@ Name | Type | Description | Notes
 **subscriptionTier** | **String** |  | 
 **isVisibleInMarketplace** | **bool** |  | 
 **canReceiveBookings** | **bool** |  | 
+**approvalStatus** | **String** |  | 
 **teamDisplay** | [**SalonDetailTeamDisplay**](SalonDetailTeamDisplay.md) |  | 
 **gallery** | **BuiltList&lt;String&gt;** |  | 
 **hours** | [**BuiltList&lt;ProSalonProfileHoursInner&gt;**](ProSalonProfileHoursInner.md) |  | 

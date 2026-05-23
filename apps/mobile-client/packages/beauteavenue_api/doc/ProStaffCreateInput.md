@@ -8,8 +8,11 @@ import 'package:beauteavenue_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**phone** | **String** |  | 
+**phone** | **String** |  | [optional] 
+**email** | **String** |  | [optional] 
+**password** | **String** |  | [optional] 
 **fullName** | **String** |  | 
+**role** | **String** |  | [optional] [default to 'salon_staff']
 **avatarUrl** | **String** |  | [optional] 
 **description** | **String** |  | [optional] 
 **serviceIds** | **BuiltList&lt;String&gt;** |  | [optional] [default to ListBuilder()]

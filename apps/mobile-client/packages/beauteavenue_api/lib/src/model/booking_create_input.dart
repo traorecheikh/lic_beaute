@@ -38,11 +38,11 @@ abstract class BookingCreateInput implements Built<BookingCreateInput, BookingCr
 
   @BuiltValueField(wireName: r'provider')
   BookingCreateInputProviderEnum? get provider;
-  // enum providerEnum {  intech,  };
+  // enum providerEnum {  intech,  paydunya,  };
 
   @BuiltValueField(wireName: r'channel')
   BookingCreateInputChannelEnum? get channel;
-  // enum channelEnum {  wave,  orange_money,  free_money,  };
+  // enum channelEnum {  wave,  orange_money,  free_money,  paydunya_card,  paydunya_airtel,  paydunya_expresso,  paydunya_free,  paydunya_mpesa,  paydunya_ng_airtel,  paydunya_ng_mtn,  paydunya_ng_9mobile,  paydunya_ng_glo,  paydunya_sam_airtel,  paydunya_sam_mtn,  paydunya_sam_safaricom,  paydunya_tigo_rw,  paydunya_airtel_rw,  paydunya_mtn_rw,  paydunya_mtn_ug,  paydunya_airtel_ug,  paydunya_orange_ml,  paydunya_mtn_ci,  paydunya_mtn_gh,  paydunya_vodafone_gh,  paydunya_airteltigo_gh,  paydunya_tm_ci,  paydunya_moov_tg,  paydunya_togocel_tg,  paydunya_wari_sn,  paydunya_wave_sn,  paydunya_cb_ci,  paydunya_orange_sn,  paydunya_free_sn,  paydunya_yup_bj,  paydunya_mtn_bj,  paydunya_moov_ci,  paydunya_orange_cm,  paydunya_mtn_cm,  paydunya_nexttel_cm,  paydunya_camtel_cm,  };
 
   BookingCreateInput._();
 
@@ -215,6 +215,8 @@ class BookingCreateInputProviderEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'intech')
   static const BookingCreateInputProviderEnum intech = _$bookingCreateInputProviderEnum_intech;
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const BookingCreateInputProviderEnum paydunya = _$bookingCreateInputProviderEnum_paydunya;
 
   static Serializer<BookingCreateInputProviderEnum> get serializer => _$bookingCreateInputProviderEnumSerializer;
 
@@ -232,6 +234,80 @@ class BookingCreateInputChannelEnum extends EnumClass {
   static const BookingCreateInputChannelEnum orangeMoney = _$bookingCreateInputChannelEnum_orangeMoney;
   @BuiltValueEnumConst(wireName: r'free_money')
   static const BookingCreateInputChannelEnum freeMoney = _$bookingCreateInputChannelEnum_freeMoney;
+  @BuiltValueEnumConst(wireName: r'paydunya_card')
+  static const BookingCreateInputChannelEnum paydunyaCard = _$bookingCreateInputChannelEnum_paydunyaCard;
+  @BuiltValueEnumConst(wireName: r'paydunya_airtel')
+  static const BookingCreateInputChannelEnum paydunyaAirtel = _$bookingCreateInputChannelEnum_paydunyaAirtel;
+  @BuiltValueEnumConst(wireName: r'paydunya_expresso')
+  static const BookingCreateInputChannelEnum paydunyaExpresso = _$bookingCreateInputChannelEnum_paydunyaExpresso;
+  @BuiltValueEnumConst(wireName: r'paydunya_free')
+  static const BookingCreateInputChannelEnum paydunyaFree = _$bookingCreateInputChannelEnum_paydunyaFree;
+  @BuiltValueEnumConst(wireName: r'paydunya_mpesa')
+  static const BookingCreateInputChannelEnum paydunyaMpesa = _$bookingCreateInputChannelEnum_paydunyaMpesa;
+  @BuiltValueEnumConst(wireName: r'paydunya_ng_airtel')
+  static const BookingCreateInputChannelEnum paydunyaNgAirtel = _$bookingCreateInputChannelEnum_paydunyaNgAirtel;
+  @BuiltValueEnumConst(wireName: r'paydunya_ng_mtn')
+  static const BookingCreateInputChannelEnum paydunyaNgMtn = _$bookingCreateInputChannelEnum_paydunyaNgMtn;
+  @BuiltValueEnumConst(wireName: r'paydunya_ng_9mobile')
+  static const BookingCreateInputChannelEnum paydunyaNg9mobile = _$bookingCreateInputChannelEnum_paydunyaNg9mobile;
+  @BuiltValueEnumConst(wireName: r'paydunya_ng_glo')
+  static const BookingCreateInputChannelEnum paydunyaNgGlo = _$bookingCreateInputChannelEnum_paydunyaNgGlo;
+  @BuiltValueEnumConst(wireName: r'paydunya_sam_airtel')
+  static const BookingCreateInputChannelEnum paydunyaSamAirtel = _$bookingCreateInputChannelEnum_paydunyaSamAirtel;
+  @BuiltValueEnumConst(wireName: r'paydunya_sam_mtn')
+  static const BookingCreateInputChannelEnum paydunyaSamMtn = _$bookingCreateInputChannelEnum_paydunyaSamMtn;
+  @BuiltValueEnumConst(wireName: r'paydunya_sam_safaricom')
+  static const BookingCreateInputChannelEnum paydunyaSamSafaricom = _$bookingCreateInputChannelEnum_paydunyaSamSafaricom;
+  @BuiltValueEnumConst(wireName: r'paydunya_tigo_rw')
+  static const BookingCreateInputChannelEnum paydunyaTigoRw = _$bookingCreateInputChannelEnum_paydunyaTigoRw;
+  @BuiltValueEnumConst(wireName: r'paydunya_airtel_rw')
+  static const BookingCreateInputChannelEnum paydunyaAirtelRw = _$bookingCreateInputChannelEnum_paydunyaAirtelRw;
+  @BuiltValueEnumConst(wireName: r'paydunya_mtn_rw')
+  static const BookingCreateInputChannelEnum paydunyaMtnRw = _$bookingCreateInputChannelEnum_paydunyaMtnRw;
+  @BuiltValueEnumConst(wireName: r'paydunya_mtn_ug')
+  static const BookingCreateInputChannelEnum paydunyaMtnUg = _$bookingCreateInputChannelEnum_paydunyaMtnUg;
+  @BuiltValueEnumConst(wireName: r'paydunya_airtel_ug')
+  static const BookingCreateInputChannelEnum paydunyaAirtelUg = _$bookingCreateInputChannelEnum_paydunyaAirtelUg;
+  @BuiltValueEnumConst(wireName: r'paydunya_orange_ml')
+  static const BookingCreateInputChannelEnum paydunyaOrangeMl = _$bookingCreateInputChannelEnum_paydunyaOrangeMl;
+  @BuiltValueEnumConst(wireName: r'paydunya_mtn_ci')
+  static const BookingCreateInputChannelEnum paydunyaMtnCi = _$bookingCreateInputChannelEnum_paydunyaMtnCi;
+  @BuiltValueEnumConst(wireName: r'paydunya_mtn_gh')
+  static const BookingCreateInputChannelEnum paydunyaMtnGh = _$bookingCreateInputChannelEnum_paydunyaMtnGh;
+  @BuiltValueEnumConst(wireName: r'paydunya_vodafone_gh')
+  static const BookingCreateInputChannelEnum paydunyaVodafoneGh = _$bookingCreateInputChannelEnum_paydunyaVodafoneGh;
+  @BuiltValueEnumConst(wireName: r'paydunya_airteltigo_gh')
+  static const BookingCreateInputChannelEnum paydunyaAirteltigoGh = _$bookingCreateInputChannelEnum_paydunyaAirteltigoGh;
+  @BuiltValueEnumConst(wireName: r'paydunya_tm_ci')
+  static const BookingCreateInputChannelEnum paydunyaTmCi = _$bookingCreateInputChannelEnum_paydunyaTmCi;
+  @BuiltValueEnumConst(wireName: r'paydunya_moov_tg')
+  static const BookingCreateInputChannelEnum paydunyaMoovTg = _$bookingCreateInputChannelEnum_paydunyaMoovTg;
+  @BuiltValueEnumConst(wireName: r'paydunya_togocel_tg')
+  static const BookingCreateInputChannelEnum paydunyaTogocelTg = _$bookingCreateInputChannelEnum_paydunyaTogocelTg;
+  @BuiltValueEnumConst(wireName: r'paydunya_wari_sn')
+  static const BookingCreateInputChannelEnum paydunyaWariSn = _$bookingCreateInputChannelEnum_paydunyaWariSn;
+  @BuiltValueEnumConst(wireName: r'paydunya_wave_sn')
+  static const BookingCreateInputChannelEnum paydunyaWaveSn = _$bookingCreateInputChannelEnum_paydunyaWaveSn;
+  @BuiltValueEnumConst(wireName: r'paydunya_cb_ci')
+  static const BookingCreateInputChannelEnum paydunyaCbCi = _$bookingCreateInputChannelEnum_paydunyaCbCi;
+  @BuiltValueEnumConst(wireName: r'paydunya_orange_sn')
+  static const BookingCreateInputChannelEnum paydunyaOrangeSn = _$bookingCreateInputChannelEnum_paydunyaOrangeSn;
+  @BuiltValueEnumConst(wireName: r'paydunya_free_sn')
+  static const BookingCreateInputChannelEnum paydunyaFreeSn = _$bookingCreateInputChannelEnum_paydunyaFreeSn;
+  @BuiltValueEnumConst(wireName: r'paydunya_yup_bj')
+  static const BookingCreateInputChannelEnum paydunyaYupBj = _$bookingCreateInputChannelEnum_paydunyaYupBj;
+  @BuiltValueEnumConst(wireName: r'paydunya_mtn_bj')
+  static const BookingCreateInputChannelEnum paydunyaMtnBj = _$bookingCreateInputChannelEnum_paydunyaMtnBj;
+  @BuiltValueEnumConst(wireName: r'paydunya_moov_ci')
+  static const BookingCreateInputChannelEnum paydunyaMoovCi = _$bookingCreateInputChannelEnum_paydunyaMoovCi;
+  @BuiltValueEnumConst(wireName: r'paydunya_orange_cm')
+  static const BookingCreateInputChannelEnum paydunyaOrangeCm = _$bookingCreateInputChannelEnum_paydunyaOrangeCm;
+  @BuiltValueEnumConst(wireName: r'paydunya_mtn_cm')
+  static const BookingCreateInputChannelEnum paydunyaMtnCm = _$bookingCreateInputChannelEnum_paydunyaMtnCm;
+  @BuiltValueEnumConst(wireName: r'paydunya_nexttel_cm')
+  static const BookingCreateInputChannelEnum paydunyaNexttelCm = _$bookingCreateInputChannelEnum_paydunyaNexttelCm;
+  @BuiltValueEnumConst(wireName: r'paydunya_camtel_cm')
+  static const BookingCreateInputChannelEnum paydunyaCamtelCm = _$bookingCreateInputChannelEnum_paydunyaCamtelCm;
 
   static Serializer<BookingCreateInputChannelEnum> get serializer => _$bookingCreateInputChannelEnumSerializer;
 

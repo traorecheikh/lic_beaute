@@ -40,7 +40,7 @@ abstract class CurrentUser implements Built<CurrentUser, CurrentUserBuilder> {
 
   @BuiltValueField(wireName: r'role')
   CurrentUserRoleEnum get role;
-  // enum roleEnum {  client,  salon_staff,  salon_owner,  platform_admin,  };
+  // enum roleEnum {  client,  salon_staff,  salon_manager,  salon_owner,  platform_admin,  };
 
   @BuiltValueField(wireName: r'salonId')
   String? get salonId;
@@ -295,6 +295,8 @@ class CurrentUserRoleEnum extends EnumClass {
   static const CurrentUserRoleEnum client = _$currentUserRoleEnum_client;
   @BuiltValueEnumConst(wireName: r'salon_staff')
   static const CurrentUserRoleEnum salonStaff = _$currentUserRoleEnum_salonStaff;
+  @BuiltValueEnumConst(wireName: r'salon_manager')
+  static const CurrentUserRoleEnum salonManager = _$currentUserRoleEnum_salonManager;
   @BuiltValueEnumConst(wireName: r'salon_owner')
   static const CurrentUserRoleEnum salonOwner = _$currentUserRoleEnum_salonOwner;
   @BuiltValueEnumConst(wireName: r'platform_admin')

@@ -18,6 +18,7 @@ part 'pro_subscription.g.dart';
 /// * [status] 
 /// * [renewsAt] 
 /// * [expiresAt] 
+/// * [gracePeriodEndsAt] 
 /// * [isComplimentary] 
 /// * [autoRenew] 
 /// * [billingMethod] 
@@ -39,6 +40,9 @@ abstract class ProSubscription implements Built<ProSubscription, ProSubscription
 
   @BuiltValueField(wireName: r'expiresAt')
   DateTime? get expiresAt;
+
+  @BuiltValueField(wireName: r'gracePeriodEndsAt')
+  DateTime? get gracePeriodEndsAt;
 
   @BuiltValueField(wireName: r'isComplimentary')
   bool get isComplimentary;
@@ -95,6 +99,11 @@ class _$ProSubscriptionSerializer implements PrimitiveSerializer<ProSubscription
     yield r'expiresAt';
     yield object.expiresAt == null ? null : serializers.serialize(
       object.expiresAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
+    yield r'gracePeriodEndsAt';
+    yield object.gracePeriodEndsAt == null ? null : serializers.serialize(
+      object.gracePeriodEndsAt,
       specifiedType: const FullType.nullable(DateTime),
     );
     yield r'isComplimentary';
@@ -171,6 +180,14 @@ class _$ProSubscriptionSerializer implements PrimitiveSerializer<ProSubscription
           ) as DateTime?;
           if (valueDes == null) continue;
           result.expiresAt = valueDes;
+          break;
+        case r'gracePeriodEndsAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.gracePeriodEndsAt = valueDes;
           break;
         case r'isComplimentary':
           final valueDes = serializers.deserialize(

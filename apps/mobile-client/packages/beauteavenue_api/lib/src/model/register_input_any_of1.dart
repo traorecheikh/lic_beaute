@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:beauteavenue_api/src/model/register_input_any_of1_documents_inner.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1_hours_inner.dart';
 import 'package:beauteavenue_api/src/model/register_input_any_of1_salon.dart';
@@ -20,9 +21,11 @@ part 'register_input_any_of1.g.dart';
 /// * [email] 
 /// * [phone] 
 /// * [password] 
+/// * [subscriptionIntentTier] 
 /// * [salon] 
 /// * [services] 
 /// * [hours] 
+/// * [documents] 
 @BuiltValue()
 abstract class RegisterInputAnyOf1 implements Built<RegisterInputAnyOf1, RegisterInputAnyOf1Builder> {
   @BuiltValueField(wireName: r'type')
@@ -41,6 +44,10 @@ abstract class RegisterInputAnyOf1 implements Built<RegisterInputAnyOf1, Registe
   @BuiltValueField(wireName: r'password')
   String get password;
 
+  @BuiltValueField(wireName: r'subscriptionIntentTier')
+  RegisterInputAnyOf1SubscriptionIntentTierEnum? get subscriptionIntentTier;
+  // enum subscriptionIntentTierEnum {  standard,  premium,  };
+
   @BuiltValueField(wireName: r'salon')
   RegisterInputAnyOf1Salon get salon;
 
@@ -49,6 +56,9 @@ abstract class RegisterInputAnyOf1 implements Built<RegisterInputAnyOf1, Registe
 
   @BuiltValueField(wireName: r'hours')
   BuiltList<RegisterInputAnyOf1HoursInner> get hours;
+
+  @BuiltValueField(wireName: r'documents')
+  BuiltList<RegisterInputAnyOf1DocumentsInner>? get documents;
 
   RegisterInputAnyOf1._();
 
@@ -98,6 +108,13 @@ class _$RegisterInputAnyOf1Serializer implements PrimitiveSerializer<RegisterInp
       object.password,
       specifiedType: const FullType(String),
     );
+    if (object.subscriptionIntentTier != null) {
+      yield r'subscriptionIntentTier';
+      yield serializers.serialize(
+        object.subscriptionIntentTier,
+        specifiedType: const FullType(RegisterInputAnyOf1SubscriptionIntentTierEnum),
+      );
+    }
     yield r'salon';
     yield serializers.serialize(
       object.salon,
@@ -113,6 +130,13 @@ class _$RegisterInputAnyOf1Serializer implements PrimitiveSerializer<RegisterInp
       object.hours,
       specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1HoursInner)]),
     );
+    if (object.documents != null) {
+      yield r'documents';
+      yield serializers.serialize(
+        object.documents,
+        specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1DocumentsInner)]),
+      );
+    }
   }
 
   @override
@@ -171,6 +195,13 @@ class _$RegisterInputAnyOf1Serializer implements PrimitiveSerializer<RegisterInp
           ) as String;
           result.password = valueDes;
           break;
+        case r'subscriptionIntentTier':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(RegisterInputAnyOf1SubscriptionIntentTierEnum),
+          ) as RegisterInputAnyOf1SubscriptionIntentTierEnum;
+          result.subscriptionIntentTier = valueDes;
+          break;
         case r'salon':
           final valueDes = serializers.deserialize(
             value,
@@ -191,6 +222,13 @@ class _$RegisterInputAnyOf1Serializer implements PrimitiveSerializer<RegisterInp
             specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1HoursInner)]),
           ) as BuiltList<RegisterInputAnyOf1HoursInner>;
           result.hours.replace(valueDes);
+          break;
+        case r'documents':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(RegisterInputAnyOf1DocumentsInner)]),
+          ) as BuiltList<RegisterInputAnyOf1DocumentsInner>;
+          result.documents.replace(valueDes);
           break;
         default:
           unhandled.add(key);
@@ -232,5 +270,20 @@ class RegisterInputAnyOf1TypeEnum extends EnumClass {
 
   static BuiltSet<RegisterInputAnyOf1TypeEnum> get values => _$registerInputAnyOf1TypeEnumValues;
   static RegisterInputAnyOf1TypeEnum valueOf(String name) => _$registerInputAnyOf1TypeEnumValueOf(name);
+}
+
+class RegisterInputAnyOf1SubscriptionIntentTierEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'standard')
+  static const RegisterInputAnyOf1SubscriptionIntentTierEnum standard = _$registerInputAnyOf1SubscriptionIntentTierEnum_standard;
+  @BuiltValueEnumConst(wireName: r'premium')
+  static const RegisterInputAnyOf1SubscriptionIntentTierEnum premium = _$registerInputAnyOf1SubscriptionIntentTierEnum_premium;
+
+  static Serializer<RegisterInputAnyOf1SubscriptionIntentTierEnum> get serializer => _$registerInputAnyOf1SubscriptionIntentTierEnumSerializer;
+
+  const RegisterInputAnyOf1SubscriptionIntentTierEnum._(String name): super(name);
+
+  static BuiltSet<RegisterInputAnyOf1SubscriptionIntentTierEnum> get values => _$registerInputAnyOf1SubscriptionIntentTierEnumValues;
+  static RegisterInputAnyOf1SubscriptionIntentTierEnum valueOf(String name) => _$registerInputAnyOf1SubscriptionIntentTierEnumValueOf(name);
 }
 

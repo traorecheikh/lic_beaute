@@ -10,7 +10,9 @@ import 'package:dio/dio.dart';
 
 import 'package:beauteavenue_api/src/api_util.dart';
 import 'package:beauteavenue_api/src/model/api_error.dart';
-import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_intech_post200_response.dart';
+import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_paydunya_post200_response.dart';
+import 'package:beauteavenue_api/src/model/paydunya_execute_payment_input.dart';
+import 'package:beauteavenue_api/src/model/paydunya_method_list_response.dart';
 import 'package:beauteavenue_api/src/model/payment_initiate_input.dart';
 import 'package:beauteavenue_api/src/model/payment_initiate_response.dart';
 import 'package:beauteavenue_api/src/model/payment_reconcile_response.dart';
@@ -24,6 +26,106 @@ class PaymentsApi {
   final Serializers _serializers;
 
   const PaymentsApi(this._dio, this._serializers);
+
+  /// Execute a payment with a specific method (two-step flow)
+  /// 
+  ///
+  /// Parameters:
+  /// * [body] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PaymentInitiateResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PaymentInitiateResponse>> apiV1PaymentsDepositsExecutePost({ 
+    required PaydunyaExecutePaymentInput body,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/payments/deposits/execute';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      _bodyData = body;
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PaymentInitiateResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PaymentInitiateResponse),
+      ) as PaymentInitiateResponse;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PaymentInitiateResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
 
   /// Initiate deposit payment for a booking
   /// 
@@ -115,6 +217,85 @@ class PaymentsApi {
     }
 
     return Response<PaymentInitiateResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Get available payment methods from the active provider
+  /// 
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PaydunyaMethodListResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PaydunyaMethodListResponse>> apiV1PaymentsMethodsGet({ 
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/payments/methods';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PaydunyaMethodListResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PaydunyaMethodListResponse),
+      ) as PaydunyaMethodListResponse;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PaydunyaMethodListResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -381,9 +562,9 @@ class PaymentsApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [ApiV1PaymentsWebhooksIntechPost200Response] as data
+  /// Returns a [Future] containing a [Response] with a [ApiV1PaymentsWebhooksPaydunyaPost200Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ApiV1PaymentsWebhooksIntechPost200Response>> apiV1PaymentsWebhooksIntechPost({ 
+  Future<Response<ApiV1PaymentsWebhooksPaydunyaPost200Response>> apiV1PaymentsWebhooksIntechPost({ 
     required PaymentWebhookBody paymentWebhookBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -433,14 +614,14 @@ class PaymentsApi {
       onReceiveProgress: onReceiveProgress,
     );
 
-    ApiV1PaymentsWebhooksIntechPost200Response? _responseData;
+    ApiV1PaymentsWebhooksPaydunyaPost200Response? _responseData;
 
     try {
       final rawResponse = _response.data;
       _responseData = rawResponse == null ? null : _serializers.deserialize(
         rawResponse,
-        specifiedType: const FullType(ApiV1PaymentsWebhooksIntechPost200Response),
-      ) as ApiV1PaymentsWebhooksIntechPost200Response;
+        specifiedType: const FullType(ApiV1PaymentsWebhooksPaydunyaPost200Response),
+      ) as ApiV1PaymentsWebhooksPaydunyaPost200Response;
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -452,7 +633,102 @@ class PaymentsApi {
       );
     }
 
-    return Response<ApiV1PaymentsWebhooksIntechPost200Response>(
+    return Response<ApiV1PaymentsWebhooksPaydunyaPost200Response>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// PayDunya payment webhook callback
+  /// 
+  ///
+  /// Parameters:
+  /// * [paymentWebhookBody] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ApiV1PaymentsWebhooksPaydunyaPost200Response] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ApiV1PaymentsWebhooksPaydunyaPost200Response>> apiV1PaymentsWebhooksPaydunyaPost({ 
+    required PaymentWebhookBody paymentWebhookBody,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/payments/webhooks/paydunya';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(PaymentWebhookBody);
+      _bodyData = _serializers.serialize(paymentWebhookBody, specifiedType: _type);
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ApiV1PaymentsWebhooksPaydunyaPost200Response? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ApiV1PaymentsWebhooksPaydunyaPost200Response),
+      ) as ApiV1PaymentsWebhooksPaydunyaPost200Response;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ApiV1PaymentsWebhooksPaydunyaPost200Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

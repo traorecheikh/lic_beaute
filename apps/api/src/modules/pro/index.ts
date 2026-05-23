@@ -33,13 +33,12 @@ import { prisma } from "../../lib/db/prisma.js";
 import { getProAnalytics, getProDashboard } from "./data.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
-  intechApiKey: config.intechApiKey,
-  intechBaseUrl: config.intechBaseUrl,
-  intechCallbackHmacEnabled: config.intechCallbackHmacEnabled,
-  intechHmacSecretKey: config.intechHmacSecretKey,
-  intechHmacMaxAgeMs: config.intechHmacMaxAgeMs,
-  intechRequestTimeoutMs: config.intechRequestTimeoutMs,
-  baseOrigin: config.webOrigin
+  baseOrigin: config.webOrigin,
+  paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPrivateKey: config.paydunyaPrivateKey,
+  paydunyaToken: config.paydunyaToken,
+  paydunyaEnv: config.paydunyaEnv,
+  paydunyaBaseUrl: config.paydunyaBaseUrl
 });
 
 function salonPublicPhoneKey(salonId: string) {
@@ -398,12 +397,18 @@ export class ProController {
       const body = proSalonUpdateInputSchema.parse(request.body);
       const { gallery, phone, instagram, teamDisplay, ...salonPayload } = body;
 
+      const currentSalon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true, approvalStatus: true, name: true } });
+
       if (gallery !== undefined) {
-        const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { subscriptionTier: true } });
-        if (salon?.subscriptionTier === "standard" && gallery.length > 3) {
+        if (currentSalon?.subscriptionTier === "standard" && gallery.length > 3) {
           fail(reply, 422, "gallery_limit", "Les salons Standard sont limités à 3 photos de galerie.");
           return;
         }
+      }
+
+      const isResubmission = currentSalon?.approvalStatus === "needs_info";
+      if (isResubmission) {
+        (salonPayload as Record<string, unknown>).approvalStatus = "pending_review";
       }
 
       if (teamDisplay?.showPhotos === true) {
@@ -498,6 +503,13 @@ export class ProController {
           });
         }
       });
+      if (isResubmission) {
+        void enqueueJob({
+          type: "salon_submitted_admin",
+          payload: { salonId, salonName: currentSalon?.name ?? salonId, resubmission: true }
+        }).catch((err) => logger.warn("updateSalon: salon_submitted_admin enqueue failed", { err }));
+      }
+
       await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
       const [salon, owner, settings] = await Promise.all([
         prisma.salon.findUnique({
@@ -1488,17 +1500,20 @@ export class ProController {
             eventType: "checkout_completed",
             fromStatus: booking.status,
             toStatus: "completed",
-            payloadJson: JSON.stringify({ paymentMethod: body.paymentMethod, discountXof, balanceXof })
+            payloadJson: JSON.stringify({ paymentMethod: body.paymentMethod, softpayMethod: body.softpayMethod, discountXof, balanceXof })
           }
         });
         if (balanceXof > 0) {
+          const effectiveMethod = body.paymentMethod === "intech" && body.softpayMethod
+            ? `softpay-${body.softpayMethod}`
+            : body.paymentMethod;
           await tx.settlementEvent.create({
             data: {
               bookingId: booking.id,
               paymentId: null,
               eventType: "balance_collected",
               amountXof: balanceXof,
-              providerReference: `manual-${body.paymentMethod ?? "cash"}`
+              providerReference: `manual-${effectiveMethod}`
             }
           });
         }
@@ -1673,7 +1688,7 @@ export class ProController {
         where: { id: userId },
         select: { phone: true }
       });
-      if (config.paymentDriver === "intech" && !owner?.phone) {
+      if (config.paymentDriver === "paydunya" && !owner?.phone) {
         fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
         return;
       }

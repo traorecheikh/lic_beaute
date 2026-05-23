@@ -50,7 +50,7 @@ abstract class AdminSubscriptionDetail implements Built<AdminSubscriptionDetail,
 
   @BuiltValueField(wireName: r'billingProvider')
   AdminSubscriptionDetailBillingProviderEnum? get billingProvider;
-  // enum billingProviderEnum {  intech,  manual,  };
+  // enum billingProviderEnum {  paydunya,  intech,  manual,  };
 
   @BuiltValueField(wireName: r'expiresAt')
   DateTime? get expiresAt;
@@ -362,6 +362,8 @@ class AdminSubscriptionDetailStatusEnum extends EnumClass {
 
 class AdminSubscriptionDetailBillingProviderEnum extends EnumClass {
 
+  @BuiltValueEnumConst(wireName: r'paydunya')
+  static const AdminSubscriptionDetailBillingProviderEnum paydunya = _$adminSubscriptionDetailBillingProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'intech')
   static const AdminSubscriptionDetailBillingProviderEnum intech = _$adminSubscriptionDetailBillingProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'manual')

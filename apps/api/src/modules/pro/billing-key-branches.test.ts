@@ -44,15 +44,14 @@ describe("ProController billing key branches", () => {
     vi.resetModules();
     vi.doMock("../../config.js", () => ({
       config: {
-        paymentDriver: "intech",
+        paymentDriver: "paydunya",
         webOrigin: "http://localhost:5174",
         cacheTtlKpiSeconds: 60,
-        intechApiKey: "x",
-        intechBaseUrl: "http://intech",
-        intechCallbackHmacEnabled: false,
-        intechHmacSecretKey: "",
-        intechHmacMaxAgeMs: 1000,
-        intechRequestTimeoutMs: 1000,
+        paydunyaMasterKey: "master-key",
+        paydunyaPrivateKey: "private-key",
+        paydunyaToken: "token",
+        paydunyaEnv: "sandbox",
+        paydunyaBaseUrl: "https://sandbox.paydunya.com",
         billingAccountSecret: "",
         nodeEnv: "production"
       }
@@ -69,15 +68,14 @@ describe("ProController billing key branches", () => {
     vi.resetModules();
     vi.doMock("../../config.js", () => ({
       config: {
-        paymentDriver: "intech",
+        paymentDriver: "paydunya",
         webOrigin: "http://localhost:5174",
         cacheTtlKpiSeconds: 60,
-        intechApiKey: "x",
-        intechBaseUrl: "http://intech",
-        intechCallbackHmacEnabled: false,
-        intechHmacSecretKey: "",
-        intechHmacMaxAgeMs: 1000,
-        intechRequestTimeoutMs: 1000,
+        paydunyaMasterKey: "master-key",
+        paydunyaPrivateKey: "private-key",
+        paydunyaToken: "token",
+        paydunyaEnv: "sandbox",
+        paydunyaBaseUrl: "https://sandbox.paydunya.com",
         billingAccountSecret: "",
         nodeEnv: "test"
       }
@@ -111,15 +109,14 @@ describe("ProController billing key branches", () => {
     vi.resetModules();
     vi.doMock("../../config.js", () => ({
       config: {
-        paymentDriver: "intech",
+        paymentDriver: "paydunya",
         webOrigin: "http://localhost:5174",
         cacheTtlKpiSeconds: 60,
-        intechApiKey: "x",
-        intechBaseUrl: "http://intech",
-        intechCallbackHmacEnabled: false,
-        intechHmacSecretKey: "",
-        intechHmacMaxAgeMs: 1000,
-        intechRequestTimeoutMs: 1000,
+        paydunyaMasterKey: "master-key",
+        paydunyaPrivateKey: "private-key",
+        paydunyaToken: "token",
+        paydunyaEnv: "sandbox",
+        paydunyaBaseUrl: "https://sandbox.paydunya.com",
         billingAccountSecret: "a".repeat(64),
         nodeEnv: "test"
       }

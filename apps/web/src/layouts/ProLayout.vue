@@ -35,12 +35,14 @@
 
         <!-- Right: Actions + User -->
         <div class="flex items-center gap-3 shrink-0">
-          <button @click="callSupport" class="p-2 text-cocoa/60 hover:text-espresso transition">
-            <PhoneIcon class="w-5 h-5" />
-          </button>
-          <button @click="openInbox" class="p-2 text-cocoa/60 hover:text-espresso transition relative">
-            <BellIcon class="w-5 h-5" />
-            <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+          <a href="https://wa.me/221338671010" target="_blank" rel="noopener noreferrer" class="p-2 text-cocoa/60 hover:text-espresso transition" title="Contacter le support via WhatsApp">
+            <ChatBubbleLeftRightIcon class="w-5 h-5" />
+          </a>
+          <button @click="openInbox" class="p-2 text-cocoa/60 hover:text-espresso transition relative" :title="`${unreadCount} notification${unreadCount !== 1 ? 's' : ''} non lue${unreadCount !== 1 ? 's' : ''}`">
+            <BellIcon class="w-5 h-5" :class="{ 'text-primary': unreadCount > 0 }" />
+            <span v-if="unreadCount > 0" class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </span>
           </button>
           
           <div class="h-6 w-px bg-outline-variant"></div>
@@ -138,7 +140,7 @@ import {
   InboxIcon,
   ChartBarIcon,
   Squares2X2Icon,
-  PhoneIcon,
+  ChatBubbleLeftRightIcon,
   BellIcon,
   UserIcon,
   UserGroupIcon,
@@ -150,7 +152,7 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import { useQuery } from "@tanstack/vue-query";
-import { fetchProSalon, fetchProSubscription } from "@/lib/pro-api";
+import { fetchNotificationsUnreadCount, fetchProSalon, fetchProSubscription } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 
 const auth = useProAuthStore();
@@ -172,6 +174,43 @@ const salonQuery = useQuery({
   queryFn: () => fetchProSalon(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken)),
   staleTime: 60 * 1000
+});
+
+const notifQuery = useQuery({
+  queryKey: ["pro-notifications-unread"],
+  queryFn: () => fetchNotificationsUnreadCount(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken)),
+  refetchInterval: 30_000,
+  staleTime: 15_000
+});
+
+const unreadCount = computed(() => notifQuery.data.value ?? 0);
+
+function playNotifSound() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+    osc.onended = () => void ctx.close();
+  } catch {
+    // AudioContext may be unavailable in some environments
+  }
+}
+
+let prevUnreadCount: number | null = null;
+watch(unreadCount, (next, prev) => {
+  if (prevUnreadCount === null) { prevUnreadCount = prev ?? 0; return; }
+  if (next > (prev ?? 0)) playNotifSound();
+  prevUnreadCount = next;
 });
 
 const gracePeriodEndsAt = computed(() => {
@@ -230,10 +269,6 @@ function handleDocumentClick(event: MouseEvent) {
   if (!menuRoot.value.contains(event.target as Node)) {
     menuOpen.value = false;
   }
-}
-
-function callSupport() {
-  window.open("tel:+221338671010", "_self");
 }
 
 function openInbox() {
