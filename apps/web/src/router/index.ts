@@ -28,6 +28,11 @@ const router = createRouter({
       name: "pro-login",
       component: () => import("@/views/ProLoginPage.vue")
     },
+    {
+      path: "/pro/setup-account",
+      name: "pro-setup-account",
+      component: () => import("@/views/ProSetupAccountPage.vue")
+    },
     // --- Protected Pro Routes ---
     {
       path: "/pro",

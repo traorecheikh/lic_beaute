@@ -179,11 +179,22 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   });
   await registerRoutes(app, databaseRuntime);
 
+  // Serve locally-stored uploads at /static/* so publicUrl() links resolve.
+  if (config.storageDriver === "local" && config.storagePath) {
+    await app.register(staticFiles, {
+      root: config.storagePath,
+      prefix: "/static/",
+      decorateReply: false,
+      serve: true,
+    });
+  }
+
   const webDistPath = join(dirname(fileURLToPath(import.meta.url)), "../public");
   if (existsSync(webDistPath)) {
     await app.register(staticFiles, {
       root: webDistPath,
       wildcard: false,
+      decorateReply: false,
       serve: true,
     });
     app.get("/*", (_req, reply) => {

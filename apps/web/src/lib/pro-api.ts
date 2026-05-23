@@ -198,7 +198,7 @@ export async function completeProCheckout(token: string, bookingId: string, payl
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new ApiError("checkout_complete_failed", text);
+    throw new ApiError(response.status, "checkout_complete_failed", text);
   }
   return response.json();
 }
@@ -214,7 +214,7 @@ export async function fetchPaymentMethods(token: string) {
       Accept: "application/json"
     }
   });
-  if (!response.ok) throw new ApiError("get_payment_methods_failed", await response.text());
+  if (!response.ok) throw new ApiError(response.status, "get_payment_methods_failed", await response.text());
   return response.json();
 }
 
@@ -420,6 +420,21 @@ export async function redeemStaffInviteToken(inviteToken: string): Promise<{ acc
       throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Lien invalide ou expiré.");
     }
     return response.json() as Promise<{ accessToken: string; refreshToken: string }>;
+  });
+}
+
+export async function setupProAccount(token: string, email: string, password: string): Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/setup-account`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, email, password })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Lien invalide ou expiré." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Lien invalide ou expiré.");
+    }
+    return response.json() as Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }>;
   });
 }
 

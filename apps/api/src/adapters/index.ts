@@ -52,7 +52,10 @@ export function getStorageAdapter(
 
   switch (driver) {
     case "local":
-      _storageAdapter = new LocalStorageAdapter(config.storagePath ?? ".data/uploads");
+      _storageAdapter = new LocalStorageAdapter(
+        config.storagePath ?? ".data/uploads",
+        `${(config.mediaPublicBaseUrl ?? "").replace(/\/$/, "")}/static`
+      );
       break;
     case "r2":
       _storageAdapter = new R2StorageAdapter(

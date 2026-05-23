@@ -682,6 +682,75 @@ export class AuthController {
     }
   }
 
+  async setupAccount(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { token, email, password } = request.body as { token?: string; email?: string; password?: string };
+      if (!token || !email || !password || typeof token !== "string" || typeof email !== "string" || typeof password !== "string") {
+        fail(reply, 400, "missing_fields", "token, email et password sont requis.");
+        return;
+      }
+      if (password.length < 8) {
+        fail(reply, 422, "password_too_short", "Le mot de passe doit contenir au moins 8 caractères.");
+        return;
+      }
+
+      const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true } });
+      if (!user) {
+        fail(reply, 404, "user_not_found", "Compte introuvable.");
+        return;
+      }
+
+      const settingKey = `auth:setup:${user.id}`;
+      const setting = await prisma.platformSetting.findUnique({ where: { key: settingKey } });
+      if (!setting) {
+        fail(reply, 401, "invalid_setup_token", "Lien d'activation invalide ou déjà utilisé.");
+        return;
+      }
+
+      let entry: { tokenHash: string; expiresAt: number };
+      try {
+        entry = JSON.parse(setting.value) as { tokenHash: string; expiresAt: number };
+      } catch {
+        fail(reply, 401, "invalid_setup_token", "Lien d'activation corrompu.");
+        return;
+      }
+
+      if (entry.expiresAt < Date.now()) {
+        await prisma.platformSetting.delete({ where: { key: settingKey } }).catch(() => {});
+        fail(reply, 401, "setup_token_expired", "Ce lien d'activation a expiré (72h). Contactez l'administrateur.");
+        return;
+      }
+
+      const expectedHash = createHash("sha256").update(token).digest("hex");
+      const tokenBuf = Buffer.from(expectedHash, "hex");
+      const actualBuf = Buffer.from(entry.tokenHash, "hex");
+      const valid = tokenBuf.length === actualBuf.length && timingSafeEqual(tokenBuf, actualBuf);
+      if (!valid) {
+        fail(reply, 401, "invalid_setup_token", "Lien d'activation invalide.");
+        return;
+      }
+
+      // Token valid — set password and consume token atomically
+      await prisma.$transaction([
+        prisma.user.update({ where: { id: user.id }, data: { passwordHash: await argon2.hash(password) } }),
+        prisma.platformSetting.delete({ where: { key: settingKey } })
+      ]);
+
+      const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
+      await pruneExcessSessions(user.id);
+      await prisma.session.create({
+        data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
+      });
+      ok(reply, session);
+    } catch (e) {
+      if (e instanceof HttpAuthError) {
+        fail(reply, e.statusCode, e.code, e.message);
+      } else {
+        fail(reply, 500, "internal_error", "Erreur interne.");
+      }
+    }
+  }
+
   async redeemStaffInvite(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { token } = request.body as { token?: string };

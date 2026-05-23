@@ -60,6 +60,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/auth/refresh", authLimit, (req, rep) => auth.refresh(req, rep));
   app.post("/api/v1/auth/staff-invite/redeem", authLimit, (req, rep) => auth.redeemStaffInvite(req, rep));
   app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
+  app.post("/api/v1/auth/setup-account", authLimit, (req, rep) => auth.setupAccount(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
   app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));
   app.get("/api/v1/metadata/profile-options", (req, rep) => clientAccounts.profileOptions(req, rep));

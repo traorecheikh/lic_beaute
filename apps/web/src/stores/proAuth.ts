@@ -10,6 +10,7 @@ import {
   logoutPro,
   redeemStaffInviteToken,
   refreshProSession,
+  setupProAccount,
   verifyProOtp
 } from "@/lib/pro-api";
 
@@ -139,6 +140,11 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     await applySession(session.accessToken, session.refreshToken);
   }
 
+  async function loginWithSetupToken(token: string, email: string, password: string) {
+    const session = await setupProAccount(token, email, password);
+    await applySession(session.accessToken, session.refreshToken);
+  }
+
   async function logout() {
     const token = accessToken.value;
     const refresh = refreshToken.value;
@@ -168,6 +174,7 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     login,
     loginWithOtp,
     loginWithInviteToken,
+    loginWithSetupToken,
     logout
   };
 }, {
