@@ -93,23 +93,22 @@ export class MediaController {
         : (owner?.salonId ?? null);
       const purpose = mediaPurposeSchema.parse(purposeValue);
 
-      // Media limit check
+      // Gallery limit check — count only SAVED gallery photos (SalonGalleryImage),
+      // not temporary uploads (MediaAsset). Uploaded but unsaved photos are ephemeral
+      // and must not permanently consume quota (e.g. page reload discards them).
       if (resolvedSalonId && purpose === "salon_gallery") {
         const salon = await prisma.salon.findUnique({
           where: { id: resolvedSalonId },
           select: { subscriptionTier: true }
         });
-        const currentCount = await prisma.mediaAsset.count({
-          where: { salonId: resolvedSalonId, purpose: "salon_gallery", deletedAt: null }
+        const savedCount = await prisma.salonGalleryImage.count({
+          where: { salonId: resolvedSalonId }
         });
 
-        if (salon?.subscriptionTier === "standard" && currentCount >= 3) {
-          fail(reply, 422, "gallery_limit_reached", "Limite de 3 photos atteinte pour le plan Standard.");
-          return;
-        }
+        const limit = salon?.subscriptionTier === "premium" ? 50 : 3;
 
-        if (salon?.subscriptionTier === "premium" && currentCount >= 50) {
-          fail(reply, 422, "gallery_limit_reached", "Limite de 50 photos atteinte.");
+        if (savedCount >= limit) {
+          fail(reply, 422, "gallery_limit_reached", `Limite de ${limit} photos atteinte pour le plan ${salon?.subscriptionTier ?? "Standard"}.`);
           return;
         }
       }
@@ -150,7 +149,7 @@ export class MediaController {
         payload: { mediaId: asset.id, salonId: asset.salonId ?? "" }
       });
 
-      ok(reply, { assetId: asset.id, uploadStatus: "review_pending", reviewStatus: "pending" }, 201);
+      ok(reply, { assetId: asset.id, publicUrl: asset.publicUrl, uploadStatus: "review_pending", reviewStatus: "pending" }, 201);
     } catch (error) {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
       logger.error("Media upload error", { error: String(error) });
@@ -188,23 +187,20 @@ export class MediaController {
         ? (body.salonId ?? user?.salonId ?? null)
         : (user?.salonId ?? null);
 
-      // Media limit check
+      // Gallery limit check — count only SAVED gallery photos (SalonGalleryImage).
       if (resolvedSalonId && body.purpose === "salon_gallery") {
         const salon = await prisma.salon.findUnique({
           where: { id: resolvedSalonId },
           select: { subscriptionTier: true }
         });
-        const currentCount = await prisma.mediaAsset.count({
-          where: { salonId: resolvedSalonId, purpose: "salon_gallery", deletedAt: null }
+        const savedCount = await prisma.salonGalleryImage.count({
+          where: { salonId: resolvedSalonId }
         });
 
-        if (salon?.subscriptionTier === "standard" && currentCount >= 3) {
-          fail(reply, 422, "gallery_limit_reached", "Limite de 3 photos atteinte pour le plan Standard.");
-          return;
-        }
+        const limit = salon?.subscriptionTier === "premium" ? 50 : 3;
 
-        if (salon?.subscriptionTier === "premium" && currentCount >= 50) {
-          fail(reply, 422, "gallery_limit_reached", "Limite de 50 photos atteinte.");
+        if (savedCount >= limit) {
+          fail(reply, 422, "gallery_limit_reached", `Limite de ${limit} photos atteinte pour le plan ${salon?.subscriptionTier ?? "Standard"}.`);
           return;
         }
       }

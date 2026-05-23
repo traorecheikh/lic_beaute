@@ -41,7 +41,7 @@
             :key="index"
             class="relative group aspect-square rounded-2xl overflow-hidden bg-neutral-bg"
           >
-            <img :src="photo" class="w-full h-full object-cover transition group-hover:scale-110" />
+            <img :src="photo.url" class="w-full h-full object-cover transition group-hover:scale-110" />
             <div class="absolute inset-0 bg-espresso/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
               <button type="button" @click="openEditPhotoModal(index)" class="p-2 bg-white rounded-full text-espresso hover:text-primary">
                 <PencilIcon class="w-4 h-4" />
@@ -233,7 +233,7 @@ import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 
 import type { ProSalonUpdateInput } from "@/lib/generated";
-import { fetchProSalon, updateProSalon, uploadProMedia } from "@/lib/pro-api";
+import { fetchProSalon, updateProSalon, uploadProMedia, deleteProMediaAsset } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 import Modal from "@/components/Modal.vue";
@@ -290,9 +290,15 @@ const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];
 const auth = useProAuthStore();
 const queryClient = useQueryClient();
 
-const photos = ref<string[]>([]);
+interface GalleryPhoto {
+  url: string;
+  assetId?: string;
+}
+
+const photos = ref<GalleryPhoto[]>([]);
 const uploadingPhoto = ref(false);
 const uploadingLogo = ref(false);
+const logoAssetId = ref<string | undefined>(undefined);
 const showPhotoModal = ref(false);
 const editingPhotoIndex = ref<number | null>(null);
 const photoDraftUrl = ref("");
@@ -346,7 +352,7 @@ const uploadMutation = useMutation({
     uploadingPhoto.value = true;
   },
   onSuccess: (asset) => {
-    photos.value = [...photos.value, asset.publicUrl];
+    photos.value = [...photos.value, { url: asset.publicUrl, assetId: asset.id }];
     toast.success("Photo téléversée.");
   },
   onError: (error) => {
@@ -364,6 +370,7 @@ const uploadLogoMutation = useMutation({
   },
   onSuccess: (asset) => {
     profile.logoUrl = asset.publicUrl;
+    logoAssetId.value = asset.id;
     toast.success("Logo téléversé.");
   },
   onError: (error) => {
@@ -375,6 +382,12 @@ const uploadLogoMutation = useMutation({
 });
 
 function removePhoto(index: number) {
+  const photo = photos.value[index];
+  if (photo.assetId) {
+    deleteProMediaAsset(auth.accessToken ?? "", photo.assetId).catch(() => {
+      // Silent fail — asset will eventually be cleaned up or user can retry
+    });
+  }
   photos.value.splice(index, 1);
 }
 
@@ -396,6 +409,10 @@ function onLogoSelected(event: Event) {
 }
 
 function removeLogo() {
+  if (logoAssetId.value) {
+    deleteProMediaAsset(auth.accessToken ?? "", logoAssetId.value).catch(() => {});
+    logoAssetId.value = undefined;
+  }
   profile.logoUrl = "";
 }
 
@@ -438,7 +455,7 @@ function openAddPhotoModal() {
 
 function openEditPhotoModal(index: number) {
   editingPhotoIndex.value = index;
-  photoDraftUrl.value = photos.value[index] ?? "";
+  photoDraftUrl.value = photos.value[index]?.url ?? "";
   showPhotoModal.value = true;
 }
 
@@ -460,9 +477,9 @@ function savePhotoDraft() {
   }
 
   if (editingPhotoIndex.value === null) {
-    photos.value = [...photos.value, normalized];
+    photos.value = [...photos.value, { url: normalized }];
   } else {
-    photos.value.splice(editingPhotoIndex.value, 1, normalized);
+    photos.value.splice(editingPhotoIndex.value, 1, { url: normalized });
   }
   closePhotoModal();
 }
@@ -730,7 +747,7 @@ async function saveProfile() {
       longitude: parseCoordinate(profile.longitude, "Longitude", -180, 180),
       phone: phone.length > 0 ? phone : null,
       instagram: instagram.length > 0 ? instagram : null,
-      gallery: photos.value.map((photo) => photo.trim()).filter((photo) => photo.length > 0)
+      gallery: photos.value.map((photo) => photo.url.trim()).filter((url) => url.length > 0)
     };
     saveMutation.mutate(payload);
   } catch (error) {
@@ -760,6 +777,7 @@ watch(
     profile.name = salon.name;
     profile.category = salon.category;
     profile.logoUrl = salon.logoUrl ?? "";
+    logoAssetId.value = undefined;
     profile.city = salon.city;
     profile.address = salon.address;
     profile.neighborhood = salon.neighborhood ?? "";
@@ -770,7 +788,7 @@ watch(
     profile.description = salon.description;
     profile.phone = salon.phone ?? "";
     profile.instagram = salon.instagram ?? "";
-    photos.value = [...salon.gallery];
+    photos.value = salon.gallery.map((url: string) => ({ url }));
     locationQuery.value = [salon.address, salon.city].filter(Boolean).join(", ");
 
     const lat = parseCoordinateLenient(profile.latitude, -90, 90);

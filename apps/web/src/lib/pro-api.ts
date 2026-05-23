@@ -4,7 +4,6 @@ import {
   MediaApi,
   NotificationsApi,
   ProApi,
-  type ApiV1MediaUploadIntentPostRequestPurposeEnum,
   type ApiV1ProBookingsGetRequest,
   type EmailLoginInput,
   type OtpRequestInput,
@@ -229,36 +228,36 @@ export async function updateProSalon(token: string, payload: ProSalonUpdateInput
 export async function uploadProMedia(
   token: string,
   file: File,
-  purpose: ApiV1MediaUploadIntentPostRequestPurposeEnum
+  purpose: string
 ) {
   return withApiError(async () => {
-    const mediaApi = getMediaApi(token);
+    const formData = new FormData();
+    formData.append("purpose", purpose);
+    formData.append("file", file);
 
-    const intent = await mediaApi.apiV1MediaUploadIntentPost({
-      apiV1MediaUploadIntentPostRequest: {
-        purpose,
-        mimeType: file.type,
-        originalFilename: file.name,
-        sizeBytes: file.size
-      }
+    const uploadResponse = await fetch(`${apiBaseUrl}/api/v1/media/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+        // No Content-Type — browser sets it automatically with boundary for multipart/form-data
+      },
+      body: formData
     });
 
-    const putResponse = await fetch(intent.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file
-    });
-
-    if (!putResponse.ok) {
-      throw new ApiError(putResponse.status, "upload_failed", "Échec du téléversement vers le stockage.");
+    if (!uploadResponse.ok) {
+      const payload = await uploadResponse.json().catch(() => ({})) as { code?: string; message?: string };
+      throw new ApiError(uploadResponse.status, payload.code ?? "upload_failed", payload.message ?? "Échec du téléversement.");
     }
 
-    await mediaApi.apiV1MediaMediaIdCompletePost({ mediaId: intent.assetId });
+    const result = await uploadResponse.json() as { assetId: string; publicUrl?: string };
 
-    const asset = await mediaApi.apiV1MediaMediaIdGet({ mediaId: intent.assetId });
-
-    return { id: asset.id, publicUrl: asset.publicUrl ?? "" };
+    return { id: result.assetId, publicUrl: result.publicUrl ?? "" };
   });
+}
+
+/** Delete a previously uploaded media asset (soft-delete in DB). */
+export async function deleteProMediaAsset(token: string, mediaId: string) {
+  return withApiError(() => getMediaApi(token).apiV1MediaMediaIdDelete({ mediaId }));
 }
 
 export async function fetchProServices(token: string) {
@@ -452,4 +451,3 @@ export async function setupProAccount(token: string, email: string, password: st
     return response.json() as Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }>;
   });
 }
-

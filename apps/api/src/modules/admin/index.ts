@@ -14,7 +14,7 @@ import { z } from "zod";
 import { requireRole, HttpAuthError } from "../../lib/auth/index.js";
 import { getOrSetCachedJson, invalidateCacheTags } from "../../lib/cache.js";
 import { config } from "../../config.js";
-import { fail, ok } from "../../lib/http.js";
+import { fail, handleError, ok } from "../../lib/http.js";
 import { prisma } from "../../lib/db/prisma.js";
 import {
   approveSalon,
@@ -132,11 +132,15 @@ export class AdminController {
   async createSalon(request: FastifyRequest, reply: FastifyReply) {
     const token = this.ensureAdmin(request, reply);
     if (!token) return;
-    const body = adminSalonCreateInputSchema.parse(request.body);
-    const actorName = await this.resolveActorName(token.sub);
-    const created = await createSalon(body, actorName);
-    await invalidateCacheTags(["kpi:admin"]);
-    ok(reply, created);
+    try {
+      const body = adminSalonCreateInputSchema.parse(request.body);
+      const actorName = await this.resolveActorName(token.sub);
+      const created = await createSalon(body, actorName);
+      await invalidateCacheTags(["kpi:admin"]);
+      ok(reply, created);
+    } catch (error) {
+      handleError(error, reply);
+    }
   }
 
   async listSubscriptions(request: FastifyRequest, reply: FastifyReply) {

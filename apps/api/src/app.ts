@@ -91,6 +91,8 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
       }
       cb(null, false);
     },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Refresh-Token"],
     credentials: true
   });
   await app.register(cookie);
@@ -107,6 +109,7 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
         upgradeInsecureRequests: httpsOrigin ? [] : null
       }
     },
+    crossOriginResourcePolicy: false,
     crossOriginEmbedderPolicy: false,
     strictTransportSecurity: httpsOrigin
   });

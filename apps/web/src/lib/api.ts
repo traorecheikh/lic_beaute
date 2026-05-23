@@ -54,12 +54,15 @@ type AuthSession = {
 };
 
 export class ApiError extends Error {
+  readonly field: string | undefined;
   constructor(
     readonly statusCode: number,
     readonly code: string,
-    message: string
+    message: string,
+    field?: string
   ) {
     super(message);
+    this.field = field;
   }
 }
 
@@ -93,8 +96,8 @@ async function request<T>(path: string, options: RequestInit = {}, query?: Recor
 
   if (!response.ok) {
     const fallback = { code: "unknown_error", message: "Une erreur est survenue." };
-    const payload = (await response.json().catch(() => fallback)) as { code?: string; message?: string };
-    throw new ApiError(response.status, payload.code ?? fallback.code, payload.message ?? fallback.message);
+    const payload = (await response.json().catch(() => fallback)) as { code?: string; message?: string; field?: string };
+    throw new ApiError(response.status, payload.code ?? fallback.code, payload.message ?? fallback.message, payload.field);
   }
 
   return (await response.json()) as T;

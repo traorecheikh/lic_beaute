@@ -764,6 +764,38 @@ export class ProController {
         return { employee, user, serviceIds: body.serviceIds };
       });
 
+      // Send invite email if the staff has an email address
+      if (result.user.email) {
+        try {
+          const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { name: true } });
+          const jwt = await import("jsonwebtoken");
+          const token = jwt.default.sign(
+            { sub: result.user.id, type: "staff_invite" },
+            config.jwtInviteSecret,
+            { expiresIn: "24h" }
+          );
+          const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${encodeURIComponent(token)}`;
+          const staffName = result.user.fullName;
+          const salonName = salon?.name ?? "Votre salon";
+          await sendEmail({
+            to: result.user.email,
+            subject: `Votre accès à ${salonName} — Beauté Avenue`,
+            text: [
+              `Bonjour ${staffName},`,
+              ``,
+              `${salonName} vous a invité(e) à rejoindre l'espace professionnel Beauté Avenue.`,
+              ``,
+              `Accédez à votre compte (lien valable 24h) :`,
+              loginUrl,
+              ``,
+              `Si vous ne connaissez pas ce salon, ignorez ce message.`
+            ].join("\n")
+          });
+        } catch (emailErr) {
+          logger.warn("createStaff: invite email failed", { userId: result.user.id, email: result.user.email, err: emailErr });
+        }
+      }
+
       ok(reply, {
         id: result.employee.id,
         userId: result.employee.userId,

@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { resolve, isAbsolute } from "node:path";
 
 import "dotenv/config";
 
@@ -17,7 +18,7 @@ export const config = {
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret",
   jwtInviteSecret: process.env.JWT_INVITE_SECRET ?? "dev-invite-secret",
-  jwtAccessTtlSeconds: Number(process.env.JWT_ACCESS_TTL_SECONDS ?? 900),
+  jwtAccessTtlSeconds: Number(process.env.JWT_ACCESS_TTL_SECONDS ?? 7200),
   jwtRefreshTtlSeconds: Number(process.env.JWT_REFRESH_TTL_SECONDS ?? 2592000),
   emailDriver: process.env.EMAIL_DRIVER ?? "noop",
   emailFrom: process.env.EMAIL_FROM ?? "noreply@beauteavenue.sn",
@@ -39,7 +40,11 @@ export const config = {
   atUsername: process.env.AT_USERNAME ?? "",
   atSenderId: process.env.AT_SENDER_ID,
   storageDriver: process.env.STORAGE_DRIVER ?? "noop",
-  storagePath: process.env.STORAGE_PATH ?? fileURLToPath(new URL("../.data/uploads", import.meta.url)),
+  storagePath: process.env.STORAGE_PATH
+    ? isAbsolute(process.env.STORAGE_PATH)
+      ? process.env.STORAGE_PATH
+      : resolve(fileURLToPath(new URL("..", import.meta.url)), process.env.STORAGE_PATH)
+    : fileURLToPath(new URL("../.data/uploads", import.meta.url)),
   workerPollIntervalMs: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 5000),
   workerBatchSize: Number(process.env.WORKER_BATCH_SIZE ?? 25),
   workerDriver: (process.env.WORKER_DRIVER as "db" | "bull" | "hybrid" | undefined) ?? "hybrid",

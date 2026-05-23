@@ -384,7 +384,7 @@ export async function rejectSalon(salonId: string, input: AdminSalonDecisionInpu
 
   const owner = await getSalonOwnerContact(salonId);
   if (owner?.email) {
-    await sendEmail({
+    sendEmail({
       to: owner.email,
       subject: "Dossier salon refusé — Beauté Avenue",
       text:
@@ -499,7 +499,7 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
   });
 
-  await sendEmail({
+  sendEmail({
     to: data.ownerEmail,
     subject: "Bienvenue sur Beauté Avenue — Activez votre espace pro",
     text: `Bonjour ${data.ownerName},\n\nVotre espace pro Beauté Avenue a été créé.\n\nActivez votre compte en définissant votre mot de passe via le lien ci-dessous (valable 72h) :\n${setupLink ?? "(lien non disponible — contactez l'administrateur)"}\n\n— L'équipe Beauté Avenue`
