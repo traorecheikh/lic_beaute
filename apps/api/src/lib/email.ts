@@ -60,6 +60,39 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
       return;
     }
 
+    case "brevo": {
+      const payload: Record<string, unknown> = {
+        sender: { email: config.emailFrom },
+        to: [{ email: message.to }],
+        subject: message.subject,
+        textContent: message.text,
+      };
+      if (message.html) {
+        payload.htmlContent = message.html;
+      }
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": config.brevoApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        logger.error("[EMAIL:brevo] send failed", {
+          to: message.to,
+          status: res.status,
+          body,
+        });
+        await writeEmailAudit(message, "failed", `Brevo API ${res.status}: ${body}`);
+        throw new Error(`Brevo API error: ${res.status} ${body}`);
+      }
+      logger.info("[EMAIL:brevo] sent", { to: message.to, subject: message.subject });
+      await writeEmailAudit(message, "sent");
+      return;
+    }
+
     case "smtp": {
       const nodemailer = await import("nodemailer");
       const transporter = nodemailer.createTransport({

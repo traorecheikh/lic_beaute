@@ -22,6 +22,7 @@ export const config = {
   jwtRefreshTtlSeconds: Number(process.env.JWT_REFRESH_TTL_SECONDS ?? 2592000),
   emailDriver: process.env.EMAIL_DRIVER ?? "noop",
   emailFrom: process.env.EMAIL_FROM ?? "noreply@beauteavenue.sn",
+  brevoApiKey: process.env.BREVO_API_KEY ?? "",
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   smtpHost: process.env.SMTP_HOST ?? "",
   smtpPort: Number(process.env.SMTP_PORT ?? 587),
@@ -94,6 +95,9 @@ export function validateConfig() {
     }
     if (config.emailDriver === "noop" && isRealProd) {
       issues.push("EMAIL_DRIVER=noop in production — no emails will be sent (invites, confirmations, alerts)");
+    }
+    if (config.emailDriver === "brevo" && !config.brevoApiKey) {
+      issues.push("BREVO_API_KEY is required when EMAIL_DRIVER=brevo");
     }
     if (
       config.databaseUrl ===
