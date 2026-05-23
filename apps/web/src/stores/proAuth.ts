@@ -8,6 +8,7 @@ import {
   fetchProSalon,
   loginPro,
   logoutPro,
+  magicLoginPro,
   redeemStaffInviteToken,
   refreshProSession,
   resetProPassword,
@@ -151,6 +152,11 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     await applySession(session.accessToken, session.refreshToken);
   }
 
+  async function loginWithMagicToken(token: string, email: string) {
+    const session = await magicLoginPro(token, email);
+    await applySession(session.accessToken, session.refreshToken);
+  }
+
   async function logout() {
     const token = accessToken.value;
     const refresh = refreshToken.value;
@@ -182,6 +188,7 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     loginWithInviteToken,
     loginWithSetupToken,
     loginWithResetToken,
+    loginWithMagicToken,
     logout
   };
 }, {

@@ -451,3 +451,18 @@ export async function setupProAccount(token: string, email: string, password: st
     return response.json() as Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }>;
   });
 }
+
+export async function magicLoginPro(token: string, email: string): Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/magic-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, email })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Lien de connexion invalide ou expiré." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Lien de connexion invalide ou expiré.");
+    }
+    return response.json() as Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }>;
+  });
+}

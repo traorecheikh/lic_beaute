@@ -38,6 +38,11 @@ const router = createRouter({
       name: "pro-reset-password",
       component: () => import("@/views/ProResetPasswordPage.vue")
     },
+    {
+      path: "/pro/magic-login",
+      name: "pro-magic-login",
+      component: () => import("@/views/ProMagicLoginPage.vue")
+    },
     // --- Protected Pro Routes ---
     {
       path: "/pro",

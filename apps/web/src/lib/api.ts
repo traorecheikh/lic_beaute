@@ -319,6 +319,13 @@ export async function sendPasswordReset(token: string, salonId: string) {
   });
 }
 
+export async function sendMagicLink(token: string, salonId: string) {
+  return request<{ sent: boolean }>(`/api/v1/admin/salons/${salonId}/send-magic-link`, {
+    method: "POST",
+    headers: authHeaders(token)
+  });
+}
+
 export async function fetchPublicRegistrationDocs(): Promise<{ id: string; label: string; description?: string }[]> {
   return request<{ id: string; label: string; description?: string }[]>("/api/v1/platform/registration-docs", { method: "GET" });
 }

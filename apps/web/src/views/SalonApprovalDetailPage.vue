@@ -37,7 +37,7 @@
 
     <template v-else-if="salonQuery.data.value">
       <!-- Main Profile Card -->
-      <article class="bg-white rounded-3xl border border-outline-variant shadow-sm overflow-hidden">
+      <article class="bg-white rounded-3xl border border-outline-variant shadow-sm">
         <div class="p-8 md:p-10 border-b border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div class="space-y-4">
             <div class="flex flex-wrap items-center gap-3">
@@ -84,19 +84,63 @@
             <p class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest">Téléphone</p>
             <p class="text-[13px] font-semibold text-espresso">{{ salonQuery.data.value.owner.phone }}</p>
           </div>
-          <div class="space-y-1">
+          <div class="space-y-2">
             <p class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest">E-mail</p>
-            <div class="flex items-center gap-2">
-              <p class="text-[13px] font-semibold text-espresso">{{ salonQuery.data.value.owner.email }}</p>
+            <p class="text-[13px] font-semibold text-espresso">{{ salonQuery.data.value.owner.email }}</p>
+            <div v-if="salonQuery.data.value.approvalStatus === 'approved'" class="relative" ref="actionsMenuRef">
               <button
-                v-if="salonQuery.data.value.approvalStatus === 'approved'"
                 type="button"
-                :disabled="resetPwdMutation.isPending.value || resetConfirm"
-                class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors disabled:opacity-40 shrink-0"
-                @click="sendPasswordResetLink"
+                aria-haspopup="true"
+                :aria-expanded="actionsMenuOpen ? true : false"
+                class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors"
+                @click="toggleActionsMenu"
+                @keydown.escape="closeActionsMenu"
               >
-                {{ resetPwdMutation.isPending.value ? '…' : resetConfirm ? 'Confirmer ?' : 'Réinit.' }}
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Envoyer un accès
+                <svg class="w-3 h-3 ml-0.5 transition-transform" :class="{ 'rotate-180': actionsMenuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
               </button>
+
+              <div
+                v-if="actionsMenuOpen"
+                role="menu"
+                class="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-xl shadow-espresso/10 border border-outline-variant overflow-hidden z-20"
+                @keydown.escape="closeActionsMenu"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-blush/30 transition-colors"
+                  :class="{ 'bg-blush/50': pwdResetConfirm }"
+                  @click="sendPasswordResetLink"
+                >
+                  <svg class="w-4 h-4 text-cocoa/40 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                  <div class="min-w-0">
+                    <p class="text-[12px] font-bold text-espresso">Réinitialiser le mot de passe</p>
+                    <p class="text-[10px] text-cocoa/60 leading-tight mt-0.5">{{ pwdResetConfirm ? "Confirmer l'envoi ?" : 'Nouveau lien de réinitialisation par email' }}</p>
+                  </div>
+                  <span v-if="resetPwdMutation.isPending.value" class="ml-auto shrink-0">
+                    <span class="block w-3.5 h-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></span>
+                  </span>
+                </button>
+                <div class="border-t border-outline-variant/40 mx-3"></div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-blush/30 transition-colors"
+                  :class="{ 'bg-blush/50': magicLinkConfirm }"
+                  @click="sendMagicLinkToSalon"
+                >
+                  <svg class="w-4 h-4 text-cocoa/40 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  <div class="min-w-0">
+                    <p class="text-[12px] font-bold text-espresso">Accès direct</p>
+                    <p class="text-[10px] text-cocoa/60 leading-tight mt-0.5">{{ magicLinkConfirm ? "Confirmer l'envoi ?" : 'Connexion sans mot de passe, valable 24h' }}</p>
+                  </div>
+                  <span v-if="magicLinkMutation.isPending.value" class="ml-auto shrink-0">
+                    <span class="block w-3.5 h-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
           <div class="space-y-1">
@@ -356,7 +400,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
@@ -374,6 +418,7 @@ import {
   fetchSalonDetail,
   rejectSalonRequest,
   requestSalonInfo,
+  sendMagicLink,
   sendPasswordReset
 } from "@/lib/api";
 import { formatDateTime } from "@/lib/date";
@@ -459,32 +504,96 @@ const decisionMutation = useMutation({
   }
 });
 
-const resetConfirm = ref(false);
-let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined;
+const actionsMenuOpen = ref(false);
+const actionsMenuRef = ref<HTMLElement | null>(null);
+
+function toggleActionsMenu() {
+  actionsMenuOpen.value = !actionsMenuOpen.value;
+}
+
+function closeActionsMenu() {
+  actionsMenuOpen.value = false;
+  pwdResetConfirm.value = false;
+  clearTimeout(pwdResetTimer);
+  magicLinkConfirm.value = false;
+  clearTimeout(magicLinkTimer);
+}
+
+function onDocumentClick(e: MouseEvent) {
+  if (actionsMenuRef.value && !actionsMenuRef.value.contains(e.target as Node)) {
+    closeActionsMenu();
+  }
+}
+
+onMounted(() => document.addEventListener("click", onDocumentClick));
+onUnmounted(() => {
+  document.removeEventListener("click", onDocumentClick);
+  clearTimeout(pwdResetTimer);
+  clearTimeout(magicLinkTimer);
+});
+
+// ── Password Reset ──
+
+const pwdResetConfirm = ref(false);
+let pwdResetTimer: ReturnType<typeof setTimeout> | undefined;
 
 const resetPwdMutation = useMutation({
   mutationFn: () => sendPasswordReset(auth.accessToken ?? "", salonId.value),
   onSuccess: () => {
-    resetConfirm.value = false;
+    pwdResetConfirm.value = false;
+    actionsMenuOpen.value = false;
     const ownerEmail = salonQuery.data.value?.owner.email ?? "";
-    toast.success(`Lien envoyé à ${ownerEmail}`);
+    toast.success(`Lien de réinitialisation envoyé à ${ownerEmail}`);
   },
   onError: (error) => {
-    resetConfirm.value = false;
+    pwdResetConfirm.value = false;
     toast.error(getErrorMessage(error, "Envoi impossible."));
   }
 });
 
 function sendPasswordResetLink() {
-  if (!resetConfirm.value) {
-    resetConfirm.value = true;
-    clearTimeout(resetConfirmTimer);
-    resetConfirmTimer = setTimeout(() => { resetConfirm.value = false; }, 4000);
+  if (!pwdResetConfirm.value) {
+    pwdResetConfirm.value = true;
+    clearTimeout(pwdResetTimer);
+    pwdResetTimer = setTimeout(() => { pwdResetConfirm.value = false; }, 4000);
     return;
   }
-  resetConfirm.value = false;
-  clearTimeout(resetConfirmTimer);
+  pwdResetConfirm.value = false;
+  clearTimeout(pwdResetTimer);
+  actionsMenuOpen.value = false;
   resetPwdMutation.mutate();
+}
+
+// ── Accès direct (Magic Link) ──
+
+const magicLinkConfirm = ref(false);
+let magicLinkTimer: ReturnType<typeof setTimeout> | undefined;
+
+const magicLinkMutation = useMutation({
+  mutationFn: () => sendMagicLink(auth.accessToken ?? "", salonId.value),
+  onSuccess: () => {
+    magicLinkConfirm.value = false;
+    actionsMenuOpen.value = false;
+    const ownerEmail = salonQuery.data.value?.owner.email ?? "";
+    toast.success(`Accès direct envoyé à ${ownerEmail}`);
+  },
+  onError: (error) => {
+    magicLinkConfirm.value = false;
+    toast.error(getErrorMessage(error, "Envoi impossible."));
+  }
+});
+
+function sendMagicLinkToSalon() {
+  if (!magicLinkConfirm.value) {
+    magicLinkConfirm.value = true;
+    clearTimeout(magicLinkTimer);
+    magicLinkTimer = setTimeout(() => { magicLinkConfirm.value = false; }, 4000);
+    return;
+  }
+  magicLinkConfirm.value = false;
+  clearTimeout(magicLinkTimer);
+  actionsMenuOpen.value = false;
+  magicLinkMutation.mutate();
 }
 
 const errorMessage = computed(() => {

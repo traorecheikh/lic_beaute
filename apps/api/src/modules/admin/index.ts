@@ -40,7 +40,8 @@ import {
   upsertRequiredDocument,
   upsertSalonCategory,
   createSalon,
-  sendPasswordReset
+  sendPasswordReset,
+  sendMagicLink
 } from "./data.js";
 
 export class AdminController {
@@ -296,6 +297,22 @@ export class AdminController {
       if (msg === "salon_not_found") { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
       if (msg === "owner_not_found") { fail(reply, 422, "owner_not_found", "Aucun gérant trouvé pour ce salon."); return; }
       fail(reply, 500, "internal_error", "Erreur lors de l'envoi du lien.");
+    }
+  }
+
+  async sendMagicLink(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    const { salonId } = request.params as { salonId: string };
+    const actorName = await this.resolveActorName(token.sub);
+    try {
+      await sendMagicLink(salonId, actorName);
+      ok(reply, { sent: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "internal_error";
+      if (msg === "salon_not_found") { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+      if (msg === "owner_not_found") { fail(reply, 422, "owner_not_found", "Aucun gérant trouvé pour ce salon."); return; }
+      fail(reply, 500, "internal_error", "Erreur lors de l'envoi du lien magique.");
     }
   }
 }

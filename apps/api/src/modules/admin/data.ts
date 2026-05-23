@@ -1112,6 +1112,53 @@ export async function deleteRequiredDocument(id: string, actorName: string) {
   return doc;
 }
 
+export async function sendMagicLink(salonId: string, actorName: string): Promise<void> {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    include: { staffMembers: { where: { role: "salon_owner" }, take: 1 } }
+  });
+  if (!salon) throw new Error("salon_not_found");
+
+  const owner = salon.staffMembers[0];
+  if (!owner) throw new Error("owner_not_found");
+  const ownerEmail = owner.email ?? "";
+  const ownerName = owner.fullName ?? "Gérant";
+
+  const rawToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24h
+
+  await prisma.platformSetting.upsert({
+    where: { key: `auth:magic:${owner.id}` },
+    create: {
+      group: "security",
+      key: `auth:magic:${owner.id}`,
+      value: JSON.stringify({ tokenHash, expiresAt }),
+      description: "Magic login token (single-use)"
+    },
+    update: { value: JSON.stringify({ tokenHash, expiresAt }) }
+  });
+
+  const magicLink = `${config.webOrigin}/pro/magic-login?token=${rawToken}&email=${encodeURIComponent(ownerEmail)}`;
+
+  await sendEmail({
+    to: ownerEmail,
+    subject: "Beauté Avenue — Lien de connexion rapide",
+    text: `Bonjour ${ownerName},\n\nUn administrateur vous a envoyé un lien de connexion rapide pour votre salon.\n\nCliquez sur le lien ci-dessous pour vous connecter automatiquement (valable 24h) :\n${magicLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`
+  });
+
+  await writeAuditLog({
+    action: "user.magic_link_sent",
+    summary: `Lien magique envoyé à ${ownerEmail} (${salon.name}).`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify({ ownerEmail, salonId }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+}
+
 export async function sendPasswordReset(salonId: string, actorName: string): Promise<void> {
   const salon = await prisma.salon.findUnique({
     where: { id: salonId },

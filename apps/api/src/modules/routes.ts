@@ -62,6 +62,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
   app.post("/api/v1/auth/setup-account", authLimit, (req, rep) => auth.setupAccount(req, rep));
   app.post("/api/v1/auth/reset-password", authLimit, (req, rep) => auth.resetPassword(req, rep));
+  app.post("/api/v1/auth/magic-login", authLimit, (req, rep) => auth.magicLogin(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
   app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));
   app.get("/api/v1/metadata/profile-options", (req, rep) => clientAccounts.profileOptions(req, rep));
@@ -200,6 +201,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/admin/salons/:salonId/reject", (req, rep) => admin.rejectSalon(req, rep));
   app.post("/api/v1/admin/salons/:salonId/request-info", (req, rep) => admin.requestSalonInfo(req, rep));
   app.post("/api/v1/admin/salons/:salonId/send-password-reset", (req, rep) => admin.sendPasswordReset(req, rep));
+  app.post("/api/v1/admin/salons/:salonId/send-magic-link", (req, rep) => admin.sendMagicLink(req, rep));
   app.get("/api/v1/admin/subscriptions", (req, rep) => admin.listSubscriptions(req, rep));
   app.get("/api/v1/admin/subscriptions/:subscriptionId", (req, rep) => admin.subscriptionDetail(req, rep));
   app.post("/api/v1/admin/subscriptions/:subscriptionId/override", (req, rep) => admin.overrideSubscription(req, rep));
