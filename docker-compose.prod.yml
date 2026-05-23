@@ -50,7 +50,7 @@ services:
       - traefik.http.routers.beauteavenue-https.entrypoints=https
       - traefik.http.routers.beauteavenue-https.tls=true
       - traefik.http.routers.beauteavenue-https.tls.certresolver=letsencrypt
-      - traefik.http.services.beauteavenue.loadbalancer.server.url=http://host.docker.internal:3000
+      - traefik.http.services.beauteavenue.loadbalancer.server.url=http://api:3000
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-beaute_avenue}?schema=public
