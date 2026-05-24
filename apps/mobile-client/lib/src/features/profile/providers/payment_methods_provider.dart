@@ -68,8 +68,8 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
     String? label,
   }) async {
     final payload = {
-      'phoneNumber': ?phoneNumber,
-      'label': label,
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
+      if (label != null) 'label': label,
     };
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {

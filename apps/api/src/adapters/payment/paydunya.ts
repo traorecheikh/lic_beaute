@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 import type { PaymentStatus } from "@beauteavenue/contracts";
+import { prisma } from "../../lib/db/prisma.js";
 
 function normalizePhoneNumber(phone: string, country: string): string {
   let cleaned = phone.replace(/[\s+\-()]/g, "");
@@ -258,6 +259,14 @@ const SOFTPAY_METHOD_MAP: Record<string, string> = {
   paydunya_djamo: "djamo"
 };
 
+const SENEGAL_TOGGLE_BY_CODE: Record<string, string> = {
+  wave_senegal: "paydunya_enabled_wave_senegal",
+  orange_senegal: "paydunya_enabled_orange_senegal",
+  free_senegal: "paydunya_enabled_free_senegal",
+  wizall_senegal: "paydunya_enabled_wizall_senegal",
+  expresso_sn: "paydunya_enabled_expresso_senegal"
+};
+
 export class PayDunyaAdapter implements PaymentAdapter {
   private baseApiUrl: string;
   private checkoutHost: string;
@@ -503,12 +512,26 @@ export class PayDunyaAdapter implements PaymentAdapter {
   // ─── getAvailableMethods ──────────────────────────────────────────────────
 
   async getAvailableMethods(): Promise<AvailableMethod[]> {
-    return Object.entries(PAYDUNYA_METHODS).map(([code, entry]) => ({
-      code,
-      country: entry.country,
-      label: entry.label,
-      enabled: true
-    }));
+    const allowedCountries = new Set(
+      (process.env.PAYDUNYA_ALLOWED_COUNTRIES ?? "sn")
+        .split(",")
+        .map((v) => v.trim().toLowerCase())
+        .filter(Boolean)
+    );
+    const rows = await prisma.platformSetting.findMany({
+      where: { group: "payment_methods" },
+      select: { key: true, value: true }
+    });
+    const settingMap = new Map(rows.map((row) => [row.key, row.value.toLowerCase()]));
+
+    return Object.entries(PAYDUNYA_METHODS)
+      .filter(([, entry]) => allowedCountries.has(entry.country))
+      .map(([code, entry]) => ({
+        code,
+        country: entry.country,
+        label: entry.label,
+        enabled: (settingMap.get(SENEGAL_TOGGLE_BY_CODE[code] ?? "") ?? "true") === "true"
+      }));
   }
 
   // ─── lookupTransaction ────────────────────────────────────────────────────

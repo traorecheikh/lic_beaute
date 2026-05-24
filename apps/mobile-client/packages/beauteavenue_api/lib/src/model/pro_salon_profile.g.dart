@@ -32,9 +32,50 @@ final BuiltSet<ProSalonProfileSubscriptionTierEnum>
   _$proSalonProfileSubscriptionTierEnum_premium,
 ]);
 
+const ProSalonProfileApprovalStatusEnum
+    _$proSalonProfileApprovalStatusEnum_pendingReview =
+    const ProSalonProfileApprovalStatusEnum._('pendingReview');
+const ProSalonProfileApprovalStatusEnum
+    _$proSalonProfileApprovalStatusEnum_needsInfo =
+    const ProSalonProfileApprovalStatusEnum._('needsInfo');
+const ProSalonProfileApprovalStatusEnum
+    _$proSalonProfileApprovalStatusEnum_approved =
+    const ProSalonProfileApprovalStatusEnum._('approved');
+const ProSalonProfileApprovalStatusEnum
+    _$proSalonProfileApprovalStatusEnum_rejected =
+    const ProSalonProfileApprovalStatusEnum._('rejected');
+
+ProSalonProfileApprovalStatusEnum _$proSalonProfileApprovalStatusEnumValueOf(
+    String name) {
+  switch (name) {
+    case 'pendingReview':
+      return _$proSalonProfileApprovalStatusEnum_pendingReview;
+    case 'needsInfo':
+      return _$proSalonProfileApprovalStatusEnum_needsInfo;
+    case 'approved':
+      return _$proSalonProfileApprovalStatusEnum_approved;
+    case 'rejected':
+      return _$proSalonProfileApprovalStatusEnum_rejected;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<ProSalonProfileApprovalStatusEnum>
+    _$proSalonProfileApprovalStatusEnumValues = BuiltSet<
+        ProSalonProfileApprovalStatusEnum>(const <ProSalonProfileApprovalStatusEnum>[
+  _$proSalonProfileApprovalStatusEnum_pendingReview,
+  _$proSalonProfileApprovalStatusEnum_needsInfo,
+  _$proSalonProfileApprovalStatusEnum_approved,
+  _$proSalonProfileApprovalStatusEnum_rejected,
+]);
+
 Serializer<ProSalonProfileSubscriptionTierEnum>
     _$proSalonProfileSubscriptionTierEnumSerializer =
     _$ProSalonProfileSubscriptionTierEnumSerializer();
+Serializer<ProSalonProfileApprovalStatusEnum>
+    _$proSalonProfileApprovalStatusEnumSerializer =
+    _$ProSalonProfileApprovalStatusEnumSerializer();
 
 class _$ProSalonProfileSubscriptionTierEnumSerializer
     implements PrimitiveSerializer<ProSalonProfileSubscriptionTierEnum> {
@@ -65,6 +106,40 @@ class _$ProSalonProfileSubscriptionTierEnumSerializer
           Serializers serializers, Object serialized,
           {FullType specifiedType = FullType.unspecified}) =>
       ProSalonProfileSubscriptionTierEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
+class _$ProSalonProfileApprovalStatusEnumSerializer
+    implements PrimitiveSerializer<ProSalonProfileApprovalStatusEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'pendingReview': 'pending_review',
+    'needsInfo': 'needs_info',
+    'approved': 'approved',
+    'rejected': 'rejected',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'pending_review': 'pendingReview',
+    'needs_info': 'needsInfo',
+    'approved': 'approved',
+    'rejected': 'rejected',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[ProSalonProfileApprovalStatusEnum];
+  @override
+  final String wireName = 'ProSalonProfileApprovalStatusEnum';
+
+  @override
+  Object serialize(
+          Serializers serializers, ProSalonProfileApprovalStatusEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  ProSalonProfileApprovalStatusEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      ProSalonProfileApprovalStatusEnum.valueOf(
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 
@@ -102,6 +177,8 @@ class _$ProSalonProfile extends ProSalonProfile {
   @override
   final bool canReceiveBookings;
   @override
+  final ProSalonProfileApprovalStatusEnum approvalStatus;
+  @override
   final SalonDetailTeamDisplay teamDisplay;
   @override
   final BuiltList<String> gallery;
@@ -128,6 +205,7 @@ class _$ProSalonProfile extends ProSalonProfile {
       required this.subscriptionTier,
       required this.isVisibleInMarketplace,
       required this.canReceiveBookings,
+      required this.approvalStatus,
       required this.teamDisplay,
       required this.gallery,
       required this.hours})
@@ -159,6 +237,7 @@ class _$ProSalonProfile extends ProSalonProfile {
         subscriptionTier == other.subscriptionTier &&
         isVisibleInMarketplace == other.isVisibleInMarketplace &&
         canReceiveBookings == other.canReceiveBookings &&
+        approvalStatus == other.approvalStatus &&
         teamDisplay == other.teamDisplay &&
         gallery == other.gallery &&
         hours == other.hours;
@@ -183,6 +262,7 @@ class _$ProSalonProfile extends ProSalonProfile {
     _$hash = $jc(_$hash, subscriptionTier.hashCode);
     _$hash = $jc(_$hash, isVisibleInMarketplace.hashCode);
     _$hash = $jc(_$hash, canReceiveBookings.hashCode);
+    _$hash = $jc(_$hash, approvalStatus.hashCode);
     _$hash = $jc(_$hash, teamDisplay.hashCode);
     _$hash = $jc(_$hash, gallery.hashCode);
     _$hash = $jc(_$hash, hours.hashCode);
@@ -209,6 +289,7 @@ class _$ProSalonProfile extends ProSalonProfile {
           ..add('subscriptionTier', subscriptionTier)
           ..add('isVisibleInMarketplace', isVisibleInMarketplace)
           ..add('canReceiveBookings', canReceiveBookings)
+          ..add('approvalStatus', approvalStatus)
           ..add('teamDisplay', teamDisplay)
           ..add('gallery', gallery)
           ..add('hours', hours))
@@ -289,6 +370,12 @@ class ProSalonProfileBuilder
   set canReceiveBookings(bool? canReceiveBookings) =>
       _$this._canReceiveBookings = canReceiveBookings;
 
+  ProSalonProfileApprovalStatusEnum? _approvalStatus;
+  ProSalonProfileApprovalStatusEnum? get approvalStatus =>
+      _$this._approvalStatus;
+  set approvalStatus(ProSalonProfileApprovalStatusEnum? approvalStatus) =>
+      _$this._approvalStatus = approvalStatus;
+
   SalonDetailTeamDisplayBuilder? _teamDisplay;
   SalonDetailTeamDisplayBuilder get teamDisplay =>
       _$this._teamDisplay ??= SalonDetailTeamDisplayBuilder();
@@ -328,6 +415,7 @@ class ProSalonProfileBuilder
       _subscriptionTier = $v.subscriptionTier;
       _isVisibleInMarketplace = $v.isVisibleInMarketplace;
       _canReceiveBookings = $v.canReceiveBookings;
+      _approvalStatus = $v.approvalStatus;
       _teamDisplay = $v.teamDisplay.toBuilder();
       _gallery = $v.gallery.toBuilder();
       _hours = $v.hours.toBuilder();
@@ -382,6 +470,8 @@ class ProSalonProfileBuilder
                 'isVisibleInMarketplace'),
             canReceiveBookings: BuiltValueNullFieldError.checkNotNull(
                 canReceiveBookings, r'ProSalonProfile', 'canReceiveBookings'),
+            approvalStatus: BuiltValueNullFieldError.checkNotNull(
+                approvalStatus, r'ProSalonProfile', 'approvalStatus'),
             teamDisplay: teamDisplay.build(),
             gallery: gallery.build(),
             hours: hours.build(),

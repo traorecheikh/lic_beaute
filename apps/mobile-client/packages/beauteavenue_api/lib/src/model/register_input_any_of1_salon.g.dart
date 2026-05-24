@@ -16,6 +16,8 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
   @override
   final String address;
   @override
+  final String? neighborhood;
+  @override
   final String? description;
 
   factory _$RegisterInputAnyOf1Salon(
@@ -27,6 +29,7 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
       required this.category,
       required this.city,
       required this.address,
+      this.neighborhood,
       this.description})
       : super._();
   @override
@@ -46,6 +49,7 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
         category == other.category &&
         city == other.city &&
         address == other.address &&
+        neighborhood == other.neighborhood &&
         description == other.description;
   }
 
@@ -56,6 +60,7 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
     _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
     _$hash = $jc(_$hash, address.hashCode);
+    _$hash = $jc(_$hash, neighborhood.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -68,6 +73,7 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
           ..add('category', category)
           ..add('city', city)
           ..add('address', address)
+          ..add('neighborhood', neighborhood)
           ..add('description', description))
         .toString();
   }
@@ -94,6 +100,10 @@ class RegisterInputAnyOf1SalonBuilder
   String? get address => _$this._address;
   set address(String? address) => _$this._address = address;
 
+  String? _neighborhood;
+  String? get neighborhood => _$this._neighborhood;
+  set neighborhood(String? neighborhood) => _$this._neighborhood = neighborhood;
+
   String? _description;
   String? get description => _$this._description;
   set description(String? description) => _$this._description = description;
@@ -109,6 +119,7 @@ class RegisterInputAnyOf1SalonBuilder
       _category = $v.category;
       _city = $v.city;
       _address = $v.address;
+      _neighborhood = $v.neighborhood;
       _description = $v.description;
       _$v = null;
     }
@@ -139,6 +150,7 @@ class RegisterInputAnyOf1SalonBuilder
               city, r'RegisterInputAnyOf1Salon', 'city'),
           address: BuiltValueNullFieldError.checkNotNull(
               address, r'RegisterInputAnyOf1Salon', 'address'),
+          neighborhood: neighborhood,
           description: description,
         );
     replace(_$result);

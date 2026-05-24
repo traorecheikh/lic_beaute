@@ -13,6 +13,8 @@ describe("contracts", () => {
   });
 
   it("accepts supported payment channels for routing", () => {
+    expect(paymentChannelSchema.parse("wave_senegal")).toBe("wave_senegal");
+    expect(paymentChannelSchema.parse("orange_senegal")).toBe("orange_senegal");
     expect(paymentChannelSchema.parse("wave")).toBe("wave");
     expect(paymentChannelSchema.parse("orange_money")).toBe("orange_money");
     expect(paymentChannelSchema.parse("free_money")).toBe("free_money");

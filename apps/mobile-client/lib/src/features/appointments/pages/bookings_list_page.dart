@@ -76,64 +76,59 @@ class BookingsListPage extends ConsumerWidget {
                     ? Builder(
                         builder: (context) {
                           final controller = DefaultTabController.of(context);
-                          return AnimatedBuilder(
-                            animation: controller.animation ?? controller,
-                            builder: (context, _) {
-                              return Padding(
-                                padding: EdgeInsets.fromLTRB(
-                                  20.w,
-                                  10.h,
-                                  20.w,
-                                  10.h,
-                                ),
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surfaceVariant,
-                                    borderRadius: BorderRadius.circular(14.r),
-                                  ),
-                                  child: CupertinoSlidingSegmentedControl<int>(
-                                    groupValue: controller.index,
-                                    backgroundColor: AppColors.surfaceVariant,
-                                    thumbColor: AppColors.surface,
-                                    padding: EdgeInsets.all(4.r),
-                                    onValueChanged: (value) {
-                                      if (value == null) return;
-                                      controller.animateTo(value);
-                                    },
-                                    children: {
-                                      0: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 12.h,
-                                        ),
-                                        child: Text(
-                                          'À VENIR',
-                                          textAlign: TextAlign.center,
-                                          style: AppTextStyles.labelLg.copyWith(
-                                            color: controller.index == 0
-                                                ? AppColors.onSurface
-                                                : AppColors.onSurfaceVariant,
-                                          ),
-                                        ),
+                          return Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              20.w,
+                              10.h,
+                              20.w,
+                              10.h,
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceVariant,
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: CupertinoSlidingSegmentedControl<int>(
+                                groupValue: controller.index,
+                                backgroundColor: AppColors.surfaceVariant,
+                                thumbColor: AppColors.surface,
+                                padding: EdgeInsets.all(4.r),
+                                onValueChanged: (value) {
+                                  if (value == null) return;
+                                  controller.animateTo(value);
+                                },
+                                children: {
+                                  0: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 12.h,
+                                    ),
+                                    child: Text(
+                                      'À VENIR',
+                                      textAlign: TextAlign.center,
+                                      style: AppTextStyles.labelLg.copyWith(
+                                        color: controller.index == 0
+                                            ? AppColors.onSurface
+                                            : AppColors.onSurfaceVariant,
                                       ),
-                                      1: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 12.h,
-                                        ),
-                                        child: Text(
-                                          'PASSÉS',
-                                          textAlign: TextAlign.center,
-                                          style: AppTextStyles.labelLg.copyWith(
-                                            color: controller.index == 1
-                                                ? AppColors.onSurface
-                                                : AppColors.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ),
-                                    },
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                  1: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 12.h,
+                                    ),
+                                    child: Text(
+                                      'PASSÉS',
+                                      textAlign: TextAlign.center,
+                                      style: AppTextStyles.labelLg.copyWith(
+                                        color: controller.index == 1
+                                            ? AppColors.onSurface
+                                            : AppColors.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                },
+                              ),
+                            ),
                           );
                         },
                       )

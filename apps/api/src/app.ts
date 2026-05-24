@@ -126,7 +126,7 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
       redisEnabled = true;
       await app.register(rateLimit, {
         global: true,
-        max: 100,
+        max: 10_000,
         timeWindow: "1 minute",
         redis
       });
@@ -143,14 +143,14 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
       // Tighter limits for in-memory fallback: not distributed, lower ceiling.
       await app.register(rateLimit, {
         global: true,
-        max: config.nodeEnv === "production" ? 50 : 2000,
+        max: config.nodeEnv === "production" ? 5_000 : 200_000,
         timeWindow: "1 minute"
       });
     }
   } else {
     await app.register(rateLimit, {
       global: true,
-      max: config.nodeEnv === "production" ? 50 : 2000,
+      max: config.nodeEnv === "production" ? 5_000 : 200_000,
       timeWindow: "1 minute"
     });
   }

@@ -401,7 +401,6 @@ export class MediaController {
 
   async uploadRegistrationDoc(request: FastifyRequest, reply: FastifyReply) {
     try {
-      requireRole(request, ["salon_owner"]);
       const storage = getStorageAdapter(config.storageDriver, {
         storagePath: config.storagePath,
         r2AccountId: config.r2AccountId,

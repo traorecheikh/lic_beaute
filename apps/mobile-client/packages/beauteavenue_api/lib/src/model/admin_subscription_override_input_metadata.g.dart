@@ -12,6 +12,8 @@ class _$AdminSubscriptionOverrideInputMetadata
   final String? internalTicket;
   @override
   final String? subscriptionChargeId;
+  @override
+  final String? providerReference;
 
   factory _$AdminSubscriptionOverrideInputMetadata(
           [void Function(AdminSubscriptionOverrideInputMetadataBuilder)?
@@ -20,7 +22,7 @@ class _$AdminSubscriptionOverrideInputMetadata
           ._build();
 
   _$AdminSubscriptionOverrideInputMetadata._(
-      {this.internalTicket, this.subscriptionChargeId})
+      {this.internalTicket, this.subscriptionChargeId, this.providerReference})
       : super._();
   @override
   AdminSubscriptionOverrideInputMetadata rebuild(
@@ -37,7 +39,8 @@ class _$AdminSubscriptionOverrideInputMetadata
     if (identical(other, this)) return true;
     return other is AdminSubscriptionOverrideInputMetadata &&
         internalTicket == other.internalTicket &&
-        subscriptionChargeId == other.subscriptionChargeId;
+        subscriptionChargeId == other.subscriptionChargeId &&
+        providerReference == other.providerReference;
   }
 
   @override
@@ -45,6 +48,7 @@ class _$AdminSubscriptionOverrideInputMetadata
     var _$hash = 0;
     _$hash = $jc(_$hash, internalTicket.hashCode);
     _$hash = $jc(_$hash, subscriptionChargeId.hashCode);
+    _$hash = $jc(_$hash, providerReference.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -54,7 +58,8 @@ class _$AdminSubscriptionOverrideInputMetadata
     return (newBuiltValueToStringHelper(
             r'AdminSubscriptionOverrideInputMetadata')
           ..add('internalTicket', internalTicket)
-          ..add('subscriptionChargeId', subscriptionChargeId))
+          ..add('subscriptionChargeId', subscriptionChargeId)
+          ..add('providerReference', providerReference))
         .toString();
   }
 }
@@ -75,6 +80,11 @@ class AdminSubscriptionOverrideInputMetadataBuilder
   set subscriptionChargeId(String? subscriptionChargeId) =>
       _$this._subscriptionChargeId = subscriptionChargeId;
 
+  String? _providerReference;
+  String? get providerReference => _$this._providerReference;
+  set providerReference(String? providerReference) =>
+      _$this._providerReference = providerReference;
+
   AdminSubscriptionOverrideInputMetadataBuilder() {
     AdminSubscriptionOverrideInputMetadata._defaults(this);
   }
@@ -84,6 +94,7 @@ class AdminSubscriptionOverrideInputMetadataBuilder
     if ($v != null) {
       _internalTicket = $v.internalTicket;
       _subscriptionChargeId = $v.subscriptionChargeId;
+      _providerReference = $v.providerReference;
       _$v = null;
     }
     return this;
@@ -108,6 +119,7 @@ class AdminSubscriptionOverrideInputMetadataBuilder
         _$AdminSubscriptionOverrideInputMetadata._(
           internalTicket: internalTicket,
           subscriptionChargeId: subscriptionChargeId,
+          providerReference: providerReference,
         );
     replace(_$result);
     return _$result;

@@ -10,6 +10,8 @@ const CurrentUserRoleEnum _$currentUserRoleEnum_client =
     const CurrentUserRoleEnum._('client');
 const CurrentUserRoleEnum _$currentUserRoleEnum_salonStaff =
     const CurrentUserRoleEnum._('salonStaff');
+const CurrentUserRoleEnum _$currentUserRoleEnum_salonManager =
+    const CurrentUserRoleEnum._('salonManager');
 const CurrentUserRoleEnum _$currentUserRoleEnum_salonOwner =
     const CurrentUserRoleEnum._('salonOwner');
 const CurrentUserRoleEnum _$currentUserRoleEnum_platformAdmin =
@@ -21,6 +23,8 @@ CurrentUserRoleEnum _$currentUserRoleEnumValueOf(String name) {
       return _$currentUserRoleEnum_client;
     case 'salonStaff':
       return _$currentUserRoleEnum_salonStaff;
+    case 'salonManager':
+      return _$currentUserRoleEnum_salonManager;
     case 'salonOwner':
       return _$currentUserRoleEnum_salonOwner;
     case 'platformAdmin':
@@ -34,6 +38,7 @@ final BuiltSet<CurrentUserRoleEnum> _$currentUserRoleEnumValues =
     BuiltSet<CurrentUserRoleEnum>(const <CurrentUserRoleEnum>[
   _$currentUserRoleEnum_client,
   _$currentUserRoleEnum_salonStaff,
+  _$currentUserRoleEnum_salonManager,
   _$currentUserRoleEnum_salonOwner,
   _$currentUserRoleEnum_platformAdmin,
 ]);
@@ -102,12 +107,14 @@ class _$CurrentUserRoleEnumSerializer
   static const Map<String, Object> _toWire = const <String, Object>{
     'client': 'client',
     'salonStaff': 'salon_staff',
+    'salonManager': 'salon_manager',
     'salonOwner': 'salon_owner',
     'platformAdmin': 'platform_admin',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'client': 'client',
     'salon_staff': 'salonStaff',
+    'salon_manager': 'salonManager',
     'salon_owner': 'salonOwner',
     'platform_admin': 'platformAdmin',
   };

@@ -983,10 +983,14 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   String? _channelFromMethod(dynamic method) {
     if (method == null) return null;
     final provider = method.provider as String? ?? '';
-    if (provider == 'paydunya') {
-      return 'wave_senegal';
-    }
-    return null;
+    if (provider != 'paydunya') return null;
+    final label = (method.label as String? ?? '').toLowerCase();
+    if (label.contains('orange')) return 'orange_senegal';
+    if (label.contains('free')) return 'free_senegal';
+    if (label.contains('wizall')) return 'wizall_senegal';
+    if (label.contains('expresso')) return 'expresso_sn';
+    if (label.contains('wave')) return 'wave_senegal';
+    return 'wave_senegal';
   }
 }
 
@@ -1058,4 +1062,3 @@ class _MethodTile extends StatelessWidget {
     );
   }
 }
-

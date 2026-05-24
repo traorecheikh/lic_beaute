@@ -153,6 +153,8 @@ class _$ProSubscription extends ProSubscription {
   @override
   final DateTime? expiresAt;
   @override
+  final DateTime? gracePeriodEndsAt;
+  @override
   final bool isComplimentary;
   @override
   final bool autoRenew;
@@ -168,6 +170,7 @@ class _$ProSubscription extends ProSubscription {
       required this.status,
       this.renewsAt,
       this.expiresAt,
+      this.gracePeriodEndsAt,
       required this.isComplimentary,
       required this.autoRenew,
       this.billingMethod})
@@ -188,6 +191,7 @@ class _$ProSubscription extends ProSubscription {
         status == other.status &&
         renewsAt == other.renewsAt &&
         expiresAt == other.expiresAt &&
+        gracePeriodEndsAt == other.gracePeriodEndsAt &&
         isComplimentary == other.isComplimentary &&
         autoRenew == other.autoRenew &&
         billingMethod == other.billingMethod;
@@ -201,6 +205,7 @@ class _$ProSubscription extends ProSubscription {
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, renewsAt.hashCode);
     _$hash = $jc(_$hash, expiresAt.hashCode);
+    _$hash = $jc(_$hash, gracePeriodEndsAt.hashCode);
     _$hash = $jc(_$hash, isComplimentary.hashCode);
     _$hash = $jc(_$hash, autoRenew.hashCode);
     _$hash = $jc(_$hash, billingMethod.hashCode);
@@ -216,6 +221,7 @@ class _$ProSubscription extends ProSubscription {
           ..add('status', status)
           ..add('renewsAt', renewsAt)
           ..add('expiresAt', expiresAt)
+          ..add('gracePeriodEndsAt', gracePeriodEndsAt)
           ..add('isComplimentary', isComplimentary)
           ..add('autoRenew', autoRenew)
           ..add('billingMethod', billingMethod))
@@ -247,6 +253,11 @@ class ProSubscriptionBuilder
   DateTime? get expiresAt => _$this._expiresAt;
   set expiresAt(DateTime? expiresAt) => _$this._expiresAt = expiresAt;
 
+  DateTime? _gracePeriodEndsAt;
+  DateTime? get gracePeriodEndsAt => _$this._gracePeriodEndsAt;
+  set gracePeriodEndsAt(DateTime? gracePeriodEndsAt) =>
+      _$this._gracePeriodEndsAt = gracePeriodEndsAt;
+
   bool? _isComplimentary;
   bool? get isComplimentary => _$this._isComplimentary;
   set isComplimentary(bool? isComplimentary) =>
@@ -274,6 +285,7 @@ class ProSubscriptionBuilder
       _status = $v.status;
       _renewsAt = $v.renewsAt;
       _expiresAt = $v.expiresAt;
+      _gracePeriodEndsAt = $v.gracePeriodEndsAt;
       _isComplimentary = $v.isComplimentary;
       _autoRenew = $v.autoRenew;
       _billingMethod = $v.billingMethod?.toBuilder();
@@ -308,6 +320,7 @@ class ProSubscriptionBuilder
                 status, r'ProSubscription', 'status'),
             renewsAt: renewsAt,
             expiresAt: expiresAt,
+            gracePeriodEndsAt: gracePeriodEndsAt,
             isComplimentary: BuiltValueNullFieldError.checkNotNull(
                 isComplimentary, r'ProSubscription', 'isComplimentary'),
             autoRenew: BuiltValueNullFieldError.checkNotNull(

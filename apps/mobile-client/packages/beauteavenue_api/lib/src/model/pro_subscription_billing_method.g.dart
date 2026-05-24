@@ -7,6 +7,9 @@ part of 'pro_subscription_billing_method.dart';
 // **************************************************************************
 
 const ProSubscriptionBillingMethodProviderEnum
+    _$proSubscriptionBillingMethodProviderEnum_paydunya =
+    const ProSubscriptionBillingMethodProviderEnum._('paydunya');
+const ProSubscriptionBillingMethodProviderEnum
     _$proSubscriptionBillingMethodProviderEnum_intech =
     const ProSubscriptionBillingMethodProviderEnum._('intech');
 const ProSubscriptionBillingMethodProviderEnum
@@ -16,6 +19,8 @@ const ProSubscriptionBillingMethodProviderEnum
 ProSubscriptionBillingMethodProviderEnum
     _$proSubscriptionBillingMethodProviderEnumValueOf(String name) {
   switch (name) {
+    case 'paydunya':
+      return _$proSubscriptionBillingMethodProviderEnum_paydunya;
     case 'intech':
       return _$proSubscriptionBillingMethodProviderEnum_intech;
     case 'manual':
@@ -28,6 +33,7 @@ ProSubscriptionBillingMethodProviderEnum
 final BuiltSet<ProSubscriptionBillingMethodProviderEnum>
     _$proSubscriptionBillingMethodProviderEnumValues = BuiltSet<
         ProSubscriptionBillingMethodProviderEnum>(const <ProSubscriptionBillingMethodProviderEnum>[
+  _$proSubscriptionBillingMethodProviderEnum_paydunya,
   _$proSubscriptionBillingMethodProviderEnum_intech,
   _$proSubscriptionBillingMethodProviderEnum_manual,
 ]);
@@ -39,10 +45,12 @@ Serializer<ProSubscriptionBillingMethodProviderEnum>
 class _$ProSubscriptionBillingMethodProviderEnumSerializer
     implements PrimitiveSerializer<ProSubscriptionBillingMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };
@@ -73,13 +81,20 @@ class _$ProSubscriptionBillingMethod extends ProSubscriptionBillingMethod {
   final ProSubscriptionBillingMethodProviderEnum provider;
   @override
   final String accountNumberMasked;
+  @override
+  final String? country;
+  @override
+  final String? method;
 
   factory _$ProSubscriptionBillingMethod(
           [void Function(ProSubscriptionBillingMethodBuilder)? updates]) =>
       (ProSubscriptionBillingMethodBuilder()..update(updates))._build();
 
   _$ProSubscriptionBillingMethod._(
-      {required this.provider, required this.accountNumberMasked})
+      {required this.provider,
+      required this.accountNumberMasked,
+      this.country,
+      this.method})
       : super._();
   @override
   ProSubscriptionBillingMethod rebuild(
@@ -95,7 +110,9 @@ class _$ProSubscriptionBillingMethod extends ProSubscriptionBillingMethod {
     if (identical(other, this)) return true;
     return other is ProSubscriptionBillingMethod &&
         provider == other.provider &&
-        accountNumberMasked == other.accountNumberMasked;
+        accountNumberMasked == other.accountNumberMasked &&
+        country == other.country &&
+        method == other.method;
   }
 
   @override
@@ -103,6 +120,8 @@ class _$ProSubscriptionBillingMethod extends ProSubscriptionBillingMethod {
     var _$hash = 0;
     _$hash = $jc(_$hash, provider.hashCode);
     _$hash = $jc(_$hash, accountNumberMasked.hashCode);
+    _$hash = $jc(_$hash, country.hashCode);
+    _$hash = $jc(_$hash, method.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -111,7 +130,9 @@ class _$ProSubscriptionBillingMethod extends ProSubscriptionBillingMethod {
   String toString() {
     return (newBuiltValueToStringHelper(r'ProSubscriptionBillingMethod')
           ..add('provider', provider)
-          ..add('accountNumberMasked', accountNumberMasked))
+          ..add('accountNumberMasked', accountNumberMasked)
+          ..add('country', country)
+          ..add('method', method))
         .toString();
   }
 }
@@ -132,6 +153,14 @@ class ProSubscriptionBillingMethodBuilder
   set accountNumberMasked(String? accountNumberMasked) =>
       _$this._accountNumberMasked = accountNumberMasked;
 
+  String? _country;
+  String? get country => _$this._country;
+  set country(String? country) => _$this._country = country;
+
+  String? _method;
+  String? get method => _$this._method;
+  set method(String? method) => _$this._method = method;
+
   ProSubscriptionBillingMethodBuilder() {
     ProSubscriptionBillingMethod._defaults(this);
   }
@@ -141,6 +170,8 @@ class ProSubscriptionBillingMethodBuilder
     if ($v != null) {
       _provider = $v.provider;
       _accountNumberMasked = $v.accountNumberMasked;
+      _country = $v.country;
+      _method = $v.method;
       _$v = null;
     }
     return this;
@@ -168,6 +199,8 @@ class ProSubscriptionBillingMethodBuilder
               accountNumberMasked,
               r'ProSubscriptionBillingMethod',
               'accountNumberMasked'),
+          country: country,
+          method: method,
         );
     replace(_$result);
     return _$result;

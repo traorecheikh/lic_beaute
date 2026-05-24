@@ -35,29 +35,35 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
               <label class="section-label mb-3 block">Nom du salon</label>
-              <input type="text" v-model="form.salonName" class="input-shell text-lg py-4" placeholder="Beauté Divine" />
+              <input type="text" v-model="form.salonName" name="organization" autocomplete="organization" :class="['input-shell text-lg py-4', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
+              <p v-if="fieldErrors.salonName" class="text-xs text-red-600 mt-1">{{ fieldErrors.salonName }}</p>
             </div>
             <div>
               <label class="section-label mb-3 block">Ville</label>
-              <select v-model="form.city" class="input-shell text-lg py-4 h-[60px]">
+              <select v-model="form.city" :class="['input-shell text-lg py-4 h-[60px]', fieldErrors.city ? 'border-red-400' : '']">
                 <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
               </select>
+              <p v-if="fieldErrors.city" class="text-xs text-red-600 mt-1">{{ fieldErrors.city }}</p>
             </div>
             <div>
               <label class="section-label mb-3 block">Email professionnel</label>
-              <input type="email" v-model="form.email" class="input-shell text-lg py-4" placeholder="contact@monsalon.com" />
+              <input type="email" v-model="form.email" name="email" autocomplete="email" :class="['input-shell text-lg py-4', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
+              <p v-if="fieldErrors.email" class="text-xs text-red-600 mt-1">{{ fieldErrors.email }}</p>
             </div>
             <div>
               <label class="section-label mb-3 block">Nom complet du gérant</label>
-              <input type="text" v-model="form.fullName" class="input-shell text-lg py-4" placeholder="Marie Diop" />
+              <input type="text" v-model="form.fullName" name="name" autocomplete="name" :class="['input-shell text-lg py-4', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
+              <p v-if="fieldErrors.fullName" class="text-xs text-red-600 mt-1">{{ fieldErrors.fullName }}</p>
             </div>
             <div>
               <label class="section-label mb-3 block">Téléphone (+221)</label>
-              <input type="tel" v-model="form.phone" class="input-shell text-lg py-4" placeholder="77 123 45 67" />
+              <input type="tel" v-model="form.phone" name="tel" autocomplete="tel" :class="['input-shell text-lg py-4', fieldErrors.phone ? 'border-red-400' : '']" placeholder="77 123 45 67" />
+              <p v-if="fieldErrors.phone" class="text-xs text-red-600 mt-1">{{ fieldErrors.phone }}</p>
             </div>
             <div>
               <label class="section-label mb-3 block">Adresse précise</label>
-              <input type="text" v-model="form.address" class="input-shell text-lg py-4" placeholder="Rue des Poilus, Zone A..." />
+              <input type="text" v-model="form.address" name="street-address" autocomplete="street-address" :class="['input-shell text-lg py-4', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
+              <p v-if="fieldErrors.address" class="text-xs text-red-600 mt-1">{{ fieldErrors.address }}</p>
             </div>
             <div>
               <label class="section-label mb-3 block">Quartier <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
@@ -69,7 +75,8 @@
             </div>
             <div class="md:col-span-2">
               <label class="section-label mb-3 block">Mot de passe</label>
-              <input type="password" v-model="form.password" class="input-shell text-lg py-4" placeholder="••••••••" />
+              <input type="password" v-model="form.password" name="new-password" autocomplete="new-password" :class="['input-shell text-lg py-4', fieldErrors.password ? 'border-red-400' : '']" placeholder="••••••••" />
+              <p v-if="fieldErrors.password" class="text-xs text-red-600 mt-1">{{ fieldErrors.password }}</p>
             </div>
           </div>
         </div>
@@ -285,7 +292,6 @@ import {
   UserGroupIcon,
   DocumentCheckIcon
 } from "@heroicons/vue/24/outline";
-import { getErrorMessage } from "@/lib/errors";
 import { registerProOwner } from "@/lib/pro-api";
 import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories } from "@/lib/api";
 
@@ -399,13 +405,50 @@ const form = reactive({
   subscriptionIntentTier: "standard" as "standard" | "premium"
 });
 
-function nextStep() {
+const fieldErrors = reactive<Record<string, string>>({});
+
+function resetFieldErrors() {
+  Object.keys(fieldErrors).forEach((k) => delete fieldErrors[k]);
+}
+
+function validateCurrentStep() {
+  resetFieldErrors();
   if (currentStep.value === 1) {
-    if (!form.fullName || !form.email || !form.phone || !form.password || !form.salonName || !form.address) {
-      toast.error("Veuillez remplir tous les champs.");
-      return;
+    if (!form.salonName.trim()) fieldErrors.salonName = "Nom du salon requis.";
+    if (!form.city.trim()) fieldErrors.city = "Ville requise.";
+    if (!form.email.trim()) fieldErrors.email = "Email requis.";
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      fieldErrors.email = "Format email invalide.";
+    }
+    if (!form.fullName.trim()) fieldErrors.fullName = "Nom complet requis.";
+    if (!form.phone.replace(/\s+/g, "").trim()) fieldErrors.phone = "Téléphone requis.";
+    if (!form.address.trim()) fieldErrors.address = "Adresse requise.";
+    if (!form.password.trim()) fieldErrors.password = "Mot de passe requis.";
+    if (form.password.trim() && form.password.trim().length < 8) {
+      fieldErrors.password = "Minimum 8 caractères.";
     }
   }
+  if (currentStep.value === 2 && !form.category) {
+    toast.error("Sélectionnez une catégorie.");
+    return false;
+  }
+  if (currentStep.value === 3 && !form.teamSize) {
+    toast.error("Sélectionnez la taille de votre équipe.");
+    return false;
+  }
+  if (currentStep.value === 4 && !form.subscriptionIntentTier) {
+    toast.error("Choisissez un plan.");
+    return false;
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    toast.error("Corrigez les champs en erreur.");
+    return false;
+  }
+  return true;
+}
+
+function nextStep() {
+  if (!validateCurrentStep()) return;
   currentStep.value++;
   if (currentStep.value === 5) {
     void loadRequiredDocs();
@@ -423,7 +466,7 @@ async function handleFileUpload(event: Event, index: number) {
     requiredDocs.value[index].fileUrl = asset.url;
     toast.success("Document ajouté.", { id: toastId });
   } catch (err) {
-    toast.error(getErrorMessage(err, "Échec du téléversement."), { id: toastId });
+    toast.error("Échec du téléversement. Vérifiez le fichier puis réessayez.", { id: toastId });
   }
 }
 
@@ -478,7 +521,7 @@ async function submitRegistration() {
       query: { email, registered: "1" }
     });
   } catch (error) {
-    toast.error(getErrorMessage(error, "Inscription impossible pour le moment."));
+    toast.error("Inscription impossible pour le moment. Vérifiez les champs du formulaire.");
   } finally {
     loading.value = false;
   }

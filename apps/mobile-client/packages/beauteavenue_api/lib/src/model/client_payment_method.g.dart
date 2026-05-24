@@ -8,12 +8,21 @@ part of 'client_payment_method.dart';
 
 const ClientPaymentMethodProviderEnum _$clientPaymentMethodProviderEnum_intech =
     const ClientPaymentMethodProviderEnum._('intech');
+const ClientPaymentMethodProviderEnum
+    _$clientPaymentMethodProviderEnum_paydunya =
+    const ClientPaymentMethodProviderEnum._('paydunya');
+const ClientPaymentMethodProviderEnum _$clientPaymentMethodProviderEnum_manual =
+    const ClientPaymentMethodProviderEnum._('manual');
 
 ClientPaymentMethodProviderEnum _$clientPaymentMethodProviderEnumValueOf(
     String name) {
   switch (name) {
     case 'intech':
       return _$clientPaymentMethodProviderEnum_intech;
+    case 'paydunya':
+      return _$clientPaymentMethodProviderEnum_paydunya;
+    case 'manual':
+      return _$clientPaymentMethodProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -23,6 +32,8 @@ final BuiltSet<ClientPaymentMethodProviderEnum>
     _$clientPaymentMethodProviderEnumValues = BuiltSet<
         ClientPaymentMethodProviderEnum>(const <ClientPaymentMethodProviderEnum>[
   _$clientPaymentMethodProviderEnum_intech,
+  _$clientPaymentMethodProviderEnum_paydunya,
+  _$clientPaymentMethodProviderEnum_manual,
 ]);
 
 Serializer<ClientPaymentMethodProviderEnum>
@@ -33,9 +44,13 @@ class _$ClientPaymentMethodProviderEnumSerializer
     implements PrimitiveSerializer<ClientPaymentMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
 
   @override

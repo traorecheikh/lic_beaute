@@ -33,6 +33,9 @@ final BuiltSet<ProSubscriptionCheckoutInputActionEnum>
 ]);
 
 const ProSubscriptionCheckoutInputProviderEnum
+    _$proSubscriptionCheckoutInputProviderEnum_paydunya =
+    const ProSubscriptionCheckoutInputProviderEnum._('paydunya');
+const ProSubscriptionCheckoutInputProviderEnum
     _$proSubscriptionCheckoutInputProviderEnum_intech =
     const ProSubscriptionCheckoutInputProviderEnum._('intech');
 const ProSubscriptionCheckoutInputProviderEnum
@@ -42,6 +45,8 @@ const ProSubscriptionCheckoutInputProviderEnum
 ProSubscriptionCheckoutInputProviderEnum
     _$proSubscriptionCheckoutInputProviderEnumValueOf(String name) {
   switch (name) {
+    case 'paydunya':
+      return _$proSubscriptionCheckoutInputProviderEnum_paydunya;
     case 'intech':
       return _$proSubscriptionCheckoutInputProviderEnum_intech;
     case 'manual':
@@ -54,6 +59,7 @@ ProSubscriptionCheckoutInputProviderEnum
 final BuiltSet<ProSubscriptionCheckoutInputProviderEnum>
     _$proSubscriptionCheckoutInputProviderEnumValues = BuiltSet<
         ProSubscriptionCheckoutInputProviderEnum>(const <ProSubscriptionCheckoutInputProviderEnum>[
+  _$proSubscriptionCheckoutInputProviderEnum_paydunya,
   _$proSubscriptionCheckoutInputProviderEnum_intech,
   _$proSubscriptionCheckoutInputProviderEnum_manual,
 ]);
@@ -100,10 +106,12 @@ class _$ProSubscriptionCheckoutInputActionEnumSerializer
 class _$ProSubscriptionCheckoutInputProviderEnumSerializer
     implements PrimitiveSerializer<ProSubscriptionCheckoutInputProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };

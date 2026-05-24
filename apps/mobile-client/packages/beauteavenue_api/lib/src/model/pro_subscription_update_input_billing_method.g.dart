@@ -7,6 +7,9 @@ part of 'pro_subscription_update_input_billing_method.dart';
 // **************************************************************************
 
 const ProSubscriptionUpdateInputBillingMethodProviderEnum
+    _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya =
+    const ProSubscriptionUpdateInputBillingMethodProviderEnum._('paydunya');
+const ProSubscriptionUpdateInputBillingMethodProviderEnum
     _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech =
     const ProSubscriptionUpdateInputBillingMethodProviderEnum._('intech');
 const ProSubscriptionUpdateInputBillingMethodProviderEnum
@@ -16,6 +19,8 @@ const ProSubscriptionUpdateInputBillingMethodProviderEnum
 ProSubscriptionUpdateInputBillingMethodProviderEnum
     _$proSubscriptionUpdateInputBillingMethodProviderEnumValueOf(String name) {
   switch (name) {
+    case 'paydunya':
+      return _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya;
     case 'intech':
       return _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech;
     case 'manual':
@@ -28,6 +33,7 @@ ProSubscriptionUpdateInputBillingMethodProviderEnum
 final BuiltSet<ProSubscriptionUpdateInputBillingMethodProviderEnum>
     _$proSubscriptionUpdateInputBillingMethodProviderEnumValues = BuiltSet<
         ProSubscriptionUpdateInputBillingMethodProviderEnum>(const <ProSubscriptionUpdateInputBillingMethodProviderEnum>[
+  _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya,
   _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech,
   _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual,
 ]);
@@ -41,10 +47,12 @@ class _$ProSubscriptionUpdateInputBillingMethodProviderEnumSerializer
         PrimitiveSerializer<
             ProSubscriptionUpdateInputBillingMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };
@@ -76,6 +84,10 @@ class _$ProSubscriptionUpdateInputBillingMethod
   final ProSubscriptionUpdateInputBillingMethodProviderEnum provider;
   @override
   final String accountNumber;
+  @override
+  final String? country;
+  @override
+  final String? method;
 
   factory _$ProSubscriptionUpdateInputBillingMethod(
           [void Function(ProSubscriptionUpdateInputBillingMethodBuilder)?
@@ -84,7 +96,10 @@ class _$ProSubscriptionUpdateInputBillingMethod
           ._build();
 
   _$ProSubscriptionUpdateInputBillingMethod._(
-      {required this.provider, required this.accountNumber})
+      {required this.provider,
+      required this.accountNumber,
+      this.country,
+      this.method})
       : super._();
   @override
   ProSubscriptionUpdateInputBillingMethod rebuild(
@@ -101,7 +116,9 @@ class _$ProSubscriptionUpdateInputBillingMethod
     if (identical(other, this)) return true;
     return other is ProSubscriptionUpdateInputBillingMethod &&
         provider == other.provider &&
-        accountNumber == other.accountNumber;
+        accountNumber == other.accountNumber &&
+        country == other.country &&
+        method == other.method;
   }
 
   @override
@@ -109,6 +126,8 @@ class _$ProSubscriptionUpdateInputBillingMethod
     var _$hash = 0;
     _$hash = $jc(_$hash, provider.hashCode);
     _$hash = $jc(_$hash, accountNumber.hashCode);
+    _$hash = $jc(_$hash, country.hashCode);
+    _$hash = $jc(_$hash, method.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -118,7 +137,9 @@ class _$ProSubscriptionUpdateInputBillingMethod
     return (newBuiltValueToStringHelper(
             r'ProSubscriptionUpdateInputBillingMethod')
           ..add('provider', provider)
-          ..add('accountNumber', accountNumber))
+          ..add('accountNumber', accountNumber)
+          ..add('country', country)
+          ..add('method', method))
         .toString();
   }
 }
@@ -140,6 +161,14 @@ class ProSubscriptionUpdateInputBillingMethodBuilder
   set accountNumber(String? accountNumber) =>
       _$this._accountNumber = accountNumber;
 
+  String? _country;
+  String? get country => _$this._country;
+  set country(String? country) => _$this._country = country;
+
+  String? _method;
+  String? get method => _$this._method;
+  set method(String? method) => _$this._method = method;
+
   ProSubscriptionUpdateInputBillingMethodBuilder() {
     ProSubscriptionUpdateInputBillingMethod._defaults(this);
   }
@@ -149,6 +178,8 @@ class ProSubscriptionUpdateInputBillingMethodBuilder
     if ($v != null) {
       _provider = $v.provider;
       _accountNumber = $v.accountNumber;
+      _country = $v.country;
+      _method = $v.method;
       _$v = null;
     }
     return this;
@@ -175,6 +206,8 @@ class ProSubscriptionUpdateInputBillingMethodBuilder
               provider, r'ProSubscriptionUpdateInputBillingMethod', 'provider'),
           accountNumber: BuiltValueNullFieldError.checkNotNull(accountNumber,
               r'ProSubscriptionUpdateInputBillingMethod', 'accountNumber'),
+          country: country,
+          method: method,
         );
     replace(_$result);
     return _$result;

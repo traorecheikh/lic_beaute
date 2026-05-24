@@ -105,14 +105,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ApiV1MeVouchersGet200Response.serializer)
       ..add(ApiV1MeVouchersGet200ResponseItemsInner.serializer)
       ..add(ApiV1MeVouchersGet200ResponseItemsInnerStatusEnum.serializer)
-      ..add(ApiV1MediaMediaIdCompletePost200Response.serializer)
       ..add(ApiV1MediaUploadIntentPost201Response.serializer)
       ..add(ApiV1MediaUploadIntentPostRequest.serializer)
       ..add(ApiV1MediaUploadIntentPostRequestPurposeEnum.serializer)
+      ..add(ApiV1MediaUploadPost201Response.serializer)
       ..add(ApiV1NotificationsGet200Response.serializer)
       ..add(ApiV1NotificationsGet200ResponseItemsInner.serializer)
       ..add(ApiV1NotificationsIdReadPost200Response.serializer)
-      ..add(ApiV1PaymentsWebhooksIntechPost200Response.serializer)
+      ..add(ApiV1PaymentsWebhooksPaydunyaPost200Response.serializer)
       ..add(ApiV1ProVouchersPost201Response.serializer)
       ..add(ApiV1PushTokensPost201Response.serializer)
       ..add(ApiV1SalonsIdAvailabilityGet200ResponseInner.serializer)
@@ -161,6 +161,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(OtpAcceptedResponse.serializer)
       ..add(OtpRequestInput.serializer)
       ..add(OtpVerifyInput.serializer)
+      ..add(PaydunyaExecutePaymentInput.serializer)
+      ..add(PaydunyaExecutePaymentResponse.serializer)
+      ..add(PaydunyaExecutePaymentResponseOtherUrl.serializer)
+      ..add(PaydunyaMethodListResponse.serializer)
+      ..add(PaydunyaMethodListResponseMethodsInner.serializer)
       ..add(PaymentInitiateInput.serializer)
       ..add(PaymentInitiateInputChannelEnum.serializer)
       ..add(PaymentInitiateInputProviderEnum.serializer)
@@ -210,6 +215,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProReviewResponseInput.serializer)
       ..add(ProSalonHour.serializer)
       ..add(ProSalonProfile.serializer)
+      ..add(ProSalonProfileApprovalStatusEnum.serializer)
       ..add(ProSalonProfileHoursInner.serializer)
       ..add(ProSalonProfileSubscriptionTierEnum.serializer)
       ..add(ProSalonUpdateInput.serializer)
@@ -221,8 +227,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProServiceUpdateInput.serializer)
       ..add(ProServiceUpdateInputDepositModeEnum.serializer)
       ..add(ProStaffCreateInput.serializer)
+      ..add(ProStaffCreateInputRoleEnum.serializer)
       ..add(ProStaffMember.serializer)
+      ..add(ProStaffMemberRoleEnum.serializer)
       ..add(ProStaffUpdateInput.serializer)
+      ..add(ProStaffUpdateInputRoleEnum.serializer)
       ..add(ProSubscription.serializer)
       ..add(ProSubscriptionBillingMethod.serializer)
       ..add(ProSubscriptionBillingMethodProviderEnum.serializer)
@@ -230,6 +239,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProSubscriptionCheckoutInputActionEnum.serializer)
       ..add(ProSubscriptionCheckoutInputProviderEnum.serializer)
       ..add(ProSubscriptionCheckoutResult.serializer)
+      ..add(ProSubscriptionExecuteInput.serializer)
+      ..add(ProSubscriptionExecuteResponse.serializer)
       ..add(ProSubscriptionStatusEnum.serializer)
       ..add(ProSubscriptionTierEnum.serializer)
       ..add(ProSubscriptionUpdateInput.serializer)
@@ -247,10 +258,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(RegisterInput.serializer)
       ..add(RegisterInputAnyOf.serializer)
       ..add(RegisterInputAnyOf1.serializer)
+      ..add(RegisterInputAnyOf1DocumentsInner.serializer)
       ..add(RegisterInputAnyOf1HoursInner.serializer)
       ..add(RegisterInputAnyOf1Salon.serializer)
       ..add(RegisterInputAnyOf1ServicesInner.serializer)
       ..add(RegisterInputAnyOf1ServicesInnerDepositModeEnum.serializer)
+      ..add(RegisterInputAnyOf1SubscriptionIntentTierEnum.serializer)
       ..add(RegisterInputAnyOf1TypeEnum.serializer)
       ..add(RegisterInputAnyOfTypeEnum.serializer)
       ..add(SalonDetail.serializer)
@@ -355,6 +368,10 @@ Serializers _$serializers = (Serializers().toBuilder()
               const [const FullType(BookingSummaryListResponseItemsInner)]),
           () => ListBuilder<BookingSummaryListResponseItemsInner>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(PaydunyaMethodListResponseMethodsInner)]),
+          () => ListBuilder<PaydunyaMethodListResponseMethodsInner>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(ProAnalyticsTopServicesInner)]),
           () => ListBuilder<ProAnalyticsTopServicesInner>())
@@ -386,6 +403,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(RegisterInputAnyOf1HoursInner)]),
           () => ListBuilder<RegisterInputAnyOf1HoursInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(RegisterInputAnyOf1DocumentsInner)]),
+          () => ListBuilder<RegisterInputAnyOf1DocumentsInner>())
       ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(SalonSummaryListResponseItemsInner)]),
@@ -479,7 +500,31 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [
             const FullType(ApiV1AdminSalonsPost201ResponseDocumentsInner)
           ]),
-          () => ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>()))
+          () => ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltMap, const [
+            const FullType(String),
+            const FullType.nullable(JsonObject)
+          ]),
+          () => MapBuilder<String, JsonObject?>())
+      ..addBuilderFactory(
+          const FullType(BuiltMap, const [
+            const FullType(String),
+            const FullType.nullable(JsonObject)
+          ]),
+          () => MapBuilder<String, JsonObject?>())
+      ..addBuilderFactory(
+          const FullType(BuiltMap, const [
+            const FullType(String),
+            const FullType.nullable(JsonObject)
+          ]),
+          () => MapBuilder<String, JsonObject?>())
+      ..addBuilderFactory(
+          const FullType(BuiltMap, const [
+            const FullType(String),
+            const FullType.nullable(JsonObject)
+          ]),
+          () => MapBuilder<String, JsonObject?>()))
     .build();
 
 // ignore_for_file: deprecated_member_use_from_same_package,type=lint

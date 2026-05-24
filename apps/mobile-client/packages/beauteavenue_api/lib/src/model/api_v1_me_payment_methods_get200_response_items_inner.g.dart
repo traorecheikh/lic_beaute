@@ -9,6 +9,13 @@ part of 'api_v1_me_payment_methods_get200_response_items_inner.dart';
 const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum
     _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_intech =
     const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum._('intech');
+const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum
+    _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_paydunya =
+    const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum._(
+        'paydunya');
+const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum
+    _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_manual =
+    const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum._('manual');
 
 ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum
     _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnumValueOf(
@@ -16,6 +23,10 @@ ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum
   switch (name) {
     case 'intech':
       return _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_intech;
+    case 'paydunya':
+      return _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_paydunya;
+    case 'manual':
+      return _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -26,6 +37,8 @@ final BuiltSet<ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum>
     BuiltSet<
         ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum>(const <ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum>[
   _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_intech,
+  _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_paydunya,
+  _$apiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum_manual,
 ]);
 
 Serializer<ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum>
@@ -38,9 +51,13 @@ class _$ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnumSerializer
             ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
 
   @override

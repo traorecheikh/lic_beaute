@@ -196,12 +196,6 @@
             <label class="section-label mb-2 block">Pays</label>
             <select v-model="paymentMethodForm.country" class="input-shell">
               <option value="sn">Sénégal</option>
-              <option value="ci">Côte d'Ivoire</option>
-              <option value="ml">Mali</option>
-              <option value="bf">Burkina Faso</option>
-              <option value="bj">Bénin</option>
-              <option value="tg">Togo</option>
-              <option value="cm">Cameroun</option>
             </select>
           </div>
           <div>
@@ -262,16 +256,30 @@
         <!-- Step 1: Select Country and Method -->
         <div v-if="checkoutStep === 'select_method'" class="space-y-4">
           <div>
+            <label class="section-label mb-2 block">Cycle de facturation</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                class="btn-secondary !py-2 !px-3 text-xs"
+                :class="billingCycle === 'monthly' ? '!bg-primary !text-white !border-primary' : ''"
+                @click="billingCycle = 'monthly'"
+              >
+                Mensuel
+              </button>
+              <button
+                type="button"
+                class="btn-secondary !py-2 !px-3 text-xs"
+                :class="billingCycle === 'annual' ? '!bg-primary !text-white !border-primary' : ''"
+                @click="billingCycle = 'annual'"
+              >
+                Annuel
+              </button>
+            </div>
+          </div>
+          <div>
             <label class="section-label mb-2 block">Pays de facturation</label>
             <select v-model="selectedCountry" class="input-shell">
               <option value="sn">Sénégal</option>
-              <option value="ci">Côte d'Ivoire</option>
-              <option value="bf">Burkina Faso</option>
-              <option value="bj">Bénin</option>
-              <option value="tg">Togo</option>
-              <option value="ml">Mali</option>
-              <option value="cm">Cameroun</option>
-              <option value="intl">International / Autre</option>
             </select>
           </div>
 
@@ -474,10 +482,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import dayjs from "dayjs";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { useRoute, useRouter } from "vue-router";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -507,6 +516,8 @@ import Modal from "@/components/Modal.vue";
 
 const auth = useProAuthStore();
 const queryClient = useQueryClient();
+const route = useRoute();
+const router = useRouter();
 const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3000";
 const showPaymentMethodModal = ref(false);
 const paymentMethodForm = reactive({
@@ -583,7 +594,8 @@ const checkoutMutation = useMutation({
   mutationFn: () =>
     checkoutProSubscription(auth.accessToken ?? "", {
       action: subscriptionQuery.data.value?.tier === "premium" ? "renewal" : "upgrade",
-      provider: "paydunya"
+      provider: "paydunya",
+      billingCycle: billingCycle.value
     }),
   onSuccess: (result) => {
     window.open(result.redirectUrl, "_blank", "noopener,noreferrer");
@@ -699,6 +711,7 @@ function toggleAutoRenew() {
 
 const showCheckoutModal = ref(false);
 const checkoutStep = ref<'select_method' | 'enter_details' | 'qr_code' | 'three_ds' | 'wizall_otp'>('select_method');
+const billingCycle = ref<'monthly' | 'annual'>('monthly');
 const selectedCountry = ref('sn');
 const selectedMethod = ref('');
 const isSubmitting = ref(false);
@@ -780,6 +793,7 @@ function formatCardNumber(e: Event) {
 
 function openCheckoutModal() {
   checkoutStep.value = "select_method";
+  billingCycle.value = "monthly";
   selectedMethod.value = "";
   qrCodeBase64.value = "";
   threeDsUrl.value = "";
@@ -799,6 +813,13 @@ function openCheckoutModal() {
 
   showCheckoutModal.value = true;
 }
+
+onMounted(() => {
+  if (route.query.upgrade === "gallery_limit") {
+    openCheckoutModal();
+    void router.replace({ path: route.path, query: {} });
+  }
+});
 
 async function handleCheckoutSubmit() {
   if (!selectedMethod.value) return;
@@ -834,8 +855,9 @@ async function handleCheckoutSubmit() {
     const initResult = await checkoutProSubscription(auth.accessToken ?? "", {
       action,
       provider: "paydunya",
+      billingCycle: billingCycle.value,
       channel: selectedMethod.value
-    });
+    } as any);
 
     chargeId.value = initResult.chargeId;
 

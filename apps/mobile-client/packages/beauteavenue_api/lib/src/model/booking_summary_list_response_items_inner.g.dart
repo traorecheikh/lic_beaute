@@ -104,6 +104,12 @@ final BuiltSet<BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum>
 const BookingSummaryListResponseItemsInnerPaymentProviderEnum
     _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_intech =
     const BookingSummaryListResponseItemsInnerPaymentProviderEnum._('intech');
+const BookingSummaryListResponseItemsInnerPaymentProviderEnum
+    _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_paydunya =
+    const BookingSummaryListResponseItemsInnerPaymentProviderEnum._('paydunya');
+const BookingSummaryListResponseItemsInnerPaymentProviderEnum
+    _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_manual =
+    const BookingSummaryListResponseItemsInnerPaymentProviderEnum._('manual');
 
 BookingSummaryListResponseItemsInnerPaymentProviderEnum
     _$bookingSummaryListResponseItemsInnerPaymentProviderEnumValueOf(
@@ -111,6 +117,10 @@ BookingSummaryListResponseItemsInnerPaymentProviderEnum
   switch (name) {
     case 'intech':
       return _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_intech;
+    case 'paydunya':
+      return _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_paydunya;
+    case 'manual':
+      return _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -120,6 +130,8 @@ final BuiltSet<BookingSummaryListResponseItemsInnerPaymentProviderEnum>
     _$bookingSummaryListResponseItemsInnerPaymentProviderEnumValues = BuiltSet<
         BookingSummaryListResponseItemsInnerPaymentProviderEnum>(const <BookingSummaryListResponseItemsInnerPaymentProviderEnum>[
   _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_intech,
+  _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_paydunya,
+  _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_manual,
 ]);
 
 Serializer<BookingSummaryListResponseItemsInnerStatusEnum>
@@ -218,9 +230,13 @@ class _$BookingSummaryListResponseItemsInnerPaymentProviderEnumSerializer
             BookingSummaryListResponseItemsInnerPaymentProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
 
   @override

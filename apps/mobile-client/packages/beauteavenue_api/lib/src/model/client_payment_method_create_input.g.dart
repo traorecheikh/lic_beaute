@@ -9,12 +9,22 @@ part of 'client_payment_method_create_input.dart';
 const ClientPaymentMethodCreateInputProviderEnum
     _$clientPaymentMethodCreateInputProviderEnum_intech =
     const ClientPaymentMethodCreateInputProviderEnum._('intech');
+const ClientPaymentMethodCreateInputProviderEnum
+    _$clientPaymentMethodCreateInputProviderEnum_paydunya =
+    const ClientPaymentMethodCreateInputProviderEnum._('paydunya');
+const ClientPaymentMethodCreateInputProviderEnum
+    _$clientPaymentMethodCreateInputProviderEnum_manual =
+    const ClientPaymentMethodCreateInputProviderEnum._('manual');
 
 ClientPaymentMethodCreateInputProviderEnum
     _$clientPaymentMethodCreateInputProviderEnumValueOf(String name) {
   switch (name) {
     case 'intech':
       return _$clientPaymentMethodCreateInputProviderEnum_intech;
+    case 'paydunya':
+      return _$clientPaymentMethodCreateInputProviderEnum_paydunya;
+    case 'manual':
+      return _$clientPaymentMethodCreateInputProviderEnum_manual;
     default:
       throw ArgumentError(name);
   }
@@ -24,6 +34,8 @@ final BuiltSet<ClientPaymentMethodCreateInputProviderEnum>
     _$clientPaymentMethodCreateInputProviderEnumValues = BuiltSet<
         ClientPaymentMethodCreateInputProviderEnum>(const <ClientPaymentMethodCreateInputProviderEnum>[
   _$clientPaymentMethodCreateInputProviderEnum_intech,
+  _$clientPaymentMethodCreateInputProviderEnum_paydunya,
+  _$clientPaymentMethodCreateInputProviderEnum_manual,
 ]);
 
 Serializer<ClientPaymentMethodCreateInputProviderEnum>
@@ -34,9 +46,13 @@ class _$ClientPaymentMethodCreateInputProviderEnumSerializer
     implements PrimitiveSerializer<ClientPaymentMethodCreateInputProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'intech': 'intech',
+    'paydunya': 'paydunya',
+    'manual': 'manual',
   };
 
   @override

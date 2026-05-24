@@ -219,6 +219,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import {
   PlusIcon,
@@ -289,6 +290,7 @@ const categories = ["Coiffure", "Barbershop", "Esthétique", "Ongles", "Spa", "M
 const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];
 const auth = useProAuthStore();
 const queryClient = useQueryClient();
+const router = useRouter();
 
 interface GalleryPhoto {
   url: string;
@@ -355,7 +357,15 @@ const uploadMutation = useMutation({
     photos.value = [...photos.value, { url: asset.publicUrl, assetId: asset.id }];
     toast.success("Photo téléversée.");
   },
-  onError: (error) => {
+  onError: async (error) => {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "gallery_limit_reached") {
+      toast.error("Plan Standard limité à 3 photos. Passez en Premium pour en ajouter plus.");
+      await router.push({
+        path: "/pro/subscription",
+        query: { upgrade: "gallery_limit" }
+      });
+      return;
+    }
     toast.error(getErrorMessage(error, "Téléversement impossible pour le moment."));
   },
   onSettled: () => {

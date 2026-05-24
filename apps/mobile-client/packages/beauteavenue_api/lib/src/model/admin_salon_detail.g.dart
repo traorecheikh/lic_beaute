@@ -147,6 +147,8 @@ class _$AdminSalonDetail extends AdminSalonDetail {
   @override
   final String id;
   @override
+  final String? subscriptionId;
+  @override
   final String salonName;
   @override
   final String category;
@@ -181,6 +183,7 @@ class _$AdminSalonDetail extends AdminSalonDetail {
 
   _$AdminSalonDetail._(
       {required this.id,
+      this.subscriptionId,
       required this.salonName,
       required this.category,
       required this.city,
@@ -209,6 +212,7 @@ class _$AdminSalonDetail extends AdminSalonDetail {
     if (identical(other, this)) return true;
     return other is AdminSalonDetail &&
         id == other.id &&
+        subscriptionId == other.subscriptionId &&
         salonName == other.salonName &&
         category == other.category &&
         city == other.city &&
@@ -229,6 +233,7 @@ class _$AdminSalonDetail extends AdminSalonDetail {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, subscriptionId.hashCode);
     _$hash = $jc(_$hash, salonName.hashCode);
     _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
@@ -251,6 +256,7 @@ class _$AdminSalonDetail extends AdminSalonDetail {
   String toString() {
     return (newBuiltValueToStringHelper(r'AdminSalonDetail')
           ..add('id', id)
+          ..add('subscriptionId', subscriptionId)
           ..add('salonName', salonName)
           ..add('category', category)
           ..add('city', city)
@@ -276,6 +282,11 @@ class AdminSalonDetailBuilder
   String? _id;
   String? get id => _$this._id;
   set id(String? id) => _$this._id = id;
+
+  String? _subscriptionId;
+  String? get subscriptionId => _$this._subscriptionId;
+  set subscriptionId(String? subscriptionId) =>
+      _$this._subscriptionId = subscriptionId;
 
   String? _salonName;
   String? get salonName => _$this._salonName;
@@ -361,6 +372,7 @@ class AdminSalonDetailBuilder
     final $v = _$v;
     if ($v != null) {
       _id = $v.id;
+      _subscriptionId = $v.subscriptionId;
       _salonName = $v.salonName;
       _category = $v.category;
       _city = $v.city;
@@ -400,6 +412,7 @@ class AdminSalonDetailBuilder
           _$AdminSalonDetail._(
             id: BuiltValueNullFieldError.checkNotNull(
                 id, r'AdminSalonDetail', 'id'),
+            subscriptionId: subscriptionId,
             salonName: BuiltValueNullFieldError.checkNotNull(
                 salonName, r'AdminSalonDetail', 'salonName'),
             category: BuiltValueNullFieldError.checkNotNull(

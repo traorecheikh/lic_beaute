@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { bookingStatusSchema, salonApprovalStatusSchema, subscriptionStatusSchema, subscriptionTierSchema } from "./enums.js";
+import { paymentChannelSchema } from "./payment.js";
 import { reviewSchema } from "./review.js";
 
 // ─── Salon profile ────────────────────────────────────────────────────────────
@@ -266,7 +267,9 @@ export const proSubscriptionUpdateInputSchema = z
 
 export const proSubscriptionCheckoutInputSchema = z.object({
   action: z.enum(["upgrade", "renewal"]),
-  provider: z.enum(["paydunya", "manual"]).default("paydunya")
+  provider: z.enum(["paydunya", "manual"]).default("paydunya"),
+  billingCycle: z.enum(["monthly", "annual"]).default("monthly"),
+  channel: paymentChannelSchema.optional()
 });
 
 export const proSubscriptionCheckoutResultSchema = z.object({

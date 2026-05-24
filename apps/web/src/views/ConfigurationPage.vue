@@ -702,6 +702,15 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     min: 0,
     unit: 'XOF'
   },
+  subscription_annual_discount_percent: {
+    label: 'Réduction annuelle',
+    description: "Remise appliquée quand le salon paie l'abonnement en annuel.",
+    example: '0 à 100',
+    type: 'number',
+    min: 0,
+    max: 100,
+    unit: '%'
+  },
   deposit_minimum_xof: {
     label: 'Acompte minimum',
     description: "Montant minimal qu'un client peut verser comme acompte lors d'une réservation Premium.",
@@ -851,6 +860,15 @@ const SETTINGS_META: Record<string, SettingMeta> = {
   paydunya_enabled_wizall_senegal: {
     label: 'Wizall Sénégal',
     description: 'Paiements via Wizall Sénégal.',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Activé' },
+      { value: 'false', label: 'Désactivé' }
+    ]
+  },
+  paydunya_enabled_expresso_senegal: {
+    label: 'Expresso Sénégal',
+    description: 'Paiements via Expresso Sénégal.',
     type: 'select',
     options: [
       { value: 'true', label: 'Activé' },

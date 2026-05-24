@@ -28,8 +28,37 @@ final BuiltSet<RegisterInputTypeEnum> _$registerInputTypeEnumValues =
   _$registerInputTypeEnum_salonOwner,
 ]);
 
+const RegisterInputSubscriptionIntentTierEnum
+    _$registerInputSubscriptionIntentTierEnum_standard =
+    const RegisterInputSubscriptionIntentTierEnum._('standard');
+const RegisterInputSubscriptionIntentTierEnum
+    _$registerInputSubscriptionIntentTierEnum_premium =
+    const RegisterInputSubscriptionIntentTierEnum._('premium');
+
+RegisterInputSubscriptionIntentTierEnum
+    _$registerInputSubscriptionIntentTierEnumValueOf(String name) {
+  switch (name) {
+    case 'standard':
+      return _$registerInputSubscriptionIntentTierEnum_standard;
+    case 'premium':
+      return _$registerInputSubscriptionIntentTierEnum_premium;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<RegisterInputSubscriptionIntentTierEnum>
+    _$registerInputSubscriptionIntentTierEnumValues = BuiltSet<
+        RegisterInputSubscriptionIntentTierEnum>(const <RegisterInputSubscriptionIntentTierEnum>[
+  _$registerInputSubscriptionIntentTierEnum_standard,
+  _$registerInputSubscriptionIntentTierEnum_premium,
+]);
+
 Serializer<RegisterInputTypeEnum> _$registerInputTypeEnumSerializer =
     _$RegisterInputTypeEnumSerializer();
+Serializer<RegisterInputSubscriptionIntentTierEnum>
+    _$registerInputSubscriptionIntentTierEnumSerializer =
+    _$RegisterInputSubscriptionIntentTierEnumSerializer();
 
 class _$RegisterInputTypeEnumSerializer
     implements PrimitiveSerializer<RegisterInputTypeEnum> {
@@ -56,6 +85,38 @@ class _$RegisterInputTypeEnumSerializer
   RegisterInputTypeEnum deserialize(Serializers serializers, Object serialized,
           {FullType specifiedType = FullType.unspecified}) =>
       RegisterInputTypeEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
+class _$RegisterInputSubscriptionIntentTierEnumSerializer
+    implements PrimitiveSerializer<RegisterInputSubscriptionIntentTierEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[
+    RegisterInputSubscriptionIntentTierEnum
+  ];
+  @override
+  final String wireName = 'RegisterInputSubscriptionIntentTierEnum';
+
+  @override
+  Object serialize(Serializers serializers,
+          RegisterInputSubscriptionIntentTierEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  RegisterInputSubscriptionIntentTierEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      RegisterInputSubscriptionIntentTierEnum.valueOf(
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 

@@ -47,11 +47,11 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const isDevOrTest = process.env.NODE_ENV !== "production";
-  const authLimit = { config: { rateLimit: { max: isDevOrTest ? 2000 : 10, timeWindow: "1 minute" } } };
+  const authLimit = { config: { rateLimit: { max: isDevOrTest ? 200000 : 1000, timeWindow: "1 minute" } } };
   const otpLimit = { config: { rateLimit: { max: isDevOrTest ? 2000 : 5, timeWindow: "1 minute" } } };
   app.post("/api/v1/auth/register", authLimit, (req, rep) => auth.register(req, rep));
   app.post("/api/v1/auth/login", authLimit, (req, rep) => auth.login(req, rep));
-  const uploadDocLimit = { config: { rateLimit: { max: isDevOrTest ? 2000 : 20, timeWindow: "1 minute" } } };
+  const uploadDocLimit = { config: { rateLimit: { max: isDevOrTest ? 200000 : 2000, timeWindow: "1 minute" } } };
   app.post("/api/v1/auth/upload-registration-doc", uploadDocLimit, (req, rep) => media.uploadRegistrationDoc(req, rep));
   app.get("/api/v1/platform/registration-docs", (req, rep) => admin.listDocumentsPublic(req, rep));
   app.get("/api/v1/platform/categories", (req, rep) => admin.listCategoriesPublic(req, rep));

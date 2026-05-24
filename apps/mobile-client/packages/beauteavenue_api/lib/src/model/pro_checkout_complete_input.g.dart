@@ -83,13 +83,18 @@ class _$ProCheckoutCompleteInput extends ProCheckoutCompleteInput {
   final BuiltList<ProCheckoutDetailsLineItemsInner> lineItems;
   @override
   final int? discountXof;
+  @override
+  final String? softpayMethod;
 
   factory _$ProCheckoutCompleteInput(
           [void Function(ProCheckoutCompleteInputBuilder)? updates]) =>
       (ProCheckoutCompleteInputBuilder()..update(updates))._build();
 
   _$ProCheckoutCompleteInput._(
-      {required this.paymentMethod, required this.lineItems, this.discountXof})
+      {required this.paymentMethod,
+      required this.lineItems,
+      this.discountXof,
+      this.softpayMethod})
       : super._();
   @override
   ProCheckoutCompleteInput rebuild(
@@ -106,7 +111,8 @@ class _$ProCheckoutCompleteInput extends ProCheckoutCompleteInput {
     return other is ProCheckoutCompleteInput &&
         paymentMethod == other.paymentMethod &&
         lineItems == other.lineItems &&
-        discountXof == other.discountXof;
+        discountXof == other.discountXof &&
+        softpayMethod == other.softpayMethod;
   }
 
   @override
@@ -115,6 +121,7 @@ class _$ProCheckoutCompleteInput extends ProCheckoutCompleteInput {
     _$hash = $jc(_$hash, paymentMethod.hashCode);
     _$hash = $jc(_$hash, lineItems.hashCode);
     _$hash = $jc(_$hash, discountXof.hashCode);
+    _$hash = $jc(_$hash, softpayMethod.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -124,7 +131,8 @@ class _$ProCheckoutCompleteInput extends ProCheckoutCompleteInput {
     return (newBuiltValueToStringHelper(r'ProCheckoutCompleteInput')
           ..add('paymentMethod', paymentMethod)
           ..add('lineItems', lineItems)
-          ..add('discountXof', discountXof))
+          ..add('discountXof', discountXof)
+          ..add('softpayMethod', softpayMethod))
         .toString();
   }
 }
@@ -150,6 +158,11 @@ class ProCheckoutCompleteInputBuilder
   int? get discountXof => _$this._discountXof;
   set discountXof(int? discountXof) => _$this._discountXof = discountXof;
 
+  String? _softpayMethod;
+  String? get softpayMethod => _$this._softpayMethod;
+  set softpayMethod(String? softpayMethod) =>
+      _$this._softpayMethod = softpayMethod;
+
   ProCheckoutCompleteInputBuilder() {
     ProCheckoutCompleteInput._defaults(this);
   }
@@ -160,6 +173,7 @@ class ProCheckoutCompleteInputBuilder
       _paymentMethod = $v.paymentMethod;
       _lineItems = $v.lineItems.toBuilder();
       _discountXof = $v.discountXof;
+      _softpayMethod = $v.softpayMethod;
       _$v = null;
     }
     return this;
@@ -187,6 +201,7 @@ class ProCheckoutCompleteInputBuilder
                 paymentMethod, r'ProCheckoutCompleteInput', 'paymentMethod'),
             lineItems: lineItems.build(),
             discountXof: discountXof,
+            softpayMethod: softpayMethod,
           );
     } catch (_) {
       late String _$failedField;

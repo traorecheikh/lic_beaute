@@ -19,7 +19,10 @@ class ForegroundNotificationService {
       requestSoundPermission: false,
     );
     await _plugin.initialize(
-      const InitializationSettings(android: androidSettings, iOS: iosSettings),
+      settings: const InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      ),
     );
 
     const androidChannel = AndroidNotificationChannel(
@@ -40,10 +43,10 @@ class ForegroundNotificationService {
       final notification = message.notification;
       if (notification == null) return;
       _plugin.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        NotificationDetails(
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             androidChannel.id,
             androidChannel.name,

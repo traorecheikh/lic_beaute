@@ -83,6 +83,9 @@ final BuiltSet<AdminSubscriptionDetailStatusEnum>
 ]);
 
 const AdminSubscriptionDetailBillingProviderEnum
+    _$adminSubscriptionDetailBillingProviderEnum_paydunya =
+    const AdminSubscriptionDetailBillingProviderEnum._('paydunya');
+const AdminSubscriptionDetailBillingProviderEnum
     _$adminSubscriptionDetailBillingProviderEnum_intech =
     const AdminSubscriptionDetailBillingProviderEnum._('intech');
 const AdminSubscriptionDetailBillingProviderEnum
@@ -92,6 +95,8 @@ const AdminSubscriptionDetailBillingProviderEnum
 AdminSubscriptionDetailBillingProviderEnum
     _$adminSubscriptionDetailBillingProviderEnumValueOf(String name) {
   switch (name) {
+    case 'paydunya':
+      return _$adminSubscriptionDetailBillingProviderEnum_paydunya;
     case 'intech':
       return _$adminSubscriptionDetailBillingProviderEnum_intech;
     case 'manual':
@@ -104,6 +109,7 @@ AdminSubscriptionDetailBillingProviderEnum
 final BuiltSet<AdminSubscriptionDetailBillingProviderEnum>
     _$adminSubscriptionDetailBillingProviderEnumValues = BuiltSet<
         AdminSubscriptionDetailBillingProviderEnum>(const <AdminSubscriptionDetailBillingProviderEnum>[
+  _$adminSubscriptionDetailBillingProviderEnum_paydunya,
   _$adminSubscriptionDetailBillingProviderEnum_intech,
   _$adminSubscriptionDetailBillingProviderEnum_manual,
 ]);
@@ -189,10 +195,12 @@ class _$AdminSubscriptionDetailStatusEnumSerializer
 class _$AdminSubscriptionDetailBillingProviderEnumSerializer
     implements PrimitiveSerializer<AdminSubscriptionDetailBillingProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
+    'paydunya': 'paydunya',
     'intech': 'intech',
     'manual': 'manual',
   };

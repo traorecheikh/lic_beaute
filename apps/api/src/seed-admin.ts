@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = [
   { group: "pricing", key: "commission_rate_percent",           value: "5",                          description: "Commission plateforme %" },
   { group: "pricing", key: "subscription_standard_price_xof",  value: "15000",                      description: "Prix abonnement Standard (XOF/mois)" },
   { group: "pricing", key: "subscription_premium_price_xof",   value: "25000",                      description: "Prix abonnement Premium (XOF/mois)" },
+  { group: "pricing", key: "subscription_annual_discount_percent", value: "0",                       description: "Réduction annuelle (%)" },
   { group: "pricing", key: "deposit_minimum_xof",              value: "2000",                        description: "Acompte minimum (XOF)" },
   { group: "pricing", key: "cancellation_window_hours",        value: "24",                          description: "Fenêtre d'annulation gratuite (heures)" },
   { group: "general", key: "support_email",                    value: "support@beauteavenue.local",  description: "Email du support" },
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS = [
   { group: "payment_methods", key: "paydunya_enabled_orange_senegal",  value: "true",  description: "Orange Money Sénégal activé" },
   { group: "payment_methods", key: "paydunya_enabled_free_senegal",    value: "false", description: "Free Money Sénégal activé" },
   { group: "payment_methods", key: "paydunya_enabled_wizall_senegal",  value: "false", description: "Wizall Sénégal activé" },
+  { group: "payment_methods", key: "paydunya_enabled_expresso_senegal", value: "false", description: "Expresso Sénégal activé" },
   // Subscription feature flags — toggleable from admin Configuration page
   { group: "subscription_features", key: "feature_deposits_enabled",      value: "true",   description: "Activer les acomptes clients" },
   { group: "subscription_features", key: "feature_deposits_tier_required", value: "premium", description: "Niveau requis pour les acomptes" },

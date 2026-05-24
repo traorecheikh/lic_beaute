@@ -257,6 +257,15 @@ class _ConfirmBar extends ConsumerStatefulWidget {
 class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
   bool _isProcessingPayment = false;
 
+  String _channelFromLabel(String? label) {
+    final normalized = (label ?? '').toLowerCase();
+    if (normalized.contains('orange')) return 'orange_senegal';
+    if (normalized.contains('free')) return 'free_senegal';
+    if (normalized.contains('wizall')) return 'wizall_senegal';
+    if (normalized.contains('expresso')) return 'expresso_sn';
+    return 'wave_senegal';
+  }
+
   @override
   Widget build(BuildContext context) {
     final createState = ref.watch(bookingCreateProvider);
@@ -334,12 +343,14 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                     }
 
                     if (!hasStoredPaymentMethod) {
+                      final returnTo = Uri.encodeComponent(AppRoutes.bookingReview);
                       AppSnackbar.info(
                         context,
-                        'Aucun compte de paiement configuré. Réservation envoyée, confirmation manuelle par le salon.',
+                        "Ajoutez d'abord un moyen de paiement pour régler l'acompte.",
                       );
-                      context.pushReplacement(
-                          AppRoutes.bookingDetailPath(booking.id));
+                      context.push(
+                        '${AppRoutes.profilePayments}?returnTo=$returnTo',
+                      );
                       return;
                     }
 
@@ -350,7 +361,7 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                             .read(paymentInitiateProvider.notifier)
                             .initiate(
                               bookingId: booking.id,
-                              channel: 'wave_senegal',
+                              channel: _channelFromLabel(defaultMethod.label),
                             );
                         final url =
                             paymentResult?['redirectUrl'] as String?;

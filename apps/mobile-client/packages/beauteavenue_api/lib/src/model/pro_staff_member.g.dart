@@ -6,6 +6,66 @@ part of 'pro_staff_member.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
+const ProStaffMemberRoleEnum _$proStaffMemberRoleEnum_salonStaff =
+    const ProStaffMemberRoleEnum._('salonStaff');
+const ProStaffMemberRoleEnum _$proStaffMemberRoleEnum_salonManager =
+    const ProStaffMemberRoleEnum._('salonManager');
+const ProStaffMemberRoleEnum _$proStaffMemberRoleEnum_salonOwner =
+    const ProStaffMemberRoleEnum._('salonOwner');
+
+ProStaffMemberRoleEnum _$proStaffMemberRoleEnumValueOf(String name) {
+  switch (name) {
+    case 'salonStaff':
+      return _$proStaffMemberRoleEnum_salonStaff;
+    case 'salonManager':
+      return _$proStaffMemberRoleEnum_salonManager;
+    case 'salonOwner':
+      return _$proStaffMemberRoleEnum_salonOwner;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<ProStaffMemberRoleEnum> _$proStaffMemberRoleEnumValues =
+    BuiltSet<ProStaffMemberRoleEnum>(const <ProStaffMemberRoleEnum>[
+  _$proStaffMemberRoleEnum_salonStaff,
+  _$proStaffMemberRoleEnum_salonManager,
+  _$proStaffMemberRoleEnum_salonOwner,
+]);
+
+Serializer<ProStaffMemberRoleEnum> _$proStaffMemberRoleEnumSerializer =
+    _$ProStaffMemberRoleEnumSerializer();
+
+class _$ProStaffMemberRoleEnumSerializer
+    implements PrimitiveSerializer<ProStaffMemberRoleEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'salonStaff': 'salon_staff',
+    'salonManager': 'salon_manager',
+    'salonOwner': 'salon_owner',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'salon_staff': 'salonStaff',
+    'salon_manager': 'salonManager',
+    'salon_owner': 'salonOwner',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[ProStaffMemberRoleEnum];
+  @override
+  final String wireName = 'ProStaffMemberRoleEnum';
+
+  @override
+  Object serialize(Serializers serializers, ProStaffMemberRoleEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  ProStaffMemberRoleEnum deserialize(Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      ProStaffMemberRoleEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
 class _$ProStaffMember extends ProStaffMember {
   @override
   final String id;
@@ -13,6 +73,12 @@ class _$ProStaffMember extends ProStaffMember {
   final String userId;
   @override
   final String displayName;
+  @override
+  final String? email;
+  @override
+  final String? phone;
+  @override
+  final ProStaffMemberRoleEnum role;
   @override
   final String? avatarUrl;
   @override
@@ -31,6 +97,9 @@ class _$ProStaffMember extends ProStaffMember {
       {required this.id,
       required this.userId,
       required this.displayName,
+      this.email,
+      this.phone,
+      required this.role,
       this.avatarUrl,
       this.description,
       required this.isActive,
@@ -51,6 +120,9 @@ class _$ProStaffMember extends ProStaffMember {
         id == other.id &&
         userId == other.userId &&
         displayName == other.displayName &&
+        email == other.email &&
+        phone == other.phone &&
+        role == other.role &&
         avatarUrl == other.avatarUrl &&
         description == other.description &&
         isActive == other.isActive &&
@@ -64,6 +136,9 @@ class _$ProStaffMember extends ProStaffMember {
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, userId.hashCode);
     _$hash = $jc(_$hash, displayName.hashCode);
+    _$hash = $jc(_$hash, email.hashCode);
+    _$hash = $jc(_$hash, phone.hashCode);
+    _$hash = $jc(_$hash, role.hashCode);
     _$hash = $jc(_$hash, avatarUrl.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
@@ -79,6 +154,9 @@ class _$ProStaffMember extends ProStaffMember {
           ..add('id', id)
           ..add('userId', userId)
           ..add('displayName', displayName)
+          ..add('email', email)
+          ..add('phone', phone)
+          ..add('role', role)
           ..add('avatarUrl', avatarUrl)
           ..add('description', description)
           ..add('isActive', isActive)
@@ -103,6 +181,18 @@ class ProStaffMemberBuilder
   String? _displayName;
   String? get displayName => _$this._displayName;
   set displayName(String? displayName) => _$this._displayName = displayName;
+
+  String? _email;
+  String? get email => _$this._email;
+  set email(String? email) => _$this._email = email;
+
+  String? _phone;
+  String? get phone => _$this._phone;
+  set phone(String? phone) => _$this._phone = phone;
+
+  ProStaffMemberRoleEnum? _role;
+  ProStaffMemberRoleEnum? get role => _$this._role;
+  set role(ProStaffMemberRoleEnum? role) => _$this._role = role;
 
   String? _avatarUrl;
   String? get avatarUrl => _$this._avatarUrl;
@@ -137,6 +227,9 @@ class ProStaffMemberBuilder
       _id = $v.id;
       _userId = $v.userId;
       _displayName = $v.displayName;
+      _email = $v.email;
+      _phone = $v.phone;
+      _role = $v.role;
       _avatarUrl = $v.avatarUrl;
       _description = $v.description;
       _isActive = $v.isActive;
@@ -171,6 +264,10 @@ class ProStaffMemberBuilder
                 userId, r'ProStaffMember', 'userId'),
             displayName: BuiltValueNullFieldError.checkNotNull(
                 displayName, r'ProStaffMember', 'displayName'),
+            email: email,
+            phone: phone,
+            role: BuiltValueNullFieldError.checkNotNull(
+                role, r'ProStaffMember', 'role'),
             avatarUrl: avatarUrl,
             description: description,
             isActive: BuiltValueNullFieldError.checkNotNull(

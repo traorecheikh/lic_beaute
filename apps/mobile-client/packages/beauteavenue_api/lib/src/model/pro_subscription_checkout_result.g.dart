@@ -8,16 +8,18 @@ part of 'pro_subscription_checkout_result.dart';
 
 class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
   @override
-  final String redirectUrl;
+  final String? redirectUrl;
   @override
   final String chargeId;
+  @override
+  final bool? resumed;
 
   factory _$ProSubscriptionCheckoutResult(
           [void Function(ProSubscriptionCheckoutResultBuilder)? updates]) =>
       (ProSubscriptionCheckoutResultBuilder()..update(updates))._build();
 
   _$ProSubscriptionCheckoutResult._(
-      {required this.redirectUrl, required this.chargeId})
+      {this.redirectUrl, required this.chargeId, this.resumed})
       : super._();
   @override
   ProSubscriptionCheckoutResult rebuild(
@@ -33,7 +35,8 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
     if (identical(other, this)) return true;
     return other is ProSubscriptionCheckoutResult &&
         redirectUrl == other.redirectUrl &&
-        chargeId == other.chargeId;
+        chargeId == other.chargeId &&
+        resumed == other.resumed;
   }
 
   @override
@@ -41,6 +44,7 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
     var _$hash = 0;
     _$hash = $jc(_$hash, redirectUrl.hashCode);
     _$hash = $jc(_$hash, chargeId.hashCode);
+    _$hash = $jc(_$hash, resumed.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -49,7 +53,8 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
   String toString() {
     return (newBuiltValueToStringHelper(r'ProSubscriptionCheckoutResult')
           ..add('redirectUrl', redirectUrl)
-          ..add('chargeId', chargeId))
+          ..add('chargeId', chargeId)
+          ..add('resumed', resumed))
         .toString();
   }
 }
@@ -68,6 +73,10 @@ class ProSubscriptionCheckoutResultBuilder
   String? get chargeId => _$this._chargeId;
   set chargeId(String? chargeId) => _$this._chargeId = chargeId;
 
+  bool? _resumed;
+  bool? get resumed => _$this._resumed;
+  set resumed(bool? resumed) => _$this._resumed = resumed;
+
   ProSubscriptionCheckoutResultBuilder() {
     ProSubscriptionCheckoutResult._defaults(this);
   }
@@ -77,6 +86,7 @@ class ProSubscriptionCheckoutResultBuilder
     if ($v != null) {
       _redirectUrl = $v.redirectUrl;
       _chargeId = $v.chargeId;
+      _resumed = $v.resumed;
       _$v = null;
     }
     return this;
@@ -98,10 +108,10 @@ class ProSubscriptionCheckoutResultBuilder
   _$ProSubscriptionCheckoutResult _build() {
     final _$result = _$v ??
         _$ProSubscriptionCheckoutResult._(
-          redirectUrl: BuiltValueNullFieldError.checkNotNull(
-              redirectUrl, r'ProSubscriptionCheckoutResult', 'redirectUrl'),
+          redirectUrl: redirectUrl,
           chargeId: BuiltValueNullFieldError.checkNotNull(
               chargeId, r'ProSubscriptionCheckoutResult', 'chargeId'),
+          resumed: resumed,
         );
     replace(_$result);
     return _$result;

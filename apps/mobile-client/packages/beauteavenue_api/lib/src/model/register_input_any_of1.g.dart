@@ -24,9 +24,38 @@ final BuiltSet<RegisterInputAnyOf1TypeEnum>
   _$registerInputAnyOf1TypeEnum_salonOwner,
 ]);
 
+const RegisterInputAnyOf1SubscriptionIntentTierEnum
+    _$registerInputAnyOf1SubscriptionIntentTierEnum_standard =
+    const RegisterInputAnyOf1SubscriptionIntentTierEnum._('standard');
+const RegisterInputAnyOf1SubscriptionIntentTierEnum
+    _$registerInputAnyOf1SubscriptionIntentTierEnum_premium =
+    const RegisterInputAnyOf1SubscriptionIntentTierEnum._('premium');
+
+RegisterInputAnyOf1SubscriptionIntentTierEnum
+    _$registerInputAnyOf1SubscriptionIntentTierEnumValueOf(String name) {
+  switch (name) {
+    case 'standard':
+      return _$registerInputAnyOf1SubscriptionIntentTierEnum_standard;
+    case 'premium':
+      return _$registerInputAnyOf1SubscriptionIntentTierEnum_premium;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<RegisterInputAnyOf1SubscriptionIntentTierEnum>
+    _$registerInputAnyOf1SubscriptionIntentTierEnumValues = BuiltSet<
+        RegisterInputAnyOf1SubscriptionIntentTierEnum>(const <RegisterInputAnyOf1SubscriptionIntentTierEnum>[
+  _$registerInputAnyOf1SubscriptionIntentTierEnum_standard,
+  _$registerInputAnyOf1SubscriptionIntentTierEnum_premium,
+]);
+
 Serializer<RegisterInputAnyOf1TypeEnum>
     _$registerInputAnyOf1TypeEnumSerializer =
     _$RegisterInputAnyOf1TypeEnumSerializer();
+Serializer<RegisterInputAnyOf1SubscriptionIntentTierEnum>
+    _$registerInputAnyOf1SubscriptionIntentTierEnumSerializer =
+    _$RegisterInputAnyOf1SubscriptionIntentTierEnumSerializer();
 
 class _$RegisterInputAnyOf1TypeEnumSerializer
     implements PrimitiveSerializer<RegisterInputAnyOf1TypeEnum> {
@@ -55,6 +84,39 @@ class _$RegisterInputAnyOf1TypeEnumSerializer
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 
+class _$RegisterInputAnyOf1SubscriptionIntentTierEnumSerializer
+    implements
+        PrimitiveSerializer<RegisterInputAnyOf1SubscriptionIntentTierEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[
+    RegisterInputAnyOf1SubscriptionIntentTierEnum
+  ];
+  @override
+  final String wireName = 'RegisterInputAnyOf1SubscriptionIntentTierEnum';
+
+  @override
+  Object serialize(Serializers serializers,
+          RegisterInputAnyOf1SubscriptionIntentTierEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  RegisterInputAnyOf1SubscriptionIntentTierEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      RegisterInputAnyOf1SubscriptionIntentTierEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
 class _$RegisterInputAnyOf1 extends RegisterInputAnyOf1 {
   @override
   final RegisterInputAnyOf1TypeEnum type;
@@ -67,11 +129,15 @@ class _$RegisterInputAnyOf1 extends RegisterInputAnyOf1 {
   @override
   final String password;
   @override
+  final RegisterInputAnyOf1SubscriptionIntentTierEnum? subscriptionIntentTier;
+  @override
   final RegisterInputAnyOf1Salon salon;
   @override
   final BuiltList<RegisterInputAnyOf1ServicesInner> services;
   @override
   final BuiltList<RegisterInputAnyOf1HoursInner> hours;
+  @override
+  final BuiltList<RegisterInputAnyOf1DocumentsInner>? documents;
 
   factory _$RegisterInputAnyOf1(
           [void Function(RegisterInputAnyOf1Builder)? updates]) =>
@@ -83,9 +149,11 @@ class _$RegisterInputAnyOf1 extends RegisterInputAnyOf1 {
       required this.email,
       required this.phone,
       required this.password,
+      this.subscriptionIntentTier,
       required this.salon,
       required this.services,
-      required this.hours})
+      required this.hours,
+      this.documents})
       : super._();
   @override
   RegisterInputAnyOf1 rebuild(
@@ -105,9 +173,11 @@ class _$RegisterInputAnyOf1 extends RegisterInputAnyOf1 {
         email == other.email &&
         phone == other.phone &&
         password == other.password &&
+        subscriptionIntentTier == other.subscriptionIntentTier &&
         salon == other.salon &&
         services == other.services &&
-        hours == other.hours;
+        hours == other.hours &&
+        documents == other.documents;
   }
 
   @override
@@ -118,9 +188,11 @@ class _$RegisterInputAnyOf1 extends RegisterInputAnyOf1 {
     _$hash = $jc(_$hash, email.hashCode);
     _$hash = $jc(_$hash, phone.hashCode);
     _$hash = $jc(_$hash, password.hashCode);
+    _$hash = $jc(_$hash, subscriptionIntentTier.hashCode);
     _$hash = $jc(_$hash, salon.hashCode);
     _$hash = $jc(_$hash, services.hashCode);
     _$hash = $jc(_$hash, hours.hashCode);
+    _$hash = $jc(_$hash, documents.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -133,9 +205,11 @@ class _$RegisterInputAnyOf1 extends RegisterInputAnyOf1 {
           ..add('email', email)
           ..add('phone', phone)
           ..add('password', password)
+          ..add('subscriptionIntentTier', subscriptionIntentTier)
           ..add('salon', salon)
           ..add('services', services)
-          ..add('hours', hours))
+          ..add('hours', hours)
+          ..add('documents', documents))
         .toString();
   }
 }
@@ -164,6 +238,14 @@ class RegisterInputAnyOf1Builder
   String? get password => _$this._password;
   set password(String? password) => _$this._password = password;
 
+  RegisterInputAnyOf1SubscriptionIntentTierEnum? _subscriptionIntentTier;
+  RegisterInputAnyOf1SubscriptionIntentTierEnum? get subscriptionIntentTier =>
+      _$this._subscriptionIntentTier;
+  set subscriptionIntentTier(
+          RegisterInputAnyOf1SubscriptionIntentTierEnum?
+              subscriptionIntentTier) =>
+      _$this._subscriptionIntentTier = subscriptionIntentTier;
+
   RegisterInputAnyOf1SalonBuilder? _salon;
   RegisterInputAnyOf1SalonBuilder get salon =>
       _$this._salon ??= RegisterInputAnyOf1SalonBuilder();
@@ -181,6 +263,12 @@ class RegisterInputAnyOf1Builder
   set hours(ListBuilder<RegisterInputAnyOf1HoursInner>? hours) =>
       _$this._hours = hours;
 
+  ListBuilder<RegisterInputAnyOf1DocumentsInner>? _documents;
+  ListBuilder<RegisterInputAnyOf1DocumentsInner> get documents =>
+      _$this._documents ??= ListBuilder<RegisterInputAnyOf1DocumentsInner>();
+  set documents(ListBuilder<RegisterInputAnyOf1DocumentsInner>? documents) =>
+      _$this._documents = documents;
+
   RegisterInputAnyOf1Builder() {
     RegisterInputAnyOf1._defaults(this);
   }
@@ -193,9 +281,11 @@ class RegisterInputAnyOf1Builder
       _email = $v.email;
       _phone = $v.phone;
       _password = $v.password;
+      _subscriptionIntentTier = $v.subscriptionIntentTier;
       _salon = $v.salon.toBuilder();
       _services = $v.services.toBuilder();
       _hours = $v.hours.toBuilder();
+      _documents = $v.documents?.toBuilder();
       _$v = null;
     }
     return this;
@@ -229,9 +319,11 @@ class RegisterInputAnyOf1Builder
                 phone, r'RegisterInputAnyOf1', 'phone'),
             password: BuiltValueNullFieldError.checkNotNull(
                 password, r'RegisterInputAnyOf1', 'password'),
+            subscriptionIntentTier: subscriptionIntentTier,
             salon: salon.build(),
             services: services.build(),
             hours: hours.build(),
+            documents: _documents?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -242,6 +334,8 @@ class RegisterInputAnyOf1Builder
         services.build();
         _$failedField = 'hours';
         hours.build();
+        _$failedField = 'documents';
+        _documents?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'RegisterInputAnyOf1', _$failedField, e.toString());

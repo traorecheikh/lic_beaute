@@ -3,6 +3,11 @@ import { z } from "zod";
 import { paymentMethodSchema, paymentProviderSchema, paymentStatusSchema } from "./enums.js";
 
 export const paymentChannelSchema = z.enum([
+  "wave_senegal",
+  "orange_senegal",
+  "free_senegal",
+  "wizall_senegal",
+  "expresso_sn",
   "wave",
   "orange_money",
   "free_money",

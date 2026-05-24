@@ -1882,7 +1882,15 @@ export class ProController {
       }
 
       const priceRows = await prisma.platformSetting.findMany({
-        where: { key: { in: ["subscription_premium_price_xof", "subscription_standard_price_xof"] } }
+        where: {
+          key: {
+            in: [
+              "subscription_premium_price_xof",
+              "subscription_standard_price_xof",
+              "subscription_annual_discount_percent"
+            ]
+          }
+        }
       });
       const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
       const priceKey = (body.action === "renewal" && sub.tier === "standard")
@@ -1893,10 +1901,17 @@ export class ProController {
         fail(reply, 500, "pricing_not_configured", "Le prix de l'abonnement n'est pas configuré. Contactez l'administrateur.");
         return;
       }
-      const amountXof = parseInt(priceStr, 10);
+      const monthlyAmountXof = parseInt(priceStr, 10);
+      const annualDiscountPercent = Math.max(
+        0,
+        Math.min(100, parseInt(priceMap.subscription_annual_discount_percent ?? "0", 10) || 0)
+      );
+      const amountXof = body.billingCycle === "annual"
+        ? Math.round(monthlyAmountXof * 12 * (100 - annualDiscountPercent) / 100)
+        : monthlyAmountXof;
       // Stable idempotency key: month-scoped so retries within same billing cycle deduplicate
       const billingMonth = new Date().toISOString().slice(0, 7);
-      const idempotencyKey = `sub-${sub.id}-${body.action}-${billingMonth}`;
+      const idempotencyKey = `sub-${sub.id}-${body.action}-${body.billingCycle}-${billingMonth}`;
 
       // Re-use an existing non-failed charge for this idempotency key to avoid zombie charges (#27)
       const existing = await prisma.subscriptionCharge.findFirst({
@@ -1912,10 +1927,11 @@ export class ProController {
       const result = await paymentAdapter.initiateDeposit({
         paymentId: existing?.id ?? tempChargeId,
         amountXof,
-        description: `Abonnement ${body.action}`,
+        description: `Abonnement ${body.action} (${body.billingCycle})`,
         callbackUrl: `${config.webOrigin}/pro/subscription/callback`,
         idempotencyKey,
-        phone: owner?.phone ?? undefined
+        phone: owner?.phone ?? undefined,
+        channel: body.channel
       });
 
       const charge = existing
@@ -2003,6 +2019,8 @@ export class ProController {
 
           const baseDate = sub?.expiresAt && sub.expiresAt > new Date() ? sub.expiresAt : new Date();
           const isUpgrade = charge.chargeType === "upgrade";
+          const isAnnualCycle = charge.idempotencyKey.includes("-annual-");
+          const renewalDurationDays = isAnnualCycle ? 365 : 30;
 
           await tx.subscription.update({
             where: { id: charge.subscriptionId },
@@ -2010,7 +2028,7 @@ export class ProController {
               ...(isUpgrade ? { tier: "premium" } : {}),
               status: "active",
               expiresAt: charge.chargeType === "renewal"
-                ? new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+                ? new Date(baseDate.getTime() + renewalDurationDays * 24 * 60 * 60 * 1000)
                 : undefined
             }
           });

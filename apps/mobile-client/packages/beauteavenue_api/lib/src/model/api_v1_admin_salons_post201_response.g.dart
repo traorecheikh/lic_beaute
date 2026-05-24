@@ -158,6 +158,8 @@ class _$ApiV1AdminSalonsPost201Response
   @override
   final String id;
   @override
+  final String? subscriptionId;
+  @override
   final String salonName;
   @override
   final String category;
@@ -195,6 +197,7 @@ class _$ApiV1AdminSalonsPost201Response
 
   _$ApiV1AdminSalonsPost201Response._(
       {required this.id,
+      this.subscriptionId,
       required this.salonName,
       required this.category,
       required this.city,
@@ -225,6 +228,7 @@ class _$ApiV1AdminSalonsPost201Response
     if (identical(other, this)) return true;
     return other is ApiV1AdminSalonsPost201Response &&
         id == other.id &&
+        subscriptionId == other.subscriptionId &&
         salonName == other.salonName &&
         category == other.category &&
         city == other.city &&
@@ -246,6 +250,7 @@ class _$ApiV1AdminSalonsPost201Response
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, subscriptionId.hashCode);
     _$hash = $jc(_$hash, salonName.hashCode);
     _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
@@ -269,6 +274,7 @@ class _$ApiV1AdminSalonsPost201Response
   String toString() {
     return (newBuiltValueToStringHelper(r'ApiV1AdminSalonsPost201Response')
           ..add('id', id)
+          ..add('subscriptionId', subscriptionId)
           ..add('salonName', salonName)
           ..add('category', category)
           ..add('city', city)
@@ -297,6 +303,11 @@ class ApiV1AdminSalonsPost201ResponseBuilder
   String? _id;
   String? get id => _$this._id;
   set id(String? id) => _$this._id = id;
+
+  String? _subscriptionId;
+  String? get subscriptionId => _$this._subscriptionId;
+  set subscriptionId(String? subscriptionId) =>
+      _$this._subscriptionId = subscriptionId;
 
   String? _salonName;
   String? get salonName => _$this._salonName;
@@ -390,6 +401,7 @@ class ApiV1AdminSalonsPost201ResponseBuilder
     final $v = _$v;
     if ($v != null) {
       _id = $v.id;
+      _subscriptionId = $v.subscriptionId;
       _salonName = $v.salonName;
       _category = $v.category;
       _city = $v.city;
@@ -430,6 +442,7 @@ class ApiV1AdminSalonsPost201ResponseBuilder
           _$ApiV1AdminSalonsPost201Response._(
             id: BuiltValueNullFieldError.checkNotNull(
                 id, r'ApiV1AdminSalonsPost201Response', 'id'),
+            subscriptionId: subscriptionId,
             salonName: BuiltValueNullFieldError.checkNotNull(
                 salonName, r'ApiV1AdminSalonsPost201Response', 'salonName'),
             category: BuiltValueNullFieldError.checkNotNull(

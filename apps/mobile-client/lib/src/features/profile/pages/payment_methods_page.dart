@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_http_error_handler.dart';
@@ -32,6 +33,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     'orange_senegal': 'Orange Money Sénégal',
     'free_senegal': 'Free Money Sénégal',
     'wizall_senegal': 'Wizall Sénégal',
+    'expresso_sn': 'Expresso Sénégal',
   };
 
   @override
@@ -224,6 +226,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       _phoneController.clear();
       if (!mounted) return;
       AppSnackbar.success(context, 'Moyen de paiement ajouté.');
+      final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
+      if (returnTo != null && returnTo.isNotEmpty) {
+        context.go(Uri.decodeComponent(returnTo));
+      }
     } catch (error) {
       await context.handleHttpError(error, 'Ajout impossible.');
     } finally {

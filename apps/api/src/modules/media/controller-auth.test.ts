@@ -47,5 +47,10 @@ describe("MediaController auth failures", () => {
     await c.delete({ params: { mediaId: "m1" } } as never, rep);
     expect(mocks.fail.mock.calls.length + mocks.handleError.mock.calls.length).toBeGreaterThan(0);
   });
-});
 
+  it("keeps registration-doc upload public for pre-registration flow", async () => {
+    await c.uploadRegistrationDoc({ file: vi.fn().mockResolvedValue(null) } as never, rep);
+    expect(mocks.requireRole).not.toHaveBeenCalled();
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 400, "file_required", expect.any(String));
+  });
+});

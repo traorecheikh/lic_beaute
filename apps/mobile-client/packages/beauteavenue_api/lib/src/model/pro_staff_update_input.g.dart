@@ -6,9 +6,71 @@ part of 'pro_staff_update_input.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
+const ProStaffUpdateInputRoleEnum _$proStaffUpdateInputRoleEnum_salonStaff =
+    const ProStaffUpdateInputRoleEnum._('salonStaff');
+const ProStaffUpdateInputRoleEnum _$proStaffUpdateInputRoleEnum_salonManager =
+    const ProStaffUpdateInputRoleEnum._('salonManager');
+
+ProStaffUpdateInputRoleEnum _$proStaffUpdateInputRoleEnumValueOf(String name) {
+  switch (name) {
+    case 'salonStaff':
+      return _$proStaffUpdateInputRoleEnum_salonStaff;
+    case 'salonManager':
+      return _$proStaffUpdateInputRoleEnum_salonManager;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<ProStaffUpdateInputRoleEnum>
+    _$proStaffUpdateInputRoleEnumValues =
+    BuiltSet<ProStaffUpdateInputRoleEnum>(const <ProStaffUpdateInputRoleEnum>[
+  _$proStaffUpdateInputRoleEnum_salonStaff,
+  _$proStaffUpdateInputRoleEnum_salonManager,
+]);
+
+Serializer<ProStaffUpdateInputRoleEnum>
+    _$proStaffUpdateInputRoleEnumSerializer =
+    _$ProStaffUpdateInputRoleEnumSerializer();
+
+class _$ProStaffUpdateInputRoleEnumSerializer
+    implements PrimitiveSerializer<ProStaffUpdateInputRoleEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'salonStaff': 'salon_staff',
+    'salonManager': 'salon_manager',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'salon_staff': 'salonStaff',
+    'salon_manager': 'salonManager',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[ProStaffUpdateInputRoleEnum];
+  @override
+  final String wireName = 'ProStaffUpdateInputRoleEnum';
+
+  @override
+  Object serialize(Serializers serializers, ProStaffUpdateInputRoleEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  ProStaffUpdateInputRoleEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      ProStaffUpdateInputRoleEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
 class _$ProStaffUpdateInput extends ProStaffUpdateInput {
   @override
   final String? displayName;
+  @override
+  final String? email;
+  @override
+  final String? phone;
+  @override
+  final ProStaffUpdateInputRoleEnum? role;
   @override
   final String? avatarUrl;
   @override
@@ -26,6 +88,9 @@ class _$ProStaffUpdateInput extends ProStaffUpdateInput {
 
   _$ProStaffUpdateInput._(
       {this.displayName,
+      this.email,
+      this.phone,
+      this.role,
       this.avatarUrl,
       this.description,
       this.isActive,
@@ -46,6 +111,9 @@ class _$ProStaffUpdateInput extends ProStaffUpdateInput {
     if (identical(other, this)) return true;
     return other is ProStaffUpdateInput &&
         displayName == other.displayName &&
+        email == other.email &&
+        phone == other.phone &&
+        role == other.role &&
         avatarUrl == other.avatarUrl &&
         description == other.description &&
         isActive == other.isActive &&
@@ -57,6 +125,9 @@ class _$ProStaffUpdateInput extends ProStaffUpdateInput {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, displayName.hashCode);
+    _$hash = $jc(_$hash, email.hashCode);
+    _$hash = $jc(_$hash, phone.hashCode);
+    _$hash = $jc(_$hash, role.hashCode);
     _$hash = $jc(_$hash, avatarUrl.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
@@ -70,6 +141,9 @@ class _$ProStaffUpdateInput extends ProStaffUpdateInput {
   String toString() {
     return (newBuiltValueToStringHelper(r'ProStaffUpdateInput')
           ..add('displayName', displayName)
+          ..add('email', email)
+          ..add('phone', phone)
+          ..add('role', role)
           ..add('avatarUrl', avatarUrl)
           ..add('description', description)
           ..add('isActive', isActive)
@@ -86,6 +160,18 @@ class ProStaffUpdateInputBuilder
   String? _displayName;
   String? get displayName => _$this._displayName;
   set displayName(String? displayName) => _$this._displayName = displayName;
+
+  String? _email;
+  String? get email => _$this._email;
+  set email(String? email) => _$this._email = email;
+
+  String? _phone;
+  String? get phone => _$this._phone;
+  set phone(String? phone) => _$this._phone = phone;
+
+  ProStaffUpdateInputRoleEnum? _role;
+  ProStaffUpdateInputRoleEnum? get role => _$this._role;
+  set role(ProStaffUpdateInputRoleEnum? role) => _$this._role = role;
 
   String? _avatarUrl;
   String? get avatarUrl => _$this._avatarUrl;
@@ -118,6 +204,9 @@ class ProStaffUpdateInputBuilder
     final $v = _$v;
     if ($v != null) {
       _displayName = $v.displayName;
+      _email = $v.email;
+      _phone = $v.phone;
+      _role = $v.role;
       _avatarUrl = $v.avatarUrl;
       _description = $v.description;
       _isActive = $v.isActive;
@@ -147,6 +236,9 @@ class ProStaffUpdateInputBuilder
       _$result = _$v ??
           _$ProStaffUpdateInput._(
             displayName: displayName,
+            email: email,
+            phone: phone,
+            role: role,
             avatarUrl: avatarUrl,
             description: description,
             isActive: isActive,
