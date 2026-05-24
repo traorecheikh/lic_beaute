@@ -77,6 +77,80 @@
           </div>
         </article>
 
+        <!-- ── PayDunya Sandbox Tester (dev only) ─────────── -->
+        <article v-if="activeTab === 'paydunya_sandbox'" class="panel-clean p-8 space-y-6 max-w-2xl">
+          <div class="pb-4 border-b border-outline-variant/50">
+            <h3 class="text-base font-bold text-espresso">Test PayDunya Sandbox</h3>
+            <p class="row-meta mt-0.5">Crée une facture et exécute un paiement de test via l'API sandbox PayDunya.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="section-label">Montant (XOF)</label>
+              <input v-model.number="sandboxForm.amountXof" type="number" min="100" class="input-shell" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="section-label">Méthode</label>
+              <select v-model="sandboxForm.method" class="input-shell">
+                <option value="sandbox_direct">Compte test (direct)</option>
+                <option value="wave_senegal">Wave Sénégal</option>
+                <option value="orange_senegal">Orange Money Sénégal</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="section-label">Téléphone</label>
+              <input v-model="sandboxForm.phone" class="input-shell" placeholder="97403627" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="section-label">Email</label>
+              <input v-model="sandboxForm.email" class="input-shell" placeholder="marnel.gnacadja@paydunya.com" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="section-label">Mot de passe compte test</label>
+              <input v-model="sandboxForm.password" type="password" class="input-shell" placeholder="Miliey@2121" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="section-label">Description</label>
+              <input v-model="sandboxForm.description" class="input-shell" placeholder="Test réservation" />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn-primary px-6 py-2.5 inline-flex items-center gap-2 text-sm"
+            :disabled="sandboxRunning"
+            @click="runSandboxTest"
+          >
+            <span v-if="sandboxRunning" class="w-4 h-4 animate-spin border-2 border-white/30 border-t-white rounded-full"></span>
+            {{ sandboxRunning ? 'Test en cours...' : 'Lancer le test' }}
+          </button>
+
+          <div v-if="sandboxResult" class="space-y-4 pt-2 border-t border-outline-variant/30">
+            <div :class="['flex items-center gap-3 px-4 py-3 rounded-xl', sandboxResult.success ? 'bg-primary/5 border border-primary/20' : 'bg-error/5 border border-error/20']">
+              <CheckCircleIcon v-if="sandboxResult.success" class="w-5 h-5 text-primary shrink-0" />
+              <XCircleIcon v-else class="w-5 h-5 text-error shrink-0" />
+              <div>
+                <p class="text-[13px] font-bold" :class="sandboxResult.success ? 'text-primary' : 'text-error'">
+                  {{ sandboxResult.success ? 'Paiement réussi' : 'Paiement échoué' }}
+                </p>
+                <p class="text-[11px] text-cocoa/60">{{ sandboxResult.payment?.message }}</p>
+              </div>
+            </div>
+            <div>
+              <p class="section-label mb-2">Réponse invoice</p>
+              <pre class="bg-espresso text-sand/80 text-[11px] p-4 rounded-xl overflow-x-auto">{{ JSON.stringify(sandboxResult.invoice, null, 2) }}</pre>
+            </div>
+            <div>
+              <p class="section-label mb-2">Réponse paiement</p>
+              <pre class="bg-espresso text-sand/80 text-[11px] p-4 rounded-xl overflow-x-auto">{{ JSON.stringify(sandboxResult.payment, null, 2) }}</pre>
+            </div>
+            <a :href="sandboxResult.checkoutUrl" target="_blank" rel="noopener" class="btn-secondary text-[12px] inline-flex items-center gap-2">
+              <ArrowTopRightOnSquareIcon class="w-4 h-4" />
+              Voir la page de paiement
+            </a>
+          </div>
+        </article>
+
         <!-- ── Catégories Salons ───────────────────────── -->
         <article v-if="activeTab === 'categories'" class="panel-clean p-8 space-y-6">
           <div class="flex items-start justify-between pb-4 border-b border-outline-variant/50">
@@ -627,8 +701,10 @@ import { computed, reactive, ref } from 'vue';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 import {
+  ArrowTopRightOnSquareIcon,
   BellIcon,
   CheckIcon,
+  CheckCircleIcon,
   Cog6ToothIcon,
   CreditCardIcon,
   CurrencyDollarIcon,
@@ -639,6 +715,7 @@ import {
   SparklesIcon,
   TagIcon,
   TrashIcon,
+  XCircleIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline';
 import { useAdminAuthStore } from '@/stores/adminAuth';
@@ -884,6 +961,7 @@ const tabs = [
   { id: 'payment_methods',  label: 'Moyens de Paiement',      description: 'Activer/désactiver les méthodes de paiement PayDunya.',         icon: CreditCardIcon },
   { id: 'subscription_features', label: 'Fonctionnalités',    description: 'Activer/désactiver les fonctionnalités par niveau d\'abonnement.', icon: SparklesIcon },
   { id: 'general',          label: 'Paramètres Généraux',     description: 'Coordonnées du support et règles opérationnelles globales.',     icon: Cog6ToothIcon },
+  ...(import.meta.env.DEV ? [{ id: 'paydunya_sandbox', label: 'Test PayDunya', description: 'Tester l\'API PayDunya en sandbox.', icon: CreditCardIcon }] : []),
 ];
 
 const activeTab = ref('documents');
@@ -920,6 +998,48 @@ const pendingChanges = reactive<Record<string, string>>({});
 const validationErrors = reactive<Record<string, string>>({});
 const savingSettings = ref(false);
 const fieldRefs = new Map<string, Element | null>();
+
+// ── PayDunya sandbox state (dev only) ──────────────────────────────────────
+
+const sandboxForm = reactive({
+  amountXof: 5000,
+  method: 'sandbox_direct',
+  phone: '97403627',
+  email: 'marnel.gnacadja@paydunya.com',
+  password: 'Miliey@2121',
+  description: 'Test réservation'
+});
+const sandboxRunning = ref(false);
+const sandboxResult = ref<any>(null);
+
+async function runSandboxTest() {
+  sandboxRunning.value = true;
+  sandboxResult.value = null;
+  try {
+    const response = await fetch('/api/v1/admin/paydunya/sandbox-test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`
+      },
+      body: JSON.stringify({
+        amountXof: sandboxForm.amountXof,
+        method: sandboxForm.method,
+        customerPhone: sandboxForm.phone,
+        customerEmail: sandboxForm.email,
+        customerPassword: sandboxForm.password,
+        description: sandboxForm.description
+      })
+    });
+    sandboxResult.value = await response.json();
+  } catch (e) {
+    sandboxResult.value = { success: false, payment: { message: String(e) } };
+  } finally {
+    sandboxRunning.value = false;
+  }
+}
+
+// ── Pending changes state ──────────────────────────────────────────────────
 
 const pendingCount = computed(() => Object.keys(pendingChanges).length);
 

@@ -212,6 +212,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/admin/audit/:auditId", (req, rep) => admin.auditDetail(req, rep));
   app.get("/api/v1/admin/config/settings", (req, rep) => admin.listSettings(req, rep));
   app.patch("/api/v1/admin/config/settings/:key", (req, rep) => admin.updateSetting(req, rep));
+  app.post("/api/v1/admin/paydunya/sandbox-test", (req, rep) => admin.paydunyaSandboxTest(req, rep));
   app.get("/api/v1/admin/config/categories", (req, rep) => admin.listCategories(req, rep));
   app.post("/api/v1/admin/config/categories", (req, rep) => admin.upsertCategory(req, rep));
   app.delete("/api/v1/admin/config/categories/:id", (req, rep) => admin.deleteCategory(req, rep));

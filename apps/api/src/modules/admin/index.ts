@@ -284,6 +284,115 @@ export class AdminController {
     ok(reply, await deleteRequiredDocument(id, actorName));
   }
 
+  // ── PayDunya Sandbox Tester (dev-only) ─────────────────────────────────
+
+  async paydunyaSandboxTest(request: FastifyRequest, reply: FastifyReply) {
+    if (config.nodeEnv !== "development") {
+      fail(reply, 403, "dev_only", "Ceci est réservé à l'environnement de développement.");
+      return;
+    }
+    const body = z.object({
+      amountXof: z.number().int().positive().default(5000),
+      description: z.string().default("Test Beauté Avenue"),
+      customerName: z.string().default("John Doe"),
+      customerEmail: z.string().email().default("marnel.gnacadja@paydunya.com"),
+      customerPhone: z.string().default("97403627"),
+      customerPassword: z.string().default("Miliey@2121"),
+      method: z.enum(["sandbox_direct", "wave_senegal", "orange_senegal", "free_senegal", "wizall_senegal"]).default("sandbox_direct")
+    }).parse(request.body);
+
+    try {
+      // Step 1: Create checkout invoice (sandbox credentials)
+      const MASTER_KEY = config.paydunyaMasterKey || "wQzk9ZwR-Qq9m-0hD0-zpud-je5coGC3FHKW";
+      const PRIVATE_KEY = config.paydunyaPrivateKey || "test_private_rMIdJM3PLLhLjyArx9tF3VURAF5";
+      const PAYDUNYA_TOKEN = config.paydunyaToken || "IivOiOxGJuWhc5znlIiK";
+
+      const invoiceRes = await fetch("https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "PAYDUNYA-MASTER-KEY": MASTER_KEY,
+          "PAYDUNYA-PRIVATE-KEY": PRIVATE_KEY,
+          "PAYDUNYA-TOKEN": PAYDUNYA_TOKEN
+        },
+        body: JSON.stringify({
+          invoice: { total_amount: body.amountXof, description: body.description },
+          store: { name: "Beauté Avenue Test" }
+        })
+      });
+
+      const invoiceJson = await invoiceRes.json() as {
+        response_code: string;
+        response_text: string;
+        description: string;
+        token: string;
+      };
+
+      if (invoiceJson.response_code !== "00") {
+        fail(reply, 422, "invoice_creation_failed", invoiceJson.response_text);
+        return;
+      }
+
+      const invoiceToken = invoiceJson.token;
+
+      // Step 2: Execute payment (use sandbox softpay checkout direct account)
+      let paymentResult: Record<string, unknown>;
+
+      if (body.method === "sandbox_direct") {
+        const payRes = await fetch("https://app.paydunya.com/sandbox-api/v1/softpay/checkout/make-payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "PAYDUNYA-MASTER-KEY": MASTER_KEY,
+            "PAYDUNYA-PRIVATE-KEY": PRIVATE_KEY,
+            "PAYDUNYA-TOKEN": PAYDUNYA_TOKEN
+          },
+          body: JSON.stringify({
+            phone_phone: body.customerPhone,
+            customer_email: body.customerEmail,
+            password: body.customerPassword,
+            invoice_token: invoiceToken
+          })
+        });
+        paymentResult = await payRes.json() as Record<string, unknown>;
+      } else {
+        const entry = { wave_senegal: "wave-senegal", orange_senegal: "new-orange-money-senegal", free_senegal: "free-money-senegal", wizall_senegal: "wizall-money-senegal" }[body.method]!;
+        const methodBody: Record<string, string> = {
+          invoice_token: invoiceToken,
+          customer_name: body.customerName,
+          customer_email: body.customerEmail,
+          customer_phone: body.customerPhone ?? body.customerPhone
+        };
+        if (body.method === "wave_senegal") {
+          methodBody.wave_senegal_payment_token = invoiceToken;
+          methodBody.wave_senegal_fullName = body.customerName;
+          methodBody.wave_senegal_email = body.customerEmail;
+          methodBody.wave_senegal_phone = body.customerPhone;
+        }
+        const payRes = await fetch(`https://app.paydunya.com/sandbox-api/v1/softpay/${entry}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "PAYDUNYA-MASTER-KEY": MASTER_KEY,
+            "PAYDUNYA-PRIVATE-KEY": PRIVATE_KEY,
+            "PAYDUNYA-TOKEN": PAYDUNYA_TOKEN
+          },
+          body: JSON.stringify(methodBody)
+        });
+        paymentResult = await payRes.json() as Record<string, unknown>;
+      }
+
+      ok(reply, {
+        invoice: invoiceJson,
+        payment: paymentResult,
+        checkoutUrl: `https://app.paydunya.com/sandbox-checkout/invoice/${invoiceToken}`,
+        success: paymentResult.success === true
+      });
+    } catch (e) {
+      handleError(e, reply);
+    }
+  }
+
   async sendPasswordReset(request: FastifyRequest, reply: FastifyReply) {
     const token = this.ensureAdmin(request, reply);
     if (!token) return;
