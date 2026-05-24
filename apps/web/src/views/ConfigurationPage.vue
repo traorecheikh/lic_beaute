@@ -2,7 +2,7 @@
   <div class="space-y-8">
     <header>
       <h2 class="page-title">Configuration</h2>
-      <p class="row-meta mt-1">Paramètres dynamiques de la plateforme — toute modification est auditée en temps réel.</p>
+      <p class="row-meta mt-1">Paramètres de la plateforme</p>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -141,6 +141,78 @@
 
           <div v-if="settingsQuery.isLoading.value" class="py-8 text-center row-meta">Chargement…</div>
           <div v-else-if="settingsQuery.isError.value" class="py-8 text-center text-error text-sm">Erreur de chargement.</div>
+
+          <!-- Subscription features: dedicated card layout -->
+          <div v-else-if="activeTab === 'subscription_features'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[13px] font-bold text-espresso">Acomptes</p>
+                  <p class="text-[11px] text-cocoa/50">Dépôts en ligne des clients</p>
+                </div>
+              </div>
+              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key.startsWith('feature_deposits'))" :key="s.key" class="flex items-center justify-between gap-4">
+                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
+                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
+                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[13px] font-bold text-espresso">Rapports</p>
+                  <p class="text-[11px] text-cocoa/50">Statistiques avancées</p>
+                </div>
+              </div>
+              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key.startsWith('feature_analytics'))" :key="s.key" class="flex items-center justify-between gap-4">
+                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
+                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
+                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-neutral-bg flex items-center justify-center text-cocoa/50">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </div>
+                <div>
+                  <p class="text-[13px] font-bold text-espresso">Abonnement</p>
+                  <p class="text-[11px] text-cocoa/50">Renouvellement automatique</p>
+                </div>
+              </div>
+              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key === 'feature_auto_renew_enabled')" :key="s.key" class="flex items-center justify-between gap-4">
+                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
+                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
+                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[13px] font-bold text-espresso">Modes de facturation</p>
+                  <p class="text-[11px] text-cocoa/50">Fournisseurs affichés</p>
+                </div>
+              </div>
+              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key.startsWith('feature_billing') || x.key === 'feature_card_payments')" :key="s.key" class="flex items-center justify-between gap-4">
+                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
+                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
+                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           <div v-else class="space-y-0">
             <div
@@ -528,7 +600,7 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_deposits_tier_required: {
-    label: 'Niveau requis — acomptes',
+    label: 'Niveau requis',
     description: 'Quel abonnement est nécessaire pour proposer des acomptes clients ?',
     type: 'select',
     options: [
@@ -546,7 +618,7 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_analytics_tier_required: {
-    label: 'Niveau requis — rapports',
+    label: 'Niveau requis',
     description: 'Quel abonnement est nécessaire pour accéder aux rapports financiers ?',
     type: 'select',
     options: [
@@ -564,7 +636,7 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_billing_paydunya: {
-    label: 'Mode de facturation — PayDunya',
+    label: 'PayDunya',
     description: 'Afficher PayDunya comme option de mode de paiement pour la facturation.',
     type: 'select',
     options: [
@@ -573,7 +645,7 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_billing_intech: {
-    label: 'Mode de facturation — Intech',
+    label: 'Intech',
     description: 'Afficher Intech comme option de mode de paiement pour la facturation.',
     type: 'select',
     options: [
@@ -582,7 +654,7 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_billing_manual: {
-    label: 'Mode de facturation — Manuel',
+    label: 'Manuel',
     description: 'Afficher le mode manuel (hors ligne) comme option de mode de paiement.',
     type: 'select',
     options: [
@@ -591,7 +663,7 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_card_payments: {
-    label: 'Paiement par carte bancaire',
+    label: 'Carte bancaire',
     description: 'Activer l\'option carte bancaire dans PayDunya (nécessaire pour le renouvellement automatique).',
     type: 'select',
     options: [
