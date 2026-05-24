@@ -72,6 +72,7 @@
           <select v-model="emailDriver" class="input-shell bg-white h-10 border-outline-variant/60 rounded-full text-[12px] px-4">
             <option value="">Tous drivers</option>
             <option value="smtp">SMTP</option>
+            <option value="brevo">Brevo API</option>
             <option value="resend">Resend</option>
             <option value="noop">Noop</option>
           </select>
@@ -136,16 +137,31 @@
         >
           <div class="flex flex-col gap-3">
             <div class="flex flex-wrap items-center gap-3">
-              <p class="row-primary">{{ event.subject }}</p>
+              <p class="row-primary truncate max-w-[400px]">{{ event.subject || '(sans objet)' }}</p>
               <StatusBadge :value="event.status === 'failed' ? 'critical' : event.status === 'sent' ? 'info' : 'warning'" />
             </div>
-            <div class="flex flex-wrap items-center gap-5">
-              <span class="row-meta">À: <span class="text-espresso/70 font-semibold">{{ event.to }}</span></span>
-              <span class="row-meta">Driver: <span class="text-espresso/70 font-semibold">{{ event.driver }}</span></span>
-              <span class="row-meta">Statut: <span class="text-espresso/70 font-semibold">{{ event.status }}</span></span>
-              <span class="row-meta tabular-nums">{{ formatDateTime(event.createdAt) }}</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[12px]">
+              <div>
+                <p class="font-bold text-cocoa/50 uppercase tracking-wider text-[10px] mb-0.5">Destinataire</p>
+                <p class="text-espresso font-semibold">{{ event.to }}</p>
+              </div>
+              <div>
+                <p class="font-bold text-cocoa/50 uppercase tracking-wider text-[10px] mb-0.5">Driver</p>
+                <p class="row-meta">{{ event.driver }}</p>
+              </div>
+              <div>
+                <p class="font-bold text-cocoa/50 uppercase tracking-wider text-[10px] mb-0.5">Statut</p>
+                <p class="row-meta">{{ { sent: 'Envoyé', failed: 'Échec', skipped: 'Ignoré' }[event.status] ?? event.status }}</p>
+              </div>
+              <div>
+                <p class="font-bold text-cocoa/50 uppercase tracking-wider text-[10px] mb-0.5">Date</p>
+                <p class="row-meta tabular-nums">{{ formatDateTime(event.createdAt) }}</p>
+              </div>
             </div>
-            <p v-if="event.errorMessage" class="row-meta text-red-700">Erreur: {{ event.errorMessage }}</p>
+            <p v-if="event.errorMessage" class="text-[12px] font-bold text-error bg-error/5 px-3 py-2 rounded-lg flex items-center gap-2">
+              <InformationCircleIcon class="w-4 h-4 shrink-0" />
+              {{ event.errorMessage }}
+            </p>
           </div>
         </div>
       </div>
@@ -157,7 +173,7 @@
 import { computed, ref } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
-import { MagnifyingGlassIcon, UserIcon } from "@heroicons/vue/24/outline";
+import { InformationCircleIcon, MagnifyingGlassIcon, UserIcon } from "@heroicons/vue/24/outline";
 
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";

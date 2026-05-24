@@ -91,9 +91,37 @@
                   <span class="row-meta tabular-nums">{{ s.expiresAt ? formatDate(s.expiresAt) : "Illimité" }}</span>
                 </td>
                 <td class="px-5 py-4 text-right">
-                  <RouterLink :to="`/admin/subscriptions/${s.id}`" class="btn-secondary px-4 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-tight">
-                    Détail
-                  </RouterLink>
+                  <div class="relative" @click.stop>
+                    <button @click="toggleDropdown(s.id)" class="btn-secondary px-2.5 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-tight inline-flex items-center gap-1">
+                      <span>Détail</span>
+                      <ChevronDownIcon class="w-3.5 h-3.5" :class="openDropdown === s.id ? 'rotate-180' : ''" />
+                    </button>
+                    <div
+                      v-if="openDropdown === s.id"
+                      class="absolute right-0 top-full mt-1 z-50 w-56 bg-white rounded-xl shadow-xl border border-outline-variant/60 py-1.5"
+                    >
+                      <RouterLink :to="`/admin/subscriptions/${s.id}`" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors">
+                        <ArrowRightIcon class="w-4 h-4 text-cocoa/40" />
+                        Voir le détail
+                      </RouterLink>
+                      <button @click="quickAction(s.id, 'pause_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                        <PauseIcon class="w-4 h-4 text-cocoa/40" />
+                        Mettre en pause
+                      </button>
+                      <button @click="quickAction(s.id, 'resume_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                        <PlayIcon class="w-4 h-4 text-cocoa/40" />
+                        Reprendre
+                      </button>
+                      <button @click="quickAction(s.id, 'downgrade_to_standard')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                        <ArrowTrendingDownIcon class="w-4 h-4 text-cocoa/40" />
+                        Rétrograder en Standard
+                      </button>
+                      <button @click="quickAction(s.id, 'terminate_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-error font-medium hover:bg-error/5 transition-colors text-left border-t border-outline-variant/30 mt-1 pt-2">
+                        <XCircleIcon class="w-4 h-4" />
+                        Résilier
+                      </button>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -106,21 +134,57 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
-import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
+import {
+  ArrowRightIcon,
+  ArrowTrendingDownIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  PauseIcon,
+  PlayIcon,
+  XCircleIcon
+} from "@heroicons/vue/24/outline";
 
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { ApiError, fetchSubscriptions } from "@/lib/api";
+import { ApiError, fetchSubscriptions, overrideSubscription } from "@/lib/api";
 import { formatDate } from "@/lib/date";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { toast } from "vue-sonner";
 
 const auth = useAdminAuthStore();
+const queryClient = useQueryClient();
 const search = ref("");
 const tier = ref("");
 const status = ref("");
+const openDropdown = ref<string | null>(null);
+
+const overrideMutation = useMutation({
+  mutationFn: ({ id, action }: { id: string; action: string }) =>
+    overrideSubscription(auth.accessToken ?? "", id, { action, reason: `Action rapide: ${action}` } as any),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+    toast.success("Abonnement mis à jour.");
+  },
+  onError: (e) => {
+    toast.error(e instanceof ApiError ? e.message : "Erreur.");
+  }
+});
+
+function toggleDropdown(id: string) {
+  openDropdown.value = openDropdown.value === id ? null : id;
+}
+
+function quickAction(id: string, action: string) {
+  openDropdown.value = null;
+  if (action === "terminate_subscription" && !confirm("Confirmer la résiliation de cet abonnement ?")) return;
+  overrideMutation.mutate({ id, action });
+}
+
+// Close dropdown on outside click
+document.addEventListener("click", () => { openDropdown.value = null; });
 const debouncedSearch = refDebounced(search, 250);
 
 const subscriptionsQuery = useQuery({

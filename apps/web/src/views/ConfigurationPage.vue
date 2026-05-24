@@ -313,10 +313,31 @@
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
+
+          <!-- Preset templates -->
+          <div>
+            <p class="section-label mb-2 block">Suggestions</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="preset in DOCUMENT_PRESETS"
+                :key="preset.label"
+                type="button"
+                class="px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all"
+                :class="newDoc.label === preset.label ? 'bg-primary text-white' : 'bg-neutral-bg text-cocoa/60 hover:bg-primary/10 hover:text-primary border border-outline-variant/40'"
+                @click="newDoc.label = preset.label; newDoc.slug = preset.slug; newDoc.type = preset.type; newDoc.isRequired = preset.isRequired"
+              >
+                {{ preset.label }}
+              </button>
+            </div>
+          </div>
+
           <div class="space-y-4">
             <div class="space-y-1.5">
               <label class="section-label">Libellé</label>
               <input v-model="newDoc.label" class="input-shell" placeholder="ex: Extrait Kbis" />
+              <p v-if="docDuplicate" class="text-[10px] font-bold text-error uppercase tracking-wide mt-1">
+                ⚠ Ce document existe déjà ({{ docDuplicate }})
+              </p>
             </div>
             <div class="space-y-1.5">
               <label class="section-label">Slug (identifiant unique)</label>
@@ -359,14 +380,35 @@
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
+
+          <!-- Preset templates -->
+          <div>
+            <p class="section-label mb-2 block">Suggestions</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="preset in CATEGORY_PRESETS"
+                :key="preset.name"
+                type="button"
+                class="px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all"
+                :class="newCat.name === preset.name ? 'bg-primary text-white' : 'bg-neutral-bg text-cocoa/60 hover:bg-primary/10 hover:text-primary border border-outline-variant/40'"
+                @click="newCat.name = preset.name; newCat.slug = preset.slug"
+              >
+                {{ preset.label }}
+              </button>
+            </div>
+          </div>
+
           <div class="space-y-4">
             <div class="space-y-1.5">
               <label class="section-label">Nom de la catégorie</label>
-              <input v-model="newCat.name" class="input-shell" placeholder="ex: Barbier" />
+              <input v-model="newCat.name" class="input-shell" placeholder="ex: Barbier" @input="autoSlugCat" />
             </div>
             <div class="space-y-1.5">
               <label class="section-label">Slug (identifiant unique)</label>
               <input v-model="newCat.slug" class="input-shell" placeholder="ex: barbier" />
+              <p v-if="catDuplicate" class="text-[10px] font-bold text-error uppercase tracking-wide mt-1">
+                ⚠ Cette catégorie existe déjà ({{ catDuplicate }})
+              </p>
             </div>
           </div>
           <div class="flex items-center justify-end gap-3 pt-2">
@@ -805,6 +847,55 @@ const addCatMutation = useMutation({
   onError: () => toast.error("Erreur lors de l'ajout.")
 });
 
+// ── Presets ─────────────────────────────────────────────────────────────────
+
+const CATEGORY_PRESETS = [
+  { label: 'Coiffure', name: 'Coiffure', slug: 'coiffure' },
+  { label: 'Barbier', name: 'Barbier', slug: 'barbier' },
+  { label: 'Ongles', name: 'Ongles', slug: 'ongles' },
+  { label: 'Spa & Bien-être', name: 'Spa & Bien-être', slug: 'spa-bien-etre' },
+  { label: 'Esthétique', name: 'Esthétique', slug: 'esthetique' },
+  { label: 'Maquillage', name: 'Maquillage', slug: 'maquillage' },
+  { label: 'Soins visage', name: 'Soins visage', slug: 'soins-visage' },
+  { label: 'Épilation', name: 'Épilation', slug: 'epilation' },
+  { label: 'Massage', name: 'Massage', slug: 'massage' },
+  { label: 'Institut', name: 'Institut de beauté', slug: 'institut' },
+];
+
+const DOCUMENT_PRESETS = [
+  { label: 'Carte d\'identité', slug: 'carte-identite', type: 'image', isRequired: true },
+  { label: 'Extrait Kbis', slug: 'extrait-kbis', type: 'pdf', isRequired: true },
+  { label: 'Registre de commerce', slug: 'registre-commerce', type: 'pdf', isRequired: true },
+  { label: 'Licence d\'exploitation', slug: 'licence-exploitation', type: 'pdf', isRequired: true },
+  { label: 'Photo de façade', slug: 'photo-facade', type: 'image', isRequired: false },
+  { label: 'Attestation CNSS', slug: 'attestation-cnss', type: 'pdf', isRequired: true },
+  { label: 'Assurance responsabilité', slug: 'assurance-responsabilite', type: 'pdf', isRequired: false },
+  { label: 'Diplôme / Certificat', slug: 'diplome', type: 'image', isRequired: false },
+  { label: 'RIB bancaire', slug: 'rib-bancaire', type: 'pdf', isRequired: false },
+];
+
+const catDuplicate = computed(() => {
+  if (!newCat.name.trim()) return null;
+  const match = (categoriesQuery.data.value ?? []).find(
+    (c) => c.name.trim().toLowerCase() === newCat.name.trim().toLowerCase() || c.slug === newCat.slug.trim()
+  );
+  return match ? match.name : null;
+});
+
+const docDuplicate = computed(() => {
+  if (!newDoc.label.trim()) return null;
+  const match = (documentsQuery.data.value ?? []).find(
+    (d) => d.label.trim().toLowerCase() === newDoc.label.trim().toLowerCase() || d.slug === newDoc.slug.trim()
+  );
+  return match ? match.label : null;
+});
+
+function autoSlugCat() {
+  if (!newCat.slug || newCat.slug === CATEGORY_PRESETS.find(p => p.label === newCat.name)?.slug || !newCat.slug.trim()) {
+    newCat.slug = newCat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+}
+
 // ── Modal state ────────────────────────────────────────────────────────────
 
 const showAddDocModal = ref(false);
@@ -815,15 +906,13 @@ const newCat = reactive({ name: '', slug: '' });
 
 function submitNewDoc() {
   if (!newDoc.label || !newDoc.slug) { toast.error('Libellé et slug sont requis.'); return; }
+  if (docDuplicate.value) { toast.error(`Le document "${docDuplicate.value}" existe déjà.`); return; }
   addDocMutation.mutate({ ...newDoc });
 }
 
 function submitNewCat() {
   if (!newCat.name || !newCat.slug) { toast.error('Nom et slug sont requis.'); return; }
-  const exists = (categoriesQuery.data.value ?? []).some(
-    (c) => c.name.trim().toLowerCase() === newCat.name.trim().toLowerCase() || c.slug === newCat.slug.trim()
-  );
-  if (exists) { toast.error('Cette catégorie existe déjà.'); return; }
+  if (catDuplicate.value) { toast.error(`La catégorie "${catDuplicate.value}" existe déjà.`); return; }
   addCatMutation.mutate({ ...newCat });
 }
 </script>

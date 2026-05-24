@@ -99,9 +99,33 @@
             </div>
 
             <div class="shrink-0">
-              <RouterLink :to="`/admin/salons/${salon.id}`" class="btn-secondary px-6 py-2 rounded-full text-[12px]">
-                Dossier
-              </RouterLink>
+              <div class="relative" @click.stop>
+                <button @click="toggleDropdown(salon.id)" class="btn-secondary px-4 py-2 rounded-full text-[12px] inline-flex items-center gap-1">
+                  Dossier
+                  <ChevronDownIcon class="w-3.5 h-3.5" :class="openDropdown === salon.id ? 'rotate-180' : ''" />
+                </button>
+                <div
+                  v-if="openDropdown === salon.id"
+                  class="absolute right-0 top-full mt-1 z-50 w-56 bg-white rounded-xl shadow-xl border border-outline-variant/60 py-1.5"
+                >
+                  <RouterLink :to="`/admin/salons/${salon.id}`" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors">
+                    <ArrowRightIcon class="w-4 h-4 text-cocoa/40" />
+                    Voir le dossier
+                  </RouterLink>
+                  <button @click="quickAction(salon.id, 'approve')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                    <CheckCircleIcon class="w-4 h-4 text-primary" />
+                    Approuver
+                  </button>
+                  <button @click="quickAction(salon.id, 'approve_premium')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                    <StarIcon class="w-4 h-4 text-secondary" />
+                    Approuver Premium
+                  </button>
+                  <button @click="quickAction(salon.id, 'reject')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-error font-medium hover:bg-error/5 transition-colors text-left border-t border-outline-variant/30 mt-1 pt-2">
+                    <XCircleIcon class="w-4 h-4" />
+                    Rejeter
+                  </button>
+                </div>
+              </div>
             </div>
           </article>
         </div>
@@ -112,22 +136,73 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
-import { FunnelIcon, MagnifyingGlassIcon, MapPinIcon, PlusIcon } from "@heroicons/vue/24/outline";
+import {
+  ArrowRightIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PlusIcon,
+  StarIcon,
+  XCircleIcon
+} from "@heroicons/vue/24/outline";
 
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { ApiError, fetchSalons } from "@/lib/api";
+import { ApiError, approveSalonRequest, fetchSalons, rejectSalonRequest } from "@/lib/api";
+import { toast } from "vue-sonner";
 import { useAdminAuthStore } from "@/stores/adminAuth";
 
 const auth = useAdminAuthStore();
+const queryClient = useQueryClient();
 const search = ref("");
 const status = ref("pending_review");
 const city = ref("");
+const openDropdown = ref<string | null>(null);
 const debouncedSearch = refDebounced(search, 250);
 const debouncedCity = refDebounced(city, 250);
+
+const approveMutation = useMutation({
+  mutationFn: ({ id, tier }: { id: string; tier: string }) =>
+    tier === "premium"
+      ? approveSalonRequest(auth.accessToken ?? "", id)
+      : approveSalonRequest(auth.accessToken ?? "", id),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-salons"] });
+    toast.success("Salon approuvé.");
+  },
+  onError: (e) => toast.error(e instanceof ApiError ? e.message : "Erreur.")
+});
+
+const rejectMutation = useMutation({
+  mutationFn: (id: string) =>
+    rejectSalonRequest(auth.accessToken ?? "", id, { reason: "Rejet depuis l'interface" }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-salons"] });
+    toast.success("Salon rejeté.");
+  },
+  onError: (e) => toast.error(e instanceof ApiError ? e.message : "Erreur.")
+});
+
+function toggleDropdown(id: string) {
+  openDropdown.value = openDropdown.value === id ? null : id;
+}
+
+function quickAction(id: string, action: string) {
+  openDropdown.value = null;
+  if (action === "approve" || action === "approve_premium") {
+    approveMutation.mutate({ id, tier: action === "approve_premium" ? "premium" : "standard" });
+  } else if (action === "reject") {
+    if (!confirm("Confirmer le rejet de ce salon ?")) return;
+    rejectMutation.mutate(id);
+  }
+}
+
+document.addEventListener("click", () => { openDropdown.value = null; });
 
 const salonsQuery = useQuery({
   queryKey: computed(() => ["admin-salons", debouncedSearch.value, status.value, debouncedCity.value]),
