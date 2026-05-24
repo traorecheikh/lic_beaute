@@ -1015,8 +1015,9 @@ const sandboxResult = ref<any>(null);
 async function runSandboxTest() {
   sandboxRunning.value = true;
   sandboxResult.value = null;
+  const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
   try {
-    const response = await fetch('/api/v1/admin/paydunya/sandbox-test', {
+    const response = await fetch(`${apiBase}/api/v1/admin/paydunya/sandbox-test`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1031,7 +1032,12 @@ async function runSandboxTest() {
         description: sandboxForm.description
       })
     });
-    sandboxResult.value = await response.json();
+    const raw = await response.text();
+    try {
+      sandboxResult.value = JSON.parse(raw);
+    } catch {
+      sandboxResult.value = { success: false, payment: { message: raw || 'Réponse vide' }, raw };
+    }
   } catch (e) {
     sandboxResult.value = { success: false, payment: { message: String(e) } };
   } finally {
