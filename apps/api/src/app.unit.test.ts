@@ -9,6 +9,7 @@ function makeAppStub() {
     log: { warn: vi.fn(), error: vi.fn() },
     setValidatorCompiler: vi.fn(),
     setSerializerCompiler: vi.fn(),
+    setErrorHandler: vi.fn(),
     register: vi.fn(async () => app),
     addHook: vi.fn((name: string, fn: (...args: any[]) => any) => {
       hooks[name] ??= [];

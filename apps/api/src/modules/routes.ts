@@ -106,16 +106,6 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/payments/deposits/execute", (req, rep) => payments.executePayment(req, rep));
   app.get("/api/v1/payments/:paymentId", (req, rep) => payments.status(req, rep));
   app.post("/api/v1/payments/:paymentId/reconcile", (req, rep) => payments.reconcile(req, rep));
-  app.post("/api/v1/payments/webhooks/intech", {
-    // Capture raw body before JSON parsing so HMAC is verified against original bytes
-    preParsing: async (request, _reply, payload) => {
-      const chunks: Buffer[] = [];
-      for await (const chunk of payload) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string));
-      const raw = Buffer.concat(chunks);
-      (request as typeof request & { rawBody: string }).rawBody = raw.toString("utf-8");
-      return Readable.from(raw) as typeof payload;
-    }
-  }, (req, rep) => payments.webhookIntech(req, rep));
   app.post("/api/v1/payments/webhooks/paydunya", {
     preParsing: async (request, _reply, payload) => {
       const chunks: Buffer[] = [];
@@ -165,6 +155,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/pro/subscription", (req, rep) => pro.getSubscription(req, rep));
   app.patch("/api/v1/pro/subscription", (req, rep) => pro.updateSubscription(req, rep));
   app.post("/api/v1/pro/subscription/checkout", (req, rep) => pro.subscriptionCheckout(req, rep));
+  app.post("/api/v1/pro/subscription/charge/:chargeId/execute", (req, rep) => pro.executeSubscriptionPayment(req, rep));
   app.get("/api/v1/pro/subscription/charge/:chargeId/status", (req, rep) => pro.getChargeStatus(req, rep));
   app.get("/api/v1/pro/payouts", (req, rep) => pro.listPayouts(req, rep));
   app.get("/api/v1/pro/invoices", (req, rep) => pro.listInvoices(req, rep));

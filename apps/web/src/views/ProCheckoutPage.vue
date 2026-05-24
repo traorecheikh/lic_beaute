@@ -232,7 +232,7 @@ const completeMutation = useMutation({
     const selected = paymentMethods.value.find((m) => m.id === selectedMethod.value);
     const isSoftpay = selectedMethod.value.startsWith("softpay-");
     return completeProCheckout(auth.accessToken ?? "", String(route.params.bookingId), {
-      paymentMethod: isSoftpay ? "intech" : (selectedMethod.value as "cash" | "intech" | "other"),
+      paymentMethod: isSoftpay ? "other" : (selectedMethod.value as "cash" | "other"),
       softpayMethod: isSoftpay ? selected?.softpayCode : undefined,
       discountXof: discount.value,
       lineItems: items.value

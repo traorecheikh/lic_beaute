@@ -16,7 +16,8 @@ import {
   proStaffCreateInputSchema,
   proStaffUpdateInputSchema,
   proSubscriptionCheckoutInputSchema,
-  proSubscriptionUpdateInputSchema
+  proSubscriptionUpdateInputSchema,
+  proSubscriptionExecuteInputSchema
 } from "@beauteavenue/contracts";
 
 import { getPaymentAdapter } from "../../adapters/index.js";
@@ -150,7 +151,6 @@ type FeatureFlags = {
   analyticsTierRequired: "standard" | "premium";
   autoRenewEnabled: boolean;
   billingPaydunya: boolean;
-  billingIntech: boolean;
   billingManual: boolean;
   cardPayments: boolean;
 };
@@ -167,8 +167,7 @@ async function getFeatureFlags(): Promise<FeatureFlags> {
     analyticsEnabled: parseBooleanSetting(map["feature_analytics_enabled"], true),
     analyticsTierRequired: map["feature_analytics_tier_required"] === "standard" ? "standard" : "premium",
     autoRenewEnabled: parseBooleanSetting(map["feature_auto_renew_enabled"], true),
-    billingPaydunya: parseBooleanSetting(map["feature_billing_paydunya"], false),
-    billingIntech: parseBooleanSetting(map["feature_billing_intech"], true),
+    billingPaydunya: parseBooleanSetting(map["feature_billing_paydunya"], true),
     billingManual: parseBooleanSetting(map["feature_billing_manual"], true),
     cardPayments: parseBooleanSetting(map["feature_card_payments"], false),
   };
@@ -1577,7 +1576,7 @@ export class ProController {
           }
         });
         if (balanceXof > 0) {
-          const effectiveMethod = body.paymentMethod === "intech" && body.softpayMethod
+          const effectiveMethod = body.paymentMethod === "other" && body.softpayMethod
             ? `softpay-${body.softpayMethod}`
             : body.paymentMethod;
           await tx.settlementEvent.create({
@@ -1699,7 +1698,6 @@ export class ProController {
         autoRenew: { enabled: flags.autoRenewEnabled },
         billingProviders: {
           paydunya: flags.billingPaydunya,
-          intech: flags.billingIntech,
           manual: flags.billingManual,
           card: flags.cardPayments
         },
@@ -1926,11 +1924,122 @@ export class ProController {
             data: { providerTxId: result.providerRef }
           })
         : await prisma.subscriptionCharge.create({
-            data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "intech", amountXof, idempotencyKey, chargeType: body.action, providerTxId: result.providerRef }
+            data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "paydunya", amountXof, idempotencyKey, chargeType: body.action, providerTxId: result.providerRef }
           });
 
       ok(reply, { redirectUrl: result.redirectUrl, chargeId: charge.id });
     } catch (e) { handleError(e, reply); }
+  }
+
+  async executeSubscriptionPayment(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!ownerOnly(role, reply)) return;
+      const params = request.params as { chargeId: string };
+      const body = proSubscriptionExecuteInputSchema.parse(request.body);
+
+      const charge = await prisma.subscriptionCharge.findUnique({
+        where: { id: params.chargeId },
+        include: { subscription: true }
+      });
+
+      if (!charge) {
+        fail(reply, 404, "charge_not_found", "Frais d'abonnement introuvable.");
+        return;
+      }
+
+      if (charge.subscription.salonId !== salonId) {
+        fail(reply, 403, "forbidden", "Accès interdit.");
+        return;
+      }
+
+      if (charge.status !== "pending") {
+        fail(reply, 422, "invalid_status", "Ce paiement ne peut pas être exécuté.");
+        return;
+      }
+
+      if (!charge.providerTxId) {
+        fail(reply, 422, "missing_invoice_token", "Token de facture PayDunya manquant.");
+        return;
+      }
+
+      if (!paymentAdapter.executePayment) {
+        fail(reply, 501, "not_supported", "Ce fournisseur ne supporte pas l'exécution séparée.");
+        return;
+      }
+
+      const result = await paymentAdapter.executePayment({
+        paymentId: charge.id,
+        method: body.method,
+        invoiceToken: charge.providerTxId,
+        details: body.details
+      });
+
+      if (result.success) {
+        await prisma.$transaction(async (tx) => {
+          await tx.subscriptionCharge.update({
+            where: { id: charge.id },
+            data: { status: "succeeded", ...(result.providerTxId ? { providerTxId: result.providerTxId } : {}) }
+          });
+
+          const invoice = await tx.billingInvoice.create({
+            data: {
+              subscriptionId: charge.subscriptionId,
+              invoiceNumber: `INV-SUB-${charge.id.slice(0, 8).toUpperCase()}`,
+              amountXof: charge.amountXof,
+              status: "paid"
+            }
+          });
+
+          await tx.subscriptionCharge.update({
+            where: { id: charge.id },
+            data: { invoiceId: invoice.id }
+          });
+
+          const sub = await tx.subscription.findUnique({
+            where: { id: charge.subscriptionId },
+            select: { salonId: true, expiresAt: true }
+          });
+
+          const baseDate = sub?.expiresAt && sub.expiresAt > new Date() ? sub.expiresAt : new Date();
+          const isUpgrade = charge.chargeType === "upgrade";
+
+          await tx.subscription.update({
+            where: { id: charge.subscriptionId },
+            data: {
+              ...(isUpgrade ? { tier: "premium" } : {}),
+              status: "active",
+              expiresAt: charge.chargeType === "renewal"
+                ? new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+                : undefined
+            }
+          });
+
+          if (isUpgrade && sub?.salonId) {
+            await tx.salon.update({
+              where: { id: sub.salonId },
+              data: { subscriptionTier: "premium" }
+            });
+          }
+
+          await tx.auditLog.create({
+            data: {
+              action: "subscription_charge_execute",
+              summary: `SubscriptionCharge ${charge.id} → succeeded`,
+              entityType: "SubscriptionCharge",
+              entityId: charge.id,
+              actorName: "pro_user",
+              severity: "info",
+              payloadJson: JSON.stringify(result)
+            }
+          });
+        });
+      }
+
+      ok(reply, result);
+    } catch (e) {
+      handleError(e, reply);
+    }
   }
 
   // ─── Payouts ───────────────────────────────────────────────────────────────

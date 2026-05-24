@@ -128,7 +128,9 @@ export type BookingSummaryDepositPaymentStatusEnum = typeof BookingSummaryDeposi
  * @export
  */
 export const BookingSummaryPaymentProviderEnum = {
-    Intech: 'intech'
+    Intech: 'intech',
+    Paydunya: 'paydunya',
+    Manual: 'manual'
 } as const;
 export type BookingSummaryPaymentProviderEnum = typeof BookingSummaryPaymentProviderEnum[keyof typeof BookingSummaryPaymentProviderEnum];
 

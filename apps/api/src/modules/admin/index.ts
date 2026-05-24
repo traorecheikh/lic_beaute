@@ -294,18 +294,13 @@ export class AdminController {
     const body = z.object({
       amountXof: z.number().int().positive().default(5000),
       description: z.string().default("Test Beauté Avenue"),
-      customerName: z.string().default("John Doe"),
-      customerEmail: z.string().email().default("marnel.gnacadja@paydunya.com"),
-      customerPhone: z.string().default("97403627"),
-      customerPassword: z.string().default("Miliey@2121"),
-      method: z.enum(["sandbox_direct", "wave_senegal", "orange_senegal", "free_senegal", "wizall_senegal"]).default("sandbox_direct")
     }).parse(request.body);
 
     try {
       // Step 1: Create checkout invoice (sandbox credentials)
-      const MASTER_KEY = config.paydunyaMasterKey || "wQzk9ZwR-Qq9m-0hD0-zpud-je5coGC3FHKW";
-      const PRIVATE_KEY = config.paydunyaPrivateKey || "test_private_rMIdJM3PLLhLjyArx9tF3VURAF5";
-      const PAYDUNYA_TOKEN = config.paydunyaToken || "IivOiOxGJuWhc5znlIiK";
+      const MASTER_KEY = config.paydunyaMasterKey || "Z7yxbFqR-rDw3-m5Gy-BxXb-SzwvTTdpGPyG";
+      const PRIVATE_KEY = config.paydunyaPrivateKey || "test_private_PSiGEf1TPDIsn9xtNwSF7UQIKwK";
+      const PAYDUNYA_TOKEN = config.paydunyaToken || "loj2kfoqtCLHOxeOImBU";
 
       const invoiceRes = await fetch("https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create", {
         method: "POST",
@@ -336,63 +331,14 @@ export class AdminController {
         return;
       }
 
+      const checkoutUrl = String(invoiceJson.response_text ?? "");
       const invoiceToken = String(invoiceJson.token ?? "");
-
-      // Step 2: Execute payment (use sandbox softpay checkout direct account)
-      let paymentRaw: string;
-      let paymentResult: Record<string, unknown>;
-
-      if (body.method === "sandbox_direct") {
-        const payRes = await fetch("https://app.paydunya.com/sandbox-api/v1/softpay/checkout/make-payment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "PAYDUNYA-MASTER-KEY": MASTER_KEY,
-            "PAYDUNYA-PRIVATE-KEY": PRIVATE_KEY,
-            "PAYDUNYA-TOKEN": PAYDUNYA_TOKEN
-          },
-          body: JSON.stringify({
-            phone_phone: body.customerPhone,
-            customer_email: body.customerEmail,
-            password: body.customerPassword,
-            invoice_token: invoiceToken
-          })
-        });
-        paymentRaw = await payRes.text();
-        try { paymentResult = JSON.parse(paymentRaw); } catch { paymentResult = { raw: paymentRaw, status: payRes.status, statusText: payRes.statusText }; }
-      } else {
-        const entry = ({ wave_senegal: "wave-senegal", orange_senegal: "new-orange-money-senegal", free_senegal: "free-money-senegal", wizall_senegal: "wizall-money-senegal" } as Record<string, string>)[body.method]!;
-        const methodPayload: Record<string, string> = {
-          invoice_token: invoiceToken,
-          customer_name: body.customerName,
-          customer_email: body.customerEmail,
-          phone_number: body.customerPhone
-        };
-        if (body.method === "wave_senegal") {
-          methodPayload.wave_senegal_payment_token = invoiceToken;
-          methodPayload.wave_senegal_fullName = body.customerName;
-          methodPayload.wave_senegal_email = body.customerEmail;
-          methodPayload.wave_senegal_phone = body.customerPhone;
-        }
-        const payRes = await fetch(`https://app.paydunya.com/sandbox-api/v1/softpay/${entry}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "PAYDUNYA-MASTER-KEY": MASTER_KEY,
-            "PAYDUNYA-PRIVATE-KEY": PRIVATE_KEY,
-            "PAYDUNYA-TOKEN": PAYDUNYA_TOKEN
-          },
-          body: JSON.stringify(methodPayload)
-        });
-        paymentRaw = await payRes.text();
-        try { paymentResult = JSON.parse(paymentRaw); } catch { paymentResult = { raw: paymentRaw, status: payRes.status, statusText: payRes.statusText }; }
-      }
 
       ok(reply, {
         invoice: invoiceJson,
-        payment: paymentResult,
-        checkoutUrl: `https://app.paydunya.com/sandbox-checkout/invoice/${invoiceToken}`,
-        success: paymentResult.success === true
+        payment: null,
+        checkoutUrl,
+        success: true
       });
     } catch (e) {
       handleError(e, reply);

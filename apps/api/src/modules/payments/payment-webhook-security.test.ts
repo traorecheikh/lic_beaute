@@ -46,7 +46,7 @@ describe("Payment webhook security", () => {
   it("rejects webhook when signature verification fails", async () => {
     mocks.adapter.verifyWebhookSignature.mockReturnValue(false);
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.adapter.parseWebhook).not.toHaveBeenCalled();
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 401, "invalid_signature", "Signature invalide.");
@@ -69,7 +69,7 @@ describe("Payment webhook security", () => {
       booking: { clientId: "c1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.fail).toHaveBeenCalledWith(
       expect.anything(),
@@ -97,7 +97,7 @@ describe("Payment webhook security", () => {
     });
     mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue(null);
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
@@ -121,7 +121,7 @@ describe("Payment webhook security", () => {
       subscription: { id: "sub_1" }
     });
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
@@ -143,7 +143,7 @@ describe("Payment webhook security", () => {
       booking: { clientId: "c1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
@@ -159,7 +159,7 @@ describe("Payment webhook security", () => {
     mocks.prisma.payment.findUnique.mockResolvedValue(null);
     mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue(null);
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
@@ -183,7 +183,7 @@ describe("Payment webhook security", () => {
       subscription: { id: "sub_1" }
     });
 
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
 
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
@@ -204,7 +204,7 @@ describe("Payment webhook security", () => {
       providerTxId: null,
       booking: { clientId: "c1", salonId: "s1" }
     });
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
 
@@ -226,7 +226,7 @@ describe("Payment webhook security", () => {
       providerTxId: null,
       subscription: { id: "sub_2" }
     });
-    await controller.webhookIntech({ body: { test: true }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { test: true }, headers: {} } as never, {} as never);
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
   });
 });

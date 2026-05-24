@@ -274,7 +274,7 @@ describe("BookingController", () => {
       source: "marketplace",
       depositAmountXof: 1000,
       depositPaymentStatus: "pending",
-      paymentProvider: "intech",
+      paymentProvider: "paydunya",
       payments: [{ id: "p1" }, { id: "p2" }]
     });
     await c.detail({ params: { bookingId: "b1" } } as never, {} as never);
@@ -319,7 +319,7 @@ describe("BookingController", () => {
     }));
     await c.cancel({ params: { bookingId: "b2" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "cancellation_window_closed", expect.any(String));
-    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", expect.any(String));
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 409, "status_conflict", expect.any(String));
   });
 
   it("cancel supports missing/invalid cancellation window settings and no linked payment", async () => {
@@ -491,7 +491,7 @@ describe("BookingController", () => {
     mocks.prisma.booking.findUnique.mockResolvedValueOnce({
       id: "bf", salonId: "s1", salon: { name: "Salon A" }, serviceId: "svcFixed", service: { name: "S" },
       startsAt, endsAt: new Date(startsAt.getTime() + 1800000), status: "pending", source: "marketplace",
-      depositAmountXof: 3000, depositPaymentStatus: "pending", paymentProvider: "intech", payments: [{ id: "pf" }]
+      depositAmountXof: 3000, depositPaymentStatus: "pending", paymentProvider: "paydunya", payments: [{ id: "pf" }]
     });
     await c.create({ body: { salonId: "s1", serviceId: "svcFixed", startsAt: startsAt.toISOString(), provider: "manual" } } as never, {} as never);
 
@@ -513,7 +513,7 @@ describe("BookingController", () => {
     mocks.prisma.booking.findUnique.mockResolvedValueOnce({
       id: "bp", salonId: "s1", salon: { name: "Salon A" }, serviceId: "svcPct", service: { name: "S2" },
       startsAt, endsAt: new Date(startsAt.getTime() + 1800000), status: "pending", source: "marketplace",
-      depositAmountXof: 3000, depositPaymentStatus: "pending", paymentProvider: "intech", payments: [{ id: "pp" }]
+      depositAmountXof: 3000, depositPaymentStatus: "pending", paymentProvider: "paydunya", payments: [{ id: "pp" }]
     });
     await c.create({ body: { salonId: "s1", serviceId: "svcPct", startsAt: startsAt.toISOString() } } as never, {} as never);
 

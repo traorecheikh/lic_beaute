@@ -56,7 +56,6 @@ enum SubscriptionStatus {
 }
 
 enum PaymentProvider {
-  intech
   paydunya
   manual
 }
@@ -292,7 +291,7 @@ model Booking {
 model Payment {
   id               String            @id @default(cuid())
   bookingId        String
-  provider         PaymentProvider   @default(intech)
+  provider         PaymentProvider   @default(paydunya)
   status           PaymentStatus     @default(pending)
   amountXof        Int
   providerTxId     String?

@@ -74,7 +74,9 @@ export interface ApiV1MePaymentMethodsGet200ResponseItemsInner {
  * @export
  */
 export const ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum = {
-    Intech: 'intech'
+    Intech: 'intech',
+    Paydunya: 'paydunya',
+    Manual: 'manual'
 } as const;
 export type ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum = typeof ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum[keyof typeof ApiV1MePaymentMethodsGet200ResponseItemsInnerProviderEnum];
 

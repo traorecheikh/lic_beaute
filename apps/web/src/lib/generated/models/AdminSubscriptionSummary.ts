@@ -102,6 +102,7 @@ export type AdminSubscriptionSummaryStatusEnum = typeof AdminSubscriptionSummary
  * @export
  */
 export const AdminSubscriptionSummaryBillingProviderEnum = {
+    Paydunya: 'paydunya',
     Intech: 'intech',
     Manual: 'manual'
 } as const;

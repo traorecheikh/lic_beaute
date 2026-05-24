@@ -101,7 +101,7 @@ describe("ClientAccountController concurrency/error mapping", () => {
 
     await controller.createPaymentMethod({
       headers: { "x-idempotency-key": "idem-key" },
-      body: { provider: "intech", phoneNumber: "770000000", label: null }
+      body: { provider: "paydunya", phoneNumber: "770000000", label: null }
     } as never, {} as never);
 
     expect(mocks.fail).toHaveBeenCalledWith(

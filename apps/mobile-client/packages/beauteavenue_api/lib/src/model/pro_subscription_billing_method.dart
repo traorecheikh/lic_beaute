@@ -14,6 +14,8 @@ part 'pro_subscription_billing_method.g.dart';
 /// Properties:
 /// * [provider] 
 /// * [accountNumberMasked] 
+/// * [country] 
+/// * [method] 
 @BuiltValue()
 abstract class ProSubscriptionBillingMethod implements Built<ProSubscriptionBillingMethod, ProSubscriptionBillingMethodBuilder> {
   @BuiltValueField(wireName: r'provider')
@@ -22,6 +24,12 @@ abstract class ProSubscriptionBillingMethod implements Built<ProSubscriptionBill
 
   @BuiltValueField(wireName: r'accountNumberMasked')
   String get accountNumberMasked;
+
+  @BuiltValueField(wireName: r'country')
+  String? get country;
+
+  @BuiltValueField(wireName: r'method')
+  String? get method;
 
   ProSubscriptionBillingMethod._();
 
@@ -56,6 +64,20 @@ class _$ProSubscriptionBillingMethodSerializer implements PrimitiveSerializer<Pr
       object.accountNumberMasked,
       specifiedType: const FullType(String),
     );
+    if (object.country != null) {
+      yield r'country';
+      yield serializers.serialize(
+        object.country,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.method != null) {
+      yield r'method';
+      yield serializers.serialize(
+        object.method,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
   }
 
   @override
@@ -92,6 +114,22 @@ class _$ProSubscriptionBillingMethodSerializer implements PrimitiveSerializer<Pr
             specifiedType: const FullType(String),
           ) as String;
           result.accountNumberMasked = valueDes;
+          break;
+        case r'country':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.country = valueDes;
+          break;
+        case r'method':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.method = valueDes;
           break;
         default:
           unhandled.add(key);

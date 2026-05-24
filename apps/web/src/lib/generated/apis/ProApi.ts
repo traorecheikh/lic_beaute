@@ -194,6 +194,16 @@ import {
     ProSubscriptionCheckoutResultToJSON,
 } from '../models/ProSubscriptionCheckoutResult';
 import {
+    type ProSubscriptionExecuteInput,
+    ProSubscriptionExecuteInputFromJSON,
+    ProSubscriptionExecuteInputToJSON,
+} from '../models/ProSubscriptionExecuteInput';
+import {
+    type ProSubscriptionExecuteResponse,
+    ProSubscriptionExecuteResponseFromJSON,
+    ProSubscriptionExecuteResponseToJSON,
+} from '../models/ProSubscriptionExecuteResponse';
+import {
     type ProSubscriptionUpdateInput,
     ProSubscriptionUpdateInputFromJSON,
     ProSubscriptionUpdateInputToJSON,
@@ -314,6 +324,11 @@ export interface ApiV1ProStaffEmployeeIdPatchRequest {
 
 export interface ApiV1ProStaffPostRequest {
     proStaffCreateInput: ProStaffCreateInput;
+}
+
+export interface ApiV1ProSubscriptionChargeChargeIdExecutePostRequest {
+    chargeId: string;
+    proSubscriptionExecuteInput: ProSubscriptionExecuteInput;
 }
 
 export interface ApiV1ProSubscriptionCheckoutPostRequest {
@@ -2114,6 +2129,69 @@ export class ProApi extends runtime.BaseAPI {
      */
     async apiV1ProStaffPost(requestParameters: ApiV1ProStaffPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProStaffMember> {
         const response = await this.apiV1ProStaffPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1ProSubscriptionChargeChargeIdExecutePost without sending the request
+     */
+    async apiV1ProSubscriptionChargeChargeIdExecutePostRequestOpts(requestParameters: ApiV1ProSubscriptionChargeChargeIdExecutePostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['chargeId'] == null) {
+            throw new runtime.RequiredError(
+                'chargeId',
+                'Required parameter "chargeId" was null or undefined when calling apiV1ProSubscriptionChargeChargeIdExecutePost().'
+            );
+        }
+
+        if (requestParameters['proSubscriptionExecuteInput'] == null) {
+            throw new runtime.RequiredError(
+                'proSubscriptionExecuteInput',
+                'Required parameter "proSubscriptionExecuteInput" was null or undefined when calling apiV1ProSubscriptionChargeChargeIdExecutePost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/pro/subscription/charge/{chargeId}/execute`;
+        urlPath = urlPath.replace('{chargeId}', encodeURIComponent(String(requestParameters['chargeId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ProSubscriptionExecuteInputToJSON(requestParameters['proSubscriptionExecuteInput']),
+        };
+    }
+
+    /**
+     * Execute subscription payment (two-step flow)
+     */
+    async apiV1ProSubscriptionChargeChargeIdExecutePostRaw(requestParameters: ApiV1ProSubscriptionChargeChargeIdExecutePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProSubscriptionExecuteResponse>> {
+        const requestOptions = await this.apiV1ProSubscriptionChargeChargeIdExecutePostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProSubscriptionExecuteResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Execute subscription payment (two-step flow)
+     */
+    async apiV1ProSubscriptionChargeChargeIdExecutePost(requestParameters: ApiV1ProSubscriptionChargeChargeIdExecutePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProSubscriptionExecuteResponse> {
+        const response = await this.apiV1ProSubscriptionChargeChargeIdExecutePostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

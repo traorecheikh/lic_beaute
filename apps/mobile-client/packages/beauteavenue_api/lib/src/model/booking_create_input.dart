@@ -38,7 +38,7 @@ abstract class BookingCreateInput implements Built<BookingCreateInput, BookingCr
 
   @BuiltValueField(wireName: r'provider')
   BookingCreateInputProviderEnum? get provider;
-  // enum providerEnum {  intech,  paydunya,  };
+  // enum providerEnum {  intech,  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'channel')
   BookingCreateInputChannelEnum? get channel;
@@ -217,6 +217,8 @@ class BookingCreateInputProviderEnum extends EnumClass {
   static const BookingCreateInputProviderEnum intech = _$bookingCreateInputProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const BookingCreateInputProviderEnum paydunya = _$bookingCreateInputProviderEnum_paydunya;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const BookingCreateInputProviderEnum manual = _$bookingCreateInputProviderEnum_manual;
 
   static Serializer<BookingCreateInputProviderEnum> get serializer => _$bookingCreateInputProviderEnumSerializer;
 

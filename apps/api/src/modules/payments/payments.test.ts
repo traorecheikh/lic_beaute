@@ -130,7 +130,7 @@ describe("PaymentController", () => {
       booking: { id: "book_1", clientId: "client_1" }
     });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.payment.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -169,7 +169,7 @@ describe("PaymentController", () => {
       booking: { id: "book_1", clientId: "client_1" }
     });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.tx.settlementEvent.create).not.toHaveBeenCalled();
@@ -184,7 +184,7 @@ describe("PaymentController", () => {
         bookingId: "book_1",
         amountXof: 12000,
         status: "pending",
-        provider: "intech",
+        provider: "paydunya",
         providerTxId: "REF_123",
         webhookSignature: "tok_123",
         createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -195,7 +195,7 @@ describe("PaymentController", () => {
         bookingId: "book_1",
         amountXof: 12000,
         status: "succeeded",
-        provider: "intech",
+        provider: "paydunya",
         providerTxId: "REF_123",
         createdAt: new Date("2026-05-05T10:00:00.000Z")
       });
@@ -223,7 +223,7 @@ describe("PaymentController", () => {
       bookingId: "book_1",
       amountXof: 12000,
       status: "pending",
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "REF_123",
       webhookSignature: "tok_123",
       createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -249,7 +249,7 @@ describe("PaymentController", () => {
       bookingId: "book_1",
       amountXof: 12000,
       status: "pending",
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "REF_123",
       webhookSignature: "tok_123",
       createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -270,7 +270,7 @@ describe("PaymentController", () => {
       bookingId: "book_1",
       amountXof: 12000,
       status: "succeeded",
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "REF_123",
       webhookSignature: "tok_123",
       createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -291,7 +291,7 @@ describe("PaymentController", () => {
       bookingId: "book_1",
       amountXof: 12000,
       status: "succeeded",
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "REF_123",
       webhookSignature: "tok_123",
       createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -316,7 +316,7 @@ describe("PaymentController", () => {
   it("rejects webhook when signature verification fails", async () => {
     mocks.adapter.verifyWebhookSignature.mockReturnValue(false);
 
-    await controller.webhookIntech({ body: { any: "payload" }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" }, headers: {} } as never, {} as never);
 
     expect(mocks.adapter.parseWebhook).not.toHaveBeenCalled();
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 401, "invalid_signature", "Signature invalide.");
@@ -327,7 +327,7 @@ describe("PaymentController", () => {
     mocks.adapter.parseWebhook.mockImplementation(() => {
       throw new Error("bad payload");
     });
-    await controller.webhookIntech({ body: { any: "payload" }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" }, headers: {} } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 400, "invalid_payload", expect.any(String));
   });
 
@@ -355,7 +355,7 @@ describe("PaymentController", () => {
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
     mocks.tx.subscription.findUnique.mockResolvedValue({ salonId: "salon_1", expiresAt: null });
 
-    await controller.webhookIntech({ body: { any: "payload" }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" }, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
     expect(mocks.tx.subscriptionCharge.update).toHaveBeenCalledWith(
@@ -402,7 +402,7 @@ describe("PaymentController", () => {
     });
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
     expect(mocks.tx.subscriptionCharge.update).toHaveBeenCalledWith(
@@ -434,7 +434,7 @@ describe("PaymentController", () => {
       billingInvoiceId: null,
       subscription: { salonId: "salon_2", tier: "standard" }
     });
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "amount_mismatch", expect.any(String));
   });
 
@@ -450,7 +450,7 @@ describe("PaymentController", () => {
     mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue(null);
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
 
-    await controller.webhookIntech({ body: { any: "payload" }, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" }, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
@@ -477,7 +477,7 @@ describe("PaymentController", () => {
       subscription: { salonId: "salon_3", tier: "premium" }
     });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
@@ -491,7 +491,7 @@ describe("PaymentController", () => {
       bookingId: "book_1",
       amountXof: 12000,
       status: "succeeded",
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "REF_123",
       webhookSignature: "tok_123",
       createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -521,7 +521,7 @@ describe("PaymentController", () => {
     });
 
     await controller.initiate({
-      body: { bookingId: "book_1", provider: "intech", channel: "wave" }
+      body: { bookingId: "book_1", provider: "paydunya", channel: "wave" }
     } as never, {} as never);
 
     expect(mocks.prisma.payment.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -545,7 +545,7 @@ describe("PaymentController", () => {
       booking: { id: "book_1", clientId: "client_1" }
     });
 
-    await controller.webhookIntech({
+    await controller.webhookPayDunya({
       body: { ok: true },
       headers: { "hmac-signature": ["sig1", "sig2"], timestamp: ["123"] }
     } as never, {} as never);
@@ -565,7 +565,7 @@ describe("PaymentController", () => {
       bookingId: "book_1",
       amountXof: 12000,
       status: "pending",
-      provider: "intech",
+      provider: "paydunya",
       providerTxId: "REF_123",
       webhookSignature: "tok_123",
       createdAt: new Date("2026-05-05T10:00:00.000Z"),
@@ -604,7 +604,7 @@ describe("PaymentController", () => {
       subscription: { salonId: "salon_1", tier: "standard" }
     });
 
-    await controller.webhookIntech({
+    await controller.webhookPayDunya({
       body: { ok: true },
       headers: { "hmac-signature": "sig1", timestamp: "123" }
     } as never, {} as never);
@@ -629,7 +629,7 @@ describe("PaymentController", () => {
     });
     mocks.tx.booking.findUnique.mockResolvedValue({ status: "confirmed", source: "manual" });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.tx.booking.update).toHaveBeenCalledWith(expect.objectContaining({
       data: { depositPaymentStatus: "succeeded" }
@@ -653,7 +653,7 @@ describe("PaymentController", () => {
     mocks.tx.booking.findUnique.mockResolvedValue({ status: "confirmed", source: "manual" });
     mocks.tx.settlementEvent.findFirst.mockResolvedValueOnce({ id: "existing-held" });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.tx.settlementEvent.create).not.toHaveBeenCalled();
   });
@@ -679,7 +679,7 @@ describe("PaymentController", () => {
     });
     mocks.tx.subscription.findUnique.mockResolvedValue({ salonId: "salon_1", expiresAt: futureExpiry });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.tx.subscription.update).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ expiresAt: expect.any(Date) })
@@ -706,7 +706,7 @@ describe("PaymentController", () => {
     });
     mocks.tx.subscription.findUnique.mockResolvedValue({ salonId: null, expiresAt: null });
 
-    await controller.webhookIntech({ body: { any: "payload" } } as never, {} as never);
+    await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.tx.salon.update).not.toHaveBeenCalled();
   });

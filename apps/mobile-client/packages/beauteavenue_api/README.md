@@ -176,6 +176,7 @@ Class | Method | HTTP request | Description
 [*ProApi*](doc/ProApi.md) | [**apiV1ProStaffEmployeeIdPatch**](doc/ProApi.md#apiv1prostaffemployeeidpatch) | **PATCH** /api/v1/pro/staff/{employeeId} | Update salon staff
 [*ProApi*](doc/ProApi.md) | [**apiV1ProStaffGet**](doc/ProApi.md#apiv1prostaffget) | **GET** /api/v1/pro/staff | List salon staff
 [*ProApi*](doc/ProApi.md) | [**apiV1ProStaffPost**](doc/ProApi.md#apiv1prostaffpost) | **POST** /api/v1/pro/staff | Create salon staff
+[*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionChargeChargeIdExecutePost**](doc/ProApi.md#apiv1prosubscriptionchargechargeidexecutepost) | **POST** /api/v1/pro/subscription/charge/{chargeId}/execute | Execute subscription payment (two-step flow)
 [*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionCheckoutPost**](doc/ProApi.md#apiv1prosubscriptioncheckoutpost) | **POST** /api/v1/pro/subscription/checkout | Initiate premium subscription checkout
 [*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionGet**](doc/ProApi.md#apiv1prosubscriptionget) | **GET** /api/v1/pro/subscription | Get subscription details
 [*ProApi*](doc/ProApi.md) | [**apiV1ProSubscriptionPatch**](doc/ProApi.md#apiv1prosubscriptionpatch) | **PATCH** /api/v1/pro/subscription | Update subscription settings
@@ -286,6 +287,11 @@ Class | Method | HTTP request | Description
  - [OtpAcceptedResponse](doc/OtpAcceptedResponse.md)
  - [OtpRequestInput](doc/OtpRequestInput.md)
  - [OtpVerifyInput](doc/OtpVerifyInput.md)
+ - [PaydunyaExecutePaymentInput](doc/PaydunyaExecutePaymentInput.md)
+ - [PaydunyaExecutePaymentResponse](doc/PaydunyaExecutePaymentResponse.md)
+ - [PaydunyaExecutePaymentResponseOtherUrl](doc/PaydunyaExecutePaymentResponseOtherUrl.md)
+ - [PaydunyaMethodListResponse](doc/PaydunyaMethodListResponse.md)
+ - [PaydunyaMethodListResponseMethodsInner](doc/PaydunyaMethodListResponseMethodsInner.md)
  - [PaymentInitiateInput](doc/PaymentInitiateInput.md)
  - [PaymentInitiateResponse](doc/PaymentInitiateResponse.md)
  - [PaymentReconcileResponse](doc/PaymentReconcileResponse.md)
@@ -331,6 +337,8 @@ Class | Method | HTTP request | Description
  - [ProSubscriptionBillingMethod](doc/ProSubscriptionBillingMethod.md)
  - [ProSubscriptionCheckoutInput](doc/ProSubscriptionCheckoutInput.md)
  - [ProSubscriptionCheckoutResult](doc/ProSubscriptionCheckoutResult.md)
+ - [ProSubscriptionExecuteInput](doc/ProSubscriptionExecuteInput.md)
+ - [ProSubscriptionExecuteResponse](doc/ProSubscriptionExecuteResponse.md)
  - [ProSubscriptionUpdateInput](doc/ProSubscriptionUpdateInput.md)
  - [ProSubscriptionUpdateInputBillingMethod](doc/ProSubscriptionUpdateInputBillingMethod.md)
  - [ProVoucherCreateInput](doc/ProVoucherCreateInput.md)

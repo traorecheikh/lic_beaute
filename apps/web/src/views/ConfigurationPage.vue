@@ -90,26 +90,6 @@
               <input v-model.number="sandboxForm.amountXof" type="number" min="100" class="input-shell" />
             </div>
             <div class="space-y-1.5">
-              <label class="section-label">Méthode</label>
-              <select v-model="sandboxForm.method" class="input-shell">
-                <option value="sandbox_direct">Compte test (direct)</option>
-                <option value="wave_senegal">Wave Sénégal</option>
-                <option value="orange_senegal">Orange Money Sénégal</option>
-              </select>
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Téléphone</label>
-              <input v-model="sandboxForm.phone" class="input-shell" placeholder="97403627" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Email</label>
-              <input v-model="sandboxForm.email" class="input-shell" placeholder="marnel.gnacadja@paydunya.com" />
-            </div>
-            <div class="space-y-1.5">
-              <label class="section-label">Mot de passe compte test</label>
-              <input v-model="sandboxForm.password" type="password" class="input-shell" placeholder="Miliey@2121" />
-            </div>
-            <div class="space-y-1.5">
               <label class="section-label">Description</label>
               <input v-model="sandboxForm.description" class="input-shell" placeholder="Test réservation" />
             </div>
@@ -126,28 +106,21 @@
           </button>
 
           <div v-if="sandboxResult" class="space-y-4 pt-2 border-t border-outline-variant/30">
-            <div :class="['flex items-center gap-3 px-4 py-3 rounded-xl', sandboxResult.success ? 'bg-primary/5 border border-primary/20' : 'bg-error/5 border border-error/20']">
-              <CheckCircleIcon v-if="sandboxResult.success" class="w-5 h-5 text-primary shrink-0" />
-              <XCircleIcon v-else class="w-5 h-5 text-error shrink-0" />
+            <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
+              <CheckCircleIcon class="w-5 h-5 text-primary shrink-0" />
               <div>
-                <p class="text-[13px] font-bold" :class="sandboxResult.success ? 'text-primary' : 'text-error'">
-                  {{ sandboxResult.success ? 'Paiement réussi' : 'Paiement échoué' }}
-                </p>
-                <p class="text-[11px] text-cocoa/60">{{ sandboxResult.payment?.message }}</p>
+                <p class="text-[13px] font-bold text-primary">Facture créée avec succès</p>
+                <p class="text-[11px] text-cocoa/60">Cliquez sur le lien ci-dessous pour effectuer le paiement sur PayDunya.</p>
               </div>
             </div>
+            <a :href="sandboxResult.checkoutUrl" target="_blank" rel="noopener" class="btn-primary w-full py-3 text-[13px] font-bold inline-flex items-center justify-center gap-2">
+              <ArrowTopRightOnSquareIcon class="w-5 h-5" />
+              Payer sur PayDunya ({{ sandboxResult.invoice?.token }})
+            </a>
             <div>
               <p class="section-label mb-2">Réponse invoice</p>
               <pre class="bg-espresso text-sand/80 text-[11px] p-4 rounded-xl overflow-x-auto">{{ JSON.stringify(sandboxResult.invoice, null, 2) }}</pre>
             </div>
-            <div>
-              <p class="section-label mb-2">Réponse paiement</p>
-              <pre class="bg-espresso text-sand/80 text-[11px] p-4 rounded-xl overflow-x-auto">{{ JSON.stringify(sandboxResult.payment, null, 2) }}</pre>
-            </div>
-            <a :href="sandboxResult.checkoutUrl" target="_blank" rel="noopener" class="btn-secondary text-[12px] inline-flex items-center gap-2">
-              <ArrowTopRightOnSquareIcon class="w-4 h-4" />
-              Voir la page de paiement
-            </a>
           </div>
         </article>
 
@@ -216,21 +189,13 @@
           <div v-if="settingsQuery.isLoading.value" class="py-8 text-center row-meta">Chargement…</div>
           <div v-else-if="settingsQuery.isError.value" class="py-8 text-center text-error text-sm">Erreur de chargement.</div>
 
-          <!-- Subscription features: card layout with Switch/SegmentedControls -->
-          <div v-else-if="activeTab === 'subscription_features'" class="grid grid-cols-1 sm:grid-cols-2 auto-rows-1fr gap-4 items-stretch">
+          <!-- Subscription features: card grid with ToggleSwitch + SegmentedControl -->
+          <div v-else-if="activeTab === 'subscription_features'" class="grid grid-cols-1 sm:grid-cols-2 auto-rows-1fr gap-4">
             <!-- Acomptes -->
-            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                  <p class="text-[13px] font-bold text-espresso">Acomptes</p>
-                  <p class="text-[11px] text-cocoa/50">Dépôts en ligne des clients</p>
-                </div>
-              </div>
-              <div class="mt-auto space-y-3">
-                <div class="flex items-center justify-between min-h-[36px]">
+            <div class="rounded-2xl border border-outline-variant/40 p-4 flex flex-col gap-3">
+              <p class="row-primary">Acomptes</p>
+              <div class="flex-1 space-y-2">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Activé</span>
                   <div
                     role="switch"
@@ -245,7 +210,7 @@
                     <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_deposits_enabled') ? 'translate-x-5' : 'translate-x-0'"></span>
                   </div>
                 </div>
-                <div class="flex items-center justify-between min-h-[36px]">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Niveau requis</span>
                   <div class="inline-flex rounded-lg border border-outline-variant/50 p-0.5 gap-0.5">
                     <button
@@ -265,18 +230,10 @@
               </div>
             </div>
             <!-- Rapports -->
-            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                </div>
-                <div>
-                  <p class="text-[13px] font-bold text-espresso">Rapports</p>
-                  <p class="text-[11px] text-cocoa/50">Statistiques avancées</p>
-                </div>
-              </div>
-              <div class="mt-auto space-y-3">
-                <div class="flex items-center justify-between min-h-[36px]">
+            <div class="rounded-2xl border border-outline-variant/40 p-4 flex flex-col gap-3">
+              <p class="row-primary">Rapports</p>
+              <div class="flex-1 space-y-2">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Activé</span>
                   <div
                     role="switch"
@@ -291,7 +248,7 @@
                     <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_analytics_enabled') ? 'translate-x-5' : 'translate-x-0'"></span>
                   </div>
                 </div>
-                <div class="flex items-center justify-between min-h-[36px]">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Niveau requis</span>
                   <div class="inline-flex rounded-lg border border-outline-variant/50 p-0.5 gap-0.5">
                     <button
@@ -311,18 +268,10 @@
               </div>
             </div>
             <!-- Abonnement -->
-            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-neutral-bg flex items-center justify-center text-cocoa/50 shrink-0">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                </div>
-                <div>
-                  <p class="text-[13px] font-bold text-espresso">Abonnement</p>
-                  <p class="text-[11px] text-cocoa/50">Renouvellement automatique</p>
-                </div>
-              </div>
-              <div class="mt-auto space-y-3">
-                <div class="flex items-center justify-between min-h-[36px]">
+            <div class="rounded-2xl border border-outline-variant/40 p-4 flex flex-col gap-3">
+              <p class="row-primary">Abonnement</p>
+              <div class="flex-1 space-y-2">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Activé</span>
                   <div
                     role="switch"
@@ -340,18 +289,10 @@
               </div>
             </div>
             <!-- Modes de facturation -->
-            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                </div>
-                <div>
-                  <p class="text-[13px] font-bold text-espresso">Modes de facturation</p>
-                  <p class="text-[11px] text-cocoa/50">Fournisseurs affichés aux salons</p>
-                </div>
-              </div>
-              <div class="mt-auto space-y-3">
-                <div class="flex items-center justify-between min-h-[36px]">
+            <div class="rounded-2xl border border-outline-variant/40 p-4 flex flex-col gap-3">
+              <p class="row-primary">Modes de facturation</p>
+              <div class="flex-1 space-y-2">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">PayDunya</span>
                   <div
                     role="switch"
@@ -366,22 +307,7 @@
                     <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_paydunya') ? 'translate-x-5' : 'translate-x-0'"></span>
                   </div>
                 </div>
-                <div class="flex items-center justify-between min-h-[36px]">
-                  <span class="text-[12px] font-semibold text-cocoa/70">Intech</span>
-                  <div
-                    role="switch"
-                    :aria-checked="boolVal('feature_billing_intech')"
-                    tabindex="0"
-                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
-                    :class="boolVal('feature_billing_intech') ? 'bg-primary' : 'bg-outline-variant'"
-                    @click="toggleBool('feature_billing_intech')"
-                    @keydown.enter="toggleBool('feature_billing_intech')"
-                    @keydown.space.prevent="toggleBool('feature_billing_intech')"
-                  >
-                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_intech') ? 'translate-x-5' : 'translate-x-0'"></span>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between min-h-[36px]">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Manuel</span>
                   <div
                     role="switch"
@@ -396,7 +322,7 @@
                     <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_manual') ? 'translate-x-5' : 'translate-x-0'"></span>
                   </div>
                 </div>
-                <div class="flex items-center justify-between min-h-[36px]">
+                <div class="flex items-center justify-between min-h-[32px]">
                   <span class="text-[12px] font-semibold text-cocoa/70">Carte bancaire</span>
                   <div
                     role="switch"
@@ -715,7 +641,7 @@ import {
   SparklesIcon,
   TagIcon,
   TrashIcon,
-  XCircleIcon,
+
   XMarkIcon
 } from '@heroicons/vue/24/outline';
 import { useAdminAuthStore } from '@/stores/adminAuth';
@@ -842,15 +768,6 @@ const SETTINGS_META: Record<string, SettingMeta> = {
   feature_billing_paydunya: {
     label: 'PayDunya',
     description: 'Afficher PayDunya comme option de mode de paiement pour la facturation.',
-    type: 'select',
-    options: [
-      { value: 'true', label: 'Afficher' },
-      { value: 'false', label: 'Masquer' }
-    ]
-  },
-  feature_billing_intech: {
-    label: 'Intech',
-    description: 'Afficher Intech comme option de mode de paiement pour la facturation.',
     type: 'select',
     options: [
       { value: 'true', label: 'Afficher' },
@@ -1003,10 +920,6 @@ const fieldRefs = new Map<string, Element | null>();
 
 const sandboxForm = reactive({
   amountXof: 5000,
-  method: 'sandbox_direct',
-  phone: '97403627',
-  email: 'marnel.gnacadja@paydunya.com',
-  password: 'Miliey@2121',
   description: 'Test réservation'
 });
 const sandboxRunning = ref(false);
@@ -1025,10 +938,6 @@ async function runSandboxTest() {
       },
       body: JSON.stringify({
         amountXof: sandboxForm.amountXof,
-        method: sandboxForm.method,
-        customerPhone: sandboxForm.phone,
-        customerEmail: sandboxForm.email,
-        customerPassword: sandboxForm.password,
         description: sandboxForm.description
       })
     });
@@ -1036,10 +945,10 @@ async function runSandboxTest() {
     try {
       sandboxResult.value = JSON.parse(raw);
     } catch {
-      sandboxResult.value = { success: false, payment: { message: raw || 'Réponse vide' }, raw };
+      sandboxResult.value = { success: false, raw };
     }
   } catch (e) {
-    sandboxResult.value = { success: false, payment: { message: String(e) } };
+    sandboxResult.value = { success: false, raw: String(e) };
   } finally {
     sandboxRunning.value = false;
   }

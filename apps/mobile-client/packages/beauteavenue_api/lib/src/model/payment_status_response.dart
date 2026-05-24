@@ -32,7 +32,7 @@ abstract class PaymentStatusResponse implements Built<PaymentStatusResponse, Pay
 
   @BuiltValueField(wireName: r'provider')
   PaymentStatusResponseProviderEnum get provider;
-  // enum providerEnum {  intech,  paydunya,  };
+  // enum providerEnum {  intech,  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'providerTxId')
   String? get providerTxId;
@@ -215,6 +215,8 @@ class PaymentStatusResponseProviderEnum extends EnumClass {
   static const PaymentStatusResponseProviderEnum intech = _$paymentStatusResponseProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const PaymentStatusResponseProviderEnum paydunya = _$paymentStatusResponseProviderEnum_paydunya;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const PaymentStatusResponseProviderEnum manual = _$paymentStatusResponseProviderEnum_manual;
 
   static Serializer<PaymentStatusResponseProviderEnum> get serializer => _$paymentStatusResponseProviderEnumSerializer;
 

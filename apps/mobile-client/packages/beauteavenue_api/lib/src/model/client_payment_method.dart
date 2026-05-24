@@ -27,7 +27,7 @@ abstract class ClientPaymentMethod implements Built<ClientPaymentMethod, ClientP
 
   @BuiltValueField(wireName: r'provider')
   ClientPaymentMethodProviderEnum get provider;
-  // enum providerEnum {  intech,  paydunya,  };
+  // enum providerEnum {  intech,  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'phoneNumber')
   String get phoneNumber;
@@ -226,6 +226,8 @@ class ClientPaymentMethodProviderEnum extends EnumClass {
   static const ClientPaymentMethodProviderEnum intech = _$clientPaymentMethodProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const ClientPaymentMethodProviderEnum paydunya = _$clientPaymentMethodProviderEnum_paydunya;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const ClientPaymentMethodProviderEnum manual = _$clientPaymentMethodProviderEnum_manual;
 
   static Serializer<ClientPaymentMethodProviderEnum> get serializer => _$clientPaymentMethodProviderEnumSerializer;
 

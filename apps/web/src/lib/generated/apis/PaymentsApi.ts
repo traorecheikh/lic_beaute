@@ -19,10 +19,25 @@ import {
     ApiErrorToJSON,
 } from '../models/ApiError';
 import {
-    type ApiV1PaymentsWebhooksIntechPost200Response,
-    ApiV1PaymentsWebhooksIntechPost200ResponseFromJSON,
-    ApiV1PaymentsWebhooksIntechPost200ResponseToJSON,
-} from '../models/ApiV1PaymentsWebhooksIntechPost200Response';
+    type ApiV1PaymentsWebhooksPaydunyaPost200Response,
+    ApiV1PaymentsWebhooksPaydunyaPost200ResponseFromJSON,
+    ApiV1PaymentsWebhooksPaydunyaPost200ResponseToJSON,
+} from '../models/ApiV1PaymentsWebhooksPaydunyaPost200Response';
+import {
+    type PaydunyaExecutePaymentInput,
+    PaydunyaExecutePaymentInputFromJSON,
+    PaydunyaExecutePaymentInputToJSON,
+} from '../models/PaydunyaExecutePaymentInput';
+import {
+    type PaydunyaExecutePaymentResponse,
+    PaydunyaExecutePaymentResponseFromJSON,
+    PaydunyaExecutePaymentResponseToJSON,
+} from '../models/PaydunyaExecutePaymentResponse';
+import {
+    type PaydunyaMethodListResponse,
+    PaydunyaMethodListResponseFromJSON,
+    PaydunyaMethodListResponseToJSON,
+} from '../models/PaydunyaMethodListResponse';
 import {
     type PaymentInitiateInput,
     PaymentInitiateInputFromJSON,
@@ -49,6 +64,10 @@ import {
     PaymentWebhookBodyToJSON,
 } from '../models/PaymentWebhookBody';
 
+export interface ApiV1PaymentsDepositsExecutePostRequest {
+    paydunyaExecutePaymentInput: PaydunyaExecutePaymentInput;
+}
+
 export interface ApiV1PaymentsDepositsInitiatePostRequest {
     paymentInitiateInput: PaymentInitiateInput;
 }
@@ -69,10 +88,69 @@ export interface ApiV1PaymentsWebhooksIntechPostRequest {
     paymentWebhookBody: PaymentWebhookBody;
 }
 
+export interface ApiV1PaymentsWebhooksPaydunyaPostRequest {
+    paymentWebhookBody: PaymentWebhookBody;
+}
+
 /**
  * 
  */
 export class PaymentsApi extends runtime.BaseAPI {
+
+    /**
+     * Creates request options for apiV1PaymentsDepositsExecutePost without sending the request
+     */
+    async apiV1PaymentsDepositsExecutePostRequestOpts(requestParameters: ApiV1PaymentsDepositsExecutePostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['paydunyaExecutePaymentInput'] == null) {
+            throw new runtime.RequiredError(
+                'paydunyaExecutePaymentInput',
+                'Required parameter "paydunyaExecutePaymentInput" was null or undefined when calling apiV1PaymentsDepositsExecutePost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/payments/deposits/execute`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PaydunyaExecutePaymentInputToJSON(requestParameters['paydunyaExecutePaymentInput']),
+        };
+    }
+
+    /**
+     * Execute a payment with a specific method (two-step flow)
+     */
+    async apiV1PaymentsDepositsExecutePostRaw(requestParameters: ApiV1PaymentsDepositsExecutePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaydunyaExecutePaymentResponse>> {
+        const requestOptions = await this.apiV1PaymentsDepositsExecutePostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PaydunyaExecutePaymentResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Execute a payment with a specific method (two-step flow)
+     */
+    async apiV1PaymentsDepositsExecutePost(requestParameters: ApiV1PaymentsDepositsExecutePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaydunyaExecutePaymentResponse> {
+        const response = await this.apiV1PaymentsDepositsExecutePostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Creates request options for apiV1PaymentsDepositsInitiatePost without sending the request
@@ -126,6 +204,51 @@ export class PaymentsApi extends runtime.BaseAPI {
      */
     async apiV1PaymentsDepositsInitiatePost(requestParameters: ApiV1PaymentsDepositsInitiatePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaymentInitiateResponse> {
         const response = await this.apiV1PaymentsDepositsInitiatePostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1PaymentsMethodsGet without sending the request
+     */
+    async apiV1PaymentsMethodsGetRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/payments/methods`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get available payment methods from the active provider
+     */
+    async apiV1PaymentsMethodsGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaydunyaMethodListResponse>> {
+        const requestOptions = await this.apiV1PaymentsMethodsGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PaydunyaMethodListResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get available payment methods from the active provider
+     */
+    async apiV1PaymentsMethodsGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaydunyaMethodListResponse> {
+        const response = await this.apiV1PaymentsMethodsGetRaw(initOverrides);
         return await response.value();
     }
 
@@ -320,18 +443,65 @@ export class PaymentsApi extends runtime.BaseAPI {
     /**
      * Intech payment webhook callback
      */
-    async apiV1PaymentsWebhooksIntechPostRaw(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1PaymentsWebhooksIntechPost200Response>> {
+    async apiV1PaymentsWebhooksIntechPostRaw(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1PaymentsWebhooksPaydunyaPost200Response>> {
         const requestOptions = await this.apiV1PaymentsWebhooksIntechPostRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1PaymentsWebhooksIntechPost200ResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1PaymentsWebhooksPaydunyaPost200ResponseFromJSON(jsonValue));
     }
 
     /**
      * Intech payment webhook callback
      */
-    async apiV1PaymentsWebhooksIntechPost(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1PaymentsWebhooksIntechPost200Response> {
+    async apiV1PaymentsWebhooksIntechPost(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1PaymentsWebhooksPaydunyaPost200Response> {
         const response = await this.apiV1PaymentsWebhooksIntechPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1PaymentsWebhooksPaydunyaPost without sending the request
+     */
+    async apiV1PaymentsWebhooksPaydunyaPostRequestOpts(requestParameters: ApiV1PaymentsWebhooksPaydunyaPostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['paymentWebhookBody'] == null) {
+            throw new runtime.RequiredError(
+                'paymentWebhookBody',
+                'Required parameter "paymentWebhookBody" was null or undefined when calling apiV1PaymentsWebhooksPaydunyaPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/payments/webhooks/paydunya`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PaymentWebhookBodyToJSON(requestParameters['paymentWebhookBody']),
+        };
+    }
+
+    /**
+     * PayDunya payment webhook callback
+     */
+    async apiV1PaymentsWebhooksPaydunyaPostRaw(requestParameters: ApiV1PaymentsWebhooksPaydunyaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1PaymentsWebhooksPaydunyaPost200Response>> {
+        const requestOptions = await this.apiV1PaymentsWebhooksPaydunyaPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1PaymentsWebhooksPaydunyaPost200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * PayDunya payment webhook callback
+     */
+    async apiV1PaymentsWebhooksPaydunyaPost(requestParameters: ApiV1PaymentsWebhooksPaydunyaPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1PaymentsWebhooksPaydunyaPost200Response> {
+        const response = await this.apiV1PaymentsWebhooksPaydunyaPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

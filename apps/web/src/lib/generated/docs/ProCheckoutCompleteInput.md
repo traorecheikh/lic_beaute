@@ -9,6 +9,7 @@ Name | Type
 `paymentMethod` | string
 `lineItems` | [Array&lt;ProCheckoutDetailsLineItemsInner&gt;](ProCheckoutDetailsLineItemsInner.md)
 `discountXof` | number
+`softpayMethod` | string
 
 ## Example
 
@@ -20,6 +21,7 @@ const example = {
   "paymentMethod": null,
   "lineItems": null,
   "discountXof": null,
+  "softpayMethod": null,
 } satisfies ProCheckoutCompleteInput
 
 console.log(example)

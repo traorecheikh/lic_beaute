@@ -114,7 +114,7 @@ describe("ProController branches", () => {
       .mockResolvedValueOnce({ id: "sub1", salonId: "s1", tier: "standard", status: "active", renewedAt: null, expiresAt: null, isComplimentary: false, autoRenew: true, billingProvider: "manual" }); // downloadInvoicePdf
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1", phone: null });
     await c.getSubscription({} as never, rep);
-    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, rep);
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, rep);
     await c.listInvoices({} as never, rep);
     mocks.prisma.billingInvoice.findFirst.mockResolvedValue(null);
     await c.downloadInvoicePdf({ params: { invoiceId: "i1" } } as never, rep);

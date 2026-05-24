@@ -79,7 +79,7 @@ docs/ApiV1MediaUploadPost201Response.md
 docs/ApiV1NotificationsGet200Response.md
 docs/ApiV1NotificationsGet200ResponseItemsInner.md
 docs/ApiV1NotificationsIdReadPost200Response.md
-docs/ApiV1PaymentsWebhooksIntechPost200Response.md
+docs/ApiV1PaymentsWebhooksPaydunyaPost200Response.md
 docs/ApiV1ProVouchersPost201Response.md
 docs/ApiV1PushTokensPost201Response.md
 docs/ApiV1SalonsIdAvailabilityGet200ResponseInner.md
@@ -117,6 +117,11 @@ docs/NotificationsApi.md
 docs/OtpAcceptedResponse.md
 docs/OtpRequestInput.md
 docs/OtpVerifyInput.md
+docs/PaydunyaExecutePaymentInput.md
+docs/PaydunyaExecutePaymentResponse.md
+docs/PaydunyaExecutePaymentResponseOtherUrl.md
+docs/PaydunyaMethodListResponse.md
+docs/PaydunyaMethodListResponseMethodsInner.md
 docs/PaymentInitiateInput.md
 docs/PaymentInitiateResponse.md
 docs/PaymentReconcileResponse.md
@@ -164,6 +169,8 @@ docs/ProSubscription.md
 docs/ProSubscriptionBillingMethod.md
 docs/ProSubscriptionCheckoutInput.md
 docs/ProSubscriptionCheckoutResult.md
+docs/ProSubscriptionExecuteInput.md
+docs/ProSubscriptionExecuteResponse.md
 docs/ProSubscriptionUpdateInput.md
 docs/ProSubscriptionUpdateInputBillingMethod.md
 docs/ProVoucherCreateInput.md
@@ -257,7 +264,7 @@ models/ApiV1MediaUploadPost201Response.ts
 models/ApiV1NotificationsGet200Response.ts
 models/ApiV1NotificationsGet200ResponseItemsInner.ts
 models/ApiV1NotificationsIdReadPost200Response.ts
-models/ApiV1PaymentsWebhooksIntechPost200Response.ts
+models/ApiV1PaymentsWebhooksPaydunyaPost200Response.ts
 models/ApiV1ProVouchersPost201Response.ts
 models/ApiV1PushTokensPost201Response.ts
 models/ApiV1SalonsIdAvailabilityGet200ResponseInner.ts
@@ -288,6 +295,11 @@ models/MediaUploadResponse.ts
 models/OtpAcceptedResponse.ts
 models/OtpRequestInput.ts
 models/OtpVerifyInput.ts
+models/PaydunyaExecutePaymentInput.ts
+models/PaydunyaExecutePaymentResponse.ts
+models/PaydunyaExecutePaymentResponseOtherUrl.ts
+models/PaydunyaMethodListResponse.ts
+models/PaydunyaMethodListResponseMethodsInner.ts
 models/PaymentInitiateInput.ts
 models/PaymentInitiateResponse.ts
 models/PaymentReconcileResponse.ts
@@ -333,6 +345,8 @@ models/ProSubscription.ts
 models/ProSubscriptionBillingMethod.ts
 models/ProSubscriptionCheckoutInput.ts
 models/ProSubscriptionCheckoutResult.ts
+models/ProSubscriptionExecuteInput.ts
+models/ProSubscriptionExecuteResponse.ts
 models/ProSubscriptionUpdateInput.ts
 models/ProSubscriptionUpdateInputBillingMethod.ts
 models/ProVoucherCreateInput.ts

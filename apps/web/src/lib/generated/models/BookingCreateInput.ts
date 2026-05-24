@@ -68,7 +68,9 @@ export interface BookingCreateInput {
  * @export
  */
 export const BookingCreateInputProviderEnum = {
-    Intech: 'intech'
+    Intech: 'intech',
+    Paydunya: 'paydunya',
+    Manual: 'manual'
 } as const;
 export type BookingCreateInputProviderEnum = typeof BookingCreateInputProviderEnum[keyof typeof BookingCreateInputProviderEnum];
 
@@ -78,7 +80,44 @@ export type BookingCreateInputProviderEnum = typeof BookingCreateInputProviderEn
 export const BookingCreateInputChannelEnum = {
     Wave: 'wave',
     OrangeMoney: 'orange_money',
-    FreeMoney: 'free_money'
+    FreeMoney: 'free_money',
+    PaydunyaCard: 'paydunya_card',
+    PaydunyaAirtel: 'paydunya_airtel',
+    PaydunyaExpresso: 'paydunya_expresso',
+    PaydunyaFree: 'paydunya_free',
+    PaydunyaMpesa: 'paydunya_mpesa',
+    PaydunyaNgAirtel: 'paydunya_ng_airtel',
+    PaydunyaNgMtn: 'paydunya_ng_mtn',
+    PaydunyaNg9mobile: 'paydunya_ng_9mobile',
+    PaydunyaNgGlo: 'paydunya_ng_glo',
+    PaydunyaSamAirtel: 'paydunya_sam_airtel',
+    PaydunyaSamMtn: 'paydunya_sam_mtn',
+    PaydunyaSamSafaricom: 'paydunya_sam_safaricom',
+    PaydunyaTigoRw: 'paydunya_tigo_rw',
+    PaydunyaAirtelRw: 'paydunya_airtel_rw',
+    PaydunyaMtnRw: 'paydunya_mtn_rw',
+    PaydunyaMtnUg: 'paydunya_mtn_ug',
+    PaydunyaAirtelUg: 'paydunya_airtel_ug',
+    PaydunyaOrangeMl: 'paydunya_orange_ml',
+    PaydunyaMtnCi: 'paydunya_mtn_ci',
+    PaydunyaMtnGh: 'paydunya_mtn_gh',
+    PaydunyaVodafoneGh: 'paydunya_vodafone_gh',
+    PaydunyaAirteltigoGh: 'paydunya_airteltigo_gh',
+    PaydunyaTmCi: 'paydunya_tm_ci',
+    PaydunyaMoovTg: 'paydunya_moov_tg',
+    PaydunyaTogocelTg: 'paydunya_togocel_tg',
+    PaydunyaWariSn: 'paydunya_wari_sn',
+    PaydunyaWaveSn: 'paydunya_wave_sn',
+    PaydunyaCbCi: 'paydunya_cb_ci',
+    PaydunyaOrangeSn: 'paydunya_orange_sn',
+    PaydunyaFreeSn: 'paydunya_free_sn',
+    PaydunyaYupBj: 'paydunya_yup_bj',
+    PaydunyaMtnBj: 'paydunya_mtn_bj',
+    PaydunyaMoovCi: 'paydunya_moov_ci',
+    PaydunyaOrangeCm: 'paydunya_orange_cm',
+    PaydunyaMtnCm: 'paydunya_mtn_cm',
+    PaydunyaNexttelCm: 'paydunya_nexttel_cm',
+    PaydunyaCamtelCm: 'paydunya_camtel_cm'
 } as const;
 export type BookingCreateInputChannelEnum = typeof BookingCreateInputChannelEnum[keyof typeof BookingCreateInputChannelEnum];
 

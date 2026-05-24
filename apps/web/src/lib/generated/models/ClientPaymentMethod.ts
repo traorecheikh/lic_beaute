@@ -74,7 +74,9 @@ export interface ClientPaymentMethod {
  * @export
  */
 export const ClientPaymentMethodProviderEnum = {
-    Intech: 'intech'
+    Intech: 'intech',
+    Paydunya: 'paydunya',
+    Manual: 'manual'
 } as const;
 export type ClientPaymentMethodProviderEnum = typeof ClientPaymentMethodProviderEnum[keyof typeof ClientPaymentMethodProviderEnum];
 

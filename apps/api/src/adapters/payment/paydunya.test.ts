@@ -319,12 +319,14 @@ describe("PayDunyaAdapter", () => {
 
   // ─── getAvailableMethods ─────────────────────────────────────────────────
 
-  it("returns all 4 PayDunya methods with correct shape", async () => {
+  it("returns all PayDunya methods with correct shape", async () => {
     const adapter = makeAdapter();
     const methods = await adapter.getAvailableMethods();
 
-    expect(methods).toHaveLength(4);
-    expect(methods[0]).toMatchObject({
+    expect(methods.length).toBeGreaterThanOrEqual(4);
+    const snMethod = methods.find((m) => m.country === "sn");
+    expect(snMethod).toBeDefined();
+    expect(snMethod).toMatchObject({
       code: expect.any(String),
       country: "sn",
       label: expect.any(String),

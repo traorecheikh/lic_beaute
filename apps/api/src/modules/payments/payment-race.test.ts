@@ -95,7 +95,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
     });
     mocks.prisma.subscriptionCharge.findUnique.mockResolvedValueOnce(null);
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     // Must NOT process — the providerRef doesn't match the stored one
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
@@ -118,7 +118,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     // Must proceed — null providerTxId means no prior binding, so the ref is accepted
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
@@ -143,7 +143,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
   });
@@ -167,7 +167,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       subscription: { salonId: "s1", tier: "standard" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
@@ -195,7 +195,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
     // billingInvoice.create must return an object with .id for the invoice update
     mocks.tx.billingInvoice.create.mockResolvedValue({ id: "inv_1" });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
   });
@@ -218,7 +218,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "amount_mismatch", expect.any(String));
   });
@@ -239,7 +239,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     // Diff is exactly 1 — within margin
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
@@ -261,7 +261,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     // amountXof is 0 -> amount guard skipped
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
@@ -285,7 +285,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.payment.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -317,7 +317,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
   });
@@ -334,7 +334,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
     mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue(null);
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue(null);
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { received: true });
@@ -356,7 +356,7 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
       booking: { clientId: "client_1", salonId: "s1" }
     });
 
-    await controller.webhookIntech({ body: {}, headers: {} } as never, {} as never);
+    await controller.webhookPayDunya({ body: {}, headers: {} } as never, {} as never);
 
     expect(mocks.prisma.payment.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({

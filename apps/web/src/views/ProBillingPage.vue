@@ -30,11 +30,11 @@
           <button :disabled="toggleMutation.isPending.value" @click="toggleAutoRenew" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-5 text-sm disabled:opacity-60">
             {{ subscriptionQuery.data.value?.autoRenew ? 'Désactiver auto-renew' : 'Activer auto-renew' }}
           </button>
-          <button v-if="subscriptionQuery.data.value?.tier !== 'premium'" :disabled="checkoutMutation.isPending.value" @click="upgradePlan" class="btn-gold px-5 text-sm disabled:opacity-60">
-            {{ checkoutMutation.isPending.value ? "Redirection..." : "Passer en Premium" }}
+          <button v-if="subscriptionQuery.data.value?.tier !== 'premium'" :disabled="isSubmitting" @click="openCheckoutModal" class="btn-gold px-5 text-sm disabled:opacity-60">
+            Passer en Premium
           </button>
-          <button v-else :disabled="checkoutMutation.isPending.value" @click="upgradePlan" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-5 text-sm disabled:opacity-60">
-            {{ checkoutMutation.isPending.value ? "..." : "Renouveler" }}
+          <button v-else :disabled="isSubmitting" @click="openCheckoutModal" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-5 text-sm disabled:opacity-60">
+            Renouveler
           </button>
         </div>
       </div>
@@ -120,15 +120,9 @@
           <h2 class="section-label mb-5">Mode de paiement</h2>
           <div v-if="billingMethod" class="flex items-center gap-3 mb-5 p-3 rounded-xl bg-neutral-bg/50">
             <div
-              :class="[
-                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border',
-                billingMethod.provider === 'intech'
-                  ? 'bg-primary/10 border-primary/20 text-primary'
-                  : 'bg-cocoa/10 border-cocoa/20 text-cocoa'
-              ]"
+              class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border bg-primary/10 border-primary/20 text-primary"
             >
-              <WalletIcon v-if="billingMethod.provider === 'intech'" class="w-5 h-5" />
-              <BanknotesIcon v-else class="w-5 h-5" />
+              <BanknotesIcon class="w-5 h-5" />
             </div>
             <div class="min-w-0">
               <p class="text-sm font-bold text-espresso leading-none mb-0.5">{{ providerLabelMap[billingMethod.provider] }}</p>
@@ -192,7 +186,6 @@
         <div>
           <label class="section-label mb-2 block">Fournisseur</label>
           <select v-model="paymentMethodForm.provider" class="input-shell">
-            <option v-if="features?.billingProviders?.intech" value="intech">Intech (Mobile Money)</option>
             <option v-if="features?.billingProviders?.paydunya" value="paydunya">PayDunya (Carte ou Mobile Money)</option>
             <option v-if="features?.billingProviders?.manual" value="manual">Manuel (hors ligne)</option>
           </select>
@@ -256,6 +249,227 @@
         </div>
       </template>
     </Modal>
+
+    <!-- Native Inline Subscription Checkout Modal -->
+    <Modal
+      :show="showCheckoutModal"
+      title="Abonnement Beauté Avenue"
+      subtitle="Finalisez votre paiement sécurisé sans redirection."
+      max-width="lg"
+      @close="showCheckoutModal = false"
+    >
+      <div class="space-y-4">
+        <!-- Step 1: Select Country and Method -->
+        <div v-if="checkoutStep === 'select_method'" class="space-y-4">
+          <div>
+            <label class="section-label mb-2 block">Pays de facturation</label>
+            <select v-model="selectedCountry" class="input-shell">
+              <option value="sn">Sénégal</option>
+              <option value="ci">Côte d'Ivoire</option>
+              <option value="bf">Burkina Faso</option>
+              <option value="bj">Bénin</option>
+              <option value="tg">Togo</option>
+              <option value="ml">Mali</option>
+              <option value="cm">Cameroun</option>
+              <option value="intl">International / Autre</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="section-label mb-2 block font-semibold text-espresso">Moyen de paiement</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1.5">
+              <button
+                v-for="method in filteredMethods"
+                :key="method.code"
+                type="button"
+                @click="selectCheckoutMethod(method.code)"
+                class="flex items-center gap-3 p-4 rounded-xl border transition-all text-left bg-white"
+                :class="selectedMethod === method.code ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-outline-variant/60 hover:border-cocoa/40'"
+              >
+                <div class="w-10 h-10 rounded-full bg-neutral-bg flex items-center justify-center shrink-0">
+                  <CreditCardIcon v-if="method.code === 'carte_bancaire'" class="w-5 h-5 text-cocoa/60" />
+                  <WalletIcon v-else class="w-5 h-5 text-cocoa/60" />
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-espresso">{{ method.label }}</p>
+                  <p class="text-[10px] text-cocoa/40 uppercase font-mono">{{ method.code.replace('_', ' ') }}</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Enter credentials -->
+        <div v-if="checkoutStep === 'enter_details'" class="space-y-4">
+          <button type="button" @click="checkoutStep = 'select_method'" class="btn-secondary py-1 px-3 text-xs flex items-center gap-1.5 border mb-2">
+            <ArrowLeftIcon class="w-3.5 h-3.5" />
+            Retour aux options
+          </button>
+
+          <h4 class="text-sm font-bold text-espresso">Détails de paiement - {{ selectedMethodLabel }}</h4>
+
+          <!-- Card Form -->
+          <div v-if="selectedMethod === 'carte_bancaire'" class="space-y-3">
+            <div>
+              <label class="section-label mb-1 block">Nom complet sur la carte</label>
+              <input v-model="cardForm.fullName" type="text" class="input-shell" placeholder="John Doe" />
+            </div>
+            <div>
+              <label class="section-label mb-1 block">Email</label>
+              <input v-model="cardForm.email" type="email" class="input-shell" placeholder="john.doe@example.com" />
+            </div>
+            <div>
+              <label class="section-label mb-1 block">Numéro de carte</label>
+              <input v-model="cardForm.cardNumber" type="text" class="input-shell" placeholder="4111 1111 1111 1111" @input="formatCardNumber" />
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="section-label mb-1 block">Mois exp. (MM)</label>
+                <input v-model="cardForm.expiryMonth" type="text" maxlength="2" class="input-shell" placeholder="12" />
+              </div>
+              <div>
+                <label class="section-label mb-1 block">Année exp. (YY)</label>
+                <input v-model="cardForm.expiryYear" type="text" maxlength="2" class="input-shell" placeholder="28" />
+              </div>
+              <div>
+                <label class="section-label mb-1 block">CVV</label>
+                <input v-model="cardForm.cvv" type="password" maxlength="4" class="input-shell" placeholder="123" />
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 p-3 rounded-xl bg-red-50 border border-red-100 mt-2">
+              <input v-model="cardForm.pciAccepted" type="checkbox" id="pci-check" class="mt-1" />
+              <label for="pci-check" class="text-xs text-red-700 leading-normal select-none">
+                Je reconnais que la transaction est soumise aux règles de sécurité PCI-DSS et j'accepte de soumettre mes informations de carte bancaire.
+              </label>
+            </div>
+          </div>
+
+          <!-- PayDunya Wallet Form -->
+          <div v-else-if="selectedMethod === 'paydunya_wallet'" class="space-y-3">
+            <div>
+              <label class="section-label mb-1 block">Numéro de téléphone / Email PayDunya</label>
+              <input v-model="walletForm.phone" type="text" class="input-shell" placeholder="john.doe@example.com ou 77XXXXXXX" />
+            </div>
+            <div>
+              <label class="section-label mb-1 block">Mot de passe PayDunya</label>
+              <input v-model="walletForm.password" type="password" class="input-shell" placeholder="••••••••" />
+            </div>
+          </div>
+
+          <!-- Mobile Money / Generic Wallet Form -->
+          <div v-else class="space-y-3">
+            <div>
+              <label class="section-label mb-1 block">Numéro de téléphone mobile money</label>
+              <input v-model="mobileMoneyForm.phone" type="text" class="input-shell" placeholder="77XXXXXXX" />
+            </div>
+            <div>
+              <label class="section-label mb-1 block">Nom complet</label>
+              <input v-model="mobileMoneyForm.fullName" type="text" class="input-shell" placeholder="John Doe" />
+            </div>
+            <div>
+              <label class="section-label mb-1 block">Email</label>
+              <input v-model="mobileMoneyForm.email" type="email" class="input-shell" placeholder="john.doe@example.com" />
+            </div>
+
+            <!-- OTP prompt for OM CI / OM BF -->
+            <div v-if="selectedMethod === 'om_ci' || selectedMethod === 'om_bf'" class="space-y-3 pt-2">
+              <div class="p-3 rounded-xl bg-primary/5 text-primary text-xs leading-relaxed">
+                <span class="font-bold block mb-1">Instruction OTP obligatoire :</span>
+                <template v-if="selectedMethod === 'om_ci'">
+                  Composez le <strong>#144*82#</strong> pour obtenir un code d'autorisation Orange Money.
+                </template>
+                <template v-else-if="selectedMethod === 'om_bf'">
+                  Générez un code OTP Orange Money en composant le <strong>*144*4*6*montant#</strong>.
+                </template>
+              </div>
+              <div>
+                <label class="section-label mb-1 block">Code d'autorisation OTP</label>
+                <input v-model="mobileMoneyForm.otp" type="text" class="input-shell" placeholder="1234" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: QR Code rendering -->
+        <div v-if="checkoutStep === 'qr_code'" class="space-y-4 text-center">
+          <h4 class="text-sm font-bold text-espresso">Scannez le QR Code Orange Money</h4>
+          <p class="text-xs text-cocoa/60 max-w-sm mx-auto">
+            Ouvrez votre application Orange Money et scannez ce QR Code pour valider votre paiement.
+          </p>
+          <div class="inline-block p-4 bg-white rounded-2xl border border-outline-variant/60 mx-auto mt-2">
+            <img :src="`data:image/png;base64,${qrCodeBase64}`" class="w-48 h-48 block" alt="Orange Money QR Code" />
+          </div>
+        </div>
+
+        <!-- Step 4: 3DS Redirect container -->
+        <div v-if="checkoutStep === 'three_ds'" class="space-y-4">
+          <h4 class="text-sm font-bold text-espresso text-center">Authentification 3D Secure</h4>
+          <p class="text-xs text-cocoa/60 text-center max-w-sm mx-auto">
+            Veuillez compléter l'authentification 3D Secure ci-dessous auprès de votre banque pour valider la transaction.
+          </p>
+          <div class="w-full border border-outline-variant/40 rounded-2xl overflow-hidden bg-neutral-bg mt-2">
+            <iframe :src="threeDsUrl" class="w-full h-[450px]" frameborder="0"></iframe>
+          </div>
+        </div>
+
+        <!-- Step 5: Wizall SMS OTP validation -->
+        <div v-if="checkoutStep === 'wizall_otp'" class="space-y-4">
+          <h4 class="text-sm font-bold text-espresso">Validation OTP Wizall</h4>
+          <p class="text-xs text-cocoa/60">
+            Saisissez le code de validation reçu par SMS pour finaliser le paiement Wizall.
+          </p>
+          <div>
+            <label class="section-label mb-1 block">Code de validation (OTP)</label>
+            <input v-model="wizallOtpCode" type="text" class="input-shell" placeholder="12345" />
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" class="btn-secondary text-xs" @click="showCheckoutModal = false">Fermer</button>
+          
+          <button
+            v-if="checkoutStep === 'select_method'"
+            type="button"
+            class="btn-primary text-xs"
+            :disabled="!selectedMethod"
+            @click="checkoutStep = 'enter_details'"
+          >
+            Continuer
+          </button>
+          
+          <button
+            v-if="checkoutStep === 'enter_details'"
+            type="button"
+            class="btn-primary text-xs"
+            :disabled="isSubmitting"
+            @click="handleCheckoutSubmit"
+          >
+            {{ isSubmitting ? 'Paiement...' : 'Confirmer et Payer' }}
+          </button>
+
+          <button
+            v-if="checkoutStep === 'wizall_otp'"
+            type="button"
+            class="btn-primary text-xs"
+            :disabled="isSubmitting"
+            @click="handleWizallOtpSubmit"
+          >
+            {{ isSubmitting ? 'Validation...' : 'Valider le code' }}
+          </button>
+
+          <button
+            v-if="checkoutStep === 'qr_code' || checkoutStep === 'three_ds'"
+            type="button"
+            class="btn-primary text-xs"
+            @click="finalizeCheckoutReconciliation"
+          >
+            J'ai finalisé le paiement
+          </button>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -274,10 +488,12 @@ import {
   StarIcon,
   SparklesIcon,
   CreditCardIcon,
-  ChatBubbleLeftEllipsisIcon
+  ChatBubbleLeftEllipsisIcon,
+  ArrowLeftIcon
 } from "@heroicons/vue/24/outline";
 import {
   checkoutProSubscription,
+  executeProSubscription,
   downloadProInvoicePdf,
   fetchProInvoices,
   fetchProSubscription,
@@ -304,7 +520,6 @@ const features = computed(() => featuresQuery.data.value);
 
 const providerLabelMap: Record<string, string> = {
   paydunya: "PayDunya (Carte ou Mobile Money)",
-  intech: "Intech (Mobile Money)",
   manual: "Manuel (hors ligne)"
 };
 
@@ -368,7 +583,7 @@ const checkoutMutation = useMutation({
   mutationFn: () =>
     checkoutProSubscription(auth.accessToken ?? "", {
       action: subscriptionQuery.data.value?.tier === "premium" ? "renewal" : "upgrade",
-      provider: "intech"
+      provider: "paydunya"
     }),
   onSuccess: (result) => {
     window.open(result.redirectUrl, "_blank", "noopener,noreferrer");
@@ -482,8 +697,257 @@ function toggleAutoRenew() {
   toggleMutation.mutate(!current);
 }
 
+const showCheckoutModal = ref(false);
+const checkoutStep = ref<'select_method' | 'enter_details' | 'qr_code' | 'three_ds' | 'wizall_otp'>('select_method');
+const selectedCountry = ref('sn');
+const selectedMethod = ref('');
+const isSubmitting = ref(false);
+const chargeId = ref('');
+const qrCodeBase64 = ref('');
+const threeDsUrl = ref('');
+const wizallOtpCode = ref('');
+const wizallCid = ref('');
+
+const cardForm = reactive({
+  fullName: "",
+  email: "",
+  cardNumber: "",
+  expiryMonth: "",
+  expiryYear: "",
+  cvv: "",
+  pciAccepted: false
+});
+
+const walletForm = reactive({
+  phone: "",
+  password: ""
+});
+
+const mobileMoneyForm = reactive({
+  phone: "",
+  fullName: "",
+  email: "",
+  otp: ""
+});
+
+const checkoutMethods = [
+  { code: "carte_bancaire", label: "Carte Bancaire", country: "intl" },
+  { code: "djamo", label: "Djamo", country: "intl" },
+  { code: "paydunya_wallet", label: "Portefeuille PayDunya", country: "intl" },
+  { code: "wave_senegal", label: "Wave Sénégal", country: "sn" },
+  { code: "orange_senegal", label: "Orange Money Sénégal", country: "sn" },
+  { code: "free_senegal", label: "Free Money Sénégal", country: "sn" },
+  { code: "wizall_senegal", label: "Wizall Sénégal", country: "sn" },
+  { code: "expresso_sn", label: "Expresso Sénégal", country: "sn" },
+  { code: "om_ci", label: "Orange Money Côte d'Ivoire", country: "ci" },
+  { code: "mtn_ci", label: "MTN Money Côte d'Ivoire", country: "ci" },
+  { code: "moov_ci", label: "Moov Côte d'Ivoire", country: "ci" },
+  { code: "wave_ci", label: "Wave Côte d'Ivoire", country: "ci" },
+  { code: "om_bf", label: "Orange Money Burkina Faso", country: "bf" },
+  { code: "moov_bf", label: "Moov Burkina Faso", country: "bf" },
+  { code: "moov_bj", label: "Moov Bénin", country: "bj" },
+  { code: "mtn_bj", label: "MTN Bénin", country: "bj" },
+  { code: "t_money_tg", label: "T-Money Togo", country: "tg" },
+  { code: "moov_tg", label: "Moov Togo", country: "tg" },
+  { code: "om_ml", label: "Orange Money Mali", country: "ml" },
+  { code: "moov_ml", label: "Moov Mali", country: "ml" },
+  { code: "mtn_cm", label: "MTN Cameroun", country: "cm" }
+];
+
+const filteredMethods = computed(() => {
+  return checkoutMethods.filter(m => m.country === selectedCountry.value || m.code === "carte_bancaire");
+});
+
+const selectedMethodLabel = computed(() => {
+  const method = checkoutMethods.find(m => m.code === selectedMethod.value);
+  return method ? method.label : "";
+});
+
+function selectCheckoutMethod(code: string) {
+  selectedMethod.value = code;
+}
+
+function formatCardNumber(e: Event) {
+  const target = e.target as HTMLInputElement;
+  const digits = target.value.replace(/\s+/g, '');
+  let formatted = '';
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && i % 4 === 0) formatted += ' ';
+    formatted += digits[i];
+  }
+  cardForm.cardNumber = formatted;
+}
+
+function openCheckoutModal() {
+  checkoutStep.value = "select_method";
+  selectedMethod.value = "";
+  qrCodeBase64.value = "";
+  threeDsUrl.value = "";
+  wizallOtpCode.value = "";
+  wizallCid.value = "";
+  isSubmitting.value = false;
+
+  const user = auth.currentUser;
+  if (user) {
+    cardForm.fullName = user.fullName;
+    cardForm.email = user.email ?? "";
+    mobileMoneyForm.fullName = user.fullName;
+    mobileMoneyForm.phone = user.phone ?? "";
+    mobileMoneyForm.email = user.email ?? "";
+    walletForm.phone = user.phone ?? user.email ?? "";
+  }
+
+  showCheckoutModal.value = true;
+}
+
+async function handleCheckoutSubmit() {
+  if (!selectedMethod.value) return;
+
+  if (selectedMethod.value === 'carte_bancaire') {
+    if (!cardForm.pciAccepted) {
+      toast.error("Vous devez accepter les conditions PCI-DSS.");
+      return;
+    }
+    if (!cardForm.fullName || !cardForm.email || !cardForm.cardNumber || !cardForm.cvv || !cardForm.expiryMonth || !cardForm.expiryYear) {
+      toast.error("Veuillez remplir tous les champs de la carte.");
+      return;
+    }
+  } else if (selectedMethod.value === 'paydunya_wallet') {
+    if (!walletForm.phone || !walletForm.password) {
+      toast.error("Veuillez remplir les identifiants du portefeuille PayDunya.");
+      return;
+    }
+  } else {
+    if (!mobileMoneyForm.phone) {
+      toast.error("Le numéro de téléphone est requis.");
+      return;
+    }
+    if ((selectedMethod.value === 'om_ci' || selectedMethod.value === 'om_bf') && !mobileMoneyForm.otp) {
+      toast.error("Le code d'autorisation OTP est requis.");
+      return;
+    }
+  }
+
+  isSubmitting.value = true;
+  try {
+    const action = subscriptionQuery.data.value?.tier === "premium" ? "renewal" : "upgrade";
+    const initResult = await checkoutProSubscription(auth.accessToken ?? "", {
+      action,
+      provider: "paydunya",
+      channel: selectedMethod.value
+    });
+
+    chargeId.value = initResult.chargeId;
+
+    const details: Record<string, any> = {};
+    if (selectedMethod.value === 'carte_bancaire') {
+      details.fullName = cardForm.fullName.trim();
+      details.email = cardForm.email.trim();
+      details.cardNumber = cardForm.cardNumber.replace(/\s/g, '');
+      details.cardCvv = cardForm.cvv.trim();
+      details.cardExpiredDateMonth = cardForm.expiryMonth.trim();
+      details.cardExpiredDateYear = cardForm.expiryYear.trim();
+    } else if (selectedMethod.value === 'paydunya_wallet') {
+      details.phone = walletForm.phone.trim();
+      details.password = walletForm.password.trim();
+    } else {
+      details.phone = mobileMoneyForm.phone.trim();
+      details.customer_name = mobileMoneyForm.fullName.trim();
+      details.customer_email = mobileMoneyForm.email.trim();
+      if (selectedMethod.value === 'om_ci' || selectedMethod.value === 'om_bf') {
+        details.otp = mobileMoneyForm.otp.trim();
+      }
+    }
+
+    const execResult = await executeProSubscription(auth.accessToken ?? "", initResult.chargeId, {
+      method: selectedMethod.value,
+      details
+    });
+
+    if (execResult.success) {
+      const url = execResult.url;
+
+      if (url && (url.includes("data[qrcode]") || url.includes("data%5Bqrcode%5D"))) {
+        const parsedUrl = new URL(url);
+        const qr = parsedUrl.searchParams.get("data[qrcode]") || parsedUrl.searchParams.get("data%5Bqrcode%5D");
+        if (qr) {
+          qrCodeBase64.value = decodeURIComponent(qr);
+          checkoutStep.value = "qr_code";
+          isSubmitting.value = false;
+          return;
+        }
+      }
+
+      const detailsData = (execResult.data as any)?.details;
+      const cid = (execResult.data as any)?.cid || detailsData?.cid;
+      if (cid) {
+        wizallCid.value = cid;
+        checkoutStep.value = "wizall_otp";
+        isSubmitting.value = false;
+        return;
+      }
+
+      if (selectedMethod.value === 'carte_bancaire' && url) {
+        threeDsUrl.value = url;
+        checkoutStep.value = "three_ds";
+        isSubmitting.value = false;
+        return;
+      }
+
+      toast.success("Paiement effectué avec succès !");
+      await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+      await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
+      showCheckoutModal.value = false;
+    } else {
+      toast.error(execResult.message || "Échec du paiement.");
+    }
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Erreur lors de l'exécution du paiement."));
+  } finally {
+    isSubmitting.value = false;
+  }
+}
+
+async function handleWizallOtpSubmit() {
+  if (!wizallOtpCode.value.trim()) {
+    toast.error("Le code OTP est requis.");
+    return;
+  }
+  isSubmitting.value = true;
+  try {
+    const execResult = await executeProSubscription(auth.accessToken ?? "", chargeId.value, {
+      method: "wizall_senegal",
+      details: {
+        phone_number: mobileMoneyForm.phone.trim(),
+        authorization_code: wizallOtpCode.value.trim(),
+        transaction_id: wizallCid.value
+      }
+    });
+
+    if (execResult.success) {
+      toast.success("Paiement effectué avec succès !");
+      await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+      await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
+      showCheckoutModal.value = false;
+    } else {
+      toast.error(execResult.message || "Échec du paiement Wizall.");
+    }
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Erreur lors de la validation Wizall."));
+  } finally {
+    isSubmitting.value = false;
+  }
+}
+
+async function finalizeCheckoutReconciliation() {
+  await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+  await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
+  showCheckoutModal.value = false;
+  toast.success("Statut d'abonnement actualisé.");
+}
+
 function upgradePlan() {
-  checkoutMutation.mutate();
+  openCheckoutModal();
 }
 
 async function openInvoice(invoice: (typeof invoices.value)[number]) {
@@ -517,7 +981,7 @@ async function openInvoice(invoice: (typeof invoices.value)[number]) {
 }
 
 function openPaymentMethodModal() {
-  paymentMethodForm.provider = billingMethod.value?.provider ?? "intech";
+  paymentMethodForm.provider = billingMethod.value?.provider ?? "paydunya";
   paymentMethodForm.accountNumber = "";
   showPaymentMethodModal.value = true;
 }

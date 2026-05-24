@@ -47,6 +47,7 @@ export type ProSubscriptionCheckoutInputActionEnum = typeof ProSubscriptionCheck
  * @export
  */
 export const ProSubscriptionCheckoutInputProviderEnum = {
+    Paydunya: 'paydunya',
     Intech: 'intech',
     Manual: 'manual'
 } as const;

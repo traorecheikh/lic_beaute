@@ -22,7 +22,7 @@ abstract class PaymentInitiateInput implements Built<PaymentInitiateInput, Payme
 
   @BuiltValueField(wireName: r'provider')
   PaymentInitiateInputProviderEnum get provider;
-  // enum providerEnum {  intech,  paydunya,  };
+  // enum providerEnum {  intech,  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'channel')
   PaymentInitiateInputChannelEnum? get channel;
@@ -147,6 +147,8 @@ class PaymentInitiateInputProviderEnum extends EnumClass {
   static const PaymentInitiateInputProviderEnum intech = _$paymentInitiateInputProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const PaymentInitiateInputProviderEnum paydunya = _$paymentInitiateInputProviderEnum_paydunya;
+  @BuiltValueEnumConst(wireName: r'manual')
+  static const PaymentInitiateInputProviderEnum manual = _$paymentInitiateInputProviderEnum_manual;
 
   static Serializer<PaymentInitiateInputProviderEnum> get serializer => _$paymentInitiateInputProviderEnumSerializer;
 

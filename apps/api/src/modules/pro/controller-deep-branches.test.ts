@@ -391,7 +391,7 @@ describe("ProController deep branches", () => {
       source: "manual",
       depositAmountXof: 0,
       createdAt: new Date("2030-01-01T09:00:00.000Z"),
-      payments: [{ id: "p1", status: "succeeded", amountXof: 1000, provider: "intech" }],
+      payments: [{ id: "p1", status: "succeeded", amountXof: 1000, provider: "paydunya" }],
       bookingEvents: [{ eventType: "created_manual", fromStatus: null, toStatus: "confirmed", createdAt: new Date("2030-01-01T09:01:00.000Z") }]
     });
     await c.getBooking({ params: { bookingId: "b9" } } as never, reply);
@@ -778,12 +778,12 @@ describe("ProController deep branches", () => {
     await c.updateSubscription({ body: { autoRenew: true, billingMethod: { provider: "manual", accountNumber: "77223344" } } } as never, reply);
 
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1", phone: null });
-    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, reply);
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, reply);
 
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1", phone: "+221770000000" });
     mocks.prisma.platformSetting.findMany.mockResolvedValueOnce([{ key: "subscription_premium_price_xof", value: "25000" }, { key: "subscription_standard_price_xof", value: "15000" }]);
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValueOnce({ id: "ch1", providerTxId: "tx1" });
-    await c.subscriptionCheckout({ body: { action: "renewal", provider: "intech" } } as never, reply);
+    await c.subscriptionCheckout({ body: { action: "renewal", provider: "paydunya" } } as never, reply);
 
     mocks.prisma.subscriptionCharge.findFirst.mockResolvedValueOnce(null);
     mocks.paymentAdapter.initiateDeposit.mockResolvedValue({ providerRef: "ref1", redirectUrl: "https://pay", expiresAt: new Date() });
@@ -884,7 +884,7 @@ describe("ProController deep branches", () => {
       pdfUrl: "https://cdn.example.com/inv3.pdf"
     });
     mocks.prisma.salon.findUnique.mockResolvedValueOnce(null);
-    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: "intech" });
+    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: "paydunya" });
     await c.downloadInvoicePdf({ params: { invoiceId: "inv3" } } as never, reply);
     expect(mocks.ok).toHaveBeenCalled();
   });
@@ -899,7 +899,7 @@ describe("ProController deep branches", () => {
       expiresAt: null,
       isComplimentary: false,
       autoRenew: true,
-      billingProvider: "intech"
+      billingProvider: "paydunya"
     });
     mocks.prisma.platformSetting.findMany.mockResolvedValueOnce([
       { key: "subscription_premium_price_xof", value: "25000" },
@@ -912,11 +912,11 @@ describe("ProController deep branches", () => {
       expiresAt: new Date()
     });
     mocks.prisma.subscriptionCharge.update.mockResolvedValueOnce({ id: "ch-existing" });
-    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, reply);
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, reply);
 
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
       id: "sub-existing",
-      billingProvider: "intech"
+      billingProvider: "paydunya"
     });
     mocks.prisma.billingInvoice.findFirst.mockResolvedValueOnce({
       id: "inv4",

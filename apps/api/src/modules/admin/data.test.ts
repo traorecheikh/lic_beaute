@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => {
   const sendEmail = vi.fn();
   const logger = { error: vi.fn(), info: vi.fn(), warn: vi.fn() };
   const config = { webOrigin: "https://admin.example.com" };
-  const toPublicBillingProvider = vi.fn((x: string | null | undefined) => (x === "manual" ? "manual" : x ? "intech" : null));
+  const toPublicBillingProvider = vi.fn((x: string | null | undefined) => (x === "manual" ? "manual" : x === "paydunya" ? "paydunya" : null));
   return { prisma, sendEmail, logger, config, toPublicBillingProvider };
 });
 
@@ -271,7 +271,7 @@ describe("admin data module", () => {
 
   it("subscriptions list/detail map fields", async () => {
     mocks.prisma.subscription.findMany.mockResolvedValue([{
-      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "intech", expiresAt: null, autoRenew: true, isComplimentary: false,
+      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true, isComplimentary: false,
       createdAt: new Date(), salon: { name: "A" }
     }]);
     mocks.prisma.subscription.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
@@ -279,7 +279,7 @@ describe("admin data module", () => {
     expect(list.total).toBe(1);
 
     mocks.prisma.subscription.findUnique.mockResolvedValue({
-      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "intech", expiresAt: null, autoRenew: true,
+      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true,
       isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" },
       events: [{ id: "e1", eventType: "x", summary: "s", createdAt: new Date(), actorName: "Admin", source: "admin", payloadPreview: null }],
       invoices: [{ id: "i1", invoiceNumber: "INV-1", amountXof: 1000, status: "paid", createdAt: new Date(), pdfUrl: "" }]
@@ -357,7 +357,7 @@ describe("admin data module", () => {
     });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({ id: "sub1", salonId: "s1", salon: { name: "A" } });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
-      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "intech", expiresAt: null, autoRenew: true,
+      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true,
       isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
     });
     const out = await overrideSubscription("sub1", {
@@ -382,7 +382,7 @@ describe("admin data module", () => {
       await cb(tx);
     });
     mocks.prisma.subscription.findUnique.mockResolvedValue({
-      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "intech", expiresAt: null, autoRenew: true,
+      id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true,
       isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
     });
     await overrideSubscription("sub1", { action: "pause_subscription", reason: "pause" }, "Admin");
@@ -434,7 +434,7 @@ describe("admin data module", () => {
       salonId: "s1",
       tier: "premium",
       status: "active",
-      billingProvider: "intech",
+      billingProvider: "paydunya",
       expiresAt: null,
       autoRenew: true,
       isComplimentary: false,
@@ -456,7 +456,7 @@ describe("admin data module", () => {
       await cb(tx);
     });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
-      id: "sube", salonId: "s1", tier: "premium", status: "paused", billingProvider: "intech", expiresAt: null, autoRenew: false,
+      id: "sube", salonId: "s1", tier: "premium", status: "paused", billingProvider: "paydunya", expiresAt: null, autoRenew: false,
       isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
     });
     await overrideSubscription("sube", { action: "pause_subscription", reason: "pause", effectiveAt: "2030-02-01T00:00:00.000Z" }, "Admin");

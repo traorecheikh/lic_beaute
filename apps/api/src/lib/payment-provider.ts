@@ -1,20 +1,17 @@
-export function toDbProvider(provider: "intech" | "paydunya" | "manual" | null | undefined): "intech" | "paydunya" | "manual" | null {
+export function toDbProvider(provider: "paydunya" | "manual" | null | undefined): "paydunya" | "manual" | null {
   if (provider === "manual") return "manual";
   if (provider === "paydunya") return "paydunya";
-  if (provider === "intech") return "intech";
   return null;
 }
 
-export function toPublicGatewayProvider(provider: string | null | undefined): "intech" | "paydunya" {
-  if (!provider) return "intech";
+export function toPublicGatewayProvider(provider: string | null | undefined): "paydunya" {
   if (provider === "paydunya") return "paydunya";
-  if (provider === "intech") return "intech";
-  return "intech";
+  return "paydunya";
 }
 
-export function toPublicBillingProvider(provider: string | null | undefined): "intech" | "paydunya" | "manual" | null {
+export function toPublicBillingProvider(provider: string | null | undefined): "paydunya" | "manual" | null {
   if (!provider) return null;
   if (provider === "manual") return "manual";
   if (provider === "paydunya") return "paydunya";
-  return "intech";
+  return null;
 }

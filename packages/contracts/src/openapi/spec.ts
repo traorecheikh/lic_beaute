@@ -84,7 +84,12 @@ import {
   paymentInitiateResponseSchema,
   paymentStatusResponseSchema,
   paymentReconcileResponseSchema,
-  paymentIntechCallbackSchema
+  paymentWebhookBodySchema,
+  paydunyaMethodListResponseSchema,
+  paydunyaTransactionExecuteInputSchema,
+  paydunyaTransactionExecuteResponseSchema,
+  proSubscriptionExecuteInputSchema,
+  proSubscriptionExecuteResponseSchema
 } from "../domain/payment.js";
 import { pushTokenRegisterSchema } from "../domain/notification.js";
 import { mediaUploadResponseSchema, mediaAssetSchema } from "../domain/media.js";
@@ -244,7 +249,12 @@ const schemaEntries = {
   PaymentInitiateResponse: paymentInitiateResponseSchema,
   PaymentStatusResponse: paymentStatusResponseSchema,
   PaymentReconcileResponse: paymentReconcileResponseSchema,
-  PaymentWebhookBody: paymentIntechCallbackSchema,
+  PaymentWebhookBody: paymentWebhookBodySchema,
+  PaydunyaMethodListResponse: paydunyaMethodListResponseSchema,
+  PaydunyaExecutePaymentInput: paydunyaTransactionExecuteInputSchema,
+  PaydunyaExecutePaymentResponse: paydunyaTransactionExecuteResponseSchema,
+  ProSubscriptionExecuteInput: proSubscriptionExecuteInputSchema,
+  ProSubscriptionExecuteResponse: proSubscriptionExecuteResponseSchema,
 
   PushTokenInput: pushTokenRegisterSchema,
 
@@ -1903,6 +1913,38 @@ export const openApiSpec = {
         }
       })
     },
+    "/api/v1/pro/subscription/charge/{chargeId}/execute": {
+      post: withBearer({
+        tags: ["pro"],
+        summary: "Execute subscription payment (two-step flow)",
+        parameters: [
+          {
+            name: "chargeId",
+            in: "path",
+            required: true,
+            schema: { type: "string" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("ProSubscriptionExecuteInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Subscription payment execution result",
+            content: {
+              "application/json": {
+                schema: ref("ProSubscriptionExecuteResponse")
+              }
+            }
+          }
+        }
+      })
+    },
     "/api/v1/pro/payouts": {
       get: withBearer({
         tags: ["pro"],
@@ -2118,7 +2160,7 @@ export const openApiSpec = {
             description: "Payment execution result",
             content: {
               "application/json": {
-                schema: ref("PaymentInitiateResponse")
+                schema: ref("PaydunyaExecutePaymentResponse")
               }
             }
           }
@@ -2173,30 +2215,6 @@ export const openApiSpec = {
           }
         }
       })
-    },
-    "/api/v1/payments/webhooks/intech": {
-      post: {
-        tags: ["payments"],
-        summary: "Intech payment webhook callback",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: ref("PaymentWebhookBody")
-            }
-          }
-        },
-        responses: {
-          200: {
-            description: "Webhook acknowledged",
-            content: {
-              "application/json": {
-                schema: toOpenApiSchema(z.object({ received: z.boolean() }))
-              }
-            }
-          }
-        }
-      }
     },
     "/api/v1/push-tokens": {
       post: withBearer({

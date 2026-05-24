@@ -33,7 +33,8 @@ export interface PaymentAdapter {
     paymentId: string;
     method: string;
     invoiceToken: string;
-  }): Promise<{ success: boolean; status: string; providerTxId: string | null }>;
+    details?: Record<string, any>;
+  }): Promise<{ success: boolean; status: string; providerTxId: string | null; [key: string]: any }>;
 
   /**
    * List available payment methods for the provider.

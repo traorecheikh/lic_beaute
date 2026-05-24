@@ -13,13 +13,17 @@ part 'pro_subscription_checkout_result.g.dart';
 /// Properties:
 /// * [redirectUrl] 
 /// * [chargeId] 
+/// * [resumed] 
 @BuiltValue()
 abstract class ProSubscriptionCheckoutResult implements Built<ProSubscriptionCheckoutResult, ProSubscriptionCheckoutResultBuilder> {
   @BuiltValueField(wireName: r'redirectUrl')
-  String get redirectUrl;
+  String? get redirectUrl;
 
   @BuiltValueField(wireName: r'chargeId')
   String get chargeId;
+
+  @BuiltValueField(wireName: r'resumed')
+  bool? get resumed;
 
   ProSubscriptionCheckoutResult._();
 
@@ -45,15 +49,22 @@ class _$ProSubscriptionCheckoutResultSerializer implements PrimitiveSerializer<P
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'redirectUrl';
-    yield serializers.serialize(
+    yield object.redirectUrl == null ? null : serializers.serialize(
       object.redirectUrl,
-      specifiedType: const FullType(String),
+      specifiedType: const FullType.nullable(String),
     );
     yield r'chargeId';
     yield serializers.serialize(
       object.chargeId,
       specifiedType: const FullType(String),
     );
+    if (object.resumed != null) {
+      yield r'resumed';
+      yield serializers.serialize(
+        object.resumed,
+        specifiedType: const FullType(bool),
+      );
+    }
   }
 
   @override
@@ -80,8 +91,9 @@ class _$ProSubscriptionCheckoutResultSerializer implements PrimitiveSerializer<P
         case r'redirectUrl':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.redirectUrl = valueDes;
           break;
         case r'chargeId':
@@ -90,6 +102,13 @@ class _$ProSubscriptionCheckoutResultSerializer implements PrimitiveSerializer<P
             specifiedType: const FullType(String),
           ) as String;
           result.chargeId = valueDes;
+          break;
+        case r'resumed':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.resumed = valueDes;
           break;
         default:
           unhandled.add(key);

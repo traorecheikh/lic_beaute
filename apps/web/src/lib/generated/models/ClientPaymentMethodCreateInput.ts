@@ -44,7 +44,9 @@ export interface ClientPaymentMethodCreateInput {
  * @export
  */
 export const ClientPaymentMethodCreateInputProviderEnum = {
-    Intech: 'intech'
+    Intech: 'intech',
+    Paydunya: 'paydunya',
+    Manual: 'manual'
 } as const;
 export type ClientPaymentMethodCreateInputProviderEnum = typeof ClientPaymentMethodCreateInputProviderEnum[keyof typeof ClientPaymentMethodCreateInputProviderEnum];
 

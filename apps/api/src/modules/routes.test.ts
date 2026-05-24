@@ -55,7 +55,7 @@ describe("registerRoutes", () => {
     const { app, routes } = makeApp();
     await registerRoutes(app as never, { driver: "prisma", mode: "connected", attempts: 1 } as never);
 
-    const webhook = routes.find((r) => r.path === "/api/v1/payments/webhooks/intech" && r.method === "POST");
+    const webhook = routes.find((r) => r.path === "/api/v1/payments/webhooks/paydunya" && r.method === "POST");
     expect(webhook?.opts).toBeDefined();
     const preParsing = (webhook?.opts as { preParsing: (req: unknown, rep: unknown, payload: Readable) => Promise<Readable> }).preParsing;
 
@@ -75,7 +75,7 @@ describe("registerRoutes", () => {
     const { app, routes } = makeApp();
     await registerRoutes(app as never, { driver: "prisma", mode: "connected", attempts: 1 } as never);
 
-    const webhook = routes.find((r) => r.path === "/api/v1/payments/webhooks/intech" && r.method === "POST");
+    const webhook = routes.find((r) => r.path === "/api/v1/payments/webhooks/paydunya" && r.method === "POST");
     const preParsing = (webhook?.opts as { preParsing: (req: unknown, rep: unknown, payload: Readable) => Promise<Readable> }).preParsing;
     const req = {} as { rawBody?: string };
     const returned = await preParsing(req, {}, Readable.from(["abc"]));

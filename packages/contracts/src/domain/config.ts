@@ -51,7 +51,6 @@ export const subscriptionFeaturesSchema = z.object({
   autoRenew: z.object({ enabled: z.boolean() }),
   billingProviders: z.object({
     paydunya: z.boolean(),
-    intech: z.boolean(),
     manual: z.boolean(),
     card: z.boolean()
   }),

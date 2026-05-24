@@ -32,8 +32,7 @@ const DEFAULT_SETTINGS = [
   { group: "subscription_features", key: "feature_analytics_enabled",      value: "true",   description: "Activer les rapports financiers" },
   { group: "subscription_features", key: "feature_analytics_tier_required", value: "premium", description: "Niveau requis pour les rapports" },
   { group: "subscription_features", key: "feature_auto_renew_enabled",     value: "true",   description: "Activer le renouvellement automatique" },
-  { group: "subscription_features", key: "feature_billing_paydunya",       value: "false",  description: "Afficher PayDunya comme mode de facturation" },
-  { group: "subscription_features", key: "feature_billing_intech",         value: "true",   description: "Afficher Intech comme mode de facturation" },
+  { group: "subscription_features", key: "feature_billing_paydunya",       value: "true",   description: "Afficher PayDunya comme mode de facturation" },
   { group: "subscription_features", key: "feature_billing_manual",         value: "true",   description: "Afficher le mode manuel" },
   { group: "subscription_features", key: "feature_card_payments",          value: "false",  description: "Activer l'option carte bancaire" },
 ];

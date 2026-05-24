@@ -24,13 +24,19 @@ export interface ProSubscriptionCheckoutResult {
      * @type {string}
      * @memberof ProSubscriptionCheckoutResult
      */
-    redirectUrl: string;
+    redirectUrl: string | null;
     /**
      * 
      * @type {string}
      * @memberof ProSubscriptionCheckoutResult
      */
     chargeId: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProSubscriptionCheckoutResult
+     */
+    resumed?: boolean;
 }
 
 /**
@@ -54,6 +60,7 @@ export function ProSubscriptionCheckoutResultFromJSONTyped(json: any, ignoreDisc
         
         'redirectUrl': json['redirectUrl'],
         'chargeId': json['chargeId'],
+        'resumed': json['resumed'] == null ? undefined : json['resumed'],
     };
 }
 
@@ -70,6 +77,7 @@ export function ProSubscriptionCheckoutResultToJSONTyped(value?: ProSubscription
         
         'redirectUrl': value['redirectUrl'],
         'chargeId': value['chargeId'],
+        'resumed': value['resumed'],
     };
 }
 

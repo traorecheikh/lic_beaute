@@ -1,5 +1,4 @@
 import type { PaymentAdapter } from "./payment/index.js";
-import { IntechAdapter } from "./payment/intech.js";
 import { MockPaymentAdapter } from "./payment/mock.js";
 import { PayDunyaAdapter } from "./payment/paydunya.js";
 import type { OtpAdapter } from "./otp/index.js";

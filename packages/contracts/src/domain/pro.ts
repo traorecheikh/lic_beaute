@@ -234,7 +234,7 @@ export const proSubscriptionSchema = z.object({
   autoRenew: z.boolean(),
   billingMethod: z
     .object({
-      provider: z.enum(["paydunya", "intech", "manual"]),
+      provider: z.enum(["paydunya", "manual"]),
       accountNumberMasked: z.string(),
       country: z.string().nullable().optional(),
       method: z.string().nullable().optional()
@@ -243,7 +243,7 @@ export const proSubscriptionSchema = z.object({
 });
 
 export const proBillingMethodSchema = z.object({
-  provider: z.enum(["paydunya", "intech", "manual"]),
+  provider: z.enum(["paydunya", "manual"]),
   accountNumber: z.string().trim().min(8).max(20),
   country: z.string().length(2).optional(),
   method: z.string().optional()
@@ -266,7 +266,7 @@ export const proSubscriptionUpdateInputSchema = z
 
 export const proSubscriptionCheckoutInputSchema = z.object({
   action: z.enum(["upgrade", "renewal"]),
-  provider: z.enum(["paydunya", "intech", "manual"]).default("paydunya")
+  provider: z.enum(["paydunya", "manual"]).default("paydunya")
 });
 
 export const proSubscriptionCheckoutResultSchema = z.object({
@@ -337,7 +337,7 @@ export const proCheckoutDetailsSchema = z.object({
 });
 
 export const proCheckoutCompleteInputSchema = z.object({
-  paymentMethod: z.enum(["cash", "intech", "other"]),
+  paymentMethod: z.enum(["cash", "other"]),
   lineItems: z.array(proCheckoutLineItemSchema).min(1),
   discountXof: z.number().int().nonnegative().default(0),
   softpayMethod: z.string().optional()

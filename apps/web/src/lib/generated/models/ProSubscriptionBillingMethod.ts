@@ -31,6 +31,18 @@ export interface ProSubscriptionBillingMethod {
      * @memberof ProSubscriptionBillingMethod
      */
     accountNumberMasked: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProSubscriptionBillingMethod
+     */
+    country?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProSubscriptionBillingMethod
+     */
+    method?: string | null;
 }
 
 
@@ -38,6 +50,7 @@ export interface ProSubscriptionBillingMethod {
  * @export
  */
 export const ProSubscriptionBillingMethodProviderEnum = {
+    Paydunya: 'paydunya',
     Intech: 'intech',
     Manual: 'manual'
 } as const;
@@ -65,6 +78,8 @@ export function ProSubscriptionBillingMethodFromJSONTyped(json: any, ignoreDiscr
         
         'provider': json['provider'],
         'accountNumberMasked': json['accountNumberMasked'],
+        'country': json['country'] == null ? undefined : json['country'],
+        'method': json['method'] == null ? undefined : json['method'],
     };
 }
 
@@ -81,6 +96,8 @@ export function ProSubscriptionBillingMethodToJSONTyped(value?: ProSubscriptionB
         
         'provider': value['provider'],
         'accountNumberMasked': value['accountNumberMasked'],
+        'country': value['country'],
+        'method': value['method'],
     };
 }
 

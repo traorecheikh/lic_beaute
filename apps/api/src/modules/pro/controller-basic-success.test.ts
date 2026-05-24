@@ -157,7 +157,7 @@ describe("ProController basic success", () => {
     await c.respondToReview({ params: { reviewId: "r1" }, body: { responseText: "Merci" } } as never, rep);
     await c.getSubscription({} as never, rep);
     await c.updateSubscription({ body: { autoRenew: true } } as never, rep);
-    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, rep);
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, rep);
     await c.listPayouts({} as never, rep);
     await c.listInvoices({} as never, rep);
     const pdfReply = {

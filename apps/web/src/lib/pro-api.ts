@@ -16,8 +16,8 @@ import {
   type ProStaffCreateInput,
   type ProStaffUpdateInput,
   type ProSubscriptionCheckoutInput,
+  type ProSubscriptionExecuteInput,
   type ProSubscriptionUpdateInput,
-  type RegisterInput,
   type ProManualBookingInput,
   type ProClientBenefitCreateInput,
   type ProVoucherCreateInput
@@ -179,7 +179,7 @@ export async function fetchProCheckout(token: string, bookingId: string) {
 }
 
 export async function completeProCheckout(token: string, bookingId: string, payload: {
-  paymentMethod: "cash" | "intech" | "other";
+  paymentMethod: "cash" | "other";
   softpayMethod?: string;
   discountXof: number;
   lineItems: Array<{ name: string; amountXof: number }>;
@@ -361,6 +361,13 @@ export async function updateProSubscription(token: string, payload: ProSubscript
 export async function checkoutProSubscription(token: string, payload: ProSubscriptionCheckoutInput) {
   return withApiError(() => getProApi(token).apiV1ProSubscriptionCheckoutPost({
     proSubscriptionCheckoutInput: payload
+  }));
+}
+
+export async function executeProSubscription(token: string, chargeId: string, payload: ProSubscriptionExecuteInput) {
+  return withApiError(() => getProApi(token).apiV1ProSubscriptionChargeChargeIdExecutePost({
+    chargeId,
+    proSubscriptionExecuteInput: payload
   }));
 }
 

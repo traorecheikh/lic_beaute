@@ -8,6 +8,7 @@ Name | Type
 ------------ | -------------
 `redirectUrl` | string
 `chargeId` | string
+`resumed` | boolean
 
 ## Example
 
@@ -18,6 +19,7 @@ import type { ProSubscriptionCheckoutResult } from ''
 const example = {
   "redirectUrl": null,
   "chargeId": null,
+  "resumed": null,
 } satisfies ProSubscriptionCheckoutResult
 
 console.log(example)

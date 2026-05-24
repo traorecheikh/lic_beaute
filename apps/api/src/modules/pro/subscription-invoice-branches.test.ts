@@ -68,7 +68,7 @@ describe("Pro subscription/invoice branches", () => {
     mocks.paymentAdapter.initiateDeposit.mockResolvedValue({ providerRef: "pref1", redirectUrl: "https://pay", expiresAt: new Date() });
     mocks.prisma.subscriptionCharge.update.mockResolvedValue({ id: "ch1" });
 
-    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, reply);
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, reply);
     expect(mocks.prisma.subscriptionCharge.update).toHaveBeenCalled();
   });
 
@@ -81,7 +81,7 @@ describe("Pro subscription/invoice branches", () => {
       expiresAt: null,
       isComplimentary: false,
       autoRenew: true,
-      billingProvider: "intech"
+      billingProvider: "paydunya"
     });
     mocks.prisma.platformSetting.findMany.mockResolvedValue([
       { key: "subscription_premium_price_xof", value: "25000" },

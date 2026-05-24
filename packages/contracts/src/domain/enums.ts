@@ -37,7 +37,7 @@ export const notificationTypeSchema = z.enum([
   "payment_received",
   "salon_approved"
 ]);
-export const paymentProviderSchema = z.enum(["intech", "paydunya", "manual"]);
+export const paymentProviderSchema = z.enum(["paydunya", "manual"]);
 export const paymentMethodSchema = z.enum([
   "wave_senegal",
   "orange_senegal",

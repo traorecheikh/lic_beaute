@@ -102,6 +102,7 @@ export type AdminSubscriptionListResponseItemsInnerStatusEnum = typeof AdminSubs
  * @export
  */
 export const AdminSubscriptionListResponseItemsInnerBillingProviderEnum = {
+    Paydunya: 'paydunya',
     Intech: 'intech',
     Manual: 'manual'
 } as const;

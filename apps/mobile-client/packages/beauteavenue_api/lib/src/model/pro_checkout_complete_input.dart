@@ -16,6 +16,7 @@ part 'pro_checkout_complete_input.g.dart';
 /// * [paymentMethod] 
 /// * [lineItems] 
 /// * [discountXof] 
+/// * [softpayMethod] 
 @BuiltValue()
 abstract class ProCheckoutCompleteInput implements Built<ProCheckoutCompleteInput, ProCheckoutCompleteInputBuilder> {
   @BuiltValueField(wireName: r'paymentMethod')
@@ -27,6 +28,9 @@ abstract class ProCheckoutCompleteInput implements Built<ProCheckoutCompleteInpu
 
   @BuiltValueField(wireName: r'discountXof')
   int? get discountXof;
+
+  @BuiltValueField(wireName: r'softpayMethod')
+  String? get softpayMethod;
 
   ProCheckoutCompleteInput._();
 
@@ -67,6 +71,13 @@ class _$ProCheckoutCompleteInputSerializer implements PrimitiveSerializer<ProChe
       yield serializers.serialize(
         object.discountXof,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.softpayMethod != null) {
+      yield r'softpayMethod';
+      yield serializers.serialize(
+        object.softpayMethod,
+        specifiedType: const FullType(String),
       );
     }
   }
@@ -112,6 +123,13 @@ class _$ProCheckoutCompleteInputSerializer implements PrimitiveSerializer<ProChe
             specifiedType: const FullType(int),
           ) as int;
           result.discountXof = valueDes;
+          break;
+        case r'softpayMethod':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.softpayMethod = valueDes;
           break;
         default:
           unhandled.add(key);

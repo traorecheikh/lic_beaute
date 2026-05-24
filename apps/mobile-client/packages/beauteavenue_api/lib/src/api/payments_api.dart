@@ -12,6 +12,7 @@ import 'package:beauteavenue_api/src/api_util.dart';
 import 'package:beauteavenue_api/src/model/api_error.dart';
 import 'package:beauteavenue_api/src/model/api_v1_payments_webhooks_paydunya_post200_response.dart';
 import 'package:beauteavenue_api/src/model/paydunya_execute_payment_input.dart';
+import 'package:beauteavenue_api/src/model/paydunya_execute_payment_response.dart';
 import 'package:beauteavenue_api/src/model/paydunya_method_list_response.dart';
 import 'package:beauteavenue_api/src/model/payment_initiate_input.dart';
 import 'package:beauteavenue_api/src/model/payment_initiate_response.dart';
@@ -31,7 +32,7 @@ class PaymentsApi {
   /// 
   ///
   /// Parameters:
-  /// * [body] 
+  /// * [paydunyaExecutePaymentInput] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -39,10 +40,10 @@ class PaymentsApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [PaymentInitiateResponse] as data
+  /// Returns a [Future] containing a [Response] with a [PaydunyaExecutePaymentResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PaymentInitiateResponse>> apiV1PaymentsDepositsExecutePost({ 
-    required PaydunyaExecutePaymentInput body,
+  Future<Response<PaydunyaExecutePaymentResponse>> apiV1PaymentsDepositsExecutePost({ 
+    required PaydunyaExecutePaymentInput paydunyaExecutePaymentInput,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -73,7 +74,8 @@ class PaymentsApi {
     dynamic _bodyData;
 
     try {
-      _bodyData = body;
+      const _type = FullType(PaydunyaExecutePaymentInput);
+      _bodyData = _serializers.serialize(paydunyaExecutePaymentInput, specifiedType: _type);
 
     } catch(error, stackTrace) {
       throw DioException(
@@ -96,14 +98,14 @@ class PaymentsApi {
       onReceiveProgress: onReceiveProgress,
     );
 
-    PaymentInitiateResponse? _responseData;
+    PaydunyaExecutePaymentResponse? _responseData;
 
     try {
       final rawResponse = _response.data;
       _responseData = rawResponse == null ? null : _serializers.deserialize(
         rawResponse,
-        specifiedType: const FullType(PaymentInitiateResponse),
-      ) as PaymentInitiateResponse;
+        specifiedType: const FullType(PaydunyaExecutePaymentResponse),
+      ) as PaydunyaExecutePaymentResponse;
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -115,7 +117,7 @@ class PaymentsApi {
       );
     }
 
-    return Response<PaymentInitiateResponse>(
+    return Response<PaydunyaExecutePaymentResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

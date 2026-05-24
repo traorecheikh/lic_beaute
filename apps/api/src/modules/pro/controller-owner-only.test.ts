@@ -57,7 +57,7 @@ describe("ProController owner-only guards", () => {
     await c.analytics({ query: { period: "30d" } } as never, rep);
     await c.getSubscription({} as never, rep);
     await c.updateSubscription({ body: {} } as never, rep);
-    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "intech" } } as never, rep);
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, rep);
     await c.listPayouts({} as never, rep);
     await c.listInvoices({} as never, rep);
     await c.downloadInvoicePdf({ params: { invoiceId: "inv1" } } as never, rep);

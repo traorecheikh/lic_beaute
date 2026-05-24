@@ -43,6 +43,7 @@ Method | HTTP request | Description
 [**apiV1ProStaffEmployeeIdPatch**](ProApi.md#apiv1prostaffemployeeidpatch) | **PATCH** /api/v1/pro/staff/{employeeId} | Update salon staff
 [**apiV1ProStaffGet**](ProApi.md#apiv1prostaffget) | **GET** /api/v1/pro/staff | List salon staff
 [**apiV1ProStaffPost**](ProApi.md#apiv1prostaffpost) | **POST** /api/v1/pro/staff | Create salon staff
+[**apiV1ProSubscriptionChargeChargeIdExecutePost**](ProApi.md#apiv1prosubscriptionchargechargeidexecutepost) | **POST** /api/v1/pro/subscription/charge/{chargeId}/execute | Execute subscription payment (two-step flow)
 [**apiV1ProSubscriptionCheckoutPost**](ProApi.md#apiv1prosubscriptioncheckoutpost) | **POST** /api/v1/pro/subscription/checkout | Initiate premium subscription checkout
 [**apiV1ProSubscriptionGet**](ProApi.md#apiv1prosubscriptionget) | **GET** /api/v1/pro/subscription | Get subscription details
 [**apiV1ProSubscriptionPatch**](ProApi.md#apiv1prosubscriptionpatch) | **PATCH** /api/v1/pro/subscription | Update subscription settings
@@ -1409,6 +1410,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**ProStaffMember**](ProStaffMember.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiV1ProSubscriptionChargeChargeIdExecutePost**
+> ProSubscriptionExecuteResponse apiV1ProSubscriptionChargeChargeIdExecutePost(chargeId, proSubscriptionExecuteInput)
+
+Execute subscription payment (two-step flow)
+
+### Example
+```dart
+import 'package:beauteavenue_api/api.dart';
+
+final api = BeauteavenueApi().getProApi();
+final String chargeId = chargeId_example; // String | 
+final ProSubscriptionExecuteInput proSubscriptionExecuteInput = ; // ProSubscriptionExecuteInput | 
+
+try {
+    final response = api.apiV1ProSubscriptionChargeChargeIdExecutePost(chargeId, proSubscriptionExecuteInput);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ProApi->apiV1ProSubscriptionChargeChargeIdExecutePost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **chargeId** | **String**|  | 
+ **proSubscriptionExecuteInput** | [**ProSubscriptionExecuteInput**](ProSubscriptionExecuteInput.md)|  | 
+
+### Return type
+
+[**ProSubscriptionExecuteResponse**](ProSubscriptionExecuteResponse.md)
 
 ### Authorization
 

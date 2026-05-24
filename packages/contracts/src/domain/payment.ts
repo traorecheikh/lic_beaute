@@ -68,7 +68,7 @@ export const paymentStatusResponseSchema = z.object({
 
 export const paymentReconcileResponseSchema = paymentStatusResponseSchema;
 
-export const paymentIntechCallbackSchema = z.object({
+export const paymentWebhookBodySchema = z.object({
   idFromGu: z.string().optional(),
   idFromClient: z.string().optional(),
   code: z.string().optional(),
@@ -80,11 +80,11 @@ export const paymentIntechCallbackSchema = z.object({
   secureHash: z.string().optional()
 }).passthrough();
 
-export const paymentIntechStatusRequestSchema = z.object({
+export const paymentStatusRequestSchema = z.object({
   idFromClient: z.string().min(1)
 });
 
-export const paymentIntechStatusResponseSchema = z.object({
+export const paymentStatusResponseSchemaWithPassthrough = z.object({
   status: z.string(),
   idFromClient: z.string().optional(),
   idFromGu: z.string().optional(),
@@ -96,9 +96,7 @@ export type PaymentInitiateResponse = z.infer<typeof paymentInitiateResponseSche
 export type PaymentStatusResponse = z.infer<typeof paymentStatusResponseSchema>;
 export type PaymentReconcileResponse = z.infer<typeof paymentReconcileResponseSchema>;
 export type PaymentChannel = z.infer<typeof paymentChannelSchema>;
-export type PaymentIntechCallback = z.infer<typeof paymentIntechCallbackSchema>;
-export type PaymentIntechStatusRequest = z.infer<typeof paymentIntechStatusRequestSchema>;
-export type PaymentIntechStatusResponse = z.infer<typeof paymentIntechStatusResponseSchema>;
+export type PaymentWebhookBody = z.infer<typeof paymentWebhookBodySchema>;
 
 // ── PayDunya ──────────────────────────────────────────────────────────────────
 
@@ -115,14 +113,29 @@ export const paydunyaMethodListResponseSchema = z.object({
 
 export const paydunyaTransactionExecuteInputSchema = z.object({
   paymentId: z.string(),
-  method: z.string()
+  method: z.string(),
+  details: z.record(z.any()).optional()
 });
 
 export const paydunyaTransactionExecuteResponseSchema = z.object({
   success: z.boolean(),
   status: z.string(),
-  providerTxId: z.string().nullable()
+  providerTxId: z.string().nullable(),
+  message: z.string().optional(),
+  url: z.string().optional(),
+  other_url: z.object({
+    om_url: z.string().optional(),
+    maxit_url: z.string().optional()
+  }).optional(),
+  data: z.record(z.any()).optional()
+}).passthrough();
+
+export const proSubscriptionExecuteInputSchema = z.object({
+  method: z.string(),
+  details: z.record(z.any()).optional()
 });
+
+export const proSubscriptionExecuteResponseSchema = paydunyaTransactionExecuteResponseSchema;
 
 export const paydunyaRefundInputSchema = z.object({
   amountXof: z.number().int().positive(),
@@ -141,3 +154,5 @@ export type PaydunyaTransactionExecuteInput = z.infer<typeof paydunyaTransaction
 export type PaydunyaTransactionExecuteResponse = z.infer<typeof paydunyaTransactionExecuteResponseSchema>;
 export type PaydunyaRefundInput = z.infer<typeof paydunyaRefundInputSchema>;
 export type PaydunyaRefundResponse = z.infer<typeof paydunyaRefundResponseSchema>;
+export type ProSubscriptionExecuteInput = z.infer<typeof proSubscriptionExecuteInputSchema>;
+export type ProSubscriptionExecuteResponse = z.infer<typeof proSubscriptionExecuteResponseSchema>;

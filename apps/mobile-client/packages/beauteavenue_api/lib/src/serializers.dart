@@ -112,6 +112,11 @@ import 'package:beauteavenue_api/src/model/media_upload_response.dart';
 import 'package:beauteavenue_api/src/model/otp_accepted_response.dart';
 import 'package:beauteavenue_api/src/model/otp_request_input.dart';
 import 'package:beauteavenue_api/src/model/otp_verify_input.dart';
+import 'package:beauteavenue_api/src/model/paydunya_execute_payment_input.dart';
+import 'package:beauteavenue_api/src/model/paydunya_execute_payment_response.dart';
+import 'package:beauteavenue_api/src/model/paydunya_execute_payment_response_other_url.dart';
+import 'package:beauteavenue_api/src/model/paydunya_method_list_response.dart';
+import 'package:beauteavenue_api/src/model/paydunya_method_list_response_methods_inner.dart';
 import 'package:beauteavenue_api/src/model/payment_initiate_input.dart';
 import 'package:beauteavenue_api/src/model/payment_initiate_response.dart';
 import 'package:beauteavenue_api/src/model/payment_reconcile_response.dart';
@@ -157,6 +162,8 @@ import 'package:beauteavenue_api/src/model/pro_subscription.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_billing_method.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_checkout_input.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_checkout_result.dart';
+import 'package:beauteavenue_api/src/model/pro_subscription_execute_input.dart';
+import 'package:beauteavenue_api/src/model/pro_subscription_execute_response.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_update_input.dart';
 import 'package:beauteavenue_api/src/model/pro_subscription_update_input_billing_method.dart';
 import 'package:beauteavenue_api/src/model/pro_voucher_create_input.dart';
@@ -282,6 +289,11 @@ part 'serializers.g.dart';
   OtpAcceptedResponse,
   OtpRequestInput,
   OtpVerifyInput,
+  PaydunyaExecutePaymentInput,
+  PaydunyaExecutePaymentResponse,
+  PaydunyaExecutePaymentResponseOtherUrl,
+  PaydunyaMethodListResponse,
+  PaydunyaMethodListResponseMethodsInner,
   PaymentInitiateInput,
   PaymentInitiateResponse,
   PaymentReconcileResponse,
@@ -327,6 +339,8 @@ part 'serializers.g.dart';
   ProSubscriptionBillingMethod,
   ProSubscriptionCheckoutInput,
   ProSubscriptionCheckoutResult,
+  ProSubscriptionExecuteInput,
+  ProSubscriptionExecuteResponse,
   ProSubscriptionUpdateInput,
   ProSubscriptionUpdateInputBillingMethod,
   ProVoucherCreateInput,

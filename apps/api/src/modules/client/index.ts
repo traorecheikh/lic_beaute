@@ -48,7 +48,7 @@ function isPrismaKnownError(error: unknown): error is { code: string } {
 
 function serializePaymentMethod(method: {
   id: string;
-  provider: "intech" | "paydunya" | "manual";
+  provider: "paydunya" | "manual";
   phoneNumber: string;
   label: string | null;
   isDefault: boolean;
@@ -132,7 +132,7 @@ export class ClientAccountController {
       cities: SENEGAL_CITIES,
       languages: ["fr", "en"],
       contactChannels: ["phone", "sms"],
-      paymentProviders: ["intech"]
+      paymentProviders: ["paydunya"]
     }));
   }
 
@@ -180,7 +180,7 @@ export class ClientAccountController {
           return tx.clientPaymentMethod.create({
             data: {
             userId: session.sub,
-            provider: toDbProvider(body.provider) ?? "intech",
+            provider: toDbProvider(body.provider) ?? "paydunya",
             phoneNumber: normalizedPhone,
               label: body.label ?? null,
               isDefault: hasDefault === 0,

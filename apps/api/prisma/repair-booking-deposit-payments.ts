@@ -54,7 +54,7 @@ async function main() {
     await prisma.payment.create({
       data: {
         bookingId: b.id,
-        provider: b.paymentProvider ?? "intech",
+        provider: b.paymentProvider ?? "paydunya",
         status: paymentStatus,
         amountXof: b.depositAmountXof,
         idempotencyKey: `booking-${b.id}-deposit-repair`

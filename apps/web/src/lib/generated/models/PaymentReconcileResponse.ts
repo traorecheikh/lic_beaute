@@ -74,7 +74,9 @@ export type PaymentReconcileResponseStatusEnum = typeof PaymentReconcileResponse
  * @export
  */
 export const PaymentReconcileResponseProviderEnum = {
-    Intech: 'intech'
+    Intech: 'intech',
+    Paydunya: 'paydunya',
+    Manual: 'manual'
 } as const;
 export type PaymentReconcileResponseProviderEnum = typeof PaymentReconcileResponseProviderEnum[keyof typeof PaymentReconcileResponseProviderEnum];
 

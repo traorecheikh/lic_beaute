@@ -46,7 +46,7 @@ describe("ClientAccountController success paths", () => {
   it("lists payment methods", async () => {
     mocks.prisma.clientPaymentMethod.findMany.mockResolvedValue([
       {
-        id: "pm1", provider: "intech", phoneNumber: "771234567", label: null, isDefault: true,
+        id: "pm1", provider: "paydunya", phoneNumber: "771234567", label: null, isDefault: true,
         lastUsedAt: null, createdAt: new Date(), updatedAt: new Date()
       }
     ]);

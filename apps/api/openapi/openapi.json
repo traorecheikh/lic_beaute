@@ -521,8 +521,8 @@
             "items": {
               "type": "string",
               "enum": [
-                "intech",
-                "paydunya"
+                "paydunya",
+                "manual"
               ]
             }
           }
@@ -544,8 +544,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ]
           },
           "phoneNumber": {
@@ -587,8 +587,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ]
           },
           "phoneNumber": {
@@ -1390,8 +1390,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ]
           },
           "channel": {
@@ -1503,8 +1503,8 @@
           "paymentProvider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ],
             "nullable": true
           },
@@ -1591,8 +1591,8 @@
                 "paymentProvider": {
                   "type": "string",
                   "enum": [
-                    "intech",
-                    "paydunya"
+                    "paydunya",
+                    "manual"
                   ],
                   "nullable": true
                 },
@@ -2183,7 +2183,6 @@
             "type": "string",
             "enum": [
               "paydunya",
-              "intech",
               "manual"
             ],
             "nullable": true
@@ -2275,7 +2274,6 @@
                   "type": "string",
                   "enum": [
                     "paydunya",
-                    "intech",
                     "manual"
                   ],
                   "nullable": true
@@ -2352,7 +2350,6 @@
             "type": "string",
             "enum": [
               "paydunya",
-              "intech",
               "manual"
             ],
             "nullable": true
@@ -3967,7 +3964,6 @@
             "type": "string",
             "enum": [
               "cash",
-              "intech",
               "other"
             ]
           },
@@ -3997,6 +3993,9 @@
             "type": "integer",
             "minimum": 0,
             "default": 0
+          },
+          "softpayMethod": {
+            "type": "string"
           }
         },
         "required": [
@@ -4198,12 +4197,19 @@
                 "type": "string",
                 "enum": [
                   "paydunya",
-                  "intech",
                   "manual"
                 ]
               },
               "accountNumberMasked": {
                 "type": "string"
+              },
+              "country": {
+                "type": "string",
+                "nullable": true
+              },
+              "method": {
+                "type": "string",
+                "nullable": true
               }
             },
             "required": [
@@ -4240,7 +4246,6 @@
                 "type": "string",
                 "enum": [
                   "paydunya",
-                  "intech",
                   "manual"
                 ]
               },
@@ -4248,6 +4253,14 @@
                 "type": "string",
                 "minLength": 8,
                 "maxLength": 20
+              },
+              "country": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "method": {
+                "type": "string"
               }
             },
             "required": [
@@ -4274,7 +4287,6 @@
             "type": "string",
             "enum": [
               "paydunya",
-              "intech",
               "manual"
             ],
             "default": "paydunya"
@@ -4290,10 +4302,14 @@
         "properties": {
           "redirectUrl": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "nullable": true
           },
           "chargeId": {
             "type": "string"
+          },
+          "resumed": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -4376,8 +4392,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ]
           },
           "channel": {
@@ -4476,8 +4492,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ]
           },
           "providerTxId": {
@@ -4522,8 +4538,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "intech",
-              "paydunya"
+              "paydunya",
+              "manual"
             ]
           },
           "providerTxId": {
@@ -4590,6 +4606,164 @@
             "type": "string"
           }
         },
+        "additionalProperties": true
+      },
+      "PaydunyaMethodListResponse": {
+        "type": "object",
+        "properties": {
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "code",
+                "country",
+                "label",
+                "enabled"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "methods"
+        ],
+        "additionalProperties": false
+      },
+      "PaydunyaExecutePaymentInput": {
+        "type": "object",
+        "properties": {
+          "paymentId": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "paymentId",
+          "method"
+        ],
+        "additionalProperties": false
+      },
+      "PaydunyaExecutePaymentResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "providerTxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "other_url": {
+            "type": "object",
+            "properties": {
+              "om_url": {
+                "type": "string"
+              },
+              "maxit_url": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "providerTxId"
+        ],
+        "additionalProperties": true
+      },
+      "ProSubscriptionExecuteInput": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "method"
+        ],
+        "additionalProperties": false
+      },
+      "ProSubscriptionExecuteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "providerTxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "other_url": {
+            "type": "object",
+            "properties": {
+              "om_url": {
+                "type": "string"
+              },
+              "maxit_url": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "providerTxId"
+        ],
         "additionalProperties": true
       },
       "PushTokenInput": {
@@ -5123,8 +5297,8 @@
                           "provider": {
                             "type": "string",
                             "enum": [
-                              "intech",
-                              "paydunya"
+                              "paydunya",
+                              "manual"
                             ]
                           },
                           "phoneNumber": {
@@ -7876,6 +8050,51 @@
         ]
       }
     },
+    "/api/v1/pro/subscription/charge/{chargeId}/execute": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Execute subscription payment (two-step flow)",
+        "parameters": [
+          {
+            "name": "chargeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProSubscriptionExecuteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription payment execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProSubscriptionExecuteResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/pro/payouts": {
       "get": {
         "tags": [
@@ -8278,7 +8497,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaymentInitiateResponse"
+                  "$ref": "#/components/schemas/PaydunyaExecutePaymentResponse"
                 }
               }
             }
@@ -8374,45 +8593,6 @@
             "bearerAuth": []
           }
         ]
-      }
-    },
-    "/api/v1/payments/webhooks/intech": {
-      "post": {
-        "tags": [
-          "payments"
-        ],
-        "summary": "Intech payment webhook callback",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PaymentWebhookBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Webhook acknowledged",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "received": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "received"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/v1/push-tokens": {

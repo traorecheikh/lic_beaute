@@ -38,6 +38,7 @@ All URIs are relative to *http://localhost:3000*
 | [**apiV1ProStaffEmployeeIdPatch**](ProApi.md#apiv1prostaffemployeeidpatch) | **PATCH** /api/v1/pro/staff/{employeeId} | Update salon staff |
 | [**apiV1ProStaffGet**](ProApi.md#apiv1prostaffget) | **GET** /api/v1/pro/staff | List salon staff |
 | [**apiV1ProStaffPost**](ProApi.md#apiv1prostaffpost) | **POST** /api/v1/pro/staff | Create salon staff |
+| [**apiV1ProSubscriptionChargeChargeIdExecutePost**](ProApi.md#apiv1prosubscriptionchargechargeidexecutepost) | **POST** /api/v1/pro/subscription/charge/{chargeId}/execute | Execute subscription payment (two-step flow) |
 | [**apiV1ProSubscriptionCheckoutPost**](ProApi.md#apiv1prosubscriptioncheckoutpost) | **POST** /api/v1/pro/subscription/checkout | Initiate premium subscription checkout |
 | [**apiV1ProSubscriptionGet**](ProApi.md#apiv1prosubscriptionget) | **GET** /api/v1/pro/subscription | Get subscription details |
 | [**apiV1ProSubscriptionPatch**](ProApi.md#apiv1prosubscriptionpatch) | **PATCH** /api/v1/pro/subscription | Update subscription settings |
@@ -2338,6 +2339,78 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **201** | Created staff |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiV1ProSubscriptionChargeChargeIdExecutePost
+
+> ProSubscriptionExecuteResponse apiV1ProSubscriptionChargeChargeIdExecutePost(chargeId, proSubscriptionExecuteInput)
+
+Execute subscription payment (two-step flow)
+
+### Example
+
+```ts
+import {
+  Configuration,
+  ProApi,
+} from '';
+import type { ApiV1ProSubscriptionChargeChargeIdExecutePostRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new ProApi(config);
+
+  const body = {
+    // string
+    chargeId: chargeId_example,
+    // ProSubscriptionExecuteInput
+    proSubscriptionExecuteInput: ...,
+  } satisfies ApiV1ProSubscriptionChargeChargeIdExecutePostRequest;
+
+  try {
+    const data = await api.apiV1ProSubscriptionChargeChargeIdExecutePost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **chargeId** | `string` |  | [Defaults to `undefined`] |
+| **proSubscriptionExecuteInput** | [ProSubscriptionExecuteInput](ProSubscriptionExecuteInput.md) |  | |
+
+### Return type
+
+[**ProSubscriptionExecuteResponse**](ProSubscriptionExecuteResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Subscription payment execution result |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

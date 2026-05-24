@@ -45,6 +45,12 @@ export interface ProCheckoutCompleteInput {
      * @memberof ProCheckoutCompleteInput
      */
     discountXof?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProCheckoutCompleteInput
+     */
+    softpayMethod?: string;
 }
 
 
@@ -81,6 +87,7 @@ export function ProCheckoutCompleteInputFromJSONTyped(json: any, ignoreDiscrimin
         'paymentMethod': json['paymentMethod'],
         'lineItems': ((json['lineItems'] as Array<any>).map(ProCheckoutDetailsLineItemsInnerFromJSON)),
         'discountXof': json['discountXof'] == null ? undefined : json['discountXof'],
+        'softpayMethod': json['softpayMethod'] == null ? undefined : json['softpayMethod'],
     };
 }
 
@@ -98,6 +105,7 @@ export function ProCheckoutCompleteInputToJSONTyped(value?: ProCheckoutCompleteI
         'paymentMethod': value['paymentMethod'],
         'lineItems': ((value['lineItems'] as Array<any>).map(ProCheckoutDetailsLineItemsInnerToJSON)),
         'discountXof': value['discountXof'],
+        'softpayMethod': value['softpayMethod'],
     };
 }
 

@@ -31,6 +31,18 @@ export interface ProSubscriptionUpdateInputBillingMethod {
      * @memberof ProSubscriptionUpdateInputBillingMethod
      */
     accountNumber: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProSubscriptionUpdateInputBillingMethod
+     */
+    country?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProSubscriptionUpdateInputBillingMethod
+     */
+    method?: string;
 }
 
 
@@ -38,6 +50,7 @@ export interface ProSubscriptionUpdateInputBillingMethod {
  * @export
  */
 export const ProSubscriptionUpdateInputBillingMethodProviderEnum = {
+    Paydunya: 'paydunya',
     Intech: 'intech',
     Manual: 'manual'
 } as const;
@@ -65,6 +78,8 @@ export function ProSubscriptionUpdateInputBillingMethodFromJSONTyped(json: any, 
         
         'provider': json['provider'],
         'accountNumber': json['accountNumber'],
+        'country': json['country'] == null ? undefined : json['country'],
+        'method': json['method'] == null ? undefined : json['method'],
     };
 }
 
@@ -81,6 +96,8 @@ export function ProSubscriptionUpdateInputBillingMethodToJSONTyped(value?: ProSu
         
         'provider': value['provider'],
         'accountNumber': value['accountNumber'],
+        'country': value['country'],
+        'method': value['method'],
     };
 }
 

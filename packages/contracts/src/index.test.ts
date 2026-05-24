@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
-
 import {
   bookingStatusSchema,
   paymentChannelSchema,
-  paymentIntechCallbackSchema,
+  paymentWebhookBodySchema,
   paymentProviderSchema
 } from "./index.js";
 
 describe("contracts", () => {
   it("keeps core enums centralized", () => {
     expect(bookingStatusSchema.parse("confirmed")).toBe("confirmed");
-    expect(paymentProviderSchema.parse("intech")).toBe("intech");
+    expect(paymentProviderSchema.parse("paydunya")).toBe("paydunya");
   });
 
   it("accepts supported payment channels for routing", () => {
@@ -22,8 +21,8 @@ describe("contracts", () => {
     expect(() => paymentChannelSchema.parse("mvola")).toThrow();
   });
 
-  it("accepts flexible intech callback payloads with integrity fields", () => {
-    const payload = paymentIntechCallbackSchema.parse({
+  it("accepts flexible webhook callback payloads with integrity fields", () => {
+    const payload = paymentWebhookBodySchema.parse({
       idFromGu: "GU-123",
       idFromClient: "PAY-123",
       serviceCode: "WAVE_SN",

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("dotenv/config", () => ({}));
+
 async function loadConfigWithEnv(env: Record<string, string | undefined>) {
   const prev = { ...process.env };
   for (const [k, v] of Object.entries(env)) {

@@ -14,6 +14,8 @@ part 'pro_subscription_update_input_billing_method.g.dart';
 /// Properties:
 /// * [provider] 
 /// * [accountNumber] 
+/// * [country] 
+/// * [method] 
 @BuiltValue()
 abstract class ProSubscriptionUpdateInputBillingMethod implements Built<ProSubscriptionUpdateInputBillingMethod, ProSubscriptionUpdateInputBillingMethodBuilder> {
   @BuiltValueField(wireName: r'provider')
@@ -22,6 +24,12 @@ abstract class ProSubscriptionUpdateInputBillingMethod implements Built<ProSubsc
 
   @BuiltValueField(wireName: r'accountNumber')
   String get accountNumber;
+
+  @BuiltValueField(wireName: r'country')
+  String? get country;
+
+  @BuiltValueField(wireName: r'method')
+  String? get method;
 
   ProSubscriptionUpdateInputBillingMethod._();
 
@@ -56,6 +64,20 @@ class _$ProSubscriptionUpdateInputBillingMethodSerializer implements PrimitiveSe
       object.accountNumber,
       specifiedType: const FullType(String),
     );
+    if (object.country != null) {
+      yield r'country';
+      yield serializers.serialize(
+        object.country,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.method != null) {
+      yield r'method';
+      yield serializers.serialize(
+        object.method,
+        specifiedType: const FullType(String),
+      );
+    }
   }
 
   @override
@@ -92,6 +114,20 @@ class _$ProSubscriptionUpdateInputBillingMethodSerializer implements PrimitiveSe
             specifiedType: const FullType(String),
           ) as String;
           result.accountNumber = valueDes;
+          break;
+        case r'country':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.country = valueDes;
+          break;
+        case r'method':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.method = valueDes;
           break;
         default:
           unhandled.add(key);

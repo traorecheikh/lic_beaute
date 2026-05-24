@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
-import { paymentInitiateInputSchema } from "@beauteavenue/contracts";
+import { paymentInitiateInputSchema, paydunyaTransactionExecuteInputSchema } from "@beauteavenue/contracts";
 
 import { getPaymentAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
@@ -126,7 +126,7 @@ export class PaymentController {
   async executePayment(request: FastifyRequest, reply: FastifyReply) {
     try {
       const session = requireRole(request, ["client"]);
-      const body = request.body as { paymentId: string; method: string };
+      const body = paydunyaTransactionExecuteInputSchema.parse(request.body);
 
       const payment = await prisma.payment.findUnique({
         where: { id: body.paymentId },
@@ -151,7 +151,8 @@ export class PaymentController {
       const result = await paymentAdapter.executePayment({
         paymentId: payment.id,
         method: body.method,
-        invoiceToken: payment.webhookSignature
+        invoiceToken: payment.webhookSignature,
+        details: body.details
       });
 
       if (result.success) {
@@ -202,10 +203,6 @@ export class PaymentController {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
       fail(reply, 500, "internal_error", "Erreur interne.");
     }
-  }
-
-  async webhookIntech(request: FastifyRequest, reply: FastifyReply) {
-    await this._handleWebhook(request, reply);
   }
 
   async reconcile(request: FastifyRequest, reply: FastifyReply) {

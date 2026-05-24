@@ -20,7 +20,7 @@ Method | HTTP request | Description
 
 
 # **apiV1PaymentsDepositsExecutePost**
-> PaymentInitiateResponse apiV1PaymentsDepositsExecutePost(body)
+> PaydunyaExecutePaymentResponse apiV1PaymentsDepositsExecutePost(paydunyaExecutePaymentInput)
 
 Execute a payment with a specific method (two-step flow)
 
@@ -29,10 +29,10 @@ Execute a payment with a specific method (two-step flow)
 import 'package:beauteavenue_api/api.dart';
 
 final api = BeauteavenueApi().getPaymentsApi();
-final PaydunyaExecutePaymentInput body = ; // PaydunyaExecutePaymentInput | 
+final PaydunyaExecutePaymentInput paydunyaExecutePaymentInput = ; // PaydunyaExecutePaymentInput | 
 
 try {
-    final response = api.apiV1PaymentsDepositsExecutePost(body);
+    final response = api.apiV1PaymentsDepositsExecutePost(paydunyaExecutePaymentInput);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling PaymentsApi->apiV1PaymentsDepositsExecutePost: $e\n');
@@ -43,11 +43,11 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body** | **PaydunyaExecutePaymentInput**|  | 
+ **paydunyaExecutePaymentInput** | [**PaydunyaExecutePaymentInput**](PaydunyaExecutePaymentInput.md)|  | 
 
 ### Return type
 
-[**PaymentInitiateResponse**](PaymentInitiateResponse.md)
+[**PaydunyaExecutePaymentResponse**](PaydunyaExecutePaymentResponse.md)
 
 ### Authorization
 

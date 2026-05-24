@@ -8,6 +8,8 @@ Name | Type
 ------------ | -------------
 `provider` | string
 `accountNumberMasked` | string
+`country` | string
+`method` | string
 
 ## Example
 
@@ -18,6 +20,8 @@ import type { ProSubscriptionBillingMethod } from ''
 const example = {
   "provider": null,
   "accountNumberMasked": null,
+  "country": null,
+  "method": null,
 } satisfies ProSubscriptionBillingMethod
 
 console.log(example)

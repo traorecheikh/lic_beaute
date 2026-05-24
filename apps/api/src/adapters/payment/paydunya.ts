@@ -2,6 +2,18 @@ import crypto from "node:crypto";
 
 import type { PaymentStatus } from "@beauteavenue/contracts";
 
+function normalizePhoneNumber(phone: string, country: string): string {
+  let cleaned = phone.replace(/[\s+\-()]/g, "");
+  if (cleaned.startsWith("221") && cleaned.length > 9) cleaned = cleaned.substring(3);
+  if (cleaned.startsWith("225") && cleaned.length > 10) cleaned = cleaned.substring(3);
+  if (cleaned.startsWith("223") && cleaned.length > 8) cleaned = cleaned.substring(3);
+  if (cleaned.startsWith("228") && cleaned.length > 8) cleaned = cleaned.substring(3);
+  if (cleaned.startsWith("229") && cleaned.length > 8) cleaned = cleaned.substring(3);
+  if (cleaned.startsWith("226") && cleaned.length > 8) cleaned = cleaned.substring(3);
+  if (cleaned.startsWith("237") && cleaned.length > 9) cleaned = cleaned.substring(3);
+  return cleaned;
+}
+
 import type { AvailableMethod, ParsedWebhookEvent, PaymentAdapter } from "./index.js";
 
 // ─── Checkout API types ──────────────────────────────────────────────────────
@@ -70,6 +82,12 @@ type SoftPayBodyKeys = {
 };
 
 const PAYDUNYA_METHODS: Record<string, MethodEntry> = {
+  carte_bancaire: {
+    country: "intl", label: "Carte Bancaire",
+    endpoint: "card",
+    bodyKeys: { tokenKey: "token", phoneKey: "", nameKey: "full_name", emailKey: "email" },
+    disbursable: false
+  },
   wave_senegal: {
     country: "sn", label: "Wave Sénégal",
     endpoint: "wave-senegal",
@@ -93,14 +111,151 @@ const PAYDUNYA_METHODS: Record<string, MethodEntry> = {
     endpoint: "wizall-money-senegal",
     bodyKeys: { tokenKey: "invoice_token", phoneKey: "phone_number", nameKey: "customer_name", emailKey: "customer_email" },
     disbursable: false
+  },
+  expresso_sn: {
+    country: "sn", label: "Expresso Sénégal",
+    endpoint: "expresso-senegal",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "expresso_sn_phone", nameKey: "expresso_sn_fullName", emailKey: "expresso_sn_email" },
+    disbursable: false
+  },
+  om_ci: {
+    country: "ci", label: "Orange Money Côte d'Ivoire",
+    endpoint: "orange-money-ci",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "orange_money_ci_phone_number", nameKey: "orange_money_ci_customer_fullname", emailKey: "orange_money_ci_email" },
+    disbursable: false
+  },
+  mtn_ci: {
+    country: "ci", label: "MTN Money Côte d'Ivoire",
+    endpoint: "mtn-ci",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "mtn_ci_phone_number", nameKey: "mtn_ci_customer_fullname", emailKey: "mtn_ci_email" },
+    disbursable: false
+  },
+  moov_ci: {
+    country: "ci", label: "Moov Côte d'Ivoire",
+    endpoint: "moov-ci",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "moov_ci_phone_number", nameKey: "moov_ci_customer_fullname", emailKey: "moov_ci_email" },
+    disbursable: false
+  },
+  wave_ci: {
+    country: "ci", label: "Wave Côte d'Ivoire",
+    endpoint: "wave-ci",
+    bodyKeys: { tokenKey: "wave_ci_payment_token", phoneKey: "wave_ci_phone", nameKey: "wave_ci_fullName", emailKey: "wave_ci_email" },
+    disbursable: false
+  },
+  om_bf: {
+    country: "bf", label: "Orange Money Burkina Faso",
+    endpoint: "orange-money-burkina",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "phone_bf", nameKey: "name_bf", emailKey: "email_bf" },
+    disbursable: false
+  },
+  moov_bf: {
+    country: "bf", label: "Moov Burkina Faso",
+    endpoint: "moov-burkina",
+    bodyKeys: { tokenKey: "moov_burkina_faso_payment_token", phoneKey: "moov_burkina_faso_phone_number", nameKey: "moov_burkina_faso_fullName", emailKey: "moov_burkina_faso_email" },
+    disbursable: false
+  },
+  moov_bj: {
+    country: "bj", label: "Moov Bénin",
+    endpoint: "moov-benin",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "moov_benin_phone_number", nameKey: "moov_benin_customer_fullname", emailKey: "moov_benin_email" },
+    disbursable: false
+  },
+  mtn_bj: {
+    country: "bj", label: "MTN Bénin",
+    endpoint: "mtn-benin",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "mtn_benin_phone_number", nameKey: "mtn_benin_customer_fullname", emailKey: "mtn_benin_email" },
+    disbursable: false
+  },
+  t_money_tg: {
+    country: "tg", label: "T-Money Togo",
+    endpoint: "t-money-togo",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "phone_t_money", nameKey: "name_t_money", emailKey: "email_t_money" },
+    disbursable: false
+  },
+  moov_tg: {
+    country: "tg", label: "Moov Togo",
+    endpoint: "moov-togo",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "moov_togo_phone_number", nameKey: "moov_togo_customer_fullname", emailKey: "moov_togo_email" },
+    disbursable: false
+  },
+  om_ml: {
+    country: "ml", label: "Orange Money Mali",
+    endpoint: "orange-money-mali",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "orange_money_mali_phone_number", nameKey: "orange_money_mali_customer_fullname", emailKey: "orange_money_mali_email" },
+    disbursable: false
+  },
+  moov_ml: {
+    country: "ml", label: "Moov Mali",
+    endpoint: "moov-mali",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "moov_ml_phone_number", nameKey: "moov_ml_customer_fullname", emailKey: "moov_ml_email" },
+    disbursable: false
+  },
+  mtn_cm: {
+    country: "cm", label: "MTN Cameroun",
+    endpoint: "mtn-cameroun",
+    bodyKeys: { tokenKey: "payment_token", phoneKey: "mtn_cameroun_phone_number", nameKey: "mtn_cameroun_customer_fullname", emailKey: "mtn_cameroun_email" },
+    disbursable: false
+  },
+  djamo: {
+    country: "intl", label: "Djamo",
+    endpoint: "djamo",
+    bodyKeys: { tokenKey: "djamo_payment_token", phoneKey: "djamo_phone", nameKey: "djamo_fullName", emailKey: "djamo_email" },
+    disbursable: false
+  },
+  paydunya_wallet: {
+    country: "intl", label: "Portefeuille PayDunya",
+    endpoint: "paydunya",
+    bodyKeys: { tokenKey: "invoice_token", phoneKey: "phone_phone", nameKey: "customer_name", emailKey: "customer_email" },
+    disbursable: false
   }
 };
 
 const SOFTPAY_METHOD_MAP: Record<string, string> = {
+  carte_bancaire: "carte_bancaire",
   wave_senegal: "wave_senegal",
   orange_senegal: "orange_senegal",
   free_senegal: "free_senegal",
-  wizall_senegal: "wizall_senegal"
+  wizall_senegal: "wizall_senegal",
+  expresso_sn: "expresso_sn",
+  om_sn: "orange_senegal",
+  free_money_sn: "free_senegal",
+  wizall_sn: "wizall_senegal",
+  wave_sn: "wave_senegal",
+  om_ci: "om_ci",
+  mtn_ci: "mtn_ci",
+  moov_ci: "moov_ci",
+  wave_ci: "wave_ci",
+  om_bf: "om_bf",
+  moov_bf: "moov_bf",
+  moov_bj: "moov_bj",
+  mtn_bj: "mtn_bj",
+  t_money_tg: "t_money_tg",
+  moov_tg: "moov_tg",
+  om_ml: "om_ml",
+  moov_ml: "moov_ml",
+  mtn_cm: "mtn_cm",
+  djamo: "djamo",
+  paydunya_wallet: "paydunya_wallet",
+
+  paydunya_card: "carte_bancaire",
+  paydunya_wave_sn: "wave_senegal",
+  paydunya_orange_sn: "orange_senegal",
+  paydunya_free_sn: "free_senegal",
+  paydunya_expresso: "expresso_sn",
+  paydunya_orange_ml: "om_ml",
+  paydunya_moov_ml: "moov_ml",
+  paydunya_mtn_cm: "mtn_cm",
+  paydunya_mtn_bj: "mtn_bj",
+  paydunya_moov_bj: "moov_bj",
+  paydunya_moov_tg: "moov_tg",
+  paydunya_moov_ci: "moov_ci",
+  paydunya_mtn_ci: "mtn_ci",
+  paydunya_wave_ci: "wave_ci",
+  paydunya_tm_ci: "om_ci",
+  paydunya_orange_bf: "om_bf",
+  paydunya_moov_bf: "moov_bf",
+  paydunya_t_money_tg: "t_money_tg",
+  paydunya_djamo: "djamo"
 };
 
 export class PayDunyaAdapter implements PaymentAdapter {
@@ -207,47 +362,140 @@ export class PayDunyaAdapter implements PaymentAdapter {
     paymentId: string;
     method: string;
     invoiceToken: string;
-  }): Promise<{ success: boolean; status: string; providerTxId: string | null }> {
-    const methodEntry = PAYDUNYA_METHODS[params.method];
+    details?: Record<string, any>;
+  }): Promise<{ success: boolean; status: string; providerTxId: string | null; [key: string]: any }> {
+    const mappedMethod = SOFTPAY_METHOD_MAP[params.method] || params.method;
+    const methodEntry = PAYDUNYA_METHODS[mappedMethod];
     if (!methodEntry) {
-      return { success: false, status: "failed", providerTxId: null };
+      return { success: false, status: "failed", providerTxId: null, message: `Méthode de paiement non supportée: ${params.method}` };
     }
 
     const keys = methodEntry.bodyKeys;
-    const body: Record<string, unknown> = {
-      [keys.tokenKey]: params.invoiceToken,
-      [keys.nameKey]: "Client",
-      [keys.emailKey]: "client@beauteavenue.sn",
-      [keys.phoneKey]: "777777777"
-    };
+    const details = params.details ?? {};
+
+    // Get input phone, email, and name
+    let inputPhone = details.phone_number || details.phoneNumber || details.phone || details.phone_phone || "";
+    if (inputPhone) {
+      inputPhone = normalizePhoneNumber(inputPhone, methodEntry.country);
+    } else {
+      inputPhone = "777777777";
+    }
+
+    const inputName = details.customer_name || details.fullName || details.name || details.full_name || "Client";
+    const inputEmail = details.customer_email || details.email || "client@beauteavenue.sn";
+
+    // Build the request body dynamically
+    const body: Record<string, unknown> = {};
+
+    if (keys.tokenKey) {
+      body[keys.tokenKey] = params.invoiceToken;
+    }
+    if (keys.phoneKey) {
+      body[keys.phoneKey] = inputPhone;
+    }
+    if (keys.nameKey) {
+      body[keys.nameKey] = inputName;
+    }
+    if (keys.emailKey) {
+      body[keys.emailKey] = inputEmail;
+    }
+
     if (keys.extra) {
       Object.assign(body, keys.extra);
     }
 
+    // Apply special custom mappings and transformations
+    if (mappedMethod === "carte_bancaire") {
+      body.full_name = inputName;
+      body.email = inputEmail;
+      body.card_number = (details.cardNumber || details.card_number || "").replace(/\s/g, "");
+      body.card_cvv = details.cardCvv || details.card_cvv || "";
+      body.card_expired_date_year = details.cardExpiredDateYear || details.card_expired_date_year || "";
+      body.card_expired_date_month = details.cardExpiredDateMonth || details.card_expired_date_month || "";
+      body.token = params.invoiceToken;
+    }
+
+    if (mappedMethod === "om_ci") {
+      body.orange_money_ci_otp = details.otp || details.orange_money_ci_otp || "";
+    }
+
+    if (mappedMethod === "mtn_ci") {
+      body.mtn_ci_wallet_provider = details.provider || details.mtn_ci_wallet_provider || "MTNCI";
+    }
+
+    if (mappedMethod === "mtn_bj") {
+      body.mtn_benin_wallet_provider = details.provider || details.mtn_benin_wallet_provider || "MTNBENIN";
+    }
+
+    if (mappedMethod === "mtn_cm") {
+      body.mtn_cameroun_wallet_provider = details.provider || details.mtn_cameroun_wallet_provider || "MTNCAMEROUN";
+    }
+
+    if (mappedMethod === "om_bf") {
+      body.otp_code = details.otp || details.otp_code || "";
+    }
+
+    if (mappedMethod === "moov_tg") {
+      body.moov_togo_customer_address = details.address || details.moov_togo_customer_address || "Lomé";
+    }
+
+    if (mappedMethod === "om_ml") {
+      body.orange_money_mali_customer_address = details.address || details.orange_money_mali_customer_address || "Bamako";
+    }
+
+    if (mappedMethod === "moov_ml") {
+      body.moov_ml_customer_address = details.address || details.moov_ml_customer_address || "Bamako";
+    }
+
+    if (mappedMethod === "djamo") {
+      body.code_country = details.code_country || details.codeCountry || "sn";
+    }
+
+    if (mappedMethod === "paydunya_wallet") {
+      body.password = details.password || "";
+    }
+
+    // Determine target endpoint (handling Wizall confirm step)
+    let endpoint = `/softpay/${methodEntry.endpoint}`;
+    if (mappedMethod === "wizall_senegal" && details.authorization_code) {
+      endpoint = `/softpay/wizall-money-senegal/confirm`;
+      body.authorization_code = details.authorization_code;
+      body.phone_number = inputPhone;
+      body.transaction_id = details.transaction_id || details.transactionId || "";
+      // delete normal softpay keys
+      delete body.invoice_token;
+      delete body.customer_name;
+      delete body.customer_email;
+    }
+
     try {
       const json = await this._postJson<SoftPayExecuteResponse>(
-        `/softpay/${methodEntry.endpoint}`,
+        endpoint,
         body
       );
 
       if (json.success) {
         return {
+          ...json,
           success: true,
           status: "succeeded",
           providerTxId: params.invoiceToken
         };
       }
 
+      const errorMsg = json.message || (json as any).errors?.message || (json as any).errors?.description || "Échec du paiement";
       return {
         success: false,
         status: "failed",
-        providerTxId: null
+        providerTxId: null,
+        message: errorMsg
       };
-    } catch {
+    } catch (e: any) {
       return {
         success: false,
         status: "failed",
-        providerTxId: null
+        providerTxId: null,
+        message: e.message || "Erreur réseau lors de la transaction."
       };
     }
   }

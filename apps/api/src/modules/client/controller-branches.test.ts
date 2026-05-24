@@ -65,7 +65,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.findUnique.mockResolvedValue({
       id: "pm1",
       userId: "u1",
-      provider: "intech",
+      provider: "paydunya",
       phoneNumber: "771234567",
       label: null,
       isDefault: true,
@@ -74,7 +74,7 @@ describe("ClientAccountController branches", () => {
       updatedAt: new Date()
     });
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "77 123 45 67", label: null },
+      body: { provider: "paydunya", phoneNumber: "77 123 45 67", label: null },
       headers: { "x-idempotency-key": "idem1" }
     } as never, {} as never);
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.any(Object), 201);
@@ -89,7 +89,7 @@ describe("ClientAccountController branches", () => {
           updateMany: vi.fn(),
           create: vi.fn().mockResolvedValue({
             id: "pm-h",
-            provider: "intech",
+            provider: "paydunya",
             phoneNumber: "771234567",
             label: null,
             isDefault: false,
@@ -101,7 +101,7 @@ describe("ClientAccountController branches", () => {
       })
     );
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "77 123 45 67", label: null },
+      body: { provider: "paydunya", phoneNumber: "77 123 45 67", label: null },
       headers: { "X-Idempotency-Key": { toString: () => "idem-object" } }
     } as never, {} as never);
     expect(mocks.ok).toHaveBeenCalled();
@@ -111,7 +111,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
       id: "pm-idem",
       userId: "u1",
-      provider: "intech",
+      provider: "paydunya",
       phoneNumber: "771234567",
       label: null,
       isDefault: true,
@@ -122,7 +122,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.count.mockResolvedValue(1);
     mocks.prisma.$transaction.mockRejectedValueOnce({ code: "P2002" });
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "771234567", label: null },
+      body: { provider: "paydunya", phoneNumber: "771234567", label: null },
       headers: { "x-idempotency-key": "idem-race" }
     } as never, {} as never);
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "pm-idem" }), 201);
@@ -135,7 +135,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.count.mockResolvedValue(1);
     mocks.prisma.$transaction.mockRejectedValueOnce({ code: "P2002" });
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "771234567", label: null },
+      body: { provider: "paydunya", phoneNumber: "771234567", label: null },
       headers: { "x-idempotency-key": "idem-conflict" }
     } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 409, "idempotency_key_conflict", expect.any(String));
@@ -151,7 +151,7 @@ describe("ClientAccountController branches", () => {
           updateMany: txUpdateMany,
           create: vi.fn().mockResolvedValue({
             id: "pm-new",
-            provider: "intech",
+            provider: "paydunya",
             phoneNumber: "771234567",
             label: null,
             isDefault: true,
@@ -163,7 +163,7 @@ describe("ClientAccountController branches", () => {
       })
     );
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "771234567", label: null }
+      body: { provider: "paydunya", phoneNumber: "771234567", label: null }
     } as never, {} as never);
     expect(txUpdateMany).toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "pm-new" }), 201);
@@ -174,7 +174,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.count.mockResolvedValue(1);
     mocks.prisma.$transaction.mockRejectedValueOnce(new Error("tx-fail"));
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "771234567", label: null },
+      body: { provider: "paydunya", phoneNumber: "771234567", label: null },
       headers: { "x-idempotency-key": "idem-err" }
     } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", expect.any(String));
@@ -184,7 +184,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.findUnique.mockResolvedValue({
       id: "pm1",
       userId: "u2",
-      provider: "intech",
+      provider: "paydunya",
       phoneNumber: "771234567",
       label: null,
       isDefault: true,
@@ -193,7 +193,7 @@ describe("ClientAccountController branches", () => {
       updatedAt: new Date()
     });
     await c.createPaymentMethod({
-      body: { provider: "intech", phoneNumber: "771234567", label: null },
+      body: { provider: "paydunya", phoneNumber: "771234567", label: null },
       headers: { "x-idempotency-key": "idem1" }
     } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 409, "idempotency_key_conflict", expect.any(String));
@@ -361,7 +361,7 @@ describe("ClientAccountController branches", () => {
     );
     mocks.prisma.clientPaymentMethod.findUnique.mockResolvedValue({
       id: "pm1",
-      provider: "intech",
+      provider: "paydunya",
       phoneNumber: "770000000",
       label: null,
       isDefault: true,
@@ -377,7 +377,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.findFirst.mockResolvedValueOnce({ id: "pm1", userId: "u1" });
     mocks.prisma.clientPaymentMethod.update.mockResolvedValueOnce({
       id: "pm1",
-      provider: "intech",
+      provider: "paydunya",
       phoneNumber: "770000111",
       label: "Main",
       isDefault: true,
@@ -626,7 +626,7 @@ describe("ClientAccountController branches", () => {
     mocks.prisma.clientPaymentMethod.findFirst.mockResolvedValueOnce({ id: "pm1", userId: "u1" });
     mocks.prisma.clientPaymentMethod.update.mockResolvedValueOnce({
       id: "pm1",
-      provider: "intech",
+      provider: "paydunya",
       phoneNumber: "770000111",
       label: null,
       isDefault: true,
