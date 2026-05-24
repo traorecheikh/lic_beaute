@@ -321,21 +321,25 @@ export class AdminController {
         })
       });
 
-      const invoiceJson = await invoiceRes.json() as {
-        response_code: string;
-        response_text: string;
-        description: string;
-        token: string;
-      };
+      const invoiceRaw = await invoiceRes.text();
+      let invoiceJson: Record<string, unknown>;
+      try { invoiceJson = JSON.parse(invoiceRaw); } catch { invoiceJson = { raw: invoiceRaw }; }
 
       if (invoiceJson.response_code !== "00") {
-        fail(reply, 422, "invoice_creation_failed", invoiceJson.response_text);
+        ok(reply, {
+          invoice: invoiceJson,
+          payment: null,
+          checkoutUrl: null,
+          success: false,
+          raw: invoiceRaw
+        });
         return;
       }
 
-      const invoiceToken = invoiceJson.token;
+      const invoiceToken = String(invoiceJson.token ?? "");
 
       // Step 2: Execute payment (use sandbox softpay checkout direct account)
+      let paymentRaw: string;
       let paymentResult: Record<string, unknown>;
 
       if (body.method === "sandbox_direct") {
@@ -354,20 +358,21 @@ export class AdminController {
             invoice_token: invoiceToken
           })
         });
-        paymentResult = await payRes.json() as Record<string, unknown>;
+        paymentRaw = await payRes.text();
+        try { paymentResult = JSON.parse(paymentRaw); } catch { paymentResult = { raw: paymentRaw, status: payRes.status, statusText: payRes.statusText }; }
       } else {
-        const entry = { wave_senegal: "wave-senegal", orange_senegal: "new-orange-money-senegal", free_senegal: "free-money-senegal", wizall_senegal: "wizall-money-senegal" }[body.method]!;
-        const methodBody: Record<string, string> = {
+        const entry = ({ wave_senegal: "wave-senegal", orange_senegal: "new-orange-money-senegal", free_senegal: "free-money-senegal", wizall_senegal: "wizall-money-senegal" } as Record<string, string>)[body.method]!;
+        const methodPayload: Record<string, string> = {
           invoice_token: invoiceToken,
           customer_name: body.customerName,
           customer_email: body.customerEmail,
-          customer_phone: body.customerPhone ?? body.customerPhone
+          phone_number: body.customerPhone
         };
         if (body.method === "wave_senegal") {
-          methodBody.wave_senegal_payment_token = invoiceToken;
-          methodBody.wave_senegal_fullName = body.customerName;
-          methodBody.wave_senegal_email = body.customerEmail;
-          methodBody.wave_senegal_phone = body.customerPhone;
+          methodPayload.wave_senegal_payment_token = invoiceToken;
+          methodPayload.wave_senegal_fullName = body.customerName;
+          methodPayload.wave_senegal_email = body.customerEmail;
+          methodPayload.wave_senegal_phone = body.customerPhone;
         }
         const payRes = await fetch(`https://app.paydunya.com/sandbox-api/v1/softpay/${entry}`, {
           method: "POST",
@@ -377,9 +382,10 @@ export class AdminController {
             "PAYDUNYA-PRIVATE-KEY": PRIVATE_KEY,
             "PAYDUNYA-TOKEN": PAYDUNYA_TOKEN
           },
-          body: JSON.stringify(methodBody)
+          body: JSON.stringify(methodPayload)
         });
-        paymentResult = await payRes.json() as Record<string, unknown>;
+        paymentRaw = await payRes.text();
+        try { paymentResult = JSON.parse(paymentRaw); } catch { paymentResult = { raw: paymentRaw, status: payRes.status, statusText: payRes.statusText }; }
       }
 
       ok(reply, {
