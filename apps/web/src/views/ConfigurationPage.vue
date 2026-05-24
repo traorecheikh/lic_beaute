@@ -142,11 +142,12 @@
           <div v-if="settingsQuery.isLoading.value" class="py-8 text-center row-meta">Chargement…</div>
           <div v-else-if="settingsQuery.isError.value" class="py-8 text-center text-error text-sm">Erreur de chargement.</div>
 
-          <!-- Subscription features: dedicated card layout -->
-          <div v-else-if="activeTab === 'subscription_features'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+          <!-- Subscription features: card layout with Switch/SegmentedControls -->
+          <div v-else-if="activeTab === 'subscription_features'" class="grid grid-cols-1 sm:grid-cols-2 auto-rows-1fr gap-4 items-stretch">
+            <!-- Acomptes -->
+            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
@@ -154,16 +155,45 @@
                   <p class="text-[11px] text-cocoa/50">Dépôts en ligne des clients</p>
                 </div>
               </div>
-              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key.startsWith('feature_deposits'))" :key="s.key" class="flex items-center justify-between gap-4">
-                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
-                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
-                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
+              <div class="mt-auto space-y-3">
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Activé</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_deposits_enabled')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_deposits_enabled') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_deposits_enabled')"
+                    @keydown.enter="toggleBool('feature_deposits_enabled')"
+                    @keydown.space.prevent="toggleBool('feature_deposits_enabled')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_deposits_enabled') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Niveau requis</span>
+                  <div class="inline-flex rounded-lg border border-outline-variant/50 p-0.5 gap-0.5">
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 text-[11px] font-bold rounded-md transition-all"
+                      :class="tierVal('feature_deposits_tier_required') === 'premium' ? 'bg-espresso text-white shadow-sm' : 'text-cocoa/50 hover:text-espresso'"
+                      @click="onInput('feature_deposits_tier_required', 'premium')"
+                    >Premium</button>
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 text-[11px] font-bold rounded-md transition-all"
+                      :class="tierVal('feature_deposits_tier_required') === 'standard' ? 'bg-espresso text-white shadow-sm' : 'text-cocoa/50 hover:text-espresso'"
+                      @click="onInput('feature_deposits_tier_required', 'standard')"
+                    >Standard</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+            <!-- Rapports -->
+            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 </div>
                 <div>
@@ -171,16 +201,45 @@
                   <p class="text-[11px] text-cocoa/50">Statistiques avancées</p>
                 </div>
               </div>
-              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key.startsWith('feature_analytics'))" :key="s.key" class="flex items-center justify-between gap-4">
-                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
-                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
-                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
+              <div class="mt-auto space-y-3">
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Activé</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_analytics_enabled')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_analytics_enabled') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_analytics_enabled')"
+                    @keydown.enter="toggleBool('feature_analytics_enabled')"
+                    @keydown.space.prevent="toggleBool('feature_analytics_enabled')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_analytics_enabled') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Niveau requis</span>
+                  <div class="inline-flex rounded-lg border border-outline-variant/50 p-0.5 gap-0.5">
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 text-[11px] font-bold rounded-md transition-all"
+                      :class="tierVal('feature_analytics_tier_required') === 'premium' ? 'bg-espresso text-white shadow-sm' : 'text-cocoa/50 hover:text-espresso'"
+                      @click="onInput('feature_analytics_tier_required', 'premium')"
+                    >Premium</button>
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 text-[11px] font-bold rounded-md transition-all"
+                      :class="tierVal('feature_analytics_tier_required') === 'standard' ? 'bg-espresso text-white shadow-sm' : 'text-cocoa/50 hover:text-espresso'"
+                      @click="onInput('feature_analytics_tier_required', 'standard')"
+                    >Standard</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-neutral-bg flex items-center justify-center text-cocoa/50">
+            <!-- Abonnement -->
+            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-neutral-bg flex items-center justify-center text-cocoa/50 shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 </div>
                 <div>
@@ -188,28 +247,96 @@
                   <p class="text-[11px] text-cocoa/50">Renouvellement automatique</p>
                 </div>
               </div>
-              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key === 'feature_auto_renew_enabled')" :key="s.key" class="flex items-center justify-between gap-4">
-                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
-                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
-                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
+              <div class="mt-auto space-y-3">
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Activé</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_auto_renew_enabled')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_auto_renew_enabled') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_auto_renew_enabled')"
+                    @keydown.enter="toggleBool('feature_auto_renew_enabled')"
+                    @keydown.space.prevent="toggleBool('feature_auto_renew_enabled')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_auto_renew_enabled') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="rounded-2xl border border-outline-variant/40 p-5 space-y-4">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <!-- Modes de facturation -->
+            <div class="rounded-2xl border border-outline-variant/40 p-5 flex flex-col gap-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                 </div>
                 <div>
                   <p class="text-[13px] font-bold text-espresso">Modes de facturation</p>
-                  <p class="text-[11px] text-cocoa/50">Fournisseurs affichés</p>
+                  <p class="text-[11px] text-cocoa/50">Fournisseurs affichés aux salons</p>
                 </div>
               </div>
-              <div v-for="s in settingsByGroup(activeTab).filter(x => x.key.startsWith('feature_billing') || x.key === 'feature_card_payments')" :key="s.key" class="flex items-center justify-between gap-4">
-                <span class="text-[12px] font-semibold text-cocoa/70">{{ metaFor(s.key).label }}</span>
-                <select class="input-shell !py-1.5 text-[12px] min-w-[140px]" :value="currentValue(s)" @change="onInput(s.key, ($event.target as HTMLSelectElement).value)">
-                  <option v-for="opt in metaFor(s.key).options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
+              <div class="mt-auto space-y-3">
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">PayDunya</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_billing_paydunya')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_billing_paydunya') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_billing_paydunya')"
+                    @keydown.enter="toggleBool('feature_billing_paydunya')"
+                    @keydown.space.prevent="toggleBool('feature_billing_paydunya')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_paydunya') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Intech</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_billing_intech')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_billing_intech') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_billing_intech')"
+                    @keydown.enter="toggleBool('feature_billing_intech')"
+                    @keydown.space.prevent="toggleBool('feature_billing_intech')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_intech') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Manuel</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_billing_manual')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_billing_manual') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_billing_manual')"
+                    @keydown.enter="toggleBool('feature_billing_manual')"
+                    @keydown.space.prevent="toggleBool('feature_billing_manual')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_manual') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between min-h-[36px]">
+                  <span class="text-[12px] font-semibold text-cocoa/70">Carte bancaire</span>
+                  <div
+                    role="switch"
+                    :aria-checked="boolVal('feature_card_payments')"
+                    tabindex="0"
+                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
+                    :class="boolVal('feature_card_payments') ? 'bg-primary' : 'bg-outline-variant'"
+                    @click="toggleBool('feature_card_payments')"
+                    @keydown.enter="toggleBool('feature_card_payments')"
+                    @keydown.space.prevent="toggleBool('feature_card_payments')"
+                  >
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_card_payments') ? 'translate-x-5' : 'translate-x-0'"></span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -815,6 +942,24 @@ function onInput(key: string, value: string) {
     pendingChanges[key] = value;
   }
   delete validationErrors[key];
+}
+
+// Helpers for the subscription_features card layout (Switch + SegmentedControl)
+function boolVal(key: string): boolean {
+  const v = settingsQuery.data.value?.find(s => s.key === key)?.value;
+  const p = pendingChanges[key];
+  return (p ?? v) === 'true';
+}
+
+function tierVal(key: string): string {
+  const v = settingsQuery.data.value?.find(s => s.key === key)?.value;
+  const p = pendingChanges[key];
+  return p ?? v ?? 'premium';
+}
+
+function toggleBool(key: string) {
+  const current = boolVal(key);
+  onInput(key, current ? 'false' : 'true');
 }
 
 function validateSetting(key: string, value: string): string | null {
