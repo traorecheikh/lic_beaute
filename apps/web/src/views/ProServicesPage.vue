@@ -511,6 +511,14 @@ function nextStep() {
 }
 
 function submitService() {
+  if (createForm.depositMode === "fixed" && (!createForm.depositAmountXof || createForm.depositAmountXof <= 0)) {
+    toast.error("Veuillez saisir un montant d'acompte pour le mode fixe.");
+    return;
+  }
+  if (createForm.depositMode === "percent" && (!createForm.depositPercent || createForm.depositPercent < 1 || createForm.depositPercent > 100)) {
+    toast.error("Veuillez définir un pourcentage d'acompte entre 1 et 100.");
+    return;
+  }
   if (editingServiceId.value) {
     updateMutation.mutate();
     return;

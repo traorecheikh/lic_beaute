@@ -16,15 +16,17 @@
           <div>
             <label for="email" class="section-label mb-2 block">Email ou Téléphone</label>
             <div class="mt-1">
-              <input id="email" v-model="email" type="text" required class="input-shell" placeholder="marie@monsalon.com" autocomplete="username" />
+              <input id="email" v-model="email" type="text" required class="input-shell" :class="{ 'border-red-400': fieldErrors.email }" placeholder="marie@monsalon.com" autocomplete="username" />
             </div>
+            <p v-if="fieldErrors.email" class="text-[11px] text-error font-medium mt-0.5">{{ fieldErrors.email }}</p>
           </div>
 
           <div>
             <label for="password" class="section-label mb-2 block">Mot de passe</label>
             <div class="mt-1">
-              <input id="password" v-model="password" type="password" required class="input-shell" placeholder="••••••••" autocomplete="current-password" />
+              <input id="password" v-model="password" type="password" required class="input-shell" :class="{ 'border-red-400': fieldErrors.password }" placeholder="••••••••" autocomplete="current-password" />
             </div>
+            <p v-if="fieldErrors.password" class="text-[11px] text-error font-medium mt-0.5">{{ fieldErrors.password }}</p>
           </div>
 
           <div class="flex items-center justify-between">
@@ -67,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { useProAuthStore } from "@/stores/proAuth";
@@ -80,12 +82,19 @@ const auth = useProAuthStore();
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
+const fieldErrors = reactive<Record<string, string>>({});
+
+function validate(): boolean {
+  Object.keys(fieldErrors).forEach((k) => delete fieldErrors[k]);
+  if (!email.value.trim()) fieldErrors.email = "Email requis.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) fieldErrors.email = "Format email invalide.";
+  if (!password.value) fieldErrors.password = "Mot de passe requis.";
+  else if (password.value.length < 8) fieldErrors.password = "Minimum 8 caractères.";
+  return Object.keys(fieldErrors).length === 0;
+}
 
 async function handleLogin() {
-  if (!email.value.trim() || !password.value) {
-    toast.error("Email et mot de passe sont requis.");
-    return;
-  }
+  if (!validate()) return;
 
   loading.value = true;
   try {

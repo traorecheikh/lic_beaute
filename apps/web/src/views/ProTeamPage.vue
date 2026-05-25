@@ -451,6 +451,10 @@ function submitMember() {
     toast.error("Le téléphone est requis pour créer un membre.");
     return;
   }
+  if (createForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createForm.email.trim())) {
+    toast.error("Format email invalide.");
+    return;
+  }
   if (teamDisplaySettings.showPhotos && createForm.isActive && !createForm.avatarUrl.trim()) {
     toast.error("Photo obligatoire pour activer un collaborateur.");
     return;

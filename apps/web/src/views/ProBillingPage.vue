@@ -1022,13 +1022,18 @@ function closePaymentMethodModal() {
 }
 
 function savePaymentMethod() {
-  if (!paymentMethodForm.accountNumber.trim()) {
+  const accountNumber = paymentMethodForm.accountNumber.trim();
+  if (!accountNumber) {
     toast.error("Le numéro de compte est requis.");
+    return;
+  }
+  if (accountNumber.length < 8 || accountNumber.length > 20) {
+    toast.error("Le numéro de compte doit contenir entre 8 et 20 chiffres.");
     return;
   }
   const billingMethod: Record<string, unknown> = {
     provider: paymentMethodForm.provider,
-    accountNumber: paymentMethodForm.accountNumber.trim()
+    accountNumber
   };
   if (paymentMethodForm.provider === "paydunya") {
     billingMethod.country = paymentMethodForm.country;

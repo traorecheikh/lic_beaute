@@ -741,10 +741,18 @@ function useCurrentLocation() {
 
 async function saveProfile() {
   try {
-    saving.value = true;
-    const neighborhood = profile.neighborhood.trim();
     const phone = profile.phone.trim();
     const instagram = profile.instagram.trim();
+    if (phone && (phone.length < 8 || phone.length > 20)) {
+      toast.error("Le téléphone doit contenir entre 8 et 20 caractères.");
+      return;
+    }
+    if (instagram.length > 200) {
+      toast.error("L'URL Instagram ne doit pas dépasser 200 caractères.");
+      return;
+    }
+    saving.value = true;
+    const neighborhood = profile.neighborhood.trim();
     const logoUrl = profile.logoUrl.trim();
     const payload: ProSalonUpdateInput = {
       category: profile.category,

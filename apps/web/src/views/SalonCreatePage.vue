@@ -126,11 +126,31 @@ const form = ref({
   ownerPhone: ""
 });
 
-async function submitSalon() {
-  // Clear all previous field errors
+function validate(): boolean {
   for (const key of Object.keys(fieldErrors)) {
     delete fieldErrors[key];
   }
+  const v = form.value;
+  if (!v.name.trim()) fieldErrors.name = "Nom du salon requis.";
+  else if (v.name.trim().length < 2) fieldErrors.name = "Minimum 2 caractères.";
+  if (!v.category) fieldErrors.category = "Catégorie requise.";
+  if (!v.city.trim()) fieldErrors.city = "Ville requise.";
+  if (!v.address.trim()) fieldErrors.address = "Adresse requise.";
+  else if (v.address.trim().length < 5) fieldErrors.address = "Minimum 5 caractères.";
+  if (!v.description.trim()) fieldErrors.description = "Description requise.";
+  else if (v.description.trim().length < 10) fieldErrors.description = "Minimum 10 caractères.";
+  if (!v.ownerName.trim()) fieldErrors.ownerName = "Nom du gérant requis.";
+  else if (v.ownerName.trim().length < 2) fieldErrors.ownerName = "Minimum 2 caractères.";
+  if (!v.ownerEmail.trim()) fieldErrors.ownerEmail = "Email requis.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.ownerEmail.trim())) fieldErrors.ownerEmail = "Format email invalide.";
+  if (v.ownerPhone.trim() && v.ownerPhone.trim().length < 8) {
+    fieldErrors.ownerPhone = "Minimum 8 caractères.";
+  }
+  return Object.keys(fieldErrors).length === 0;
+}
+
+async function submitSalon() {
+  if (!validate()) return;
   submitting.value = true;
   try {
     await createSalon(auth.accessToken ?? "", form.value);
