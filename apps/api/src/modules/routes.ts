@@ -74,6 +74,8 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/me/benefits", (req, rep) => clientAccounts.listBenefits(req, rep));
   app.get("/api/v1/me/vouchers", (req, rep) => clientAccounts.listVouchers(req, rep));
   app.post("/api/v1/me/vouchers/redeem", (req, rep) => clientAccounts.redeemVoucher(req, rep));
+  app.get("/api/v1/me/bookings", (req, rep) => bookings.list(req, rep));
+  app.get("/api/v1/me/bookings/:bookingId", (req, rep) => bookings.detail(req, rep));
   app.get("/api/v1/me/addresses", (req, rep) => clientAccounts.listAddresses(req, rep));
   app.post("/api/v1/me/addresses", (req, rep) => clientAccounts.createAddress(req, rep));
   app.patch("/api/v1/me/addresses/:addressId", (req, rep) => clientAccounts.updateAddress(req, rep));
