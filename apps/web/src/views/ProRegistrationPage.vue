@@ -1,78 +1,105 @@
 <template>
-  <div class="min-h-screen bg-neutral-bg py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased">
-    <div class="mx-auto max-w-3xl">
-      <!-- Header -->
-      <div class="text-center mb-16">
-        <RouterLink to="/pro" class="inline-block mb-10">
-          <img src="/logo.png" alt="Beauté Avenue" class="h-14 w-auto mx-auto" />
+  <main class="bg-neutral-bg py-4 md:py-6 px-4 sm:px-6 font-sans antialiased">
+    <form @submit.prevent="submitRegistration" class="mx-auto max-w-2xl">
+      <header class="mb-4">
+        <RouterLink to="/pro" class="inline-flex items-center gap-2 mb-3">
+          <img src="/logo.png" alt="Beauté Avenue" class="h-7 w-auto" />
+          <span class="row-meta">Beauté Avenue Pro</span>
         </RouterLink>
-        <p class="text-[11px] font-bold uppercase tracking-[0.4em] text-cocoa/40 mb-4">Étape {{ currentStep }} sur 5</p>
-        <h1 class="text-[42px] font-medium-bold text-espresso leading-tight tracking-tight">
+        <p class="section-label mb-1">Étape {{ currentStep }} sur 5</p>
+        <h1 class="text-[30px] md:text-[34px] font-medium-bold text-espresso leading-tight tracking-tight">
           {{ stepTitles[currentStep - 1] }}
         </h1>
-        <p class="text-[17px] text-cocoa/60 mt-4 max-w-lg mx-auto leading-relaxed">
+        <p class="text-[15px] text-cocoa/70 mt-1.5 leading-relaxed">
           {{ stepSubtitles[currentStep - 1] }}
         </p>
-      </div>
+        <div class="flex items-center gap-2 mt-3">
+          <div
+            v-for="step in 5"
+            :key="step"
+            :class="[
+              'h-1.5 rounded-full transition-all duration-500',
+              currentStep === step ? 'w-10 bg-primary' : currentStep > step ? 'w-4 bg-primary/40' : 'w-4 bg-outline-variant'
+            ]"
+          ></div>
+        </div>
+      </header>
 
-      <!-- Stepper -->
-      <div class="flex items-center justify-center gap-3 mb-16">
-        <div 
-          v-for="step in 5" 
-          :key="step"
-          :class="[
-            'h-1.5 rounded-full transition-all duration-500',
-            currentStep === step ? 'w-12 bg-primary' : currentStep > step ? 'w-4 bg-primary/40' : 'w-4 bg-outline-variant'
-          ]"
-        ></div>
-      </div>
-
-      <form @submit.prevent="submitRegistration">
-      <!-- Form Content -->
-      <div class="panel-clean p-10 mb-12 shadow-xl shadow-espresso/5 border-none">
+      <section class="panel-clean p-4 md:p-5 shadow-lg shadow-espresso/5 border-none">
         
         <!-- Step 1: Identity & Salon -->
-        <div v-if="currentStep === 1" class="space-y-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div v-if="currentStep === 1" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
               <label for="salon-name" class="section-label mb-3 block">Nom du salon</label>
-              <input id="salon-name" type="text" v-model="form.salonName" name="organization" autocomplete="organization" :class="['input-shell text-lg py-4', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
-              <p v-if="fieldErrors.salonName" class="text-xs text-red-600 mt-1">{{ fieldErrors.salonName }}</p>
+              <input id="salon-name" type="text" v-model="form.salonName" name="organization" autocomplete="organization" required :aria-invalid="Boolean(fieldErrors.salonName)" aria-describedby="salon-name-error" :class="['input-shell text-base py-3', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
+              <p id="salon-name-error" v-if="fieldErrors.salonName" class="text-xs text-red-600 mt-1">{{ fieldErrors.salonName }}</p>
             </div>
             <div>
               <label for="salon-city" class="section-label mb-3 block">Ville</label>
-              <select id="salon-city" v-model="form.city" name="address-level2" autocomplete="address-level2" :class="['input-shell text-lg py-4 h-[60px]', fieldErrors.city ? 'border-red-400' : '']">
+              <select id="salon-city" v-model="form.city" name="address-level2" autocomplete="address-level2" required :aria-invalid="Boolean(fieldErrors.city)" aria-describedby="salon-city-error" :class="['input-shell text-base py-3 h-[52px]', fieldErrors.city ? 'border-red-400' : '']">
                 <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
               </select>
-              <p v-if="fieldErrors.city" class="text-xs text-red-600 mt-1">{{ fieldErrors.city }}</p>
+              <p id="salon-city-error" v-if="fieldErrors.city" class="text-xs text-red-600 mt-1">{{ fieldErrors.city }}</p>
+            </div>
+            <div>
+              <label for="owner-phone" class="section-label mb-3 block">Téléphone</label>
+              <div
+                :class="[
+                  'flex items-center rounded-2xl border bg-white px-3',
+                  fieldErrors.phone ? 'border-red-400' : 'border-outline-variant'
+                ]"
+              >
+                <select
+                  id="owner-phone-country"
+                  v-model="selectedPhoneCountryCode"
+                  class="h-[52px] w-[112px] bg-transparent border-0 pr-2 text-sm focus:outline-none"
+                  aria-label="Indicatif pays"
+                >
+                  <option v-for="option in allowedPhoneCountries" :key="option.code" :value="option.code">
+                    {{ option.flag }} {{ option.dialCode }}
+                  </option>
+                </select>
+                <input
+                  id="owner-phone"
+                  type="tel"
+                  v-model="form.phone"
+                  name="tel-national"
+                  autocomplete="tel-national"
+                  inputmode="numeric"
+                  maxlength="16"
+                  required
+                  :aria-invalid="Boolean(fieldErrors.phone)"
+                  aria-describedby="owner-phone-error"
+                  class="h-[52px] w-full border-0 bg-transparent pl-3 text-base focus:outline-none"
+                  :placeholder="selectedPhoneCountry.placeholder"
+                  @input="onPhoneInput"
+                />
+              </div>
+              <p id="owner-phone-error" v-if="fieldErrors.phone" class="text-xs text-red-600 mt-1">{{ fieldErrors.phone }}</p>
             </div>
             <div>
               <label for="owner-email" class="section-label mb-3 block">Email professionnel</label>
-              <input id="owner-email" type="email" v-model="form.email" name="email" autocomplete="email" :class="['input-shell text-lg py-4', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
-              <p v-if="fieldErrors.email" class="text-xs text-red-600 mt-1">{{ fieldErrors.email }}</p>
+              <input id="owner-email" type="email" v-model="form.email" name="email" autocomplete="email" required :aria-invalid="Boolean(fieldErrors.email)" aria-describedby="owner-email-error" :class="['input-shell text-base py-3', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
+              <p id="owner-email-error" v-if="fieldErrors.email" class="text-xs text-red-600 mt-1">{{ fieldErrors.email }}</p>
             </div>
             <div>
               <label for="owner-name" class="section-label mb-3 block">Nom complet du gérant</label>
-              <input id="owner-name" type="text" v-model="form.fullName" name="name" autocomplete="name" :class="['input-shell text-lg py-4', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
-              <p v-if="fieldErrors.fullName" class="text-xs text-red-600 mt-1">{{ fieldErrors.fullName }}</p>
+              <input id="owner-name" type="text" v-model="form.fullName" name="name" autocomplete="name" required :aria-invalid="Boolean(fieldErrors.fullName)" aria-describedby="owner-name-error" :class="['input-shell text-base py-3', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
+              <p id="owner-name-error" v-if="fieldErrors.fullName" class="text-xs text-red-600 mt-1">{{ fieldErrors.fullName }}</p>
             </div>
-            <div>
-              <label for="owner-phone" class="section-label mb-3 block">Téléphone (+221)</label>
-              <input id="owner-phone" type="tel" v-model="form.phone" name="tel" autocomplete="tel" :class="['input-shell text-lg py-4', fieldErrors.phone ? 'border-red-400' : '']" placeholder="77 123 45 67" />
-              <p v-if="fieldErrors.phone" class="text-xs text-red-600 mt-1">{{ fieldErrors.phone }}</p>
-            </div>
-            <div>
+            <div class="md:col-span-2">
               <label for="salon-address" class="section-label mb-3 block">Adresse précise</label>
-              <input id="salon-address" type="text" v-model="form.address" name="street-address" autocomplete="street-address" :class="['input-shell text-lg py-4', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
-              <p v-if="fieldErrors.address" class="text-xs text-red-600 mt-1">{{ fieldErrors.address }}</p>
+              <input id="salon-address" type="text" v-model="form.address" name="street-address" autocomplete="street-address" required :aria-invalid="Boolean(fieldErrors.address)" aria-describedby="salon-address-error" :class="['input-shell text-base py-3', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
+              <p id="salon-address-error" v-if="fieldErrors.address" class="text-xs text-red-600 mt-1">{{ fieldErrors.address }}</p>
             </div>
             <div>
               <label for="salon-neighborhood" class="section-label mb-3 block">Quartier <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
-              <input id="salon-neighborhood" type="text" v-model="form.neighborhood" name="address-level3" autocomplete="address-level3" class="input-shell text-lg py-4" placeholder="Plateau, Mermoz, Almadies…" />
+              <input id="salon-neighborhood" type="text" v-model="form.neighborhood" name="address-level3" autocomplete="address-level3" class="input-shell text-base py-3" placeholder="Plateau, Mermoz, Almadies…" />
             </div>
-            <div class="md:col-span-2">
+            <div>
               <label for="salon-description" class="section-label mb-3 block">Description du salon <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
-              <textarea id="salon-description" v-model="form.description" rows="3" class="input-shell text-lg py-4 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
+              <textarea id="salon-description" v-model="form.description" rows="3" class="input-shell text-base py-3 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
             </div>
             <div class="md:col-span-2">
               <label for="owner-password" class="section-label mb-3 block">Mot de passe</label>
@@ -83,8 +110,12 @@
                   v-model="form.password"
                   name="new-password"
                   autocomplete="new-password"
-                  :class="['input-shell text-lg py-4 pr-12', fieldErrors.password ? 'border-red-400' : '']"
+                  minlength="8"
+                  :class="['input-shell text-base py-3 pr-12', fieldErrors.password ? 'border-red-400' : '']"
                   placeholder="••••••••"
+                  required
+                  :aria-invalid="Boolean(fieldErrors.password)"
+                  aria-describedby="owner-password-error"
                 />
                 <button
                   type="button"
@@ -96,7 +127,7 @@
                   <EyeIcon v-else class="w-5 h-5" />
                 </button>
               </div>
-              <p v-if="fieldErrors.password" class="text-xs text-red-600 mt-1">{{ fieldErrors.password }}</p>
+              <p id="owner-password-error" v-if="fieldErrors.password" class="text-xs text-red-600 mt-1">{{ fieldErrors.password }}</p>
             </div>
           </div>
         </div>
@@ -104,10 +135,12 @@
         <!-- Step 2: Categories -->
         <div v-if="currentStep === 2">
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <button 
+            <button
+              type="button"
               v-for="cat in categoryOptions" 
               :key="cat.name"
               @click="form.category = cat.name"
+              :aria-pressed="form.category === cat.name"
               :class="[
                 'p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 text-center group',
                 form.category === cat.name 
@@ -132,10 +165,12 @@
         <!-- Step 3: Team Size -->
         <div v-if="currentStep === 3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button 
+            <button
+              type="button"
               v-for="size in teamSizeOptions" 
               :key="size.label"
               @click="form.teamSize = size.label"
+              :aria-pressed="form.teamSize === size.label"
               :class="[
                 'p-8 rounded-2xl border-2 transition-all flex flex-col items-center gap-5 text-center group',
                 form.teamSize === size.label 
@@ -167,8 +202,10 @@
         <!-- Step 4: Subscription Intent -->
         <div v-if="currentStep === 4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <button 
+            <button
+              type="button"
               @click="form.subscriptionIntentTier = 'standard'"
+              :aria-pressed="form.subscriptionIntentTier === 'standard'"
               :class="[
                 'p-8 rounded-3xl border-2 text-left transition-all relative overflow-hidden',
                 form.subscriptionIntentTier === 'standard' 
@@ -195,8 +232,10 @@
               </ul>
             </button>
 
-            <button 
+            <button
+              type="button"
               @click="form.subscriptionIntentTier = 'premium'"
+              :aria-pressed="form.subscriptionIntentTier === 'premium'"
               :class="[
                 'p-8 rounded-3xl border-2 text-left transition-all relative overflow-hidden',
                 form.subscriptionIntentTier === 'premium' 
@@ -262,10 +301,9 @@
           </div>
         </div>
 
-      </div>
+      </section>
 
-      <!-- Navigation -->
-      <div class="flex items-center justify-center gap-4">
+      <div class="flex items-center justify-center gap-3 mt-4">
         <button
           type="button"
           v-if="currentStep > 1" 
@@ -296,13 +334,12 @@
           <span>{{ loading ? 'Finalisation en cours…' : 'Ouvrir mon salon' }}</span>
         </button>
       </div>
-      </form>
-    </div>
-  </div>
+    </form>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import {
@@ -329,6 +366,35 @@ const currentStep = ref(1);
 const loading = ref(false);
 const docsLoading = ref(false);
 const showPassword = ref(false);
+
+type PhoneCountry = {
+  code: string;
+  flag: string;
+  dialCode: string;
+  placeholder: string;
+  nationalDigits: number;
+};
+
+const PHONE_COUNTRY_MAP: Record<string, PhoneCountry> = {
+  sn: { code: "sn", flag: "🇸🇳", dialCode: "+221", placeholder: "77 123 45 67", nationalDigits: 9 },
+  ci: { code: "ci", flag: "🇨🇮", dialCode: "+225", placeholder: "01 23 45 67 89", nationalDigits: 10 },
+  bf: { code: "bf", flag: "🇧🇫", dialCode: "+226", placeholder: "70 12 34 56", nationalDigits: 8 },
+  bj: { code: "bj", flag: "🇧🇯", dialCode: "+229", placeholder: "01 95 12 34 56", nationalDigits: 10 },
+  tg: { code: "tg", flag: "🇹🇬", dialCode: "+228", placeholder: "90 12 34 56", nationalDigits: 8 },
+  ml: { code: "ml", flag: "🇲🇱", dialCode: "+223", placeholder: "70 12 34 56", nationalDigits: 8 },
+  cm: { code: "cm", flag: "🇨🇲", dialCode: "+237", placeholder: "6 12 34 56 78", nationalDigits: 9 }
+};
+
+const configuredPhoneCountries = ((import.meta.env.VITE_ALLOWED_PHONE_COUNTRIES as string | undefined) ?? "sn")
+  .split(",")
+  .map((item) => item.trim().toLowerCase())
+  .filter((code) => code in PHONE_COUNTRY_MAP);
+
+const allowedPhoneCountries = (configuredPhoneCountries.length > 0 ? configuredPhoneCountries : ["sn"])
+  .map((code) => PHONE_COUNTRY_MAP[code]);
+
+const selectedPhoneCountryCode = ref(allowedPhoneCountries[0]?.code ?? "sn");
+const selectedPhoneCountry = computed(() => PHONE_COUNTRY_MAP[selectedPhoneCountryCode.value] ?? PHONE_COUNTRY_MAP.sn);
 const pricing = ref<{ standardPriceXof: number; premiumPriceXof: number }>({
   standardPriceXof: 15000,
   premiumPriceXof: 25000
@@ -456,6 +522,13 @@ const form = reactive({
   subscriptionIntentTier: "standard" as "standard" | "premium"
 });
 
+function onPhoneInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const digits = input.value.replace(/\D+/g, "").slice(0, selectedPhoneCountry.value.nationalDigits);
+  const chunks = digits.match(/.{1,2}/g) ?? [];
+  form.phone = chunks.join(" ");
+}
+
 const fieldErrors = reactive<Record<string, string>>({});
 
 function resetFieldErrors() {
@@ -465,18 +538,39 @@ function resetFieldErrors() {
 function validateCurrentStep() {
   resetFieldErrors();
   if (currentStep.value === 1) {
-    if (!form.salonName.trim()) fieldErrors.salonName = "Nom du salon requis.";
+    const salonName = form.salonName.trim();
+    const fullName = form.fullName.trim();
+    const email = form.email.trim();
+    const address = form.address.trim();
+    const localDigits = form.phone.replace(/\D+/g, "");
+    const expectedDigits = selectedPhoneCountry.value.nationalDigits;
+
+    if (!salonName) fieldErrors.salonName = "Nom du salon requis.";
+    else if (salonName.length < 2) fieldErrors.salonName = "Nom du salon trop court.";
+    else if (salonName.length > 120) fieldErrors.salonName = "Nom du salon trop long.";
+
     if (!form.city.trim()) fieldErrors.city = "Ville requise.";
-    if (!form.email.trim()) fieldErrors.email = "Email requis.";
-    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    else if (!cities.includes(form.city)) fieldErrors.city = "Ville invalide.";
+
+    if (!email) fieldErrors.email = "Email requis.";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       fieldErrors.email = "Format email invalide.";
     }
-    if (!form.fullName.trim()) fieldErrors.fullName = "Nom complet requis.";
-    if (!form.phone.replace(/\s+/g, "").trim()) fieldErrors.phone = "Téléphone requis.";
-    if (!form.address.trim()) fieldErrors.address = "Adresse requise.";
+    if (!fullName) fieldErrors.fullName = "Nom complet requis.";
+    else if (fullName.length < 2) fieldErrors.fullName = "Nom complet trop court.";
+
+    if (!localDigits) fieldErrors.phone = "Téléphone requis.";
+    else if (localDigits.length !== expectedDigits) {
+      fieldErrors.phone = `Ce pays attend ${expectedDigits} chiffres.`;
+    }
+
+    if (!address) fieldErrors.address = "Adresse requise.";
+    else if (address.length < 5) fieldErrors.address = "Adresse trop courte.";
+
     if (!form.password.trim()) fieldErrors.password = "Mot de passe requis.";
-    if (form.password.trim() && form.password.trim().length < 8) {
-      fieldErrors.password = "Minimum 8 caractères.";
+    if (form.password.trim() && form.password.trim().length < 8) fieldErrors.password = "Minimum 8 caractères.";
+    if (form.password.trim() && (!/[A-Za-z]/.test(form.password) || !/\d/.test(form.password))) {
+      fieldErrors.password = "Incluez au moins une lettre et un chiffre.";
     }
   }
   if (currentStep.value === 2 && !form.category) {
@@ -527,7 +621,8 @@ function removeDoc(index: number) {
 
 async function submitRegistration() {
   const email = form.email.trim();
-  const phone = form.phone.replace(/\s+/g, "");
+  const phoneNational = form.phone.replace(/\D+/g, "");
+  const phone = `${selectedPhoneCountry.value.dialCode}${phoneNational}`;
   
   // Mandatory documents check
   const missingDocs = requiredDocs.value.some(d => !d.fileUrl);

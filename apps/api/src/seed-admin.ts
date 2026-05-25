@@ -41,17 +41,22 @@ const DEFAULT_SETTINGS = [
 
 async function main() {
   // ── Admin user ──────────────────────────────────────────────────────────────
+  const email = process.env.ADMIN_EMAIL ?? "admin@beauteavenue.local";
+  const password = process.env.ADMIN_PASSWORD ?? "supersecure";
   const existing = await prisma.user.findFirst({ where: { role: "platform_admin" } });
   if (existing) {
-    console.log("[seed-admin] platform_admin already exists:", existing.email, "— skipping.");
+    const passwordHash = await argon2.hash(password);
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: { passwordHash }
+    });
+    console.log(`[seed-admin] platform_admin password refreshed: ${existing.email} / ${password}`);
   } else {
-    const email = process.env.ADMIN_EMAIL ?? "admin@beauteavenue.local";
-    const password = process.env.ADMIN_PASSWORD ?? "supersecure";
     const passwordHash = await argon2.hash(password);
     const admin = await prisma.user.create({
       data: { fullName: "Chef de Plateforme", email, passwordHash, role: "platform_admin" }
     });
-    console.log("[seed-admin] platform_admin created:", admin.email);
+    console.log(`[seed-admin] platform_admin created: ${admin.email} / ${password}`);
   }
 
   // ── Default platform settings (idempotent) ──────────────────────────────────
@@ -72,15 +77,12 @@ async function main() {
   const PRO_EMAIL = "pro@beauteavenue.local";
   const PRO_PASSWORD = "pro12345";
   const proPasswordHash = await argon2.hash(PRO_PASSWORD);
-  const existingPro = await prisma.user.findUnique({ where: { email: PRO_EMAIL } });
-  if (existingPro) {
-    await prisma.user.update({
-      where: { email: PRO_EMAIL },
-      data: { passwordHash: proPasswordHash }
+  const ensureDemoSalon = async () => {
+    const existing = await prisma.salon.findFirst({
+      where: { name: "Salon Démo", city: "Dakar" }
     });
-    console.log(`[seed-admin] test pro account password refreshed: ${PRO_EMAIL} / ${PRO_PASSWORD}`);
-  } else {
-    const testSalon = await prisma.salon.create({
+    if (existing) return existing;
+    return prisma.salon.create({
       data: {
         name: "Salon Démo",
         category: "Beauté & Bien-être",
@@ -89,21 +91,64 @@ async function main() {
         description: "Salon de démonstration pour les tests de la plateforme.",
         approvalStatus: "approved",
         isVisibleInMarketplace: true,
-        canReceiveBookings: true,
-        staffMembers: {
-          create: {
-            fullName: "Gérant Démo",
-            email: PRO_EMAIL,
-            phone: "+221770000000",
-            role: "salon_owner",
-            passwordHash: proPasswordHash
-          }
-        }
+        canReceiveBookings: true
       }
     });
-    await prisma.subscription.create({
-      data: { salonId: testSalon.id, tier: "standard", status: "active" }
+  };
+
+  const ensureActiveSubscription = async (salonId: string) => {
+    await prisma.subscription.upsert({
+      where: { salonId },
+      update: { status: "active", tier: "standard" },
+      create: { salonId, tier: "standard", status: "active" }
     });
+  };
+
+  const existingPro = await prisma.user.findUnique({ where: { email: PRO_EMAIL } });
+  if (existingPro) {
+    const ensuredSalon = existingPro.salonId
+      ? await prisma.salon.findUnique({ where: { id: existingPro.salonId } })
+      : null;
+    const salon = ensuredSalon ?? await ensureDemoSalon();
+    await prisma.user.update({
+      where: { email: PRO_EMAIL },
+      data: { passwordHash: proPasswordHash, role: "salon_owner", salonId: salon.id, phone: existingPro.phone ?? "+221770000000" }
+    });
+    await ensureActiveSubscription(salon.id);
+    console.log(`[seed-admin] test pro account password refreshed: ${PRO_EMAIL} / ${PRO_PASSWORD}`);
+  } else {
+    const existingPhoneUser = await prisma.user.findFirst({ where: { phone: "+221770000000" } });
+    if (existingPhoneUser) {
+      const ensuredSalon = existingPhoneUser.salonId
+        ? await prisma.salon.findUnique({ where: { id: existingPhoneUser.salonId } })
+        : null;
+      const salon = ensuredSalon ?? await ensureDemoSalon();
+      await prisma.user.update({
+        where: { id: existingPhoneUser.id },
+        data: {
+          email: PRO_EMAIL,
+          role: "salon_owner",
+          salonId: salon.id,
+          passwordHash: proPasswordHash
+        }
+      });
+      await ensureActiveSubscription(salon.id);
+      console.log(`[seed-admin] linked existing owner to test pro account: ${PRO_EMAIL} / ${PRO_PASSWORD}`);
+      return;
+    }
+
+    const testSalon = await ensureDemoSalon();
+    await prisma.user.create({
+      data: {
+        fullName: "Gérant Démo",
+        email: PRO_EMAIL,
+        phone: "+221770000000",
+        role: "salon_owner",
+        passwordHash: proPasswordHash,
+        salonId: testSalon.id
+      }
+    });
+    await ensureActiveSubscription(testSalon.id);
     console.log(`[seed-admin] test pro account created: ${PRO_EMAIL} / ${PRO_PASSWORD} (salonId: ${testSalon.id})`);
   }
 }
