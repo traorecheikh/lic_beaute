@@ -518,12 +518,13 @@ import type {
   ProSubscriptionUpdateInputBillingMethod,
   ProSubscriptionUpdateInputBillingMethodProviderEnum
 } from "@/lib/generated";
+import { resolveApiBaseUrl } from "@/lib/api-base";
 
 const auth = useProAuthStore();
 const queryClient = useQueryClient();
 const route = useRoute();
 const router = useRouter();
-const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3000";
+const apiBaseUrl = resolveApiBaseUrl();
 const showPaymentMethodModal = ref(false);
 const paymentMethodForm = reactive({
   provider: "paydunya" as string,

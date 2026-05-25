@@ -16,15 +16,19 @@
           <div>
             <label for="email" class="section-label mb-2 block">Email ou Téléphone</label>
             <div class="mt-1">
-              <input id="email" v-model="email" type="text" required class="input-shell" :class="{ 'border-red-400': fieldErrors.email }" placeholder="marie@monsalon.com" autocomplete="username" />
+              <input id="email" v-model="email" type="text" name="login_identifier" required class="input-shell" :class="{ 'border-red-400': fieldErrors.email }" placeholder="marie@monsalon.com ou 77 123 45 67" autocomplete="username" />
             </div>
             <p v-if="fieldErrors.email" class="text-[11px] text-error font-medium mt-0.5">{{ fieldErrors.email }}</p>
           </div>
 
           <div>
             <label for="password" class="section-label mb-2 block">Mot de passe</label>
-            <div class="mt-1">
-              <input id="password" v-model="password" type="password" required class="input-shell" :class="{ 'border-red-400': fieldErrors.password }" placeholder="••••••••" autocomplete="current-password" />
+            <div class="mt-1 relative">
+              <input id="password" v-model="password" :type="showPassword ? 'text' : 'password'" name="login_password" required class="input-shell pr-11" :class="{ 'border-red-400': fieldErrors.password }" placeholder="••••••••" autocomplete="current-password" />
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-cocoa/50 hover:text-cocoa" :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" @click="showPassword = !showPassword">
+                <EyeSlashIcon v-if="showPassword" class="w-5 h-5" />
+                <EyeIcon v-else class="w-5 h-5" />
+              </button>
             </div>
             <p v-if="fieldErrors.password" class="text-[11px] text-error font-medium mt-0.5">{{ fieldErrors.password }}</p>
           </div>
@@ -72,6 +76,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/vue/24/outline";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -81,13 +86,20 @@ const auth = useProAuthStore();
 
 const email = ref("");
 const password = ref("");
+const showPassword = ref(false);
 const loading = ref(false);
 const fieldErrors = reactive<Record<string, string>>({});
 
+function isLikelyPhone(raw: string): boolean {
+  const normalized = raw.replace(/[^\d+]/g, "");
+  return /^\+?\d{8,15}$/.test(normalized);
+}
+
 function validate(): boolean {
   Object.keys(fieldErrors).forEach((k) => delete fieldErrors[k]);
-  if (!email.value.trim()) fieldErrors.email = "Email requis.";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) fieldErrors.email = "Format email invalide.";
+  const identifier = email.value.trim();
+  if (!identifier) fieldErrors.email = "Email ou téléphone requis.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier) && !isLikelyPhone(identifier)) fieldErrors.email = "Entrez un email valide ou un numéro de téléphone.";
   if (!password.value) fieldErrors.password = "Mot de passe requis.";
   else if (password.value.length < 8) fieldErrors.password = "Minimum 8 caractères.";
   return Object.keys(fieldErrors).length === 0;

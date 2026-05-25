@@ -32,12 +32,12 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
               <label for="salon-name" class="section-label mb-3 block">Nom du salon</label>
-              <input id="salon-name" type="text" v-model="form.salonName" name="organization" autocomplete="organization" required :aria-invalid="Boolean(fieldErrors.salonName)" aria-describedby="salon-name-error" :class="['input-shell text-base py-3', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
+              <input id="salon-name" type="text" v-model="form.salonName" name="salon_name" autocomplete="organization" required :aria-invalid="Boolean(fieldErrors.salonName)" aria-describedby="salon-name-error" :class="['input-shell text-base py-3', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
               <p id="salon-name-error" v-if="fieldErrors.salonName" class="text-xs text-red-600 mt-1">{{ fieldErrors.salonName }}</p>
             </div>
             <div>
               <label for="salon-city" class="section-label mb-3 block">Ville</label>
-              <select id="salon-city" v-model="form.city" name="address-level2" autocomplete="address-level2" required :aria-invalid="Boolean(fieldErrors.city)" aria-describedby="salon-city-error" :class="['input-shell text-base py-3 h-[52px]', fieldErrors.city ? 'border-red-400' : '']">
+              <select id="salon-city" v-model="form.city" name="city" autocomplete="address-level2" required :aria-invalid="Boolean(fieldErrors.city)" aria-describedby="salon-city-error" :class="['input-shell text-base py-3 h-[52px]', fieldErrors.city ? 'border-red-400' : '']">
                 <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
               </select>
               <p id="salon-city-error" v-if="fieldErrors.city" class="text-xs text-red-600 mt-1">{{ fieldErrors.city }}</p>
@@ -53,6 +53,8 @@
                 <select
                   id="owner-phone-country"
                   v-model="selectedPhoneCountryCode"
+                  name="phone_country_code"
+                  autocomplete="tel-country-code"
                   class="h-[52px] w-[112px] bg-transparent border-0 pr-2 text-sm focus:outline-none"
                   aria-label="Indicatif pays"
                 >
@@ -64,7 +66,7 @@
                   id="owner-phone"
                   type="tel"
                   v-model="form.phone"
-                  name="tel-national"
+                  name="phone_number"
                   autocomplete="tel-national"
                   inputmode="numeric"
                   maxlength="16"
@@ -80,26 +82,26 @@
             </div>
             <div>
               <label for="owner-email" class="section-label mb-3 block">Email professionnel</label>
-              <input id="owner-email" type="email" v-model="form.email" name="email" autocomplete="email" required :aria-invalid="Boolean(fieldErrors.email)" aria-describedby="owner-email-error" :class="['input-shell text-base py-3', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
+              <input id="owner-email" type="email" v-model="form.email" name="owner_email" autocomplete="email" required :aria-invalid="Boolean(fieldErrors.email)" aria-describedby="owner-email-error" :class="['input-shell text-base py-3', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
               <p id="owner-email-error" v-if="fieldErrors.email" class="text-xs text-red-600 mt-1">{{ fieldErrors.email }}</p>
             </div>
             <div>
               <label for="owner-name" class="section-label mb-3 block">Nom complet du gérant</label>
-              <input id="owner-name" type="text" v-model="form.fullName" name="name" autocomplete="name" required :aria-invalid="Boolean(fieldErrors.fullName)" aria-describedby="owner-name-error" :class="['input-shell text-base py-3', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
+              <input id="owner-name" type="text" v-model="form.fullName" name="owner_full_name" autocomplete="name" required :aria-invalid="Boolean(fieldErrors.fullName)" aria-describedby="owner-name-error" :class="['input-shell text-base py-3', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
               <p id="owner-name-error" v-if="fieldErrors.fullName" class="text-xs text-red-600 mt-1">{{ fieldErrors.fullName }}</p>
             </div>
             <div class="md:col-span-2">
               <label for="salon-address" class="section-label mb-3 block">Adresse précise</label>
-              <input id="salon-address" type="text" v-model="form.address" name="street-address" autocomplete="street-address" required :aria-invalid="Boolean(fieldErrors.address)" aria-describedby="salon-address-error" :class="['input-shell text-base py-3', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
+              <input id="salon-address" type="text" v-model="form.address" name="salon_address" autocomplete="street-address" required :aria-invalid="Boolean(fieldErrors.address)" aria-describedby="salon-address-error" :class="['input-shell text-base py-3', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
               <p id="salon-address-error" v-if="fieldErrors.address" class="text-xs text-red-600 mt-1">{{ fieldErrors.address }}</p>
             </div>
             <div>
               <label for="salon-neighborhood" class="section-label mb-3 block">Quartier <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
-              <input id="salon-neighborhood" type="text" v-model="form.neighborhood" name="address-level3" autocomplete="address-level3" class="input-shell text-base py-3" placeholder="Plateau, Mermoz, Almadies…" />
+              <input id="salon-neighborhood" type="text" v-model="form.neighborhood" name="salon_neighborhood" autocomplete="address-level3" class="input-shell text-base py-3" placeholder="Plateau, Mermoz, Almadies…" />
             </div>
             <div>
               <label for="salon-description" class="section-label mb-3 block">Description du salon <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
-              <textarea id="salon-description" v-model="form.description" rows="3" class="input-shell text-base py-3 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
+              <textarea id="salon-description" v-model="form.description" rows="3" name="salon_description" autocomplete="off" class="input-shell text-base py-3 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
             </div>
             <div class="md:col-span-2">
               <label for="owner-password" class="section-label mb-3 block">Mot de passe</label>
@@ -108,7 +110,7 @@
                   id="owner-password"
                   :type="showPassword ? 'text' : 'password'"
                   v-model="form.password"
-                  name="new-password"
+                  name="owner_password"
                   autocomplete="new-password"
                   minlength="8"
                   :class="['input-shell text-base py-3 pr-12', fieldErrors.password ? 'border-red-400' : '']"
