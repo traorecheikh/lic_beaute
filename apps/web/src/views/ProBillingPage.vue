@@ -40,34 +40,117 @@
       </div>
     </div>
 
-    <!-- Plan comparison -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Plan comparison — redesigned with marketing hooks -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 items-start">
+      <!-- Standard card -->
       <div
-        v-for="plan in planTiers"
-        :key="plan.tier"
         :class="[
-          'panel-clean p-6 relative transition-all',
-          plan.tier === currentTier ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-90'
+          'panel-clean p-6 relative',
+          planTiers[0]?.tier === currentTier ? 'ring-2 ring-primary' : ''
         ]"
       >
-        <div v-if="plan.tier === currentTier" class="absolute -top-2.5 left-6">
+        <div v-if="planTiers[0]?.tier === currentTier" class="absolute -top-2.5 left-6 z-10">
           <span class="px-3 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-widest">Plan actuel</span>
         </div>
-        <div class="flex items-start justify-between mb-4">
+        <div class="flex items-start justify-between mb-5">
           <div>
-            <p class="row-primary text-base">{{ plan.label }}</p>
-            <p class="metric-value text-2xl mt-1">{{ plan.priceLabel }}</p>
-            <p class="row-meta">par mois</p>
+            <p class="text-[15px] font-semibold text-espresso">Standard</p>
+            <p class="metric-value text-2xl mt-1">{{ planTiers[0]?.priceLabel ?? '15 000 F' }}</p>
+            <p class="text-[11px] text-cocoa/40">par mois</p>
           </div>
-          <component :is="plan.tier === 'premium' ? StarIcon : SparklesIcon" class="w-8 h-8" :class="plan.tier === 'premium' ? 'text-secondary' : 'text-primary/40'" />
+          <SparklesIcon class="w-7 h-7 text-cocoa/20" />
         </div>
-        <ul class="space-y-2 mt-4">
-          <li v-for="feature in plan.features" :key="feature.label" class="flex items-center gap-2.5">
-            <CheckCircleIcon v-if="feature.included" class="w-4 h-4 text-primary shrink-0" />
-            <XCircleIcon v-else class="w-4 h-4 text-cocoa/20 shrink-0" />
-            <span :class="['text-sm', feature.included ? 'text-espresso font-medium' : 'text-cocoa/40 line-through']">{{ feature.label }}</span>
+        <ul class="space-y-3">
+          <li v-for="feature in planTiers[0]?.features ?? []" :key="feature.label" class="flex items-start gap-2.5">
+            <CheckCircleIcon v-if="feature.included" class="w-4 h-4 mt-0.5 text-primary shrink-0" />
+            <XCircleIcon v-else class="w-4 h-4 mt-0.5 text-cocoa/20 shrink-0" />
+            <span :class="['text-[13px]', feature.included ? 'text-espresso font-medium' : 'text-cocoa/30 line-through']">{{ feature.label }}</span>
           </li>
         </ul>
+      </div>
+
+      <!-- Premium card — hero treatment -->
+      <div
+        :class="[
+          'p-6 relative overflow-hidden',
+          planTiers[1]?.tier === currentTier
+            ? 'ring-2 ring-secondary bg-gradient-to-br from-white via-secondary/[0.02] to-secondary/[0.06]'
+            : 'bg-white border border-outline-variant rounded-3xl shadow-sm',
+          'rounded-3xl'
+        ]"
+      >
+        <!-- Glow effect -->
+        <div class="absolute -right-12 -top-12 w-40 h-40 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-12 -bottom-12 w-32 h-32 bg-secondary/5 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div v-if="planTiers[1]?.tier === currentTier" class="absolute -top-2.5 left-6 z-10">
+          <span class="px-3 py-0.5 rounded-full bg-secondary text-white text-[10px] font-bold uppercase tracking-widest">Plan actuel</span>
+        </div>
+
+        <div class="relative z-10">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <p class="text-[15px] font-semibold text-espresso">
+                Premium
+                <span class="ml-2 px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-[9px] font-bold uppercase tracking-widest">Le plus populaire</span>
+              </p>
+              <p class="metric-value text-2xl mt-1">{{ planTiers[1]?.priceLabel ?? '25 000 F' }}</p>
+              <p class="text-[11px] text-cocoa/40">par mois</p>
+            </div>
+            <StarIcon class="w-7 h-7 text-secondary" />
+          </div>
+
+          <!-- Feature list -->
+          <ul class="space-y-3 mb-6">
+            <li v-for="feature in planTiers[1]?.features ?? []" :key="feature.label" class="flex items-start gap-2.5">
+              <CheckCircleIcon class="w-4 h-4 mt-0.5 text-secondary shrink-0" />
+              <span class="text-[13px] text-espresso font-medium">{{ feature.label }}</span>
+            </li>
+          </ul>
+
+          <!-- Marketing upsell — what Premium unlocks beyond Standard -->
+          <div class="border-t border-secondary/10 pt-5 space-y-4">
+            <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-cocoa/40">Pourquoi passer Premium ?</p>
+            <div class="grid grid-cols-1 gap-3">
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-secondary/[0.04]">
+                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 2v20"/></svg>
+                </div>
+                <div>
+                  <p class="text-[11px] font-semibold text-espresso leading-tight">Sécurisez vos revenus</p>
+                  <p class="text-[10px] text-cocoa/60 leading-relaxed">Les acomptes automatisés réduisent les no-shows de 40 % — chaque créneau réservé est payé d'avance.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-secondary/[0.04]">
+                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                </div>
+                <div>
+                  <p class="text-[11px] font-semibold text-espresso leading-tight">Pilotez avec des chiffres</p>
+                  <p class="text-[10px] text-cocoa/60 leading-relaxed">Rapports financiers, top prestations, taux d'occupation — prenez les bonnes décisions.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-secondary/[0.04]">
+                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[11px] font-semibold text-espresso leading-tight">Faites-vous connaître</p>
+                  <p class="text-[10px] text-cocoa/60 leading-relaxed">Visibilité prioritaire sur la marketplace + badge « Vérifié » qui rassure les clients.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social proof -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-espresso/[0.03] border border-cocoa/[0.06]">
+              <p class="text-[10px] text-cocoa/60">
+                <span class="font-bold text-espresso">85 %</span> des salons Premium
+                <br/>voient leur chiffre augmenter <span class="font-semibold text-espresso">dès le 1er mois</span>.
+              </p>
+              <ArrowTrendingUpIcon class="w-5 h-5 text-secondary shrink-0" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -492,6 +575,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ArrowDownTrayIcon,
+  ArrowTrendingUpIcon,
   WalletIcon,
   BanknotesIcon,
   CalendarDaysIcon,

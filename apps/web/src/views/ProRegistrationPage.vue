@@ -6,7 +6,7 @@
           <img src="/logo.png" alt="Beauté Avenue" class="h-7 w-auto" />
           <span class="row-meta">Beauté Avenue Pro</span>
         </RouterLink>
-        <p class="section-label mb-1">Étape {{ currentStep }} sur 5</p>
+        <p class="section-label mb-1">Étape {{ currentStep }} sur 4</p>
         <h1 class="text-[30px] md:text-[34px] font-medium-bold text-espresso leading-tight tracking-tight">
           {{ stepTitles[currentStep - 1] }}
         </h1>
@@ -15,7 +15,7 @@
         </p>
         <div class="flex items-center gap-2 mt-3">
           <div
-            v-for="step in 5"
+            v-for="step in 4"
             :key="step"
             :class="[
               'h-1.5 rounded-full transition-all duration-500',
@@ -201,77 +201,7 @@
           </div>
         </div>
 
-        <!-- Step 4: Subscription Intent -->
-        <div v-if="currentStep === 4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <button
-              type="button"
-              @click="form.subscriptionIntentTier = 'standard'"
-              :aria-pressed="form.subscriptionIntentTier === 'standard'"
-              :class="[
-                'p-8 rounded-3xl border-2 text-left transition-all relative overflow-hidden',
-                form.subscriptionIntentTier === 'standard' 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-outline-variant bg-white hover:border-primary/20'
-              ]"
-            >
-              <div v-if="form.subscriptionIntentTier === 'standard'" class="absolute top-4 right-4 text-primary">
-                <CheckCircleIcon class="w-6 h-6" />
-              </div>
-              <h3 class="text-sm font-bold uppercase tracking-widest text-cocoa/60 mb-2">Plan Standard</h3>
-              <p class="text-2xl font-medium-bold text-espresso mb-6">
-                {{ formatPriceXof(pricing.standardPriceXof) }} F <span class="text-sm text-cocoa/40">/mois</span>
-              </p>
-              <ul class="space-y-3">
-                <li class="flex items-center gap-3 text-sm text-cocoa/80">
-                  <CheckIcon class="w-4 h-4 text-primary" />
-                  Agenda & Réservations
-                </li>
-                <li class="flex items-center gap-3 text-sm text-cocoa/80">
-                  <CheckIcon class="w-4 h-4 text-primary" />
-                  Base clients
-                </li>
-              </ul>
-            </button>
-
-            <button
-              type="button"
-              @click="form.subscriptionIntentTier = 'premium'"
-              :aria-pressed="form.subscriptionIntentTier === 'premium'"
-              :class="[
-                'p-8 rounded-3xl border-2 text-left transition-all relative overflow-hidden',
-                form.subscriptionIntentTier === 'premium' 
-                  ? 'border-secondary bg-secondary/5' 
-                  : 'border-outline-variant bg-white hover:border-secondary/20'
-              ]"
-            >
-              <div v-if="form.subscriptionIntentTier === 'premium'" class="absolute top-4 right-4 text-secondary">
-                <CheckCircleIcon class="w-6 h-6" />
-              </div>
-              <div class="absolute -right-8 -top-8 w-24 h-24 bg-secondary/10 rounded-full blur-2xl"></div>
-              <h3 class="text-sm font-bold uppercase tracking-widest text-secondary mb-2">Plan Premium</h3>
-              <p class="text-2xl font-medium-bold text-espresso mb-6">
-                {{ formatPriceXof(pricing.premiumPriceXof) }} F <span class="text-sm text-cocoa/40">/mois</span>
-              </p>
-              <ul class="space-y-3">
-                <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
-                  <StarIcon class="w-4 h-4 text-secondary" />
-                  Acomptes automatisés
-                </li>
-                <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
-                  <StarIcon class="w-4 h-4 text-secondary" />
-                  Marketing & SMS
-                </li>
-                <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
-                  <StarIcon class="w-4 h-4 text-secondary" />
-                  Visibilité prioritaire
-                </li>
-              </ul>
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 5: Documents -->
+        <!-- Step 4: Documents -->
         <div v-if="currentStep === 5" class="space-y-8">
           <div class="bg-primary/5 rounded-2xl p-6 border border-primary/10 mb-8">
             <p class="text-sm text-espresso leading-relaxed">
@@ -317,7 +247,7 @@
         
         <button
           type="button"
-          v-if="currentStep < 5" 
+          v-if="currentStep < 4" 
           @click="nextStep" 
           class="btn-primary flex-1 max-w-xs py-4 h-[60px] text-lg font-medium-bold shadow-xl shadow-primary/20"
         >
@@ -348,11 +278,8 @@ import {
   XMarkIcon,
   PlusIcon,
   BuildingStorefrontIcon,
-  CheckCircleIcon,
-  StarIcon,
   EyeIcon,
   EyeSlashIcon,
-  CheckIcon,
   ScissorsIcon,
   SparklesIcon,
   PaintBrushIcon,
@@ -406,7 +333,6 @@ const stepTitles = [
   "Inscrivez votre salon",
   "Que proposez-vous ?",
   "Quelle est la taille de votre équipe ?",
-  "Choisissez votre plan",
   "Pièces justificatives"
 ];
 
@@ -414,7 +340,6 @@ const stepSubtitles = [
   "Commençons par faire connaissance. Votre salon sera configuré en quelques minutes.",
   "Sélectionnez la catégorie principale qui définit le mieux votre activité.",
   "Cela nous permet d'adapter l'agenda et la gestion des ressources.",
-  "Sélectionnez le plan qui correspond le mieux à vos besoins actuels.",
   "Téléversez les documents nécessaires pour la validation de votre compte."
 ];
 
@@ -482,7 +407,7 @@ const requiredDocs = ref([
   { label: "Pièce d'Identité du Gérant", desc: "CNI, Passeport ou Permis", fileUrl: "" }
 ]);
 
-// Fetch required docs from API when user reaches step 5
+// Fetch required docs from API when user reaches step 4
 async function loadRequiredDocs() {
   if (docsLoading.value) return;
   docsLoading.value = true;
@@ -520,8 +445,7 @@ const form = reactive({
   address: "",
   neighborhood: "",
   description: "",
-  teamSize: "Juste moi",
-  subscriptionIntentTier: "standard" as "standard" | "premium"
+  teamSize: "Juste moi"
 });
 
 function onPhoneInput(event: Event) {
@@ -583,10 +507,6 @@ function validateCurrentStep() {
     toast.error("Sélectionnez la taille de votre équipe.");
     return false;
   }
-  if (currentStep.value === 4 && !form.subscriptionIntentTier) {
-    toast.error("Choisissez un plan.");
-    return false;
-  }
   if (Object.keys(fieldErrors).length > 0) {
     toast.error("Corrigez les champs en erreur.");
     return false;
@@ -597,7 +517,7 @@ function validateCurrentStep() {
 function nextStep() {
   if (!validateCurrentStep()) return;
   currentStep.value++;
-  if (currentStep.value === 5) {
+  if (currentStep.value === 4) {
     void loadRequiredDocs();
   }
 }
@@ -641,7 +561,6 @@ async function submitRegistration() {
       email,
       phone,
       password: form.password,
-      subscriptionIntentTier: form.subscriptionIntentTier,
       salon: {
         name: form.salonName.trim(),
         category: form.category,
