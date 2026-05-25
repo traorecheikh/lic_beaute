@@ -289,6 +289,7 @@ import {
 } from "@heroicons/vue/24/outline";
 import { registerProOwner } from "@/lib/pro-api";
 import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories, fetchPublicPricing } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 
 const router = useRouter();
 const currentStep = ref(1);
@@ -588,7 +589,7 @@ async function submitRegistration() {
       query: { email, registered: "1" }
     });
   } catch (error) {
-    toast.error("Inscription impossible pour le moment. Vérifiez les champs du formulaire.");
+    toast.error(getErrorMessage(error, "Inscription impossible pour le moment."));
   } finally {
     loading.value = false;
   }
