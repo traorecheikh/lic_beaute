@@ -185,6 +185,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { proStaffCreateInputSchema, proStaffUpdateInputSchema } from "@beauteavenue/contracts";
+import { validateForm } from "@beauteavenue/shared-ts";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import {
@@ -443,28 +445,34 @@ function toggleService(serviceId: string) {
 }
 
 function submitMember() {
-  if (!createForm.fullName.trim()) {
-    toast.error("Le nom est requis.");
-    return;
-  }
-  if (!editingMemberId.value && !createForm.phone.trim()) {
-    toast.error("Le téléphone est requis pour créer un membre.");
-    return;
-  }
-  if (createForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createForm.email.trim())) {
-    toast.error("Format email invalide.");
+  const schema = editingMemberId.value ? proStaffUpdateInputSchema : proStaffCreateInputSchema;
+  const data = {
+    fullName: createForm.fullName.trim(),
+    phone: createForm.phone.trim() || undefined,
+    email: createForm.email.trim() || undefined,
+    password: createForm.password || undefined,
+    role: createForm.role,
+    avatarUrl: createForm.avatarUrl.trim() || undefined,
+    description: createForm.description.trim() || undefined,
+    serviceIds: createForm.serviceIds,
+    isActive: editingMemberId.value ? createForm.isActive : undefined,
+    schedulingEnabled: editingMemberId.value ? createForm.schedulingEnabled : undefined,
+    displayName: editingMemberId.value ? createForm.fullName.trim() : undefined,
+  };
+  const result = validateForm(schema, data);
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? result.formError ?? "Vérifiez les champs.");
     return;
   }
   if (teamDisplaySettings.showPhotos && createForm.isActive && !createForm.avatarUrl.trim()) {
     toast.error("Photo obligatoire pour activer un collaborateur.");
     return;
   }
-
   if (editingMemberId.value) {
     updateMutation.mutate();
     return;
   }
-
   createMutation.mutate();
 }
 

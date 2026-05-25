@@ -52,6 +52,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { useMutation, useQuery } from "@tanstack/vue-query";
+import { proHoursUpdateInputSchema } from "@beauteavenue/contracts";
+import { validateForm } from "@beauteavenue/shared-ts";
 import { toast } from "vue-sonner";
 import { 
   DocumentDuplicateIcon,
@@ -123,6 +125,18 @@ function copyToAll(sourceDay: string) {
 }
 
 async function saveHours() {
+  const payload = days.map((day) => ({
+    dayOfWeek: dayOfWeekByLabel[day],
+    isOpen: Boolean(hours[day].open),
+    opensAt: hours[day].open ? hours[day].start : null,
+    closesAt: hours[day].open ? hours[day].end : null
+  }));
+  const result = validateForm(proHoursUpdateInputSchema, payload);
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Horaires invalides.");
+    return;
+  }
   saving.value = true;
   saveMutation.mutate();
 }

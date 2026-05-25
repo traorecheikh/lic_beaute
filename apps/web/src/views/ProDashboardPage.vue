@@ -224,7 +224,8 @@ import { computed, reactive, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
 import dayjs from "dayjs";
-import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { proManualBookingInputSchema, proBlockedSlotCreateInputSchema } from "@beauteavenue/contracts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { toast } from "vue-sonner";
 import { PlusIcon, NoSymbolIcon, XMarkIcon, MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
 import {
@@ -449,16 +450,31 @@ function rejectRequest(id: string) {
 }
 
 function submitManualBooking() {
-  if (!manualForm.serviceId) {
-    toast.error("Veuillez sélectionner une prestation.");
+  const result = validateForm(proManualBookingInputSchema, {
+    serviceId: manualForm.serviceId || undefined,
+    startsAt: new Date(manualForm.startsAt).toISOString(),
+    clientId: manualForm.clientId || undefined,
+    clientName: manualForm.clientName.trim() || undefined,
+    clientPhone: manualForm.clientPhone.trim() || undefined
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les champs.");
     return;
   }
   manualMutation.mutate();
 }
 
 function submitBlockSlot() {
-  if (new Date(blockForm.endsAt) <= new Date(blockForm.startsAt)) {
-    toast.error("La fin doit être après le début.");
+  const result = validateForm(proBlockedSlotCreateInputSchema, {
+    startsAt: new Date(blockForm.startsAt).toISOString(),
+    endsAt: new Date(blockForm.endsAt).toISOString(),
+    reason: blockForm.reason || undefined,
+    scope: "salon"
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les dates.");
     return;
   }
   blockMutation.mutate();

@@ -67,12 +67,11 @@
 
         <!-- Right: Photography -->
         <div class="lg:col-span-6 flex justify-end">
-          <div class="relative w-full max-w-[520px] aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-black/10">
-            <img
-              src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=85"
-              alt="Salon de beauté"
-              class="absolute inset-0 w-full h-full object-cover"
-            />
+          <div class="relative w-full max-w-[520px] aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-black/10 bg-gradient-to-br from-primary/25 via-secondary/20 to-espresso/15">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.45),transparent_45%),radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.25),transparent_40%)]"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <img src="/logo.png" alt="Beauté Avenue" class="h-24 w-auto opacity-90" />
+            </div>
           </div>
         </div>
 

@@ -88,47 +88,51 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/zod";
-import { z } from "zod";
+import { computed, reactive, ref } from "vue";
+import { emailLoginSchema } from "@beauteavenue/contracts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/vue/24/outline";
 
 import { getErrorMessage } from "@/lib/errors";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { validateForm } from "@beauteavenue/shared-ts";
 
 const auth = useAdminAuthStore();
 const route = useRoute();
 const router = useRouter();
 
-const loginSchema = toTypedSchema(
-  z.object({
-    email: z.string().email("Entrez un email valide."),
-    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères.")
-  })
-);
-
-const { errors, defineField, handleSubmit: withFormSubmit, isSubmitting, setFieldError } = useForm({
-  validationSchema: loginSchema
-});
-
-const [email] = defineField("email");
-const [password] = defineField("password");
+const email = ref("");
+const password = ref("");
+const isSubmitting = ref(false);
+const errors = reactive<Record<string, string>>({});
 
 const showExpiredBanner = computed(() => route.query.expired === "1");
 
-const handleSubmit = withFormSubmit(async (values) => {
+function validate(): boolean {
+  Object.keys(errors).forEach((k) => delete errors[k]);
+  const result = validateForm(emailLoginSchema, { email: email.value, password: password.value });
+  if (!result.success) {
+    Object.assign(errors, result.errors);
+    return false;
+  }
+  return true;
+}
+
+async function handleSubmit() {
+  if (!validate()) return;
+  isSubmitting.value = true;
   try {
-    await auth.login(values.email, values.password);
+    await auth.login(email.value, password.value);
     toast.success("Connexion admin établie.");
     const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/admin/dashboard";
     await router.push(redirect);
   } catch (error) {
     const message = getErrorMessage(error, "Connexion impossible pour le moment.");
-    setFieldError("password", message);
+    errors.password = message;
     toast.error(message);
+  } finally {
+    isSubmitting.value = false;
   }
-});
+}
 </script>

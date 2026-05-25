@@ -157,7 +157,8 @@
 import { ref, computed, watch } from "vue";
 import { useMutation, useQuery } from "@tanstack/vue-query";
 import dayjs from "dayjs";
-import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { proCheckoutCompleteInputSchema } from "@beauteavenue/contracts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { 
@@ -296,8 +297,16 @@ function removeItem(index: number) {
 
 
 function completeCheckout() {
-  if (!items.value.some((item) => item.name.trim().length > 0)) {
-    toast.error("Ajoutez au moins une ligne de facturation.");
+  const result = validateForm(proCheckoutCompleteInputSchema, {
+    paymentMethod: "cash",
+    lineItems: items.value
+      .filter((item) => item.name.trim().length > 0)
+      .map((item) => ({ name: item.name.trim(), amountXof: item.price })),
+    discountXof: 0
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les lignes de facturation.");
     return;
   }
   completeMutation.mutate();

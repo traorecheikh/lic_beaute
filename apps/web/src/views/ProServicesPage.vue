@@ -324,7 +324,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { proServiceCreateInputSchema } from "@beauteavenue/contracts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { toast } from "vue-sonner";
 import {
   PlusIcon,
@@ -511,12 +512,18 @@ function nextStep() {
 }
 
 function submitService() {
-  if (createForm.depositMode === "fixed" && (!createForm.depositAmountXof || createForm.depositAmountXof <= 0)) {
-    toast.error("Veuillez saisir un montant d'acompte pour le mode fixe.");
-    return;
-  }
-  if (createForm.depositMode === "percent" && (!createForm.depositPercent || createForm.depositPercent < 1 || createForm.depositPercent > 100)) {
-    toast.error("Veuillez définir un pourcentage d'acompte entre 1 et 100.");
+  const result = validateForm(proServiceCreateInputSchema, {
+    name: createForm.name,
+    category: createForm.category || undefined,
+    durationMinutes: createForm.durationMinutes,
+    priceXof: createForm.priceXof,
+    depositMode: createForm.depositMode,
+    depositAmountXof: createForm.depositMode === "fixed" ? createForm.depositAmountXof : undefined,
+    depositPercent: createForm.depositMode === "percent" ? createForm.depositPercent : undefined
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? result.formError ?? "Vérifiez les champs.");
     return;
   }
   if (editingServiceId.value) {

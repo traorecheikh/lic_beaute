@@ -138,6 +138,8 @@ import { refDebounced } from "@vueuse/core";
 import dayjs from "dayjs";
 import { useRouter } from "vue-router";
 import { MagnifyingGlassIcon, UsersIcon } from "@heroicons/vue/24/outline";
+import { proClientBenefitCreateSchema } from "@beauteavenue/contracts";
+import { validateForm } from "@beauteavenue/shared-ts";
 import { createClientBenefit, fetchProClient, fetchProClients } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
@@ -263,12 +265,21 @@ watch(selectedId, () => {
 
 async function submitBenefit() {
   if (!auth.accessToken || !selectedId.value) return;
-  if (!benefitForm.value.name.trim()) {
-    benefitError.value = "Le nom est obligatoire.";
+  benefitError.value = null;
+  const result = validateForm(proClientBenefitCreateSchema, {
+    clientId: selectedId.value,
+    kind: benefitForm.value.kind,
+    name: benefitForm.value.name.trim(),
+    remainingUses: benefitForm.value.remainingUses ?? undefined,
+    expiresAt: benefitForm.value.expiresAt ? new Date(benefitForm.value.expiresAt).toISOString() : undefined,
+    billingDate: undefined
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    benefitError.value = firstError ?? "Vérifiez les champs.";
     return;
   }
   benefitSubmitting.value = true;
-  benefitError.value = null;
   try {
     await createClientBenefit(auth.accessToken, {
       clientId: selectedId.value,

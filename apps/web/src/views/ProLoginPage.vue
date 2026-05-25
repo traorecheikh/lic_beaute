@@ -74,11 +74,13 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
+import { emailLoginSchema } from "@beauteavenue/contracts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/vue/24/outline";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
+import { validateForm } from "@beauteavenue/shared-ts";
 
 const router = useRouter();
 const route = useRoute();
@@ -90,19 +92,21 @@ const showPassword = ref(false);
 const loading = ref(false);
 const fieldErrors = reactive<Record<string, string>>({});
 
-function isLikelyPhone(raw: string): boolean {
-  const normalized = raw.replace(/[^\d+]/g, "");
-  return /^\+?\d{8,15}$/.test(normalized);
-}
-
 function validate(): boolean {
   Object.keys(fieldErrors).forEach((k) => delete fieldErrors[k]);
-  const identifier = email.value.trim();
-  if (!identifier) fieldErrors.email = "Email ou téléphone requis.";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier) && !isLikelyPhone(identifier)) fieldErrors.email = "Entrez un email valide ou un numéro de téléphone.";
-  if (!password.value) fieldErrors.password = "Mot de passe requis.";
-  else if (password.value.length < 8) fieldErrors.password = "Minimum 8 caractères.";
-  return Object.keys(fieldErrors).length === 0;
+  // Pro login accepts email OR phone — emailLoginSchema only requires email format.
+  // Check if it looks like a phone, skip email validation.
+  const isPhone = /^\+?\d{8,15}$/.test(email.value.trim().replace(/[^\d+]/g, ""));
+  if (isPhone) {
+    if (!email.value.trim()) fieldErrors.email = "Téléphone requis.";
+    return Object.keys(fieldErrors).length === 0;
+  }
+  const result = validateForm(emailLoginSchema, { email: email.value, password: password.value });
+  if (!result.success) {
+    Object.assign(fieldErrors, result.errors);
+    return false;
+  }
+  return true;
 }
 
 async function handleLogin() {

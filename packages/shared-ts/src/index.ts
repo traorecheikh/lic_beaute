@@ -18,3 +18,6 @@ export function formatMoneyXof(amount: number) {
     maximumFractionDigits: 0
   }).format(amount);
 }
+
+export { validateForm } from "./validate-form.js";
+export type { FieldErrors, ValidationResult } from "./validate-form.js";

@@ -234,6 +234,8 @@ import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 
 import type { ProSalonUpdateInput } from "@/lib/generated";
+import { proSalonUpdateInputSchema } from "@beauteavenue/contracts";
+import { validateForm } from "@beauteavenue/shared-ts";
 import { fetchProSalon, updateProSalon, uploadProMedia, deleteProMediaAsset } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
@@ -741,40 +743,45 @@ function useCurrentLocation() {
 
 async function saveProfile() {
   try {
+    saving.value = true;
     const phone = profile.phone.trim();
     const instagram = profile.instagram.trim();
-    if (phone && (phone.length < 8 || phone.length > 20)) {
-      toast.error("Le téléphone doit contenir entre 8 et 20 caractères.");
-      return;
-    }
-    if (instagram.length > 200) {
-      toast.error("L'URL Instagram ne doit pas dépasser 200 caractères.");
-      return;
-    }
-    saving.value = true;
     const neighborhood = profile.neighborhood.trim();
     const logoUrl = profile.logoUrl.trim();
-    const payload: ProSalonUpdateInput = {
+    let lat: number | null = null;
+    let lng: number | null = null;
+    try {
+      lat = profile.latitude.trim() ? parseCoordinate(profile.latitude, "Latitude", -90, 90) : null;
+      lng = profile.longitude.trim() ? parseCoordinate(profile.longitude, "Longitude", -180, 180) : null;
+    } catch (e) {
+      toast.error((e as Error).message);
+      saving.value = false;
+      return;
+    }
+    const payload = {
       category: profile.category,
       logoUrl: logoUrl.length > 0 ? logoUrl : null,
       description: profile.description.trim(),
       city: profile.city,
       address: profile.address.trim(),
       neighborhood: neighborhood.length > 0 ? neighborhood : null,
-      latitude: parseCoordinate(profile.latitude, "Latitude", -90, 90),
-      longitude: parseCoordinate(profile.longitude, "Longitude", -180, 180),
+      latitude: lat,
+      longitude: lng,
       phone: phone.length > 0 ? phone : null,
       instagram: instagram.length > 0 ? instagram : null,
       gallery: photos.value.map((photo) => photo.url.trim()).filter((url) => url.length > 0)
     };
-    saveMutation.mutate(payload);
+    const result = validateForm(proSalonUpdateInputSchema, payload);
+    if (!result.success) {
+      const firstError = Object.values(result.errors)[0];
+      toast.error(firstError ?? result.formError ?? "Corrigez les champs.");
+      saving.value = false;
+      return;
+    }
+    saveMutation.mutate(result.data as ProSalonUpdateInput);
   } catch (error) {
     saving.value = false;
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : "Coordonnées invalides. Vérifiez la latitude et la longitude."
-    );
+    toast.error("Erreur lors de la sauvegarde du profil.");
   }
 }
 

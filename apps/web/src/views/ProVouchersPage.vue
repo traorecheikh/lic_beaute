@@ -112,6 +112,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { proVoucherCreateSchema } from "@beauteavenue/contracts";
+import { validateForm } from "@beauteavenue/shared-ts";
 import { PlusIcon, TicketIcon } from "@heroicons/vue/24/outline";
 import dayjs from "dayjs";
 import { createProVoucher } from "@/lib/pro-api";
@@ -157,10 +159,23 @@ function resetForm() {
 
 async function submitVoucher() {
   if (!auth.accessToken) return;
-  submitting.value = true;
   formError.value = null;
+  const result = validateForm(proVoucherCreateSchema, {
+    code: form.value.code.trim().toUpperCase(),
+    title: form.value.title.trim(),
+    discountLabel: form.value.discountLabel.trim(),
+    description: form.value.description.trim() || null,
+    expiresAt: form.value.expiresAt ? new Date(form.value.expiresAt).toISOString() : null,
+    maxRedemptions: form.value.maxRedemptions ?? null
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    formError.value = firstError ?? "Vérifiez les champs.";
+    return;
+  }
+  submitting.value = true;
   try {
-    const result = await createProVoucher(auth.accessToken, {
+    const apiResult = await createProVoucher(auth.accessToken, {
       code: form.value.code.trim().toUpperCase(),
       title: form.value.title.trim(),
       discountLabel: form.value.discountLabel.trim(),
@@ -169,13 +184,13 @@ async function submitVoucher() {
       maxRedemptions: form.value.maxRedemptions ?? null
     });
     vouchers.value.unshift({
-      id: result.id,
-      code: result.code,
-      title: result.title,
-      discountLabel: result.discountLabel,
-      description: result.description ?? null,
-      expiresAt: result.expiresAt ?? null,
-      maxRedemptions: result.maxRedemptions ?? null
+      id: apiResult.id,
+      code: apiResult.code,
+      title: apiResult.title,
+      discountLabel: apiResult.discountLabel,
+      description: apiResult.description ?? null,
+      expiresAt: apiResult.expiresAt ?? null,
+      maxRedemptions: apiResult.maxRedemptions ?? null
     });
     showForm.value = false;
     resetForm();

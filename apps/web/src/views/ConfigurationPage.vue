@@ -657,6 +657,8 @@ import {
   upsertPlatformRequiredDocument
 } from '@/lib/api';
 import type { PlatformSetting } from '@beauteavenue/contracts';
+import { upsertSalonCategoryInputSchema, upsertRequiredDocumentInputSchema } from '@beauteavenue/contracts';
+import { validateForm } from '@beauteavenue/shared-ts';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -1176,14 +1178,34 @@ const showAddCatModal = ref(false);
 const newCat = reactive({ name: '', slug: '' });
 
 function submitNewDoc() {
-  if (!newDoc.label || !newDoc.slug) { toast.error('Libellé et slug sont requis.'); return; }
+  const result = validateForm(upsertRequiredDocumentInputSchema, {
+    label: newDoc.label.trim(),
+    slug: newDoc.slug.trim(),
+    type: newDoc.type,
+    isRequired: newDoc.isRequired,
+    enabled: true
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les champs.");
+    return;
+  }
   if (docDuplicate.value) { toast.error(`Le document "${docDuplicate.value}" existe déjà.`); return; }
-  addDocMutation.mutate({ ...newDoc });
+  addDocMutation.mutate(result.data as { label: string; slug: string; type: string; isRequired: boolean; });
 }
 
 function submitNewCat() {
-  if (!newCat.name || !newCat.slug) { toast.error('Nom et slug sont requis.'); return; }
+  const result = validateForm(upsertSalonCategoryInputSchema, {
+    name: newCat.name.trim(),
+    slug: newCat.slug.trim(),
+    enabled: true
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les champs.");
+    return;
+  }
   if (catDuplicate.value) { toast.error(`La catégorie "${catDuplicate.value}" existe déjà.`); return; }
-  addCatMutation.mutate({ ...newCat });
+  addCatMutation.mutate(result.data as { name: string; slug: string; });
 }
 </script>

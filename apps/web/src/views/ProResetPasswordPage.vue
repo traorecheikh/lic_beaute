@@ -71,6 +71,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { resetPasswordInputSchema } from "@beauteavenue/contracts";
+import { validateForm } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { useProAuthStore } from "@/stores/proAuth";
@@ -100,12 +102,12 @@ onMounted(() => {
 
 async function handleReset() {
   errorMsg.value = "";
-  if (password.value !== confirm.value) {
-    errorMsg.value = "Les mots de passe ne correspondent pas.";
-    return;
-  }
-  if (password.value.length < 8) {
-    errorMsg.value = "Le mot de passe doit contenir au moins 8 caractères.";
+  const result = validateForm(resetPasswordInputSchema, {
+    token: token.value, email: email.value, password: password.value, confirm: confirm.value
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    errorMsg.value = firstError ?? result.formError ?? "Vérifiez les champs.";
     return;
   }
   loading.value = true;

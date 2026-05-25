@@ -235,7 +235,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { adminSubscriptionOverrideSchema } from "@beauteavenue/contracts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 
@@ -366,14 +367,25 @@ const errorTitle = computed(() => {
 });
 
 function submitOverride() {
-  if (selectedReasonKey.value === 'custom' && !customReason.value.trim()) {
-    toast.error("Veuillez préciser le motif manuellement.");
+  const reasonObj = reasons.find(r => r.id === selectedReasonKey.value);
+  const finalReason = selectedReasonKey.value === 'custom'
+    ? customReason.value.trim()
+    : (reasonObj?.label ?? "Ajustement support");
+
+  const result = validateForm(adminSubscriptionOverrideSchema, {
+    action: overrideAction.value,
+    reason: finalReason,
+    effectiveAt: effectiveAt.value ? new Date(effectiveAt.value).toISOString() : undefined,
+    expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : undefined,
+    metadata: {}
+  });
+
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? result.formError ?? "Vérifiez les champs.");
     return;
   }
-  if (requiresFile.value && !selectedFile.value) {
-    toast.error("Une pièce justificative est obligatoire pour ce motif.");
-    return;
-  }
+
   overrideMutation.mutate();
 }
 

@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <section class="relative bg-espresso py-24 overflow-hidden">
       <div class="absolute inset-0 opacity-10">
-        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.25),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.2),transparent_45%)]"></div>
       </div>
       
       <div class="relative mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8 text-center">

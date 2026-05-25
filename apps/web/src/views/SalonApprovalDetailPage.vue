@@ -402,7 +402,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { adminSalonDecisionSchema } from "@beauteavenue/contracts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { CheckIcon, QuestionMarkCircleIcon, XMarkIcon, DocumentIcon } from "@heroicons/vue/24/outline";
@@ -480,9 +481,6 @@ const decisionMutation = useMutation({
       if (labels.length > 0) {
         fullReason = `${fullReason ? fullReason + "\n\n" : ""}Documents requis :\n${labels.map((l) => `• ${l}`).join("\n")}`;
       }
-    }
-    if (!fullReason) {
-      throw new Error("Le motif est requis pour cette action.");
     }
     const payload = { reason: fullReason };
 
@@ -608,6 +606,26 @@ function resetForm() {
 }
 
 function submitDecision() {
+  if (action.value !== "approve" && action.value !== "reject" && action.value !== "request-info") return;
+
+  // Validate reason for reject/request-info
+  if (action.value !== "approve") {
+    let fullReason = reason.value.trim();
+    if (action.value === "request-info" && selectedDocTypes.value.length > 0) {
+      const docs = requiredDocsQuery.data.value ?? [];
+      const labels = selectedDocTypes.value.map((id) => docs.find((d) => d.id === id)?.label).filter(Boolean);
+      if (labels.length > 0) {
+        fullReason = `${fullReason ? fullReason + "\n\n" : ""}Documents requis :\n${labels.map((l) => `• ${l}`).join("\n")}`;
+      }
+    }
+    const result = validateForm(adminSalonDecisionSchema, { reason: fullReason });
+    if (!result.success) {
+      const firstError = Object.values(result.errors)[0];
+      mutationError.value = firstError ?? result.formError ?? "Le motif est requis.";
+      return;
+    }
+  }
+
   decisionMutation.mutate();
 }
 

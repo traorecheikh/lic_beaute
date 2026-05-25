@@ -124,8 +124,24 @@ import { toast } from "vue-sonner";
 
 import { changePassword } from "@/lib/api";
 import { useProAuthStore } from "@/stores/proAuth";
+import { validateForm } from "@beauteavenue/shared-ts";
+import { z } from "zod";
 
 const auth = useProAuthStore();
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Mot de passe actuel requis."),
+  newPassword: z.string().min(8, "Le nouveau mot de passe doit contenir au moins 8 caractères."),
+  confirm: z.string().min(1, "Confirmation requise.")
+}).superRefine((data, ctx) => {
+  if (data.newPassword !== data.confirm) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Les mots de passe ne correspondent pas.",
+      path: ["confirm"]
+    });
+  }
+});
 
 const form = reactive({ currentPassword: "", newPassword: "", confirm: "" });
 const loading = ref(false);
@@ -185,16 +201,11 @@ const salonLinks = computed(() => [
 async function submit() {
   error.value = "";
 
-  if (!form.currentPassword || !form.newPassword || !form.confirm) {
-    error.value = "Tous les champs sont requis.";
-    return;
-  }
-  if (form.newPassword.length < 8) {
-    error.value = "Le nouveau mot de passe doit contenir au moins 8 caractères.";
-    return;
-  }
-  if (form.newPassword !== form.confirm) {
-    error.value = "Les mots de passe ne correspondent pas.";
+  const result = validateForm(changePasswordSchema, form);
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    if (firstError) error.value = firstError;
+    if (result.formError) error.value = result.formError;
     return;
   }
 

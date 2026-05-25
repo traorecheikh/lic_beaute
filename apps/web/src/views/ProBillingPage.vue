@@ -485,7 +485,8 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import dayjs from "dayjs";
-import { formatMoneyXof } from "@beauteavenue/shared-ts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
+import { proBillingMethodSchema } from "@beauteavenue/contracts";
 import { useRoute, useRouter } from "vue-router";
 import {
   CheckCircleIcon,
@@ -1023,24 +1024,19 @@ function closePaymentMethodModal() {
 }
 
 function savePaymentMethod() {
-  const accountNumber = paymentMethodForm.accountNumber.trim();
-  if (!accountNumber) {
-    toast.error("Le numéro de compte est requis.");
-    return;
-  }
-  if (accountNumber.length < 8 || accountNumber.length > 20) {
-    toast.error("Le numéro de compte doit contenir entre 8 et 20 chiffres.");
-    return;
-  }
-  const billingMethod: Record<string, unknown> = {
-    provider: paymentMethodForm.provider,
-    accountNumber
+  const billingData = {
+    provider: paymentMethodForm.provider as "paydunya" | "manual",
+    accountNumber: paymentMethodForm.accountNumber.trim(),
+    country: paymentMethodForm.provider === "paydunya" ? paymentMethodForm.country : undefined,
+    method: paymentMethodForm.provider === "paydunya" ? paymentMethodForm.method : undefined,
   };
-  if (paymentMethodForm.provider === "paydunya") {
-    billingMethod.country = paymentMethodForm.country;
-    billingMethod.method = paymentMethodForm.method;
+  const result = validateForm(proBillingMethodSchema, billingData);
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les champs.");
+    return;
   }
-  paymentMethodMutation.mutate(billingMethod);
+  paymentMethodMutation.mutate(result.data as unknown as Record<string, unknown>);
 }
 
 function clearPaymentMethod() {
