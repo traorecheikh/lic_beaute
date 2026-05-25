@@ -48,6 +48,30 @@ class AuthActions {
     await _hydrateSession(sessionResponse.data!);
   }
 
+  Future<void> requestEmailOtp({required String email}) async {
+    final dio = _ref.read(dioProvider);
+    await dio.post(
+      '/api/v1/auth/otp/email/request',
+      data: {'email': email},
+    );
+  }
+
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String code,
+  }) async {
+    final dio = _ref.read(dioProvider);
+    final response = await dio.post<Map<String, dynamic>>(
+      '/api/v1/auth/otp/email/verify',
+      data: {'email': email, 'code': code},
+    );
+    final data = response.data!;
+    await _hydrateSessionFromRaw(
+      accessToken: data['accessToken'] as String,
+      refreshToken: data['refreshToken'] as String,
+    );
+  }
+
   Future<void> registerEmail({
     required String fullName,
     required String email,
@@ -125,6 +149,34 @@ class AuthActions {
       role: user.role.name,
     );
 
+    _ref.read(fcmRegistrationServiceProvider).register();
+  }
+
+  Future<void> _hydrateSessionFromRaw({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    final notifier = _ref.read(sessionProvider.notifier);
+    await notifier.login(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userId: '',
+    );
+    final api = _ref.read(apiClientProvider).getAuthApi();
+    final meResponse = await api.apiV1MeGet();
+    final user = meResponse.data!;
+    if (user.role.name != 'client') {
+      await notifier.logout();
+      throw const ClientOnlyAuthException(
+        'Ce compte professionnel ne peut pas utiliser l’application cliente.',
+      );
+    }
+    await notifier.login(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userId: user.id,
+      role: user.role.name,
+    );
     _ref.read(fcmRegistrationServiceProvider).register();
   }
 }

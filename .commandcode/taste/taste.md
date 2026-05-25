@@ -19,3 +19,7 @@ See [ui/taste.md](ui/taste.md)
 - For staging deployments, use the project's actual configured drivers/services (email, OTP, payment) instead of defaulting to `noop` or `mock` placeholders. Confidence: 0.60
 - Configure services (email, payment, OTP drivers) via environment variables, not by patching compiled files or source code. Confidence: 0.85
 - Let Coolify handle Docker pulls and restarts automatically after a git push instead of manually SSH-ing to run docker pull/restart. Confidence: 0.70
+
+# mobile
+- For mobile client authentication, use email-only login — disable phone number login entirely and send OTP via email for account creation. Confidence: 0.65
+- Include email masking/validation and password visibility toggle with validation in the mobile client login form. Confidence: 0.60

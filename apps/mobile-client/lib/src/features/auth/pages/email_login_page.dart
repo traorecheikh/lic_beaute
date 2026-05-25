@@ -12,6 +12,8 @@ import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
 import '../widgets/auth_form_widgets.dart';
 
+final _emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+
 class EmailLoginPage extends ConsumerStatefulWidget {
   const EmailLoginPage({super.key});
 
@@ -106,6 +108,10 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
       AppSnackbar.info(context, 'Email et mot de passe requis.');
+      return;
+    }
+    if (!_emailRegex.hasMatch(email)) {
+      AppSnackbar.info(context, 'Format d\'email invalide.');
       return;
     }
     AppHaptics.light();

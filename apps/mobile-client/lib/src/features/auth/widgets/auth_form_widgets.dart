@@ -160,6 +160,7 @@ class EditorialField extends StatefulWidget {
     this.style,
     this.suffixBuilder,
     this.errorText,
+    this.enabled = true,
   });
 
   final String label;
@@ -171,6 +172,7 @@ class EditorialField extends StatefulWidget {
   final TextStyle? style;
   final Widget Function(bool focused)? suffixBuilder;
   final String? errorText;
+  final bool enabled;
 
   @override
   State<EditorialField> createState() => _EditorialFieldState();
@@ -195,6 +197,13 @@ class _EditorialFieldState extends State<EditorialField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+    final labelColor = !widget.enabled
+        ? AppColors.onSurfaceVariant.withValues(alpha: 0.5)
+        : hasError
+            ? AppColors.error
+            : _focused
+                ? AppColors.primary
+                : AppColors.onSurfaceVariant;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,11 +211,7 @@ class _EditorialFieldState extends State<EditorialField> {
         Text(
           widget.label,
           style: AppTextStyles.labelSm.copyWith(
-            color: hasError
-                ? AppColors.error
-                : _focused
-                ? AppColors.primary
-                : AppColors.onSurfaceVariant,
+            color: labelColor,
             letterSpacing: 1.5,
           ),
         ),
@@ -216,7 +221,8 @@ class _EditorialFieldState extends State<EditorialField> {
           children: [
             Expanded(
               child: TextField(
-                focusNode: _focus,
+                enabled: widget.enabled,
+                focusNode: widget.enabled ? _focus : null,
                 controller: widget.controller,
                 keyboardType: widget.keyboardType,
                 obscureText: widget.obscureText,

@@ -192,6 +192,15 @@ model OtpChallenge {
   createdAt      DateTime @default(now())
 }
 
+model EmailOtpChallenge {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  codeHash       String
+  expiresAt      DateTime
+  failedAttempts Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
 model Salon {
   id                     String              @id @default(cuid())
   name                   String

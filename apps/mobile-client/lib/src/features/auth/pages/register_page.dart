@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pinput/pinput.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
-import '../../../core/widgets/app_icon.dart';
-import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
 import '../widgets/auth_form_widgets.dart';
+
+/// Email regex pattern for client-side validation before sending OTP request.
+final _emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -20,79 +24,160 @@ class RegisterPage extends ConsumerStatefulWidget {
 }
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
-  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final _otpController = TextEditingController();
+  bool _codeSent = false;
   bool _submitting = false;
 
   @override
   void dispose() {
-    _fullNameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AuthPageScaffold(
-      title: 'Créer un compte',
-      subtitle: 'Rejoignez Beauté Avenue pour une expérience personnalisée.',
+      title: _codeSent ? 'Vérification' : 'Créer un compte',
+      subtitle: _codeSent
+          ? 'Un code à 6 chiffres vous a été envoyé par email.'
+          : 'Saisissez votre email pour recevoir un code de vérification.',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          EditorialField(
-            label: 'NOM COMPLET',
-            controller: _fullNameController,
-            keyboardType: TextInputType.name,
-          ),
-          SizedBox(height: 24.h),
-          EditorialField(
-            label: 'EMAIL',
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          SizedBox(height: 24.h),
-          EditorialField(
-            label: 'MOT DE PASSE',
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            suffixBuilder: (focused) => AppPressable(
-              onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
-                child: AppIcon(
-                  _obscurePassword ? 'eye-off' : 'eye',
-                  color: focused ? AppColors.primary : AppColors.onSurfaceVariant,
-                  size: 20,
+          if (!_codeSent) ...[
+            EditorialField(
+              label: 'EMAIL',
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 48.h),
+            AuthPrimaryButton(
+              label: 'RECEVOIR LE CODE',
+              loading: _submitting,
+              onTap: _requestCode,
+            ),
+            SizedBox(height: 24.h),
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  if (_submitting) return;
+                  context.push(AppRoutes.emailLogin);
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Text(
+                    'Déjà un compte ? Connectez-vous',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(height: 48.h),
-          AuthPrimaryButton(
-            label: 'S\'INSCRIRE',
-            loading: _submitting,
-            onTap: _submitRegister,
-          ),
+          ] else ...[
+            Center(
+              child: Column(
+                children: [
+                  EditorialField(
+                    label: 'EMAIL',
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: false,
+                  ),
+                  SizedBox(height: 32.h),
+                  Text(
+                    'CODE À 6 CHIFFRES',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  Pinput(
+                    length: 6,
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    defaultPinTheme: PinTheme(
+                      width: 48.w,
+                      height: 56.h,
+                      textStyle: AppTextStyles.headlineLg.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColors.outline.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    focusedPinTheme: PinTheme(
+                      width: 48.w,
+                      height: 56.h,
+                      textStyle: AppTextStyles.headlineLg.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    onCompleted: (_) => _verifyCode(),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 32.h),
+            AuthPrimaryButton(
+              label: 'VÉRIFIER LE CODE',
+              loading: _submitting,
+              onTap: _verifyCode,
+            ),
+            gapH16,
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  if (_submitting) return;
+                  setState(() => _codeSent = false);
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Text(
+                    'Modifier l\'email',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Future<void> _submitRegister() async {
+  Future<void> _requestCode() async {
     if (_submitting) return;
-    final name = _fullNameController.text.trim();
     final email = _emailController.text.trim();
-    final password = _passwordController.text;
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      AppSnackbar.info(context, 'Tous les champs sont requis.');
+    if (email.isEmpty) {
+      AppSnackbar.info(context, 'Veuillez saisir votre adresse email.');
       return;
     }
-    if (password.length < 8) {
-      AppSnackbar.info(context, 'Le mot de passe doit contenir au moins 8 caractères.');
+    if (!_emailRegex.hasMatch(email)) {
+      AppSnackbar.info(context, 'Format d\'email invalide.');
       return;
     }
 
@@ -101,16 +186,67 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     await handleAuthAction(
       context,
       () async {
-        await ref.read(authActionsProvider).registerEmail(
-              fullName: name,
-              email: email,
-              password: password,
-            );
+        await ref.read(authActionsProvider).requestEmailOtp(email: email);
+        if (!mounted) return;
+        setState(() => _codeSent = true);
+        AppSnackbar.success(context, 'Code de vérification envoyé par email.');
+      },
+      fallback: 'Envoi du code impossible.',
+      errorMapper: (error, fallback) {
+        final data = error.response?.data;
+        if (data is Map<String, dynamic>) {
+          final code = data['code'] as String?;
+          if (code == 'email_already_used') {
+            return 'Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.';
+          }
+          if (code == 'otp_rate_limited') {
+            return 'Trop de tentatives. Réessayez dans quelques minutes.';
+          }
+        }
+        return fallback;
+      },
+    );
+    if (mounted) setState(() => _submitting = false);
+  }
+
+  Future<void> _verifyCode() async {
+    final email = _emailController.text.trim();
+    final code = _otpController.text.trim();
+
+    if (code.length != 6) {
+      AppSnackbar.info(context, 'Le code doit contenir 6 chiffres.');
+      return;
+    }
+
+    AppHaptics.light();
+    setState(() => _submitting = true);
+    await handleAuthAction(
+      context,
+      () async {
+        await ref
+            .read(authActionsProvider)
+            .verifyEmailOtp(email: email, code: code);
         if (!context.mounted) return;
         // ignore: use_build_context_synchronously
         await navigateAfterAuth(context, ref);
       },
-      fallback: 'Inscription impossible.',
+      fallback: 'Vérification impossible.',
+      errorMapper: (error, fallback) {
+        final data = error.response?.data;
+        if (data is Map<String, dynamic>) {
+          final code = data['code'] as String?;
+          if (code == 'invalid_otp') {
+            return 'Code incorrect. Vérifiez et réessayez.';
+          }
+          if (code == 'otp_locked') {
+            return 'Trop de tentatives. Veuillez redemander un code.';
+          }
+          if (code == 'otp_expired') {
+            return 'Code expiré. Demandez un nouveau code.';
+          }
+        }
+        return fallback;
+      },
     );
     if (mounted) setState(() => _submitting = false);
   }

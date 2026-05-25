@@ -6,6 +6,8 @@ import { ZodError } from "zod";
 import {
   currentUserSchema,
   emailLoginSchema,
+  emailOtpRequestSchema,
+  emailOtpVerifySchema,
   otpRequestSchema,
   otpVerifySchema,
   refreshInputSchema,
@@ -917,5 +919,91 @@ export class AuthController {
         fail(reply, 500, "internal_error", "Erreur interne.");
       }
     }
+  }
+
+  async requestEmailOtp(request: FastifyRequest, reply: FastifyReply) {
+    const body = emailOtpRequestSchema.parse(request.body);
+
+    // Check that email is not already taken
+    const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
+    if (existingUser) {
+      fail(reply, 409, "email_already_used", "Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.");
+      return;
+    }
+
+    const rateLimit = await checkOtpRateLimit(`email:${body.email}`);
+    if (!rateLimit.allowed) {
+      fail(reply, 429, "otp_rate_limited", `Trop de tentatives. Réessayez dans ${rateLimit.retryAfterSeconds}s.`);
+      return;
+    }
+
+    const code = generateOtpCode();
+    const codeHash = otpCodeHash(body.email, code);
+    await prisma.emailOtpChallenge.upsert({
+      where: { email: body.email },
+      create: { email: body.email, codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS), failedAttempts: 0 },
+      update: { codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS), failedAttempts: 0 }
+    });
+
+    void sendEmail({
+      to: body.email,
+      subject: "Votre code de vérification — Beauté Avenue",
+      text: `Bonjour,\n\nVotre code de vérification Beauté Avenue est : ${code}\n\nCe code est valable 5 minutes. Ne le partagez à personne.\n\n— L'équipe Beauté Avenue`,
+      html: `<p>Bonjour,</p><p>Votre code de vérification Beauté Avenue est :</p><p style="font-size:24px;font-weight:bold;letter-spacing:4px;text-align:center;padding:16px;background:#f5f5f5;border-radius:8px;">${code}</p><p>Ce code est valable <strong>5 minutes</strong>. Ne le partagez à personne.</p><p>— L'équipe Beauté Avenue</p>`
+    }).catch((err) => logger.error("auth.requestEmailOtp: failed to send email", { err: String(err), to: body.email }));
+
+    reply.code(202).send({ accepted: true, destination: body.email });
+  }
+
+  async verifyEmailOtp(request: FastifyRequest, reply: FastifyReply) {
+    const body = emailOtpVerifySchema.parse(request.body);
+    const entry = await prisma.emailOtpChallenge.findUnique({ where: { email: body.email } });
+    const codeHash = otpCodeHash(body.email, body.code);
+    const notExpired = !!entry && entry.expiresAt.getTime() > Date.now();
+    const valid = notExpired && constantTimeEquals(entry!.codeHash, codeHash);
+
+    if (!valid) {
+      if (entry && notExpired) {
+        const attempts = entry.failedAttempts + 1;
+        if (attempts >= OTP_MAX_ATTEMPTS) {
+          await prisma.emailOtpChallenge.deleteMany({ where: { email: body.email } });
+          fail(reply, 429, "otp_locked", "Trop de tentatives. Veuillez demander un nouveau code.");
+        } else {
+          await prisma.emailOtpChallenge.update({
+            where: { email: body.email },
+            data: { failedAttempts: attempts }
+          });
+          fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
+        }
+      } else {
+        fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
+      }
+      return;
+    }
+    await prisma.emailOtpChallenge.deleteMany({ where: { email: body.email } });
+
+    // Check again — email could have been registered between OTP request and verify
+    let user = await prisma.user.findUnique({ where: { email: body.email } });
+    if (user) {
+      fail(reply, 409, "email_already_used", "Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.");
+      return;
+    }
+
+    user = await prisma.user.create({
+      data: { fullName: "", email: body.email, role: "client" }
+    });
+
+    const tokens = signSession(user.id, user.role);
+    await pruneExcessSessions(user.id);
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshToken: hashRefreshToken(tokens.refreshToken),
+        clientType: "app",
+        userAgentHash: uaHash(request),
+        expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
+      }
+    });
+    ok(reply, tokens);
   }
 }

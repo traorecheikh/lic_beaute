@@ -19,6 +19,9 @@ import {
   authSessionSchema,
   currentUserSchema,
   emailLoginSchema,
+  emailOtpRequestSchema,
+  emailOtpVerifySchema,
+  emailOtpAcceptedResponseSchema,
   otpRequestSchema,
   otpVerifySchema,
   refreshInputSchema,
@@ -175,6 +178,9 @@ const schemaEntries = {
   AuthSession: authSessionSchema,
   LogoutResponse: z.object({ revoked: z.boolean() }),
   OtpAcceptedResponse: acceptedOtpResponseSchema,
+  EmailOtpRequestInput: emailOtpRequestSchema,
+  EmailOtpVerifyInput: emailOtpVerifySchema,
+  EmailOtpAcceptedResponse: emailOtpAcceptedResponseSchema,
   CurrentUser: currentUserSchema,
   ProfileOptions: profileOptionsSchema,
   ClientPaymentMethod: clientPaymentMethodSchema,
@@ -426,6 +432,70 @@ export const openApiSpec = {
             content: {
               "application/json": {
                 schema: ref("AuthSession")
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/email/request": {
+      post: {
+        tags: ["auth"],
+        summary: "Request an OTP code via email",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("EmailOtpRequestInput")
+            }
+          }
+        },
+        responses: {
+          202: {
+            description: "OTP request accepted",
+            content: {
+              "application/json": {
+                schema: ref("EmailOtpAcceptedResponse")
+              }
+            }
+          },
+          409: {
+            description: "Email already in use",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/email/verify": {
+      post: {
+        tags: ["auth"],
+        summary: "Verify email OTP and create/login client",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: ref("EmailOtpVerifyInput")
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Authenticated session",
+            content: {
+              "application/json": {
+                schema: ref("AuthSession")
+              }
+            }
+          },
+          401: {
+            description: "Invalid or expired code",
+            content: {
+              "application/json": {
+                schema: ref("ApiError")
               }
             }
           }

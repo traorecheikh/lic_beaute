@@ -14,7 +14,6 @@ import '../features/appointments/pages/review_new_page.dart';
 import '../features/auth/pages/auth_choice_page.dart';
 import '../features/auth/pages/email_login_page.dart';
 import '../features/auth/pages/onboarding/onboarding_page.dart';
-import '../features/auth/pages/otp_login_page.dart';
 import '../features/auth/pages/profile_bootstrap_page.dart';
 import '../features/auth/pages/register_page.dart';
 import '../features/booking/pages/booking_review_page.dart';
@@ -51,7 +50,6 @@ abstract final class AppRoutes {
   static const auth = '/auth';
   static const emailLogin = '/auth/email-login';
   static const register = '/auth/register';
-  static const otpLogin = '/auth/otp';
   static const profileBootstrap = '/profile/bootstrap';
   static const home = '/';
   static const search = '/search';
@@ -102,7 +100,6 @@ const _publicRoutesWithoutAuth = {
   AppRoutes.auth,
   AppRoutes.emailLogin,
   AppRoutes.register,
-  AppRoutes.otpLogin,
   AppRoutes.home,
   AppRoutes.search,
 };
@@ -113,7 +110,6 @@ const _authEntryRoutes = {
   AppRoutes.auth,
   AppRoutes.emailLogin,
   AppRoutes.register,
-  AppRoutes.otpLogin,
 };
 
 bool _isPublicRouteWithoutAuth(String location) {
@@ -183,7 +179,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, _) => const EmailLoginPage(),
           ),
           GoRoute(path: 'register', builder: (_, _) => const RegisterPage()),
-          GoRoute(path: 'otp', builder: (_, _) => const OtpLoginPage()),
         ],
       ),
       GoRoute(

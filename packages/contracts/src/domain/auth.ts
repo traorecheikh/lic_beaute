@@ -166,6 +166,20 @@ export const resetPasswordInputSchema = z
     }
   });
 
+export const emailOtpRequestSchema = z.object({
+  email: z.string().email()
+});
+
+export const emailOtpVerifySchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6)
+});
+
+export const emailOtpAcceptedResponseSchema = z.object({
+  accepted: z.boolean(),
+  destination: z.string()
+});
+
 export const magicLoginInputSchema = z.object({
   token: z.string().min(1),
   email: z.string().email()
@@ -174,6 +188,8 @@ export const magicLoginInputSchema = z.object({
 export type EmailLoginInput = z.infer<typeof emailLoginSchema>;
 export type OtpRequestInput = z.infer<typeof otpRequestSchema>;
 export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
+export type EmailOtpRequestInput = z.infer<typeof emailOtpRequestSchema>;
+export type EmailOtpVerifyInput = z.infer<typeof emailOtpVerifySchema>;
 export type AuthSession = z.infer<typeof authSessionSchema>;
 export type CurrentUser = z.infer<typeof currentUserSchema>;
 export type RefreshInput = z.infer<typeof refreshInputSchema>;
