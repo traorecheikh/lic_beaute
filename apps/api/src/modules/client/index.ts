@@ -46,6 +46,21 @@ function isPrismaKnownError(error: unknown): error is { code: string } {
   return typeof error === "object" && error !== null && "code" in error && typeof (error as { code?: unknown }).code === "string";
 }
 
+const LOCKED_SUBSCRIPTION_STATUSES = new Set(["inactive", "paused", "cancelled", "expired"]);
+
+async function ensureProWriteAccessForSalon(salonId: string, reply: FastifyReply): Promise<boolean> {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    select: { subscription: { select: { status: true } } }
+  });
+  const status = salon?.subscription?.status;
+  if (!status || LOCKED_SUBSCRIPTION_STATUSES.has(status)) {
+    fail(reply, 402, "subscription_required", "Abonnement requis pour effectuer cette action. Activez votre abonnement.");
+    return false;
+  }
+  return true;
+}
+
 function serializePaymentMethod(method: {
   id: string;
   provider: "paydunya" | "manual";
@@ -299,6 +314,7 @@ export class ClientAccountController {
         fail(reply, 403, "forbidden", "Accès interdit.");
         return;
       }
+      if (!(await ensureProWriteAccessForSalon(actor.salonId, reply))) return;
       const client = await prisma.user.findFirst({ where: { id: body.clientId, role: "client" } });
       if (!client) {
         fail(reply, 404, "client_not_found", "Client introuvable.");
@@ -365,6 +381,7 @@ export class ClientAccountController {
         fail(reply, 403, "forbidden", "Accès interdit.");
         return;
       }
+      if (!(await ensureProWriteAccessForSalon(actor.salonId, reply))) return;
       const created = await prisma.voucherDefinition.create({
         data: {
           salonId: actor.salonId,

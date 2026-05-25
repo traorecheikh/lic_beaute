@@ -343,7 +343,7 @@ export async function approveSalon(salonId: string, actorName: string) {
 
   const updated = await prisma.salon.update({
     where: { id: salonId },
-    data: { approvalStatus: "approved", isVisibleInMarketplace: true, canReceiveBookings: true, latestAdminNote: "Salon approuvé et prêt à être visible." }
+    data: { approvalStatus: "approved", isVisibleInMarketplace: false, canReceiveBookings: false, latestAdminNote: "Salon approuvé. Activation en attente d'un abonnement actif." }
   });
 
   await prisma.subscription.upsert({
@@ -371,7 +371,7 @@ export async function approveSalon(salonId: string, actorName: string) {
       text:
         `Bonjour ${owner.fullName ?? ""},\n\n` +
         `Excellente nouvelle: le salon "${salon.name}" a été approuvé.\n` +
-        `Votre espace pro est maintenant activé.\n\n` +
+        `Dernière étape: activez votre abonnement pour rendre le salon visible et recevoir des réservations.\n\n` +
         `— L'équipe Beauté Avenue`
     }).catch((err) =>
       logger.error("approveSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })

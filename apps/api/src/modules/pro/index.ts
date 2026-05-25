@@ -355,6 +355,21 @@ function managerOrOwner(role: string, reply: FastifyReply): boolean {
   return true;
 }
 
+const LOCKED_SUBSCRIPTION_STATUSES = new Set(["inactive", "paused", "cancelled", "expired"]);
+
+async function ensureProWriteAccess(salonId: string, reply: FastifyReply): Promise<boolean> {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    select: { subscription: { select: { status: true } } }
+  });
+  const status = salon?.subscription?.status;
+  if (!status || LOCKED_SUBSCRIPTION_STATUSES.has(status)) {
+    fail(reply, 402, "subscription_required", "Abonnement requis pour effectuer cette action. Activez votre abonnement.");
+    return false;
+  }
+  return true;
+}
+
 export class ProController {
   // ─── Dashboard ─────────────────────────────────────────────────────────────
 
@@ -424,6 +439,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const body = proSalonUpdateInputSchema.parse(request.body);
       const { gallery, phone, instagram, teamDisplay, ...salonPayload } = body;
 
@@ -602,6 +618,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const body = proServiceCreateInputSchema.parse(request.body);
       if (body.depositMode !== "none") {
         const flags = await getFeatureFlags();
@@ -636,6 +653,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { serviceId: string };
       const body = proServiceUpdateInputSchema.parse(request.body);
       const existing = await prisma.service.findFirst({ where: { id: params.serviceId, salonId } });
@@ -673,6 +691,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { serviceId: string };
       const existing = await prisma.service.findFirst({ where: { id: params.serviceId, salonId } });
       if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
@@ -722,6 +741,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!managerOrOwner(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const body = proStaffCreateInputSchema.parse(request.body);
       const normalizedAvatarUrl = body.avatarUrl?.trim() ? body.avatarUrl.trim() : null;
       const normalizedDescription = body.description?.trim() ? body.description.trim() : null;
@@ -856,6 +876,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!managerOrOwner(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { employeeId: string };
       const body = proStaffUpdateInputSchema.parse(request.body);
       const existing = await prisma.employee.findFirst({ 
@@ -925,6 +946,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { employeeId: string };
       const existing = await prisma.employee.findFirst({ where: { id: params.employeeId, salonId } });
       if (!existing) { fail(reply, 404, "employee_not_found", "Employé introuvable."); return; }
@@ -937,6 +959,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!managerOrOwner(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { employeeId: string };
       const employee = await prisma.employee.findFirst({
         where: { id: params.employeeId, salonId },
@@ -992,6 +1015,7 @@ export class ProController {
     try {
       const { salonId, role } = await ensurePro(request);
       if (!ownerOnly(role, reply)) return;
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const body = proHoursUpdateInputSchema.parse(request.body);
       if (!body.some((h) => h.isOpen)) { fail(reply, 422, "no_open_day", "Au moins un jour doit être ouvert."); return; }
 
@@ -1022,6 +1046,7 @@ export class ProController {
   async createBlockedSlot(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, userId } = await ensurePro(request);
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const body = proBlockedSlotCreateInputSchema.parse(request.body);
       const startsAt = new Date(body.startsAt);
       const endsAt = new Date(body.endsAt);
@@ -1058,6 +1083,7 @@ export class ProController {
   async deleteBlockedSlot(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId } = await ensurePro(request);
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { slotId: string };
       const existing = await prisma.blockedSlot.findFirst({ where: { id: params.slotId, salonId } });
       if (!existing) { fail(reply, 404, "slot_not_found", "Créneau bloqué introuvable."); return; }
@@ -1148,6 +1174,7 @@ export class ProController {
   ) {
     try {
       const { salonId, userId } = await ensurePro(request);
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { bookingId: string };
       const booking = await prisma.booking.findFirst({ where: { id: params.bookingId, salonId } });
       if (!booking) { fail(reply, 404, "booking_not_found", "Réservation introuvable."); return; }
@@ -1259,6 +1286,7 @@ export class ProController {
   async createManualBooking(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, userId } = await ensurePro(request);
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const body = proManualBookingInputSchema.parse(request.body);
 
       const service = await prisma.service.findFirst({ where: { id: body.serviceId, salonId, isActive: true } });
@@ -1534,6 +1562,7 @@ export class ProController {
   async completeCheckout(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, userId } = await ensurePro(request);
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { bookingId: string };
       const body = proCheckoutCompleteInputSchema.parse(request.body);
 
@@ -1625,6 +1654,7 @@ export class ProController {
   async respondToReview(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId, userId } = await ensurePro(request);
+      if (!(await ensureProWriteAccess(salonId, reply))) return;
       const params = request.params as { reviewId: string };
       const body = proReviewResponseInputSchema.parse(request.body);
       const review = await prisma.review.findFirst({ where: { id: params.reviewId, salonId } });
@@ -2033,10 +2063,14 @@ export class ProController {
             }
           });
 
-          if (isUpgrade && sub?.salonId) {
+          if (sub?.salonId) {
             await tx.salon.update({
               where: { id: sub.salonId },
-              data: { subscriptionTier: "premium" }
+              data: {
+                ...(isUpgrade ? { subscriptionTier: "premium" } : {}),
+                isVisibleInMarketplace: true,
+                canReceiveBookings: true
+              }
             });
           }
 

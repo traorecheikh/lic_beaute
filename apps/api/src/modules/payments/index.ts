@@ -750,11 +750,16 @@ export class PaymentController {
           }
         });
 
-        // Sync Salon.subscriptionTier on upgrade to prevent entitlement split-brain
-        if (isUpgrade && sub?.salonId) {
+        // Reactivate salon distribution flags on successful subscription payment.
+        // Also sync tier on upgrade to prevent entitlement split-brain.
+        if (sub?.salonId) {
           await tx.salon.update({
             where: { id: sub.salonId },
-            data: { subscriptionTier: "premium" }
+            data: {
+              ...(isUpgrade ? { subscriptionTier: "premium" } : {}),
+              isVisibleInMarketplace: true,
+              canReceiveBookings: true
+            }
           });
         }
       }

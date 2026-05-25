@@ -110,6 +110,28 @@
       </div>
     </div>
 
+    <div
+      v-if="showSubscriptionLockReminder"
+      class="fixed inset-0 z-[120] flex items-center justify-center bg-black/35 p-4"
+      @click.self="subscriptionLockDismissed = true"
+    >
+      <div class="w-full max-w-lg rounded-2xl border border-outline-variant bg-surface p-6 shadow-2xl">
+        <h3 class="text-lg font-semibold text-espresso">Mode lecture seule</h3>
+        <p class="mt-2 text-sm text-cocoa/70 leading-relaxed">
+          Votre salon est approuvé mais l'abonnement n'est pas encore actif.
+          Vous pouvez consulter vos données, mais les actions de modification sont temporairement bloquées.
+        </p>
+        <div class="mt-5 flex items-center justify-end gap-3">
+          <button class="btn-secondary px-4 text-sm" @click="subscriptionLockDismissed = true">
+            Plus tard
+          </button>
+          <RouterLink class="btn-primary px-4 text-sm" to="/pro/subscription" @click="subscriptionLockDismissed = true">
+            Activer l'abonnement
+          </RouterLink>
+        </div>
+      </div>
+    </div>
+
     <main>
       <div class="mx-auto max-w-[1480px] px-4 pb-12 pt-8 sm:px-6 lg:px-8">
         <RouterView v-slot="{ Component }">
@@ -161,6 +183,7 @@ const router = useRouter();
 const menuOpen = ref(false);
 const menuRoot = ref<HTMLElement | null>(null);
 const graceBannerDismissed = ref(false);
+const subscriptionLockDismissed = ref(false);
 
 const subQuery = useQuery({
   queryKey: ["pro-subscription", "layout"],
@@ -224,6 +247,28 @@ const graceDaysLeft = computed(() => {
   if (!gracePeriodEndsAt.value) return null;
   return Math.ceil((gracePeriodEndsAt.value.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 });
+
+const subscriptionStatus = computed(() => {
+  const status = (subQuery.data.value as Record<string, unknown> | undefined)?.status;
+  return typeof status === "string" ? status : null;
+});
+
+const isSubscriptionLocked = computed(() => {
+  const status = subscriptionStatus.value;
+  return status === "inactive" || status === "paused" || status === "cancelled" || status === "expired";
+});
+
+const isLockExceptionRoute = computed(() => {
+  const name = route.name;
+  return name === "pro-subscription" || name === "pro-subscription-callback" || name === "pro-account" || name === "pro-approval-status";
+});
+
+const showSubscriptionLockReminder = computed(() =>
+  auth.isOwner &&
+  isSubscriptionLocked.value &&
+  !isLockExceptionRoute.value &&
+  !subscriptionLockDismissed.value
+);
 
 const centerNavItems = [
   { label: "Agenda", to: "/pro/calendar", icon: CalendarIcon },
@@ -301,6 +346,13 @@ watch(
     if (status && status !== "approved" && route.path !== "/pro/approval-status") {
       router.replace("/pro/approval-status");
     }
+  }
+);
+
+watch(
+  () => subscriptionStatus.value,
+  () => {
+    subscriptionLockDismissed.value = false;
   }
 );
 </script>

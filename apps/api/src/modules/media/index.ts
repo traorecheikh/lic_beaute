@@ -46,6 +46,29 @@ function readMultipartFieldValue(fields: Record<string, unknown>, key: string): 
   return typeof value === "string" ? value : undefined;
 }
 
+const LOCKED_SUBSCRIPTION_STATUSES = new Set(["inactive", "paused", "cancelled", "expired"]);
+
+async function ensureSalonWriteAccessIfNeeded(
+  params: { role: string; salonId: string | null | undefined },
+  reply: FastifyReply
+): Promise<boolean> {
+  if (!["salon_owner", "salon_staff", "salon_manager"].includes(params.role)) return true;
+  if (!params.salonId) {
+    fail(reply, 403, "not_in_salon", "Vous n'êtes associé à aucun salon.");
+    return false;
+  }
+  const salon = await prisma.salon.findUnique({
+    where: { id: params.salonId },
+    select: { subscription: { select: { status: true } } }
+  });
+  const status = salon?.subscription?.status;
+  if (!status || LOCKED_SUBSCRIPTION_STATUSES.has(status)) {
+    fail(reply, 402, "subscription_required", "Abonnement requis pour effectuer cette action. Activez votre abonnement.");
+    return false;
+  }
+  return true;
+}
+
 export class MediaController {
   async upload(request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -87,6 +110,7 @@ export class MediaController {
       }
 
       const owner = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true } });
+      if (!(await ensureSalonWriteAccessIfNeeded({ role: session.role, salonId: owner?.salonId }, reply))) return;
       // Non-admin callers cannot assign a foreign salonId — always use their own.
       const resolvedSalonId = session.role === "platform_admin"
         ? (typeof salonIdValue === "string" && salonIdValue.length > 0 ? salonIdValue : owner?.salonId ?? null)
@@ -182,6 +206,7 @@ export class MediaController {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
       const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true } });
+      if (!(await ensureSalonWriteAccessIfNeeded({ role: session.role, salonId: user?.salonId }, reply))) return;
       // Non-admin callers cannot assign a foreign salonId — always use their own.
       const resolvedSalonId = session.role === "platform_admin"
         ? (body.salonId ?? user?.salonId ?? null)
@@ -247,6 +272,8 @@ export class MediaController {
       if (asset.uploadedBy !== session.sub && session.role !== "platform_admin") {
         fail(reply, 403, "forbidden", "Accès interdit."); return;
       }
+      const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true } });
+      if (!(await ensureSalonWriteAccessIfNeeded({ role: session.role, salonId: user?.salonId }, reply))) return;
       if (asset.uploadStatus !== "pending_upload") {
         fail(reply, 409, "already_completed", "Upload déjà confirmé."); return;
       }
@@ -354,6 +381,7 @@ export class MediaController {
       if (!asset || asset.deletedAt) { fail(reply, 404, "media_not_found", "Fichier introuvable."); return; }
 
       const user = await prisma.user.findUnique({ where: { id: session.sub }, select: { salonId: true, role: true } });
+      if (!(await ensureSalonWriteAccessIfNeeded({ role: session.role, salonId: user?.salonId }, reply))) return;
       const isOwner =
         (asset.ownerType === "user" && asset.ownerId === session.sub) ||
         (asset.ownerType === "salon" && user?.salonId === asset.ownerId) ||
