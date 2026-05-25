@@ -1,6 +1,7 @@
 import argon2 from "argon2";
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { ZodError } from "zod";
 
 import {
   currentUserSchema,
@@ -196,7 +197,16 @@ async function serializeCurrentUser(userId: string) {
 
 export class AuthController {
   async register(request: FastifyRequest, reply: FastifyReply) {
-    const body = registerInputSchema.parse(request.body);
+    let body: ReturnType<typeof registerInputSchema.parse>;
+    try {
+      body = registerInputSchema.parse(request.body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        fail(reply, 422, "invalid_payload", "Données d'inscription invalides.");
+        return;
+      }
+      throw error;
+    }
 
     if (body.type === "client") {
       if (!body.email && !body.phone) {

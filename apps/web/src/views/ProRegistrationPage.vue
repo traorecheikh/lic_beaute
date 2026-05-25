@@ -160,7 +160,9 @@
                 <CheckCircleIcon class="w-6 h-6" />
               </div>
               <h3 class="text-sm font-bold uppercase tracking-widest text-cocoa/60 mb-2">Plan Standard</h3>
-              <p class="text-2xl font-medium-bold text-espresso mb-6">Gratuit</p>
+              <p class="text-2xl font-medium-bold text-espresso mb-6">
+                {{ formatPriceXof(pricing.standardPriceXof) }} F <span class="text-sm text-cocoa/40">/mois</span>
+              </p>
               <ul class="space-y-3">
                 <li class="flex items-center gap-3 text-sm text-cocoa/80">
                   <CheckIcon class="w-4 h-4 text-primary" />
@@ -187,7 +189,9 @@
               </div>
               <div class="absolute -right-8 -top-8 w-24 h-24 bg-secondary/10 rounded-full blur-2xl"></div>
               <h3 class="text-sm font-bold uppercase tracking-widest text-secondary mb-2">Plan Premium</h3>
-              <p class="text-2xl font-medium-bold text-espresso mb-6">25 000 F <span class="text-sm text-cocoa/40">/mois</span></p>
+              <p class="text-2xl font-medium-bold text-espresso mb-6">
+                {{ formatPriceXof(pricing.premiumPriceXof) }} F <span class="text-sm text-cocoa/40">/mois</span>
+              </p>
               <ul class="space-y-3">
                 <li class="flex items-center gap-3 text-sm text-espresso font-semibold">
                   <StarIcon class="w-4 h-4 text-secondary" />
@@ -293,12 +297,16 @@ import {
   DocumentCheckIcon
 } from "@heroicons/vue/24/outline";
 import { registerProOwner } from "@/lib/pro-api";
-import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories } from "@/lib/api";
+import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories, fetchPublicPricing } from "@/lib/api";
 
 const router = useRouter();
 const currentStep = ref(1);
 const loading = ref(false);
 const docsLoading = ref(false);
+const pricing = ref<{ standardPriceXof: number; premiumPriceXof: number }>({
+  standardPriceXof: 15000,
+  premiumPriceXof: 25000
+});
 
 const stepTitles = [
   "Inscrivez votre salon",
@@ -352,6 +360,22 @@ async function loadCategories() {
   }
 }
 
+function formatPriceXof(value: number) {
+  return new Intl.NumberFormat("fr-FR").format(value);
+}
+
+async function loadPricing() {
+  try {
+    const data = await fetchPublicPricing();
+    pricing.value = {
+      standardPriceXof: data.standard.priceXof,
+      premiumPriceXof: data.premium.priceXof
+    };
+  } catch {
+    // keep local fallback
+  }
+}
+
 const teamSizeOptions = [
   { label: "Juste moi", desc: "1 collaborateur", dots: 1 },
   { label: "Petite équipe", desc: "2 à 5 collaborateurs", dots: 3 },
@@ -386,6 +410,7 @@ async function loadRequiredDocs() {
 
 onMounted(() => {
   void loadCategories();
+  void loadPricing();
 });
 
 const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];

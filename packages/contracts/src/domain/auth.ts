@@ -92,7 +92,7 @@ export const salonOwnerRegisterInputSchema = z.object({
     neighborhood: z.string().optional(),
     description: z.string().optional()
   }),
-  services: z.array(serviceCreateInputSchema).min(1),
+  services: z.array(serviceCreateInputSchema),
   hours: z.array(hourInputSchema).length(7),
   documents: z.array(z.object({
     label: z.string(),
