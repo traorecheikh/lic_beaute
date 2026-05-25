@@ -16,14 +16,14 @@
           <div>
             <label for="email" class="section-label mb-2 block">Email ou Téléphone</label>
             <div class="mt-1">
-              <input id="email" v-model="email" type="text" required class="input-shell" placeholder="marie@monsalon.com" />
+              <input id="email" v-model="email" type="text" required class="input-shell" placeholder="marie@monsalon.com" autocomplete="username" />
             </div>
           </div>
 
           <div>
             <label for="password" class="section-label mb-2 block">Mot de passe</label>
             <div class="mt-1">
-              <input id="password" v-model="password" type="password" required class="input-shell" placeholder="••••••••" />
+              <input id="password" v-model="password" type="password" required class="input-shell" placeholder="••••••••" autocomplete="current-password" />
             </div>
           </div>
 

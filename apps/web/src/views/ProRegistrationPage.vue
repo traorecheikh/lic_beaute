@@ -27,6 +27,7 @@
         ></div>
       </div>
 
+      <form @submit.prevent="submitRegistration">
       <!-- Form Content -->
       <div class="panel-clean p-10 mb-12 shadow-xl shadow-espresso/5 border-none">
         
@@ -34,48 +35,67 @@
         <div v-if="currentStep === 1" class="space-y-8">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
-              <label class="section-label mb-3 block">Nom du salon</label>
-              <input type="text" v-model="form.salonName" name="organization" autocomplete="organization" :class="['input-shell text-lg py-4', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
+              <label for="salon-name" class="section-label mb-3 block">Nom du salon</label>
+              <input id="salon-name" type="text" v-model="form.salonName" name="organization" autocomplete="organization" :class="['input-shell text-lg py-4', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
               <p v-if="fieldErrors.salonName" class="text-xs text-red-600 mt-1">{{ fieldErrors.salonName }}</p>
             </div>
             <div>
-              <label class="section-label mb-3 block">Ville</label>
-              <select v-model="form.city" :class="['input-shell text-lg py-4 h-[60px]', fieldErrors.city ? 'border-red-400' : '']">
+              <label for="salon-city" class="section-label mb-3 block">Ville</label>
+              <select id="salon-city" v-model="form.city" name="address-level2" autocomplete="address-level2" :class="['input-shell text-lg py-4 h-[60px]', fieldErrors.city ? 'border-red-400' : '']">
                 <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
               </select>
               <p v-if="fieldErrors.city" class="text-xs text-red-600 mt-1">{{ fieldErrors.city }}</p>
             </div>
             <div>
-              <label class="section-label mb-3 block">Email professionnel</label>
-              <input type="email" v-model="form.email" name="email" autocomplete="email" :class="['input-shell text-lg py-4', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
+              <label for="owner-email" class="section-label mb-3 block">Email professionnel</label>
+              <input id="owner-email" type="email" v-model="form.email" name="email" autocomplete="email" :class="['input-shell text-lg py-4', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
               <p v-if="fieldErrors.email" class="text-xs text-red-600 mt-1">{{ fieldErrors.email }}</p>
             </div>
             <div>
-              <label class="section-label mb-3 block">Nom complet du gérant</label>
-              <input type="text" v-model="form.fullName" name="name" autocomplete="name" :class="['input-shell text-lg py-4', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
+              <label for="owner-name" class="section-label mb-3 block">Nom complet du gérant</label>
+              <input id="owner-name" type="text" v-model="form.fullName" name="name" autocomplete="name" :class="['input-shell text-lg py-4', fieldErrors.fullName ? 'border-red-400' : '']" placeholder="Marie Diop" />
               <p v-if="fieldErrors.fullName" class="text-xs text-red-600 mt-1">{{ fieldErrors.fullName }}</p>
             </div>
             <div>
-              <label class="section-label mb-3 block">Téléphone (+221)</label>
-              <input type="tel" v-model="form.phone" name="tel" autocomplete="tel" :class="['input-shell text-lg py-4', fieldErrors.phone ? 'border-red-400' : '']" placeholder="77 123 45 67" />
+              <label for="owner-phone" class="section-label mb-3 block">Téléphone (+221)</label>
+              <input id="owner-phone" type="tel" v-model="form.phone" name="tel" autocomplete="tel" :class="['input-shell text-lg py-4', fieldErrors.phone ? 'border-red-400' : '']" placeholder="77 123 45 67" />
               <p v-if="fieldErrors.phone" class="text-xs text-red-600 mt-1">{{ fieldErrors.phone }}</p>
             </div>
             <div>
-              <label class="section-label mb-3 block">Adresse précise</label>
-              <input type="text" v-model="form.address" name="street-address" autocomplete="street-address" :class="['input-shell text-lg py-4', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
+              <label for="salon-address" class="section-label mb-3 block">Adresse précise</label>
+              <input id="salon-address" type="text" v-model="form.address" name="street-address" autocomplete="street-address" :class="['input-shell text-lg py-4', fieldErrors.address ? 'border-red-400' : '']" placeholder="Rue des Poilus, Zone A..." />
               <p v-if="fieldErrors.address" class="text-xs text-red-600 mt-1">{{ fieldErrors.address }}</p>
             </div>
             <div>
-              <label class="section-label mb-3 block">Quartier <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
-              <input type="text" v-model="form.neighborhood" class="input-shell text-lg py-4" placeholder="Plateau, Mermoz, Almadies…" />
+              <label for="salon-neighborhood" class="section-label mb-3 block">Quartier <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
+              <input id="salon-neighborhood" type="text" v-model="form.neighborhood" name="address-level3" autocomplete="address-level3" class="input-shell text-lg py-4" placeholder="Plateau, Mermoz, Almadies…" />
             </div>
             <div class="md:col-span-2">
-              <label class="section-label mb-3 block">Description du salon <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
-              <textarea v-model="form.description" rows="3" class="input-shell text-lg py-4 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
+              <label for="salon-description" class="section-label mb-3 block">Description du salon <span class="text-cocoa/40 font-normal normal-case">(optionnel)</span></label>
+              <textarea id="salon-description" v-model="form.description" rows="3" class="input-shell text-lg py-4 resize-none" placeholder="Décrivez votre salon, vos spécialités, l'ambiance…"></textarea>
             </div>
             <div class="md:col-span-2">
-              <label class="section-label mb-3 block">Mot de passe</label>
-              <input type="password" v-model="form.password" name="new-password" autocomplete="new-password" :class="['input-shell text-lg py-4', fieldErrors.password ? 'border-red-400' : '']" placeholder="••••••••" />
+              <label for="owner-password" class="section-label mb-3 block">Mot de passe</label>
+              <div class="relative">
+                <input
+                  id="owner-password"
+                  :type="showPassword ? 'text' : 'password'"
+                  v-model="form.password"
+                  name="new-password"
+                  autocomplete="new-password"
+                  :class="['input-shell text-lg py-4 pr-12', fieldErrors.password ? 'border-red-400' : '']"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-cocoa/50 hover:text-cocoa"
+                  :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                  @click="showPassword = !showPassword"
+                >
+                  <EyeSlashIcon v-if="showPassword" class="w-5 h-5" />
+                  <EyeIcon v-else class="w-5 h-5" />
+                </button>
+              </div>
               <p v-if="fieldErrors.password" class="text-xs text-red-600 mt-1">{{ fieldErrors.password }}</p>
             </div>
           </div>
@@ -246,7 +266,8 @@
 
       <!-- Navigation -->
       <div class="flex items-center justify-center gap-4">
-        <button 
+        <button
+          type="button"
           v-if="currentStep > 1" 
           @click="currentStep--" 
           class="btn-secondary px-10 py-4 h-[60px] ring-0 border-none hover:bg-white transition-all font-medium-bold"
@@ -254,7 +275,8 @@
           Retour
         </button>
         
-        <button 
+        <button
+          type="button"
           v-if="currentStep < 5" 
           @click="nextStep" 
           class="btn-primary flex-1 max-w-xs py-4 h-[60px] text-lg font-medium-bold shadow-xl shadow-primary/20"
@@ -263,7 +285,7 @@
         </button>
         <button
           v-else
-          @click="submitRegistration"
+          type="submit"
           :disabled="loading"
           class="btn-primary flex-1 max-w-xs py-4 h-[60px] text-lg font-medium-bold shadow-xl shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
         >
@@ -274,6 +296,7 @@
           <span>{{ loading ? 'Finalisation en cours…' : 'Ouvrir mon salon' }}</span>
         </button>
       </div>
+      </form>
     </div>
   </div>
 </template>
@@ -288,6 +311,8 @@ import {
   BuildingStorefrontIcon,
   CheckCircleIcon,
   StarIcon,
+  EyeIcon,
+  EyeSlashIcon,
   CheckIcon,
   ScissorsIcon,
   SparklesIcon,
@@ -303,6 +328,7 @@ const router = useRouter();
 const currentStep = ref(1);
 const loading = ref(false);
 const docsLoading = ref(false);
+const showPassword = ref(false);
 const pricing = ref<{ standardPriceXof: number; premiumPriceXof: number }>({
   standardPriceXof: 15000,
   premiumPriceXof: 25000

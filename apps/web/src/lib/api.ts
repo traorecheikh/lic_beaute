@@ -16,6 +16,7 @@ import type {
   UpsertRequiredDocumentInput,
   UpsertSalonCategoryInput
 } from "@beauteavenue/contracts";
+import { resolveApiBaseUrl } from "./api-base";
 
 type PaginatedResponse<T> = {
   items: T[];
@@ -66,10 +67,7 @@ export class ApiError extends Error {
   }
 }
 
-const _configuredBase = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
-const apiBaseUrl = _configuredBase.startsWith("http")
-  ? _configuredBase
-  : (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000") + _configuredBase;
+const apiBaseUrl = resolveApiBaseUrl();
 
 function buildUrl(path: string, query?: Record<string, string | undefined>) {
   const url = new URL(path, apiBaseUrl);

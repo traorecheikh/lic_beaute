@@ -8,6 +8,7 @@ import {
   type EmailLoginInput,
   type OtpRequestInput,
   type OtpVerifyInput,
+  type RegisterInput,
   type ProBlockedSlotCreateInput,
   type ProSalonProfileHoursInner,
   type ProSalonUpdateInput,
@@ -25,11 +26,9 @@ import {
 import { ResponseError } from "@/lib/generated/runtime";
 
 import { ApiError } from "./api";
+import { resolveApiBaseUrl } from "./api-base";
 
-const _configuredBase = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
-const apiBaseUrl = _configuredBase.startsWith("http")
-  ? _configuredBase
-  : (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000") + _configuredBase;
+const apiBaseUrl = resolveApiBaseUrl();
 
 function getConfiguration(token?: string) {
   return new Configuration({

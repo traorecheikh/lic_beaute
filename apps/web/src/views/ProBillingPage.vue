@@ -513,6 +513,11 @@ import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "vue-sonner";
 import Modal from "@/components/Modal.vue";
+import type {
+  ProSubscriptionCheckoutInput,
+  ProSubscriptionUpdateInputBillingMethod,
+  ProSubscriptionUpdateInputBillingMethodProviderEnum
+} from "@/lib/generated";
 
 const auth = useProAuthStore();
 const queryClient = useQueryClient();
@@ -566,7 +571,7 @@ const toggleMutation = useMutation({
 const paymentMethodMutation = useMutation({
   mutationFn: (billingMethod: Record<string, unknown>) =>
     updateProSubscription(auth.accessToken ?? "", {
-      billingMethod: billingMethod as { provider: string; accountNumber: string }
+      billingMethod: billingMethod as unknown as ProSubscriptionUpdateInputBillingMethod
     }),
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
@@ -591,14 +596,18 @@ const clearPaymentMethodMutation = useMutation({
 });
 
 const checkoutMutation = useMutation({
-  mutationFn: () =>
-    checkoutProSubscription(auth.accessToken ?? "", {
+  mutationFn: () => {
+    const payload: ProSubscriptionCheckoutInput & { billingCycle?: "monthly" | "annual" } = {
       action: subscriptionQuery.data.value?.tier === "premium" ? "renewal" : "upgrade",
-      provider: "paydunya",
+      provider: "paydunya" as ProSubscriptionUpdateInputBillingMethodProviderEnum,
       billingCycle: billingCycle.value
-    }),
+    };
+    return checkoutProSubscription(auth.accessToken ?? "", payload as unknown as ProSubscriptionCheckoutInput);
+  },
   onSuccess: (result) => {
-    window.open(result.redirectUrl, "_blank", "noopener,noreferrer");
+    if (result.redirectUrl) {
+      window.open(result.redirectUrl, "_blank", "noopener,noreferrer");
+    }
     toast.success("Redirection vers le paiement.");
   },
   onError: (error) => {

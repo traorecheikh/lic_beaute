@@ -332,8 +332,8 @@ export class MediaApi extends runtime.BaseAPI {
         }
 
         if (requestParameters['file'] != null) {
-            formParams.append('file', new Blob([JSON.stringify(anyToJSON(requestParameters['file']))], { type: "application/json", }));
-                    }
+            formParams.append('file', requestParameters['file'] as any);
+        }
 
         if (requestParameters['purpose'] != null) {
             formParams.append('purpose', requestParameters['purpose'] as any);

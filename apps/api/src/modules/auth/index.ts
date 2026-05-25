@@ -201,7 +201,7 @@ export class AuthController {
     try {
       body = registerInputSchema.parse(request.body);
     } catch (error) {
-      if (error instanceof ZodError) {
+      if (error instanceof ZodError || (typeof error === "object" && error !== null && "issues" in error)) {
         fail(reply, 422, "invalid_payload", "Données d'inscription invalides.");
         return;
       }
@@ -355,7 +355,16 @@ export class AuthController {
   }
 
   async login(request: FastifyRequest, reply: FastifyReply) {
-    const body = emailLoginSchema.parse(request.body);
+    let body: ReturnType<typeof emailLoginSchema.parse>;
+    try {
+      body = emailLoginSchema.parse(request.body);
+    } catch (error) {
+      if (error instanceof ZodError || (typeof error === "object" && error !== null && "issues" in error)) {
+        fail(reply, 422, "invalid_payload", "Identifiants invalides.");
+        return;
+      }
+      throw error;
+    }
 
     const user = await prisma.user.findUnique({ where: { email: body.email } });
     if (!user || !user.passwordHash) {

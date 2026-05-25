@@ -70,11 +70,16 @@ async function main() {
   // Creates a fully-approved salon + owner so the pro dashboard can be tested
   // without going through the magic-link flow.
   const PRO_EMAIL = "pro@beauteavenue.local";
+  const PRO_PASSWORD = "pro12345";
+  const proPasswordHash = await argon2.hash(PRO_PASSWORD);
   const existingPro = await prisma.user.findUnique({ where: { email: PRO_EMAIL } });
   if (existingPro) {
-    console.log("[seed-admin] test pro account already exists:", PRO_EMAIL, "— skipping.");
+    await prisma.user.update({
+      where: { email: PRO_EMAIL },
+      data: { passwordHash: proPasswordHash }
+    });
+    console.log(`[seed-admin] test pro account password refreshed: ${PRO_EMAIL} / ${PRO_PASSWORD}`);
   } else {
-    const proPasswordHash = await argon2.hash("pro1234");
     const testSalon = await prisma.salon.create({
       data: {
         name: "Salon Démo",
@@ -99,7 +104,7 @@ async function main() {
     await prisma.subscription.create({
       data: { salonId: testSalon.id, tier: "standard", status: "active" }
     });
-    console.log(`[seed-admin] test pro account created: ${PRO_EMAIL} / pro1234 (salonId: ${testSalon.id})`);
+    console.log(`[seed-admin] test pro account created: ${PRO_EMAIL} / ${PRO_PASSWORD} (salonId: ${testSalon.id})`);
   }
 }
 
