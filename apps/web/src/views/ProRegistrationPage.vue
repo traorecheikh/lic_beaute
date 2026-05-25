@@ -202,7 +202,7 @@
         </div>
 
         <!-- Step 4: Documents -->
-        <div v-if="currentStep === 5" class="space-y-8">
+        <div v-if="currentStep === 4" class="space-y-8">
           <div class="bg-primary/5 rounded-2xl p-6 border border-primary/10 mb-8">
             <p class="text-sm text-espresso leading-relaxed">
               Pour des raisons de sécurité et de conformité, nous devons vérifier l'existence légale de votre établissement.
