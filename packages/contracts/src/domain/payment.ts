@@ -78,8 +78,8 @@ export const paymentWebhookBodySchema = z.object({
   idFromClient: z.string().optional(),
   code: z.string().optional(),
   status: z.string().optional(),
-  amount: z.union([z.number(), z.string()]).optional(),
-  amountWithoutFees: z.union([z.number(), z.string()]).optional(),
+  amount: z.union([z.number().nonnegative(), z.string()]).optional(),
+  amountWithoutFees: z.union([z.number().nonnegative(), z.string()]).optional(),
   serviceCode: z.string().optional(),
   infoHash: z.string().optional(),
   secureHash: z.string().optional()

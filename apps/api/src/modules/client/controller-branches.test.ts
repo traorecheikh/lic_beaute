@@ -39,6 +39,7 @@ const mocks = vi.hoisted(() => {
     pushToken: { deleteMany: vi.fn() },
     clientProfile: { deleteMany: vi.fn() },
     clientBenefit: { deleteMany: vi.fn(), findMany: vi.fn(), create: vi.fn() },
+    salon: { findUnique: vi.fn() },
     $transaction: vi.fn()
   };
   return { requireRole, fail, ok, prisma };
@@ -59,6 +60,7 @@ describe("ClientAccountController branches", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "client" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscription: { status: "active" } });
   });
 
   it("createPaymentMethod reuses idempotent existing record", async () => {

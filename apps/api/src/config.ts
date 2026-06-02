@@ -81,7 +81,7 @@ export function validateConfig() {
     if (config.jwtRefreshSecret === "dev-refresh-secret") {
       issues.push("JWT_REFRESH_SECRET is the development default");
     }
-    if (config.jwtInviteSecret === "dev-invite-secret" && isRealProd) {
+    if (config.jwtInviteSecret === "dev-invite-secret") {
       issues.push("JWT_INVITE_SECRET is the development default");
     }
     if (config.paymentDriver === "mock" && isRealProd) {
@@ -95,6 +95,12 @@ export function validateConfig() {
     }
     if (config.emailDriver === "noop" && isRealProd) {
       issues.push("EMAIL_DRIVER=noop in production — no emails will be sent (invites, confirmations, alerts)");
+    }
+    if (config.pushDriver === "fcm" && isRealProd && !config.fcmServiceAccountJsonB64) {
+      issues.push("FCM_SERVICE_ACCOUNT_JSON_B64 must be set when PUSH_DRIVER=fcm in production");
+    }
+    if (isRealProd && !config.redisUrl) {
+      console.warn("[config] WARNING: REDIS_URL not set — rate limiting will use in-memory store (not distributed)");
     }
     if (config.emailDriver === "brevo" && !config.brevoApiKey) {
       issues.push("BREVO_API_KEY is required when EMAIL_DRIVER=brevo");

@@ -144,6 +144,8 @@ function escapePdfText(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
+import { buildInvoicePdf } from "../../lib/pdf.js";
+
 type FeatureFlags = {
   depositsEnabled: boolean;
   depositsTierRequired: "standard" | "premium";
@@ -171,165 +173,6 @@ async function getFeatureFlags(): Promise<FeatureFlags> {
     billingManual: parseBooleanSetting(map["feature_billing_manual"], true),
     cardPayments: parseBooleanSetting(map["feature_card_payments"], false),
   };
-}
-
-function buildInvoicePdfBuffer(input: {
-  invoiceNumber: string;
-  issuedAt: string;
-  status: string;
-  amountLabel: string;
-  billingProvider: string;
-  salonName: string;
-}) {
-  const rows = [
-    { label: "Abonnement mensuel", amount: input.amountLabel }
-  ];
-  const lineItems = rows
-    .map((row, index) => ({
-      y: 642 - index * 26,
-      ...row
-    }))
-    .map((row) => [
-      "BT",
-      `/F1 11 Tf`,
-      `56 ${row.y} Td`,
-      `(${escapePdfText(row.label)}) Tj`,
-      "ET",
-      "BT",
-      `/F1 11 Tf`,
-      `485 ${row.y} Td`,
-      `(${escapePdfText(row.amount)} FCFA) Tj`,
-      "ET"
-    ].join("\n"))
-    .join("\n");
-
-  const content = [
-    // Header background bar
-    "0.95 0.93 0.89 rg",
-    "40 770 515 48 re",
-    "f",
-    // Brand
-    "BT",
-    "/F2 20 Tf",
-    "52 795 Td",
-    "(Beaut\\351 Avenue) Tj",
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 781 Td",
-    "(Facture d\\'abonnement) Tj",
-    "ET",
-    // Invoice metadata
-    "BT",
-    "/F1 10 Tf",
-    "370 796 Td",
-    `(${escapePdfText(`N° ${input.invoiceNumber}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "370 782 Td",
-    `(${escapePdfText(`Date ${input.issuedAt}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "370 768 Td",
-    `(${escapePdfText(`Statut ${input.status}`)}) Tj`,
-    "ET",
-    // Billing section label
-    "BT",
-    "/F2 12 Tf",
-    "52 736 Td",
-    "(D\\351tails de facturation) Tj",
-    "ET",
-    // Detail text
-    "BT",
-    "/F1 10 Tf",
-    "52 720 Td",
-    `(${escapePdfText(`Salon: ${input.salonName}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 706 Td",
-    `(${escapePdfText(`Mode de r\\350glement: ${input.billingProvider}`)}) Tj`,
-    "ET",
-    // Table header
-    "0.93 0.92 0.90 rg",
-    "40 668 515 26 re",
-    "f",
-    "BT",
-    "/F2 10 Tf",
-    "56 676 Td",
-    "(Libell\\351) Tj",
-    "ET",
-    "BT",
-    "/F2 10 Tf",
-    "485 676 Td",
-    "(Montant) Tj",
-    "ET",
-    // Row grid lines
-    "0.82 0.80 0.76 RG",
-    "1 w",
-    "40 668 m 555 668 l S",
-    "40 638 m 555 638 l S",
-    "40 612 m 555 612 l S",
-    // Line items
-    lineItems,
-    // Total
-    "BT",
-    "/F2 12 Tf",
-    "56 586 Td",
-    "(Total TTC) Tj",
-    "ET",
-    "BT",
-    "/F2 12 Tf",
-    `450 586 Td`,
-    `(${escapePdfText(`${input.amountLabel} FCFA`)}) Tj`,
-    "ET",
-    // Footer
-    "BT",
-    "/F1 9 Tf",
-    "52 100 Td",
-    "(Merci pour votre confiance.) Tj",
-    "ET",
-    "BT",
-    "/F1 9 Tf",
-    "52 86 Td",
-    "(support@beauteavenue.com  |  +221 33 800 12 34) Tj",
-    "ET"
-  ].join("\n");
-
-  const objects = [
-    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n",
-    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n",
-    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >> endobj\n",
-    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n",
-    "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj\n",
-    `6 0 obj << /Length ${Buffer.byteLength(content, "utf8")} >> stream\n${content}\nendstream\nendobj\n`
-  ];
-
-  let pdf = "%PDF-1.4\n";
-  const offsets = [0];
-  for (const object of objects) {
-    offsets.push(Buffer.byteLength(pdf, "utf8"));
-    pdf += object;
-  }
-
-  const xrefStart = Buffer.byteLength(pdf, "utf8");
-  const xref = [
-    `xref\n0 ${objects.length + 1}`,
-    "0000000000 65535 f ",
-    ...offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n `)
-  ].join("\n");
-
-  const trailer = [
-    "trailer",
-    `<< /Size ${objects.length + 1} /Root 1 0 R >>`,
-    "startxref",
-    String(xrefStart),
-    "%%EOF"
-  ].join("\n");
-
-  return Buffer.from(`${pdf}${xref}\n${trailer}\n`, "utf8");
 }
 
 async function ensurePro(request: FastifyRequest) {
@@ -829,11 +672,16 @@ export class ProController {
         try {
           const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { name: true } });
           const jwt = await import("jsonwebtoken");
+          const crypto = await import("node:crypto");
+          const jti = crypto.randomUUID();
           const token = jwt.default.sign(
-            { sub: result.user.id, type: "staff_invite" },
+            { sub: result.user.id, type: "staff_invite", jti },
             config.jwtInviteSecret,
             { expiresIn: "24h" }
           );
+          await prisma.platformSetting.create({
+            data: { group: "security", key: `invite:${jti}`, value: "pending", description: `Staff invite token for ${result.user.id}` }
+          });
           const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${encodeURIComponent(token)}`;
           const staffName = result.user.fullName;
           const salonName = salon?.name ?? "Votre salon";
@@ -917,13 +765,11 @@ export class ProController {
           }
         });
 
-        if (body.role !== undefined || body.email !== undefined || body.phone !== undefined) {
+        if (body.role !== undefined) {
           await tx.user.update({
             where: { id: existing.userId },
             data: {
-              role: body.role as Role | undefined,
-              email: body.email,
-              phone: body.phone
+              role: body.role as Role | undefined
             }
           });
         }
@@ -971,13 +817,18 @@ export class ProController {
         return;
       }
 
-      // Generate a short-lived signed invite token (stateless, no DB write)
+      // Generate a short-lived signed invite token with one-time-use tracking
       const jwt = await import("jsonwebtoken");
+      const crypto = await import("node:crypto");
+      const jti = crypto.randomUUID();
       const token = jwt.default.sign(
-        { sub: employee.user.id, type: "staff_invite" },
+        { sub: employee.user.id, type: "staff_invite", jti },
         config.jwtInviteSecret,
         { expiresIn: "24h" }
       );
+      await prisma.platformSetting.create({
+        data: { group: "security", key: `invite:${jti}`, value: "pending", description: `Staff invite token for ${employee.user.id}` }
+      });
 
       const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${encodeURIComponent(token)}`;
       const staffName = employee.user.fullName;
@@ -1380,6 +1231,17 @@ export class ProController {
             clientNote: body.clientName && !body.clientId ? `Nouveau client: ${body.clientName}` : null
           }
         });
+        if (depositAmountXof > 0) {
+          await tx.payment.create({
+            data: {
+              bookingId: b.id,
+              provider: "manual",
+              status: "succeeded",
+              amountXof: depositAmountXof,
+              idempotencyKey: `manual-${b.id}-deposit`
+            }
+          });
+        }
         await tx.bookingEvent.create({ data: { bookingId: b.id, actorUserId: userId, eventType: "created_manual", toStatus: "confirmed" } });
         return b;
       });
@@ -2159,7 +2021,7 @@ export class ProController {
       const billingProvider = toPublicBillingProvider(providerSetting?.value ?? sub.billingProvider ?? "manual");
       const providerLabel =
         billingProvider === "manual" ? "Manuel" : "Intech";
-      const pdf = buildInvoicePdfBuffer({
+      const pdf = buildInvoicePdf({
         invoiceNumber: invoice.invoiceNumber,
         issuedAt,
         status: invoice.status,

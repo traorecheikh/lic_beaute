@@ -50,13 +50,13 @@ async function main() {
       where: { id: existing.id },
       data: { passwordHash }
     });
-    console.log(`[seed-admin] platform_admin password refreshed: ${existing.email} / ${password}`);
+    console.log(`[seed-admin] platform_admin password refreshed: ${existing.email} / [password set]`);
   } else {
     const passwordHash = await argon2.hash(password);
     const admin = await prisma.user.create({
       data: { fullName: "Chef de Plateforme", email, passwordHash, role: "platform_admin" }
     });
-    console.log(`[seed-admin] platform_admin created: ${admin.email} / ${password}`);
+    console.log(`[seed-admin] platform_admin created: ${admin.email} / [password set]`);
   }
 
   // ── Default platform settings (idempotent) ──────────────────────────────────
@@ -76,6 +76,12 @@ async function main() {
   // without going through the magic-link flow.
   const PRO_EMAIL = "pro@beauteavenue.local";
   const PRO_PASSWORD = "pro12345";
+
+  if (process.env.NODE_ENV === "production") {
+    console.log("[seed-admin] skipping demo pro account in production");
+    return;
+  }
+
   const proPasswordHash = await argon2.hash(PRO_PASSWORD);
   const ensureDemoSalon = async () => {
     const existing = await prisma.salon.findFirst({
@@ -115,7 +121,7 @@ async function main() {
       data: { passwordHash: proPasswordHash, role: "salon_owner", salonId: salon.id, phone: existingPro.phone ?? "+221770000000" }
     });
     await ensureActiveSubscription(salon.id);
-    console.log(`[seed-admin] test pro account password refreshed: ${PRO_EMAIL} / ${PRO_PASSWORD}`);
+    console.log(`[seed-admin] test pro account password refreshed: ${PRO_EMAIL} / [password set]`);
   } else {
     const existingPhoneUser = await prisma.user.findFirst({ where: { phone: "+221770000000" } });
     if (existingPhoneUser) {
@@ -133,7 +139,7 @@ async function main() {
         }
       });
       await ensureActiveSubscription(salon.id);
-      console.log(`[seed-admin] linked existing owner to test pro account: ${PRO_EMAIL} / ${PRO_PASSWORD}`);
+      console.log(`[seed-admin] linked existing owner to test pro account: ${PRO_EMAIL} / [password set]`);
       return;
     }
 
@@ -149,7 +155,7 @@ async function main() {
       }
     });
     await ensureActiveSubscription(testSalon.id);
-    console.log(`[seed-admin] test pro account created: ${PRO_EMAIL} / ${PRO_PASSWORD} (salonId: ${testSalon.id})`);
+    console.log(`[seed-admin] test pro account created: ${PRO_EMAIL} / [password set] (salonId: ${testSalon.id})`);
   }
 }
 

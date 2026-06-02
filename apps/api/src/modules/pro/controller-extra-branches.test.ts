@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => {
   const handleError = vi.fn();
   const prisma = {
     user: { findUnique: vi.fn(), findFirst: vi.fn() },
-    salon: { findUnique: vi.fn(), update: vi.fn() },
+    salon: { findUnique: vi.fn().mockResolvedValue({ subscription: { status: "active" }, subscriptionTier: "premium" }), update: vi.fn() },
     employee: { count: vi.fn(), findFirst: vi.fn(), update: vi.fn(), findMany: vi.fn(), create: vi.fn() },
     employeeSpecialty: { createMany: vi.fn(), deleteMany: vi.fn() },
     service: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
@@ -60,13 +60,17 @@ describe("ProController extra branches", () => {
   });
 
   it("updateSalon blocks gallery over limit for standard tier", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard" });
+    mocks.prisma.salon.findUnique
+      .mockResolvedValueOnce({ subscription: { status: "active" } }) // ensureProWriteAccess
+      .mockResolvedValueOnce({ subscriptionTier: "standard" }); // gallery check
     await c.updateSalon({ body: { gallery: ["1", "2", "3", "4"] } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "gallery_limit", expect.any(String));
   });
 
   it("updateSalon blocks team photos when active staff has no avatar", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique
+      .mockResolvedValueOnce({ subscription: { status: "active" } }) // ensureProWriteAccess
+      .mockResolvedValueOnce({ subscriptionTier: "premium" }); // team display check
     mocks.prisma.employee.count.mockResolvedValue(1);
     await c.updateSalon({ body: { teamDisplay: { showPhotos: true } } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "team_photo_required", expect.any(String));
@@ -74,7 +78,8 @@ describe("ProController extra branches", () => {
 
   it("updateSalon success updates settings/gallery and returns mapped payload", async () => {
     mocks.prisma.employee.count.mockResolvedValue(0);
-    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscription: { status: "active" } }); // ensureProWriteAccess
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium" }); // gallery check
     mocks.prisma.salon.findUnique.mockResolvedValueOnce({
       id: "s1",
       name: "Salon A",
@@ -117,7 +122,8 @@ describe("ProController extra branches", () => {
   it("updateSalon returns 404 if refreshed salon is missing after transaction", async () => {
     mocks.prisma.employee.count.mockResolvedValue(0);
     mocks.prisma.salon.findUnique
-      .mockResolvedValueOnce({ subscriptionTier: "premium" })
+      .mockResolvedValueOnce({ subscription: { status: "active" } }) // ensureProWriteAccess
+      .mockResolvedValueOnce({ subscriptionTier: "premium" }) // gallery check
       .mockResolvedValueOnce(null);
     await c.updateSalon({
       body: {
@@ -139,7 +145,8 @@ describe("ProController extra branches", () => {
 
   it("updateSalon falls back to owner phone when public phone setting is absent", async () => {
     mocks.prisma.employee.count.mockResolvedValue(0);
-    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium", approvalStatus: "approved", name: "Salon A" });
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscription: { status: "active" } }); // ensureProWriteAccess
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium", approvalStatus: "approved", name: "Salon A" }); // gallery check
     mocks.prisma.salon.findUnique.mockResolvedValueOnce({
       id: "s1",
       name: "Salon A",
@@ -168,7 +175,8 @@ describe("ProController extra branches", () => {
 
   it("updateSalon tolerates invalid team display settings by falling back to defaults", async () => {
     mocks.prisma.employee.count.mockResolvedValue(0);
-    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium" });
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscription: { status: "active" } }); // ensureProWriteAccess
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium" }); // gallery check
     mocks.prisma.salon.findUnique.mockResolvedValueOnce({
       id: "s1",
       name: "Salon A",
@@ -205,7 +213,8 @@ describe("ProController extra branches", () => {
   });
 
   it("updateSalon supports partial payload without optional setting/gallery fields", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium", approvalStatus: "approved", name: "Salon Partial" });
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscription: { status: "active" } }); // ensureProWriteAccess
+    mocks.prisma.salon.findUnique.mockResolvedValueOnce({ subscriptionTier: "premium", approvalStatus: "approved", name: "Salon Partial" }); // gallery check
     mocks.prisma.salon.findUnique.mockResolvedValueOnce({
       id: "s1",
       name: "Salon Partial",

@@ -350,6 +350,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
     case "prestige_score_refresh": {
       // Single raw SQL UPDATE — scales to 100k salons without N round-trips or OOM.
       // Formula: 0.45×ratingScore + 0.25×availability + 0.15×photoScore + 0.15×premiumBonus
+      // Minimum 3 reviews required before prestige score counts (prevents gaming with single review)
       const result = await prisma.$executeRaw`
         UPDATE "Salon" s SET
           "prestigeScore" = sub.score,
@@ -358,10 +359,12 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
           SELECT
             s2.id,
             ROUND(CAST(
-              0.45 * ((s2."averageRating" * LN(GREATEST(COALESCE(rc.cnt, 0), 0) + 1)) / 15.0)
-              + 0.25 * CASE WHEN s2."canReceiveBookings" THEN 1.0 ELSE 0.0 END
-              + 0.15 * LEAST(COALESCE(gc.cnt, 0)::float / 10.0, 1.0)
-              + 0.15 * CASE WHEN s2."subscriptionTier" = 'premium' THEN 1.0 ELSE 0.0 END
+              CASE WHEN COALESCE(rc.cnt, 0) < 3 THEN 0.0 ELSE
+                0.45 * ((s2."averageRating" * LN(GREATEST(COALESCE(rc.cnt, 0), 0) + 1)) / 15.0)
+                + 0.25 * CASE WHEN s2."canReceiveBookings" THEN 1.0 ELSE 0.0 END
+                + 0.15 * LEAST(COALESCE(gc.cnt, 0)::float / 10.0, 1.0)
+                + 0.15 * CASE WHEN s2."subscriptionTier" = 'premium' THEN 1.0 ELSE 0.0 END
+              END
             AS numeric), 3) AS score
           FROM "Salon" s2
           LEFT JOIN (SELECT "salonId", COUNT(*)::int AS cnt FROM "Review" GROUP BY "salonId") rc ON rc."salonId" = s2.id

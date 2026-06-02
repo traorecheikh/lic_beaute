@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/session/session_store.dart';
@@ -70,12 +71,17 @@ class _HomePageState extends ConsumerState<HomePage> {
     final bannerDismissed = ref.watch(locationBannerDismissedProvider);
     final locationStatus = ref.watch(locationStatusProvider);
 
-    final hasNearby = nearbyAsync.asData?.value?.isNotEmpty == true;
-    final locationPending =
-        nearbyAsync.isLoading; // show section header while GPS resolves
-    final hasTopRatedData = topRatedAsync.asData?.value.isNotEmpty == true;
-    final hasTrendingData = trendingAsync.asData?.value.isNotEmpty == true;
-    final hasPrestigeData = prestigeAsync.asData?.value.isNotEmpty == true;
+    bool hasPhoto(SalonSummaryListResponseItemsInner s) =>
+        s.logoUrl != null && s.logoUrl!.isNotEmpty;
+
+    final hasNearby =
+        nearbyAsync.asData?.value?.any(hasPhoto) == true;
+    final hasTopRatedData =
+        topRatedAsync.asData?.value.any(hasPhoto) == true;
+    final hasTrendingData =
+        trendingAsync.asData?.value.any(hasPhoto) == true;
+    final hasPrestigeData =
+        prestigeAsync.asData?.value.any(hasPhoto) == true;
     final hasAnyCatalogData =
         hasTopRatedData || hasTrendingData || hasPrestigeData;
     final allCoreLoading =
@@ -179,9 +185,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
 
-            // Nearby — only when location is available or loading
             if (!showGlobalLoading && !showGlobalError)
-            if (hasNearby || locationPending) ...[
+            if (hasNearby) ...[
               _SectionHeaderSliver(
                 title: 'Près de vous',
                 action: 'Tout voir',
@@ -206,20 +211,21 @@ class _HomePageState extends ConsumerState<HomePage> {
               _TrendingSalonSliver(salonsAsync: trendingAsync, onRetry: refreshAll),
             ],
 
-            // Top-rated — always visible
+            // Top-rated — only when it has data or is loading
             if (!showGlobalLoading && !showGlobalError)
-            _SectionHeaderSliver(
-              title: 'Les mieux notés',
-              action: 'Tout voir',
-              onAction: () => context.push(AppRoutes.salonsTopRated),
-            ),
-            if (!showGlobalLoading && !showGlobalError)
-            _SalonListSliver(
-              salonsAsync: topRatedAsync,
-              take: 3,
-              showDistance: false,
-              onRetry: refreshAll,
-            ),
+            if (hasTopRatedData || topRatedAsync.isLoading) ...[
+              _SectionHeaderSliver(
+                title: 'Les mieux notés',
+                action: 'Tout voir',
+                onAction: () => context.push(AppRoutes.salonsTopRated),
+              ),
+              _SalonListSliver(
+                salonsAsync: topRatedAsync,
+                take: 3,
+                showDistance: false,
+                onRetry: refreshAll,
+              ),
+            ],
 
             // Prestige — horizontal carousel at the bottom
             if (!showGlobalLoading && !showGlobalError)
@@ -675,10 +681,12 @@ class _SalonListSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return salonsAsync.when(
-      loading: () => SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.h),
-          child: const Center(child: CircularProgressIndicator()),
+      loading: () => SliverPadding(
+        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 0),
+        sliver: SliverList.separated(
+          itemCount: take,
+          separatorBuilder: (_, _) => gapH12,
+          itemBuilder: (_, _) => const _SalonListCardSkeleton(),
         ),
       ),
       error: (error, _) => SliverToBoxAdapter(
@@ -694,14 +702,12 @@ class _SalonListSliver extends StatelessWidget {
         ),
       ),
       data: (list) {
-        final items = (list ?? []).take(take).toList();
+        final items = (list ?? [])
+            .where((s) => s.logoUrl != null && s.logoUrl!.isNotEmpty)
+            .take(take)
+            .toList();
         if (items.isEmpty) {
-          return const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text('Aucun salon trouvé.'),
-            ),
-          );
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
         }
         return SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -754,14 +760,18 @@ class _SalonListCard extends StatelessWidget {
               borderRadius: BorderRadius.horizontal(
                 left: Radius.circular(20.r),
               ),
-              child: CachedNetworkImage(
-                imageUrl:
-                    salon.logoUrl ??
-                    'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=600',
-                width: 96.w,
-                height: 96.w,
-                fit: BoxFit.cover,
-              ),
+              child: salon.logoUrl != null && salon.logoUrl!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: salon.logoUrl!,
+                      width: 96.w,
+                      height: 96.w,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, _, _) => _SalonPlaceholderBox(
+                        width: 96.w,
+                        height: 96.w,
+                      ),
+                    )
+                  : _SalonPlaceholderBox(width: 96.w, height: 96.w),
             ),
             SizedBox(width: 14.w),
             Expanded(
@@ -881,7 +891,19 @@ class _FeaturedSalonSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return salonsAsync.when(
-      loading: () => SliverToBoxAdapter(child: SizedBox(height: 280.h)),
+      loading: () => SliverToBoxAdapter(
+        child: SizedBox(
+          height: 280.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            itemCount: 3,
+            separatorBuilder: (_, _) => SizedBox(width: 14.w),
+            itemBuilder: (_, _) => const _FeaturedCardSkeleton(),
+          ),
+        ),
+      ),
       error: (error, _) => SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 8.h),
@@ -895,7 +917,10 @@ class _FeaturedSalonSliver extends StatelessWidget {
         ),
       ),
       data: (items) {
-        if (items.isEmpty) {
+        final withPhoto = items
+            .where((s) => s.logoUrl != null && s.logoUrl!.isNotEmpty)
+            .toList();
+        if (withPhoto.isEmpty) {
           return const SliverToBoxAdapter(child: SizedBox.shrink());
         }
         return SliverToBoxAdapter(
@@ -905,16 +930,14 @@ class _FeaturedSalonSliver extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 20.w),
-              itemCount: items.length,
+              itemCount: withPhoto.length,
               separatorBuilder: (_, _) => SizedBox(width: 14.w),
               itemBuilder: (context, i) {
-                final salon = items[i];
+                final salon = withPhoto[i];
                 return RepaintBoundary(
                   child: _FeaturedCard(
                     name: salon.name,
-                    imageUrl:
-                        salon.logoUrl ??
-                        'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800',
+                    imageUrl: salon.logoUrl!,
                     rating: salon.averageRating.toStringAsFixed(1),
                     isFavorite: favoriteIds.contains(salon.id),
                     isAuthenticated: isAuthenticated,
@@ -1081,7 +1104,19 @@ class _TrendingSalonSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return salonsAsync.when(
-      loading: () => SliverToBoxAdapter(child: SizedBox(height: 170.h)),
+      loading: () => SliverToBoxAdapter(
+        child: SizedBox(
+          height: 170.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            itemCount: 4,
+            separatorBuilder: (_, _) => SizedBox(width: 14.w),
+            itemBuilder: (_, _) => const _TrendingCardSkeleton(),
+          ),
+        ),
+      ),
       error: (error, _) => SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 8.h),
@@ -1095,7 +1130,10 @@ class _TrendingSalonSliver extends StatelessWidget {
         ),
       ),
       data: (items) {
-        if (items.isEmpty) {
+        final withPhoto = items
+            .where((s) => s.logoUrl != null && s.logoUrl!.isNotEmpty)
+            .toList();
+        if (withPhoto.isEmpty) {
           return const SliverToBoxAdapter(child: SizedBox.shrink());
         }
         return SliverToBoxAdapter(
@@ -1105,10 +1143,10 @@ class _TrendingSalonSliver extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 20.w),
-              itemCount: items.length,
+              itemCount: withPhoto.length,
               separatorBuilder: (_, _) => gapW12,
               itemBuilder: (context, i) {
-                final salon = items[i];
+                final salon = withPhoto[i];
                 return RepaintBoundary(
                   child: _TrendingCard(
                     salon: salon,
@@ -1158,12 +1196,14 @@ class _TrendingCard extends StatelessWidget {
                 child: Stack(
                   children: [
                     CachedNetworkImage(
-                      imageUrl:
-                          salon.logoUrl ??
-                          'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=600',
+                      imageUrl: salon.logoUrl!,
                       width: 110.w,
                       height: 170.h,
                       fit: BoxFit.cover,
+                      errorWidget: (_, _, _) => _SalonPlaceholderBox(
+                        width: 110.w,
+                        height: 170.h,
+                      ),
                     ),
                     // Rank badge
                     Positioned(
@@ -1250,6 +1290,142 @@ class _TrendingCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shimmer skeleton widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+Widget _shimmerBox({required double width, required double height, double radius = 8}) {
+  return Container(
+    width: width,
+    height: height,
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(radius),
+    ),
+  );
+}
+
+Widget _shimmerWrap(Widget child) => Shimmer.fromColors(
+  baseColor: AppColors.surfaceVariant,
+  highlightColor: AppColors.outlineVariant,
+  child: child,
+);
+
+class _SalonListCardSkeleton extends StatelessWidget {
+  const _SalonListCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return _shimmerWrap(
+      Container(
+        height: 96.w,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
+              child: Container(
+                width: 96.w,
+                height: 96.w,
+                color: AppColors.surface,
+              ),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 18.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _shimmerBox(width: 60.w, height: 10.h),
+                    SizedBox(height: 8.h),
+                    _shimmerBox(width: 120.w, height: 14.h),
+                    SizedBox(height: 8.h),
+                    _shimmerBox(width: 80.w, height: 10.h),
+                    SizedBox(height: 6.h),
+                    _shimmerBox(width: 50.w, height: 10.h),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 14.w),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendingCardSkeleton extends StatelessWidget {
+  const _TrendingCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return _shimmerWrap(
+      ClipRRect(
+        borderRadius: BorderRadius.circular(16.r),
+        child: Container(
+          width: 110.w,
+          height: 170.h,
+          color: AppColors.surface,
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturedCardSkeleton extends StatelessWidget {
+  const _FeaturedCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return _shimmerWrap(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16.r),
+            child: Container(
+              width: 160.w,
+              height: 220.h,
+              color: AppColors.surface,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          _shimmerBox(width: 120.w, height: 14.h),
+          SizedBox(height: 6.h),
+          _shimmerBox(width: 60.w, height: 10.h),
+        ],
+      ),
+    );
+  }
+}
+
+// Branded placeholder used when a salon has no image or the image fails to load.
+// Never shows a third-party stock photo — keeps trust signals honest.
+class _SalonPlaceholderBox extends StatelessWidget {
+  const _SalonPlaceholderBox({required this.width, required this.height});
+
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      color: AppColors.primaryLight,
+      child: Center(
+        child: AppIcon('sparkle', size: 28, color: AppColors.primary),
       ),
     );
   }

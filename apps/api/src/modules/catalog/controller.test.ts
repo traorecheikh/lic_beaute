@@ -74,7 +74,7 @@ describe("CatalogController", () => {
 
   it("list default branch returns db payload on MISS", async () => {
     const header = vi.fn();
-    mocks.prisma.salon.findMany.mockResolvedValue([
+    mocks.prisma.$queryRaw.mockResolvedValue([
       {
         id: "s1",
         name: "Salon A",
@@ -87,10 +87,10 @@ describe("CatalogController", () => {
         longitude: null,
         subscriptionTier: "premium",
         isPrestige: false,
-        prestigeScore: null
+        prestigeScore: null,
+        total_count: BigInt(1)
       }
     ]);
-    mocks.prisma.salon.count.mockResolvedValue(1);
 
     await controller.list({ query: { page: "0", pageSize: "20" } } as never, { header } as never);
 
@@ -221,22 +221,19 @@ describe("CatalogController", () => {
 
   it("list falls back from invalid nearby coordinates to default DB branch", async () => {
     const header = vi.fn();
-    mocks.prisma.salon.findMany.mockResolvedValue([]);
-    mocks.prisma.salon.count.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
     await controller.list({ query: { sort: "nearby", lat: "NaN", lng: "-17.4" } } as never, { header } as never);
-    expect(mocks.prisma.$queryRaw).not.toHaveBeenCalled();
-    expect(mocks.prisma.salon.findMany).toHaveBeenCalled();
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalled();
     expect(header).toHaveBeenCalledWith("x-cache", "MISS");
   });
 
   it("list default branch handles search and price filters", async () => {
     const header = vi.fn();
-    mocks.prisma.salon.findMany.mockResolvedValue([]);
-    mocks.prisma.salon.count.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
     await controller.list({
       query: { search: "coupe", minPrice: "1000", maxPrice: "20000", city: "Dakar", category: "hair" }
     } as never, { header } as never);
-    expect(mocks.prisma.salon.findMany).toHaveBeenCalled();
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalled();
     expect(header).toHaveBeenCalledWith("x-cache", "MISS");
   });
 

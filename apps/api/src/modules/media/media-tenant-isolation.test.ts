@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     user: { findUnique: vi.fn() },
     mediaAsset: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn(), findMany: vi.fn(), count: vi.fn().mockResolvedValue(0) },
-    salon: { findUnique: vi.fn().mockResolvedValue({ subscriptionTier: "premium" }) },
+    salon: { findUnique: vi.fn().mockResolvedValue({ subscriptionTier: "premium", subscription: { status: "active" } }) },
     salonGalleryImage: { count: vi.fn().mockResolvedValue(0) }
   };
   const enqueueJob = vi.fn();

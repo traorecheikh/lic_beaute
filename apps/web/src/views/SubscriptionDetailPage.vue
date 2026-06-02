@@ -130,13 +130,13 @@
               <div class="space-y-2">
                 <span class="section-label px-1">Action souhaitée</span>
                 <select v-model="overrideAction" class="input-shell text-[13px] rounded-xl h-12">
-                  <option value="grant_complimentary_premium">Offrir Premium (Geste Commercial)</option>
-                  <option value="extend_expiry">Prolonger l'accès manuellement</option>
-                  <option value="pause_subscription">Suspendre l'abonnement</option>
-                  <option value="resume_subscription">Rétablir l'accès</option>
-                  <option value="downgrade_to_standard">Rétrograder vers Standard</option>
-                  <option value="terminate_subscription">Résilier le contrat</option>
-                  <option value="mark_charge_resolved">Régulariser un paiement (Cash/Virement)</option>
+                  <option value="grant_complimentary_premium">🎁 Offrir Premium (Geste Commercial)</option>
+                  <option value="extend_expiry">📅 Prolonger l'accès</option>
+                  <option value="downgrade_to_standard">{{ subscriptionQuery.data.value?.status === 'inactive' ? '🔓 Activer en Standard' : '⬇ Rétrograder vers Standard' }}</option>
+                  <option value="pause_subscription">⏸ Suspendre l'abonnement</option>
+                  <option value="resume_subscription">▶ Rétablir l'accès</option>
+                  <option value="terminate_subscription">⛔ Résilier le contrat</option>
+                  <option value="mark_charge_resolved">💳 Régulariser un paiement (Cash/Virement)</option>
                 </select>
                 <p class="row-meta px-1 leading-tight italic">{{ actionEffectDescription }}</p>
               </div>
@@ -192,6 +192,24 @@
                 </div>
               </div>
 
+              <!-- mark_charge_resolved: charge selector + provider ref -->
+              <div v-if="overrideAction === 'mark_charge_resolved'" class="space-y-4">
+                <div class="space-y-2">
+                  <span class="section-label px-1">Facture en attente</span>
+                  <select v-model="selectedChargeId" class="input-shell text-[13px] rounded-xl h-12">
+                    <option value="" disabled>Sélectionnez une charge...</option>
+                    <option v-for="c in subscriptionQuery.data.value.pendingCharges" :key="c.id" :value="c.id">
+                      {{ formatMoneyXof(c.amountXof) }} — {{ c.chargeType === 'upgrade' ? 'Upgrade' : 'Renouvellement' }} ({{ c.createdAt.substring(0, 10) }})
+                    </option>
+                  </select>
+                  <p v-if="subscriptionQuery.data.value.pendingCharges.length === 0" class="row-meta italic px-1">Aucune charge en attente pour cet abonnement.</p>
+                </div>
+                <div class="space-y-2">
+                  <span class="section-label px-1">Référence fournisseur</span>
+                  <input v-model="providerReference" class="input-shell text-[12px] rounded-xl h-11" placeholder="N° de transaction, reçu, virement..." />
+                </div>
+              </div>
+
               <div class="pt-4 border-t border-outline-variant/40">
                 <button
                   type="submit"
@@ -202,6 +220,59 @@
                 </button>
               </div>
             </form>
+          </section>
+
+          <!-- Manual Extension -->
+          <section class="bg-white rounded-3xl border border-outline-variant p-8 space-y-6 shadow-sm">
+            <div class="space-y-1">
+              <h3 class="section-label">Extension manuelle</h3>
+              <h4 class="entity-title">Prolonger hors ligne</h4>
+            </div>
+            <p class="row-meta leading-relaxed">Enregistrez un paiement reçu hors ligne (espèces, virement, chèque) et prolongez l'accès du salon.</p>
+            <form class="space-y-4" @submit.prevent="submitManualExtend">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <span class="section-label px-1">Montant (FCFA)</span>
+                  <input v-model.number="manualExtendAmount" class="input-shell text-[13px] rounded-xl h-11" type="number" min="1" placeholder="15000" />
+                </div>
+                <div class="space-y-2">
+                  <span class="section-label px-1">Durée (jours)</span>
+                  <input v-model.number="manualExtendDays" class="input-shell text-[13px] rounded-xl h-11" type="number" min="1" placeholder="30" />
+                </div>
+              </div>
+              <div class="space-y-2">
+                <span class="section-label px-1">Référence</span>
+                <input v-model="manualExtendRef" class="input-shell text-[13px] rounded-xl h-11" placeholder="N° de reçu, virement, opérateur..." />
+              </div>
+              <div class="space-y-2">
+                <span class="section-label px-1">Motif</span>
+                <textarea v-model="manualExtendReason" class="input-shell min-h-[64px] text-[13px] rounded-xl py-3" placeholder="Raison du paiement hors ligne..." />
+              </div>
+              <button type="submit" class="w-full btn-primary h-12 font-bold disabled:opacity-50" :disabled="manualExtendMutation.isPending.value">
+                {{ manualExtendMutation.isPending.value ? "Enregistrement..." : "Enregistrer le paiement" }}
+              </button>
+            </form>
+          </section>
+
+          <!-- Pending Charges -->
+          <section class="space-y-4">
+            <h3 class="section-label px-2">Paiements en attente</h3>
+            <div v-if="subscriptionQuery.data.value.pendingCharges.length === 0" class="bg-white rounded-2xl border border-outline-variant p-5">
+              <p class="row-meta">Aucun paiement en attente.</p>
+            </div>
+            <div v-else class="space-y-3">
+              <article
+                v-for="c in subscriptionQuery.data.value.pendingCharges"
+                :key="c.id"
+                class="bg-white rounded-2xl border border-outline-variant p-5 flex items-center justify-between group hover:border-secondary/30 transition-colors"
+              >
+                <div>
+                  <p class="row-primary">{{ formatMoneyXof(c.amountXof) }}</p>
+                  <p class="row-meta">{{ c.chargeType === 'upgrade' ? 'Upgrade Premium' : 'Renouvellement' }} • {{ c.createdAt.substring(0, 10) }}</p>
+                </div>
+                <StatusBadge :value="c.status" />
+              </article>
+            </div>
           </section>
 
           <!-- Invoices -->
@@ -243,7 +314,7 @@ import { toast } from "vue-sonner";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { ApiError, fetchSubscriptionDetail, overrideSubscription } from "@/lib/api";
+import { ApiError, fetchSubscriptionDetail, manualExtendSubscription, overrideSubscription } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { useAdminAuthStore } from "@/stores/adminAuth";
 
@@ -279,6 +350,12 @@ const selectedReasonKey = ref<string>("commercial_gesture");
 const customReason = ref("");
 const effectiveAt = ref("");
 const expiresAt = ref("");
+const selectedChargeId = ref("");
+const providerReference = ref("");
+const manualExtendAmount = ref(15000);
+const manualExtendDays = ref(30);
+const manualExtendRef = ref("");
+const manualExtendReason = ref("");
 const selectedFile = ref<File | null>(null);
 const mutationError = ref("");
 
@@ -327,12 +404,20 @@ const overrideMutation = useMutation({
       ? customReason.value.trim()
       : (reasonObj?.label ?? "Ajustement support");
 
+    const metadata: Record<string, string> = {};
+    if (overrideAction.value === "mark_charge_resolved") {
+      if (!selectedChargeId.value) throw new Error("Sélectionnez une charge en attente.");
+      if (!providerReference.value.trim()) throw new Error("Fournissez une référence de paiement.");
+      metadata.subscriptionChargeId = selectedChargeId.value;
+      metadata.providerReference = providerReference.value.trim();
+    }
+
     return overrideSubscription(auth.accessToken ?? "", subscriptionId.value, {
       action: overrideAction.value,
       reason: finalReason,
       effectiveAt: effectiveAt.value ? new Date(effectiveAt.value).toISOString() : undefined,
       expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : undefined,
-      metadata: {}
+      metadata
     });
   },
   onSuccess: async () => {
@@ -342,12 +427,39 @@ const overrideMutation = useMutation({
     toast.success("Ajustement appliqué.");
     selectedFile.value = null;
     customReason.value = "";
+    selectedChargeId.value = "";
+    providerReference.value = "";
   },
   onError: (error) => {
     mutationError.value = getErrorMessage(error, "Erreur lors de l'ajustement.");
     toast.error(mutationError.value);
   }
 });
+
+const manualExtendMutation = useMutation({
+  mutationFn: () => manualExtendSubscription(auth.accessToken ?? "", subscriptionId.value, {
+    amountXof: manualExtendAmount.value,
+    durationDays: manualExtendDays.value,
+    reason: manualExtendReason.value.trim() || "Extension manuelle",
+    reference: manualExtendRef.value.trim()
+  }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-subscription-detail", subscriptionId.value] });
+    queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+    toast.success("Extension enregistrée.");
+    manualExtendAmount.value = 15000;
+    manualExtendDays.value = 30;
+    manualExtendRef.value = "";
+    manualExtendReason.value = "";
+  },
+  onError: (error) => toast.error(getErrorMessage(error, "Erreur lors de l'extension."))
+});
+
+function submitManualExtend() {
+  if (!manualExtendRef.value.trim()) { toast.error("Fournissez une référence de paiement."); return; }
+  if (!manualExtendReason.value.trim()) { toast.error("Fournissez un motif."); return; }
+  manualExtendMutation.mutate();
+}
 
 const errorMessage = computed(() => {
   const error = subscriptionQuery.error.value;
@@ -367,17 +479,28 @@ const errorTitle = computed(() => {
 });
 
 function submitOverride() {
+  if (overrideAction.value === "mark_charge_resolved") {
+    if (!selectedChargeId.value) { toast.error("Sélectionnez une charge en attente."); return; }
+    if (!providerReference.value.trim()) { toast.error("Fournissez une référence de paiement."); return; }
+  }
+
   const reasonObj = reasons.find(r => r.id === selectedReasonKey.value);
   const finalReason = selectedReasonKey.value === 'custom'
     ? customReason.value.trim()
     : (reasonObj?.label ?? "Ajustement support");
+
+  const metadata: Record<string, string> = {};
+  if (overrideAction.value === "mark_charge_resolved") {
+    metadata.subscriptionChargeId = selectedChargeId.value;
+    metadata.providerReference = providerReference.value.trim();
+  }
 
   const result = validateForm(adminSubscriptionOverrideSchema, {
     action: overrideAction.value,
     reason: finalReason,
     effectiveAt: effectiveAt.value ? new Date(effectiveAt.value).toISOString() : undefined,
     expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : undefined,
-    metadata: {}
+    metadata: Object.keys(metadata).length > 0 ? metadata : undefined
   });
 
   if (!result.success) {

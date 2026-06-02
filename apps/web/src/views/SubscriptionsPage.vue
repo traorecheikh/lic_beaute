@@ -104,19 +104,23 @@
                         <ArrowRightIcon class="w-4 h-4 text-cocoa/40" />
                         Voir le détail
                       </RouterLink>
-                      <button @click="quickAction(s.id, 'pause_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                      <button v-if="s.status === 'inactive'" @click="quickAction(s.id, 'downgrade_to_standard')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                        <PlayIcon class="w-4 h-4 text-cocoa/40" />
+                        Activer l'abonnement
+                      </button>
+                      <button v-if="s.status !== 'inactive' && s.status !== 'paused'" @click="quickAction(s.id, 'pause_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
                         <PauseIcon class="w-4 h-4 text-cocoa/40" />
                         Mettre en pause
                       </button>
-                      <button @click="quickAction(s.id, 'resume_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                      <button v-if="s.status === 'paused'" @click="quickAction(s.id, 'resume_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
                         <PlayIcon class="w-4 h-4 text-cocoa/40" />
                         Reprendre
                       </button>
-                      <button @click="quickAction(s.id, 'downgrade_to_standard')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
+                      <button v-if="s.status !== 'inactive' && s.tier === 'premium'" @click="quickAction(s.id, 'downgrade_to_standard')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-espresso font-medium hover:bg-neutral-bg/60 transition-colors text-left">
                         <ArrowTrendingDownIcon class="w-4 h-4 text-cocoa/40" />
                         Rétrograder en Standard
                       </button>
-                      <button @click="quickAction(s.id, 'terminate_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-error font-medium hover:bg-error/5 transition-colors text-left border-t border-outline-variant/30 mt-1 pt-2">
+                      <button v-if="s.status !== 'inactive'" @click="quickAction(s.id, 'terminate_subscription')" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-error font-medium hover:bg-error/5 transition-colors text-left border-t border-outline-variant/30 mt-1 pt-2">
                         <XCircleIcon class="w-4 h-4" />
                         Résilier
                       </button>

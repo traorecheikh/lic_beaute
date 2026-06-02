@@ -239,7 +239,7 @@ export class AuthController {
         }
       });
 
-      const tokens = signSession(user.id, "client");
+      const tokens = signSession(user.id, "client", user.tokenVersion);
       await prisma.session.create({
         data: {
           userId: user.id,
@@ -326,7 +326,7 @@ export class AuthController {
         return { user, salon };
       });
 
-      const tokens = signSession(result.user.id, "salon_owner");
+      const tokens = signSession(result.user.id, "salon_owner", result.user.tokenVersion);
       await pruneExcessSessions(result.user.id);
       await prisma.session.create({
         data: {
@@ -422,7 +422,7 @@ export class AuthController {
 
     await prisma.platformSetting.deleteMany({ where: { key: lockoutKey } });
 
-    const tokens = signSession(user.id, user.role);
+    const tokens = signSession(user.id, user.role, user.tokenVersion);
     await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
@@ -511,7 +511,7 @@ export class AuthController {
       });
     }
 
-    const tokens = signSession(user.id, user.role);
+    const tokens = signSession(user.id, user.role, user.tokenVersion);
     await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
@@ -561,7 +561,7 @@ export class AuthController {
 
     await prisma.session.delete({ where: { id: session.id } });
 
-    const tokens = signSession(user.id, user.role);
+    const tokens = signSession(user.id, user.role, user.tokenVersion);
     await prisma.session.create({
       data: {
         userId: user.id,
@@ -641,7 +641,7 @@ export class AuthController {
         }
         const newHash = await argon2.hash(body.newPassword!);
         await prisma.$transaction(async (tx) => {
-          await tx.user.update({ where: { id: session.sub }, data: { passwordHash: newHash } });
+          await tx.user.update({ where: { id: session.sub }, data: { passwordHash: newHash, tokenVersion: { increment: 1 } } });
           await tx.session.deleteMany({ where: { userId: session.sub } });
         });
         if (user.email) {
@@ -855,19 +855,20 @@ export class AuthController {
       const valid = tokenBuf.length === actualBuf.length && timingSafeEqual(tokenBuf, actualBuf);
       if (!valid) { fail(reply, 401, "invalid_magic_token", "Lien de connexion invalide."); return; }
 
-      // Token valid — log the user in directly (passwordless)
-      await prisma.platformSetting.delete({ where: { key: settingKey } }).catch(() => {});
-
       if (!["salon_owner", "salon_manager", "salon_staff"].includes(user.role)) {
         fail(reply, 403, "forbidden", "Ce compte n'a pas accès à l'espace professionnel.");
         return;
       }
 
-      const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
+      // Token valid — consume token and create session atomically
       await pruneExcessSessions(user.id);
-      await prisma.session.create({
-        data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
-      });
+      const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
+      await prisma.$transaction([
+        prisma.platformSetting.delete({ where: { key: settingKey } }),
+        prisma.session.create({
+          data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
+        })
+      ]);
       ok(reply, session);
     } catch (e) {
       if (e instanceof HttpAuthError) {
@@ -885,16 +886,26 @@ export class AuthController {
         fail(reply, 400, "missing_token", "Token manquant.");
         return;
       }
-      let payload: { sub?: string; type?: string };
+      let payload: { sub?: string; type?: string; jti?: string };
       try {
         const jwt = await import("jsonwebtoken");
-        payload = jwt.default.verify(token, config.jwtInviteSecret) as { sub?: string; type?: string };
+        payload = jwt.default.verify(token, config.jwtInviteSecret, { algorithms: ["HS256"] }) as { sub?: string; type?: string; jti?: string };
       } catch {
         fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide ou expiré.");
         return;
       }
       if (payload.type !== "staff_invite" || !payload.sub) {
         fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide.");
+        return;
+      }
+      if (!payload.jti) {
+        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide (ancien format).");
+        return;
+      }
+      const inviteKey = `invite:${payload.jti}`;
+      const inviteRecord = await prisma.platformSetting.findUnique({ where: { key: inviteKey } });
+      if (!inviteRecord) {
+        fail(reply, 401, "invite_already_used", "Ce lien d'invitation a déjà été utilisé ou est invalide.");
         return;
       }
       const user = await prisma.user.findUnique({
@@ -905,13 +916,17 @@ export class AuthController {
         fail(reply, 403, "forbidden", "Ce compte n'a pas accès à l'espace professionnel.");
         return;
       }
-      await pruneExcessSessions(user.id);
-      const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
-      await pruneExcessSessions(user.id);
-      await prisma.session.create({
-        data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
+      await prisma.$transaction(async (tx) => {
+        await tx.platformSetting.delete({ where: { key: inviteKey } });
+        await pruneExcessSessions(user.id);
+        const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
+        await tx.session.create({
+          data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
+        });
+        return session;
+      }).then((session) => {
+        ok(reply, session);
       });
-      ok(reply, session);
     } catch (e) {
       if (e instanceof HttpAuthError) {
         fail(reply, e.statusCode, e.code, e.message);
@@ -993,7 +1008,7 @@ export class AuthController {
       data: { fullName: "", email: body.email, role: "client" }
     });
 
-    const tokens = signSession(user.id, user.role);
+    const tokens = signSession(user.id, user.role, user.tokenVersion);
     await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {

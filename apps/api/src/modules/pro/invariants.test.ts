@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => {
     blockedSlot: { create: vi.fn(), findMany: vi.fn() },
     service: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn() },
     salonHours: { findUnique: vi.fn() },
-    salon: { findUnique: vi.fn() },
+    salon: { findUnique: vi.fn().mockResolvedValue({ subscription: { status: "active" }, subscriptionTier: "premium" }) },
     booking: { findMany: vi.fn(), findFirst: vi.fn() },
     platformSetting: { findMany: vi.fn().mockResolvedValue([
       { key: "feature_deposits_enabled", value: "true" },
@@ -277,7 +277,7 @@ describe("ProController invariants", () => {
   });
 
   it("allows update without changing deposit mode regardless of tier", async () => {
-    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscriptionTier: "standard", subscription: { status: "active" } });
     mocks.prisma.service.update.mockResolvedValue({
       id: "svc_1", name: "Service", category: "Hair", durationMinutes: 30,
       priceXof: 12000, depositMode: "none", depositAmountXof: null,

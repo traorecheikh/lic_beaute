@@ -26,6 +26,62 @@ function parseBooleanSetting(value: string | undefined, fallback: boolean) {
   return fallback;
 }
 
+// Builds the last token into a prefix query so "coiff" matches "coiffure" mid-type.
+function buildPrefixQuery(raw: string): string {
+  const words = raw
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.replace(/[':&|!<>()]/g, "").trim())
+    .filter((w) => w.length >= 2);
+  if (!words.length) return "";
+  return [...words.slice(0, -1), `${words[words.length - 1]}:*`].join(" & ");
+}
+
+// Weighted tsvector + combined tsquery (full-text + prefix) for a search param.
+// Field priority: name (A) > category (B) > description (C) > location (D).
+// Uses immutable_unaccent so queries hit the GIN index from the search migration.
+function buildSearchVecAndQuery(searchParam: string) {
+  const prefix = buildPrefixQuery(searchParam);
+  const vec = Prisma.sql`(
+    setweight(to_tsvector('french', immutable_unaccent(COALESCE(s.name,''))), 'A') ||
+    setweight(to_tsvector('french', immutable_unaccent(COALESCE(s.category,''))), 'B') ||
+    setweight(to_tsvector('french', immutable_unaccent(COALESCE(s.description,''))), 'C') ||
+    setweight(to_tsvector('french', immutable_unaccent(COALESCE(s.neighborhood,'') || ' ' || COALESCE(s.city,''))), 'D')
+  )`;
+  const tsq = prefix
+    ? Prisma.sql`(websearch_to_tsquery('french', immutable_unaccent(${searchParam})) || to_tsquery('french', immutable_unaccent(${prefix})))`
+    : Prisma.sql`websearch_to_tsquery('french', immutable_unaccent(${searchParam}))`;
+  return { vec, tsq };
+}
+
+// WHERE fragment: FTS match OR trigram similarity (typo tolerance) OR ILIKE fallback.
+function searchFilter(searchParam: string) {
+  const { vec, tsq } = buildSearchVecAndQuery(searchParam);
+  const like = `%${searchParam}%`;
+  return Prisma.sql`AND (
+    ${vec} @@ ${tsq}
+    OR similarity(immutable_unaccent(s.name), immutable_unaccent(${searchParam})) > 0.25
+    OR s.name         ILIKE ${like}
+    OR s.description  ILIKE ${like}
+    OR s.neighborhood ILIKE ${like}
+    OR s.category     ILIKE ${like}
+    OR EXISTS (
+      SELECT 1 FROM "Service" svc
+      WHERE svc."salonId" = s.id AND svc."isActive" = true
+      AND (
+        svc.name ILIKE ${like}
+        OR to_tsvector('french', immutable_unaccent(svc.name)) @@ websearch_to_tsquery('french', immutable_unaccent(${searchParam}))
+      )
+    )
+  )`;
+}
+
+// Relevance score for ORDER BY when a search query is present.
+function searchRank(searchParam: string) {
+  const { vec, tsq } = buildSearchVecAndQuery(searchParam);
+  return Prisma.sql`ts_rank_cd(${vec}, ${tsq})`;
+}
+
 export class CatalogController {
   async list(request: FastifyRequest, reply: FastifyReply) {
     const q = request.query as {
@@ -66,7 +122,7 @@ export class CatalogController {
       return;
     }
 
-    // ── Nearby: Haversine raw SQL, 5 km hard filter ──────────────────────────
+    // ── Nearby ──────────────────────────────────────────────────────────────────
     if (sort === "nearby" && lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
       type NearbyRow = {
         id: string; name: string; category: string; logoUrl: string | null;
@@ -96,13 +152,13 @@ export class CatalogController {
           AND s."isVisibleInMarketplace" = true
           AND s.latitude IS NOT NULL
           AND s.longitude IS NOT NULL
-          AND s.latitude BETWEEN ${lat - 0.045} AND ${lat + 0.045}
+          AND s.latitude  BETWEEN ${lat - 0.045} AND ${lat + 0.045}
           AND s.longitude BETWEEN ${lng - 0.065} AND ${lng + 0.065}
-          ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
-          ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}` : Prisma.empty}
-          ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}` : Prisma.empty}
-          ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}` : Prisma.empty}
-          ${searchParam ? Prisma.sql`AND (s.name ILIKE ${"%" + searchParam + "%"} OR EXISTS (SELECT 1 FROM "Service" svc WHERE svc."salonId" = s.id AND svc."isActive" = true AND svc.name ILIKE ${"%" + searchParam + "%"}))` : Prisma.empty}
+          ${cityParam     ? Prisma.sql`AND s.city = ${cityParam}`             : Prisma.empty}
+          ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}`     : Prisma.empty}
+          ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}`  : Prisma.empty}
+          ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}`  : Prisma.empty}
+          ${searchParam ? searchFilter(searchParam) : Prisma.empty}
           AND 6371 * acos(LEAST(1.0,
                 cos(radians(${lat})) * cos(radians(s.latitude)) *
                 cos(radians(s.longitude) - radians(${lng})) +
@@ -126,17 +182,12 @@ export class CatalogController {
         })),
         total, page, pageSize
       };
-      await setCachedJsonWithTags({
-        key: cacheKey,
-        value: payload,
-        ttlSeconds: config.cacheTtlCatalogSeconds,
-        tags: ["catalog:list"]
-      });
+      await setCachedJsonWithTags({ key: cacheKey, value: payload, ttlSeconds: config.cacheTtlCatalogSeconds, tags: ["catalog:list"] });
       reply.header("x-cache", "MISS");
       return ok(reply, payload);
     }
 
-    // ── Trending: weighted recency score (last 7 days count 3×, 8–30 days 1×) ─
+    // ── Trending ─────────────────────────────────────────────────────────────────
     if (sort === "trending") {
       type TrendingRow = {
         id: string; name: string; category: string; logoUrl: string | null;
@@ -150,8 +201,6 @@ export class CatalogController {
       const categoryParam = q.category ?? null;
       const searchParam = q.search ?? null;
 
-      // Pre-aggregate bookings once per salon to avoid double-join explosion.
-      // A single pass with CASE WHEN is O(bookings_30d) vs O(salons × bookings²).
       const rows = await prisma.$queryRaw<TrendingRow[]>(Prisma.sql`
         SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
                s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
@@ -170,11 +219,11 @@ export class CatalogController {
         ) t ON t."salonId" = s.id
         WHERE s."approvalStatus" = 'approved'
           AND s."isVisibleInMarketplace" = true
-          ${cityParam ? Prisma.sql`AND s.city = ${cityParam}` : Prisma.empty}
-          ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}` : Prisma.empty}
-          ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}` : Prisma.empty}
-          ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}` : Prisma.empty}
-          ${searchParam ? Prisma.sql`AND (s.name ILIKE ${"%" + searchParam + "%"} OR EXISTS (SELECT 1 FROM "Service" svc WHERE svc."salonId" = s.id AND svc."isActive" = true AND svc.name ILIKE ${"%" + searchParam + "%"}))` : Prisma.empty}
+          ${cityParam     ? Prisma.sql`AND s.city = ${cityParam}`             : Prisma.empty}
+          ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}`     : Prisma.empty}
+          ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}`  : Prisma.empty}
+          ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}`  : Prisma.empty}
+          ${searchParam ? searchFilter(searchParam) : Prisma.empty}
         GROUP BY s.id, t.score
         ORDER BY trending_score DESC, s."averageRating" DESC
         LIMIT ${pageSize} OFFSET ${page * pageSize}
@@ -194,17 +243,12 @@ export class CatalogController {
         })),
         total, page, pageSize
       };
-      await setCachedJsonWithTags({
-        key: cacheKey,
-        value: payload,
-        ttlSeconds: config.cacheTtlCatalogSeconds,
-        tags: ["catalog:list"]
-      });
+      await setCachedJsonWithTags({ key: cacheKey, value: payload, ttlSeconds: config.cacheTtlCatalogSeconds, tags: ["catalog:list"] });
       reply.header("x-cache", "MISS");
       return ok(reply, payload);
     }
 
-    // ── Prestige: sorted by prestigeScore DESC, then rating DESC ─────────────
+    // ── Prestige ─────────────────────────────────────────────────────────────────
     if (sort === "prestige") {
       const [items, total] = await Promise.all([
         prisma.salon.findMany({
@@ -228,82 +272,62 @@ export class CatalogController {
         })
       ]);
       const payload = {
-        items: items.map((s) => ({
-          ...s,
-          featured: s.subscriptionTier === "premium",
-          distanceKm: null
-        })),
+        items: items.map((s) => ({ ...s, featured: s.subscriptionTier === "premium", distanceKm: null })),
         total, page, pageSize
       };
-      await setCachedJsonWithTags({
-        key: cacheKey, value: payload,
-        ttlSeconds: config.cacheTtlCatalogSeconds,
-        tags: ["catalog:list"]
-      });
+      await setCachedJsonWithTags({ key: cacheKey, value: payload, ttlSeconds: config.cacheTtlCatalogSeconds, tags: ["catalog:list"] });
       reply.header("x-cache", "MISS");
       return ok(reply, payload);
     }
 
-    // ── Default: sort by rating (with optional city/category/search filters) ─
-    const where = {
-      approvalStatus: "approved" as const,
-      isVisibleInMarketplace: true,
-      ...(q.city && { city: q.city }),
-      ...(q.category && { category: q.category }),
-      ...((minPrice != null || maxPrice != null) && {
-        services: {
-          some: {
-            isActive: true,
-            ...(minPrice != null && { priceXof: { gte: minPrice } }),
-            ...(maxPrice != null && { priceXof: { lte: maxPrice } })
-          }
-        }
-      })
+    // ── Default (rating) — when search is present, re-ranks by relevance ─────────
+    const cityParam = q.city ?? null;
+    const categoryParam = q.category ?? null;
+    const searchParam = q.search ?? null;
+
+    type RatingRow = {
+      id: string; name: string; category: string; logoUrl: string | null;
+      city: string; neighborhood: string | null; averageRating: number;
+      latitude: number | null; longitude: number | null; subscriptionTier: string;
+      isPrestige: boolean; prestigeScore: number | null; total_count: bigint;
     };
 
-    const whereWithSearch = q.search
-      ? {
-          AND: [
-            where,
-            {
-              OR: [
-                { name: { contains: q.search, mode: "insensitive" as const } },
-                { services: { some: { name: { contains: q.search, mode: "insensitive" as const }, isActive: true } } }
-              ]
-            }
-          ]
-        }
-      : where;
+    const rows = await prisma.$queryRaw<RatingRow[]>(Prisma.sql`
+      SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
+             s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+             s."isPrestige", s."prestigeScore",
+             COUNT(*) OVER() AS total_count
+      FROM "Salon" s
+      ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
+      WHERE s."approvalStatus" = 'approved'
+        AND s."isVisibleInMarketplace" = true
+        ${cityParam     ? Prisma.sql`AND s.city = ${cityParam}`             : Prisma.empty}
+        ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}`     : Prisma.empty}
+        ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}`  : Prisma.empty}
+        ${maxPrice != null ? Prisma.sql`AND srv."priceXof" <= ${maxPrice}`  : Prisma.empty}
+        ${searchParam ? searchFilter(searchParam) : Prisma.empty}
+      ORDER BY
+        ${searchParam ? Prisma.sql`${searchRank(searchParam)} DESC,` : Prisma.empty}
+        CASE s."subscriptionTier" WHEN 'premium' THEN 0 ELSE 1 END ASC,
+        s."averageRating" DESC
+      LIMIT ${pageSize} OFFSET ${page * pageSize}
+    `);
 
-    const [items, total] = await Promise.all([
-      prisma.salon.findMany({
-        where: whereWithSearch,
-        select: {
-          id: true, name: true, category: true, logoUrl: true, city: true,
-          neighborhood: true, averageRating: true, latitude: true, longitude: true,
-          subscriptionTier: true, isPrestige: true, prestigeScore: true
-        },
-        orderBy: [{ subscriptionTier: "desc" }, { averageRating: "desc" }],
-        take: pageSize,
-        skip: page * pageSize
-      }),
-      prisma.salon.count({ where: whereWithSearch })
-    ]);
-
+    const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
     const payload = {
-      items: items.map((s) => ({
-        ...s,
-        featured: s.subscriptionTier === "premium",
+      items: rows.map((r) => ({
+        id: r.id, name: r.name, category: r.category, logoUrl: r.logoUrl,
+        city: r.city, neighborhood: r.neighborhood, averageRating: Number(r.averageRating),
+        latitude: r.latitude, longitude: r.longitude,
+        subscriptionTier: r.subscriptionTier,
+        featured: r.subscriptionTier === "premium",
+        isPrestige: r.isPrestige,
+        prestigeScore: r.prestigeScore != null ? Number(r.prestigeScore) : null,
         distanceKm: null
       })),
       total, page, pageSize
     };
-    await setCachedJsonWithTags({
-      key: cacheKey,
-      value: payload,
-      ttlSeconds: config.cacheTtlCatalogSeconds,
-      tags: ["catalog:list"]
-    });
+    await setCachedJsonWithTags({ key: cacheKey, value: payload, ttlSeconds: config.cacheTtlCatalogSeconds, tags: ["catalog:list"] });
     reply.header("x-cache", "MISS");
     ok(reply, payload);
   }
@@ -337,14 +361,7 @@ export class CatalogController {
     }
 
     const teamSettingRows = await prisma.platformSetting.findMany({
-      where: {
-        key: {
-          in: [
-            salonTeamShowPhotosKey(salon.id),
-            salonTeamShowDescriptionsKey(salon.id)
-          ]
-        }
-      },
+      where: { key: { in: [salonTeamShowPhotosKey(salon.id), salonTeamShowDescriptionsKey(salon.id)] } },
       select: { key: true, value: true }
     });
     const settingMap = Object.fromEntries(teamSettingRows.map((row) => [row.key, row.value]));
@@ -421,7 +438,6 @@ export class CatalogController {
     }
 
     const date = new Date(query.date + "T00:00:00");
-
     const slots = await fetchAndComputeAvailableSlots(prisma, {
       salonId: params.id,
       date,
@@ -496,16 +512,8 @@ export class CatalogController {
         const rows = await prisma.platformSetting.findMany({ where: { key: { in: keys } } });
         const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
         return {
-          standard: {
-            tier: "standard",
-            priceXof: parseInt(map["subscription_standard_price_xof"] ?? "15000", 10),
-            label: "Standard"
-          },
-          premium: {
-            tier: "premium",
-            priceXof: parseInt(map["subscription_premium_price_xof"] ?? "25000", 10),
-            label: "Premium"
-          },
+          standard: { tier: "standard", priceXof: parseInt(map["subscription_standard_price_xof"] ?? "15000", 10), label: "Standard" },
+          premium: { tier: "premium", priceXof: parseInt(map["subscription_premium_price_xof"] ?? "25000", 10), label: "Premium" },
           commissionPercent: parseFloat(map["commission_rate_percent"] ?? "5")
         };
       }
@@ -518,15 +526,12 @@ export class CatalogController {
     try {
       const session = requireRole(request, ["client"]);
       const params = request.params as { salonId: string };
-
       const salon = await prisma.salon.findFirst({ where: { id: params.salonId, approvalStatus: "approved" } });
       if (!salon) { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
-
       await prisma.favorite.create({ data: { userId: session.sub, salonId: params.salonId } });
       ok(reply, { added: true }, 201);
     } catch (error) {
       if (error instanceof HttpAuthError) { fail(reply, error.statusCode, error.code, error.message); return; }
-      // P2002 = unique constraint — already favorited
       fail(reply, 409, "already_favorited", "Salon déjà en favoris.");
     }
   }

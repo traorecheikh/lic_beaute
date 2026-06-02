@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     user: { findUnique: vi.fn() },
     service: { findMany: vi.fn() },
+    salon: { findUnique: vi.fn().mockResolvedValue({ subscription: { status: "active" } }) },
     platformSetting: { findUnique: vi.fn() },
     $transaction: vi.fn()
   };

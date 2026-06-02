@@ -908,7 +908,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
             } else {
               final msg = confirmResult?['message'] as String? ?? 'Échec de la validation Wizall.';
-              AppSnackbar.error(context, msg);
+              if (mounted) AppSnackbar.error(context, msg);
             }
           }
           return;
@@ -940,7 +940,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
       } else {
         final msg = executeResult?['message'] as String? ?? 'Échec du paiement.';
-        AppSnackbar.error(context, msg);
+        if (mounted) AppSnackbar.error(context, msg);
       }
     } catch (e) {
       if (!context.mounted) return;
@@ -976,8 +976,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           return;
       }
     }
-    if (!context.mounted) return;
-    await context.handleHttpError(error, 'Échec du paiement.');
+    if (mounted) context.handleHttpError(error, 'Échec du paiement.');
   }
 
   String? _channelFromMethod(dynamic method) {

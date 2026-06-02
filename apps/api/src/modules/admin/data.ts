@@ -527,6 +527,21 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
   return await getPendingSalonDetail(salon.id);
 }
 
+// ─── Uniqueness check ─────────────────────────────────────────────────────────
+
+export async function checkSalonUniqueness(fields: { email?: string; phone?: string }) {
+  const result: { email?: "available" | "taken"; phone?: "available" | "taken" } = {};
+  if (fields.email) {
+    const existing = await prisma.user.findUnique({ where: { email: fields.email }, select: { id: true } });
+    result.email = existing ? "taken" : "available";
+  }
+  if (fields.phone) {
+    const existing = await prisma.user.findFirst({ where: { phone: fields.phone }, select: { id: true } });
+    result.phone = existing ? "taken" : "available";
+  }
+  return result;
+}
+
 // ─── Subscriptions ────────────────────────────────────────────────────────────
 
 export async function listSubscriptions(filters: {
@@ -571,7 +586,8 @@ export async function getSubscriptionDetail(subscriptionId: string): Promise<Adm
     include: {
       salon: { select: { name: true } },
       events: { orderBy: { createdAt: "desc" } },
-      invoices: { orderBy: { createdAt: "desc" } }
+      invoices: { orderBy: { createdAt: "desc" } },
+      charges: { where: { status: "pending" }, orderBy: { createdAt: "desc" } }
     }
   });
 
@@ -606,6 +622,14 @@ export async function getSubscriptionDetail(subscriptionId: string): Promise<Adm
       status: inv.status as "issued" | "void" | "paid" | "comped",
       createdAt: inv.createdAt.toISOString(),
       pdfUrl: inv.pdfUrl
+    })),
+    pendingCharges: sub.charges.map((c) => ({
+      id: c.id,
+      amountXof: c.amountXof,
+      chargeType: c.chargeType as "upgrade" | "renewal",
+      provider: c.provider as "paydunya" | "manual",
+      status: c.status as "pending" | "authorized" | "succeeded" | "failed" | "refunded",
+      createdAt: c.createdAt.toISOString()
     }))
   };
 }
@@ -636,6 +660,10 @@ export async function overrideSubscription(
       break;
     case "extend_expiry":
       if (input.expiresAt) updateData.expiresAt = new Date(input.expiresAt);
+      // also activate if inactive or paused
+      if (sub.status === "inactive" || sub.status === "paused") {
+        updateData.status = "active";
+      }
       break;
     case "downgrade_to_standard":
       updateData.tier = "standard";
@@ -669,7 +697,7 @@ export async function overrideSubscription(
       });
     }
 
-    if (input.action === "resume_subscription") {
+    if (input.action === "grant_complimentary_premium" || input.action === "downgrade_to_standard" || input.action === "resume_subscription" || input.action === "extend_expiry") {
       await tx.salon.update({
         where: { id: sub.salonId },
         data: { isVisibleInMarketplace: true, canReceiveBookings: true }

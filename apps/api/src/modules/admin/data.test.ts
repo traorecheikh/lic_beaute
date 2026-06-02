@@ -282,7 +282,8 @@ describe("admin data module", () => {
       id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true,
       isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" },
       events: [{ id: "e1", eventType: "x", summary: "s", createdAt: new Date(), actorName: "Admin", source: "admin", payloadPreview: null }],
-      invoices: [{ id: "i1", invoiceNumber: "INV-1", amountXof: 1000, status: "paid", createdAt: new Date(), pdfUrl: "" }]
+      invoices: [{ id: "i1", invoiceNumber: "INV-1", amountXof: 1000, status: "paid", createdAt: new Date(), pdfUrl: "" }],
+      charges: [{ id: "ch1", amountXof: 5000, chargeType: "upgrade", provider: "paydunya", status: "pending", createdAt: new Date() }]
     });
     const detail = await getSubscriptionDetail("sub1");
     expect(detail?.id).toBe("sub1");
@@ -302,7 +303,7 @@ describe("admin data module", () => {
 
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
       id: "sub2", salonId: "s2", tier: "standard", status: "paused", billingProvider: "manual", expiresAt: null, autoRenew: false,
-      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "B" }, events: [], invoices: []
+      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "B" }, events: [], invoices: [], charges: []
     });
     const detail = await getSubscriptionDetail("sub2");
     expect(detail?.entitlements.some((e) => e.enabled === false)).toBe(true);
@@ -358,7 +359,7 @@ describe("admin data module", () => {
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({ id: "sub1", salonId: "s1", salon: { name: "A" } });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
       id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true,
-      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
+      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: [], charges: []
     });
     const out = await overrideSubscription("sub1", {
       action: "mark_charge_resolved",
@@ -383,7 +384,7 @@ describe("admin data module", () => {
     });
     mocks.prisma.subscription.findUnique.mockResolvedValue({
       id: "sub1", salonId: "s1", tier: "premium", status: "active", billingProvider: "paydunya", expiresAt: null, autoRenew: true,
-      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
+      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: [], charges: []
     });
     await overrideSubscription("sub1", { action: "pause_subscription", reason: "pause" }, "Admin");
     await overrideSubscription("sub1", { action: "resume_subscription", reason: "resume" }, "Admin");
@@ -416,14 +417,14 @@ describe("admin data module", () => {
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({ id: "subx", salonId: "s1", salon: { name: "A" } });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
       id: "subx", salonId: "s1", tier: "standard", status: "active", billingProvider: "manual", expiresAt: null, autoRenew: false,
-      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
+      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: [], charges: []
     });
     await overrideSubscription("subx", { action: "extend_expiry", reason: "extend-no-exp" }, "Admin");
 
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({ id: "subx", salonId: "s1", salon: { name: "A" } });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
       id: "subx", salonId: "s1", tier: "premium", status: "active", billingProvider: null, expiresAt: null, autoRenew: false,
-      isComplimentary: true, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
+      isComplimentary: true, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: [], charges: []
     });
     await overrideSubscription("subx", { action: "grant_complimentary_premium", reason: "comp-no-exp" }, "Admin");
   });
@@ -442,7 +443,8 @@ describe("admin data module", () => {
       renewedAt: null,
       salon: { name: "A" },
       events: [],
-      invoices: []
+      invoices: [],
+      charges: []
     });
     mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<void>) => {
       const tx = {
@@ -457,10 +459,60 @@ describe("admin data module", () => {
     });
     mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
       id: "sube", salonId: "s1", tier: "premium", status: "paused", billingProvider: "paydunya", expiresAt: null, autoRenew: false,
-      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: []
+      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "A" }, events: [], invoices: [], charges: []
     });
     await overrideSubscription("sube", { action: "pause_subscription", reason: "pause", effectiveAt: "2030-02-01T00:00:00.000Z" }, "Admin");
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it("overrideSubscription extend_expiry activates inactive sub and makes salon visible", async () => {
+    mocks.prisma.subscription.findUnique.mockResolvedValue({ id: "subx", salonId: "s1", status: "inactive", salon: { name: "X" } });
+    const salonUpdate = vi.fn();
+    mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<void>) => {
+      await cb({
+        subscription: { update: vi.fn() },
+        salon: { update: salonUpdate },
+        subscriptionCharge: { findUnique: vi.fn(), update: vi.fn() },
+        subscriptionEvent: { create: vi.fn() },
+        billingInvoice: { create: vi.fn() },
+        auditLog: { create: vi.fn() }
+      });
+    });
+    // First findUnique in overrideSubscription, then in getSubscriptionDetail
+    mocks.prisma.subscription.findUnique.mockResolvedValueOnce({ id: "subx", salonId: "s1", salon: { name: "X" } });
+    mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
+      id: "subx", salonId: "s1", tier: "standard", status: "active", billingProvider: null, expiresAt: new Date("2030-06-01"), autoRenew: false,
+      isComplimentary: false, startedAt: new Date(), renewedAt: null, salon: { name: "X" }, events: [], invoices: [], charges: []
+    });
+    await overrideSubscription("subx", { action: "extend_expiry", reason: "extend", expiresAt: "2030-06-01T00:00:00.000Z" }, "Admin");
+    expect(salonUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ isVisibleInMarketplace: true, canReceiveBookings: true })
+    }));
+  });
+
+  it("getSubscriptionDetail includes pendingCharges in response", async () => {
+    mocks.prisma.subscription.findUnique.mockResolvedValue({
+      id: "sub_charge",
+      salonId: "s1",
+      tier: "premium",
+      status: "active",
+      billingProvider: "paydunya",
+      expiresAt: null,
+      autoRenew: true,
+      isComplimentary: false,
+      startedAt: new Date(),
+      renewedAt: null,
+      salon: { name: "A" },
+      events: [],
+      invoices: [],
+      charges: [
+        { id: "pc1", amountXof: 25000, chargeType: "upgrade", provider: "paydunya", status: "pending", createdAt: new Date() }
+      ]
+    });
+    const detail = await getSubscriptionDetail("sub_charge");
+    expect(detail?.pendingCharges).toHaveLength(1);
+    expect(detail?.pendingCharges[0].id).toBe("pc1");
+    expect(detail?.pendingCharges[0].amountXof).toBe(25000);
   });
 
   it("manualExtendSubscription creates charge+invoice, extends expiry, sends email", async () => {

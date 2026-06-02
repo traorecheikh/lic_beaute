@@ -149,6 +149,15 @@ export const billingInvoiceSchema = z.object({
   pdfUrl: z.string().url()
 });
 
+export const pendingChargeSchema = z.object({
+  id: z.string(),
+  amountXof: z.number().int().nonnegative(),
+  chargeType: z.enum(["upgrade", "renewal"]),
+  provider: z.enum(["paydunya", "manual"]),
+  status: z.enum(["pending", "authorized", "succeeded", "failed", "refunded"]),
+  createdAt: z.string().datetime()
+});
+
 export const adminSubscriptionDetailSchema = adminSubscriptionSummarySchema.extend({
   startedAt: z.string().datetime(),
   renewedAt: z.string().datetime().nullable(),
@@ -160,7 +169,8 @@ export const adminSubscriptionDetailSchema = adminSubscriptionSummarySchema.exte
     })
   ),
   events: z.array(adminSubscriptionEventSchema),
-  invoices: z.array(billingInvoiceSchema)
+  invoices: z.array(billingInvoiceSchema),
+  pendingCharges: z.array(pendingChargeSchema)
 });
 
 export const adminSubscriptionOverrideActionSchema = z.enum([
@@ -251,11 +261,12 @@ export type AdminSubscriptionEvent = z.infer<typeof adminSubscriptionEventSchema
 export type AdminSubscriptionOverrideAction = z.infer<typeof adminSubscriptionOverrideActionSchema>;
 export type AdminSubscriptionOverrideInput = z.infer<typeof adminSubscriptionOverrideSchema>;
 export type BillingInvoice = z.infer<typeof billingInvoiceSchema>;
+export type PendingCharge = z.infer<typeof pendingChargeSchema>;
 export type AdminAuditFilters = z.infer<typeof adminAuditFiltersSchema>;
 export type AdminAuditSummary = z.infer<typeof adminAuditSummarySchema>;
 export const adminManualExtendInputSchema = z.object({
   amountXof: z.number().int().positive(),
-  durationDays: z.number().int().positive(),
+  durationDays: z.number().int().positive().max(365),
   reason: z.string().trim().min(3).max(500),
   reference: z.string().trim().min(1).max(200),
   effectiveDate: z.string().datetime().optional()

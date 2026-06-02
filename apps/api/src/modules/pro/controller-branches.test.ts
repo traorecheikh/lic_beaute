@@ -50,6 +50,7 @@ describe("ProController branches", () => {
     vi.clearAllMocks();
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "salon_owner" });
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscription: { status: "active" } });
     mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb({
       booking: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
       bookingEvent: { create: vi.fn() },

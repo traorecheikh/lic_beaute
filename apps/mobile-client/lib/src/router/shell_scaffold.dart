@@ -16,21 +16,9 @@ class ShellScaffold extends ConsumerWidget {
   final Widget child;
 
   static const _tabs = [
-    _TabItem(
-      icon: 'compass',
-      label: AppStrings.discoverTab,
-      path: AppRoutes.home,
-    ),
-    _TabItem(
-      icon: 'calendar',
-      label: AppStrings.bookingsTab,
-      path: AppRoutes.bookingsList,
-    ),
-    _TabItem(
-      icon: 'user',
-      label: AppStrings.profileTab,
-      path: AppRoutes.profile,
-    ),
+    _TabItem(icon: 'compass', label: AppStrings.discoverTab, path: AppRoutes.home),
+    _TabItem(icon: 'calendar', label: AppStrings.bookingsTab, path: AppRoutes.bookingsList),
+    _TabItem(icon: 'user', label: AppStrings.profileTab, path: AppRoutes.profile),
   ];
 
   int _currentIndex(BuildContext context) {
@@ -63,7 +51,7 @@ class ShellScaffold extends ConsumerWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: _FloatingNavBar(
+      bottomNavigationBar: _BottomNav(
         currentIndex: index,
         tabs: _tabs,
         onTap: handleTabTap,
@@ -72,12 +60,8 @@ class ShellScaffold extends ConsumerWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Floating pill nav bar
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _FloatingNavBar extends StatelessWidget {
-  const _FloatingNavBar({
+class _BottomNav extends StatelessWidget {
+  const _BottomNav({
     required this.currentIndex,
     required this.tabs,
     required this.onTap,
@@ -89,16 +73,20 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 12.h),
-        child: Container(
-          height: 64.h,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(32.r),
-            boxShadow: AppShadows.nav,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.outline.withValues(alpha: 0.5),
+            width: 0.5,
           ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 56.h,
           child: Row(
             children: List.generate(tabs.length, (i) {
               return Expanded(
@@ -129,46 +117,49 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = AppColors.primary;
+    final inactiveColor = AppColors.onSurfaceVariant.withValues(alpha: 0.5);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        margin: EdgeInsets.all(6.r),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primaryLight : AppColors.transparent,
-          borderRadius: BorderRadius.circular(26.r),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppIcon(
-              item.icon,
-              size: 22,
-              color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIcon(
+            item.icon,
+            size: 22,
+            color: isActive ? activeColor : inactiveColor,
+          ),
+          SizedBox(height: 3.h),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 150),
+            style: TextStyle(
+              fontFamily: 'DMSans',
+              fontSize: 10.sp,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              color: isActive ? activeColor : inactiveColor,
+              letterSpacing: 0.2,
             ),
-            SizedBox(height: 3.h),
-            Text(
-              item.label,
-              style: AppTextStyles.labelSm.copyWith(
-                color: isActive
-                    ? AppColors.primary
-                    : AppColors.onSurfaceVariant,
-                fontSize: 10.sp,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              ),
+            child: Text(item.label),
+          ),
+          SizedBox(height: 4.h),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            width: isActive ? 4.r : 0,
+            height: isActive ? 4.r : 0,
+            decoration: BoxDecoration(
+              color: activeColor,
+              shape: BoxShape.circle,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Data class
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _TabItem {
   const _TabItem({required this.icon, required this.label, required this.path});

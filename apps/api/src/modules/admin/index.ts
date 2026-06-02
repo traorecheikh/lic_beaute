@@ -16,8 +16,11 @@ import { getOrSetCachedJson, invalidateCacheTags } from "../../lib/cache.js";
 import { config } from "../../config.js";
 import { fail, handleError, ok } from "../../lib/http.js";
 import { prisma } from "../../lib/db/prisma.js";
+import { buildInvoicePdf } from "../../lib/pdf.js";
 import {
   approveSalon,
+  checkSalonUniqueness,
+  createSalon,
   deleteSalonCategory,
   deleteRequiredDocument,
   getAdminDashboard,
@@ -39,7 +42,6 @@ import {
   updatePlatformSetting,
   upsertRequiredDocument,
   upsertSalonCategory,
-  createSalon,
   sendPasswordReset,
   sendMagicLink
 } from "./data.js";
@@ -142,6 +144,15 @@ export class AdminController {
     } catch (error) {
       handleError(error, reply);
     }
+  }
+
+  async checkUniqueness(request: FastifyRequest, reply: FastifyReply) {
+    if (!this.ensureAdmin(request, reply)) return;
+    const query = z.object({
+      email: z.string().email().optional(),
+      phone: z.string().min(5).optional()
+    }).parse(request.query);
+    ok(reply, await checkSalonUniqueness(query));
   }
 
   async listSubscriptions(request: FastifyRequest, reply: FastifyReply) {
@@ -343,6 +354,40 @@ export class AdminController {
     } catch (e) {
       handleError(e, reply);
     }
+  }
+
+  async downloadInvoicePdf(request: FastifyRequest, reply: FastifyReply) {
+    if (!this.ensureAdmin(request, reply)) return;
+    const params = request.params as { invoiceId: string };
+    const invoice = await prisma.billingInvoice.findFirst({
+      where: { id: params.invoiceId },
+      include: {
+        subscription: {
+          include: {
+            salon: { select: { name: true } }
+          }
+        }
+      }
+    });
+    if (!invoice) { fail(reply, 404, "invoice_not_found", "Facture introuvable."); return; }
+
+    const issuedAt = invoice.createdAt.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+    const amountLabel = invoice.amountXof.toLocaleString("fr-FR");
+    const billingProvider = invoice.subscription.billingProvider === "paydunya" ? "PayDunya" : "Manuel";
+
+    const pdf = buildInvoicePdf({
+      invoiceNumber: invoice.invoiceNumber,
+      issuedAt,
+      status: invoice.status === "paid" ? "Payé" : invoice.status === "comped" ? "Offert" : "Émis",
+      amountLabel,
+      billingProvider,
+      salonName: invoice.subscription.salon.name
+    });
+
+    reply
+      .header("Content-Type", "application/pdf")
+      .header("Content-Disposition", `attachment; filename="${invoice.invoiceNumber}.pdf"`)
+      .send(pdf);
   }
 
   async sendPasswordReset(request: FastifyRequest, reply: FastifyReply) {

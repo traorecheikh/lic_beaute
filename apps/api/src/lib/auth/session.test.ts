@@ -15,7 +15,7 @@ describe("auth/session", () => {
   it("verifyAccessToken accepts signed token", () => {
     const session = signSession("u2", "platform_admin");
     const payload = verifyAccessToken(session.accessToken);
-    expect(payload).toEqual({ sub: "u2", role: "platform_admin" });
+    expect(payload).toEqual({ sub: "u2", role: "platform_admin", tv: 0 });
   });
 
   it("verifyRefreshToken accepts refresh token", () => {

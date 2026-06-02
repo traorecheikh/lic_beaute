@@ -137,6 +137,7 @@ describe("Pro forced branches", () => {
 
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "salon_owner" });
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1", phone: "+221770000000" });
+    (mocks.prisma as any).salon = { findUnique: vi.fn().mockResolvedValue({ subscription: { status: "active" } }) };
     (mocks.prisma as any).booking = { findFirst: vi.fn().mockResolvedValue({
       id: "b1",
       status: "confirmed",

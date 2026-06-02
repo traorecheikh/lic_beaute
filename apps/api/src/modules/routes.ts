@@ -191,6 +191,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/admin/dashboard", (req, rep) => admin.dashboard(req, rep));
   app.get("/api/v1/admin/salons", (req, rep) => admin.listSalons(req, rep));
   app.get("/api/v1/admin/salons/pending", (req, rep) => admin.listPendingSalons(req, rep));
+  app.get("/api/v1/admin/salons/check-uniqueness", (req, rep) => admin.checkUniqueness(req, rep));
   app.get("/api/v1/admin/salons/:salonId", (req, rep) => admin.salonDetail(req, rep));
   app.post("/api/v1/admin/salons", (req, rep) => admin.createSalon(req, rep));
   app.post("/api/v1/admin/salons/:salonId/approve", (req, rep) => admin.approveSalon(req, rep));
@@ -202,6 +203,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/admin/subscriptions/:subscriptionId", (req, rep) => admin.subscriptionDetail(req, rep));
   app.post("/api/v1/admin/subscriptions/:subscriptionId/override", (req, rep) => admin.overrideSubscription(req, rep));
   app.post("/api/v1/admin/subscriptions/:subscriptionId/manual-extend", (req, rep) => admin.manualExtendSubscription(req, rep));
+  app.get("/api/v1/admin/invoices/:invoiceId/pdf", (req, rep) => admin.downloadInvoicePdf(req, rep));
   app.get("/api/v1/admin/audit", (req, rep) => admin.listAudit(req, rep));
   app.get("/api/v1/admin/audit/email", (req, rep) => admin.listEmailAudit(req, rep));
   app.get("/api/v1/admin/audit/:auditId", (req, rep) => admin.auditDetail(req, rep));

@@ -211,7 +211,7 @@ export class BookingController {
         });
 
         return { booking, payment };
-      });
+      }, { isolationLevel: "Serializable" });
 
       const full = await prisma.booking.findUnique({
         where: { id: result.booking.id },

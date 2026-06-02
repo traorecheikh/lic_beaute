@@ -1,6 +1,4 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -24,26 +22,22 @@ class BookingsListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(bookingsListProvider);
     Future<void> refreshBookings() => ref.refresh(bookingsListProvider.future);
-    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
 
-    final tabBar = TabBar(
+    final innerTabBar = TabBar(
       indicatorSize: TabBarIndicatorSize.tab,
       dividerColor: Colors.transparent,
       splashFactory: NoSplash.splashFactory,
       overlayColor: WidgetStateProperty.all(Colors.transparent),
-      indicator: isIOS
-          ? BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: AppShadows.card,
-            )
-          : UnderlineTabIndicator(
-              borderSide: BorderSide(color: AppColors.primary, width: 3),
-            ),
-      indicatorPadding: isIOS ? EdgeInsets.all(4.r) : EdgeInsets.zero,
-      labelColor: isIOS ? AppColors.onSurface : AppColors.primary,
+      indicator: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(11.r),
+        boxShadow: AppShadows.sm,
+      ),
+      indicatorPadding: EdgeInsets.all(4.r),
+      labelColor: AppColors.onSurface,
       unselectedLabelColor: AppColors.onSurfaceVariant,
-      labelStyle: AppTextStyles.labelLg,
+      labelStyle: AppTextStyles.labelMd,
+      unselectedLabelStyle: AppTextStyles.labelMd,
       tabs: const [
         Tab(text: 'À VENIR'),
         Tab(text: 'PASSÉS'),
@@ -72,68 +66,8 @@ class BookingsListPage extends ConsumerWidget {
             SliverPersistentHeader(
               pinned: true,
               delegate: _TabBarDelegate(
-                isIOS
-                    ? Builder(
-                        builder: (context) {
-                          final controller = DefaultTabController.of(context);
-                          return Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              20.w,
-                              10.h,
-                              20.w,
-                              10.h,
-                            ),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceVariant,
-                                borderRadius: BorderRadius.circular(14.r),
-                              ),
-                              child: CupertinoSlidingSegmentedControl<int>(
-                                groupValue: controller.index,
-                                backgroundColor: AppColors.surfaceVariant,
-                                thumbColor: AppColors.surface,
-                                padding: EdgeInsets.all(4.r),
-                                onValueChanged: (value) {
-                                  if (value == null) return;
-                                  controller.animateTo(value);
-                                },
-                                children: {
-                                  0: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 12.h,
-                                    ),
-                                    child: Text(
-                                      'À VENIR',
-                                      textAlign: TextAlign.center,
-                                      style: AppTextStyles.labelLg.copyWith(
-                                        color: controller.index == 0
-                                            ? AppColors.onSurface
-                                            : AppColors.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                  1: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 12.h,
-                                    ),
-                                    child: Text(
-                                      'PASSÉS',
-                                      textAlign: TextAlign.center,
-                                      style: AppTextStyles.labelLg.copyWith(
-                                        color: controller.index == 1
-                                            ? AppColors.onSurface
-                                            : AppColors.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    : tabBar,
-                extent: isIOS ? 72.h : tabBar.preferredSize.height,
+                innerTabBar,
+                extent: innerTabBar.preferredSize.height + 20.h,
               ),
             ),
           ],
@@ -208,7 +142,17 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(color: AppColors.surface, child: _tabBar);
+    return Container(
+      color: AppColors.surface,
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(14.r),
+        ),
+        child: _tabBar,
+      ),
+    );
   }
 
   @override

@@ -299,59 +299,87 @@ class _EditorialFieldState extends State<EditorialField> {
 
 /// Primary action button for auth flows — pill shape + warm shadow,
 /// with loading spinner that maintains button size.
+///
+/// When [expand] is `true` (default) the button fills the available width.
+/// Set [expand] to `false` for a compact button sized to its label.
 class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
     super.key,
     required this.label,
     required this.loading,
     required this.onTap,
+    this.expand = true,
   });
 
   final String label;
   final bool loading;
   final VoidCallback onTap;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
     return AppPressable(
       onTap: loading ? null : onTap,
       enabled: !loading,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: double.infinity,
-        height: 56.h,
-        decoration: BoxDecoration(
-          color: loading ? AppColors.outline : AppColors.primary,
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: loading
-              ? null
-              : [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.30),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-        ),
-        child: Center(
-          child: loading
-              ? SizedBox(
-                  width: 22.r,
-                  height: 22.r,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                  ),
-                )
-              : Text(
-                  label,
-                  style: AppTextStyles.labelLg.copyWith(
-                    color: AppColors.white,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w700,
-                  ),
+      child: expand ? _expandedBody(context) : _compactBody(),
+    );
+  }
+
+  Widget _expandedBody(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // maxWidth is ALWAYS finite when the parent provides finite constraints
+        // (e.g. inside a Row, Column with CrossAxisAlignment.stretch, Expanded, etc.).
+        // Fallback: screen width (always finite) prevents the crash when constraints
+        // are unconstrained.
+        final w = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        return _shell(width: w);
+      },
+    );
+  }
+
+  Widget _compactBody() => _shell(width: null);
+
+  Widget _shell({double? width}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: width,
+      height: 56.h,
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      decoration: BoxDecoration(
+        color: loading ? AppColors.outline : AppColors.primary,
+        borderRadius: BorderRadius.circular(14.r),
+        boxShadow: loading
+            ? null
+            : [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.30),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
-        ),
+              ],
+      ),
+      child: Center(
+        child: loading
+            ? SizedBox(
+                width: 22.r,
+                height: 22.r,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.white),
+                ),
+              )
+            : Text(
+                label,
+                style: AppTextStyles.labelLg.copyWith(
+                  color: AppColors.white,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }

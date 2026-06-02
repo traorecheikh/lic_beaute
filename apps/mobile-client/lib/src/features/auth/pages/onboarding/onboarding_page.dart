@@ -155,7 +155,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       SizedBox(height: 24.h),
                       Row(
                         children: [
-                          if (!isLast)
+                          if (isLast)
+                            Expanded(
+                              flex: 1,
+                              child: AuthPrimaryButton(
+                                label: 'COMMENCER',
+                                loading: false,
+                                onTap: _next,
+                              ),
+                            )
+                          else ...[
                             AppPressable(
                               onTap: _complete,
                               child: Padding(
@@ -171,15 +180,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 ),
                               ),
                             ),
-                          if (!isLast) const Spacer(),
-                          Expanded(
-                            flex: isLast ? 1 : 0,
-                            child: AuthPrimaryButton(
-                              label: isLast ? 'COMMENCER' : 'SUIVANT',
+                            const Spacer(),
+                            AuthPrimaryButton(
+                              label: 'SUIVANT',
                               loading: false,
                               onTap: _next,
+                              expand: false,
                             ),
-                          ),
+                          ],
                         ],
                       ),
                       SizedBox(height: 8.h),

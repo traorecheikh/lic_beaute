@@ -23,14 +23,14 @@ describe("auth requireRole", () => {
   });
 
   it("throws forbidden role", () => {
-    vi.mocked(verifyAccessToken).mockReturnValue({ sub: "u1", role: "client" });
+    vi.mocked(verifyAccessToken).mockReturnValue({ sub: "u1", role: "client", tv: 0 });
     expect(() => requireRole({ headers: { authorization: "Bearer t" } } as never, ["platform_admin"])).toThrowError(HttpAuthError);
   });
 
   it("returns payload when role allowed", () => {
-    vi.mocked(verifyAccessToken).mockReturnValue({ sub: "u1", role: "client" });
+    vi.mocked(verifyAccessToken).mockReturnValue({ sub: "u1", role: "client", tv: 0 });
     const payload = requireRole({ headers: { authorization: "Bearer t" } } as never, ["client"]);
-    expect(payload).toEqual({ sub: "u1", role: "client" });
+    expect(payload).toEqual({ sub: "u1", role: "client", tv: 0 });
   });
 
   it("maps session errors to invalid_token", () => {

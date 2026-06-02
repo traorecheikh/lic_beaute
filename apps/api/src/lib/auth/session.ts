@@ -9,14 +9,17 @@ export type AccessTokenRole = "platform_admin" | "client" | "salon_owner" | "sal
 export type AccessTokenPayload = {
   sub: string;
   role: AccessTokenRole;
+  tv: number;
 };
 
-export function signSession(subject: string, role: AccessTokenRole) {
-  const accessToken = jwt.sign({ sub: subject, role }, config.jwtAccessSecret, {
-    expiresIn: config.jwtAccessTtlSeconds
+export function signSession(subject: string, role: AccessTokenRole, tokenVersion: number = 0) {
+  const accessToken = jwt.sign({ sub: subject, role, tv: tokenVersion }, config.jwtAccessSecret, {
+    expiresIn: config.jwtAccessTtlSeconds,
+    algorithm: "HS256"
   });
   const refreshToken = jwt.sign({ sub: subject, type: "refresh", jti: randomUUID() }, config.jwtRefreshSecret, {
-    expiresIn: config.jwtRefreshTtlSeconds
+    expiresIn: config.jwtRefreshTtlSeconds,
+    algorithm: "HS256"
   });
 
   return {
@@ -27,8 +30,11 @@ export function signSession(subject: string, role: AccessTokenRole) {
 }
 
 export function verifyRefreshToken(token: string): { sub: string } {
-  const payload = jwt.verify(token, config.jwtRefreshSecret);
+  const payload = jwt.verify(token, config.jwtRefreshSecret, { algorithms: ["HS256"] });
   if (typeof payload !== "object" || payload === null || typeof payload.sub !== "string") {
+    throw new Error("invalid_refresh_token");
+  }
+  if (typeof payload.type !== "string" || payload.type !== "refresh") {
     throw new Error("invalid_refresh_token");
   }
   return { sub: payload.sub };
@@ -37,7 +43,7 @@ export function verifyRefreshToken(token: string): { sub: string } {
 const VALID_ROLES: readonly AccessTokenRole[] = ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"];
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  const payload = jwt.verify(token, config.jwtAccessSecret);
+  const payload = jwt.verify(token, config.jwtAccessSecret, { algorithms: ["HS256"] });
 
   if (
     typeof payload !== "object" ||
@@ -51,7 +57,8 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 
   return {
     sub: payload.sub,
-    role: payload.role as AccessTokenRole
+    role: payload.role as AccessTokenRole,
+    tv: typeof payload.tv === "number" ? payload.tv : 0
   };
 }
 

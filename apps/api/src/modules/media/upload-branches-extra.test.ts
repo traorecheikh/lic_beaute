@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     mediaAsset: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     user: { findUnique: vi.fn() },
+    salon: { findUnique: vi.fn().mockResolvedValue({ subscription: { status: "active" } }) },
     $transaction: vi.fn()
   };
   const storage = { store: vi.fn(), delete: vi.fn(), publicUrl: vi.fn((k: string) => `https://local/${k}`) };
@@ -251,9 +252,7 @@ describe("MediaController extra upload branches", () => {
     await c.uploadIntent({
       body: { purpose: "avatar", mimeType: "image/jpeg", originalFilename: "n.jpg", sizeBytes: 120, salonId: "ignored" }
     } as never, {} as never);
-    expect(mocks.prisma.mediaAsset.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ salonId: null })
-    }));
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 403, "not_in_salon", expect.any(String));
   });
 
   it("uploadIntent uses default extension for unmapped image mime and admin fallback salon resolution", async () => {

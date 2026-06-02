@@ -1,11 +1,18 @@
 import { config } from "../config.js";
 import { logger } from "./logger.js";
 
+export type EmailAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+};
+
 export type EmailMessage = {
   to: string;
   subject: string;
   text: string;
   html?: string;
+  attachments?: EmailAttachment[];
 };
 
 async function writeEmailAudit(
@@ -43,13 +50,20 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
     case "resend": {
       const { Resend } = await import("resend");
       const resend = new Resend(config.resendApiKey);
-      const { error } = await resend.emails.send({
+      const resendPayload: Record<string, unknown> = {
         from: config.emailFrom,
         to: message.to,
         subject: message.subject,
         text: message.text,
         html: message.html,
-      });
+      };
+      if (message.attachments && message.attachments.length > 0) {
+        resendPayload.attachments = message.attachments.map((a) => ({
+          filename: a.filename,
+          content: a.content,
+        }));
+      }
+      const { error } = await resend.emails.send(resendPayload as Parameters<typeof resend.emails.send>[0]);
       if (error) {
         logger.error("[EMAIL:resend] send failed", { to: message.to, error });
         await writeEmailAudit(message, "failed", error.message);
@@ -69,6 +83,13 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
       };
       if (message.html) {
         payload.htmlContent = message.html;
+      }
+      if (message.attachments && message.attachments.length > 0) {
+        payload.attachment = message.attachments.map((a) => ({
+          name: a.filename,
+          content: a.content.toString("base64"),
+          contentType: a.contentType,
+        }));
       }
       const res = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
@@ -101,14 +122,22 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
         secure: config.smtpPort === 465,
         auth: { user: config.smtpUser, pass: config.smtpPass },
       });
-      await transporter.sendMail({
+      const mailOptions: Record<string, unknown> = {
         from: config.emailFrom,
         to: message.to,
         subject: message.subject,
         text: message.text,
         html: message.html,
-      });
-      logger.info("[EMAIL:smtp] sent", { to: message.to, subject: message.subject });
+      };
+      if (message.attachments && message.attachments.length > 0) {
+        mailOptions.attachments = message.attachments.map((a) => ({
+          filename: a.filename,
+          content: a.content,
+          contentType: a.contentType,
+        }));
+      }
+      await transporter.sendMail(mailOptions);
+      logger.info("[EMAIL:smtp] sent", { to: message.to, subject: message.subject, attachments: message.attachments?.length ?? 0 });
       await writeEmailAudit(message, "sent");
       return;
     }

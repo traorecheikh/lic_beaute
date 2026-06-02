@@ -63,12 +63,18 @@
           </div>
           <div class="space-y-1.5">
             <label class="section-label">Téléphone</label>
-            <input v-model="form.ownerPhone" class="input-shell" :class="{ 'input-error': fieldErrors.ownerPhone }" placeholder="+221 77 000 0000" />
+            <div class="relative">
+              <input v-model="form.ownerPhone" class="input-shell w-full" :class="{ 'input-error': fieldErrors.ownerPhone }" placeholder="+221 77 000 0000" />
+              <span v-if="checkingPhone" class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-cocoa/40">Vérification...</span>
+            </div>
             <p v-if="fieldErrors.ownerPhone" class="text-[11px] text-error font-medium mt-0.5">{{ fieldErrors.ownerPhone }}</p>
           </div>
           <div class="col-span-2 space-y-1.5">
             <label class="section-label">Email gérant <span class="text-primary">*</span></label>
-            <input v-model="form.ownerEmail" class="input-shell" :class="{ 'input-error': fieldErrors.ownerEmail }" type="email" placeholder="gerant@exemple.com" required />
+            <div class="relative">
+              <input v-model="form.ownerEmail" class="input-shell w-full" :class="{ 'input-error': fieldErrors.ownerEmail }" type="email" placeholder="gerant@exemple.com" required />
+              <span v-if="checkingEmail" class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-cocoa/40">Vérification...</span>
+            </div>
             <p v-if="fieldErrors.ownerEmail" class="text-[11px] text-error font-medium mt-0.5">{{ fieldErrors.ownerEmail }}</p>
             <p class="row-meta mt-1">Un email d'invitation sera envoyé à cette adresse.</p>
           </div>
@@ -88,15 +94,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { adminSalonCreateInputSchema } from "@beauteavenue/contracts";
 import { validateForm } from "@beauteavenue/shared-ts";
 import { useQueryClient } from "@tanstack/vue-query";
+import { refDebounced } from "@vueuse/core";
 import { toast } from "vue-sonner";
 import { ArrowLeftIcon } from "@heroicons/vue/24/outline";
 
-import { ApiError, createSalon, fetchPlatformCategories } from "@/lib/api";
+import { ApiError, checkSalonUniqueness, createSalon, fetchPlatformCategories } from "@/lib/api";
 import { useAdminAuthStore } from "@/stores/adminAuth";
 
 const auth = useAdminAuthStore();
@@ -105,6 +112,8 @@ const queryClient = useQueryClient();
 
 const categories = ref<{ id: string; name: string }[]>([]);
 const submitting = ref(false);
+const checkingEmail = ref(false);
+const checkingPhone = ref(false);
 
 onMounted(async () => {
   try {
@@ -126,6 +135,36 @@ const form = ref({
   ownerName: "",
   ownerEmail: "",
   ownerPhone: ""
+});
+
+// Debounced uniqueness check — sync rawEmail/rawPhone from form
+watch(() => form.value.ownerEmail, (v) => { rawEmail.value = v; });
+watch(() => form.value.ownerPhone, (v) => { rawPhone.value = v; });
+const rawEmail = ref("");
+const rawPhone = ref("");
+const debouncedEmail = refDebounced(rawEmail, 600);
+const debouncedPhone = refDebounced(rawPhone, 600);
+
+watch(debouncedEmail, async (email) => {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  checkingEmail.value = true;
+  try {
+    const result = await checkSalonUniqueness(auth.accessToken ?? "", { email });
+    if (result.email === "taken") fieldErrors.ownerEmail = "Cet email est déjà associé à un autre salon.";
+    else delete fieldErrors.ownerEmail;
+  } catch { /* ignore — server check is advisory */ }
+  finally { checkingEmail.value = false; }
+});
+
+watch(debouncedPhone, async (phone) => {
+  if (!phone || phone.length < 8) return;
+  checkingPhone.value = true;
+  try {
+    const result = await checkSalonUniqueness(auth.accessToken ?? "", { phone });
+    if (result.phone === "taken") fieldErrors.ownerPhone = "Ce numéro est déjà associé à un autre salon.";
+    else delete fieldErrors.ownerPhone;
+  } catch { /* ignore */ }
+  finally { checkingPhone.value = false; }
 });
 
 function validate(): boolean {

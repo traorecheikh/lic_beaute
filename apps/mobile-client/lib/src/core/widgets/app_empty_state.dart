@@ -5,7 +5,6 @@ import '../theme/app_theme.dart';
 import 'app_button.dart';
 import 'app_icon.dart';
 import 'app_icon_box.dart';
-import 'app_state_card.dart';
 
 class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
@@ -27,19 +26,18 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppStateCard(
-      compact: compact,
-      expandedPadding: 28.0,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 32.w),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           AppIconBox(
-            size: 56.r,
+            size: compact ? 44.r : 64.r,
             color: AppColors.primaryContainer.withValues(alpha: 0.5),
             circle: true,
-            child: AppIcon(icon, size: 26, color: AppColors.primary),
+            child: AppIcon(icon, size: compact ? 20 : 28, color: AppColors.primary),
           ),
-          SizedBox(height: 14.h),
+          SizedBox(height: compact ? 10.h : 16.h),
           Text(
             title,
             style: AppTextStyles.headlineSm,
@@ -49,16 +47,17 @@ class AppEmptyState extends StatelessWidget {
             SizedBox(height: 6.h),
             Text(
               subtitle!,
-              style: AppTextStyles.bodySm.copyWith(
+              style: AppTextStyles.bodyMd.copyWith(
                 color: AppColors.onSurfaceVariant,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
           ],
           if (action != null && actionLabel != null) ...[
-            SizedBox(height: 18.h),
+            SizedBox(height: 20.h),
             SizedBox(
-              width: compact ? double.infinity : 260.w,
+              width: compact ? double.infinity : 240.w,
               child: AppButton.primary(label: actionLabel!, onPressed: action!),
             ),
           ],

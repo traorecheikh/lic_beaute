@@ -24,6 +24,9 @@ const mocks = vi.hoisted(() => {
     voucherDefinition: {
       create: vi.fn()
     },
+    salon: {
+      findUnique: vi.fn()
+    },
     clientAddress: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -115,6 +118,7 @@ describe("ClientAccountController concurrency/error mapping", () => {
   it("returns 409 voucher_code_exists on voucher code unique collision", async () => {
     mocks.requireRole.mockReturnValue({ sub: "owner_1", role: "salon_owner" });
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "salon_1" });
+    mocks.prisma.salon.findUnique.mockResolvedValue({ subscription: { status: "active" } });
     mocks.prisma.voucherDefinition.create.mockRejectedValue({ code: "P2002" });
 
     await controller.createVoucherDefinition({

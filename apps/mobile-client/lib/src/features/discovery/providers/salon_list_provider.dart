@@ -128,7 +128,7 @@ final prestigeProvider =
 final salonSearchProvider = FutureProvider.family<
     List<SalonSummaryListResponseItemsInner>,
     ({String query, String? category})>(
-  retry: (_, __) => null,
+  retry: (_, _) => null,
   (ref, params) async {
     final api = ref.read(apiClientProvider).getSalonsApi();
     final response = await retryWithBackoff(

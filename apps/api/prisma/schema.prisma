@@ -150,6 +150,7 @@ model User {
   phone               String?        @unique
   passwordHash        String?
   role                Role
+  tokenVersion        Int            @default(0)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   salonId             String?
@@ -181,6 +182,9 @@ model Session {
   expiresAt     DateTime
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, expiresAt])
 }
 
 model OtpChallenge {
@@ -295,6 +299,8 @@ model Booking {
   @@index([salonId, createdAt])
   @@index([salonId, status, createdAt])
   @@index([clientId, startsAt])
+  @@index([employeeId, startsAt])
+  @@index([salonId, startsAt, endsAt])
 }
 
 model Payment {
@@ -310,6 +316,9 @@ model Payment {
   updatedAt        DateTime          @updatedAt
   booking          Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   settlementEvents SettlementEvent[]
+
+  @@index([bookingId])
+  @@index([status, createdAt])
 }
 
 model Notification {
@@ -321,6 +330,9 @@ model Notification {
   readAt    DateTime?
   createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 model Subscription {
@@ -423,6 +435,9 @@ model Job {
   lastError   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([status, runAfter])
+  @@index([queue, status])
 }
 
 model PlatformSetting {
@@ -534,7 +549,7 @@ model BlockedSlot {
   createdByUserId String
   createdAt       DateTime         @default(now())
   salon           Salon            @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   createdBy       User             @relation("BlockedSlotCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
 }
 

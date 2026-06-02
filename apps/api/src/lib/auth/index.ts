@@ -1,6 +1,7 @@
 import type { FastifyRequest } from "fastify";
 
 import { verifyAccessToken, type AccessTokenPayload, type AccessTokenRole } from "./session.js";
+import { prisma } from "../db/prisma.js";
 
 export class HttpAuthError extends Error {
   constructor(
@@ -44,5 +45,17 @@ export function requireRole(request: FastifyRequest, allowedRoles: AccessTokenRo
 
     throw new HttpAuthError(401, "invalid_token", "Session invalide ou expirée.");
   }
+}
+
+export async function requireRoleWithTokenCheck(request: FastifyRequest, allowedRoles: AccessTokenRole[]): Promise<AccessTokenPayload> {
+  const payload = requireRole(request, allowedRoles);
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: { tokenVersion: true }
+  });
+  if (user && user.tokenVersion !== payload.tv) {
+    throw new HttpAuthError(401, "token_revoked", "Token révoqué. Veuillez vous reconnecter.");
+  }
+  return payload;
 }
 

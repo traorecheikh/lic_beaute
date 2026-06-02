@@ -2,6 +2,8 @@ import type {
   AdminAuditDetail,
   AdminAuditSummary,
   AdminDashboard,
+  AdminManualExtendInput,
+  AdminManualExtendResponse,
   AdminSalonDecisionInput,
   AdminSalonDetail,
   AdminSalonQueueItem,
@@ -177,6 +179,16 @@ export async function createSalon(token: string, data: AdminSalonCreateInput) {
   });
 }
 
+export async function checkSalonUniqueness(token: string, fields: { email?: string; phone?: string }) {
+  const params = new URLSearchParams();
+  if (fields.email) params.set("email", fields.email);
+  if (fields.phone) params.set("phone", fields.phone);
+  return request<{ email?: "available" | "taken"; phone?: "available" | "taken" }>(
+    `/api/v1/admin/salons/check-uniqueness?${params.toString()}`,
+    { headers: authHeaders(token) }
+  );
+}
+
 async function mutateSalonDecision(token: string, salonId: string, action: "approve" | "reject" | "request-info", payload?: AdminSalonDecisionInput) {
   return request<AdminSalonDetail>(`/api/v1/admin/salons/${salonId}/${action}`, {
     method: "POST",
@@ -213,6 +225,14 @@ export async function fetchSubscriptionDetail(token: string, subscriptionId: str
 
 export async function overrideSubscription(token: string, subscriptionId: string, payload: AdminSubscriptionOverrideInput) {
   return request<AdminSubscriptionDetail>(`/api/v1/admin/subscriptions/${subscriptionId}/override`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function manualExtendSubscription(token: string, subscriptionId: string, payload: AdminManualExtendInput) {
+  return request<AdminManualExtendResponse>(`/api/v1/admin/subscriptions/${subscriptionId}/manual-extend`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(payload)

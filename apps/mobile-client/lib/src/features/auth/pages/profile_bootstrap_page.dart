@@ -7,6 +7,7 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_city_dropdown.dart';
+import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_resource_view.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -105,6 +106,64 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     );
   }
 
+  Future<void> _showPaymentNudge() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      showDragHandle: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 32.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52.r,
+              height: 52.r,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: AppIcon('star', size: 26, color: AppColors.primary),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Réservez en un tap',
+              style: AppTextStyles.headlineMd,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Ajoutez un moyen de paiement maintenant pour réserver sans friction.',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 28.h),
+            AppButton.primary(
+              label: 'Ajouter un moyen de paiement',
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.push(AppRoutes.profilePayments);
+              },
+            ),
+            SizedBox(height: 12.h),
+            AppButton.text(
+              label: 'Plus tard',
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     final name = _fullNameController.text.trim();
     if (name.length < 2) {
@@ -125,7 +184,8 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
             city: _selectedCity,
           );
       if (!mounted) return;
-      context.go(AppRoutes.home);
+      await _showPaymentNudge();
+      if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       if (!mounted) return;
       AppSnackbar.error(context, 'Mise à jour impossible.');

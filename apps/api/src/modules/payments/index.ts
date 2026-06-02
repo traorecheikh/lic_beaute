@@ -11,6 +11,7 @@ import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
+import { buildBookingConfirmationPdf } from "../../lib/pdf.js";
 import { sendNotification } from "../notifications/index.js";
 
 // ─── Replay protection ──────────────────────────────────────────────────────
@@ -385,6 +386,14 @@ export class PaymentController {
       fail(reply, 422, "amount_mismatch", "Montant du callback incohérent.");
       return;
     }
+
+    // Duplicate succeeded webhook — already processed
+    if (payment.status === "succeeded" && event.status === "succeeded") {
+      logger.warn("Duplicate succeeded webhook ignored", { paymentId: payment.id });
+      ok(reply, { received: true });
+      return;
+    }
+
     await this._applyPaymentStatus(payment, event.status, rawBody, event.providerRef);
 
     ok(reply, { received: true });
@@ -548,7 +557,18 @@ export class PaymentController {
     providerRefOverride?: string
   ) {
     if (payment.status === newStatus) return;
-    if (payment.status === "refunded") return;
+
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      pending: ["authorized", "succeeded", "failed"],
+      authorized: ["succeeded", "failed", "refunded"],
+      succeeded: ["refunded"],
+      failed: [],
+      refunded: [],
+    };
+    if (!VALID_TRANSITIONS[payment.status]?.includes(newStatus)) {
+      logger.warn("Blocked invalid payment transition", { from: payment.status, to: newStatus, paymentId: payment.id });
+      return;
+    }
 
     type AutoConfirmedMeta = { bookingId: string; startsAt: Date; clientId: string; clientEmail: string | null; serviceName: string };
     const autoConfirmedCapture: AutoConfirmedMeta[] = [];
@@ -661,12 +681,33 @@ export class PaymentController {
       );
 
       if (meta.clientEmail) {
-        await sendEmail({
-          to: meta.clientEmail,
-          subject: "Votre réservation est confirmée — BeautéAvenue",
-          text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur BeautéAvenue.`,
-          html: `<p>Bonjour,</p><p>Votre réservation pour <strong>${meta.serviceName}</strong> est confirmée.</p><p>À très bientôt sur BeautéAvenue.</p>`
-        }).catch((err) => logger.warn("[PAYMENT] confirmation email failed", { to: meta.clientEmail, err }));
+        try {
+          const booking = await prisma.booking.findUnique({
+            where: { id: meta.bookingId },
+            include: { salon: { select: { name: true } }, service: { select: { name: true, priceXof: true } }, client: { select: { fullName: true } } }
+          });
+          const pdf = booking ? buildBookingConfirmationPdf({
+            salonName: booking.salon.name,
+            serviceName: booking.service.name,
+            clientName: booking.client.fullName,
+            startsAt: booking.startsAt.toLocaleString("fr-FR"),
+            endsAt: booking.endsAt.toLocaleString("fr-FR"),
+            depositAmountXof: booking.depositAmountXof,
+            totalAmountXof: booking.service.priceXof,
+            bookingId: booking.id,
+            status: "Confirmée"
+          }) : undefined;
+
+          await sendEmail({
+            to: meta.clientEmail,
+            subject: "Votre réservation est confirmée — BeautéAvenue",
+            text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur BeautéAvenue.`,
+            html: `<p>Bonjour,</p><p>Votre réservation pour <strong>${meta.serviceName}</strong> est confirmée.</p><p>Vous trouverez en pièce jointe votre confirmation de réservation.</p><p>À très bientôt sur BeautéAvenue.</p>`,
+            attachments: pdf ? [{ filename: `confirmation-${meta.bookingId.slice(0, 8)}.pdf`, content: pdf, contentType: "application/pdf" }] : undefined
+          }).catch((err) => logger.warn("[PAYMENT] confirmation email failed", { to: meta.clientEmail, err }));
+        } catch (err) {
+          logger.warn("[PAYMENT] confirmation email with PDF failed", { to: meta.clientEmail, err });
+        }
       }
     }
   }
