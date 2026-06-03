@@ -953,6 +953,9 @@ export class AuthController {
     }
 
     const code = generateOtpCode();
+    if (config.nodeEnv !== "production") {
+      logger.info("[OTP-DEV] email code", { email: body.email, code });
+    }
     const codeHash = otpCodeHash(body.email, code);
     await prisma.emailOtpChallenge.upsert({
       where: { email: body.email },

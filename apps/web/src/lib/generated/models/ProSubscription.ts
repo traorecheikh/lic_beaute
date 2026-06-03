@@ -41,6 +41,12 @@ export interface ProSubscription {
     tier: ProSubscriptionTierEnum;
     /**
      * 
+     * @type {ProSubscriptionTierEnum}
+     * @memberof ProSubscription
+     */
+    pendingTier?: ProSubscriptionTierEnum | null;
+    /**
+     * 
      * @type {ProSubscriptionStatusEnum}
      * @memberof ProSubscription
      */
@@ -135,6 +141,7 @@ export function ProSubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boo
         
         'id': json['id'],
         'tier': json['tier'],
+        'pendingTier': json['pendingTier'] ?? null,
         'status': json['status'],
         'renewsAt': (json['renewsAt'] == null ? null : new Date(json['renewsAt'])),
         'expiresAt': (json['expiresAt'] == null ? null : new Date(json['expiresAt'])),
@@ -158,6 +165,7 @@ export function ProSubscriptionToJSONTyped(value?: ProSubscription | null, ignor
         
         'id': value['id'],
         'tier': value['tier'],
+        'pendingTier': value['pendingTier'],
         'status': value['status'],
         'renewsAt': value['renewsAt'] == null ? value['renewsAt'] : value['renewsAt'].toISOString(),
         'expiresAt': value['expiresAt'] == null ? value['expiresAt'] : value['expiresAt'].toISOString(),

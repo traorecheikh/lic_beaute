@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import type { PaymentStatus } from "@beauteavenue/contracts";
 import { prisma } from "../../lib/db/prisma.js";
+import { logger } from "../../lib/logger.js";
 
 function normalizePhoneNumber(phone: string, country: string): string {
   let cleaned = phone.replace(/[\s+\-()]/g, "");
@@ -268,7 +269,8 @@ const SENEGAL_TOGGLE_BY_CODE: Record<string, string> = {
 };
 
 export class PayDunyaAdapter implements PaymentAdapter {
-  private baseApiUrl: string;
+  private invoiceApiUrl: string;
+  private softpayApiUrl: string;
   private checkoutHost: string;
 
   constructor(
@@ -280,9 +282,11 @@ export class PayDunyaAdapter implements PaymentAdapter {
     private baseUrl = "https://app.paydunya.com"
   ) {
     // Sandbox uses the `/sandbox-api/v1` path prefix on app.paydunya.com
-    this.baseApiUrl = this.env === "sandbox"
+    this.invoiceApiUrl = this.env === "sandbox"
       ? "https://app.paydunya.com/sandbox-api/v1"
       : `${this.baseUrl}/api/v1`;
+    // SoftPay method endpoints live under `/api/v1`, even for sandbox credentials.
+    this.softpayApiUrl = `${this.baseUrl}/api/v1`;
     this.checkoutHost = this.env === "sandbox"
       ? "https://app.paydunya.com/sandbox-checkout"
       : "https://app.paydunya.com/checkout";
@@ -347,6 +351,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
     };
 
     const json = await this._postJson<CheckoutCreateInvoiceResponse>(
+      this.invoiceApiUrl,
       "/checkout-invoice/create",
       body
     );
@@ -477,11 +482,16 @@ export class PayDunyaAdapter implements PaymentAdapter {
       delete body.customer_email;
     }
 
+    logger.info("[paydunya] softpay execute", { endpoint, method: mappedMethod, bodyKeys: Object.keys(body) });
+
     try {
       const json = await this._postJson<SoftPayExecuteResponse>(
+        this.softpayApiUrl,
         endpoint,
         body
       );
+
+      logger.info("[paydunya] softpay response", { success: json.success, message: json.message, keys: Object.keys(json) });
 
       if (json.success) {
         return {
@@ -492,7 +502,13 @@ export class PayDunyaAdapter implements PaymentAdapter {
         };
       }
 
-      const errorMsg = json.message || (json as any).errors?.message || (json as any).errors?.description || "Échec du paiement";
+      const errorMsg =
+        json.message ||
+        (json as any).response_text ||
+        (json as any).errors?.message ||
+        (json as any).errors?.description ||
+        "Échec du paiement";
+      logger.warn("[paydunya] softpay failed", { method: mappedMethod, message: errorMsg, fullResponse: JSON.stringify(json).slice(0, 500) });
       return {
         success: false,
         status: "failed",
@@ -500,6 +516,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
         message: errorMsg
       };
     } catch (e: any) {
+      logger.error("[paydunya] softpay exception", { method: mappedMethod, error: String(e) });
       return {
         success: false,
         status: "failed",
@@ -645,6 +662,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
     };
 
     const getInvoiceResponse = await this._postJson<DisburseGetInvoiceResponse>(
+      this.invoiceApiUrl,
       "/disburse/v2/get-invoice",
       getInvoiceBody
     );
@@ -664,6 +682,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
     };
 
     const submitResponse = await this._postJson<DisburseSubmitInvoiceResponse>(
+      this.invoiceApiUrl,
       "/disburse/v2/submit-invoice",
       submitBody
     );
@@ -707,8 +726,8 @@ export class PayDunyaAdapter implements PaymentAdapter {
 
   // ─── HTTP helper ─────────────────────────────────────────────────────────
 
-  private async _postJson<T>(path: string, body: Record<string, unknown>): Promise<T> {
-    const response = await fetch(`${this.baseApiUrl}${path}`, {
+  private async _postJson<T>(baseUrl: string, path: string, body: Record<string, unknown>): Promise<T> {
+    const response = await fetch(`${baseUrl}${path}`, {
       method: "POST",
       headers: this._headers(),
       body: JSON.stringify(body),

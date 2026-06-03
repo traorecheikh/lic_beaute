@@ -42,6 +42,7 @@ vi.mock("../../config.js", () => ({
   config: {
     paymentDriver: "paydunya",
     paydunyaMasterKey: "master-key",
+    paydunyaPublicKey: "public-key",
     paydunyaPrivateKey: "private-key",
     paydunyaToken: "token",
     paydunyaEnv: "sandbox",

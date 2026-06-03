@@ -296,6 +296,7 @@ export class CatalogController {
       SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
              s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
              s."isPrestige", s."prestigeScore",
+             CASE s."subscriptionTier" WHEN 'premium' THEN 0 ELSE 1 END AS tier_rank,
              COUNT(*) OVER() AS total_count
       FROM "Salon" s
       ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
@@ -308,7 +309,7 @@ export class CatalogController {
         ${searchParam ? searchFilter(searchParam) : Prisma.empty}
       ORDER BY
         ${searchParam ? Prisma.sql`${searchRank(searchParam)} DESC,` : Prisma.empty}
-        CASE s."subscriptionTier" WHEN 'premium' THEN 0 ELSE 1 END ASC,
+        tier_rank ASC,
         s."averageRating" DESC
       LIMIT ${pageSize} OFFSET ${page * pageSize}
     `);

@@ -206,54 +206,88 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                     ),
                   ),
                   SizedBox(height: 28.h),
-                  Text('Moyen de paiement', style: AppTextStyles.headlineSm),
                   if (defaultMethod != null) ...[
-                    SizedBox(height: 6.h),
-                    Text(
-                      'Numéro enregistré: ${defaultMethod.phoneNumber}',
-                      style: AppTextStyles.bodySm.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                    // User has stored payment method — show summary, no form needed
+                    Text('Moyen de paiement', style: AppTextStyles.headlineSm),
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: AppColors.outlineVariant),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  defaultMethod.label ?? 'Moyen de paiement',
+                                  style: AppTextStyles.labelLg,
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  profile != null && profile.fullName.isNotEmpty
+                                      ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
+                                      : defaultMethod.phoneNumber,
+                                  style: AppTextStyles.bodySm.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          AppIcon('check-circle', color: AppColors.primary, size: 24),
+                        ],
+                      ),
+                    ),
+                  ] else if (profile != null && profile.fullName.isEmpty) ...[
+                    // No payment method + no profile name — redirect to complete profile
+                    _buildIncompleteProfileBanner(context),
+                  ] else ...[
+                    // No stored method — show selector + form
+                    Text('Moyen de paiement', style: AppTextStyles.headlineSm),
+                    SizedBox(height: 14.h),
+                    paydunyaMethodsAsync.when(
+                      loading: () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: CircularProgressIndicator.adaptive(),
+                        ),
+                      ),
+                      error: (error, _) => Text(
+                        'Impossible de charger les moyens de paiement',
+                        style: AppTextStyles.bodySm.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                      data: (methods) => Column(
+                        children: methods
+                            .where((m) => m.enabled)
+                            .map((method) {
+                              final isSelected = _selectedMethod == method.code;
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 10.h),
+                                child: Column(
+                                  children: [
+                                    _MethodTile(
+                                      id: method.code,
+                                      label: method.label,
+                                      selected: isSelected,
+                                      onTap: () => setState(
+                                          () => _selectedMethod = method.code),
+                                    ),
+                                    if (isSelected) _buildFormForMethod(method.code, profile: profile, defaultMethod: defaultMethod),
+                                  ],
+                                ),
+                              );
+                            })
+                            .toList(),
                       ),
                     ),
                   ],
-                  SizedBox(height: 14.h),
-                  paydunyaMethodsAsync.when(
-                    loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: CircularProgressIndicator.adaptive(),
-                      ),
-                    ),
-                    error: (error, _) => Text(
-                      'Impossible de charger les moyens de paiement',
-                      style: AppTextStyles.bodySm.copyWith(
-                        color: AppColors.error,
-                      ),
-                    ),
-                    data: (methods) => Column(
-                      children: methods
-                          .where((m) => m.enabled)
-                          .map((method) {
-                            final isSelected = _selectedMethod == method.code;
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 10.h),
-                              child: Column(
-                                children: [
-                                  _MethodTile(
-                                    id: method.code,
-                                    label: method.label,
-                                    selected: isSelected,
-                                    onTap: () => setState(
-                                        () => _selectedMethod = method.code),
-                                  ),
-                                  if (isSelected) _buildFormForMethod(method.code),
-                                ],
-                              ),
-                            );
-                          })
-                          .toList(),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -263,7 +297,58 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     );
   }
 
-  Widget _buildFormForMethod(String methodCode) {
+  Widget _buildIncompleteProfileBanner(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon('user-circle', color: AppColors.primary, size: 22),
+              gapW8,
+              Expanded(
+                child: Text(
+                  'Complétez votre profil pour payer',
+                  style: AppTextStyles.labelLg.copyWith(color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+          gapH8,
+          Text(
+            'Ajoutez votre nom complet et un moyen de paiement pour finaliser votre réservation.',
+            style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+          ),
+          gapH16,
+          Row(
+            children: [
+              Expanded(
+                child: AppButton.outline(
+                  label: 'Mon profil',
+                  onPressed: () => context.push(AppRoutes.profileEdit),
+                ),
+              ),
+              gapW8,
+              Expanded(
+                child: AppButton.primary(
+                  label: 'Paiement',
+                  onPressed: () => context.push(AppRoutes.profilePayments),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormForMethod(String methodCode, {required dynamic profile, required dynamic defaultMethod}) {
     if (methodCode == 'carte_bancaire') {
       return Container(
         margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
@@ -406,26 +491,45 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Informations de paiement', style: AppTextStyles.labelLg),
-            gapH12,
-            _buildTextField(
-              controller: _phoneController,
-              label: 'Numéro de téléphone',
-              hint: '77XXXXXXX',
-              keyboardType: TextInputType.phone,
-            ),
-            gapH12,
-            _buildTextField(
-              controller: _nameController,
-              label: 'Nom complet',
-              hint: 'John Doe',
-            ),
-            gapH12,
-            _buildTextField(
-              controller: _emailController,
-              label: 'Email',
-              hint: 'john.doe@example.com',
-              keyboardType: TextInputType.emailAddress,
-            ),
+            if (defaultMethod != null) ...[
+              gapH8,
+              Text(
+                profile != null && profile.fullName.isNotEmpty
+                    ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
+                    : defaultMethod.phoneNumber,
+                style: AppTextStyles.bodySm.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              if (profile?.email != null && profile!.email!.isNotEmpty)
+                Text(
+                  profile.email!,
+                  style: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+            ] else ...[
+              gapH12,
+              _buildTextField(
+                controller: _phoneController,
+                label: 'Numéro de téléphone',
+                hint: '77XXXXXXX',
+                keyboardType: TextInputType.phone,
+              ),
+              gapH12,
+              _buildTextField(
+                controller: _nameController,
+                label: 'Nom complet',
+                hint: 'John Doe',
+              ),
+              gapH12,
+              _buildTextField(
+                controller: _emailController,
+                label: 'Email',
+                hint: 'john.doe@example.com',
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
             if (showOtpTip) ...[
               gapH12,
               Container(
@@ -537,6 +641,36 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     );
   }
 
+  Future<void> _pollPaymentConfirmation(String paymentId) async {
+    if (!mounted) return;
+    bool confirmed = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return _PaymentWaitingSheet(
+          paymentId: paymentId,
+          onConfirmed: () {
+            confirmed = true;
+            Navigator.of(sheetContext).pop();
+          },
+          onFailed: (msg) {
+            Navigator.of(sheetContext).pop();
+            if (mounted) AppSnackbar.error(context, msg);
+          },
+          reconcile: (id) => ref.read(paymentInitiateProvider.notifier).reconcile(id),
+        );
+      },
+    );
+
+    if (confirmed && mounted) {
+      context.pushReplacement(AppRoutes.success(widget.bookingId));
+    }
+  }
+
   Future<String?> _showOtpDialog(String label) async {
     final codeController = TextEditingController();
     return showDialog<String>(
@@ -602,54 +736,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         );
       },
     );
-  }
-
-  Future<bool> _showThreeDsConfirmationDialog() async {
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.r),
-          ),
-          title: Text(
-            'Authentification 3D Secure',
-            style: AppTextStyles.headlineSm.copyWith(color: AppColors.primary),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Une page d\'authentification s\'est ouverte dans votre navigateur. Veuillez valider la transaction auprès de votre banque, puis revenez ici pour finaliser.',
-                style: AppTextStyles.bodySm,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                'Annuler',
-                style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurfaceVariant),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
-              child: Text('J\'ai finalisé mon paiement', style: AppTextStyles.labelLg),
-            ),
-          ],
-        );
-      },
-    ) ?? false;
   }
 
   Future<bool> _showMoovCiCountdownDialog() async {
@@ -816,7 +902,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         return;
       }
     } else {
-      if (_phoneController.text.trim().isEmpty) {
+      final profileData = ref.read(profileProvider).asData?.value;
+      final methodsData = ref.read(paymentMethodsProvider).asData?.value;
+      final storedDefault = methodsData?.where((m) => m.isDefault).firstOrNull;
+      final effectivePhone = _phoneController.text.trim().isNotEmpty
+          ? _phoneController.text.trim()
+          : storedDefault?.phoneNumber ?? profileData?.phone ?? '';
+      if (effectivePhone.isEmpty) {
         AppSnackbar.error(context, 'Veuillez saisir votre numéro de téléphone.');
         return;
       }
@@ -844,9 +936,18 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         details['phone'] = _phoneController.text.trim();
         details['password'] = _walletPasswordController.text.trim();
       } else {
-        details['phone'] = _phoneController.text.trim();
-        details['fullName'] = _nameController.text.trim();
-        details['email'] = _emailController.text.trim();
+        final profileSnap = ref.read(profileProvider).asData?.value;
+        final methodsSnap = ref.read(paymentMethodsProvider).asData?.value;
+        final storedDefault = methodsSnap?.where((m) => m.isDefault).firstOrNull;
+        details['phone'] = _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : storedDefault?.phoneNumber ?? profileSnap?.phone ?? '';
+        details['fullName'] = _nameController.text.trim().isNotEmpty
+            ? _nameController.text.trim()
+            : profileSnap?.fullName ?? '';
+        details['email'] = _emailController.text.trim().isNotEmpty
+            ? _emailController.text.trim()
+            : profileSnap?.email ?? '';
         if (_selectedMethod == 'om_ci' || _selectedMethod == 'om_bf') {
           details['otp'] = _walletPasswordController.text.trim();
         }
@@ -860,35 +961,44 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
       if (executeResult?['success'] == true) {
         final url = executeResult?['url'] as String?;
+        // OM deep links take priority over QR on mobile (per PayDunya docs)
+        final omUrl = executeResult?['other_url']?['om_url'] as String?
+            ?? executeResult?['data']?['om_url'] as String?;
+        final maxitUrl = executeResult?['other_url']?['maxit_url'] as String?
+            ?? executeResult?['data']?['maxit_url'] as String?;
+        final deepLink = omUrl ?? maxitUrl;
+
+        if (deepLink != null) {
+          final uri = Uri.parse(deepLink);
+          final launched = await canLaunchUrl(uri) && await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (!launched) {
+            // Deep link failed (no OM app installed or emulator) — extract QR from url or open web fallback
+            if (url != null) {
+              final qrUri = Uri.parse(url);
+              final qrCodeBase64 = qrUri.queryParameters['data[qrcode]'] ?? qrUri.queryParameters['data%5Bqrcode%5D'];
+              if (qrCodeBase64 != null) {
+                await _showQrCodeDialog(qrCodeBase64);
+              } else if (await canLaunchUrl(qrUri)) {
+                await launchUrl(qrUri, mode: LaunchMode.externalApplication);
+              }
+            }
+          }
+          if (mounted) await _pollPaymentConfirmation(paymentId);
+          return;
+        }
 
         if (url != null && (url.contains('data[qrcode]') || url.contains('data%5Bqrcode%5D'))) {
           final uri = Uri.parse(url);
           final qrCodeBase64 = uri.queryParameters['data[qrcode]'] ?? uri.queryParameters['data%5Bqrcode%5D'];
           if (qrCodeBase64 != null) {
             await _showQrCodeDialog(qrCodeBase64);
-            await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
-            if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+            if (mounted) await _pollPaymentConfirmation(paymentId);
             return;
           }
         }
 
-        final omUrl = executeResult?['other_url']?['om_url'] ?? executeResult?['data']?['om_url'] as String?;
-        final maxitUrl = executeResult?['other_url']?['maxit_url'] ?? executeResult?['data']?['maxit_url'] as String?;
-        final deepLink = omUrl ?? maxitUrl;
-        if (deepLink != null) {
-          final uri = Uri.parse(deepLink);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
-          final confirmed = await _showThreeDsConfirmationDialog();
-          if (confirmed) {
-            await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
-          }
-          if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
-          return;
-        }
-
-        final cid = executeResult?['data']?['details']?['cid'] ?? executeResult?['data']?['cid'] as String?;
+        final cid = executeResult?['data']?['details']?['cid'] as String?
+            ?? executeResult?['data']?['cid'] as String?;
         if (cid != null && cid.isNotEmpty) {
           final otp = await _showOtpDialog('Wizall Sénégal');
           if (otp != null && otp.isNotEmpty) {
@@ -904,8 +1014,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             );
             if (!context.mounted) return;
             if (confirmResult?['success'] == true) {
-              await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
-              if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+              await _pollPaymentConfirmation(paymentId);
             } else {
               final msg = confirmResult?['message'] as String? ?? 'Échec de la validation Wizall.';
               if (mounted) AppSnackbar.error(context, msg);
@@ -915,11 +1024,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         }
 
         if (_selectedMethod == 'moov_ci' || _selectedMethod == 'paydunya_moov_ci') {
-          final confirmed = await _showMoovCiCountdownDialog();
-          if (confirmed) {
-            await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
-          }
-          if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+          await _showMoovCiCountdownDialog();
+          if (mounted) await _pollPaymentConfirmation(paymentId);
           return;
         }
 
@@ -928,16 +1034,12 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           }
-          final confirmed = await _showThreeDsConfirmationDialog();
-          if (confirmed) {
-            await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
-          }
-          if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+          if (mounted) await _pollPaymentConfirmation(paymentId);
           return;
         }
 
-        await ref.read(paymentInitiateProvider.notifier).reconcile(paymentId);
-        if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
+        // Direct success (no redirect needed) — verify with PayDunya and navigate
+        if (mounted) await _pollPaymentConfirmation(paymentId);
       } else {
         final msg = executeResult?['message'] as String? ?? 'Échec du paiement.';
         if (mounted) AppSnackbar.error(context, msg);
@@ -1057,6 +1159,150 @@ class _MethodTile extends StatelessWidget {
               AppIcon('circle', color: AppColors.outline, size: 22),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PaymentWaitingSheet extends StatefulWidget {
+  const _PaymentWaitingSheet({
+    required this.paymentId,
+    required this.onConfirmed,
+    required this.onFailed,
+    required this.reconcile,
+  });
+
+  final String paymentId;
+  final VoidCallback onConfirmed;
+  final void Function(String message) onFailed;
+  final Future<String?> Function(String paymentId) reconcile;
+
+  @override
+  State<_PaymentWaitingSheet> createState() => _PaymentWaitingSheetState();
+}
+
+class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet> {
+  static const _pollInterval = Duration(seconds: 4);
+  static const _timeout = Duration(minutes: 5);
+  bool _checking = false;
+  int _elapsed = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _timer = Timer.periodic(_pollInterval, (_) async {
+      _elapsed += _pollInterval.inSeconds;
+      if (_elapsed >= _timeout.inSeconds) {
+        _timer?.cancel();
+        // Timeout — let user stay on page, webhook will eventually come
+        return;
+      }
+      await _check();
+    });
+  }
+
+  Future<void> _check() async {
+    if (_checking || !mounted) return;
+    setState(() => _checking = true);
+    try {
+      final status = await widget.reconcile(widget.paymentId);
+      if (!mounted) return;
+      if (status == 'succeeded') {
+        _timer?.cancel();
+        widget.onConfirmed();
+      } else if (status == 'failed' || status == 'refunded') {
+        _timer?.cancel();
+        widget.onFailed('Le paiement a échoué. Veuillez réessayer.');
+      }
+    } catch (_) {
+      // Network error — keep polling
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timedOut = _elapsed >= _timeout.inSeconds;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40.w,
+            height: 4.h,
+            decoration: BoxDecoration(
+              color: AppColors.outlineVariant,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+          SizedBox(height: 28.h),
+          if (!timedOut) ...[
+            SizedBox(
+              width: 48.r,
+              height: 48.r,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'Vérification en cours…',
+              style: AppTextStyles.labelLg,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Complétez le paiement dans votre application, puis revenez ici.',
+              style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ] else ...[
+            AppIcon('clock', color: AppColors.onSurfaceVariant, size: 48),
+            SizedBox(height: 20.h),
+            Text(
+              'En attente de confirmation',
+              style: AppTextStyles.labelLg,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Le paiement sera confirmé automatiquement dès que votre opérateur nous notifie. Vous pouvez fermer cette fenêtre.',
+              style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          SizedBox(height: 24.h),
+          AppButton.outline(
+            label: _checking ? 'Vérification…' : 'Vérifier maintenant',
+            onPressed: _checking ? null : _check,
+            isLoading: _checking,
+          ),
+          if (timedOut) ...[
+            SizedBox(height: 12.h),
+            AppButton.primary(
+              label: 'Fermer',
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ],
       ),
     );
   }

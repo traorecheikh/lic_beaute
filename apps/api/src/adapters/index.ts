@@ -100,6 +100,7 @@ export function getPaymentAdapter(
   config: {
     baseOrigin: string;
     paydunyaMasterKey?: string;
+    paydunyaPublicKey?: string;
     paydunyaPrivateKey?: string;
     paydunyaToken?: string;
     paydunyaEnv?: string;
@@ -116,6 +117,7 @@ export function createPaymentAdapter(
   config: {
     baseOrigin: string;
     paydunyaMasterKey?: string;
+    paydunyaPublicKey?: string;
     paydunyaPrivateKey?: string;
     paydunyaToken?: string;
     paydunyaEnv?: string;
@@ -126,8 +128,8 @@ export function createPaymentAdapter(
     case "mock":
       return new MockPaymentAdapter();
     case "paydunya": {
-      if (!config.paydunyaMasterKey || !config.paydunyaPrivateKey || !config.paydunyaToken) {
-        throw new Error("PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY, and PAYDUNYA_TOKEN required for paydunya driver");
+      if (!config.paydunyaMasterKey || !config.paydunyaPublicKey || !config.paydunyaPrivateKey || !config.paydunyaToken) {
+        throw new Error("PAYDUNYA_MASTER_KEY, PAYDUNYA_PUBLIC_KEY, PAYDUNYA_PRIVATE_KEY, and PAYDUNYA_TOKEN required for paydunya driver");
       }
       return new PayDunyaAdapter(
         config.paydunyaMasterKey,

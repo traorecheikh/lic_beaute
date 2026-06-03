@@ -227,6 +227,7 @@ export const proAnalyticsSchema = z.object({
 export const proSubscriptionSchema = z.object({
   id: z.string(),
   tier: subscriptionTierSchema,
+  pendingTier: subscriptionTierSchema.nullable().optional(),
   status: subscriptionStatusSchema,
   renewsAt: z.string().datetime().nullable(),
   expiresAt: z.string().datetime().nullable(),
@@ -266,16 +267,18 @@ export const proSubscriptionUpdateInputSchema = z
   });
 
 export const proSubscriptionCheckoutInputSchema = z.object({
-  action: z.enum(["upgrade", "renewal"]),
+  action: z.enum(["upgrade", "renewal", "downgrade"]),
   provider: z.enum(["paydunya", "manual"]).default("paydunya"),
   billingCycle: z.enum(["monthly", "annual"]).default("monthly"),
   channel: paymentChannelSchema.optional()
 });
 
 export const proSubscriptionCheckoutResultSchema = z.object({
-  redirectUrl: z.string().url().nullable(),
-  chargeId: z.string(),
-  resumed: z.boolean().optional()
+  redirectUrl: z.string().url().nullable().optional(),
+  chargeId: z.string().optional(),
+  resumed: z.boolean().optional(),
+  downgradeScheduled: z.boolean().optional(),
+  effectiveAt: z.string().datetime().nullable().optional()
 });
 
 export const proInvoiceSchema = z.object({

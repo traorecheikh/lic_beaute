@@ -33,10 +33,12 @@ export const config = {
   fcmServiceAccountJsonB64: process.env.FCM_SERVICE_ACCOUNT_JSON_B64 ?? "",
   paymentDriver: process.env.PAYMENT_DRIVER ?? "mock",
   paydunyaMasterKey: process.env.PAYDUNYA_MASTER_KEY ?? "",
+  paydunyaPublicKey: process.env.PAYDUNYA_PUBLIC_KEY ?? "",
   paydunyaPrivateKey: process.env.PAYDUNYA_PRIVATE_KEY ?? "",
   paydunyaToken: process.env.PAYDUNYA_TOKEN ?? "",
   paydunyaEnv: (process.env.PAYDUNYA_ENV as "sandbox" | "production") ?? "sandbox",
   paydunyaBaseUrl: process.env.PAYDUNYA_BASE_URL ?? "https://app.paydunya.com",
+  prorationEnabled: process.env.PRORATION_ENABLED === "true",
   atApiKey: process.env.AT_API_KEY ?? "",
   atUsername: process.env.AT_USERNAME ?? "",
   atSenderId: process.env.AT_SENDER_ID,
@@ -120,6 +122,9 @@ export function validateConfig() {
     if (config.paymentDriver === "paydunya") {
       if (!config.paydunyaMasterKey) {
         issues.push("PAYDUNYA_MASTER_KEY is required when PAYMENT_DRIVER=paydunya");
+      }
+      if (!config.paydunyaPublicKey) {
+        issues.push("PAYDUNYA_PUBLIC_KEY is required when PAYMENT_DRIVER=paydunya");
       }
       if (!config.paydunyaPrivateKey) {
         issues.push("PAYDUNYA_PRIVATE_KEY is required when PAYMENT_DRIVER=paydunya");

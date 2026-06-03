@@ -44,13 +44,13 @@ services:
     labels:
       - traefik.enable=true
       # HTTP → HTTPS redirect
-      - traefik.http.routers.beauteavenue-http.rule=Host(`h255qm4nj3i832xhkls5270z.159.65.122.15.sslip.io`)
+      - traefik.http.routers.beauteavenue-http.rule=Host(`h255qm4nj3i832xhkls5270z.178.105.224.117.sslip.io`)
       - traefik.http.routers.beauteavenue-http.entrypoints=http
       - traefik.http.routers.beauteavenue-http.middlewares=beauteavenue-redirect
       - traefik.http.middlewares.beauteavenue-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.beauteavenue-redirect.redirectscheme.permanent=true
       # HTTPS with Let's Encrypt
-      - traefik.http.routers.beauteavenue-https.rule=Host(`h255qm4nj3i832xhkls5270z.159.65.122.15.sslip.io`)
+      - traefik.http.routers.beauteavenue-https.rule=Host(`h255qm4nj3i832xhkls5270z.178.105.224.117.sslip.io`)
       - traefik.http.routers.beauteavenue-https.entrypoints=https
       - traefik.http.routers.beauteavenue-https.tls=true
       - traefik.http.routers.beauteavenue-https.tls.certresolver=letsencrypt

@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { prisma } from "../../lib/db/prisma.js";
 import { PayDunyaAdapter } from "./paydunya.js";
 
 describe("PayDunyaAdapter", () => {
@@ -236,6 +237,7 @@ describe("PayDunyaAdapter", () => {
 
     const init = fetchMock.mock.calls[0][0] as string;
     expect(init).toContain("/softpay/wave-senegal");
+    expect(init).toBe("https://app.paydunya.com/api/v1/softpay/wave-senegal");
 
     const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
     expect(body).toMatchObject({
@@ -320,6 +322,12 @@ describe("PayDunyaAdapter", () => {
   // ─── getAvailableMethods ─────────────────────────────────────────────────
 
   it("returns all PayDunya methods with correct shape", async () => {
+    vi.spyOn(prisma.platformSetting, "findMany").mockResolvedValue([
+      { key: "paydunya_enabled_wave_senegal", value: "true" },
+      { key: "paydunya_enabled_orange_senegal", value: "true" },
+      { key: "paydunya_enabled_free_senegal", value: "true" },
+      { key: "paydunya_enabled_wizall_senegal", value: "true" }
+    ] as never);
     const adapter = makeAdapter();
     const methods = await adapter.getAvailableMethods();
 

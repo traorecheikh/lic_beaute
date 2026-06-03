@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../profile/widgets/profile_card_shell.dart';
-import '../../profile/providers/payment_methods_provider.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_button.dart';
@@ -255,31 +253,12 @@ class _ConfirmBar extends ConsumerStatefulWidget {
 }
 
 class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
-  bool _isProcessingPayment = false;
-
-  String _channelFromLabel(String? label) {
-    final normalized = (label ?? '').toLowerCase();
-    if (normalized.contains('orange')) return 'orange_senegal';
-    if (normalized.contains('free')) return 'free_senegal';
-    if (normalized.contains('wizall')) return 'wizall_senegal';
-    if (normalized.contains('expresso')) return 'expresso_sn';
-    return 'wave_senegal';
-  }
-
   @override
   Widget build(BuildContext context) {
     final createState = ref.watch(bookingCreateProvider);
-    final loading = createState.isLoading || _isProcessingPayment;
+    final loading = createState.isLoading;
     final currentDeposit = ref.watch(bookingFunnelProvider).depositAmount ?? 0;
     final requiresDepositPayment = currentDeposit > 0;
-
-    final methodsAsync = ref.watch(paymentMethodsProvider);
-    final defaultMethod = methodsAsync.asData?.value
-        .where((m) => m.isDefault)
-        .firstOrNull;
-    final hasStoredPaymentMethod =
-        (methodsAsync.asData?.value.isNotEmpty ?? false);
-    final hasDefault = defaultMethod != null;
 
     return AppBottomBar(
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
@@ -342,103 +321,17 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                       return;
                     }
 
-                    if (!hasStoredPaymentMethod) {
-                      final returnTo = Uri.encodeComponent(AppRoutes.bookingReview);
-                      AppSnackbar.info(
-                        context,
-                        "Ajoutez d'abord un moyen de paiement pour régler l'acompte.",
-                      );
-                      context.push(
-                        '${AppRoutes.profilePayments}?returnTo=$returnTo',
-                      );
-                      return;
-                    }
-
-                    if (defaultMethod != null) {
-                      setState(() => _isProcessingPayment = true);
-                      try {
-                        final paymentResult = await ref
-                            .read(paymentInitiateProvider.notifier)
-                            .initiate(
-                              bookingId: booking.id,
-                              channel: _channelFromLabel(defaultMethod.label),
-                            );
-                        final url =
-                            paymentResult?['redirectUrl'] as String?;
-                        final paymentId =
-                            paymentResult?['paymentId'] as String?;
-                        if (!context.mounted) return;
-                        if (url != null) {
-                          final uri = Uri.parse(url);
-                          if (uri.scheme == 'mock') {
-                            if (paymentId != null && paymentId.isNotEmpty) {
-                              await ref
-                                  .read(paymentInitiateProvider.notifier)
-                                  .reconcile(paymentId);
-                            }
-                            if (!context.mounted) return;
-                            context.pushReplacement(
-                                AppRoutes.success(booking.id));
-                            return;
-                          }
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                            if (context.mounted) {
-                              context.pushReplacement(
-                                AppRoutes.success(booking.id),
-                              );
-                            }
-                            return;
-                          }
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          AppSnackbar.error(context,
-                              'Paiement échoué. Réessayez sur la page suivante.');
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(
-                              () => _isProcessingPayment = false);
-                        }
-                      }
-                    }
-                    if (context.mounted) {
-                      context.pushReplacement(
-                        AppRoutes.paymentHandoff(booking.id),
-                      );
-                    }
+                    // Go to payment handoff — handles two-step flow (initiate + execute)
+                    // with profile data pre-filled and stored payment method pre-selected
+                    context.pushReplacement(
+                      AppRoutes.paymentHandoff(booking.id),
+                    );
                   },
             isLoading: loading,
             label: !requiresDepositPayment
                 ? 'Confirmer la réservation'
-                : !hasStoredPaymentMethod
-                    ? 'Confirmer (validation manuelle)'
-                    : hasDefault
-                        ? "Payer l'acompte"
-                        : "Confirmer & Payer l'acompte",
+                : "Payer l'acompte",
           ),
-          if (hasDefault && requiresDepositPayment) ...[
-            gapH8,
-            GestureDetector(
-              onTap: () {
-                AppSnackbar.info(
-                  context,
-                  "Vous pouvez modifier votre compte principal dans le profil.",
-                );
-              },
-              child: Text(
-                'Modifier le compte principal',
-                style: AppTextStyles.labelSm.copyWith(
-                  color: AppColors.primary,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );

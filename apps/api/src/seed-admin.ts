@@ -13,8 +13,8 @@ const prisma = new PrismaClient({ adapter });
 
 const DEFAULT_SETTINGS = [
   { group: "pricing", key: "commission_rate_percent",           value: "5",                          description: "Commission plateforme %" },
-  { group: "pricing", key: "subscription_standard_price_xof",  value: "15000",                      description: "Prix abonnement Standard (XOF/mois)" },
-  { group: "pricing", key: "subscription_premium_price_xof",   value: "25000",                      description: "Prix abonnement Premium (XOF/mois)" },
+  { group: "pricing", key: "subscription_standard_price_xof",  value: "200",                        description: "Prix abonnement Standard (XOF/mois)" },
+  { group: "pricing", key: "subscription_premium_price_xof",   value: "300",                        description: "Prix abonnement Premium (XOF/mois)" },
   { group: "pricing", key: "subscription_annual_discount_percent", value: "0",                       description: "Réduction annuelle (%)" },
   { group: "pricing", key: "deposit_minimum_xof",              value: "2000",                        description: "Acompte minimum (XOF)" },
   { group: "pricing", key: "cancellation_window_hours",        value: "24",                          description: "Fenêtre d'annulation gratuite (heures)" },

@@ -1,0 +1,210 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: pro-subscription-checkout.spec.ts >> pro subscription checkout >> logs in with an existing pro account and drives checkout up to the payment result
+- Location: tests/e2e/pro-subscription-checkout.spec.ts:37:3
+
+# Error details
+
+```
+Test timeout of 180000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications alt+T":
+    - list
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "Beauté Avenue Studio Kadija" [ref=e7] [cursor=pointer]:
+          - /url: /pro/calendar
+          - img "Beauté Avenue" [ref=e8]
+          - paragraph [ref=e10]: Studio Kadija
+        - navigation [ref=e11]:
+          - link "Agenda" [ref=e12] [cursor=pointer]:
+            - /url: /pro/calendar
+            - img [ref=e13]
+            - generic [ref=e15]: Agenda
+          - link "Clients" [ref=e16] [cursor=pointer]:
+            - /url: /pro/clients
+            - img [ref=e17]
+            - generic [ref=e19]: Clients
+          - link "Ventes" [ref=e20] [cursor=pointer]:
+            - /url: /pro/payouts
+            - img [ref=e21]
+            - generic [ref=e23]: Ventes
+          - link "Inbox" [ref=e24] [cursor=pointer]:
+            - /url: /pro/bookings/inbox
+            - img [ref=e25]
+            - generic [ref=e27]: Inbox
+          - link "Rapports" [ref=e28] [cursor=pointer]:
+            - /url: /pro/analytics
+            - img [ref=e29]
+            - generic [ref=e31]: Rapports
+          - link "Services" [ref=e32] [cursor=pointer]:
+            - /url: /pro/salon/services
+            - img [ref=e33]
+            - generic [ref=e35]: Services
+        - generic [ref=e36]:
+          - link "Contacter le support via WhatsApp" [ref=e37] [cursor=pointer]:
+            - /url: https://wa.me/221338671010
+            - img [ref=e38]
+          - button "0 notifications non lues" [ref=e40]:
+            - img [ref=e41]
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - paragraph [ref=e46]: Kadija Fall
+              - paragraph [ref=e47]: Propriétaire
+            - button "KF" [ref=e49]
+    - main [ref=e50]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - heading "Abonnement & Facturation" [level=1] [ref=e55]
+            - paragraph [ref=e56]: Gérez votre plan, vos factures et votre mode de paiement.
+          - generic [ref=e57]: Actif
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]: Plan actuel
+            - heading "Beauté Avenue Premium" [level=2] [ref=e62]
+            - paragraph [ref=e63]: Prochaine échéance le date non définie • renouvellement auto désactivé
+          - generic [ref=e64]:
+            - button "Activer auto-renew" [ref=e65]
+            - button "Renouveler" [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - paragraph [ref=e71]: Standard
+                - paragraph [ref=e72]: 200 XOF
+                - paragraph [ref=e73]: par mois
+              - img [ref=e74]
+            - list [ref=e76]:
+              - listitem [ref=e77]:
+                - img [ref=e78]
+                - generic [ref=e80]: Agenda illimité
+              - listitem [ref=e81]:
+                - img [ref=e82]
+                - generic [ref=e84]: Gestion de l'équipe
+              - listitem [ref=e85]:
+                - img [ref=e86]
+                - generic [ref=e88]: Acompte client
+              - listitem [ref=e89]:
+                - img [ref=e90]
+                - generic [ref=e92]: Rapports financiers
+              - listitem [ref=e93]:
+                - img [ref=e94]
+                - generic [ref=e96]: Export CSV
+              - listitem [ref=e97]:
+                - img [ref=e98]
+                - generic [ref=e100]: Badge « Vérifié »
+              - listitem [ref=e101]:
+                - img [ref=e102]
+                - generic [ref=e104]: Support prioritaire 24/7
+          - generic [ref=e105]:
+            - generic [ref=e106]: Plan actuel
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - generic [ref=e109]:
+                  - paragraph [ref=e110]: Premium Le plus populaire
+                  - paragraph [ref=e111]: 300 XOF
+                  - paragraph [ref=e112]: par mois
+                - img [ref=e113]
+              - list [ref=e115]:
+                - listitem [ref=e116]:
+                  - img [ref=e117]
+                  - generic [ref=e119]: Agenda illimité
+                - listitem [ref=e120]:
+                  - img [ref=e121]
+                  - generic [ref=e123]: Gestion de l'équipe
+                - listitem [ref=e124]:
+                  - img [ref=e125]
+                  - generic [ref=e127]: Acompte client
+                - listitem [ref=e128]:
+                  - img [ref=e129]
+                  - generic [ref=e131]: Rapports financiers
+                - listitem [ref=e132]:
+                  - img [ref=e133]
+                  - generic [ref=e135]: Export CSV
+                - listitem [ref=e136]:
+                  - img [ref=e137]
+                  - generic [ref=e139]: Badge « Vérifié »
+                - listitem [ref=e140]:
+                  - img [ref=e141]
+                  - generic [ref=e143]: Support prioritaire 24/7
+              - generic [ref=e144]:
+                - paragraph [ref=e145]: Pourquoi passer Premium ?
+                - generic [ref=e146]:
+                  - generic [ref=e147]:
+                    - img [ref=e149]
+                    - generic [ref=e151]:
+                      - paragraph [ref=e152]: Sécurisez vos revenus
+                      - paragraph [ref=e153]: Les acomptes automatisés réduisent les no-shows de 40 % — chaque créneau réservé est payé d'avance.
+                  - generic [ref=e154]:
+                    - img [ref=e156]
+                    - generic [ref=e157]:
+                      - paragraph [ref=e158]: Pilotez avec des chiffres
+                      - paragraph [ref=e159]: Rapports financiers, top prestations, taux d'occupation — prenez les bonnes décisions.
+                  - generic [ref=e160]:
+                    - img [ref=e162]
+                    - generic [ref=e164]:
+                      - paragraph [ref=e165]: Faites-vous connaître
+                      - paragraph [ref=e166]: Visibilité prioritaire sur la marketplace + badge « Vérifié » qui rassure les clients.
+                - generic [ref=e167]:
+                  - paragraph [ref=e168]:
+                    - text: 85 % des salons Premium
+                    - text: voient leur chiffre augmenter dès le 1er mois.
+                  - img [ref=e169]
+        - generic [ref=e171]:
+          - generic [ref=e173]:
+            - generic [ref=e174]:
+              - heading "Historique des factures" [level=2] [ref=e175]
+              - generic [ref=e176]: 1 facture
+            - table [ref=e177]:
+              - rowgroup [ref=e178]:
+                - row "Date N° Facture Statut Montant" [ref=e179]:
+                  - columnheader "Date" [ref=e180]
+                  - columnheader "N° Facture" [ref=e181]
+                  - columnheader "Statut" [ref=e182]
+                  - columnheader "Montant" [ref=e183]
+                  - columnheader [ref=e184]
+              - rowgroup [ref=e185]:
+                - row "03 June 2026 INV-SUB-CMPXXQPR Payé 300 F CFA" [ref=e186]:
+                  - cell "03 June 2026" [ref=e187]
+                  - cell "INV-SUB-CMPXXQPR" [ref=e188]
+                  - cell "Payé" [ref=e189]
+                  - cell "300 F CFA" [ref=e190]
+                  - cell [ref=e191]:
+                    - button "Télécharger la facture" [active] [ref=e192]:
+                      - img [ref=e193]
+          - generic [ref=e195]:
+            - generic [ref=e196]:
+              - heading "Mode de paiement" [level=2] [ref=e197]
+              - generic [ref=e198]:
+                - paragraph [ref=e199]: Aucun moyen de paiement configuré.
+                - paragraph [ref=e200]: Requis pour le renouvellement automatique.
+              - button "Configurer" [ref=e201]:
+                - img [ref=e202]
+                - text: Configurer
+            - generic [ref=e204]:
+              - heading "Renouvellement automatique" [level=2] [ref=e205]
+              - generic [ref=e206]:
+                - generic [ref=e207]:
+                  - paragraph [ref=e208]: Désactivé
+                  - paragraph [ref=e209]: Vous devrez renouveler manuellement.
+                - button [ref=e210]
+            - generic [ref=e212]:
+              - heading "Support" [level=2] [ref=e213]
+              - paragraph [ref=e214]: Une question sur votre abonnement ou une facture ?
+              - button "Contacter le support" [ref=e215]:
+                - img [ref=e216]
+                - text: Contacter le support
+```

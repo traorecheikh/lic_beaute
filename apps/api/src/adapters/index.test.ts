@@ -85,6 +85,7 @@ describe("adapters index", () => {
     const paydunya = mod.createPaymentAdapter("paydunya", {
       baseOrigin: "http://localhost:3000",
       paydunyaMasterKey: "master-key",
+      paydunyaPublicKey: "public-key",
       paydunyaPrivateKey: "private-key",
       paydunyaToken: "token",
       paydunyaEnv: "sandbox",

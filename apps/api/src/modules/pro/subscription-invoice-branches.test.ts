@@ -5,11 +5,11 @@ const mocks = vi.hoisted(() => {
   const fail = vi.fn();
   const ok = vi.fn();
   const handleError = vi.fn();
-  const paymentAdapter = { initiateDeposit: vi.fn() };
+  const paymentAdapter = { initiateDeposit: vi.fn(), executePayment: vi.fn() };
   const prisma = {
     user: { findUnique: vi.fn() },
     subscription: { findUnique: vi.fn(), update: vi.fn() },
-    subscriptionCharge: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    subscriptionCharge: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     platformSetting: { findMany: vi.fn(), findUnique: vi.fn() },
     billingInvoice: { findFirst: vi.fn() },
     salon: { findUnique: vi.fn() },
@@ -72,6 +72,40 @@ describe("Pro subscription/invoice branches", () => {
     expect(mocks.prisma.subscriptionCharge.update).toHaveBeenCalled();
   });
 
+  it("subscriptionCheckout revives failed charge for the same idempotency key", async () => {
+    mocks.prisma.subscription.findUnique.mockResolvedValue({
+      id: "sub1",
+      tier: "standard",
+      status: "active",
+      renewedAt: null,
+      expiresAt: null,
+      isComplimentary: false,
+      autoRenew: true,
+      billingProvider: "manual"
+    });
+    mocks.prisma.platformSetting.findMany.mockResolvedValue([
+      { key: "subscription_premium_price_xof", value: "300" },
+      { key: "subscription_standard_price_xof", value: "200" }
+    ]);
+    mocks.prisma.subscriptionCharge.findFirst.mockResolvedValue({
+      id: "ch_failed",
+      status: "failed",
+      providerTxId: "old_pref"
+    });
+    mocks.paymentAdapter.initiateDeposit.mockResolvedValue({ providerRef: "pref_new", redirectUrl: "https://pay-new", expiresAt: new Date() });
+    mocks.prisma.subscriptionCharge.update.mockResolvedValue({ id: "ch_failed" });
+
+    await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, reply);
+
+    expect(mocks.prisma.subscriptionCharge.update).toHaveBeenCalledWith({
+      where: { id: "ch_failed" },
+      data: expect.objectContaining({
+        status: "pending",
+        providerTxId: "pref_new"
+      })
+    });
+  });
+
   it("subscriptionCheckout creates charge when no existing", async () => {
     mocks.prisma.subscription.findUnique.mockResolvedValue({
       id: "sub2",
@@ -95,6 +129,33 @@ describe("Pro subscription/invoice branches", () => {
     expect(mocks.prisma.subscriptionCharge.create).toHaveBeenCalled();
   });
 
+  it("executeSubscriptionPayment marks charge failed when PayDunya says already initiated", async () => {
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "ch3",
+      status: "pending",
+      providerTxId: "live_token_123",
+      subscriptionId: "sub3",
+      subscription: { id: "sub3", salonId: "s1" }
+    });
+    mocks.paymentAdapter.executePayment.mockResolvedValue({
+      success: false,
+      status: "failed",
+      providerTxId: null,
+      message: "Ce paiement a déjà été initié."
+    });
+
+    await c.executeSubscriptionPayment({
+      params: { chargeId: "ch3" },
+      body: { method: "wave_senegal", details: { phone: "781706184" } }
+    } as never, reply);
+
+    expect(mocks.prisma.subscriptionCharge.update).toHaveBeenCalledWith({
+      where: { id: "ch3" },
+      data: { status: "failed" }
+    });
+    expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ success: false }));
+  });
+
   it("downloadInvoicePdf falls back provider to manual when both setting and sub provider missing", async () => {
     mocks.prisma.subscription.findUnique.mockResolvedValue({ id: "sub3", billingProvider: null });
     mocks.prisma.billingInvoice.findFirst.mockResolvedValue({
@@ -112,4 +173,3 @@ describe("Pro subscription/invoice branches", () => {
     expect(mocks.fail).not.toHaveBeenCalledWith(expect.anything(), 404, "subscription_not_found", expect.anything());
   });
 });
-

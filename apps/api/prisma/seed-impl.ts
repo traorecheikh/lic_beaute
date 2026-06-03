@@ -123,6 +123,7 @@ async function main() {
         address: "Mermoz, Dakar",
         latitude: 14.7189,
         longitude: -17.4795,
+        logoUrl: "/seed/dione-signature.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.premium,
         isVisibleInMarketplace: true,
@@ -131,10 +132,10 @@ async function main() {
       owner: { fullName: "Aïda Dione", email: "aida@dionesignature.sn", phone: "+221776667788" },
       staffCount: 4,
       services: [
-        { name: "Brushing", durationMinutes: 45, priceXof: 12000, depositMode: "fixed", depositAmountXof: 3000 },
-        { name: "Balayage", durationMinutes: 120, priceXof: 45000, depositMode: "fixed", depositAmountXof: 10000 },
-        { name: "Soin kératine", durationMinutes: 90, priceXof: 35000, depositMode: "percentage", depositPercent: 30 },
-        { name: "Coupe & Coiffage", durationMinutes: 60, priceXof: 15000, depositMode: "none" }
+        { name: "Brushing", durationMinutes: 45, priceXof: 12000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Balayage", durationMinutes: 120, priceXof: 45000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Soin kératine", durationMinutes: 90, priceXof: 35000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Coupe & Coiffage", durationMinutes: 60, priceXof: 15000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active }
     },
@@ -147,6 +148,7 @@ async function main() {
         address: "Plateau, Dakar",
         latitude: 14.6931,
         longitude: -17.4467,
+        logoUrl: "/seed/studio-kadija.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.standard,
         isVisibleInMarketplace: true,
@@ -155,9 +157,9 @@ async function main() {
       owner: { fullName: "Kadija Fall", email: "kadija@studiokadija.sn", phone: "+221771234567" },
       staffCount: 3,
       services: [
-        { name: "Pose gel", durationMinutes: 75, priceXof: 18000, depositMode: "none" },
-        { name: "Semi-permanent", durationMinutes: 60, priceXof: 12000, depositMode: "none" },
-        { name: "Nail art", durationMinutes: 30, priceXof: 8000, depositMode: "none" }
+        { name: "Pose gel", durationMinutes: 75, priceXof: 18000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Semi-permanent", durationMinutes: 60, priceXof: 12000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Nail art", durationMinutes: 30, priceXof: 8000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.standard, status: SubscriptionStatus.active }
     },
@@ -170,6 +172,7 @@ async function main() {
         address: "Almadies, Dakar",
         latitude: 14.7455,
         longitude: -17.5125,
+        logoUrl: "/seed/maison-lumiere.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.premium,
         isVisibleInMarketplace: true,
@@ -178,8 +181,8 @@ async function main() {
       owner: { fullName: "Binta Traoré", email: "binta@maisonlumiere.sn", phone: "+221772345678" },
       staffCount: 5,
       services: [
-        { name: "Hammam express", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 5000 },
-        { name: "Massage relaxant", durationMinutes: 90, priceXof: 30000, depositMode: "fixed", depositAmountXof: 8000 }
+        { name: "Hammam express", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Massage relaxant", durationMinutes: 90, priceXof: 30000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active, isComplimentary: true }
     },
@@ -192,6 +195,7 @@ async function main() {
         address: "Île de Saint-Louis",
         latitude: 16.0179,
         longitude: -16.4896,
+        logoUrl: "/seed/eclat-visage.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.premium,
         isVisibleInMarketplace: true,
@@ -200,8 +204,8 @@ async function main() {
       owner: { fullName: "Aïssatou Niane", email: "aissatou@eclatvisage.sn", phone: "+221773456789" },
       staffCount: 2,
       services: [
-        { name: "Soin hydratant", durationMinutes: 60, priceXof: 22000, depositMode: "fixed", depositAmountXof: 5000 },
-        { name: "Peeling doux", durationMinutes: 45, priceXof: 18000, depositMode: "none" }
+        { name: "Soin hydratant", durationMinutes: 60, priceXof: 22000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Peeling doux", durationMinutes: 45, priceXof: 18000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active }
     },
@@ -214,6 +218,7 @@ async function main() {
         address: "Liberté 6, Dakar",
         latitude: 14.6978,
         longitude: -17.4543,
+        logoUrl: "/seed/epil-express.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.standard,
         isVisibleInMarketplace: true,
@@ -222,7 +227,7 @@ async function main() {
       owner: { fullName: "Seynabou Diallo", email: "seynabou@epilexpress.sn", phone: "+221774567890" },
       staffCount: 3,
       services: [
-        { name: "Épilation jambes", durationMinutes: 40, priceXof: 10000, depositMode: "none" }
+        { name: "Épilation jambes", durationMinutes: 40, priceXof: 10000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.standard, status: SubscriptionStatus.past_due, gracePeriodEndsAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) }
     },
@@ -235,6 +240,7 @@ async function main() {
         address: "Pikine Nord, Dakar",
         latitude: 14.7650,
         longitude: -17.3958,
+        logoUrl: "/seed/ndiambour-beauty.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.premium,
         isVisibleInMarketplace: true,
@@ -243,10 +249,10 @@ async function main() {
       owner: { fullName: "Rokhaya Ndiaye", email: "rokhaya@ndiambourbeauty.sn", phone: "+221775110001" },
       staffCount: 3,
       services: [
-        { name: "Tresses collées", durationMinutes: 120, priceXof: 15000, depositMode: "fixed", depositAmountXof: 4000 },
-        { name: "Tissage brésilien", durationMinutes: 90, priceXof: 25000, depositMode: "fixed", depositAmountXof: 6000 },
-        { name: "Soin capillaire", durationMinutes: 60, priceXof: 12000, depositMode: "none" },
-        { name: "Lissage kératine", durationMinutes: 150, priceXof: 40000, depositMode: "percentage", depositPercent: 30 }
+        { name: "Tresses collées", durationMinutes: 120, priceXof: 15000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Tissage brésilien", durationMinutes: 90, priceXof: 25000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Soin capillaire", durationMinutes: 60, priceXof: 12000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Lissage kératine", durationMinutes: 150, priceXof: 40000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.premium, status: SubscriptionStatus.active }
     },
@@ -259,6 +265,7 @@ async function main() {
         address: "Thiaroye, Pikine",
         latitude: 14.7530,
         longitude: -17.3810,
+        logoUrl: "/seed/keur-beaute.jpg",
         approvalStatus: SalonApprovalStatus.approved,
         subscriptionTier: SubscriptionTier.standard,
         isVisibleInMarketplace: true,
@@ -267,9 +274,9 @@ async function main() {
       owner: { fullName: "Fatou Mbaye", email: "fatou@keurbeaute.sn", phone: "+221776110002" },
       staffCount: 2,
       services: [
-        { name: "Épilation sourcils", durationMinutes: 20, priceXof: 3000, depositMode: "none" },
-        { name: "Soin visage express", durationMinutes: 45, priceXof: 10000, depositMode: "none" },
-        { name: "Maquillage occasion", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 5000 }
+        { name: "Épilation sourcils", durationMinutes: 20, priceXof: 3000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Soin visage express", durationMinutes: 45, priceXof: 10000, depositMode: "fixed", depositAmountXof: 200 },
+        { name: "Maquillage occasion", durationMinutes: 60, priceXof: 20000, depositMode: "fixed", depositAmountXof: 200 }
       ],
       subscription: { tier: SubscriptionTier.standard, status: SubscriptionStatus.active }
     }
@@ -787,8 +794,8 @@ async function main() {
   const platformSettings = [
     { group: "pricing", key: "commission_rate_percent", value: "5", description: "Commission" },
     { group: "pricing", key: "cancellation_window_hours", value: "24", description: "Cancellation penalty window" },
-    { group: "pricing", key: "subscription_standard_price_xof", value: "15000", description: "Standard Price" },
-    { group: "pricing", key: "subscription_premium_price_xof", value: "25000", description: "Premium Price" },
+    { group: "pricing", key: "subscription_standard_price_xof", value: "200", description: "Standard Price" },
+    { group: "pricing", key: "subscription_premium_price_xof", value: "300", description: "Premium Price" },
     { group: "pricing", key: "subscription_annual_discount_percent", value: "0", description: "Annual discount percent" },
     { group: "payment_methods", key: "paydunya_enabled_wave_senegal", value: "true", description: "Wave Sénégal activé" },
     { group: "payment_methods", key: "paydunya_enabled_orange_senegal", value: "true", description: "Orange Money Sénégal activé" },

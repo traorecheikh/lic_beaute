@@ -18,6 +18,14 @@
           <span class="px-3 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-widest mb-4 inline-block">Plan actuel</span>
           <h2 class="metric-value text-white mb-1">{{ currentPlanLabel }}</h2>
           <p class="text-white/50 text-sm leading-relaxed mt-2">{{ subscriptionDescription }}</p>
+          <div v-if="subscriptionQuery.data.value?.pendingTier === 'standard'" class="mt-3 flex items-center gap-2">
+            <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 text-[11px] font-semibold">
+              Rétrogradation au Standard à la fin de la période de grâce
+            </span>
+            <button @click="cancelDowngrade" :disabled="cancelDowngradeMutation.isPending.value" class="text-[11px] text-white/60 underline hover:text-white">
+              Annuler
+            </button>
+          </div>
           <div v-if="renewsInDays !== null" class="mt-4 flex items-center gap-2">
             <CalendarDaysIcon class="w-4 h-4 text-white/40 shrink-0" />
             <span class="text-[12px] text-white/50">
@@ -33,9 +41,14 @@
           <button v-if="subscriptionQuery.data.value?.tier !== 'premium'" :disabled="isSubmitting" @click="openCheckoutModal" class="btn-gold px-5 text-sm disabled:opacity-60">
             Passer en Premium
           </button>
-          <button v-else :disabled="isSubmitting" @click="openCheckoutModal" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-5 text-sm disabled:opacity-60">
-            Renouveler
-          </button>
+          <template v-else>
+            <button :disabled="isSubmitting" @click="openCheckoutModal" class="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white px-5 text-sm disabled:opacity-60">
+              Renouveler
+            </button>
+            <button v-if="!subscriptionQuery.data.value?.pendingTier" :disabled="downgradeMutation.isPending.value" @click="scheduleDowngrade" class="text-[12px] text-white/40 underline hover:text-white/70 px-3">
+              Rétrograder au Standard
+            </button>
+          </template>
         </div>
       </div>
     </div>
@@ -451,7 +464,29 @@
           <div v-else class="space-y-3">
             <div>
               <label class="section-label mb-1 block">Numéro de téléphone mobile money</label>
-              <input v-model="mobileMoneyForm.phone" type="text" class="input-shell" placeholder="77XXXXXXX" />
+              <div class="flex items-center rounded-2xl border border-outline-variant bg-white px-3">
+                <select
+                  v-model="selectedMobileMoneyCountryCode"
+                  :disabled="mobileMoneyCountryOptions.length === 1"
+                  class="h-[52px] w-[122px] bg-transparent border-0 pr-2 text-sm focus:outline-none"
+                  aria-label="Indicatif pays"
+                >
+                  <option v-for="option in mobileMoneyCountryOptions" :key="option.code" :value="option.code">
+                    {{ option.flag }} {{ option.dialCode }}
+                  </option>
+                </select>
+                <input
+                  v-model="mobileMoneyForm.phone"
+                  type="tel"
+                  inputmode="numeric"
+                  class="h-[52px] w-full border-0 bg-transparent pl-3 text-base focus:outline-none"
+                  :placeholder="selectedMobileMoneyCountry.placeholder"
+                  @input="formatMobileMoneyPhoneInput"
+                />
+              </div>
+              <p class="mt-1 text-[11px] text-cocoa/50">
+                Format attendu : {{ selectedMobileMoneyCountry.dialCode }} {{ selectedMobileMoneyCountry.placeholder }}
+              </p>
             </div>
             <div>
               <label class="section-label mb-1 block">Nom complet</label>
@@ -565,7 +600,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import dayjs from "dayjs";
 import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
@@ -698,6 +733,37 @@ const checkoutMutation = useMutation({
   },
   onError: (error) => {
     toast.error(getErrorMessage(error, "Paiement impossible pour le moment."));
+  }
+});
+
+const downgradeMutation = useMutation({
+  mutationFn: () => checkoutProSubscription(auth.accessToken ?? "", { action: "downgrade", provider: "paydunya" } as unknown as ProSubscriptionCheckoutInput),
+  onSuccess: async (result) => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    if ((result as any).downgradeScheduled) {
+      toast.success("Rétrogradation programmée. Elle prendra effet à la fin de votre période de grâce.");
+    }
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Impossible de programmer la rétrogradation."));
+  }
+});
+
+const cancelDowngradeMutation = useMutation({
+  mutationFn: async () => {
+    const response = await fetch("/api/v1/pro/subscription/cancel-downgrade", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${auth.accessToken ?? ""}` }
+    });
+    if (!response.ok) throw new Error("Annulation impossible.");
+    return response.json();
+  },
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    toast.success("Rétrogradation annulée.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Impossible d'annuler la rétrogradation."));
   }
 });
 
@@ -838,6 +904,69 @@ const mobileMoneyForm = reactive({
   otp: ""
 });
 
+type PhoneCountry = {
+  code: string;
+  flag: string;
+  dialCode: string;
+  placeholder: string;
+  nationalDigits: number;
+  groupPattern: number[];
+};
+
+const PHONE_COUNTRY_MAP: Record<string, PhoneCountry> = {
+  sn: { code: "sn", flag: "🇸🇳", dialCode: "+221", placeholder: "78 170 61 84", nationalDigits: 9, groupPattern: [2, 3, 2, 2] },
+  ci: { code: "ci", flag: "🇨🇮", dialCode: "+225", placeholder: "01 23 45 67 89", nationalDigits: 10, groupPattern: [2, 2, 2, 2, 2] },
+  bf: { code: "bf", flag: "🇧🇫", dialCode: "+226", placeholder: "70 12 34 56", nationalDigits: 8, groupPattern: [2, 2, 2, 2] },
+  bj: { code: "bj", flag: "🇧🇯", dialCode: "+229", placeholder: "01 95 12 34 56", nationalDigits: 10, groupPattern: [2, 2, 2, 2, 2] },
+  tg: { code: "tg", flag: "🇹🇬", dialCode: "+228", placeholder: "90 12 34 56", nationalDigits: 8, groupPattern: [2, 2, 2, 2] },
+  ml: { code: "ml", flag: "🇲🇱", dialCode: "+223", placeholder: "70 12 34 56", nationalDigits: 8, groupPattern: [2, 2, 2, 2] },
+  cm: { code: "cm", flag: "🇨🇲", dialCode: "+237", placeholder: "6 12 34 56 78", nationalDigits: 9, groupPattern: [1, 2, 2, 2, 2] }
+};
+
+const configuredPhoneCountries = ((import.meta.env.VITE_ALLOWED_PHONE_COUNTRIES as string | undefined) ?? "sn")
+  .split(",")
+  .map((item) => item.trim().toLowerCase())
+  .filter((code) => code in PHONE_COUNTRY_MAP);
+
+const allowedPhoneCountries = (configuredPhoneCountries.length > 0 ? configuredPhoneCountries : ["sn"])
+  .map((code) => PHONE_COUNTRY_MAP[code]);
+
+const selectedMobileMoneyCountryCode = ref(allowedPhoneCountries[0]?.code ?? "sn");
+const selectedMobileMoneyCountry = computed(
+  () => PHONE_COUNTRY_MAP[selectedMobileMoneyCountryCode.value] ?? PHONE_COUNTRY_MAP.sn
+);
+
+function normalizePhoneNumber(value: string, country: PhoneCountry) {
+  const digits = value.replace(/\D/g, "");
+  const countryDigits = country.dialCode.replace(/\D/g, "");
+  const withoutCountryCode = digits.startsWith(countryDigits) ? digits.slice(countryDigits.length) : digits;
+  return withoutCountryCode.slice(0, country.nationalDigits);
+}
+
+function applyPhoneMask(digits: string, country: PhoneCountry) {
+  const normalized = digits.slice(0, country.nationalDigits);
+  const groups: string[] = [];
+  let index = 0;
+
+  for (const size of country.groupPattern) {
+    if (index >= normalized.length) break;
+    groups.push(normalized.slice(index, index + size));
+    index += size;
+  }
+
+  if (index < normalized.length) {
+    groups.push(normalized.slice(index));
+  }
+
+  return groups.join(" ");
+}
+
+function formatMobileMoneyPhoneInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const digits = normalizePhoneNumber(target.value, selectedMobileMoneyCountry.value);
+  mobileMoneyForm.phone = applyPhoneMask(digits, selectedMobileMoneyCountry.value);
+}
+
 const checkoutMethods = [
   { code: "carte_bancaire", label: "Carte Bancaire", country: "intl" },
   { code: "djamo", label: "Djamo", country: "intl" },
@@ -866,6 +995,16 @@ const filteredMethods = computed(() => {
   return checkoutMethods.filter(m => m.country === selectedCountry.value || m.code === "carte_bancaire");
 });
 
+const mobileMoneyCountryOptions = computed(() => {
+  const currentMethod = checkoutMethods.find((method) => method.code === selectedMethod.value);
+  if (!currentMethod || currentMethod.country === "intl") {
+    return allowedPhoneCountries;
+  }
+
+  const matchedCountry = allowedPhoneCountries.find((country) => country.code === currentMethod.country);
+  return matchedCountry ? [matchedCountry] : allowedPhoneCountries;
+});
+
 const selectedMethodLabel = computed(() => {
   const method = checkoutMethods.find(m => m.code === selectedMethod.value);
   return method ? method.label : "";
@@ -874,6 +1013,17 @@ const selectedMethodLabel = computed(() => {
 function selectCheckoutMethod(code: string) {
   selectedMethod.value = code;
 }
+
+watch(mobileMoneyCountryOptions, (options) => {
+  if (!options.some((option) => option.code === selectedMobileMoneyCountryCode.value)) {
+    selectedMobileMoneyCountryCode.value = options[0]?.code ?? "sn";
+  }
+}, { immediate: true });
+
+watch(selectedMobileMoneyCountryCode, () => {
+  const digits = normalizePhoneNumber(mobileMoneyForm.phone, selectedMobileMoneyCountry.value);
+  mobileMoneyForm.phone = applyPhoneMask(digits, selectedMobileMoneyCountry.value);
+});
 
 function formatCardNumber(e: Event) {
   const target = e.target as HTMLInputElement;
@@ -901,7 +1051,10 @@ function openCheckoutModal() {
     cardForm.fullName = user.fullName;
     cardForm.email = user.email ?? "";
     mobileMoneyForm.fullName = user.fullName;
-    mobileMoneyForm.phone = user.phone ?? "";
+    mobileMoneyForm.phone = applyPhoneMask(
+      normalizePhoneNumber(user.phone ?? "", selectedMobileMoneyCountry.value),
+      selectedMobileMoneyCountry.value
+    );
     mobileMoneyForm.email = user.email ?? "";
     walletForm.phone = user.phone ?? user.email ?? "";
   }
@@ -934,7 +1087,8 @@ async function handleCheckoutSubmit() {
       return;
     }
   } else {
-    if (!mobileMoneyForm.phone) {
+    const normalizedPhone = normalizePhoneNumber(mobileMoneyForm.phone, selectedMobileMoneyCountry.value);
+    if (!normalizedPhone || normalizedPhone.length !== selectedMobileMoneyCountry.value.nationalDigits) {
       toast.error("Le numéro de téléphone est requis.");
       return;
     }
@@ -968,7 +1122,7 @@ async function handleCheckoutSubmit() {
       details.phone = walletForm.phone.trim();
       details.password = walletForm.password.trim();
     } else {
-      details.phone = mobileMoneyForm.phone.trim();
+      details.phone = normalizePhoneNumber(mobileMoneyForm.phone, selectedMobileMoneyCountry.value);
       details.customer_name = mobileMoneyForm.fullName.trim();
       details.customer_email = mobileMoneyForm.email.trim();
       if (selectedMethod.value === 'om_ci' || selectedMethod.value === 'om_bf') {
@@ -1016,7 +1170,12 @@ async function handleCheckoutSubmit() {
       await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
       showCheckoutModal.value = false;
     } else {
-      toast.error(execResult.message || "Échec du paiement.");
+      const providerMessage = execResult.message || "Échec du paiement.";
+      if (providerMessage.toLowerCase().includes("déjà été initié")) {
+        toast.error("Ce paiement a déjà été lancé côté PayDunya. Finalisez-le dans l'application Wave, ou relancez un nouveau checkout si nécessaire.");
+      } else {
+        toast.error(providerMessage);
+      }
     }
   } catch (error) {
     toast.error(getErrorMessage(error, "Erreur lors de l'exécution du paiement."));
@@ -1035,7 +1194,7 @@ async function handleWizallOtpSubmit() {
     const execResult = await executeProSubscription(auth.accessToken ?? "", chargeId.value, {
       method: "wizall_senegal",
       details: {
-        phone_number: mobileMoneyForm.phone.trim(),
+        phone_number: normalizePhoneNumber(mobileMoneyForm.phone, selectedMobileMoneyCountry.value),
         authorization_code: wizallOtpCode.value.trim(),
         transaction_id: wizallCid.value
       }
@@ -1065,6 +1224,18 @@ async function finalizeCheckoutReconciliation() {
 
 function upgradePlan() {
   openCheckoutModal();
+}
+
+function scheduleDowngrade() {
+  downgradeMutation.mutate();
+}
+
+function cancelDowngrade() {
+  cancelDowngradeMutation.mutate();
+}
+
+function formatDate(iso: string | Date) {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
 async function openInvoice(invoice: (typeof invoices.value)[number]) {

@@ -24,6 +24,7 @@ const storageAdapter = getStorageAdapter(config.storageDriver, {
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin,
   paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPublicKey: config.paydunyaPublicKey,
   paydunyaPrivateKey: config.paydunyaPrivateKey,
   paydunyaToken: config.paydunyaToken,
   paydunyaEnv: config.paydunyaEnv,
@@ -294,18 +295,28 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
         logger.info("[WORKER] subscription_expiry_check: grace started", { count: toGrace.length });
       }
 
-      // Step 2: past_due → expired (grace over)
+      // Step 2: past_due → expired (grace over) — also apply any pending downgrade
       const toExpire = await prisma.subscription.findMany({
         where: { status: "past_due", gracePeriodEndsAt: { lt: now } },
         include: { salon: { select: { id: true, staffMembers: { where: { role: "salon_owner" }, select: { email: true }, take: 1 } } } }
       });
       for (const sub of toExpire) {
+        const downgradedTier = sub.pendingTier ?? undefined;
         await prisma.$transaction([
-          prisma.subscription.update({ where: { id: sub.id }, data: { status: "expired" } }),
+          prisma.subscription.update({
+            where: { id: sub.id },
+            data: {
+              status: "expired",
+              ...(downgradedTier ? { tier: downgradedTier, pendingTier: null } : {})
+            }
+          }),
           prisma.salon.update({
             where: { id: sub.salonId },
-            data: { isVisibleInMarketplace: false, canReceiveBookings: false }
-            // DO NOT touch subscriptionTier — both standard and premium are paid tiers
+            data: {
+              isVisibleInMarketplace: false,
+              canReceiveBookings: false,
+              ...(downgradedTier ? { subscriptionTier: downgradedTier } : {})
+            }
           })
         ]);
         const ownerEmail = sub.salon.staffMembers[0]?.email;

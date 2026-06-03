@@ -46,6 +46,7 @@ const WITHDRAW_MODE_MAP: Record<string, string> = {
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin,
   paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPublicKey: config.paydunyaPublicKey,
   paydunyaPrivateKey: config.paydunyaPrivateKey,
   paydunyaToken: config.paydunyaToken,
   paydunyaEnv: config.paydunyaEnv,
@@ -69,10 +70,6 @@ export class PaymentController {
         where: { id: session.sub },
         select: { phone: true }
       });
-      if (config.paymentDriver === "paydunya" && !client?.phone) {
-        fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
-        return;
-      }
 
       const callbackUrl = `${config.webOrigin}/payment/callback`;
       const result = await paymentAdapter.initiateDeposit({
@@ -157,10 +154,18 @@ export class PaymentController {
       });
 
       if (result.success) {
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: { status: "succeeded", providerTxId: result.providerTxId ?? payment.providerTxId }
-        });
+        // Redirect-based methods (Wave, OM, Wizall, Djamo) return a `url` — the payment
+        // isn't complete yet, only the redirect was created. Mark as `authorized` so that
+        // the booking remains in its current state until the webhook arrives.
+        // Direct methods (OTP confirmed, Expresso, Free Money) have no `url` — mark as `succeeded`.
+        const isRedirect = !!(result.url || result.other_url);
+        const newStatus = isRedirect ? "authorized" : "succeeded";
+        await this._applyPaymentStatus(
+          { id: payment.id, bookingId: payment.bookingId, amountXof: payment.amountXof, status: payment.status },
+          newStatus,
+          JSON.stringify({ source: "execute", method: body.method }),
+          result.providerTxId ?? payment.providerTxId ?? undefined
+        );
       }
 
       ok(reply, result);

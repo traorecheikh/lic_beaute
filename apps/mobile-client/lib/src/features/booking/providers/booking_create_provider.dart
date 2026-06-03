@@ -67,9 +67,13 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
     return state.asData?.value;
   }
 
-  Future<void> reconcile(String paymentId) async {
+  Future<String?> reconcile(String paymentId) async {
     final dio = ref.read(dioProvider);
-    await dio.post('/api/v1/payments/$paymentId/reconcile', data: const {});
+    final response = await dio.post<Map<String, dynamic>>(
+      '/api/v1/payments/$paymentId/reconcile',
+      data: const {},
+    );
+    return response.data?['status'] as String?;
   }
 
   Future<Map<String, dynamic>?> execute({

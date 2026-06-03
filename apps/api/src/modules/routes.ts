@@ -160,6 +160,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.patch("/api/v1/pro/subscription", (req, rep) => pro.updateSubscription(req, rep));
   app.post("/api/v1/pro/subscription/checkout", (req, rep) => pro.subscriptionCheckout(req, rep));
   app.post("/api/v1/pro/subscription/charge/:chargeId/execute", (req, rep) => pro.executeSubscriptionPayment(req, rep));
+  app.post("/api/v1/pro/subscription/cancel-downgrade", (req, rep) => pro.cancelDowngrade(req, rep));
   app.get("/api/v1/pro/subscription/charge/:chargeId/status", (req, rep) => pro.getChargeStatus(req, rep));
   app.get("/api/v1/pro/payouts", (req, rep) => pro.listPayouts(req, rep));
   app.get("/api/v1/pro/invoices", (req, rep) => pro.listInvoices(req, rep));

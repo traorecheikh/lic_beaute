@@ -16,6 +16,7 @@ import { prisma } from "../../lib/db/prisma.js";
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin,
   paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPublicKey: config.paydunyaPublicKey,
   paydunyaPrivateKey: config.paydunyaPrivateKey,
   paydunyaToken: config.paydunyaToken,
   paydunyaEnv: config.paydunyaEnv,

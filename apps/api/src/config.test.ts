@@ -91,11 +91,13 @@ describe("config", () => {
       DATABASE_URL: "postgresql://prod/prod",
       PAYMENT_DRIVER: "paydunya",
       PAYDUNYA_MASTER_KEY: "master-key",
+      PAYDUNYA_PUBLIC_KEY: "public-key",
       PAYDUNYA_PRIVATE_KEY: "private-key",
       PAYDUNYA_TOKEN: "token",
       STORAGE_DRIVER: "r2",
       OTP_DRIVER: "africastalking",
-      EMAIL_DRIVER: "smtp"
+      EMAIL_DRIVER: "smtp",
+      FCM_SERVICE_ACCOUNT_JSON_B64: "ZmFrZQ=="
     });
 
     expect(() => validateConfig()).not.toThrow();

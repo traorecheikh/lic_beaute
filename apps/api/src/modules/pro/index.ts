@@ -36,11 +36,30 @@ import { getProAnalytics, getProDashboard } from "./data.js";
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin,
   paydunyaMasterKey: config.paydunyaMasterKey,
+  paydunyaPublicKey: config.paydunyaPublicKey,
   paydunyaPrivateKey: config.paydunyaPrivateKey,
   paydunyaToken: config.paydunyaToken,
   paydunyaEnv: config.paydunyaEnv,
   paydunyaBaseUrl: config.paydunyaBaseUrl
 });
+
+function isPaydunyaTokenCompatibleWithEnv(token: string | null | undefined) {
+  if (!token) return false;
+  const isSandboxToken = token.startsWith("test_");
+  if (config.paymentDriver !== "paydunya") return true;
+  return config.paydunyaEnv === "sandbox" ? isSandboxToken : !isSandboxToken;
+}
+
+function isNonReusableSubscriptionChargeError(message: string | null | undefined) {
+  const normalized = message?.toLowerCase() ?? "";
+  const looksAlreadyInitiated =
+    normalized.includes("already initiated") ||
+    normalized.includes("déjà été initié") ||
+    normalized.includes("deja ete initie") ||
+    normalized.includes("dej\\u00e0") ||
+    normalized.includes("deja");
+  return looksAlreadyInitiated && normalized.includes("initi");
+}
 
 function salonPublicPhoneKey(salonId: string) {
   return `salon:${salonId}:public_phone`;
@@ -1652,6 +1671,7 @@ export class ProController {
       ok(reply, {
         id: sub.id,
         tier: sub.tier,
+        pendingTier: sub.pendingTier ?? null,
         status: sub.status,
         renewsAt: sub.renewedAt?.toISOString() ?? null,
         expiresAt: sub.expiresAt?.toISOString() ?? null,
@@ -1773,6 +1793,37 @@ export class ProController {
         return;
       }
 
+      // ── Guard: block invalid action/tier combinations ────────────────────
+      if (body.action === "upgrade" && sub.tier === "premium") {
+        fail(reply, 409, "already_premium", "Vous êtes déjà sur le plan Premium.");
+        return;
+      }
+      if (body.action === "upgrade" && sub.tier === "standard" && sub.pendingTier === "premium") {
+        fail(reply, 409, "upgrade_pending", "Une mise à niveau est déjà en attente de paiement.");
+        return;
+      }
+      if (body.action === "renewal" && sub.tier === "standard") {
+        fail(reply, 409, "renewal_not_applicable", "Le renouvellement n'est pas applicable sur le plan Standard.");
+        return;
+      }
+      if (body.action === "renewal" && sub.isComplimentary) {
+        fail(reply, 409, "complimentary", "Les abonnements complémentaires ne nécessitent pas de renouvellement.");
+        return;
+      }
+      if (body.action === "downgrade") {
+        if (sub.tier === "standard") {
+          fail(reply, 409, "already_standard", "Vous êtes déjà sur le plan Standard.");
+          return;
+        }
+        // Downgrade is free — applies after grace period when subscription expires
+        await prisma.subscription.update({
+          where: { id: sub.id },
+          data: { pendingTier: "standard" }
+        });
+        ok(reply, { downgradeScheduled: true, effectiveAt: sub.expiresAt?.toISOString() ?? null, afterGracePeriod: true });
+        return;
+      }
+
       const priceRows = await prisma.platformSetting.findMany({
         where: {
           key: {
@@ -1785,9 +1836,12 @@ export class ProController {
         }
       });
       const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
-      const priceKey = (body.action === "renewal" && sub.tier === "standard")
-        ? "subscription_standard_price_xof"
-        : "subscription_premium_price_xof";
+      // Upgrade always charges premium price; renewal charges current tier price
+      const priceKey = body.action === "upgrade"
+        ? "subscription_premium_price_xof"
+        : sub.tier === "premium"
+          ? "subscription_premium_price_xof"
+          : "subscription_standard_price_xof";
       const priceStr = priceMap[priceKey];
       if (!priceStr) {
         fail(reply, 500, "pricing_not_configured", "Le prix de l'abonnement n'est pas configuré. Contactez l'administrateur.");
@@ -1801,20 +1855,17 @@ export class ProController {
       const amountXof = body.billingCycle === "annual"
         ? Math.round(monthlyAmountXof * 12 * (100 - annualDiscountPercent) / 100)
         : monthlyAmountXof;
-      // Stable idempotency key: month-scoped so retries within same billing cycle deduplicate
       const billingMonth = new Date().toISOString().slice(0, 7);
       const idempotencyKey = `sub-${sub.id}-${body.action}-${body.billingCycle}-${billingMonth}`;
 
-      // Re-use an existing non-failed charge for this idempotency key to avoid zombie charges (#27)
       const existing = await prisma.subscriptionCharge.findFirst({
-        where: { idempotencyKey, status: { not: "failed" } }
+        where: { idempotencyKey }
       });
-      if (existing?.providerTxId) {
+      if (existing?.status !== "failed" && existing?.providerTxId && isPaydunyaTokenCompatibleWithEnv(existing.providerTxId)) {
         ok(reply, { redirectUrl: null, chargeId: existing.id, resumed: true });
         return;
       }
 
-      // Initiate external payment first, then persist (#27 / #28)
       const tempChargeId = `pending-${Date.now()}`;
       const result = await paymentAdapter.initiateDeposit({
         paymentId: existing?.id ?? tempChargeId,
@@ -1829,11 +1880,26 @@ export class ProController {
       const charge = existing
         ? await prisma.subscriptionCharge.update({
             where: { id: existing.id },
-            data: { providerTxId: result.providerRef }
+            data: {
+              status: "pending",
+              provider: toDbProvider(body.provider) ?? "paydunya",
+              amountXof,
+              chargeType: body.action,
+              providerTxId: result.providerRef,
+              invoiceId: null
+            }
           })
         : await prisma.subscriptionCharge.create({
             data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "paydunya", amountXof, idempotencyKey, chargeType: body.action, providerTxId: result.providerRef }
           });
+
+      // Mark pending tier for upgrades so the UI knows an upgrade is in progress
+      if (body.action === "upgrade") {
+        await prisma.subscription.update({
+          where: { id: sub.id },
+          data: { pendingTier: "premium" }
+        });
+      }
 
       ok(reply, { redirectUrl: result.redirectUrl, chargeId: charge.id });
     } catch (e) { handleError(e, reply); }
@@ -1906,22 +1972,49 @@ export class ProController {
 
           const sub = await tx.subscription.findUnique({
             where: { id: charge.subscriptionId },
-            select: { salonId: true, expiresAt: true }
+            select: { salonId: true, tier: true, expiresAt: true, pendingTier: true }
           });
 
-          const baseDate = sub?.expiresAt && sub.expiresAt > new Date() ? sub.expiresAt : new Date();
           const isUpgrade = charge.chargeType === "upgrade";
+          const isRenewal = charge.chargeType === "renewal";
           const isAnnualCycle = charge.idempotencyKey.includes("-annual-");
-          const renewalDurationDays = isAnnualCycle ? 365 : 30;
+          const cycleDays = isAnnualCycle ? 365 : 30;
+          const now = new Date();
+
+          let newExpiresAt: Date | undefined;
+          let newTier = sub?.tier ?? "standard";
+          let newPendingTier = sub?.pendingTier ?? null;
+
+          if (isUpgrade) {
+            if (config.prorationEnabled) {
+              // Proration mode: upgrade takes effect immediately
+              newTier = "premium";
+              newPendingTier = null;
+              newExpiresAt = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+            } else {
+              // Default: upgrade is deferred to next billing cycle
+              // Tier stays the same, pendingTier is set, no expiry change
+              newPendingTier = "premium";
+              newExpiresAt = undefined;
+            }
+          } else if (isRenewal) {
+            // Renewal: apply any pending tier change, then extend expiry
+            if (sub?.pendingTier) {
+              newTier = sub.pendingTier;
+              newPendingTier = null;
+            }
+            const baseDate = sub?.expiresAt && sub.expiresAt > now ? sub.expiresAt : now;
+            newExpiresAt = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+          }
 
           await tx.subscription.update({
             where: { id: charge.subscriptionId },
             data: {
-              ...(isUpgrade ? { tier: "premium" } : {}),
+              tier: newTier,
+              pendingTier: newPendingTier,
               status: "active",
-              expiresAt: charge.chargeType === "renewal"
-                ? new Date(baseDate.getTime() + renewalDurationDays * 24 * 60 * 60 * 1000)
-                : undefined
+              renewedAt: now,
+              expiresAt: newExpiresAt
             }
           });
 
@@ -1929,7 +2022,7 @@ export class ProController {
             await tx.salon.update({
               where: { id: sub.salonId },
               data: {
-                ...(isUpgrade ? { subscriptionTier: "premium" } : {}),
+                subscriptionTier: newTier,
                 isVisibleInMarketplace: true,
                 canReceiveBookings: true
               }
@@ -1939,7 +2032,7 @@ export class ProController {
           await tx.auditLog.create({
             data: {
               action: "subscription_charge_execute",
-              summary: `SubscriptionCharge ${charge.id} → succeeded`,
+              summary: `SubscriptionCharge ${charge.id} → succeeded (${charge.chargeType})`,
               entityType: "SubscriptionCharge",
               entityId: charge.id,
               actorName: "pro_user",
@@ -1948,12 +2041,46 @@ export class ProController {
             }
           });
         });
+      } else {
+        await prisma.subscriptionCharge.update({
+          where: { id: charge.id },
+          data: { status: "failed" }
+        });
+
+        // Clear pendingTier on upgrade failure so user can retry
+        if (charge.chargeType === "upgrade") {
+          await prisma.subscription.update({
+            where: { id: charge.subscriptionId },
+            data: { pendingTier: null }
+          });
+        }
       }
 
       ok(reply, result);
     } catch (e) {
       handleError(e, reply);
     }
+  }
+
+  async cancelDowngrade(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!ownerOnly(role, reply)) return;
+
+      const sub = await prisma.subscription.findUnique({ where: { salonId } });
+      if (!sub) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
+      if (sub.pendingTier !== "standard") {
+        fail(reply, 409, "no_downgrade_scheduled", "Aucun rétrogradation planifiée.");
+        return;
+      }
+
+      await prisma.subscription.update({
+        where: { id: sub.id },
+        data: { pendingTier: null }
+      });
+
+      ok(reply, { cancelled: true });
+    } catch (e) { handleError(e, reply); }
   }
 
   // ─── Payouts ───────────────────────────────────────────────────────────────
