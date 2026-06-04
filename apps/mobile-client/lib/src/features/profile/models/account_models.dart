@@ -127,6 +127,8 @@ class PaymentMethodRecord {
     required this.provider,
     required this.phoneNumber,
     required this.label,
+    required this.method,
+    required this.country,
     required this.isDefault,
     required this.lastUsedAt,
     required this.pendingSync,
@@ -136,6 +138,8 @@ class PaymentMethodRecord {
   final String provider;
   final String phoneNumber;
   final String? label;
+  final String? method;
+  final String? country;
   final bool isDefault;
   final DateTime? lastUsedAt;
   final bool pendingSync;
@@ -149,6 +153,8 @@ class PaymentMethodRecord {
       provider: json['provider'] as String? ?? 'paydunya',
       phoneNumber: json['phoneNumber'] as String? ?? '',
       label: json['label'] as String?,
+      method: json['method'] as String?,
+      country: json['country'] as String?,
       isDefault: json['isDefault'] as bool? ?? false,
       lastUsedAt: DateTime.tryParse(json['lastUsedAt'] as String? ?? ''),
       pendingSync: pendingSync,
@@ -159,6 +165,8 @@ class PaymentMethodRecord {
     String? provider,
     String? phoneNumber,
     String? label,
+    String? method,
+    String? country,
     bool? isDefault,
     DateTime? lastUsedAt,
     bool? pendingSync,
@@ -168,6 +176,8 @@ class PaymentMethodRecord {
       provider: provider ?? this.provider,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       label: label ?? this.label,
+      method: method ?? this.method,
+      country: country ?? this.country,
       isDefault: isDefault ?? this.isDefault,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
       pendingSync: pendingSync ?? this.pendingSync,
@@ -180,6 +190,8 @@ class PaymentMethodRecord {
       'provider': provider,
       'phoneNumber': phoneNumber,
       'label': label,
+      'method': method,
+      'country': country,
       'isDefault': isDefault,
       'lastUsedAt': lastUsedAt?.toIso8601String(),
     };

@@ -370,6 +370,31 @@ export async function executeProSubscription(token: string, chargeId: string, pa
   }));
 }
 
+export async function fetchProSubscriptionChargeStatus(token: string, chargeId: string) {
+  const cfg = getConfiguration(token);
+  const basePath = cfg.basePath ?? "";
+  const response = await fetch(`${basePath}/api/v1/pro/subscription/charge/${chargeId}/status`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json"
+    }
+  });
+  if (!response.ok) {
+    let code = "unknown_error";
+    let message = "Impossible de récupérer le statut du paiement.";
+    try {
+      const payload = (await response.clone().json()) as { code?: string; message?: string };
+      code = payload.code ?? code;
+      message = payload.message ?? message;
+    } catch {
+      // ignore parsing failures and use fallback message
+    }
+    throw new ApiError(response.status, code, message);
+  }
+  return response.json();
+}
+
 export async function fetchProInvoices(token: string) {
   return withApiError(() => getProApi(token).apiV1ProInvoicesGet());
 }

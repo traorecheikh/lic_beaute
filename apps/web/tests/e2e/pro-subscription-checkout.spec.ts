@@ -86,7 +86,6 @@ test.describe("pro subscription checkout", () => {
 
     const executeText = JSON.stringify(executeJson);
     const maybeUrl = typeof executeJson.url === "string" ? executeJson.url : "";
-    const successToast = page.getByText("Paiement effectué avec succès !");
     const errorToast = page.locator("body");
 
     if (maybeUrl) {
@@ -95,7 +94,12 @@ test.describe("pro subscription checkout", () => {
     }
 
     if ((executeJson.success as boolean | undefined) === true) {
-      await expect(successToast.or(page.getByText("Authentification 3D Secure")).or(page.getByText("Scannez le QR Code Orange Money")).or(page.getByText("Validation OTP Wizall"))).toBeVisible({ timeout: 15_000 });
+      await expect(
+        page
+          .getByText("Confirmation du paiement en cours")
+          .or(page.getByText("Validation OTP Wizall"))
+          .or(page.getByText("En attente de confirmation"))
+      ).toBeVisible({ timeout: 15_000 });
     } else {
       await expect(errorToast).toContainText(String(executeJson.message ?? "Échec du paiement."), { timeout: 15_000 });
     }

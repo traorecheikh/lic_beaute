@@ -27,8 +27,10 @@ class PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final channel = _resolveChannel(method.provider, method.label);
-    final title = _displayTitle(channel);
+    final channel = _resolveChannel(method.provider, method.method, method.label);
+    final title = (method.label != null && method.label!.trim().isNotEmpty)
+        ? method.label!.trim()
+        : _displayTitle(channel);
     final logoAsset = _logoAsset(channel);
 
     return ProfileCardShell(
@@ -145,22 +147,61 @@ class PaymentTile extends StatelessWidget {
     );
   }
 
-  static String _resolveChannel(String provider, String? label) {
+  static String _resolveChannel(String provider, String? methodCode, String? label) {
     if (provider == 'wave' || provider == 'orange_money') return provider;
     if (provider == 'om') return 'orange_money';
+    final savedMethod = methodCode?.trim();
+    if (savedMethod != null && savedMethod.isNotEmpty) {
+      return savedMethod;
+    }
     final normalized = (label ?? '').toLowerCase();
     if (normalized.contains('orange')) return 'orange_money';
-    return 'wave';
+    if (normalized.contains('wave')) return 'wave';
+    if (normalized.contains('free')) return 'free_senegal';
+    if (normalized.contains('wizall')) return 'wizall_senegal';
+    if (normalized.contains('expresso')) return 'expresso_sn';
+    if (normalized.contains('djamo')) return 'djamo';
+    if (normalized.contains('portefeuille paydunya')) return 'paydunya_wallet';
+    return 'paydunya';
   }
 
   static String _displayTitle(String channel) {
-    return channel == 'orange_money' ? 'Orange Money' : 'Wave';
+    switch (channel) {
+      case 'orange_senegal':
+      case 'om_ci':
+      case 'om_bf':
+      case 'om_ml':
+      case 'orange_money':
+        return 'Orange Money';
+      case 'wave_senegal':
+      case 'wave_ci':
+      case 'wave':
+        return 'Wave';
+      case 'free_senegal':
+        return 'Free Money';
+      case 'wizall_senegal':
+        return 'Wizall';
+      case 'expresso_sn':
+        return 'Expresso';
+      case 'djamo':
+        return 'Djamo';
+      case 'paydunya_wallet':
+        return 'Portefeuille PayDunya';
+      default:
+        return 'Moyen de paiement';
+    }
   }
 
   static String? _logoAsset(String channel) {
     switch (channel) {
+      case 'wave_senegal':
+      case 'wave_ci':
       case 'wave':
         return 'assets/wave.png';
+      case 'orange_senegal':
+      case 'om_ci':
+      case 'om_bf':
+      case 'om_ml':
       case 'orange_money':
         return 'assets/om.png';
       default:

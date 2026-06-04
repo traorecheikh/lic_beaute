@@ -150,6 +150,31 @@ function parseBooleanSetting(value: string | undefined, fallback: boolean) {
   return fallback;
 }
 
+function requiresProviderCompletion(result: { url?: string; other_url?: unknown; data?: Record<string, unknown> | undefined } & Record<string, unknown>) {
+  if (result.url || result.other_url) return true;
+  if (result.pendingProviderConfirmation === true || result.status === "authorized") return true;
+  const message = typeof result.message === "string"
+    ? result.message.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+    : "";
+  if (
+    message.includes("rediriger vers cette url") ||
+    message.includes("en cours de traitement") ||
+    message.includes("veuillez completer le paiement") ||
+    message.includes("veuillez tapez") ||
+    message.includes("compose") ||
+    message.includes("valider le paiement")
+  ) {
+    return true;
+  }
+  const details = result.data && typeof result.data.details === "object" && result.data.details
+    ? result.data.details as Record<string, unknown>
+    : null;
+  const providerStatus = typeof result.data?.status === "string" ? result.data.status.toUpperCase() : null;
+  if (providerStatus === "PENDING" || providerStatus === "PROCESSING") return true;
+  const cid = typeof result.data?.cid === "string" ? result.data.cid : typeof details?.cid === "string" ? details.cid : null;
+  return Boolean(cid);
+}
+
 async function isTeamPhotoRequiredForSalon(salonId: string) {
   const key = salonTeamShowPhotosKey(salonId);
   const setting = await prisma.platformSetting.findUnique({
@@ -1655,7 +1680,16 @@ export class ProController {
       const [sub, settings] = await Promise.all([
         prisma.subscription.findUnique({ where: { salonId } }),
         prisma.platformSetting.findMany({
-          where: { key: { in: [salonBillingProviderKey(salonId), salonBillingAccountKey(salonId)] } },
+          where: {
+            key: {
+              in: [
+                salonBillingProviderKey(salonId),
+                salonBillingAccountKey(salonId),
+                `salon:${salonId}:billing_country`,
+                `salon:${salonId}:billing_method`
+              ]
+            }
+          },
           select: { key: true, value: true }
         })
       ]);
@@ -1665,8 +1699,10 @@ export class ProController {
       const provider = toPublicBillingProvider(rawProvider ?? sub.billingProvider);
       const encryptedAccountNumber = settingMap[salonBillingAccountKey(salonId)];
       const accountNumber = encryptedAccountNumber ? decryptBillingAccount(encryptedAccountNumber) : null;
+      const billingCountry = settingMap[`salon:${salonId}:billing_country`] ?? null;
+      const billingMethodCode = settingMap[`salon:${salonId}:billing_method`] ?? null;
       const billingMethod = provider && accountNumber
-        ? { provider, accountNumberMasked: maskAccountNumber(accountNumber), country: null, method: null }
+        ? { provider, accountNumberMasked: maskAccountNumber(accountNumber), country: billingCountry, method: billingMethodCode }
         : null;
       ok(reply, {
         id: sub.id,
@@ -1762,16 +1798,43 @@ export class ProController {
       if (!charge || charge.subscriptionId !== sub.id) {
         fail(reply, 404, "charge_not_found", "Paiement introuvable."); return;
       }
+
+      let effectiveCharge = charge;
+      if (
+        config.paymentDriver === "paydunya" &&
+        charge.providerTxId &&
+        (charge.status === "pending" || charge.status === "authorized")
+      ) {
+        try {
+          const providerStatus = await paymentAdapter.fetchPaymentStatus({ providerToken: charge.providerTxId });
+          if (providerStatus === "succeeded") {
+            await this._settleSuccessfulSubscriptionCharge(charge, charge.providerTxId);
+          } else if (providerStatus === "failed" || providerStatus === "refunded") {
+            await this._markSubscriptionChargeFailed(charge, providerStatus);
+          }
+          const refreshed = await prisma.subscriptionCharge.findUnique({
+            where: { id: charge.id },
+            include: { subscription: { select: { status: true, tier: true, expiresAt: true } } }
+          });
+          if (refreshed) effectiveCharge = refreshed;
+        } catch (error) {
+          logger.warn("getChargeStatus: provider reconciliation failed", {
+            chargeId: charge.id,
+            error: String(error)
+          });
+        }
+      }
+
       ok(reply, {
-        chargeId: charge.id,
-        status: charge.status,
-        provider: charge.provider,
-        amountXof: charge.amountXof,
-        chargeType: charge.chargeType,
-        subscriptionId: charge.subscriptionId,
-        subscriptionStatus: charge.subscription?.status ?? sub.status,
-        tier: charge.subscription?.tier ?? sub.tier,
-        expiresAt: charge.subscription?.expiresAt?.toISOString() ?? null
+        chargeId: effectiveCharge.id,
+        status: effectiveCharge.status,
+        provider: effectiveCharge.provider,
+        amountXof: effectiveCharge.amountXof,
+        chargeType: effectiveCharge.chargeType,
+        subscriptionId: effectiveCharge.subscriptionId,
+        subscriptionStatus: effectiveCharge.subscription?.status ?? sub.status,
+        tier: effectiveCharge.subscription?.tier ?? sub.tier,
+        expiresAt: effectiveCharge.subscription?.expiresAt?.toISOString() ?? null
       });
     } catch (e) { handleError(e, reply); }
   }
@@ -1950,116 +2013,177 @@ export class ProController {
       });
 
       if (result.success) {
-        await prisma.$transaction(async (tx) => {
-          await tx.subscriptionCharge.update({
-            where: { id: charge.id },
-            data: { status: "succeeded", ...(result.providerTxId ? { providerTxId: result.providerTxId } : {}) }
-          });
-
-          const invoice = await tx.billingInvoice.create({
-            data: {
-              subscriptionId: charge.subscriptionId,
-              invoiceNumber: `INV-SUB-${charge.id.slice(0, 8).toUpperCase()}`,
-              amountXof: charge.amountXof,
-              status: "paid"
-            }
-          });
-
-          await tx.subscriptionCharge.update({
-            where: { id: charge.id },
-            data: { invoiceId: invoice.id }
-          });
-
-          const sub = await tx.subscription.findUnique({
-            where: { id: charge.subscriptionId },
-            select: { salonId: true, tier: true, expiresAt: true, pendingTier: true }
-          });
-
-          const isUpgrade = charge.chargeType === "upgrade";
-          const isRenewal = charge.chargeType === "renewal";
-          const isAnnualCycle = charge.idempotencyKey.includes("-annual-");
-          const cycleDays = isAnnualCycle ? 365 : 30;
-          const now = new Date();
-
-          let newExpiresAt: Date | undefined;
-          let newTier = sub?.tier ?? "standard";
-          let newPendingTier = sub?.pendingTier ?? null;
-
-          if (isUpgrade) {
-            if (config.prorationEnabled) {
-              // Proration mode: upgrade takes effect immediately
-              newTier = "premium";
-              newPendingTier = null;
-              newExpiresAt = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
-            } else {
-              // Default: upgrade is deferred to next billing cycle
-              // Tier stays the same, pendingTier is set, no expiry change
-              newPendingTier = "premium";
-              newExpiresAt = undefined;
-            }
-          } else if (isRenewal) {
-            // Renewal: apply any pending tier change, then extend expiry
-            if (sub?.pendingTier) {
-              newTier = sub.pendingTier;
-              newPendingTier = null;
-            }
-            const baseDate = sub?.expiresAt && sub.expiresAt > now ? sub.expiresAt : now;
-            newExpiresAt = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
-          }
-
-          await tx.subscription.update({
-            where: { id: charge.subscriptionId },
-            data: {
-              tier: newTier,
-              pendingTier: newPendingTier,
-              status: "active",
-              renewedAt: now,
-              expiresAt: newExpiresAt
-            }
-          });
-
-          if (sub?.salonId) {
-            await tx.salon.update({
-              where: { id: sub.salonId },
+        if (requiresProviderCompletion(result)) {
+          await prisma.$transaction(async (tx) => {
+            await tx.subscriptionCharge.update({
+              where: { id: charge.id },
+              data: { status: "authorized", ...(result.providerTxId ? { providerTxId: result.providerTxId } : {}) }
+            });
+            await tx.auditLog.create({
               data: {
-                subscriptionTier: newTier,
-                isVisibleInMarketplace: true,
-                canReceiveBookings: true
+                action: "subscription_charge_execute",
+                summary: `SubscriptionCharge ${charge.id} → authorized (${charge.chargeType})`,
+                entityType: "SubscriptionCharge",
+                entityId: charge.id,
+                actorName: "pro_user",
+                severity: "info",
+                payloadJson: JSON.stringify(result)
               }
             });
-          }
-
-          await tx.auditLog.create({
-            data: {
-              action: "subscription_charge_execute",
-              summary: `SubscriptionCharge ${charge.id} → succeeded (${charge.chargeType})`,
-              entityType: "SubscriptionCharge",
-              entityId: charge.id,
-              actorName: "pro_user",
-              severity: "info",
-              payloadJson: JSON.stringify(result)
-            }
           });
-        });
-      } else {
-        await prisma.subscriptionCharge.update({
-          where: { id: charge.id },
-          data: { status: "failed" }
-        });
-
-        // Clear pendingTier on upgrade failure so user can retry
-        if (charge.chargeType === "upgrade") {
-          await prisma.subscription.update({
-            where: { id: charge.subscriptionId },
-            data: { pendingTier: null }
-          });
+          ok(reply, result);
+          return;
         }
+        await this._settleSuccessfulSubscriptionCharge(
+          charge,
+          result.providerTxId ?? charge.providerTxId ?? undefined,
+          JSON.stringify(result)
+        );
+      } else {
+        await this._markSubscriptionChargeFailed(charge, "failed", JSON.stringify(result));
       }
 
       ok(reply, result);
     } catch (e) {
       handleError(e, reply);
     }
+  }
+
+  private async _settleSuccessfulSubscriptionCharge(
+    charge: {
+      id: string;
+      subscriptionId: string;
+      amountXof: number;
+      chargeType: string;
+      idempotencyKey: string;
+      providerTxId: string | null;
+    },
+    providerTxId?: string,
+    payloadJson?: string
+  ) {
+    await prisma.$transaction(async (tx) => {
+      await tx.subscriptionCharge.update({
+        where: { id: charge.id },
+        data: { status: "succeeded", ...(providerTxId ? { providerTxId } : {}) }
+      });
+
+      const invoice = await tx.billingInvoice.create({
+        data: {
+          subscriptionId: charge.subscriptionId,
+          invoiceNumber: `INV-SUB-${charge.id.slice(0, 8).toUpperCase()}`,
+          amountXof: charge.amountXof,
+          status: "paid"
+        }
+      });
+
+      await tx.subscriptionCharge.update({
+        where: { id: charge.id },
+        data: { invoiceId: invoice.id }
+      });
+
+      const sub = await tx.subscription.findUnique({
+        where: { id: charge.subscriptionId },
+        select: { salonId: true, tier: true, expiresAt: true, pendingTier: true }
+      });
+
+      const isUpgrade = charge.chargeType === "upgrade";
+      const isRenewal = charge.chargeType === "renewal";
+      const isAnnualCycle = charge.idempotencyKey.includes("-annual-");
+      const cycleDays = isAnnualCycle ? 365 : 30;
+      const now = new Date();
+
+      let newExpiresAt: Date | undefined;
+      let newTier = sub?.tier ?? "standard";
+      let newPendingTier = sub?.pendingTier ?? null;
+
+      if (isUpgrade) {
+        if (config.prorationEnabled) {
+          newTier = "premium";
+          newPendingTier = null;
+          newExpiresAt = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+        } else {
+          newPendingTier = "premium";
+          newExpiresAt = undefined;
+        }
+      } else if (isRenewal) {
+        if (sub?.pendingTier) {
+          newTier = sub.pendingTier;
+          newPendingTier = null;
+        }
+        const baseDate = sub?.expiresAt && sub.expiresAt > now ? sub.expiresAt : now;
+        newExpiresAt = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+      }
+
+      await tx.subscription.update({
+        where: { id: charge.subscriptionId },
+        data: {
+          tier: newTier,
+          pendingTier: newPendingTier,
+          status: "active",
+          renewedAt: now,
+          expiresAt: newExpiresAt
+        }
+      });
+
+      if (sub?.salonId) {
+        await tx.salon.update({
+          where: { id: sub.salonId },
+          data: {
+            subscriptionTier: newTier,
+            isVisibleInMarketplace: true,
+            canReceiveBookings: true
+          }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: "subscription_charge_execute",
+          summary: `SubscriptionCharge ${charge.id} → succeeded (${charge.chargeType})`,
+          entityType: "SubscriptionCharge",
+          entityId: charge.id,
+          actorName: "pro_user",
+          severity: "info",
+          payloadJson: payloadJson ?? JSON.stringify({ providerTxId })
+        }
+      });
+    });
+  }
+
+  private async _markSubscriptionChargeFailed(
+    charge: {
+      id: string;
+      subscriptionId: string;
+      chargeType: string;
+    },
+    status: "failed" | "refunded",
+    payloadJson?: string
+  ) {
+    await prisma.$transaction(async (tx) => {
+      await tx.subscriptionCharge.update({
+        where: { id: charge.id },
+        data: { status }
+      });
+
+      if (charge.chargeType === "upgrade") {
+        await tx.subscription.update({
+          where: { id: charge.subscriptionId },
+          data: { pendingTier: null }
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: "subscription_charge_execute",
+          summary: `SubscriptionCharge ${charge.id} → ${status} (${charge.chargeType})`,
+          entityType: "SubscriptionCharge",
+          entityId: charge.id,
+          actorName: "pro_user",
+          severity: status === "failed" ? "warn" : "info",
+          payloadJson: payloadJson ?? JSON.stringify({ status })
+        }
+      });
+    });
   }
 
   async cancelDowngrade(request: FastifyRequest, reply: FastifyReply) {

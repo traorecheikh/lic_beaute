@@ -66,6 +66,8 @@ function serializePaymentMethod(method: {
   provider: "paydunya" | "manual";
   phoneNumber: string;
   label: string | null;
+  method: string | null;
+  country: string | null;
   isDefault: boolean;
   lastUsedAt: Date | null;
   createdAt: Date;
@@ -76,6 +78,8 @@ function serializePaymentMethod(method: {
     provider: paymentProviderSchema.parse(toPublicGatewayProvider(method.provider)),
     phoneNumber: method.phoneNumber,
     label: method.label,
+    method: method.method,
+    country: method.country,
     isDefault: method.isDefault,
     lastUsedAt: method.lastUsedAt?.toISOString() ?? null,
     createdAt: method.createdAt.toISOString(),
@@ -198,6 +202,8 @@ export class ClientAccountController {
             provider: toDbProvider(body.provider) ?? "paydunya",
             phoneNumber: normalizedPhone,
               label: body.label ?? null,
+              method: body.method ?? null,
+              country: body.country?.trim().toLowerCase() ?? null,
               isDefault: hasDefault === 0,
               idempotencyKey: idempotencyKey ?? null
             }
@@ -235,7 +241,9 @@ export class ClientAccountController {
         where: { id: params.paymentMethodId },
         data: {
           phoneNumber: body.phoneNumber ? normalizePhoneNumber(body.phoneNumber) : undefined,
-          label: body.label === undefined ? undefined : body.label
+          label: body.label === undefined ? undefined : body.label,
+          method: body.method === undefined ? undefined : body.method,
+          country: body.country === undefined ? undefined : (body.country ? body.country.trim().toLowerCase() : null)
         }
       });
       ok(reply, serializePaymentMethod(updated));

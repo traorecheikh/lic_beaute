@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +12,7 @@ import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -33,7 +33,13 @@ class PaymentHandoffPage extends ConsumerStatefulWidget {
 }
 
 class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
+  static const List<PhoneCountry> _djamoCountries = [
+    PhoneCountry(code: 'SN', name: 'Sénégal', dialCode: '+221', flag: '🇸🇳', digits: 9),
+    PhoneCountry(code: 'CI', name: "Côte d'Ivoire", dialCode: '+225', flag: '🇨🇮', digits: 10),
+  ];
+
   String? _selectedMethod;
+  String _selectedDjamoCountryCode = 'SN';
   bool _isProcessing = false;
 
   late final TextEditingController _phoneController;
@@ -45,7 +51,25 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   late final TextEditingController _cardExpiryYearController;
   late final TextEditingController _walletPasswordController;
   bool _pciDssAccepted = false;
-  bool _hasInitializedProfileData = false;
+  bool _hasInitializedContactFields = false;
+  bool _hasAppliedDefaultPaymentMethod = false;
+
+  Future<bool> _launchExternalPaymentUri(
+    Uri uri, {
+    bool preferNonBrowser = false,
+  }) async {
+    if (preferNonBrowser) {
+      final launchedNonBrowser = await launchUrl(
+        uri,
+        mode: LaunchMode.externalNonBrowserApplication,
+      );
+      if (launchedNonBrowser) {
+        return true;
+      }
+    }
+
+    return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   void initState() {
@@ -100,14 +124,40 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
     final profileAsync = ref.watch(profileProvider);
     final profile = profileAsync.asData?.value;
-    if (profile != null && !_hasInitializedProfileData) {
-      _hasInitializedProfileData = true;
+    if ((profile != null || defaultMethod != null) && !_hasInitializedContactFields) {
+      _hasInitializedContactFields = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
-            if (profile.phone != null) _phoneController.text = profile.phone!;
-            _nameController.text = profile.fullName;
-            if (profile.email != null) _emailController.text = profile.email!;
+            final defaultPhone = defaultMethod?.phoneNumber.trim();
+            final profilePhone = profile?.phone?.trim();
+            if (defaultPhone != null && defaultPhone.isNotEmpty) {
+              _phoneController.text = defaultPhone;
+              _selectedDjamoCountryCode = _inferDjamoCountryCodeFromMethod(defaultMethod);
+            } else if (profilePhone != null && profilePhone.isNotEmpty) {
+              _phoneController.text = profilePhone;
+              _selectedDjamoCountryCode = _inferDjamoCountryCode(profilePhone);
+            }
+            _nameController.text = profile?.fullName ?? '';
+            if ((profile?.email?.trim().isNotEmpty ?? false)) {
+              _emailController.text = profile!.email!.trim();
+            }
+          });
+        }
+      });
+    }
+
+    if (defaultMethod != null && !_hasAppliedDefaultPaymentMethod) {
+      _hasAppliedDefaultPaymentMethod = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final defaultPhone = defaultMethod.phoneNumber.trim();
+        final profilePhone = profile?.phone?.trim() ?? '';
+        if (defaultPhone.isEmpty) return;
+        if (_phoneController.text.trim().isEmpty || _phoneController.text.trim() == profilePhone) {
+          setState(() {
+            _phoneController.text = defaultPhone;
+            _selectedDjamoCountryCode = _inferDjamoCountryCodeFromMethod(defaultMethod);
           });
         }
       });
@@ -243,6 +293,10 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                         ],
                       ),
                     ),
+                    if (_selectedMethod == 'djamo') ...[
+                      SizedBox(height: 12.h),
+                      _buildDjamoCountrySelector(),
+                    ],
                   ] else if (profile != null && profile.fullName.isEmpty) ...[
                     // No payment method + no profile name — redirect to complete profile
                     _buildIncompleteProfileBanner(context),
@@ -491,6 +545,10 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Informations de paiement', style: AppTextStyles.labelLg),
+            if (methodCode == 'djamo') ...[
+              gapH12,
+              _buildDjamoCountrySelector(),
+            ],
             if (defaultMethod != null) ...[
               gapH8,
               Text(
@@ -600,6 +658,49 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: AppTextStyles.bodySm.copyWith(color: AppColors.outline),
+            filled: true,
+            fillColor: AppColors.surfaceVariant,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDjamoCountrySelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pays du compte Djamo',
+          style: AppTextStyles.bodySm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        gapH4,
+        DropdownButtonFormField<String>(
+          initialValue: _selectedDjamoCountryCode,
+          items: _djamoCountries
+              .map(
+                (country) => DropdownMenuItem<String>(
+                  value: country.code,
+                  child: Text(
+                    '${country.flag} ${country.name}',
+                    style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurface),
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => _selectedDjamoCountryCode = value);
+          },
+          decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.surfaceVariant,
             contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -738,146 +839,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     );
   }
 
-  Future<bool> _showMoovCiCountdownDialog() async {
-    int timeLeft = 30;
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            final timer = Stream.periodic(const Duration(seconds: 1), (i) => i);
-            final subscription = timer.listen((_) {
-              if (timeLeft > 0) {
-                if (context.mounted) {
-                  setStateDialog(() {
-                    timeLeft--;
-                  });
-                }
-              } else {
-                if (context.mounted) {
-                  Navigator.pop(context, true);
-                }
-              }
-            });
-
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              title: Text(
-                'Validation Moov Money',
-                style: AppTextStyles.headlineSm.copyWith(color: AppColors.primary),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Veuillez valider la transaction sur votre téléphone en saisissant votre code secret Moov.',
-                    style: AppTextStyles.bodySm,
-                    textAlign: TextAlign.center,
-                  ),
-                  gapH16,
-                  Text(
-                    '$timeLeft s',
-                    style: AppTextStyles.headlineLg.copyWith(
-                      color: AppColors.primary,
-                      fontSize: 36.sp,
-                    ),
-                  ),
-                  gapH8,
-                  const CircularProgressIndicator.adaptive(),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    subscription.cancel();
-                    Navigator.pop(context, false);
-                  },
-                  child: Text(
-                    'Annuler',
-                    style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurfaceVariant),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    subscription.cancel();
-                    Navigator.pop(context, true);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                  child: Text('Vérifier', style: AppTextStyles.labelLg),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    ) ?? false;
-  }
-
-  Future<void> _showQrCodeDialog(String qrCodeBase64) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.r),
-          ),
-          title: Text(
-            'Scannez le QR Code',
-            style: AppTextStyles.headlineSm.copyWith(color: AppColors.primary),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Ouvrez votre application de paiement et scannez ce QR code pour finaliser la transaction.',
-                style: AppTextStyles.bodySm,
-                textAlign: TextAlign.center,
-              ),
-              gapH16,
-              Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: AppColors.outlineVariant),
-                ),
-                child: Image.memory(
-                  base64Decode(qrCodeBase64),
-                  width: 200.r,
-                  height: 200.r,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
-              child: Text('J\'ai payé', style: AppTextStyles.labelLg),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _pay() async {
     if (_selectedMethod == null) return;
 
@@ -948,6 +909,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         details['email'] = _emailController.text.trim().isNotEmpty
             ? _emailController.text.trim()
             : profileSnap?.email ?? '';
+        if (_selectedMethod == 'djamo') {
+          details['code_country'] = _selectedDjamoCountryCode.toLowerCase();
+        }
         if (_selectedMethod == 'om_ci' || _selectedMethod == 'om_bf') {
           details['otp'] = _walletPasswordController.text.trim();
         }
@@ -970,31 +934,18 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
         if (deepLink != null) {
           final uri = Uri.parse(deepLink);
-          final launched = await canLaunchUrl(uri) && await launchUrl(uri, mode: LaunchMode.externalApplication);
+          final launched = await _launchExternalPaymentUri(
+            uri,
+            preferNonBrowser: true,
+          );
           if (!launched) {
-            // Deep link failed (no OM app installed or emulator) — extract QR from url or open web fallback
             if (url != null) {
-              final qrUri = Uri.parse(url);
-              final qrCodeBase64 = qrUri.queryParameters['data[qrcode]'] ?? qrUri.queryParameters['data%5Bqrcode%5D'];
-              if (qrCodeBase64 != null) {
-                await _showQrCodeDialog(qrCodeBase64);
-              } else if (await canLaunchUrl(qrUri)) {
-                await launchUrl(qrUri, mode: LaunchMode.externalApplication);
-              }
+              final fallbackUri = Uri.parse(url);
+              await _launchExternalPaymentUri(fallbackUri);
             }
           }
           if (mounted) await _pollPaymentConfirmation(paymentId);
           return;
-        }
-
-        if (url != null && (url.contains('data[qrcode]') || url.contains('data%5Bqrcode%5D'))) {
-          final uri = Uri.parse(url);
-          final qrCodeBase64 = uri.queryParameters['data[qrcode]'] ?? uri.queryParameters['data%5Bqrcode%5D'];
-          if (qrCodeBase64 != null) {
-            await _showQrCodeDialog(qrCodeBase64);
-            if (mounted) await _pollPaymentConfirmation(paymentId);
-            return;
-          }
         }
 
         final cid = executeResult?['data']?['details']?['cid'] as String?
@@ -1023,17 +974,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           return;
         }
 
-        if (_selectedMethod == 'moov_ci' || _selectedMethod == 'paydunya_moov_ci') {
-          await _showMoovCiCountdownDialog();
-          if (mounted) await _pollPaymentConfirmation(paymentId);
-          return;
-        }
-
         if (url != null && url.isNotEmpty) {
           final uri = Uri.parse(url);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
+          await _launchExternalPaymentUri(uri);
           if (mounted) await _pollPaymentConfirmation(paymentId);
           return;
         }
@@ -1085,13 +1028,49 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     if (method == null) return null;
     final provider = method.provider as String? ?? '';
     if (provider != 'paydunya') return null;
+    final savedMethod = (method.method as String?)?.trim();
+    if (savedMethod != null && savedMethod.isNotEmpty) {
+      return savedMethod;
+    }
     final label = (method.label as String? ?? '').toLowerCase();
-    if (label.contains('orange')) return 'orange_senegal';
-    if (label.contains('free')) return 'free_senegal';
+    if (label.contains('portefeuille paydunya')) return 'paydunya_wallet';
+    if (label.contains('djamo')) return 'djamo';
     if (label.contains('wizall')) return 'wizall_senegal';
     if (label.contains('expresso')) return 'expresso_sn';
+    if (label.contains('free')) return 'free_senegal';
+    if (label.contains('orange money sénégal')) return 'orange_senegal';
+    if (label.contains('orange money côte')) return 'om_ci';
+    if (label.contains('orange money burkina')) return 'om_bf';
+    if (label.contains('orange money mali')) return 'om_ml';
+    if (label.contains('mtn money côte')) return 'mtn_ci';
+    if (label.contains('mtn bénin')) return 'mtn_bj';
+    if (label.contains('mtn cameroun')) return 'mtn_cm';
+    if (label.contains('moov côte')) return 'moov_ci';
+    if (label.contains('moov burkina')) return 'moov_bf';
+    if (label.contains('moov bénin')) return 'moov_bj';
+    if (label.contains('moov togo')) return 'moov_tg';
+    if (label.contains('moov mali')) return 'moov_ml';
+    if (label.contains('t-money')) return 't_money_tg';
+    if (label.contains('wave côte')) return 'wave_ci';
     if (label.contains('wave')) return 'wave_senegal';
-    return 'wave_senegal';
+    return null;
+  }
+
+  String _inferDjamoCountryCode(String phone) {
+    final normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (normalized.startsWith('+225') || normalized.startsWith('225') || normalized.length == 10) {
+      return 'CI';
+    }
+    return 'SN';
+  }
+
+  String _inferDjamoCountryCodeFromMethod(dynamic method) {
+    final savedCountry = (method?.country as String?)?.trim().toUpperCase();
+    if (savedCountry == 'CI' || savedCountry == 'SN') {
+      return savedCountry!;
+    }
+    final phone = method?.phoneNumber as String? ?? '';
+    return _inferDjamoCountryCode(phone);
   }
 }
 
@@ -1181,23 +1160,34 @@ class _PaymentWaitingSheet extends StatefulWidget {
   State<_PaymentWaitingSheet> createState() => _PaymentWaitingSheetState();
 }
 
-class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet> {
-  static const _pollInterval = Duration(seconds: 4);
+class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
+    with WidgetsBindingObserver {
+  static const _pollInterval = Duration(seconds: 6);
   static const _timeout = Duration(minutes: 5);
-  bool _checking = false;
+  bool _manualChecking = false;
+  bool _backgroundChecking = false;
   int _elapsed = 0;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startPolling();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_runCheck(showLoading: false));
+    }
   }
 
   void _startPolling() {
@@ -1208,13 +1198,21 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet> {
         // Timeout — let user stay on page, webhook will eventually come
         return;
       }
-      await _check();
+      await _runCheck(showLoading: false);
     });
   }
 
   Future<void> _check() async {
-    if (_checking || !mounted) return;
-    setState(() => _checking = true);
+    await _runCheck(showLoading: true);
+  }
+
+  Future<void> _runCheck({required bool showLoading}) async {
+    if ((_backgroundChecking || _manualChecking) || !mounted) return;
+    if (showLoading) {
+      setState(() => _manualChecking = true);
+    } else {
+      _backgroundChecking = true;
+    }
     try {
       final status = await widget.reconcile(widget.paymentId);
       if (!mounted) return;
@@ -1228,7 +1226,10 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet> {
     } catch (_) {
       // Network error — keep polling
     } finally {
-      if (mounted) setState(() => _checking = false);
+      _backgroundChecking = false;
+      if (mounted && showLoading) {
+        setState(() => _manualChecking = false);
+      }
     }
   }
 
@@ -1291,9 +1292,9 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet> {
           ],
           SizedBox(height: 24.h),
           AppButton.outline(
-            label: _checking ? 'Vérification…' : 'Vérifier maintenant',
-            onPressed: _checking ? null : _check,
-            isLoading: _checking,
+            label: _manualChecking ? 'Vérification…' : 'Vérifier maintenant',
+            onPressed: _manualChecking ? null : _check,
+            isLoading: _manualChecking,
           ),
           if (timedOut) ...[
             SizedBox(height: 12.h),

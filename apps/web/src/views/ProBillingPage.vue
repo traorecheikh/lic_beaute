@@ -344,9 +344,9 @@
     <Modal
       :show="showCheckoutModal"
       title="Abonnement Beauté Avenue"
-      subtitle="Finalisez votre paiement sécurisé sans redirection."
+      subtitle="Finalisez votre paiement puis attendez la confirmation PayDunya."
       max-width="lg"
-      @close="showCheckoutModal = false"
+      @close="closeCheckoutModal"
     >
       <div class="space-y-4">
         <!-- Step 1: Select Country and Method -->
@@ -516,29 +516,7 @@
           </div>
         </div>
 
-        <!-- Step 3: QR Code rendering -->
-        <div v-if="checkoutStep === 'qr_code'" class="space-y-4 text-center">
-          <h4 class="text-sm font-bold text-espresso">Scannez le QR Code Orange Money</h4>
-          <p class="text-xs text-cocoa/60 max-w-sm mx-auto">
-            Ouvrez votre application Orange Money et scannez ce QR Code pour valider votre paiement.
-          </p>
-          <div class="inline-block p-4 bg-white rounded-2xl border border-outline-variant/60 mx-auto mt-2">
-            <img :src="`data:image/png;base64,${qrCodeBase64}`" class="w-48 h-48 block" alt="Orange Money QR Code" />
-          </div>
-        </div>
-
-        <!-- Step 4: 3DS Redirect container -->
-        <div v-if="checkoutStep === 'three_ds'" class="space-y-4">
-          <h4 class="text-sm font-bold text-espresso text-center">Authentification 3D Secure</h4>
-          <p class="text-xs text-cocoa/60 text-center max-w-sm mx-auto">
-            Veuillez compléter l'authentification 3D Secure ci-dessous auprès de votre banque pour valider la transaction.
-          </p>
-          <div class="w-full border border-outline-variant/40 rounded-2xl overflow-hidden bg-neutral-bg mt-2">
-            <iframe :src="threeDsUrl" class="w-full h-[450px]" frameborder="0"></iframe>
-          </div>
-        </div>
-
-        <!-- Step 5: Wizall SMS OTP validation -->
+        <!-- Step 3: Wizall SMS OTP validation -->
         <div v-if="checkoutStep === 'wizall_otp'" class="space-y-4">
           <h4 class="text-sm font-bold text-espresso">Validation OTP Wizall</h4>
           <p class="text-xs text-cocoa/60">
@@ -549,11 +527,40 @@
             <input v-model="wizallOtpCode" type="text" class="input-shell" placeholder="12345" />
           </div>
         </div>
+
+        <div v-if="checkoutStep === 'waiting'" class="space-y-4">
+          <div class="rounded-3xl border border-outline-variant/40 bg-neutral-bg/40 px-5 py-6 text-center">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <ArrowTrendingUpIcon class="h-6 w-6 text-primary" />
+            </div>
+            <h4 class="text-sm font-bold text-espresso">
+              {{ waitingTimedOut ? "En attente de confirmation" : "Confirmation du paiement en cours" }}
+            </h4>
+            <p class="mt-2 text-xs leading-relaxed text-cocoa/60 max-w-sm mx-auto">
+              <template v-if="waitingTimedOut">
+                PayDunya finalise encore la confirmation. Vous pouvez fermer cette fenêtre et revenir plus tard, ou vérifier manuellement.
+              </template>
+              <template v-else>
+                Finalisez le paiement dans l'application ou la page ouverte, puis revenez ici. L'abonnement sera activé dès réception de la confirmation PayDunya.
+              </template>
+            </p>
+            <button
+              v-if="waitingLaunchUrl"
+              type="button"
+              class="btn-secondary mt-4 text-xs"
+              @click="reopenWaitingLink"
+            >
+              Rouvrir le moyen de paiement
+            </button>
+          </div>
+        </div>
       </div>
 
       <template #footer>
         <div class="flex items-center justify-end gap-2">
-          <button type="button" class="btn-secondary text-xs" @click="showCheckoutModal = false">Fermer</button>
+          <button type="button" class="btn-secondary text-xs" @click="closeCheckoutModal">
+            {{ checkoutStep === 'waiting' && !waitingTimedOut ? 'Fermer' : 'Annuler' }}
+          </button>
           
           <button
             v-if="checkoutStep === 'select_method'"
@@ -586,12 +593,13 @@
           </button>
 
           <button
-            v-if="checkoutStep === 'qr_code' || checkoutStep === 'three_ds'"
+            v-if="checkoutStep === 'waiting'"
             type="button"
             class="btn-primary text-xs"
-            @click="finalizeCheckoutReconciliation"
+            :disabled="waitingManualCheck"
+            @click="verifyWaitingCharge(true)"
           >
-            J'ai finalisé le paiement
+            {{ waitingManualCheck ? 'Vérification...' : 'Vérifier maintenant' }}
           </button>
         </div>
       </template>
@@ -600,7 +608,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import dayjs from "dayjs";
 import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
@@ -625,18 +633,25 @@ import {
   executeProSubscription,
   downloadProInvoicePdf,
   fetchProInvoices,
+  fetchProSubscriptionChargeStatus,
   fetchProSubscription,
   fetchProSubscriptionFeatures,
   updateProSubscription
 } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  isPaydunyaMethodAvailableForCountry,
+  isSuccessfulSubscriptionCharge,
+  requiresAsyncSubscriptionConfirmation,
+  resolvePaydunyaLaunchUrl,
+  shouldOpenPaydunyaLinkInSameTab
+} from "@/lib/pro-billing";
 import { toast } from "vue-sonner";
 import Modal from "@/components/Modal.vue";
 import type {
   ProSubscriptionCheckoutInput,
-  ProSubscriptionUpdateInputBillingMethod,
-  ProSubscriptionUpdateInputBillingMethodProviderEnum
+  ProSubscriptionUpdateInputBillingMethod
 } from "@/lib/generated";
 import { resolveApiBaseUrl } from "@/lib/api-base";
 
@@ -713,26 +728,6 @@ const clearPaymentMethodMutation = useMutation({
   },
   onError: (error) => {
     toast.error(getErrorMessage(error, "Suppression impossible pour le moment."));
-  }
-});
-
-const checkoutMutation = useMutation({
-  mutationFn: () => {
-    const payload: ProSubscriptionCheckoutInput & { billingCycle?: "monthly" | "annual" } = {
-      action: subscriptionQuery.data.value?.tier === "premium" ? "renewal" : "upgrade",
-      provider: "paydunya" as ProSubscriptionUpdateInputBillingMethodProviderEnum,
-      billingCycle: billingCycle.value
-    };
-    return checkoutProSubscription(auth.accessToken ?? "", payload as unknown as ProSubscriptionCheckoutInput);
-  },
-  onSuccess: (result) => {
-    if (result.redirectUrl) {
-      window.open(result.redirectUrl, "_blank", "noopener,noreferrer");
-    }
-    toast.success("Redirection vers le paiement.");
-  },
-  onError: (error) => {
-    toast.error(getErrorMessage(error, "Paiement impossible pour le moment."));
   }
 });
 
@@ -870,17 +865,24 @@ function toggleAutoRenew() {
   toggleMutation.mutate(!current);
 }
 
+const CHECKOUT_WAITING_TIMEOUT_MS = 5 * 60 * 1000;
+const CHECKOUT_WAITING_POLL_INTERVAL_MS = 6 * 1000;
+
 const showCheckoutModal = ref(false);
-const checkoutStep = ref<'select_method' | 'enter_details' | 'qr_code' | 'three_ds' | 'wizall_otp'>('select_method');
+const checkoutStep = ref<'select_method' | 'enter_details' | 'wizall_otp' | 'waiting'>('select_method');
 const billingCycle = ref<'monthly' | 'annual'>('monthly');
 const selectedCountry = ref('sn');
 const selectedMethod = ref('');
 const isSubmitting = ref(false);
 const chargeId = ref('');
-const qrCodeBase64 = ref('');
-const threeDsUrl = ref('');
 const wizallOtpCode = ref('');
 const wizallCid = ref('');
+const waitingChargeId = ref('');
+const waitingLaunchUrl = ref<string | null>(null);
+const waitingTimedOut = ref(false);
+const waitingManualCheck = ref(false);
+let waitingPollTimer: number | null = null;
+let waitingStartedAt = 0;
 
 const cardForm = reactive({
   fullName: "",
@@ -992,7 +994,7 @@ const checkoutMethods = [
 ];
 
 const filteredMethods = computed(() => {
-  return checkoutMethods.filter(m => m.country === selectedCountry.value || m.code === "carte_bancaire");
+  return checkoutMethods.filter(m => isPaydunyaMethodAvailableForCountry(m.country, selectedCountry.value));
 });
 
 const mobileMoneyCountryOptions = computed(() => {
@@ -1036,14 +1038,118 @@ function formatCardNumber(e: Event) {
   cardForm.cardNumber = formatted;
 }
 
+function clearWaitingPoll() {
+  if (waitingPollTimer !== null) {
+    window.clearTimeout(waitingPollTimer);
+    waitingPollTimer = null;
+  }
+}
+
+function closeCheckoutModal() {
+  clearWaitingPoll();
+  showCheckoutModal.value = false;
+}
+
+function requiresAsyncConfirmation(result: { status?: string; message?: string; url?: string; other_url?: unknown; data?: Record<string, unknown> | undefined; pendingProviderConfirmation?: boolean }) {
+  return requiresAsyncSubscriptionConfirmation(result);
+}
+
+function openExternalPaymentLink(url: string | null) {
+  if (!url) return;
+  const device = {
+    userAgent: window.navigator.userAgent,
+    maxTouchPoints: window.navigator.maxTouchPoints
+  };
+
+  if (shouldOpenPaydunyaLinkInSameTab(url, device)) {
+    window.location.assign(url);
+    return;
+  }
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+  window.location.assign(url);
+}
+
+async function finalizeSuccessfulCharge() {
+  clearWaitingPoll();
+  await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+  await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
+  showCheckoutModal.value = false;
+  toast.success("Paiement confirmé.");
+}
+
+function scheduleWaitingPoll() {
+  clearWaitingPoll();
+  waitingPollTimer = window.setTimeout(() => {
+    void verifyWaitingCharge(false);
+  }, CHECKOUT_WAITING_POLL_INTERVAL_MS);
+}
+
+async function verifyWaitingCharge(manual: boolean) {
+  if (!auth.accessToken || !waitingChargeId.value) return;
+  if (manual) waitingManualCheck.value = true;
+  try {
+    const result = await fetchProSubscriptionChargeStatus(auth.accessToken, waitingChargeId.value) as {
+      status?: string;
+    };
+    if (isSuccessfulSubscriptionCharge(result)) {
+      await finalizeSuccessfulCharge();
+      return;
+    }
+    if (result.status === "failed" || result.status === "refunded") {
+      clearWaitingPoll();
+      waitingTimedOut.value = true;
+      toast.error("Le paiement n'a pas été confirmé. Veuillez réessayer.");
+      return;
+    }
+    if (Date.now() - waitingStartedAt >= CHECKOUT_WAITING_TIMEOUT_MS) {
+      waitingTimedOut.value = true;
+      clearWaitingPoll();
+      return;
+    }
+    if (checkoutStep.value === "waiting") {
+      scheduleWaitingPoll();
+    }
+  } catch (error) {
+    if (manual) {
+      toast.error(getErrorMessage(error, "La vérification du paiement a échoué."));
+    } else if (checkoutStep.value === "waiting") {
+      scheduleWaitingPoll();
+    }
+  } finally {
+    if (manual) waitingManualCheck.value = false;
+  }
+}
+
+function enterWaitingStep(nextChargeId: string, launchUrl: string | null) {
+  waitingChargeId.value = nextChargeId;
+  waitingLaunchUrl.value = launchUrl;
+  waitingTimedOut.value = false;
+  waitingStartedAt = Date.now();
+  checkoutStep.value = "waiting";
+  openExternalPaymentLink(launchUrl);
+  scheduleWaitingPoll();
+}
+
+function reopenWaitingLink() {
+  openExternalPaymentLink(waitingLaunchUrl.value);
+}
+
 function openCheckoutModal() {
+  clearWaitingPoll();
   checkoutStep.value = "select_method";
   billingCycle.value = "monthly";
-  selectedMethod.value = "";
-  qrCodeBase64.value = "";
-  threeDsUrl.value = "";
+  selectedCountry.value = billingMethod.value?.country ?? "sn";
+  selectedMethod.value = billingMethod.value?.method ?? "";
   wizallOtpCode.value = "";
   wizallCid.value = "";
+  waitingChargeId.value = "";
+  waitingLaunchUrl.value = null;
+  waitingTimedOut.value = false;
+  waitingManualCheck.value = false;
   isSubmitting.value = false;
 
   const user = auth.currentUser;
@@ -1067,7 +1173,27 @@ onMounted(() => {
     openCheckoutModal();
     void router.replace({ path: route.path, query: {} });
   }
+  window.addEventListener("focus", handleWindowFocus);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 });
+
+onUnmounted(() => {
+  clearWaitingPoll();
+  window.removeEventListener("focus", handleWindowFocus);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+});
+
+function handleWindowFocus() {
+  if (checkoutStep.value === "waiting") {
+    void verifyWaitingCharge(false);
+  }
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === "visible" && checkoutStep.value === "waiting") {
+    void verifyWaitingCharge(false);
+  }
+}
 
 async function handleCheckoutSubmit() {
   if (!selectedMethod.value) return;
@@ -1125,6 +1251,9 @@ async function handleCheckoutSubmit() {
       details.phone = normalizePhoneNumber(mobileMoneyForm.phone, selectedMobileMoneyCountry.value);
       details.customer_name = mobileMoneyForm.fullName.trim();
       details.customer_email = mobileMoneyForm.email.trim();
+      if (selectedMethod.value === "djamo") {
+        details.code_country = selectedCountry.value;
+      }
       if (selectedMethod.value === 'om_ci' || selectedMethod.value === 'om_bf') {
         details.otp = mobileMoneyForm.otp.trim();
       }
@@ -1136,19 +1265,6 @@ async function handleCheckoutSubmit() {
     });
 
     if (execResult.success) {
-      const url = execResult.url;
-
-      if (url && (url.includes("data[qrcode]") || url.includes("data%5Bqrcode%5D"))) {
-        const parsedUrl = new URL(url);
-        const qr = parsedUrl.searchParams.get("data[qrcode]") || parsedUrl.searchParams.get("data%5Bqrcode%5D");
-        if (qr) {
-          qrCodeBase64.value = decodeURIComponent(qr);
-          checkoutStep.value = "qr_code";
-          isSubmitting.value = false;
-          return;
-        }
-      }
-
       const detailsData = (execResult.data as any)?.details;
       const cid = (execResult.data as any)?.cid || detailsData?.cid;
       if (cid) {
@@ -1158,17 +1274,18 @@ async function handleCheckoutSubmit() {
         return;
       }
 
-      if (selectedMethod.value === 'carte_bancaire' && url) {
-        threeDsUrl.value = url;
-        checkoutStep.value = "three_ds";
-        isSubmitting.value = false;
+      if (requiresAsyncConfirmation(execResult)) {
+        enterWaitingStep(
+          initResult.chargeId,
+          resolvePaydunyaLaunchUrl(execResult, {
+            userAgent: window.navigator.userAgent,
+            maxTouchPoints: window.navigator.maxTouchPoints
+          })
+        );
         return;
       }
 
-      toast.success("Paiement effectué avec succès !");
-      await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
-      await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
-      showCheckoutModal.value = false;
+      await finalizeSuccessfulCharge();
     } else {
       const providerMessage = execResult.message || "Échec du paiement.";
       if (providerMessage.toLowerCase().includes("déjà été initié")) {
@@ -1201,10 +1318,17 @@ async function handleWizallOtpSubmit() {
     });
 
     if (execResult.success) {
-      toast.success("Paiement effectué avec succès !");
-      await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
-      await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
-      showCheckoutModal.value = false;
+      if (requiresAsyncConfirmation(execResult)) {
+        enterWaitingStep(
+          chargeId.value,
+          resolvePaydunyaLaunchUrl(execResult, {
+            userAgent: window.navigator.userAgent,
+            maxTouchPoints: window.navigator.maxTouchPoints
+          })
+        );
+        return;
+      }
+      await finalizeSuccessfulCharge();
     } else {
       toast.error(execResult.message || "Échec du paiement Wizall.");
     }
@@ -1215,27 +1339,12 @@ async function handleWizallOtpSubmit() {
   }
 }
 
-async function finalizeCheckoutReconciliation() {
-  await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
-  await queryClient.invalidateQueries({ queryKey: ["pro-invoices"] });
-  showCheckoutModal.value = false;
-  toast.success("Statut d'abonnement actualisé.");
-}
-
-function upgradePlan() {
-  openCheckoutModal();
-}
-
 function scheduleDowngrade() {
   downgradeMutation.mutate();
 }
 
 function cancelDowngrade() {
   cancelDowngradeMutation.mutate();
-}
-
-function formatDate(iso: string | Date) {
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
 async function openInvoice(invoice: (typeof invoices.value)[number]) {
@@ -1271,6 +1380,8 @@ async function openInvoice(invoice: (typeof invoices.value)[number]) {
 function openPaymentMethodModal() {
   paymentMethodForm.provider = billingMethod.value?.provider ?? "paydunya";
   paymentMethodForm.accountNumber = "";
+  paymentMethodForm.country = billingMethod.value?.country ?? "sn";
+  paymentMethodForm.method = billingMethod.value?.method ?? "wave";
   showPaymentMethodModal.value = true;
 }
 

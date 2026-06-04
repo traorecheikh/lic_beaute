@@ -8,12 +8,12 @@ import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_empty_state.dart';
-import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../models/account_models.dart';
 import '../providers/payment_methods_provider.dart';
+import '../../booking/providers/payment_methods_provider.dart' as booking_payment_methods;
 import '../widgets/payment_tile.dart';
 import '../widgets/profile_card_shell.dart';
 
@@ -28,12 +28,14 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   final _phoneController = TextEditingController();
   String _channel = 'wave_senegal';
   bool _saving = false;
-  static const Map<String, String> _channelLabels = {
+  static const Map<String, String> _fallbackChannelLabels = {
     'wave_senegal': 'Wave Sénégal',
     'orange_senegal': 'Orange Money Sénégal',
     'free_senegal': 'Free Money Sénégal',
     'wizall_senegal': 'Wizall Sénégal',
     'expresso_sn': 'Expresso Sénégal',
+    'djamo': 'Djamo',
+    'paydunya_wallet': 'Portefeuille PayDunya',
   };
 
   @override
@@ -45,6 +47,27 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   @override
   Widget build(BuildContext context) {
     final methodsAsync = ref.watch(paymentMethodsProvider);
+    final paydunyaMethodsAsync = ref.watch(booking_payment_methods.availablePaydunyaMethodsProvider);
+    final availableChannels = paydunyaMethodsAsync.asData?.value
+            .where((method) => method.enabled)
+            .toList() ??
+        const <booking_payment_methods.PaydunyaMethodRecord>[];
+    final channelItems = availableChannels.isNotEmpty
+        ? availableChannels
+        : _fallbackChannelLabels.entries
+            .map((entry) => booking_payment_methods.PaydunyaMethodRecord(
+                  code: entry.key,
+                  country: '',
+                  label: entry.value,
+                  enabled: true,
+                ))
+            .toList();
+
+    if (!channelItems.any((item) => item.code == _channel) && channelItems.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _channel = channelItems.first.code);
+      });
+    }
 
     return AppScaffold(
       appBar: const AppTopBar(title: 'Moyens de paiement', showBackButton: true),
@@ -92,15 +115,15 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   AppDropdown<String>(
                     label: 'Opérateur',
                     value: _channel,
-                    items: _channelLabels.keys.toList(),
-                    itemLabel: (v) => _channelLabels[v] ?? v,
+                    items: channelItems.map((item) => item.code).toList(),
+                    itemLabel: (value) =>
+                        channelItems
+                            .firstWhere((item) => item.code == value)
+                            .label,
                     onChanged: (val) => setState(() => _channel = val),
                   ),
                   gapH16,
-                  AppPhoneField(
-                    controller: _phoneController,
-                    labelText: 'Numéro de téléphone',
-                  ),
+                  _buildPhoneField(_phoneController),
                   SizedBox(height: 24.h),
                   AppButton.primary(
                     label: 'Ajouter',
@@ -145,10 +168,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   Text('Modifier le moyen de paiement',
                       style: AppTextStyles.labelLg),
                   SizedBox(height: 20.h),
-                  AppPhoneField(
-                    controller: phoneController,
-                    labelText: 'Numéro de téléphone',
-                  ),
+                  _buildPhoneField(phoneController),
                   gapH16,
                   TextField(
                     controller: labelController,
@@ -221,7 +241,9 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
           .add(
             provider: 'paydunya',
             phoneNumber: phone,
-            label: _channelLabels[_channel],
+            label: _resolveChannelLabel(),
+            method: _channel,
+            country: _resolveChannelCountry(),
           );
       _phoneController.clear();
       if (!mounted) return;
@@ -255,5 +277,48 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     } catch (error) {
       await context.handleHttpError(error, 'Mise à jour impossible.');
     }
+  }
+
+  Widget _buildPhoneField(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.phone,
+      decoration: InputDecoration(
+        labelText: 'Numéro de téléphone',
+        hintText: '778676477',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+    );
+  }
+
+  String _resolveChannelLabel() {
+    final liveMethods = ref.read(booking_payment_methods.availablePaydunyaMethodsProvider).asData?.value;
+    final matched = liveMethods?.firstWhere(
+      (item) => item.code == _channel,
+      orElse: () => booking_payment_methods.PaydunyaMethodRecord(
+        code: _channel,
+        country: '',
+        label: _fallbackChannelLabels[_channel] ?? _channel,
+        enabled: true,
+      ),
+    );
+    return matched?.label ?? (_fallbackChannelLabels[_channel] ?? _channel);
+  }
+
+  String? _resolveChannelCountry() {
+    final liveMethods = ref.read(booking_payment_methods.availablePaydunyaMethodsProvider).asData?.value;
+    final matched = liveMethods?.firstWhere(
+      (item) => item.code == _channel,
+      orElse: () => booking_payment_methods.PaydunyaMethodRecord(
+        code: _channel,
+        country: '',
+        label: _fallbackChannelLabels[_channel] ?? _channel,
+        enabled: true,
+      ),
+    );
+    final country = matched?.country.trim().toLowerCase();
+    return country == null || country.isEmpty ? null : country;
   }
 }

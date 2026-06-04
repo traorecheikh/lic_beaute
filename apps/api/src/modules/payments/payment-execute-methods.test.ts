@@ -71,14 +71,29 @@ describe("PaymentController - executePayment & getMethods", () => {
   // ─── executePayment ─────────────────────────────────────────────────────
 
   it("executes payment successfully with PayDunya adapter", async () => {
+    const txPaymentUpdate = vi.fn();
+    const txBookingUpdate = vi.fn();
+    const txAuditLogCreate = vi.fn();
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "client" });
     mocks.prisma.payment.findUnique.mockResolvedValue({
       id: "pay_1",
       bookingId: "b1",
+      amountXof: 5000,
       status: "pending",
       webhookSignature: "inv_tok_1",
+      providerTxId: null,
       booking: { clientId: "u1" }
     });
+    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
+      payment: { update: txPaymentUpdate },
+      booking: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        update: txBookingUpdate
+      },
+      bookingEvent: { create: vi.fn() },
+      settlementEvent: { findFirst: vi.fn(), create: vi.fn() },
+      auditLog: { create: txAuditLogCreate }
+    }));
     mocks.adapter.executePayment.mockResolvedValue({
       success: true,
       status: "succeeded",
@@ -95,11 +110,110 @@ describe("PaymentController - executePayment & getMethods", () => {
       method: "wave_senegal",
       invoiceToken: "inv_tok_1"
     });
-    expect(mocks.prisma.payment.update).toHaveBeenCalledWith({
+    expect(txPaymentUpdate).toHaveBeenCalledWith({
       where: { id: "pay_1" },
       data: { status: "succeeded", providerTxId: "inv_tok_1" }
     });
+    expect(txBookingUpdate).toHaveBeenCalledWith({
+      where: { id: "b1" },
+      data: { depositPaymentStatus: "succeeded" }
+    });
+    expect(txAuditLogCreate).toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalled();
+  });
+
+  it("keeps provider-completion methods authorized until confirmation arrives", async () => {
+    const txPaymentUpdate = vi.fn();
+    const txBookingUpdate = vi.fn();
+    const txAuditLogCreate = vi.fn();
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_async",
+      bookingId: "b_async",
+      amountXof: 5000,
+      status: "pending",
+      webhookSignature: "inv_async",
+      providerTxId: "inv_async",
+      booking: { clientId: "u1" }
+    });
+    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
+      payment: { update: txPaymentUpdate },
+      booking: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        update: txBookingUpdate
+      },
+      bookingEvent: { create: vi.fn() },
+      settlementEvent: { findFirst: vi.fn(), create: vi.fn() },
+      auditLog: { create: txAuditLogCreate }
+    }));
+    mocks.adapter.executePayment.mockResolvedValue({
+      success: true,
+      status: "succeeded",
+      providerTxId: "inv_async",
+      data: { cid: "wizall-step" }
+    });
+
+    await (controller as any).executePayment(
+      { body: { paymentId: "pay_async", method: "wizall_senegal" } },
+      {} as never
+    );
+
+    expect(txPaymentUpdate).toHaveBeenCalledWith({
+      where: { id: "pay_async" },
+      data: { status: "authorized", providerTxId: "inv_async" }
+    });
+    expect(txBookingUpdate).toHaveBeenCalledWith({
+      where: { id: "b_async" },
+      data: { depositPaymentStatus: "authorized" }
+    });
+    expect(txAuditLogCreate).toHaveBeenCalled();
+    expect(mocks.ok).toHaveBeenCalled();
+  });
+
+  it("keeps async message-only methods authorized until confirmation arrives", async () => {
+    const txPaymentUpdate = vi.fn();
+    const txBookingUpdate = vi.fn();
+    const txAuditLogCreate = vi.fn();
+
+    mocks.prisma.payment.findUnique.mockResolvedValue({
+      id: "pay_sms",
+      bookingId: "b_sms",
+      amountXof: 3000,
+      status: "pending",
+      providerTxId: null,
+      webhookSignature: "inv_sms",
+      booking: { clientId: "u1" }
+    });
+    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
+      payment: { update: txPaymentUpdate },
+      booking: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        update: txBookingUpdate
+      },
+      bookingEvent: { create: vi.fn() },
+      settlementEvent: { findFirst: vi.fn(), create: vi.fn() },
+      auditLog: { create: txAuditLogCreate }
+    }));
+    mocks.adapter.executePayment.mockResolvedValue({
+      success: true,
+      status: "authorized",
+      providerTxId: "inv_sms",
+      message: "Votre paiement est en cours de traitement. Merci de valider le paiement après reception de sms pour le compléter."
+    });
+
+    await (controller as any).executePayment(
+      { body: { paymentId: "pay_sms", method: "expresso_sn" } },
+      {} as never
+    );
+
+    expect(txPaymentUpdate).toHaveBeenCalledWith({
+      where: { id: "pay_sms" },
+      data: { status: "authorized", providerTxId: "inv_sms" }
+    });
+    expect(txBookingUpdate).toHaveBeenCalledWith({
+      where: { id: "b_sms" },
+      data: { depositPaymentStatus: "authorized" }
+    });
+    expect(txAuditLogCreate).toHaveBeenCalled();
   });
 
   it("returns 404 when payment not found", async () => {

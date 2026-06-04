@@ -43,6 +43,11 @@ const router = createRouter({
       name: "pro-magic-login",
       component: () => import("@/views/ProMagicLoginPage.vue")
     },
+    {
+      path: "/payment/callback",
+      name: "payment-callback",
+      component: () => import("@/views/PaymentCallbackPage.vue")
+    },
     // --- Protected Pro Routes ---
     {
       path: "/pro",

@@ -34,12 +34,22 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
     required String provider,
     required String phoneNumber,
     String? label,
+    String? method,
+    String? country,
   }) async {
     final idempotencyKey = _idempotencyKey();
     final payload = {
       'provider': provider,
       'phoneNumber': phoneNumber,
-      if (label != null && label.trim().isNotEmpty) 'label': label.trim(),
+      ...?((label != null && label.trim().isNotEmpty)
+          ? {'label': label.trim()}
+          : null),
+      ...?((method != null && method.trim().isNotEmpty)
+          ? {'method': method.trim()}
+          : null),
+      ...?((country != null && country.trim().isNotEmpty)
+          ? {'country': country.trim().toLowerCase()}
+          : null),
     };
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
@@ -66,10 +76,14 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
     String paymentMethodId, {
     String? phoneNumber,
     String? label,
+    String? method,
+    String? country,
   }) async {
     final payload = {
-      if (phoneNumber != null) 'phoneNumber': phoneNumber,
-      if (label != null) 'label': label,
+      ...?(phoneNumber != null ? {'phoneNumber': phoneNumber} : null),
+      ...?(label != null ? {'label': label} : null),
+      ...?(method != null ? {'method': method} : null),
+      ...?(country != null ? {'country': country} : null),
     };
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
@@ -138,6 +152,8 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
               provider: entry.payload['provider'] as String? ?? 'paydunya',
               phoneNumber: entry.payload['phoneNumber'] as String? ?? '',
               label: entry.payload['label'] as String?,
+              method: entry.payload['method'] as String?,
+              country: entry.payload['country'] as String?,
               isDefault: items.every((item) => !item.isDefault),
               lastUsedAt: null,
               pendingSync: true,
@@ -154,6 +170,8 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
             return item.copyWith(
               phoneNumber: data['phoneNumber'] as String?,
               label: data['label'] as String?,
+              method: data['method'] as String?,
+              country: data['country'] as String?,
               pendingSync: true,
             );
           }).toList();

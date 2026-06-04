@@ -72,6 +72,11 @@ describe("PayDunyaAdapter", () => {
 
     const body = JSON.parse(String(init.body)) as Record<string, unknown>;
     expect(body.store).toMatchObject({ name: "Beauté Avenue Dev" });
+    expect(body.actions).toMatchObject({
+      return_url: "https://app.example.com/payment/callback",
+      cancel_url: "https://app.example.com/payment/callback",
+      callback_url: "https://app.example.com/api/v1/payments/webhooks/paydunya"
+    });
     const cd = body.custom_data as Record<string, unknown>;
     expect(cd.payment_method).toBe("wave_senegal");
     expect(cd.paymentId).toBe("pay_1");
@@ -232,7 +237,8 @@ describe("PayDunyaAdapter", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.status).toBe("succeeded");
+    expect(result.status).toBe("authorized");
+    expect(result.pendingProviderConfirmation).toBe(true);
     expect(result.providerTxId).toBe("inv_tok");
 
     const init = fetchMock.mock.calls[0][0] as string;
@@ -265,10 +271,99 @@ describe("PayDunyaAdapter", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.status).toBe("succeeded");
+    expect(result.status).toBe("authorized");
+    expect(result.pendingProviderConfirmation).toBe(true);
 
     const init = fetchMock.mock.calls[0][0] as string;
     expect(init).toContain("/softpay/new-orange-money-senegal");
+  });
+
+  it("keeps async non-redirect methods awaiting confirmation", async () => {
+    const fetchMock = mockFetch({
+      success: true,
+      message: "Votre paiement est en cours de traitement. Merci de valider le paiement après reception de sms pour le compléter.",
+      currency: "XOF"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const result = await adapter.executePayment({
+      paymentId: "pay_expresso",
+      method: "expresso_sn",
+      invoiceToken: "inv_expresso"
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.status).toBe("authorized");
+    expect(result.pendingProviderConfirmation).toBe(true);
+    expect(result.providerTxId).toBe("inv_expresso");
+  });
+
+  it("uses the provider success token returned by Wizall confirm", async () => {
+    const fetchMock = mockFetch({
+      success: true,
+      message: "Paiement réussi",
+      return_url: "https://www.paydunya.com/successful-payment",
+      token: "wizall_confirm_tok"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const result = await adapter.executePayment({
+      paymentId: "pay_wizall_confirm",
+      method: "wizall_senegal",
+      invoiceToken: "inv_wizall",
+      details: {
+        authorization_code: "461050",
+        phone_number: "777777777",
+        transaction_id: "286513913"
+      }
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.status).toBe("succeeded");
+    expect(result.pendingProviderConfirmation).toBe(false);
+    expect(result.providerTxId).toBe("wizall_confirm_tok");
+
+    const endpoint = fetchMock.mock.calls[0][0] as string;
+    expect(endpoint).toContain("/softpay/wizall-money-senegal/confirm");
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      authorization_code: "461050",
+      phone_number: "777777777",
+      transaction_id: "286513913"
+    });
+  });
+
+  it("passes code_country for Djamo payments", async () => {
+    const fetchMock = mockFetch({
+      success: true,
+      message: "Rediriger vers cette URL pour completer le paiement.",
+      url: "https://p.djamo.com/payment-link/charge"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    await adapter.executePayment({
+      paymentId: "pay_djamo",
+      method: "djamo",
+      invoiceToken: "inv_djamo",
+      details: {
+        phone: "0777568646",
+        fullName: "Camille",
+        email: "camille@example.com",
+        code_country: "ci"
+      }
+    });
+
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      djamo_payment_token: "inv_djamo",
+      djamo_phone: "0777568646",
+      djamo_fullName: "Camille",
+      djamo_email: "camille@example.com",
+      code_country: "ci"
+    });
   });
 
   it("returns failed when softpay execution returns success=false", async () => {
@@ -360,9 +455,55 @@ describe("PayDunyaAdapter", () => {
     expect(result.status).toBe("pending");
   });
 
+  it("confirms payment status from PayDunya invoice token", async () => {
+    const fetchMock = mockFetch({
+      response_code: "00",
+      response_text: "https://app.paydunya.com/sandbox-checkout/invoice/test_token_1",
+      description: "Checkout Invoice Confirmed",
+      status: "completed",
+      token: "test_token_1"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const status = await adapter.fetchPaymentStatus({ providerToken: "test_token_1" });
+
+    expect(status).toBe("succeeded");
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "https://app.paydunya.com/sandbox-api/v1/checkout-invoice/confirm/test_token_1"
+    );
+  });
+
   // ─── verifyWebhookSignature ──────────────────────────────────────────────
 
-  it("verifies valid SHA-512 webhook signature", () => {
+  it("verifies the documented IPN SHA-512 webhook signature", () => {
+    const adapter = makeAdapter();
+    const hash = crypto
+      .createHash("sha512")
+      .update(MASTER_KEY)
+      .digest("hex");
+
+    const payload = JSON.stringify({
+      data: {
+        response_code: "00",
+        response_text: "Transaction Found",
+        hash,
+        invoice: {
+          token: "test_jkEdPY8SuG",
+          total_amount: "42300",
+          description: "Paiement test"
+        },
+        status: "completed",
+        custom_data: {
+          paymentId: "pay_1",
+          idempotencyKey: "idem_1"
+        }
+      }
+    });
+    expect(adapter.verifyWebhookSignature({ rawBody: payload })).toBe(true);
+  });
+
+  it("keeps compatibility with the legacy webhook signature format", () => {
     const adapter = makeAdapter();
     const token = "ipn_token_123";
     const invoiceData = '{"status":"completed","total_amount":"10000","custom_data":{"paymentId":"pay_1"}}';
@@ -431,6 +572,39 @@ describe("PayDunyaAdapter", () => {
     expect(event.metadata).toMatchObject({
       paymentId: "pay_1",
       idempotencyKey: "k1",
+      payment_method: "wave_senegal"
+    });
+  });
+
+  it("parses the documented IPN payload shape", () => {
+    const adapter = makeAdapter();
+    const event = adapter.parseWebhook(
+      JSON.stringify({
+        data: {
+          response_code: "00",
+          response_text: "Transaction Found",
+          hash: "any",
+          invoice: {
+            token: "test_jkEdPY8SuG",
+            total_amount: "42300",
+            description: "Paiement test",
+            custom_data: {
+              paymentId: "pay_doc",
+              idempotencyKey: "doc_1",
+              payment_method: "wave_senegal"
+            }
+          },
+          status: "completed"
+        }
+      })
+    );
+
+    expect(event.providerRef).toBe("test_jkEdPY8SuG");
+    expect(event.status).toBe("succeeded");
+    expect(event.amountXof).toBe(42300);
+    expect(event.metadata).toMatchObject({
+      paymentId: "pay_doc",
+      idempotencyKey: "doc_1",
       payment_method: "wave_senegal"
     });
   });
@@ -731,10 +905,16 @@ describe("PayDunyaAdapter", () => {
 
   // ─── fetchPaymentStatus ──────────────────────────────────────────────────
 
-  it("returns pending for fetchPaymentStatus (no public endpoint)", async () => {
+  it("throws when fetchPaymentStatus receives a non-ok HTTP response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetch("Service Unavailable", { ok: false, status: 503 })
+    );
+
     const adapter = makeAdapter();
-    const status = await adapter.fetchPaymentStatus({ providerToken: "any_token" });
-    expect(status).toBe("pending");
+    await expect(
+      adapter.fetchPaymentStatus({ providerToken: "any_token" })
+    ).rejects.toThrow(/PayDunya \/checkout-invoice\/confirm failed: 503/);
   });
 
   // ─── normalizeStatus (direct mapping coverage) ──────────────────────────

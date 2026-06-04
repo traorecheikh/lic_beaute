@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => {
     booking: { findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
     review: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     subscription: { findUnique: vi.fn(), update: vi.fn() },
-    subscriptionCharge: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    subscriptionCharge: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     settlementEvent: { findMany: vi.fn(), create: vi.fn() },
     billingInvoice: { findMany: vi.fn(), findFirst: vi.fn() },
     payment: { findFirst: vi.fn() },
@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => {
   const fetchAndComputeAvailableSlots = vi.fn();
   const enqueueJob = vi.fn();
   const invalidateCacheTags = vi.fn();
-  const paymentAdapter = { initiateDeposit: vi.fn() };
+  const paymentAdapter = { initiateDeposit: vi.fn(), executePayment: vi.fn(), fetchPaymentStatus: vi.fn() };
   return { requireRole, fail, ok, handleError, getOrSetCachedJson, prisma, getProDashboard, fetchAndComputeAvailableSlots, enqueueJob, invalidateCacheTags, paymentAdapter };
 });
 
@@ -170,5 +170,162 @@ describe("ProController basic success", () => {
     await c.downloadInvoicePdf({ params: { invoiceId: "i1" } } as never, pdfReply);
 
     expect(mocks.ok).toHaveBeenCalled();
+  });
+
+  it("keeps redirect-based subscription charges awaiting webhook confirmation", async () => {
+    const txSubscriptionChargeUpdate = vi.fn();
+    const txBillingInvoiceCreate = vi.fn();
+    const txSubscriptionUpdate = vi.fn();
+    const txSalonUpdate = vi.fn();
+    const txAuditLogCreate = vi.fn();
+
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "ch_wave",
+      status: "pending",
+      amountXof: 30000,
+      chargeType: "upgrade",
+      idempotencyKey: "sub-sub1-upgrade-monthly-2026-06",
+      providerTxId: "invoice_tok",
+      subscriptionId: "sub1",
+      subscription: { id: "sub1", salonId: "s1" }
+    });
+    mocks.paymentAdapter.executePayment.mockResolvedValue({
+      success: true,
+      status: "succeeded",
+      providerTxId: "invoice_tok",
+      url: "https://wave.example/checkout"
+    });
+    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
+      subscriptionCharge: { update: txSubscriptionChargeUpdate },
+      billingInvoice: { create: txBillingInvoiceCreate },
+      subscription: { findUnique: vi.fn(), update: txSubscriptionUpdate },
+      salon: { update: txSalonUpdate },
+      auditLog: { create: txAuditLogCreate }
+    }));
+
+    await c.executeSubscriptionPayment({
+      params: { chargeId: "ch_wave" },
+      body: { method: "wave_senegal", details: { phone: "770000000" } }
+    } as never, rep);
+
+    expect(txSubscriptionChargeUpdate).toHaveBeenCalledWith({
+      where: { id: "ch_wave" },
+      data: { status: "authorized", providerTxId: "invoice_tok" }
+    });
+    expect(txBillingInvoiceCreate).not.toHaveBeenCalled();
+    expect(txSubscriptionUpdate).not.toHaveBeenCalled();
+    expect(txSalonUpdate).not.toHaveBeenCalled();
+    expect(txAuditLogCreate).toHaveBeenCalled();
+  });
+
+  it("keeps async message-only subscription charges awaiting confirmation", async () => {
+    const txSubscriptionChargeUpdate = vi.fn();
+    const txBillingInvoiceCreate = vi.fn();
+    const txSubscriptionUpdate = vi.fn();
+    const txSalonUpdate = vi.fn();
+    const txAuditLogCreate = vi.fn();
+
+    mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
+      id: "ch_sms",
+      status: "pending",
+      amountXof: 30000,
+      chargeType: "renewal",
+      idempotencyKey: "sub-sub1-renewal-monthly-2026-06",
+      providerTxId: "invoice_sms",
+      subscriptionId: "sub1",
+      subscription: { id: "sub1", salonId: "s1" }
+    });
+    mocks.paymentAdapter.executePayment.mockResolvedValue({
+      success: true,
+      status: "authorized",
+      providerTxId: "invoice_sms",
+      message: "Votre paiement est en cours de traitement. Merci de valider le paiement après reception de sms pour le compléter."
+    });
+    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
+      subscriptionCharge: { update: txSubscriptionChargeUpdate },
+      billingInvoice: { create: txBillingInvoiceCreate },
+      subscription: { findUnique: vi.fn(), update: txSubscriptionUpdate },
+      salon: { update: txSalonUpdate },
+      auditLog: { create: txAuditLogCreate }
+    }));
+
+    await c.executeSubscriptionPayment({
+      params: { chargeId: "ch_sms" },
+      body: { method: "expresso_sn", details: { phone: "770000000" } }
+    } as never, rep);
+
+    expect(txSubscriptionChargeUpdate).toHaveBeenCalledWith({
+      where: { id: "ch_sms" },
+      data: { status: "authorized", providerTxId: "invoice_sms" }
+    });
+    expect(txBillingInvoiceCreate).not.toHaveBeenCalled();
+    expect(txSubscriptionUpdate).not.toHaveBeenCalled();
+    expect(txSalonUpdate).not.toHaveBeenCalled();
+    expect(txAuditLogCreate).toHaveBeenCalled();
+  });
+
+  it("reconciles pending charge status from provider during polling", async () => {
+    const txSubscriptionChargeUpdate = vi.fn();
+    const txBillingInvoiceCreate = vi.fn().mockResolvedValue({ id: "inv_sub_1" });
+    const txSubscriptionUpdate = vi.fn();
+    const txSalonUpdate = vi.fn();
+    const txAuditLogCreate = vi.fn();
+
+    mocks.prisma.subscription.findUnique.mockResolvedValueOnce({
+      id: "sub1",
+      salonId: "s1",
+      tier: "standard",
+      status: "inactive",
+      expiresAt: null
+    });
+    mocks.prisma.subscriptionCharge.findUnique
+      .mockResolvedValueOnce({
+        id: "ch_poll",
+        status: "authorized",
+        amountXof: 30000,
+        chargeType: "renewal",
+        idempotencyKey: "sub-sub1-renewal-monthly-2026-06",
+        provider: "paydunya",
+        providerTxId: "invoice_tok",
+        subscriptionId: "sub1",
+        subscription: { status: "inactive", tier: "standard", expiresAt: null }
+      })
+      .mockResolvedValueOnce({
+        id: "ch_poll",
+        status: "succeeded",
+        amountXof: 30000,
+        chargeType: "renewal",
+        provider: "paydunya",
+        providerTxId: "invoice_tok",
+        subscriptionId: "sub1",
+        subscription: { status: "active", tier: "standard", expiresAt: new Date("2026-07-01T00:00:00.000Z") }
+      });
+    mocks.paymentAdapter.fetchPaymentStatus.mockResolvedValue("succeeded");
+    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
+      subscriptionCharge: { update: txSubscriptionChargeUpdate },
+      billingInvoice: { create: txBillingInvoiceCreate },
+      subscription: {
+        findUnique: vi.fn().mockResolvedValue({ salonId: "s1", tier: "standard", expiresAt: null, pendingTier: null }),
+        update: txSubscriptionUpdate
+      },
+      salon: { update: txSalonUpdate },
+      auditLog: { create: txAuditLogCreate }
+    }));
+
+    await c.getChargeStatus({ params: { chargeId: "ch_poll" } } as never, rep);
+
+    expect(mocks.paymentAdapter.fetchPaymentStatus).toHaveBeenCalledWith({ providerToken: "invoice_tok" });
+    expect(txSubscriptionChargeUpdate).toHaveBeenCalledWith({
+      where: { id: "ch_poll" },
+      data: { status: "succeeded", providerTxId: "invoice_tok" }
+    });
+    expect(txBillingInvoiceCreate).toHaveBeenCalled();
+    expect(txSubscriptionUpdate).toHaveBeenCalled();
+    expect(txSalonUpdate).toHaveBeenCalled();
+    expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      chargeId: "ch_poll",
+      status: "succeeded",
+      subscriptionStatus: "active"
+    }));
   });
 });

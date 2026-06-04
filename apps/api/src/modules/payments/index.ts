@@ -53,6 +53,31 @@ const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   paydunyaBaseUrl: config.paydunyaBaseUrl
 });
 
+function requiresProviderCompletion(result: { url?: string; other_url?: unknown; data?: Record<string, unknown> | undefined } & Record<string, unknown>) {
+  if (result.url || result.other_url) return true;
+  if (result.pendingProviderConfirmation === true || result.status === "authorized") return true;
+  const message = typeof result.message === "string"
+    ? result.message.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+    : "";
+  if (
+    message.includes("rediriger vers cette url") ||
+    message.includes("en cours de traitement") ||
+    message.includes("veuillez completer le paiement") ||
+    message.includes("veuillez tapez") ||
+    message.includes("compose") ||
+    message.includes("valider le paiement")
+  ) {
+    return true;
+  }
+  const details = result.data && typeof result.data.details === "object" && result.data.details
+    ? result.data.details as Record<string, unknown>
+    : null;
+  const providerStatus = typeof result.data?.status === "string" ? result.data.status.toUpperCase() : null;
+  if (providerStatus === "PENDING" || providerStatus === "PROCESSING") return true;
+  const cid = typeof result.data?.cid === "string" ? result.data.cid : typeof details?.cid === "string" ? details.cid : null;
+  return Boolean(cid);
+}
+
 export class PaymentController {
   async initiate(request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -154,12 +179,7 @@ export class PaymentController {
       });
 
       if (result.success) {
-        // Redirect-based methods (Wave, OM, Wizall, Djamo) return a `url` — the payment
-        // isn't complete yet, only the redirect was created. Mark as `authorized` so that
-        // the booking remains in its current state until the webhook arrives.
-        // Direct methods (OTP confirmed, Expresso, Free Money) have no `url` — mark as `succeeded`.
-        const isRedirect = !!(result.url || result.other_url);
-        const newStatus = isRedirect ? "authorized" : "succeeded";
+        const newStatus = requiresProviderCompletion(result) ? "authorized" : "succeeded";
         await this._applyPaymentStatus(
           { id: payment.id, bookingId: payment.bookingId, amountXof: payment.amountXof, status: payment.status },
           newStatus,

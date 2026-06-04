@@ -688,6 +688,8 @@ model ClientPaymentMethod {
   provider       PaymentProvider
   phoneNumber    String
   label          String?
+  method         String?
+  country        String?
   isDefault      Boolean         @default(false)
   lastUsedAt     DateTime?
   idempotencyKey String?         @unique

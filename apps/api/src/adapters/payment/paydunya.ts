@@ -16,6 +16,18 @@ function normalizePhoneNumber(phone: string, country: string): string {
   return cleaned;
 }
 
+function inferDjamoCodeCountry(phone: string): "sn" | "ci" {
+  const cleaned = phone.replace(/[\s\-()]/g, "");
+  if (
+    cleaned.startsWith("+225") ||
+    cleaned.startsWith("225") ||
+    cleaned.length === 10
+  ) {
+    return "ci";
+  }
+  return "sn";
+}
+
 import type { AvailableMethod, ParsedWebhookEvent, PaymentAdapter } from "./index.js";
 
 // ─── Checkout API types ──────────────────────────────────────────────────────
@@ -31,6 +43,8 @@ type SoftPayExecuteResponse = {
   success: boolean;
   message: string;
   url?: string;
+  return_url?: string;
+  other_url?: Record<string, unknown>;
   fees?: number;
   currency?: string;
   data?: Record<string, unknown>;
@@ -56,6 +70,18 @@ type IpnPayload = {
   token: string;
   invoice_data: string;
   hash: string;
+};
+
+type DocumentedIpnPayload = {
+  data?: {
+    response_code?: string;
+    response_text?: string;
+    hash?: string;
+    invoice?: Record<string, unknown>;
+    custom_data?: Record<string, unknown> | null;
+    status?: string;
+  };
+  hash?: string;
 };
 
 // ─── Method registry ──────────────────────────────────────────────────────────
@@ -339,8 +365,8 @@ export class PayDunyaAdapter implements PaymentAdapter {
         website_url: this.baseOrigin
       },
       actions: {
-        cancel_url: `${this.baseOrigin}/payment/cancel`,
-        return_url: `${this.baseOrigin}/payment/success`,
+        cancel_url: params.callbackUrl,
+        return_url: params.callbackUrl,
         callback_url: `${this.baseOrigin}/api/v1/payments/webhooks/paydunya`
       },
       custom_data: {
@@ -388,7 +414,10 @@ export class PayDunyaAdapter implements PaymentAdapter {
     const details = params.details ?? {};
 
     // Get input phone, email, and name
-    let inputPhone = details.phone_number || details.phoneNumber || details.phone || details.phone_phone || "";
+    const rawPhoneInput = String(
+      details.phone_number || details.phoneNumber || details.phone || details.phone_phone || ""
+    );
+    let inputPhone = rawPhoneInput;
     if (inputPhone) {
       inputPhone = normalizePhoneNumber(inputPhone, methodEntry.country);
     } else {
@@ -462,7 +491,12 @@ export class PayDunyaAdapter implements PaymentAdapter {
     }
 
     if (mappedMethod === "djamo") {
-      body.code_country = details.code_country || details.codeCountry || "sn";
+      body.code_country = String(
+        details.code_country ||
+        details.codeCountry ||
+        details.country ||
+        inferDjamoCodeCountry(rawPhoneInput || inputPhone)
+      ).toLowerCase();
     }
 
     if (mappedMethod === "paydunya_wallet") {
@@ -494,11 +528,16 @@ export class PayDunyaAdapter implements PaymentAdapter {
       logger.info("[paydunya] softpay response", { success: json.success, message: json.message, keys: Object.keys(json) });
 
       if (json.success) {
+        const pendingProviderConfirmation = this._requiresProviderConfirmation(mappedMethod, json);
+        const providerTxId = typeof json.token === "string" && json.token.length > 0
+          ? json.token
+          : params.invoiceToken;
         return {
           ...json,
           success: true,
-          status: "succeeded",
-          providerTxId: params.invoiceToken
+          status: pendingProviderConfirmation ? "authorized" : "succeeded",
+          pendingProviderConfirmation,
+          providerTxId
         };
       }
 
@@ -568,18 +607,33 @@ export class PayDunyaAdapter implements PaymentAdapter {
     timestamp?: string;
   }): boolean {
     try {
-      const payload = JSON.parse(params.rawBody) as IpnPayload;
-      if (!payload.token || !payload.hash) return false;
+      const payload = JSON.parse(params.rawBody) as Partial<IpnPayload> & DocumentedIpnPayload;
+      const payloadHash = typeof payload.hash === "string"
+        ? payload.hash
+        : typeof payload.data?.hash === "string"
+          ? payload.data.hash
+          : null;
 
-      const expected = crypto
+      if (!payloadHash) return false;
+
+      const documentedHash = crypto
         .createHash("sha512")
-        .update(payload.token + this.privateKey + (payload.invoice_data ?? ""))
+        .update(this.masterKey)
         .digest("hex");
 
-      return crypto.timingSafeEqual(
-        Buffer.from(expected, "utf8"),
-        Buffer.from(payload.hash, "utf8")
-      );
+      if (this._secureCompare(documentedHash, payloadHash)) {
+        return true;
+      }
+
+      if (typeof payload.token === "string") {
+        const legacyHash = crypto
+          .createHash("sha512")
+          .update(payload.token + this.privateKey + (payload.invoice_data ?? ""))
+          .digest("hex");
+        return this._secureCompare(legacyHash, payloadHash);
+      }
+
+      return false;
     } catch {
       return false;
     }
@@ -588,23 +642,41 @@ export class PayDunyaAdapter implements PaymentAdapter {
   // ─── parseWebhook ─────────────────────────────────────────────────────────
 
   parseWebhook(rawBody: string): ParsedWebhookEvent {
-    const payload = JSON.parse(rawBody) as {
-      token: string;
-      invoice_data: string;
-      hash: string;
-    };
+    const payload = JSON.parse(rawBody) as Partial<IpnPayload> & DocumentedIpnPayload;
 
+    let providerRef = typeof payload.token === "string" ? payload.token : "";
     let invoiceData: Record<string, unknown> = {};
-    try {
-      invoiceData = JSON.parse(payload.invoice_data ?? "{}") as Record<string, unknown>;
-    } catch {
-      invoiceData = {};
+    let customData: Record<string, unknown> = {};
+
+    if (typeof payload.data === "object" && payload.data) {
+      const documentedInvoice =
+        typeof payload.data.invoice === "object" && payload.data.invoice
+          ? payload.data.invoice
+          : {};
+      invoiceData = {
+        ...documentedInvoice,
+        ...(payload.data.status ? { status: payload.data.status } : {}),
+        ...(payload.data.custom_data ? { custom_data: payload.data.custom_data } : {})
+      };
+      providerRef = typeof documentedInvoice.token === "string" ? documentedInvoice.token : providerRef;
+      customData =
+        typeof payload.data.custom_data === "object" && payload.data.custom_data
+          ? payload.data.custom_data
+          : typeof documentedInvoice.custom_data === "object" && documentedInvoice.custom_data
+            ? documentedInvoice.custom_data as Record<string, unknown>
+            : {};
+    } else {
+      try {
+        invoiceData = JSON.parse(payload.invoice_data ?? "{}") as Record<string, unknown>;
+      } catch {
+        invoiceData = {};
+      }
+      customData =
+        typeof invoiceData.custom_data === "object" && invoiceData.custom_data
+          ? invoiceData.custom_data as Record<string, unknown>
+          : {};
     }
 
-    const customData =
-      (typeof invoiceData.custom_data === "object" && invoiceData.custom_data
-        ? (invoiceData.custom_data as Record<string, unknown>)
-        : {}) ?? {};
     const metadata: Record<string, unknown> = {
       paymentId: customData.paymentId,
       idempotencyKey: customData.idempotencyKey,
@@ -615,7 +687,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
     }
 
     return {
-      providerRef: payload.token,
+      providerRef,
       status: this.normalizeStatus(
         String(invoiceData.status ?? "completed")
       ),
@@ -699,7 +771,35 @@ export class PayDunyaAdapter implements PaymentAdapter {
   // ─── fetchPaymentStatus ──────────────────────────────────────────────────
 
   async fetchPaymentStatus(params: { providerToken: string }): Promise<PaymentStatus> {
-    return "pending";
+    const response = await fetch(
+      `${this.invoiceApiUrl}/checkout-invoice/confirm/${encodeURIComponent(params.providerToken)}`,
+      {
+        method: "GET",
+        headers: this._headers(),
+        signal: AbortSignal.timeout(30_000)
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`PayDunya /checkout-invoice/confirm failed: ${response.status} ${text}`);
+    }
+
+    const json = (await response.json()) as Record<string, unknown>;
+    const responseCode = typeof json.response_code === "string" ? json.response_code : null;
+    if (responseCode && responseCode !== "00") {
+      throw new Error(
+        `PayDunya checkout-invoice/confirm failed: ${responseCode} ${String(json.response_text ?? "")}`.trim()
+      );
+    }
+
+    const rawStatus = typeof json.status === "string"
+      ? json.status
+      : typeof json.response_text === "string"
+        ? json.response_text
+        : "pending";
+
+    return this.normalizeStatus(rawStatus);
   }
 
   // ─── normalizeStatus ─────────────────────────────────────────────────────
@@ -740,5 +840,57 @@ export class PayDunyaAdapter implements PaymentAdapter {
     }
 
     return (await response.json()) as T;
+  }
+
+  private _secureCompare(expected: string, actual: string): boolean {
+    if (expected.length !== actual.length) return false;
+    return crypto.timingSafeEqual(
+      Buffer.from(expected, "utf8"),
+      Buffer.from(actual, "utf8")
+    );
+  }
+
+  private _requiresProviderConfirmation(
+    method: string,
+    response: SoftPayExecuteResponse
+  ): boolean {
+    if (response.url || response.other_url) return true;
+
+    const data = response.data && typeof response.data === "object"
+      ? response.data as Record<string, unknown>
+      : null;
+    const details = data?.details && typeof data.details === "object"
+      ? data.details as Record<string, unknown>
+      : null;
+
+    const providerState = typeof data?.status === "string" ? data.status.toUpperCase() : null;
+    if (providerState === "PENDING" || providerState === "PROCESSING") return true;
+
+    const cid = typeof data?.cid === "string" ? data.cid : typeof details?.cid === "string" ? details.cid : null;
+    if (cid) return true;
+
+    const normalizedMessage = response.message
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase();
+    if (
+      normalizedMessage.includes("rediriger vers cette url") ||
+      normalizedMessage.includes("en cours de traitement") ||
+      normalizedMessage.includes("veuillez completer le paiement") ||
+      normalizedMessage.includes("veuillez tapez") ||
+      normalizedMessage.includes("compose") ||
+      normalizedMessage.includes("valider le paiement")
+    ) {
+      return true;
+    }
+
+    return new Set([
+      "free_senegal",
+      "expresso_sn",
+      "moov_bf",
+      "mtn_bj",
+      "t_money_tg",
+      "moov_ci"
+    ]).has(method);
   }
 }

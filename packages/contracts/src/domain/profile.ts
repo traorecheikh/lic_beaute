@@ -7,6 +7,7 @@ import {
   paymentProviderSchema,
   voucherRedemptionStatusSchema
 } from "./enums.js";
+import { paymentChannelSchema } from "./payment.js";
 
 export const profileOptionsSchema = z.object({
   cities: z.array(z.string()),
@@ -20,6 +21,8 @@ export const clientPaymentMethodSchema = z.object({
   provider: paymentProviderSchema,
   phoneNumber: z.string(),
   label: z.string().nullable(),
+  method: paymentChannelSchema.nullable().optional(),
+  country: z.string().nullable().optional(),
   isDefault: z.boolean(),
   lastUsedAt: z.string().nullable(),
   createdAt: z.string(),
@@ -29,12 +32,16 @@ export const clientPaymentMethodSchema = z.object({
 export const clientPaymentMethodCreateSchema = z.object({
   provider: paymentProviderSchema,
   phoneNumber: z.string().min(8).max(20),
-  label: z.string().min(1).max(60).nullable().optional()
+  label: z.string().min(1).max(60).nullable().optional(),
+  method: paymentChannelSchema.optional(),
+  country: z.string().trim().min(2).max(8).optional()
 });
 
 export const clientPaymentMethodUpdateSchema = z.object({
   phoneNumber: z.string().min(8).max(20).optional(),
-  label: z.string().min(1).max(60).nullable().optional()
+  label: z.string().min(1).max(60).nullable().optional(),
+  method: paymentChannelSchema.nullable().optional(),
+  country: z.string().trim().min(2).max(8).nullable().optional()
 });
 
 export const clientBenefitSchema = z.object({
