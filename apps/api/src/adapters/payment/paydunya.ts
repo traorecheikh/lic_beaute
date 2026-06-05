@@ -42,6 +42,7 @@ type CheckoutCreateInvoiceResponse = {
 type SoftPayExecuteResponse = {
   success: boolean;
   message: string;
+  token?: string;
   url?: string;
   return_url?: string;
   other_url?: Record<string, unknown>;
@@ -581,7 +582,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
     const settingMap = new Map(rows.map((row) => [row.key, row.value.toLowerCase()]));
 
     return Object.entries(PAYDUNYA_METHODS)
-      .filter(([, entry]) => allowedCountries.has(entry.country))
+      .filter(([, entry]) => entry.country === "intl" || allowedCountries.has(entry.country))
       .map(([code, entry]) => ({
         code,
         country: entry.country,

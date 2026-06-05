@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getPaydunyaLaunchLabel,
   isLikelyMobileDevice,
   isPaydunyaMethodAvailableForCountry,
   isSuccessfulSubscriptionCharge,
   requiresAsyncSubscriptionConfirmation,
+  resolvePaydunyaLaunchTargets,
   resolvePaydunyaLaunchUrl,
   shouldOpenPaydunyaLinkInSameTab
 } from "./pro-billing";
@@ -72,6 +74,25 @@ describe("resolvePaydunyaLaunchUrl", () => {
   });
 });
 
+describe("resolvePaydunyaLaunchTargets", () => {
+  it("keeps both deeplinks and hosted fallback available for waiting-state relaunches", () => {
+    expect(resolvePaydunyaLaunchTargets({
+      url: "https://app.paydunya.com/recharge-orange-sn?token=abc",
+      other_url: {
+        om_url: "https://orangemoneysn.page.link/abc",
+        maxit_url: "https://sugu.orange-sonatel.com/abc"
+      }
+    }, { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" })).toEqual({
+      preferredUrl: "https://orangemoneysn.page.link/abc",
+      hostedUrl: "https://app.paydunya.com/recharge-orange-sn?token=abc",
+      deeplinkUrls: [
+        "https://orangemoneysn.page.link/abc",
+        "https://sugu.orange-sonatel.com/abc"
+      ]
+    });
+  });
+});
+
 describe("isLikelyMobileDevice", () => {
   it("detects touch macs and phone user agents as mobile", () => {
     expect(isLikelyMobileDevice({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" })).toBe(true);
@@ -98,5 +119,14 @@ describe("shouldOpenPaydunyaLinkInSameTab", () => {
       })
     ).toBe(false);
     expect(shouldOpenPaydunyaLinkInSameTab("wave://payment/abc")).toBe(true);
+  });
+});
+
+describe("getPaydunyaLaunchLabel", () => {
+  it("maps known PayDunya deeplinks and hosted urls to explicit labels", () => {
+    expect(getPaydunyaLaunchLabel("https://orangemoneysn.page.link/abc")).toBe("Orange Money");
+    expect(getPaydunyaLaunchLabel("https://sugu.orange-sonatel.com/mp/abc")).toBe("Maxit");
+    expect(getPaydunyaLaunchLabel("https://pay.wave.com/c/abc")).toBe("Wave");
+    expect(getPaydunyaLaunchLabel("https://app.paydunya.com/recharge-orange-sn?token=abc")).toBe("la page PayDunya");
   });
 });

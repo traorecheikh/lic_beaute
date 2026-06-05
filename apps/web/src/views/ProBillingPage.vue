@@ -291,16 +291,25 @@
           <div>
             <label class="section-label mb-2 block">Pays</label>
             <select v-model="paymentMethodForm.country" class="input-shell">
-              <option value="sn">Sénégal</option>
+              <option
+                v-for="country in checkoutCountryOptions"
+                :key="country.code"
+                :value="country.code"
+              >
+                {{ country.flag }} {{ country.code.toUpperCase() }}
+              </option>
             </select>
           </div>
           <div>
             <label class="section-label mb-2 block">Méthode</label>
             <select v-model="paymentMethodForm.method" class="input-shell">
-              <option value="wave">Wave</option>
-              <option value="orange_money">Orange Money</option>
-              <option value="free_money">Free Money</option>
-              <option v-if="features?.billingProviders?.card" value="paydunya_card">Carte bancaire</option>
+              <option
+                v-for="method in billingMethodOptions.filter((item) => isPaydunyaMethodAvailableForCountry(item.country, paymentMethodForm.country))"
+                :key="method.code"
+                :value="method.code"
+              >
+                {{ method.label }}
+              </option>
             </select>
           </div>
         </template>
@@ -375,7 +384,13 @@
           <div>
             <label class="section-label mb-2 block">Pays de facturation</label>
             <select v-model="selectedCountry" class="input-shell">
-              <option value="sn">Sénégal</option>
+              <option
+                v-for="country in checkoutCountryOptions"
+                :key="country.code"
+                :value="country.code"
+              >
+                {{ country.flag }} {{ country.code.toUpperCase() }}
+              </option>
             </select>
           </div>
 
@@ -550,7 +565,23 @@
               class="btn-secondary mt-4 text-xs"
               @click="reopenWaitingLink"
             >
-              Rouvrir le moyen de paiement
+              {{ `Ouvrir ${waitingLaunchLabel}` }}
+            </button>
+            <button
+              v-if="waitingAlternateLaunchUrl"
+              type="button"
+              class="btn-secondary mt-2 text-xs"
+              @click="openAlternateWaitingLink"
+            >
+              {{ `Ouvrir ${waitingAlternateLaunchLabel}` }}
+            </button>
+            <button
+              v-if="waitingHostedLaunchUrl && waitingHostedLaunchUrl !== waitingLaunchUrl"
+              type="button"
+              class="btn-secondary mt-2 text-xs"
+              @click="openHostedWaitingLink"
+            >
+              {{ `Ouvrir ${waitingHostedLaunchLabel}` }}
             </button>
           </div>
         </div>
@@ -632,6 +663,7 @@ import {
   checkoutProSubscription,
   executeProSubscription,
   downloadProInvoicePdf,
+  fetchPaymentMethods,
   fetchProInvoices,
   fetchProSubscriptionChargeStatus,
   fetchProSubscription,
@@ -641,10 +673,11 @@ import {
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 import {
+  getPaydunyaLaunchLabel,
   isPaydunyaMethodAvailableForCountry,
   isSuccessfulSubscriptionCharge,
   requiresAsyncSubscriptionConfirmation,
-  resolvePaydunyaLaunchUrl,
+  resolvePaydunyaLaunchTargets,
   shouldOpenPaydunyaLinkInSameTab
 } from "@/lib/pro-billing";
 import { toast } from "vue-sonner";
@@ -665,7 +698,7 @@ const paymentMethodForm = reactive({
   provider: "paydunya" as string,
   accountNumber: "",
   country: "sn",
-  method: "wave"
+  method: "wave_senegal"
 });
 
 const features = computed(() => featuresQuery.data.value);
@@ -690,6 +723,12 @@ const featuresQuery = useQuery({
 const invoicesQuery = useQuery({
   queryKey: ["pro-invoices"],
   queryFn: () => fetchProInvoices(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+});
+
+const paymentMethodsQuery = useQuery({
+  queryKey: ["paydunya-methods"],
+  queryFn: () => fetchPaymentMethods(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
 });
 
@@ -879,6 +918,11 @@ const wizallOtpCode = ref('');
 const wizallCid = ref('');
 const waitingChargeId = ref('');
 const waitingLaunchUrl = ref<string | null>(null);
+const waitingAlternateLaunchUrl = ref<string | null>(null);
+const waitingHostedLaunchUrl = ref<string | null>(null);
+const waitingLaunchLabel = ref("le moyen de paiement");
+const waitingAlternateLaunchLabel = ref("l’autre application");
+const waitingHostedLaunchLabel = ref("la page PayDunya");
 const waitingTimedOut = ref(false);
 const waitingManualCheck = ref(false);
 let waitingPollTimer: number | null = null;
@@ -930,10 +974,10 @@ const configuredPhoneCountries = ((import.meta.env.VITE_ALLOWED_PHONE_COUNTRIES 
   .map((item) => item.trim().toLowerCase())
   .filter((code) => code in PHONE_COUNTRY_MAP);
 
-const allowedPhoneCountries = (configuredPhoneCountries.length > 0 ? configuredPhoneCountries : ["sn"])
+const fallbackPhoneCountries = (configuredPhoneCountries.length > 0 ? configuredPhoneCountries : ["sn"])
   .map((code) => PHONE_COUNTRY_MAP[code]);
 
-const selectedMobileMoneyCountryCode = ref(allowedPhoneCountries[0]?.code ?? "sn");
+const selectedMobileMoneyCountryCode = ref(fallbackPhoneCountries[0]?.code ?? "sn");
 const selectedMobileMoneyCountry = computed(
   () => PHONE_COUNTRY_MAP[selectedMobileMoneyCountryCode.value] ?? PHONE_COUNTRY_MAP.sn
 );
@@ -969,7 +1013,7 @@ function formatMobileMoneyPhoneInput(event: Event) {
   mobileMoneyForm.phone = applyPhoneMask(digits, selectedMobileMoneyCountry.value);
 }
 
-const checkoutMethods = [
+const fallbackCheckoutMethods = [
   { code: "carte_bancaire", label: "Carte Bancaire", country: "intl" },
   { code: "djamo", label: "Djamo", country: "intl" },
   { code: "paydunya_wallet", label: "Portefeuille PayDunya", country: "intl" },
@@ -993,28 +1037,52 @@ const checkoutMethods = [
   { code: "mtn_cm", label: "MTN Cameroun", country: "cm" }
 ];
 
+const checkoutMethods = computed(() => {
+  const backendMethods = ((paymentMethodsQuery.data.value as { methods?: Array<{ code: string; label: string; country: string; enabled?: boolean }> } | undefined)?.methods ?? [])
+    .filter((method) => method.enabled !== false);
+  return backendMethods.length > 0 ? backendMethods : fallbackCheckoutMethods;
+});
+
+const checkoutCountryOptions = computed(() => {
+  const availableCountryCodes = new Set(
+    checkoutMethods.value
+      .map((method) => method.country)
+      .filter((country) => country && country !== "intl")
+  );
+  const options = Object.values(PHONE_COUNTRY_MAP).filter((country) => availableCountryCodes.has(country.code));
+  return options.length > 0 ? options : fallbackPhoneCountries;
+});
+
 const filteredMethods = computed(() => {
-  return checkoutMethods.filter(m => isPaydunyaMethodAvailableForCountry(m.country, selectedCountry.value));
+  return checkoutMethods.value.filter((m) =>
+    isPaydunyaMethodAvailableForCountry(m.country, selectedCountry.value)
+  );
 });
 
 const mobileMoneyCountryOptions = computed(() => {
-  const currentMethod = checkoutMethods.find((method) => method.code === selectedMethod.value);
+  const currentMethod = checkoutMethods.value.find((method) => method.code === selectedMethod.value);
   if (!currentMethod || currentMethod.country === "intl") {
-    return allowedPhoneCountries;
+    return checkoutCountryOptions.value;
   }
 
-  const matchedCountry = allowedPhoneCountries.find((country) => country.code === currentMethod.country);
-  return matchedCountry ? [matchedCountry] : allowedPhoneCountries;
+  const matchedCountry = checkoutCountryOptions.value.find((country) => country.code === currentMethod.country);
+  return matchedCountry ? [matchedCountry] : checkoutCountryOptions.value;
 });
 
 const selectedMethodLabel = computed(() => {
-  const method = checkoutMethods.find(m => m.code === selectedMethod.value);
+  const method = checkoutMethods.value.find((m) => m.code === selectedMethod.value);
   return method ? method.label : "";
 });
 
 function selectCheckoutMethod(code: string) {
   selectedMethod.value = code;
+  const method = checkoutMethods.value.find((item) => item.code === code);
+  if (method && method.country !== "intl") {
+    selectedCountry.value = method.country;
+  }
 }
+
+const billingMethodOptions = computed(() => checkoutMethods.value);
 
 watch(mobileMoneyCountryOptions, (options) => {
   if (!options.some((option) => option.code === selectedMobileMoneyCountryCode.value)) {
@@ -1025,6 +1093,18 @@ watch(mobileMoneyCountryOptions, (options) => {
 watch(selectedMobileMoneyCountryCode, () => {
   const digits = normalizePhoneNumber(mobileMoneyForm.phone, selectedMobileMoneyCountry.value);
   mobileMoneyForm.phone = applyPhoneMask(digits, selectedMobileMoneyCountry.value);
+});
+
+watch(() => paymentMethodForm.country, (country) => {
+  const availableMethod = billingMethodOptions.value.find((item) =>
+    isPaydunyaMethodAvailableForCountry(item.country, country)
+  );
+  if (availableMethod && !billingMethodOptions.value.some((item) =>
+    item.code === paymentMethodForm.method &&
+    isPaydunyaMethodAvailableForCountry(item.country, country)
+  )) {
+    paymentMethodForm.method = availableMethod.code;
+  }
 });
 
 function formatCardNumber(e: Event) {
@@ -1124,18 +1204,34 @@ async function verifyWaitingCharge(manual: boolean) {
   }
 }
 
-function enterWaitingStep(nextChargeId: string, launchUrl: string | null) {
+function enterWaitingStepWithFallback(
+  nextChargeId: string,
+  launchTargets: { preferredUrl: string | null; hostedUrl: string | null; deeplinkUrls?: string[] }
+) {
   waitingChargeId.value = nextChargeId;
-  waitingLaunchUrl.value = launchUrl;
+  waitingLaunchUrl.value = launchTargets.preferredUrl;
+  waitingLaunchLabel.value = getPaydunyaLaunchLabel(launchTargets.preferredUrl);
+  waitingAlternateLaunchUrl.value = (launchTargets.deeplinkUrls ?? []).find((url) => url !== launchTargets.preferredUrl) ?? null;
+  waitingAlternateLaunchLabel.value = getPaydunyaLaunchLabel(waitingAlternateLaunchUrl.value);
+  waitingHostedLaunchUrl.value = launchTargets.hostedUrl;
+  waitingHostedLaunchLabel.value = getPaydunyaLaunchLabel(launchTargets.hostedUrl);
   waitingTimedOut.value = false;
   waitingStartedAt = Date.now();
   checkoutStep.value = "waiting";
-  openExternalPaymentLink(launchUrl);
-  scheduleWaitingPoll();
+  openExternalPaymentLink(launchTargets.preferredUrl);
+  void verifyWaitingCharge(false);
 }
 
 function reopenWaitingLink() {
   openExternalPaymentLink(waitingLaunchUrl.value);
+}
+
+function openAlternateWaitingLink() {
+  openExternalPaymentLink(waitingAlternateLaunchUrl.value);
+}
+
+function openHostedWaitingLink() {
+  openExternalPaymentLink(waitingHostedLaunchUrl.value);
 }
 
 function openCheckoutModal() {
@@ -1148,6 +1244,11 @@ function openCheckoutModal() {
   wizallCid.value = "";
   waitingChargeId.value = "";
   waitingLaunchUrl.value = null;
+  waitingAlternateLaunchUrl.value = null;
+  waitingHostedLaunchUrl.value = null;
+  waitingLaunchLabel.value = "le moyen de paiement";
+  waitingAlternateLaunchLabel.value = "l’autre application";
+  waitingHostedLaunchLabel.value = "la page PayDunya";
   waitingTimedOut.value = false;
   waitingManualCheck.value = false;
   isSubmitting.value = false;
@@ -1176,6 +1277,12 @@ onMounted(() => {
   window.addEventListener("focus", handleWindowFocus);
   document.addEventListener("visibilitychange", handleVisibilityChange);
 });
+
+watch(checkoutCountryOptions, (options) => {
+  if (!options.some((option) => option.code === selectedCountry.value)) {
+    selectedCountry.value = options[0]?.code ?? "sn";
+  }
+}, { immediate: true });
 
 onUnmounted(() => {
   clearWaitingPoll();
@@ -1234,7 +1341,12 @@ async function handleCheckoutSubmit() {
       channel: selectedMethod.value
     } as any);
 
-    chargeId.value = initResult.chargeId;
+    const nextChargeId = initResult.chargeId;
+    if (!nextChargeId) {
+      throw new Error("Référence de paiement PayDunya manquante.");
+    }
+
+    chargeId.value = nextChargeId;
 
     const details: Record<string, any> = {};
     if (selectedMethod.value === 'carte_bancaire') {
@@ -1259,7 +1371,7 @@ async function handleCheckoutSubmit() {
       }
     }
 
-    const execResult = await executeProSubscription(auth.accessToken ?? "", initResult.chargeId, {
+    const execResult = await executeProSubscription(auth.accessToken ?? "", nextChargeId, {
       method: selectedMethod.value,
       details
     });
@@ -1275,9 +1387,9 @@ async function handleCheckoutSubmit() {
       }
 
       if (requiresAsyncConfirmation(execResult)) {
-        enterWaitingStep(
-          initResult.chargeId,
-          resolvePaydunyaLaunchUrl(execResult, {
+        enterWaitingStepWithFallback(
+          nextChargeId,
+          resolvePaydunyaLaunchTargets(execResult, {
             userAgent: window.navigator.userAgent,
             maxTouchPoints: window.navigator.maxTouchPoints
           })
@@ -1319,9 +1431,9 @@ async function handleWizallOtpSubmit() {
 
     if (execResult.success) {
       if (requiresAsyncConfirmation(execResult)) {
-        enterWaitingStep(
+        enterWaitingStepWithFallback(
           chargeId.value,
-          resolvePaydunyaLaunchUrl(execResult, {
+          resolvePaydunyaLaunchTargets(execResult, {
             userAgent: window.navigator.userAgent,
             maxTouchPoints: window.navigator.maxTouchPoints
           })
@@ -1380,8 +1492,10 @@ async function openInvoice(invoice: (typeof invoices.value)[number]) {
 function openPaymentMethodModal() {
   paymentMethodForm.provider = billingMethod.value?.provider ?? "paydunya";
   paymentMethodForm.accountNumber = "";
-  paymentMethodForm.country = billingMethod.value?.country ?? "sn";
-  paymentMethodForm.method = billingMethod.value?.method ?? "wave";
+  paymentMethodForm.country = billingMethod.value?.country ?? checkoutCountryOptions.value[0]?.code ?? "sn";
+  paymentMethodForm.method = billingMethod.value?.method ?? billingMethodOptions.value.find((item) =>
+    isPaydunyaMethodAvailableForCountry(item.country, paymentMethodForm.country)
+  )?.code ?? "wave_senegal";
   showPaymentMethodModal.value = true;
 }
 

@@ -147,27 +147,36 @@ describe("ClientAccountController branches", () => {
     const txUpdateMany = vi.fn();
     mocks.prisma.clientPaymentMethod.findUnique.mockResolvedValue(null);
     mocks.prisma.clientPaymentMethod.count.mockResolvedValue(0);
+    const txCreate = vi.fn().mockResolvedValue({
+      id: "pm-new",
+      provider: "paydunya",
+      phoneNumber: "771234567",
+      label: null,
+      method: "orange_senegal",
+      country: "sn",
+      isDefault: true,
+      lastUsedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) =>
       cb({
         clientPaymentMethod: {
           updateMany: txUpdateMany,
-          create: vi.fn().mockResolvedValue({
-            id: "pm-new",
-            provider: "paydunya",
-            phoneNumber: "771234567",
-            label: null,
-            isDefault: true,
-            lastUsedAt: null,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          })
+          create: txCreate
         }
       })
     );
     await c.createPaymentMethod({
-      body: { provider: "paydunya", phoneNumber: "771234567", label: null }
+      body: { provider: "paydunya", phoneNumber: "771234567", label: null, method: "orange_senegal", country: "SN" }
     } as never, {} as never);
     expect(txUpdateMany).toHaveBeenCalled();
+    expect(txCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        method: "orange_senegal",
+        country: "sn"
+      })
+    }));
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "pm-new" }), 201);
   });
 

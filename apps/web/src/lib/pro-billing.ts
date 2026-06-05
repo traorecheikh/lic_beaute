@@ -15,6 +15,24 @@ export type ProSubscriptionExecuteLikeResult = {
   pendingProviderConfirmation?: boolean;
 };
 
+export type PaydunyaLaunchTargets = {
+  preferredUrl: string | null;
+  hostedUrl: string | null;
+  deeplinkUrls: string[];
+};
+
+export function getPaydunyaLaunchLabel(url: string | null): string {
+  if (!url) return "le moyen de paiement";
+  const normalized = url.toLowerCase();
+  if (normalized.includes("orangemoneysn.page.link")) return "Orange Money";
+  if (normalized.includes("sugu.orange-sonatel.com")) return "Maxit";
+  if (normalized.includes("pay.wave.com")) return "Wave";
+  if (normalized.includes("app.paydunya.com") || normalized.includes("paydunya.com")) {
+    return "la page PayDunya";
+  }
+  return "le moyen de paiement";
+}
+
 export function isLikelyMobileDevice(
   device: { userAgent?: string; maxTouchPoints?: number } = {}
 ): boolean {
@@ -34,20 +52,32 @@ export function isPaydunyaMethodAvailableForCountry(methodCountry: string, selec
   return methodCountry === "intl" || methodCountry === selectedCountry;
 }
 
-export function resolvePaydunyaLaunchUrl(
+export function resolvePaydunyaLaunchTargets(
   result: ProSubscriptionExecuteLikeResult,
   device: { userAgent?: string; maxTouchPoints?: number } = {}
-): string | null {
+): PaydunyaLaunchTargets {
   const providerUrl = typeof result.url === "string" && result.url.length > 0 ? result.url : null;
   const otherUrl = result.other_url && typeof result.other_url === "object"
     ? result.other_url as { om_url?: string; maxit_url?: string }
     : null;
-  const omUrl = typeof otherUrl?.om_url === "string" && otherUrl.om_url.length > 0 ? otherUrl.om_url : null;
-  const maxitUrl = typeof otherUrl?.maxit_url === "string" && otherUrl.maxit_url.length > 0 ? otherUrl.maxit_url : null;
-  const deepLink = omUrl ?? maxitUrl;
+  const deeplinkUrls = [otherUrl?.om_url, otherUrl?.maxit_url]
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  const preferredUrl = isLikelyMobileDevice(device)
+    ? deeplinkUrls[0] ?? providerUrl ?? null
+    : providerUrl ?? deeplinkUrls[0] ?? null;
 
-  if (isLikelyMobileDevice(device) && deepLink) return deepLink;
-  return providerUrl ?? deepLink ?? null;
+  return {
+    preferredUrl,
+    hostedUrl: providerUrl,
+    deeplinkUrls
+  };
+}
+
+export function resolvePaydunyaLaunchUrl(
+  result: ProSubscriptionExecuteLikeResult,
+  device: { userAgent?: string; maxTouchPoints?: number } = {}
+): string | null {
+  return resolvePaydunyaLaunchTargets(result, device).preferredUrl;
 }
 
 export function shouldOpenPaydunyaLinkInSameTab(

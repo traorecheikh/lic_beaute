@@ -440,6 +440,9 @@ describe("PayDunyaAdapter", () => {
     expect(codes).toContain("orange_senegal");
     expect(codes).toContain("free_senegal");
     expect(codes).toContain("wizall_senegal");
+    expect(codes).toContain("carte_bancaire");
+    expect(codes).toContain("djamo");
+    expect(codes).toContain("paydunya_wallet");
     const labels = methods.map((m) => m.label);
     expect(labels).toContain("Wave Sénégal");
     expect(labels).toContain("Orange Money Sénégal");

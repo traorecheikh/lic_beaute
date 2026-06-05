@@ -142,6 +142,23 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   void _showEditSheet(BuildContext context, PaymentMethodRecord method) {
     final phoneController = TextEditingController(text: method.phoneNumber);
     final labelController = TextEditingController(text: method.label ?? '');
+    final paydunyaMethods = ref
+        .read(booking_payment_methods.availablePaydunyaMethodsProvider)
+        .asData
+        ?.value;
+    final channelItems = (paydunyaMethods?.where((item) => item.enabled).toList() ??
+            const <booking_payment_methods.PaydunyaMethodRecord>[])
+        .isNotEmpty
+        ? paydunyaMethods!.where((item) => item.enabled).toList()
+        : _fallbackChannelLabels.entries
+            .map((entry) => booking_payment_methods.PaydunyaMethodRecord(
+                  code: entry.key,
+                  country: '',
+                  label: entry.value,
+                  enabled: true,
+                ))
+            .toList();
+    var selectedChannel = _resolveExistingChannel(method, channelItems);
     bool saving = false;
 
     showModalBottomSheet<void>(
@@ -168,6 +185,16 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   Text('Modifier le moyen de paiement',
                       style: AppTextStyles.labelLg),
                   SizedBox(height: 20.h),
+                  AppDropdown<String>(
+                    label: 'Opérateur',
+                    value: selectedChannel,
+                    items: channelItems.map((item) => item.code).toList(),
+                    itemLabel: (value) => channelItems
+                        .firstWhere((item) => item.code == value)
+                        .label,
+                    onChanged: (val) => setSheetState(() => selectedChannel = val),
+                  ),
+                  gapH16,
                   _buildPhoneField(phoneController),
                   gapH16,
                   TextField(
@@ -198,6 +225,11 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                                     label: labelController.text.trim().isEmpty
                                         ? null
                                         : labelController.text.trim(),
+                                    method: selectedChannel,
+                                    country: _resolveChannelCountryForCode(
+                                      selectedChannel,
+                                      channelItems,
+                                    ),
                                   );
                               if (context.mounted) {
                                 Navigator.of(sheetContext).pop();
@@ -309,16 +341,53 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
 
   String? _resolveChannelCountry() {
     final liveMethods = ref.read(booking_payment_methods.availablePaydunyaMethodsProvider).asData?.value;
-    final matched = liveMethods?.firstWhere(
-      (item) => item.code == _channel,
+    final channelItems = liveMethods?.isNotEmpty == true
+        ? liveMethods!
+        : _fallbackChannelLabels.entries
+            .map((entry) => booking_payment_methods.PaydunyaMethodRecord(
+                  code: entry.key,
+                  country: '',
+                  label: entry.value,
+                  enabled: true,
+                ))
+            .toList();
+    return _resolveChannelCountryForCode(_channel, channelItems);
+  }
+
+  String _resolveExistingChannel(
+    PaymentMethodRecord method,
+    List<booking_payment_methods.PaydunyaMethodRecord> channelItems,
+  ) {
+    final savedMethod = method.method?.trim();
+    if (savedMethod != null &&
+        savedMethod.isNotEmpty &&
+        channelItems.any((item) => item.code == savedMethod)) {
+      return savedMethod;
+    }
+    final normalizedLabel = (method.label ?? '').toLowerCase();
+    final matched = channelItems.where((item) {
+      final label = item.label.toLowerCase();
+      return label == normalizedLabel ||
+          normalizedLabel.contains(label) ||
+          label.contains(normalizedLabel);
+    }).firstOrNull;
+    return matched?.code ?? channelItems.first.code;
+  }
+
+  String? _resolveChannelCountryForCode(
+    String channelCode,
+    List<booking_payment_methods.PaydunyaMethodRecord> channelItems,
+  ) {
+    final matched = channelItems.firstWhere(
+      (item) => item.code == channelCode,
       orElse: () => booking_payment_methods.PaydunyaMethodRecord(
-        code: _channel,
+        code: channelCode,
         country: '',
-        label: _fallbackChannelLabels[_channel] ?? _channel,
+        label: _fallbackChannelLabels[channelCode] ?? channelCode,
         enabled: true,
       ),
     );
-    final country = matched?.country.trim().toLowerCase();
-    return country == null || country.isEmpty ? null : country;
+    final country = matched.country.trim().toLowerCase();
+    return country.isEmpty ? null : country;
   }
 }

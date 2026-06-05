@@ -19,6 +19,7 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
+import '../paydunya_launch.dart';
 import '../../profile/providers/payment_methods_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/booking_create_provider.dart';
@@ -69,6 +70,27 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     }
 
     return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<bool> _launchExternalPaymentCandidates(
+    Iterable<String?> candidates, {
+    bool preferNonBrowser = false,
+  }) async {
+    for (final candidate in candidates) {
+      final uri = Uri.tryParse(candidate?.trim() ?? '');
+      if (uri == null) {
+        continue;
+      }
+      final launched = await _launchExternalPaymentUri(
+        uri,
+        preferNonBrowser: preferNonBrowser,
+      );
+      if (launched) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -743,6 +765,15 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   }
 
   Future<void> _pollPaymentConfirmation(String paymentId) async {
+    await _pollPaymentConfirmationWithLaunchTargets(paymentId: paymentId);
+  }
+
+  Future<void> _pollPaymentConfirmationWithLaunchTargets({
+    required String paymentId,
+    String? preferredLaunchUrl,
+    String? secondaryLaunchUrl,
+    String? hostedLaunchUrl,
+  }) async {
     if (!mounted) return;
     bool confirmed = false;
 
@@ -762,6 +793,56 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             Navigator.of(sheetContext).pop();
             if (mounted) AppSnackbar.error(context, msg);
           },
+          onReopenPreferred: preferredLaunchUrl == null
+              ? null
+              : () async {
+                  final launched = await _launchExternalPaymentCandidates(
+                    [preferredLaunchUrl],
+                    preferNonBrowser: true,
+                  );
+                  if (!launched && mounted) {
+                    AppSnackbar.error(
+                      context,
+                      'Impossible de rouvrir ${paydunyaLaunchLabel(preferredLaunchUrl)}.',
+                    );
+                  }
+                },
+          preferredLaunchLabel: preferredLaunchUrl == null
+              ? null
+              : paydunyaLaunchLabel(preferredLaunchUrl),
+          onReopenSecondary: secondaryLaunchUrl == null
+              ? null
+              : () async {
+                  final launched = await _launchExternalPaymentCandidates(
+                    [secondaryLaunchUrl],
+                    preferNonBrowser: true,
+                  );
+                  if (!launched && mounted) {
+                    AppSnackbar.error(
+                      context,
+                      'Impossible d’ouvrir ${paydunyaLaunchLabel(secondaryLaunchUrl)}.',
+                    );
+                  }
+                },
+          secondaryLaunchLabel: secondaryLaunchUrl == null
+              ? null
+              : paydunyaLaunchLabel(secondaryLaunchUrl),
+          onOpenHosted: hostedLaunchUrl == null
+              ? null
+              : () async {
+                  final launched = await _launchExternalPaymentCandidates(
+                    [hostedLaunchUrl],
+                  );
+                  if (!launched && mounted) {
+                    AppSnackbar.error(
+                      context,
+                      'Impossible d’ouvrir ${paydunyaLaunchLabel(hostedLaunchUrl)}.',
+                    );
+                  }
+                },
+          hostedLaunchLabel: hostedLaunchUrl == null
+              ? null
+              : paydunyaLaunchLabel(hostedLaunchUrl),
           reconcile: (id) => ref.read(paymentInitiateProvider.notifier).reconcile(id),
         );
       },
@@ -930,21 +1011,29 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             ?? executeResult?['data']?['om_url'] as String?;
         final maxitUrl = executeResult?['other_url']?['maxit_url'] as String?
             ?? executeResult?['data']?['maxit_url'] as String?;
-        final deepLink = omUrl ?? maxitUrl;
-
-        if (deepLink != null) {
-          final uri = Uri.parse(deepLink);
-          final launched = await _launchExternalPaymentUri(
-            uri,
+        if (omUrl != null || maxitUrl != null) {
+          final launched = await _launchExternalPaymentCandidates(
+            paydunyaLaunchCandidates(
+              omUrl: omUrl,
+              maxitUrl: maxitUrl,
+              hostedUrl: url,
+            ),
             preferNonBrowser: true,
           );
-          if (!launched) {
-            if (url != null) {
-              final fallbackUri = Uri.parse(url);
+          if (!launched && url != null) {
+            final fallbackUri = Uri.tryParse(url);
+            if (fallbackUri != null) {
               await _launchExternalPaymentUri(fallbackUri);
             }
           }
-          if (mounted) await _pollPaymentConfirmation(paymentId);
+          if (mounted) {
+            await _pollPaymentConfirmationWithLaunchTargets(
+              paymentId: paymentId,
+              preferredLaunchUrl: omUrl ?? maxitUrl,
+              secondaryLaunchUrl: omUrl != null && maxitUrl != null ? maxitUrl : null,
+              hostedLaunchUrl: url,
+            );
+          }
           return;
         }
 
@@ -965,7 +1054,11 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             );
             if (!context.mounted) return;
             if (confirmResult?['success'] == true) {
-              await _pollPaymentConfirmation(paymentId);
+              await _pollPaymentConfirmationWithLaunchTargets(
+                paymentId: paymentId,
+                preferredLaunchUrl: confirmResult?['return_url'] as String?,
+                hostedLaunchUrl: confirmResult?['return_url'] as String?,
+              );
             } else {
               final msg = confirmResult?['message'] as String? ?? 'Échec de la validation Wizall.';
               if (mounted) AppSnackbar.error(context, msg);
@@ -977,7 +1070,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         if (url != null && url.isNotEmpty) {
           final uri = Uri.parse(url);
           await _launchExternalPaymentUri(uri);
-          if (mounted) await _pollPaymentConfirmation(paymentId);
+          if (mounted) {
+            await _pollPaymentConfirmationWithLaunchTargets(
+              paymentId: paymentId,
+              preferredLaunchUrl: url,
+              hostedLaunchUrl: url,
+            );
+          }
           return;
         }
 
@@ -1148,12 +1247,24 @@ class _PaymentWaitingSheet extends StatefulWidget {
     required this.paymentId,
     required this.onConfirmed,
     required this.onFailed,
+    this.onReopenPreferred,
+    this.preferredLaunchLabel,
+    this.onReopenSecondary,
+    this.secondaryLaunchLabel,
+    this.onOpenHosted,
+    this.hostedLaunchLabel,
     required this.reconcile,
   });
 
   final String paymentId;
   final VoidCallback onConfirmed;
   final void Function(String message) onFailed;
+  final Future<void> Function()? onReopenPreferred;
+  final String? preferredLaunchLabel;
+  final Future<void> Function()? onReopenSecondary;
+  final String? secondaryLaunchLabel;
+  final Future<void> Function()? onOpenHosted;
+  final String? hostedLaunchLabel;
   final Future<String?> Function(String paymentId) reconcile;
 
   @override
@@ -1174,6 +1285,7 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startPolling();
+    unawaited(_runCheck(showLoading: false));
   }
 
   @override
@@ -1296,6 +1408,27 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
             onPressed: _manualChecking ? null : _check,
             isLoading: _manualChecking,
           ),
+          if (widget.onReopenPreferred != null) ...[
+            SizedBox(height: 12.h),
+            AppButton.outline(
+              label: 'Ouvrir ${widget.preferredLaunchLabel ?? 'le moyen de paiement'}',
+              onPressed: () => widget.onReopenPreferred!(),
+            ),
+          ],
+          if (widget.onReopenSecondary != null) ...[
+            SizedBox(height: 12.h),
+            AppButton.outline(
+              label: 'Ouvrir ${widget.secondaryLaunchLabel ?? 'l’autre application'}',
+              onPressed: () => widget.onReopenSecondary!(),
+            ),
+          ],
+          if (widget.onOpenHosted != null) ...[
+            SizedBox(height: 12.h),
+            AppButton.outline(
+              label: 'Ouvrir ${widget.hostedLaunchLabel ?? 'la page PayDunya'}',
+              onPressed: () => widget.onOpenHosted!(),
+            ),
+          ],
           if (timedOut) ...[
             SizedBox(height: 12.h),
             AppButton.primary(

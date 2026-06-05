@@ -46,12 +46,23 @@ describe("ClientAccountController success paths", () => {
   it("lists payment methods", async () => {
     mocks.prisma.clientPaymentMethod.findMany.mockResolvedValue([
       {
-        id: "pm1", provider: "paydunya", phoneNumber: "771234567", label: null, isDefault: true,
+        id: "pm1", provider: "paydunya", phoneNumber: "771234567", label: null, method: "orange_senegal", country: "sn", isDefault: true,
         lastUsedAt: null, createdAt: new Date(), updatedAt: new Date()
       }
     ]);
     await c.listPaymentMethods({} as never, {} as never);
-    expect(mocks.ok).toHaveBeenCalled();
+    expect(mocks.ok).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        items: [
+          expect.objectContaining({
+            id: "pm1",
+            method: "orange_senegal",
+            country: "sn"
+          })
+        ]
+      })
+    );
   });
 
   it("setDefaultPaymentMethod returns 404 when missing", async () => {
@@ -73,4 +84,3 @@ describe("ClientAccountController success paths", () => {
     expect(mocks.ok).toHaveBeenCalled();
   });
 });
-

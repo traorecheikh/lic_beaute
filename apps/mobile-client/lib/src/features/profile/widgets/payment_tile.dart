@@ -148,18 +148,31 @@ class PaymentTile extends StatelessWidget {
   }
 
   static String _resolveChannel(String provider, String? methodCode, String? label) {
-    if (provider == 'wave' || provider == 'orange_money') return provider;
-    if (provider == 'om') return 'orange_money';
     final savedMethod = methodCode?.trim();
     if (savedMethod != null && savedMethod.isNotEmpty) {
       return savedMethod;
     }
+    if (provider == 'wave') return 'wave_senegal';
+    if (provider == 'orange_money' || provider == 'om') return 'orange_senegal';
     final normalized = (label ?? '').toLowerCase();
-    if (normalized.contains('orange')) return 'orange_money';
-    if (normalized.contains('wave')) return 'wave';
+    if (normalized.contains('orange money sénégal')) return 'orange_senegal';
+    if (normalized.contains("orange money cote") || normalized.contains("orange money côte")) return 'om_ci';
+    if (normalized.contains('orange money burkina')) return 'om_bf';
+    if (normalized.contains('orange money mali')) return 'om_ml';
+    if (normalized.contains('wave côte') || normalized.contains('wave cote')) return 'wave_ci';
+    if (normalized.contains('wave')) return 'wave_senegal';
     if (normalized.contains('free')) return 'free_senegal';
     if (normalized.contains('wizall')) return 'wizall_senegal';
     if (normalized.contains('expresso')) return 'expresso_sn';
+    if (normalized.contains("mtn money côte") || normalized.contains("mtn money cote")) return 'mtn_ci';
+    if (normalized.contains('mtn bénin') || normalized.contains('mtn benin')) return 'mtn_bj';
+    if (normalized.contains('mtn cameroun')) return 'mtn_cm';
+    if (normalized.contains('moov côte') || normalized.contains('moov cote')) return 'moov_ci';
+    if (normalized.contains('moov burkina')) return 'moov_bf';
+    if (normalized.contains('moov bénin') || normalized.contains('moov benin')) return 'moov_bj';
+    if (normalized.contains('moov togo')) return 'moov_tg';
+    if (normalized.contains('moov mali')) return 'moov_ml';
+    if (normalized.contains('t-money')) return 't_money_tg';
     if (normalized.contains('djamo')) return 'djamo';
     if (normalized.contains('portefeuille paydunya')) return 'paydunya_wallet';
     return 'paydunya';
@@ -171,11 +184,9 @@ class PaymentTile extends StatelessWidget {
       case 'om_ci':
       case 'om_bf':
       case 'om_ml':
-      case 'orange_money':
         return 'Orange Money';
       case 'wave_senegal':
       case 'wave_ci':
-      case 'wave':
         return 'Wave';
       case 'free_senegal':
         return 'Free Money';
@@ -196,13 +207,11 @@ class PaymentTile extends StatelessWidget {
     switch (channel) {
       case 'wave_senegal':
       case 'wave_ci':
-      case 'wave':
         return 'assets/wave.png';
       case 'orange_senegal':
       case 'om_ci':
       case 'om_bf':
       case 'om_ml':
-      case 'orange_money':
         return 'assets/om.png';
       default:
         return null;
