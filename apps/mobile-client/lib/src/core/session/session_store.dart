@@ -26,7 +26,8 @@ class SessionState {
   final String? role;
   final bool isRestoring;
 
-  bool get isAuthenticated => accessToken != null && userId != null;
+  bool get isAuthenticated =>
+      accessToken != null && (userId?.trim().isNotEmpty ?? false);
 
   SessionState copyWith({
     String? accessToken,

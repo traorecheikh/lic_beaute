@@ -35,7 +35,7 @@ void main() {
                 items: const <String>['A', 'B'],
                 isStale: true,
                 cachedAt: cachedAt,
-                itemBuilder: (_, __, ___) => const SizedBox.shrink(),
+                itemBuilder: (_, _, _) => const SizedBox.shrink(),
               );
               return built;
             },

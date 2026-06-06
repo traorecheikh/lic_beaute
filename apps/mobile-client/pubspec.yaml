@@ -109,6 +109,14 @@ dev_dependencies:
 
   # WCAG live scanner — open Flutter DevTools → accessibility_radar tab
   accessibility_radar: ^0.3.0
+  patrol: ^4.6.0
+
+patrol:
+  app_name: Beauté Avenue
+  android:
+    package_name: sn.lic.beauteavenu
+  ios:
+    bundle_id: sn.lic.beauteavenu
 
 flutter:
   uses-material-design: true

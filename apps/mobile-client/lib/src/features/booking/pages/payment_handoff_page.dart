@@ -13,12 +13,14 @@ import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_phone_field.dart';
-import '../../../core/widgets/app_pressable.dart';
+import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
+import '../payment_handoff_navigation.dart';
 import '../paydunya_launch.dart';
 import '../../profile/providers/payment_methods_provider.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -38,6 +40,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     PhoneCountry(code: 'SN', name: 'Sénégal', dialCode: '+221', flag: '🇸🇳', digits: 9),
     PhoneCountry(code: 'CI', name: "Côte d'Ivoire", dialCode: '+225', flag: '🇨🇮', digits: 10),
   ];
+  // Use kPhoneCountries for other mobile money methods (wave, orange, etc.)
 
   String? _selectedMethod;
   String _selectedDjamoCountryCode = 'SN';
@@ -192,6 +195,10 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       provider: bookingDetailResourceProvider,
       errorTitle: 'Paiement indisponible pour le moment',
       serverTitle: 'Le récapitulatif de paiement est indisponible',
+      appBar: AppTopBar(
+        showBackButton: true,
+        onBack: _handleBackNavigation,
+      ),
       pageTitle: 'Paiement',
       pageSubtitle: 'Sécurisez votre réservation avec un acompte.',
       bottomNavigationBar: _buildBottomBar(),
@@ -200,21 +207,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             (resource.data?['depositAmountXof'] as num?)?.toInt() ?? 0;
 
         return [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: AppPressable(
-                  onTap: () => context.pop(),
-                  child: Padding(
-                    padding: EdgeInsets.all(12.r),
-                    child: AppIcon('arrow-left', size: 20, color: AppColors.onSurface),
-                  ),
-                ),
-              ),
-            ),
-          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 0),
@@ -407,14 +399,18 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               Expanded(
                 child: AppButton.outline(
                   label: 'Mon profil',
-                  onPressed: () => context.push(AppRoutes.profileEdit),
+                  onPressed: () => context.go(
+                    paymentHandoffProfileSetupRoute(widget.bookingId),
+                  ),
                 ),
               ),
               gapW8,
               Expanded(
                 child: AppButton.primary(
                   label: 'Paiement',
-                  onPressed: () => context.push(AppRoutes.profilePayments),
+                  onPressed: () => context.go(
+                    paymentHandoffMethodSetupRoute(widget.bookingId),
+                  ),
                 ),
               ),
             ],
@@ -422,6 +418,14 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         ],
       ),
     );
+  }
+
+  void _handleBackNavigation() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(paymentHandoffBackFallbackRoute(widget.bookingId));
   }
 
   Widget _buildFormForMethod(String methodCode, {required dynamic profile, required dynamic defaultMethod}) {
@@ -573,28 +577,35 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             ],
             if (defaultMethod != null) ...[
               gapH8,
-              Text(
-                profile != null && profile.fullName.isNotEmpty
-                    ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
-                    : defaultMethod.phoneNumber,
-                style: AppTextStyles.bodySm.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              if (profile?.email != null && profile!.email!.isNotEmpty)
-                Text(
-                  profile.email!,
+              Semantics(
+                label: 'Moyen de paiement par défaut: ${defaultMethod.phoneNumber}',
+                child: Text(
+                  profile != null && profile.fullName.isNotEmpty
+                      ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
+                      : defaultMethod.phoneNumber,
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
+              ),
+              if (profile?.email != null && profile!.email!.isNotEmpty)
+                Semantics(
+                  label: 'Email: ${profile.email}',
+                  child: Text(
+                    profile.email!,
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
             ] else ...[
               gapH12,
-              _buildTextField(
+              AppPhoneField(
                 controller: _phoneController,
-                label: 'Numéro de téléphone',
-                hint: '77XXXXXXX',
-                keyboardType: TextInputType.phone,
+                labelText: 'Numéro de téléphone',
+                initialCountry: _selectedDjamoCountryCode == 'CI'
+                    ? kPhoneCountries[1]
+                    : kPhoneCountries[0],
               ),
               gapH12,
               _buildTextField(
@@ -694,45 +705,26 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   }
 
   Widget _buildDjamoCountrySelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Pays du compte Djamo',
-          style: AppTextStyles.bodySm.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-        gapH4,
-        DropdownButtonFormField<String>(
-          initialValue: _selectedDjamoCountryCode,
-          items: _djamoCountries
-              .map(
-                (country) => DropdownMenuItem<String>(
-                  value: country.code,
-                  child: Text(
-                    '${country.flag} ${country.name}',
-                    style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurface),
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() => _selectedDjamoCountryCode = value);
-          },
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.surfaceVariant,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
+    return Semantics(
+      label: 'Pays du compte Djamo',
+      child: AppDropdown<String>(
+        label: 'Pays du compte Djamo',
+        value: _selectedDjamoCountryCode,
+        items: _djamoCountries.map((c) => c.code).toList(),
+        itemLabel: (code) {
+          final country = _djamoCountries.firstWhere((c) => c.code == code);
+          return '${country.flag} ${country.name}';
+        },
+        itemLeading: (code) {
+          final country = _djamoCountries.firstWhere((c) => c.code == code);
+          return ExcludeSemantics(
+            child: Text(country.flag, style: TextStyle(fontSize: 20.sp)),
+          );
+        },
+        onChanged: (value) {
+          setState(() => _selectedDjamoCountryCode = value);
+        },
+      ),
     );
   }
 

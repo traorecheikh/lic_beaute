@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:hive_ce/hive_ce.dart';
@@ -7,6 +8,10 @@ import 'package:hive_ce/hive_ce.dart';
 import '../core/constants/storage_keys.dart';
 import '../core/reactivity/app_reactivity.dart';
 import '../core/session/session_store.dart';
+import '../core/storage/app_model_cache.dart';
+import '../core/theme/app_theme.dart';
+import '../core/widgets/app_back_button.dart';
+import '../core/widgets/app_icon.dart';
 import '../features/appointments/pages/booking_detail_page.dart';
 import '../features/appointments/pages/booking_manage_page.dart';
 import '../features/appointments/pages/bookings_list_page.dart';
@@ -39,6 +44,7 @@ import '../features/profile/pages/support_page.dart';
 import '../features/profile/pages/legal_page.dart';
 import '../features/profile/pages/about_page.dart';
 import '../features/profile/pages/faq_page.dart';
+import '../features/profile/models/account_models.dart';
 import 'shell_scaffold.dart';
 import 'splash_page.dart';
 
@@ -90,6 +96,10 @@ abstract final class AppRoutes {
   static String bookingDetailPath(String id) => '/bookings/$id';
   static String bookingManagePath(String id) => '/bookings/$id/manage';
   static String review(String bookingId) => '/reviews/new/$bookingId';
+  static String profileBootstrapSetup({String next = home}) =>
+      '$profileBootstrap?required=1&next=${Uri.encodeComponent(next)}';
+  static String profilePaymentsSetup({String next = home}) =>
+      '$profilePayments?required=1&next=${Uri.encodeComponent(next)}';
 }
 
 // ── Routes protected from unauthenticated access ──────────────────────────
@@ -118,6 +128,52 @@ bool _isPublicRouteWithoutAuth(String location) {
     if (location.startsWith(prefix)) return true;
   }
   return false;
+}
+
+bool _isSetupRoute(String location) {
+  return location == AppRoutes.profileBootstrap ||
+      location == AppRoutes.profilePayments;
+}
+
+String? resolveRequiredSetupRedirect({
+  required String location,
+  Map<String, dynamic>? cachedProfile,
+  Map<String, dynamic>? cachedPaymentMethods,
+}) {
+  if (cachedProfile != null) {
+    final profile = ClientAccountProfile.fromJson(cachedProfile);
+    if (profile.fullName.trim().isEmpty) {
+      if (_isSetupRoute(location)) return null;
+      return AppRoutes.profileBootstrapSetup(next: location);
+    }
+  }
+
+  if (cachedPaymentMethods != null) {
+    final items = (cachedPaymentMethods['items'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(PaymentMethodRecord.fromJson)
+        .toList();
+    if (items.isEmpty) {
+      if (location == AppRoutes.profilePayments) return null;
+      return AppRoutes.profilePaymentsSetup(next: location);
+    }
+  }
+
+  return null;
+}
+
+String? _requiredSetupRedirect(String location) {
+  return resolveRequiredSetupRedirect(
+    location: location,
+    cachedProfile: AppModelCache.getMap(
+      StorageKeys.profileBox,
+      StorageKeys.currentUser,
+    ),
+    cachedPaymentMethods: AppModelCache.getMap(
+      StorageKeys.profileBox,
+      StorageKeys.paymentMethods,
+    ),
+  );
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────
@@ -154,6 +210,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '${AppRoutes.auth}?redirectTo=$current';
       }
 
+      if (session.isAuthenticated) {
+        final setupRedirect = _requiredSetupRedirect(location);
+        if (setupRedirect != null) {
+          return setupRedirect;
+        }
+      }
+
       // If onboarding just completed and user is redirected to /auth,
       // or if they are authenticated and try to go to auth pages, redirect to home.
       if (session.isAuthenticated && _authEntryRoutes.contains(location)) {
@@ -183,7 +246,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.profileBootstrap,
-        builder: (_, _) => const ProfileBootstrapPage(),
+        builder: (_, state) => ProfileBootstrapPage(
+          requiredSetup: state.uri.queryParameters['required'] == '1',
+          nextRoute: state.uri.queryParameters['next'] ?? AppRoutes.home,
+        ),
       ),
 
       // ── Main shell (bottom nav) ───────────────────────────────────────────
@@ -233,7 +299,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'payment-methods',
-                builder: (_, _) => const PaymentMethodsPage(),
+                builder: (_, state) => PaymentMethodsPage(
+                  requiredSetup: state.uri.queryParameters['required'] == '1',
+                  nextRoute: state.uri.queryParameters['next'] ?? AppRoutes.home,
+                ),
               ),
               // Promos hidden —
               // GoRoute(
@@ -419,31 +488,51 @@ class _BookingRouteErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.neutral,
+      appBar: AppBar(
+        backgroundColor: AppColors.neutral,
+        elevation: 0,
+        leading: AppBackButton(
+          onPressed: () => GoRouter.of(context).go(AppRoutes.home),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                AppIcon('alert-circle', size: 48, color: AppColors.error),
+                SizedBox(height: 20.h),
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTextStyles.displaySm,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15),
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 24.h),
                 FilledButton(
                   onPressed: () => GoRouter.of(context).go(AppRoutes.home),
-                  child: const Text('Retour à l’accueil'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.onPrimary,
+                    padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  child: Text(
+                    "Retour à l'accueil",
+                    style: AppTextStyles.labelLg.copyWith(color: AppColors.onPrimary),
+                  ),
                 ),
               ],
             ),

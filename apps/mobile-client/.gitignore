@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# E2E test credentials (real secrets, never commit)
+patrol_test/.e2e.env
+
 # Symbolication related
 app.*.symbols
 

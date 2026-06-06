@@ -2,8 +2,10 @@ import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:one_of/any_of.dart';
 
+import '../../../core/constants/storage_keys.dart';
 import '../../../core/network/api_client_provider.dart';
 import '../../../core/session/session_store.dart';
+import '../../../core/storage/app_model_cache.dart';
 
 // ── Current user ──────────────────────────────────────────────────────────
 
@@ -142,6 +144,7 @@ class AuthActions {
         'Ce compte professionnel ne peut pas utiliser l’application cliente.',
       );
     }
+    await _primeSetupCache();
     await notifier.login(
       accessToken: authSession.accessToken,
       refreshToken: authSession.refreshToken,
@@ -171,6 +174,7 @@ class AuthActions {
         'Ce compte professionnel ne peut pas utiliser l’application cliente.',
       );
     }
+    await _primeSetupCache();
     await notifier.login(
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -178,5 +182,30 @@ class AuthActions {
       role: user.role.name,
     );
     _ref.read(fcmRegistrationServiceProvider).register();
+  }
+
+  Future<void> _primeSetupCache() async {
+    final dio = _ref.read(dioProvider);
+
+    final profileResponse = await dio.get<Map<String, dynamic>>('/api/v1/me');
+    final profileData = profileResponse.data;
+    if (profileData != null) {
+      await AppModelCache.putMap(
+        StorageKeys.profileBox,
+        StorageKeys.currentUser,
+        profileData,
+      );
+    }
+
+    final paymentMethodsResponse = await dio.get<Map<String, dynamic>>(
+      '/api/v1/me/payment-methods',
+    );
+    final paymentMethodsData =
+        paymentMethodsResponse.data ?? const <String, dynamic>{'items': []};
+    await AppModelCache.putMap(
+      StorageKeys.profileBox,
+      StorageKeys.paymentMethods,
+      paymentMethodsData,
+    );
   }
 }

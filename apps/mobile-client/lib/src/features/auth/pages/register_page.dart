@@ -13,7 +13,6 @@ import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
 import '../widgets/auth_form_widgets.dart';
 
-/// Email regex pattern for client-side validation before sending OTP request.
 final _emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -24,6 +23,7 @@ class RegisterPage extends ConsumerStatefulWidget {
 }
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
   bool _codeSent = false;
@@ -43,143 +43,194 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       subtitle: _codeSent
           ? 'Un code à 6 chiffres vous a été envoyé par email.'
           : 'Saisissez votre email pour recevoir un code de vérification.',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!_codeSent) ...[
-            EditorialField(
-              label: 'EMAIL',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            SizedBox(height: 48.h),
-            AuthPrimaryButton(
-              label: 'RECEVOIR LE CODE',
-              loading: _submitting,
-              onTap: _requestCode,
-            ),
-            SizedBox(height: 24.h),
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  if (_submitting) return;
-                  context.push(AppRoutes.emailLogin);
+      body: Form(
+        key: _codeSent ? null : _formKey,
+        autovalidateMode: _codeSent ? null : AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!_codeSent) ...[
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'EMAIL',
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide(
+                      color: AppColors.outline.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(color: AppColors.error, width: 1.2),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(color: AppColors.error, width: 1.8),
+                  ),
+                  hintStyle: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
+                ),
+                style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Email requis';
+                  }
+                  if (!_emailRegex.hasMatch(value.trim())) {
+                    return "Format d'email invalide";
+                  }
+                  return null;
                 },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
-                  child: Text(
-                    'Déjà un compte ? Connectez-vous',
-                    style: AppTextStyles.labelSm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      decoration: TextDecoration.underline,
-                      decorationColor: AppColors.onSurfaceVariant,
+              ),
+              SizedBox(height: 48.h),
+              AuthPrimaryButton(
+                label: 'RECEVOIR LE CODE',
+                loading: _submitting,
+                onTap: _requestCode,
+              ),
+              SizedBox(height: 24.h),
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_submitting) return;
+                    context.push(AppRoutes.emailLogin);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Text(
+                      'Déjà un compte ? Connectez-vous',
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ] else ...[
-            Center(
-              child: Column(
-                children: [
-                  EditorialField(
-                    label: 'EMAIL',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    enabled: false,
-                  ),
-                  SizedBox(height: 32.h),
-                  Text(
-                    'CODE À 6 CHIFFRES',
-                    style: AppTextStyles.labelSm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                  Pinput(
-                    length: 6,
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    autofocus: true,
-                    defaultPinTheme: PinTheme(
-                      width: 48.w,
-                      height: 56.h,
-                      textStyle: AppTextStyles.headlineLg.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppColors.outline.withValues(alpha: 0.5),
+            ] else ...[
+              Center(
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      enabled: false,
+                      decoration: InputDecoration(
+                        labelText: 'EMAIL',
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                          borderSide: BorderSide(
+                            color: AppColors.outline.withValues(alpha: 0.5),
+                            width: 1,
+                          ),
                         ),
                       ),
+                      style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
                     ),
-                    focusedPinTheme: PinTheme(
-                      width: 48.w,
-                      height: 56.h,
-                      textStyle: AppTextStyles.headlineLg.copyWith(
-                        color: AppColors.onSurface,
+                    SizedBox(height: 32.h),
+                    Text(
+                      'CODE À 6 CHIFFRES',
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        letterSpacing: 1.5,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 1.5,
+                    ),
+                    SizedBox(height: 20.h),
+                    Pinput(
+                      length: 6,
+                      controller: _otpController,
+                      keyboardType: TextInputType.number,
+                      autofocus: true,
+                      defaultPinTheme: PinTheme(
+                        width: 48.w,
+                        height: 56.h,
+                        textStyle: AppTextStyles.headlineLg.copyWith(
+                          color: AppColors.onSurface,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: AppColors.outline.withValues(alpha: 0.5),
+                          ),
                         ),
                       ),
+                      focusedPinTheme: PinTheme(
+                        width: 48.w,
+                        height: 56.h,
+                        textStyle: AppTextStyles.headlineLg.copyWith(
+                          color: AppColors.onSurface,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      onCompleted: (_) => _verifyCode(),
                     ),
-                    onCompleted: (_) => _verifyCode(),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 32.h),
-            AuthPrimaryButton(
-              label: 'VÉRIFIER LE CODE',
-              loading: _submitting,
-              onTap: _verifyCode,
-            ),
-            gapH16,
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  if (_submitting) return;
-                  setState(() => _codeSent = false);
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
-                  child: Text(
-                    'Modifier l\'email',
-                    style: AppTextStyles.labelSm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      decoration: TextDecoration.underline,
-                      decorationColor: AppColors.onSurfaceVariant,
+              SizedBox(height: 32.h),
+              AuthPrimaryButton(
+                label: 'VÉRIFIER LE CODE',
+                loading: _submitting,
+                onTap: _verifyCode,
+              ),
+              gapH16,
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_submitting) return;
+                    setState(() => _codeSent = false);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Text(
+                      "Modifier l'email",
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 
   Future<void> _requestCode() async {
-    if (_submitting) return;
+    if (_submitting || !_formKey.currentState!.validate()) return;
     final email = _emailController.text.trim();
-
-    if (email.isEmpty) {
-      AppSnackbar.info(context, 'Veuillez saisir votre adresse email.');
-      return;
-    }
-    if (!_emailRegex.hasMatch(email)) {
-      AppSnackbar.info(context, 'Format d\'email invalide.');
-      return;
-    }
 
     AppHaptics.light();
     setState(() => _submitting = true);

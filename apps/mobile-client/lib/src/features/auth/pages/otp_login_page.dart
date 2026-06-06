@@ -66,10 +66,10 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             SizedBox(height: 10.h),
             PhoneFormField(
               controller: _phoneController,
-              isCountrySelectionEnabled: false,
+              isCountrySelectionEnabled: true,
               isCountryButtonPersistent: true,
               countrySelectorNavigator: const CountrySelectorNavigator.bottomSheet(
-                countries: [IsoCode.SN],
+                countries: [IsoCode.SN, IsoCode.CI, IsoCode.ML, IsoCode.FR],
               ),
               countryButtonStyle: CountryButtonStyle(
                 showFlag: true,

@@ -22,6 +22,7 @@ class EmailLoginPage extends ConsumerStatefulWidget {
 }
 
 class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -39,81 +40,153 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
     return AuthPageScaffold(
       title: 'Connexion',
       subtitle: 'Veuillez saisir vos identifiants.',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          EditorialField(
-            label: 'EMAIL',
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          SizedBox(height: 28.h),
-          EditorialField(
-            label: 'MOT DE PASSE',
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            suffixBuilder: (focused) => AppPressable(
-              onTap: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
-                child: AppIcon(
-                  _obscurePassword ? 'eye-off' : 'eye',
-                  color: focused
-                      ? AppColors.primary
-                      : AppColors.onSurfaceVariant,
-                  size: 20,
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: 'EMAIL',
+                filled: true,
+                fillColor: AppColors.surface,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(
+                    color: AppColors.outline.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(color: AppColors.error, width: 1.2),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(color: AppColors.error, width: 1.8),
+                ),
+                hintStyle: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
+              ),
+              style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Email requis';
+                }
+                if (!_emailRegex.hasMatch(value.trim())) {
+                  return "Format d'email invalide";
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 28.h),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: 'MOT DE PASSE',
+                filled: true,
+                fillColor: AppColors.surface,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(
+                    color: AppColors.outline.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(color: AppColors.error, width: 1.2),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: const BorderSide(color: AppColors.error, width: 1.8),
+                ),
+                hintStyle: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
+                suffixIcon: AppPressable(
+                  onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 12.w),
+                    child: AppIcon(
+                      _obscurePassword ? 'eye-off' : 'eye',
+                      color: AppColors.onSurfaceVariant,
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          gapH12,
-          Align(
-            alignment: Alignment.centerRight,
-            child: AppPressable(
-              onTap: () {
-                AppHaptics.light();
-                AppSnackbar.info(
-                  context,
-                  'Réinitialisation par email bientôt disponible.',
-                );
+              style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Mot de passe requis';
+                }
+                if (value.length < 6) {
+                  return '6 caractères minimum';
+                }
+                return null;
               },
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 4.h),
-                child: Text(
-                  'Mot de passe oublié ?',
-                  style: AppTextStyles.labelSm.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                    decoration: TextDecoration.underline,
-                    decorationColor: AppColors.onSurfaceVariant,
+            ),
+            gapH12,
+            Align(
+              alignment: Alignment.centerRight,
+              child: AppPressable(
+                onTap: () {
+                  AppHaptics.light();
+                  AppSnackbar.info(
+                    context,
+                    'Réinitialisation par email bientôt disponible.',
+                  );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
+                  child: Text(
+                    'Mot de passe oublié ?',
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          SizedBox(height: 48.h),
-          AuthPrimaryButton(
-            label: 'SE CONNECTER',
-            loading: _submitting,
-            onTap: _submitLogin,
-          ),
-        ],
+            SizedBox(height: 48.h),
+            AuthPrimaryButton(
+              label: 'SE CONNECTER',
+              loading: _submitting,
+              onTap: _submitLogin,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _submitLogin() async {
-    if (_submitting) return;
+    if (_submitting || !_formKey.currentState!.validate()) return;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    if (email.isEmpty || password.isEmpty) {
-      AppSnackbar.info(context, 'Email et mot de passe requis.');
-      return;
-    }
-    if (!_emailRegex.hasMatch(email)) {
-      AppSnackbar.info(context, 'Format d\'email invalide.');
-      return;
-    }
+
     AppHaptics.light();
     setState(() => _submitting = true);
     await handleAuthAction(

@@ -3,10 +3,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
+import '../../profile/providers/payment_methods_provider.dart';
+
+bool needsProfileBootstrap(String? fullName) => (fullName ?? '').trim().isEmpty;
+
+bool needsPaymentMethodSetup(int paymentMethodCount) => paymentMethodCount <= 0;
+
+String resolvePostAuthRoute({
+  required String? fullName,
+  required int paymentMethodCount,
+  String fallbackRoute = AppRoutes.home,
+}) {
+  if (needsProfileBootstrap(fullName)) {
+    return AppRoutes.profileBootstrapSetup(next: fallbackRoute);
+  }
+  if (needsPaymentMethodSetup(paymentMethodCount)) {
+    return AppRoutes.profilePaymentsSetup(next: fallbackRoute);
+  }
+  return fallbackRoute;
+}
 
 Future<void> navigateAfterAuth(BuildContext context, WidgetRef ref) async {
   final user = await ref.read(currentUserProvider.future);
+  List<dynamic> paymentMethods;
+  try {
+    paymentMethods = await ref.read(paymentMethodsProvider.future);
+  } catch (_) {
+    paymentMethods = const [];
+  }
   if (!context.mounted) return;
-  final needsBootstrap = (user?.fullName ?? '').trim().isEmpty;
-  context.go(needsBootstrap ? AppRoutes.profileBootstrap : AppRoutes.home);
+  context.go(
+    resolvePostAuthRoute(
+      fullName: user?.fullName,
+      paymentMethodCount: paymentMethods.length,
+    ),
+  );
 }

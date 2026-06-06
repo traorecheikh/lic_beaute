@@ -4,13 +4,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/providers/supported_countries_provider.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_empty_state.dart';
+import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
+import '../../../router/app_router.dart';
 import '../models/account_models.dart';
 import '../providers/payment_methods_provider.dart';
 import '../../booking/providers/payment_methods_provider.dart' as booking_payment_methods;
@@ -18,13 +21,21 @@ import '../widgets/payment_tile.dart';
 import '../widgets/profile_card_shell.dart';
 
 class PaymentMethodsPage extends ConsumerStatefulWidget {
-  const PaymentMethodsPage({super.key});
+  const PaymentMethodsPage({
+    this.requiredSetup = false,
+    this.nextRoute = AppRoutes.home,
+    super.key,
+  });
+
+  final bool requiredSetup;
+  final String nextRoute;
 
   @override
   ConsumerState<PaymentMethodsPage> createState() => _PaymentMethodsPageState();
 }
 
 class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
+  final _addFormKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   String _channel = 'wave_senegal';
   bool _saving = false;
@@ -70,7 +81,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     }
 
     return AppScaffold(
-      appBar: const AppTopBar(title: 'Moyens de paiement', showBackButton: true),
+      appBar: AppTopBar(
+        title: 'Moyens de paiement',
+        showBackButton: !widget.requiredSetup,
+      ),
       body: methodsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppEmptyState(
@@ -80,61 +94,92 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
           action: () => ref.refresh(paymentMethodsProvider),
           actionLabel: 'Réessayer',
         ),
-        data: (methods) => ListView(
-          padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 100.h),
-          children: [
-            if (methods.isEmpty)
-              const AppEmptyState(
-                icon: 'star',
-                title: 'Aucun moyen de paiement',
-                subtitle:
-                    'Enregistrez un compte mobile money pour simplifier vos réservations.',
-              )
-            else
-              ...methods.map(
-                (method) => Padding(
-                  padding: EdgeInsets.only(bottom: 12.h),
-                  child: PaymentTile(
-                    method: method,
-                    onTap: () => _showEditSheet(context, method),
-                    onDelete: () => _deleteMethod(method.id),
-                    onDefault: method.isDefault
-                        ? null
-                        : () => _setDefault(method.id),
+        data: (methods) {
+          if (widget.requiredSetup && methods.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) context.go(widget.nextRoute);
+            });
+          }
+
+          return ListView(
+            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 100.h),
+            children: [
+              if (widget.requiredSetup) ...[
+                ProfileCardShell(
+                  padding: EdgeInsets.all(20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Dernière étape', style: AppTextStyles.labelLg),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Ajoutez un moyen de paiement par défaut pour terminer la configuration de votre compte.',
+                        style: AppTextStyles.bodySm.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12.h),
+              ],
+              if (methods.isEmpty)
+                const AppEmptyState(
+                  icon: 'star',
+                  title: 'Aucun moyen de paiement',
+                  subtitle:
+                      'Enregistrez un compte mobile money pour simplifier vos réservations.',
+                )
+              else
+                ...methods.map(
+                  (method) => Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: PaymentTile(
+                      method: method,
+                      onTap: () => _showEditSheet(context, method),
+                      onDelete: () => _deleteMethod(method.id),
+                      onDefault: method.isDefault
+                          ? null
+                          : () => _setDefault(method.id),
+                    ),
+                  ),
+                ),
+              SizedBox(height: 12.h),
+              Form(
+                key: _addFormKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: ProfileCardShell(
+                  padding: EdgeInsets.all(20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ajouter un numéro', style: AppTextStyles.labelLg),
+                      SizedBox(height: 16.h),
+                      AppDropdown<String>(
+                        label: 'Opérateur',
+                        value: _channel,
+                        items: channelItems.map((item) => item.code).toList(),
+                        itemLabel: (value) =>
+                            channelItems
+                                .firstWhere((item) => item.code == value)
+                                .label,
+                        onChanged: (val) => setState(() => _channel = val),
+                      ),
+                      gapH16,
+                      _buildPhoneField(_phoneController),
+                      SizedBox(height: 24.h),
+                      AppButton.primary(
+                        label: 'Ajouter',
+                        onPressed: _saving ? null : _addMethod,
+                        isLoading: _saving,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            SizedBox(height: 12.h),
-            ProfileCardShell(
-              padding: EdgeInsets.all(20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Ajouter un numéro', style: AppTextStyles.labelLg),
-                  SizedBox(height: 16.h),
-                  AppDropdown<String>(
-                    label: 'Opérateur',
-                    value: _channel,
-                    items: channelItems.map((item) => item.code).toList(),
-                    itemLabel: (value) =>
-                        channelItems
-                            .firstWhere((item) => item.code == value)
-                            .label,
-                    onChanged: (val) => setState(() => _channel = val),
-                  ),
-                  gapH16,
-                  _buildPhoneField(_phoneController),
-                  SizedBox(height: 24.h),
-                  AppButton.primary(
-                    label: 'Ajouter',
-                    onPressed: _saving ? null : _addMethod,
-                    isLoading: _saving,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -161,6 +206,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     var selectedChannel = _resolveExistingChannel(method, channelItems);
     bool saving = false;
 
+    final editFormKey = GlobalKey<FormState>();
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -178,78 +225,86 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                 20.w,
                 MediaQuery.viewInsetsOf(ctx).bottom + 32.h,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Modifier le moyen de paiement',
-                      style: AppTextStyles.labelLg),
-                  SizedBox(height: 20.h),
-                  AppDropdown<String>(
-                    label: 'Opérateur',
-                    value: selectedChannel,
-                    items: channelItems.map((item) => item.code).toList(),
-                    itemLabel: (value) => channelItems
-                        .firstWhere((item) => item.code == value)
-                        .label,
-                    onChanged: (val) => setSheetState(() => selectedChannel = val),
-                  ),
-                  gapH16,
-                  _buildPhoneField(phoneController),
-                  gapH16,
-                  TextField(
-                    controller: labelController,
-                    decoration: InputDecoration(
-                      labelText: 'Libellé (optionnel)',
-                      hintText: 'ex : Mon Wave principal',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+              child: Form(
+                key: editFormKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Modifier le moyen de paiement',
+                        style: AppTextStyles.labelLg),
+                    SizedBox(height: 20.h),
+                    AppDropdown<String>(
+                      label: 'Opérateur',
+                      value: selectedChannel,
+                      items: channelItems.map((item) => item.code).toList(),
+                      itemLabel: (value) => channelItems
+                          .firstWhere((item) => item.code == value)
+                          .label,
+                      onChanged: (val) => setSheetState(() => selectedChannel = val),
                     ),
-                    maxLength: 60,
-                  ),
-                  SizedBox(height: 8.h),
-                  AppButton.primary(
-                    label: 'Enregistrer',
-                    isLoading: saving,
-                    onPressed: saving
-                        ? null
-                        : () async {
-                            setSheetState(() => saving = true);
-                            try {
-                              await ref
-                                  .read(paymentMethodsProvider.notifier)
-                                  .updateMethod(
-                                    method.id,
-                                    phoneNumber: phoneController.text.trim(),
-                                    label: labelController.text.trim().isEmpty
-                                        ? null
-                                        : labelController.text.trim(),
-                                    method: selectedChannel,
-                                    country: _resolveChannelCountryForCode(
-                                      selectedChannel,
-                                      channelItems,
-                                    ),
+                    gapH16,
+                    _buildPhoneField(phoneController),
+                    gapH16,
+                    TextField(
+                      controller: labelController,
+                      decoration: InputDecoration(
+                        labelText: 'Libellé (optionnel)',
+                        hintText: 'ex : Mon Wave principal',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      maxLength: 60,
+                    ),
+                    SizedBox(height: 8.h),
+                    AppButton.primary(
+                      label: 'Enregistrer',
+                      isLoading: saving,
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              if (!editFormKey.currentState!.validate()) {
+                                setSheetState(() => saving = false);
+                                return;
+                              }
+                              setSheetState(() => saving = true);
+                              try {
+                                await ref
+                                    .read(paymentMethodsProvider.notifier)
+                                    .updateMethod(
+                                      method.id,
+                                      phoneNumber: phoneController.text.trim(),
+                                      label: labelController.text.trim().isEmpty
+                                          ? null
+                                          : labelController.text.trim(),
+                                      method: selectedChannel,
+                                      country: _resolveChannelCountryForCode(
+                                        selectedChannel,
+                                        channelItems,
+                                      ),
+                                    );
+                                if (context.mounted) {
+                                  Navigator.of(sheetContext).pop();
+                                  AppSnackbar.success(
+                                    context,
+                                    'Moyen de paiement mis à jour.',
                                   );
-                              if (context.mounted) {
-                                Navigator.of(sheetContext).pop();
-                                AppSnackbar.success(
-                                  context,
-                                  'Moyen de paiement mis à jour.',
-                                );
+                                }
+                              } catch (error) {
+                                setSheetState(() => saving = false);
+                                if (context.mounted) {
+                                  await context.handleHttpError(
+                                      error, 'Mise à jour impossible.');
+                                }
                               }
-                            } catch (error) {
-                              setSheetState(() => saving = false);
-                              if (context.mounted) {
-                                await context.handleHttpError(
-                                    error, 'Mise à jour impossible.');
-                              }
-                            }
-                          },
+                            },
                   ),
                 ],
               ),
-            );
+            ),
+          );
           },
         );
       },
@@ -260,11 +315,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   }
 
   Future<void> _addMethod() async {
+    if (!_addFormKey.currentState!.validate()) return;
     final phone = _phoneController.text.trim();
-    if (phone.length < 9) {
-      AppSnackbar.error(context, 'Numéro de téléphone invalide.');
-      return;
-    }
 
     setState(() => _saving = true);
     try {
@@ -280,6 +332,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       _phoneController.clear();
       if (!mounted) return;
       AppSnackbar.success(context, 'Moyen de paiement ajouté.');
+      if (widget.requiredSetup) {
+        context.go(widget.nextRoute);
+        return;
+      }
       final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
       if (returnTo != null && returnTo.isNotEmpty) {
         context.go(Uri.decodeComponent(returnTo));
@@ -312,15 +368,22 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   }
 
   Widget _buildPhoneField(TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.phone,
-      decoration: InputDecoration(
+    final countriesAsync = ref.watch(supportedCountriesProvider);
+    final selectedCountry = countriesAsync.asData?.value?.firstWhere(
+      (c) => _resolveChannelCountry()?.toUpperCase() == c.code,
+      orElse: () => (countriesAsync.asData?.value ?? kPhoneCountries)[0],
+    ) ?? kPhoneCountries[0];
+
+    return Semantics(
+      label: 'Numéro de téléphone pour le moyen de paiement',
+      child: AppPhoneField(
+        controller: controller,
         labelText: 'Numéro de téléphone',
-        hintText: '778676477',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
+        initialCountry: selectedCountry,
+        countries: countriesAsync.asData?.value ?? kPhoneCountries,
+        onCountryChanged: (_) {
+          // Country change handled by the channel selection
+        },
       ),
     );
   }

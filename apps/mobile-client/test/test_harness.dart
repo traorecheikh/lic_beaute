@@ -13,7 +13,7 @@ Widget buildTestableWidget(
     designSize: const Size(390, 844),
     minTextAdapt: true,
     splitScreenMode: true,
-    builder: (_, __) {
+    builder: (_, _) {
       return MaterialApp(
         theme: theme ?? ThemeData(useMaterial3: true),
         home: scaffold ? Scaffold(body: child) : child,

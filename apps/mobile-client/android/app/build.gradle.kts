@@ -32,6 +32,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        testInstrumentationRunner = "pl.leancode.patrol.PatrolJUnitRunner"
     }
 
     buildTypes {
@@ -45,6 +47,10 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    androidTestImplementation("androidx.test:runner:1.5.1")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 }
 
 flutter {

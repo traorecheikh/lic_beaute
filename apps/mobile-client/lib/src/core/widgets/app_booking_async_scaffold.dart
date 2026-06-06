@@ -14,6 +14,7 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
   final String? pageSubtitle;
   final List<Widget> Function(CachedResource<T> resource) sliverBuilder;
   final Widget? bottomNavigationBar;
+  final PreferredSizeWidget? appBar;
   final dynamic provider;
 
   const AppBookingAsyncScaffold({
@@ -24,6 +25,7 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
     this.pageSubtitle,
     required this.sliverBuilder,
     this.bottomNavigationBar,
+    this.appBar,
     required this.provider,
     super.key,
   });
@@ -34,9 +36,10 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
     Future<void> refresh() => ref.refresh(provider(bookingId).future);
 
     return AppScaffold(
+      appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(
-        top: true,
+        top: appBar == null,
         bottom: false,
         child: AppAsyncView<CachedResource<T>>(
           value: detailAsync,

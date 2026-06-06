@@ -81,6 +81,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               padding: EdgeInsets.all(24.w),
               child: Form(
                 key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   children: [
                     Center(
