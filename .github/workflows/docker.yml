@@ -62,5 +62,5 @@ jobs:
         if: success() && github.ref == 'refs/heads/main'
         run: |
           curl -fsSL -X GET \
-            "http://178.105.224.117:8000/api/v1/deploy?uuid=h255qm4nj3i832xhkls5270z&force=false" \
+            "http://178.105.224.117:8000/api/v1/deploy?uuid=h255qm4nj3i832xhkls5270z&force=true" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
