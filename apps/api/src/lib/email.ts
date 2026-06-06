@@ -63,7 +63,9 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
           content: a.content,
         }));
       }
-      const { error } = await resend.emails.send(resendPayload as Parameters<typeof resend.emails.send>[0]);
+      const { error } = await resend.emails.send(
+        resendPayload as unknown as Parameters<typeof resend.emails.send>[0]
+      );
       if (error) {
         logger.error("[EMAIL:resend] send failed", { to: message.to, error });
         await writeEmailAudit(message, "failed", error.message);

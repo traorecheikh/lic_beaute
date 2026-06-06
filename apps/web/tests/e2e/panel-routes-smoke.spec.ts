@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+const API_BASE_URL = (process.env.PW_API_BASE_URL ?? process.env.PW_BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
+
 async function waitForApi(page: import("@playwright/test").Page, maxSeconds = 30) {
   for (let i = 0; i < maxSeconds; i += 1) {
     try {
-      const response = await page.request.get("http://127.0.0.1:3000/health");
+      const response = await page.request.get(`${API_BASE_URL}/health`);
       if (response.ok()) return;
     } catch {
       // API might still be booting.

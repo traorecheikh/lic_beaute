@@ -2,6 +2,8 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://127.0.0.1:3000}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@beauteavenue.local}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin1234}"
 RUN_ID="$(date +%s)"
 CLIENT_EMAIL="client.flow.${RUN_ID}@example.sn"
 CLIENT_PHONE="+22179$(printf '%07d' "$((RUN_ID % 10000000))")"
@@ -21,7 +23,7 @@ curl -fsS "${BASE_URL}/health" >/dev/null
 echo "[2/8] Admin login"
 ADMIN_JSON="$(curl -fsS -X POST "${BASE_URL}/api/v1/auth/login" \
   -H 'Content-Type: application/json' \
-  --data '{"email":"admin@beauteavenue.local","password":"admin1234"}')"
+  --data "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}")"
 ADMIN_TOKEN="$(printf '%s' "$ADMIN_JSON" | node -e 'const fs=require("fs"); const v=JSON.parse(fs.readFileSync(0,"utf8")); process.stdout.write(v.accessToken||"")')"
 [ -n "$ADMIN_TOKEN" ]
 

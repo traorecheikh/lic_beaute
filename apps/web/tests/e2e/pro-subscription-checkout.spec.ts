@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const API = "http://127.0.0.1:3000";
+const API = (process.env.PW_API_BASE_URL ?? process.env.PW_BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const PRO_EMAIL = process.env.PW_PRO_EMAIL ?? "kadija@studiokadija.sn";
 const PRO_PASSWORD = process.env.PW_PRO_PASSWORD ?? "salon1234";
 const SUBSCRIPTION_PHONE = process.env.PW_SUBSCRIPTION_PHONE ?? "781706184";
