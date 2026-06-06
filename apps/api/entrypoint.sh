@@ -48,6 +48,11 @@ fi
 echo "[entrypoint] Migrations OK. Seeding admin..."
 node dist/seed-admin.js 2>&1 || echo "[entrypoint] seed-admin.js not found or failed — continuing"
 
+if [ "${SEED_DEMO}" = "1" ] || [ "${SEED_DEMO}" = "true" ]; then
+  echo "[entrypoint] SEED_DEMO=1 — seeding demo salons..."
+  node dist/seed-demo.js 2>&1 || echo "[entrypoint] seed-demo.js not found or failed — continuing"
+fi
+
 echo "[entrypoint] Starting node dist/index.js..."
 if [ "$#" -eq 0 ]; then
   node dist/index.js

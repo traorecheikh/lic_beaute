@@ -83,6 +83,7 @@ services:
       FCM_SERVICE_ACCOUNT_JSON_B64: ${FCM_SERVICE_ACCOUNT_JSON_B64:-}
       INTECH_API_KEY: ${INTECH_API_KEY:-}
       INTECH_API_SECRET: ${INTECH_API_SECRET:-}
+      SEED_DEMO: ${SEED_DEMO:-1}
     volumes:
       - media_uploads:/app/uploads
     depends_on:

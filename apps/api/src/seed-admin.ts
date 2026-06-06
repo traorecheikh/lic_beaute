@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS = [
 async function main() {
   // ── Admin user ──────────────────────────────────────────────────────────────
   const email = process.env.ADMIN_EMAIL ?? "admin@beauteavenue.local";
-  const password = process.env.ADMIN_PASSWORD ?? "supersecure";
+  const password = process.env.ADMIN_PASSWORD ?? "admin1234";
   const existing = await prisma.user.findFirst({ where: { role: "platform_admin" } });
   if (existing) {
     const passwordHash = await argon2.hash(password);

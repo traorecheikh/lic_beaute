@@ -73,8 +73,8 @@ test.describe("Admin + Pro full business flow", () => {
 
     await test.step("Admin login and open the newly submitted dossier", async () => {
       await adminPage.goto("/admin/login");
-      await adminPage.getByPlaceholder("nom@beauteavenue.com").fill("admin@beauteavenue.local");
-      await adminPage.getByPlaceholder("••••••••").fill("admin1234");
+      await adminPage.getByPlaceholder("nom@beauteavenue.com").fill(process.env.PW_ADMIN_EMAIL ?? "admin@beauteavenue.local");
+      await adminPage.getByPlaceholder("••••••••").fill(process.env.PW_ADMIN_PASSWORD ?? "admin1234");
 
       const loginResponsePromise = adminPage.waitForResponse((response) =>
         response.url().includes("/api/v1/auth/login") && response.request().method() === "POST"
