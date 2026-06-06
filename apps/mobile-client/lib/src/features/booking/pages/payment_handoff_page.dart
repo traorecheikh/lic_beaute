@@ -21,6 +21,7 @@ import '../../../router/app_router.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../payment_handoff_navigation.dart';
+import '../payment_utils.dart';
 import '../paydunya_launch.dart';
 import '../../profile/providers/payment_methods_provider.dart';
 import '../../profile/providers/profile_provider.dart';
@@ -1123,37 +1124,12 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     if (savedMethod != null && savedMethod.isNotEmpty) {
       return savedMethod;
     }
-    final label = (method.label as String? ?? '').toLowerCase();
-    if (label.contains('portefeuille paydunya')) return 'paydunya_wallet';
-    if (label.contains('djamo')) return 'djamo';
-    if (label.contains('wizall')) return 'wizall_senegal';
-    if (label.contains('expresso')) return 'expresso_sn';
-    if (label.contains('free')) return 'free_senegal';
-    if (label.contains('orange money sénégal')) return 'orange_senegal';
-    if (label.contains('orange money côte')) return 'om_ci';
-    if (label.contains('orange money burkina')) return 'om_bf';
-    if (label.contains('orange money mali')) return 'om_ml';
-    if (label.contains('mtn money côte')) return 'mtn_ci';
-    if (label.contains('mtn bénin')) return 'mtn_bj';
-    if (label.contains('mtn cameroun')) return 'mtn_cm';
-    if (label.contains('moov côte')) return 'moov_ci';
-    if (label.contains('moov burkina')) return 'moov_bf';
-    if (label.contains('moov bénin')) return 'moov_bj';
-    if (label.contains('moov togo')) return 'moov_tg';
-    if (label.contains('moov mali')) return 'moov_ml';
-    if (label.contains('t-money')) return 't_money_tg';
-    if (label.contains('wave côte')) return 'wave_ci';
-    if (label.contains('wave')) return 'wave_senegal';
-    return null;
+    final label = (method.label as String? ?? '');
+    final code = channelFromMethodLabel(label);
+    return code.isEmpty ? null : code;
   }
 
-  String _inferDjamoCountryCode(String phone) {
-    final normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-    if (normalized.startsWith('+225') || normalized.startsWith('225') || normalized.length == 10) {
-      return 'CI';
-    }
-    return 'SN';
-  }
+  String _inferDjamoCountryCode(String phone) => inferDjamoCountryCode(phone);
 
   String _inferDjamoCountryCodeFromMethod(dynamic method) {
     final savedCountry = (method?.country as String?)?.trim().toUpperCase();
