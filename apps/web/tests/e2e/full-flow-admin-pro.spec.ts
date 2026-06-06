@@ -4,7 +4,7 @@ test.describe("Admin + Pro full business flow", () => {
   test("register pro dossier, login pro, review dossier in admin", async ({ page, context }) => {
     for (let i = 0; i < 30; i += 1) {
       try {
-        const health = await context.request.get("http://127.0.0.1:3000/health");
+        const health = await context.request.get("${process.env.PW_BASE_URL ?? "http://127.0.0.1:3000"}/health");
         if (health.ok()) break;
       } catch {
         // API may still be booting during Playwright webServer startup.
@@ -19,7 +19,7 @@ test.describe("Admin + Pro full business flow", () => {
     const salonName = `Flow Salon ${runId}`;
 
     await test.step("Register pro owner dossier through live API contract", async () => {
-      const registerResponse = await context.request.post("http://127.0.0.1:3000/api/v1/auth/register", {
+      const registerResponse = await context.request.post("${process.env.PW_BASE_URL ?? "http://127.0.0.1:3000"}/api/v1/auth/register", {
         data: {
           type: "salon_owner",
           fullName: "Flow Owner",
@@ -131,7 +131,7 @@ test.describe("Admin + Pro full business flow", () => {
     });
 
     await test.step("Live API verification with bearer token", async () => {
-      const verifyResponse = await context.request.get(`http://127.0.0.1:3000/api/v1/admin/salons/${dossierId}`, {
+      const verifyResponse = await context.request.get(`${process.env.PW_BASE_URL ?? "http://127.0.0.1:3000"}/api/v1/admin/salons/${dossierId}`, {
         headers: {
           authorization: `Bearer ${adminToken}`
         }

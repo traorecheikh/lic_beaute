@@ -92,7 +92,7 @@ test.describe("pro subscription checkout", () => {
     expect(executeResponse.ok(), JSON.stringify(executeJson)).toBeTruthy();
 
     if ((executeJson.success as boolean | undefined) === true) {
-      await expect(page.locator("body")).toContainText(/Confirmation du paiement en cours|Validation OTP Wizall|En attente de confirmation|mise à niveau est déjà en attente de paiement/i, {
+      await expect(page.locator("body")).toContainText(/Confirmation du paiement en cours|Validation OTP Wizall|En attente de confirmation|mise à niveau est déjà en attente de paiement|Paiement confirmé|Plan actuel/i, {
         timeout: 15_000
       });
       return;

@@ -18,7 +18,7 @@
 
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
-const API = "http://127.0.0.1:3000";
+const API = process.env.PW_BASE_URL ?? "http://127.0.0.1:3000";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ async function apiLogin(
 }
 
 async function adminLogin(page: Page, ctx: BrowserContext) {
-  return apiLogin(page, ctx, "admin@beauteavenue.local", "admin1234", "beauteavenue.admin.session", "/admin/dashboard");
+  return apiLogin(page, ctx, process.env.PW_ADMIN_EMAIL ?? "admin@beauteavenue.local", process.env.PW_ADMIN_PASSWORD ?? "admin1234", "beauteavenue.admin.session", "/admin/dashboard");
 }
 
 async function proLogin(page: Page, ctx: BrowserContext, email: string, password: string) {
