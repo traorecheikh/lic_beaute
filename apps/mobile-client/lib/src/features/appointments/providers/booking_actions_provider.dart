@@ -45,7 +45,7 @@ class BookingActions {
     final dio = _ref.read(dioProvider);
     await dio.post(
       '/api/v1/bookings/$bookingId/review',
-      data: {'rating': rating, 'comment': ?comment},
+      data: {'rating': rating, if (comment != null) 'comment': comment},
     );
     _ref.invalidate(bookingDetailProvider(bookingId));
   }

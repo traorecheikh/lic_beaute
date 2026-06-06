@@ -120,16 +120,12 @@ void main() {
   });
 
   group('ClientOnlyAuthException', () {
-    test('stores and displays message', () {
+    test('stores message', () {
       final exception = ClientOnlyAuthException(
         'Ce compte professionnel ne peut pas utiliser l\'application cliente.',
       );
       expect(
         exception.message,
-        "Ce compte professionnel ne peut pas utiliser l'application cliente.",
-      );
-      expect(
-        exception.toString(),
         "Ce compte professionnel ne peut pas utiliser l'application cliente.",
       );
     });

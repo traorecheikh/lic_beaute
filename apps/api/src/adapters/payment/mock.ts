@@ -38,6 +38,22 @@ export class MockPaymentAdapter implements PaymentAdapter {
     return { refundRef: `mock-refund-${params.providerRef}` };
   }
 
+  async executePayment(params: {
+    paymentId: string;
+    method: string;
+    invoiceToken: string;
+    details?: Record<string, any>;
+  }) {
+    return {
+      success: true,
+      status: "succeeded",
+      providerTxId: `mock-exec-${params.paymentId}`,
+      method: params.method,
+      invoiceToken: params.invoiceToken,
+      details: params.details ?? null
+    };
+  }
+
   async fetchPaymentStatus(_params: { providerToken: string }): Promise<PaymentStatus> {
     return "succeeded";
   }

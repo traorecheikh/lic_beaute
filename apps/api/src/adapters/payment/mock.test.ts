@@ -35,4 +35,23 @@ describe("MockPaymentAdapter", () => {
     });
     await expect(adapter.fetchPaymentStatus({ providerToken: "t" })).resolves.toBe("succeeded");
   });
+
+  it("executes payment for two-step demo flows", async () => {
+    const adapter = new MockPaymentAdapter();
+    await expect(
+      adapter.executePayment({
+        paymentId: "p1",
+        method: "wave_senegal",
+        invoiceToken: "mock-p1",
+        details: { phone: "770000000" }
+      })
+    ).resolves.toEqual({
+      success: true,
+      status: "succeeded",
+      providerTxId: "mock-exec-p1",
+      method: "wave_senegal",
+      invoiceToken: "mock-p1",
+      details: { phone: "770000000" }
+    });
+  });
 });

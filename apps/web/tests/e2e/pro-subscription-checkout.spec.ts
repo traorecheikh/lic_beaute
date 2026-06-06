@@ -50,9 +50,9 @@ test.describe("pro subscription checkout", () => {
     await page.getByRole("button", { name: /Wave Sénégal/i }).click();
     await page.getByRole("button", { name: "Continuer" }).click();
 
-    await page.getByLabel("Numéro de téléphone mobile money").fill(SUBSCRIPTION_PHONE);
-    await page.getByLabel("Nom complet").fill(SUBSCRIPTION_FULL_NAME);
-    await page.getByLabel("Email").fill(SUBSCRIPTION_EMAIL);
+    await page.getByPlaceholder("77XXXXXXX").fill(SUBSCRIPTION_PHONE);
+    await page.getByPlaceholder("John Doe").fill(SUBSCRIPTION_FULL_NAME);
+    await page.getByPlaceholder("john.doe@example.com").fill(SUBSCRIPTION_EMAIL);
 
     const checkoutResponsePromise = page.waitForResponse((response) =>
       response.url().includes("/api/v1/pro/subscription/checkout") &&

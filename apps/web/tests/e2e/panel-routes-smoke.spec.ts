@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 const API_BASE_URL = (process.env.PW_API_BASE_URL ?? process.env.PW_BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
+const ADMIN_EMAIL = process.env.PW_ADMIN_EMAIL ?? "admin@beauteavenue.local";
+const ADMIN_PASSWORD = process.env.PW_ADMIN_PASSWORD ?? "admin1234";
+const PRO_EMAIL = process.env.PW_PRO_EMAIL ?? "aida@dionesignature.sn";
+const PRO_PASSWORD = process.env.PW_PRO_PASSWORD ?? "salon1234";
 
 async function waitForApi(page: import("@playwright/test").Page, maxSeconds = 30) {
   for (let i = 0; i < maxSeconds; i += 1) {
@@ -20,8 +24,8 @@ test.describe("Admin/Pro panel route smoke", () => {
 
     await test.step("Admin login", async () => {
       await page.goto("/admin/login");
-      await page.getByPlaceholder("nom@beauteavenue.com").fill("admin@beauteavenue.local");
-      await page.getByPlaceholder("••••••••").fill("admin1234");
+      await page.getByPlaceholder("nom@beauteavenue.com").fill(ADMIN_EMAIL);
+      await page.getByPlaceholder("••••••••").fill(ADMIN_PASSWORD);
       await Promise.all([
         page.waitForURL(/\/admin\/dashboard/),
         page.getByRole("button", { name: "Ouvrir la session" }).click()
@@ -49,8 +53,8 @@ test.describe("Admin/Pro panel route smoke", () => {
 
     await test.step("Pro login", async () => {
       await proPage.goto("/pro/login");
-      await proPage.locator("#email").fill("aida@dionesignature.sn");
-      await proPage.getByLabel("Mot de passe").fill("salon1234");
+      await proPage.locator("#email").fill(PRO_EMAIL);
+      await proPage.locator("#password").fill(PRO_PASSWORD);
       await Promise.all([
         proPage.waitForURL(/\/pro\/(calendar|dashboard)/),
         proPage.getByRole("button", { name: "Se connecter" }).click()

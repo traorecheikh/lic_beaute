@@ -64,12 +64,12 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     String? preferredLanguage,
   }) async {
     final payload = <String, dynamic>{
-      'fullName': ?fullName,
-      'city': ?city,
-      'preferredContactChannel': ?preferredContactChannel,
-      'pushOptIn': ?pushOptIn,
-      'marketingOptIn': ?marketingOptIn,
-      'preferredLanguage': ?preferredLanguage,
+      if (fullName != null) 'fullName': fullName,
+      if (city != null) 'city': city,
+      if (preferredContactChannel != null) 'preferredContactChannel': preferredContactChannel,
+      if (pushOptIn != null) 'pushOptIn': pushOptIn,
+      if (marketingOptIn != null) 'marketingOptIn': marketingOptIn,
+      if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
     };
     final previous = state.asData?.value;
     if (previous != null) {

@@ -89,7 +89,7 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
         data: {
           'paymentId': paymentId,
           'method': method,
-          'details': ?details,
+          if (details != null) 'details': details,
         },
       );
       return response.data;
