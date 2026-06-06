@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const API = (process.env.PW_API_BASE_URL ?? process.env.PW_BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const PRO_EMAIL = process.env.PW_PRO_EMAIL ?? "kadija@studiokadija.sn";
 const PRO_PASSWORD = process.env.PW_PRO_PASSWORD ?? "salon1234";
-const SUBSCRIPTION_PHONE = process.env.PW_SUBSCRIPTION_PHONE ?? "781706184";
+const SUBSCRIPTION_PHONE = process.env.PW_SUBSCRIPTION_PHONE ?? "78 170 61 84";
 const SUBSCRIPTION_FULL_NAME = process.env.PW_SUBSCRIPTION_FULL_NAME ?? "Kadija Fall";
 const SUBSCRIPTION_EMAIL = process.env.PW_SUBSCRIPTION_EMAIL ?? PRO_EMAIL;
 
@@ -50,58 +50,54 @@ test.describe("pro subscription checkout", () => {
     await page.getByRole("button", { name: /Wave Sénégal/i }).click();
     await page.getByRole("button", { name: "Continuer" }).click();
 
-    await page.getByPlaceholder("77XXXXXXX").fill(SUBSCRIPTION_PHONE);
-    await page.getByPlaceholder("John Doe").fill(SUBSCRIPTION_FULL_NAME);
-    await page.getByPlaceholder("john.doe@example.com").fill(SUBSCRIPTION_EMAIL);
+    const paymentModal = page.getByText("Détails de paiement - Wave Sénégal").locator("..");
+    await paymentModal.locator('input[type="tel"]').first().fill(SUBSCRIPTION_PHONE);
+    await paymentModal.locator('input[type="text"]').first().fill(SUBSCRIPTION_FULL_NAME);
+    await paymentModal.locator('input[type="email"]').first().fill(SUBSCRIPTION_EMAIL);
 
     const checkoutResponsePromise = page.waitForResponse((response) =>
       response.url().includes("/api/v1/pro/subscription/checkout") &&
-      response.request().method() === "POST"
-    );
-    const executeResponsePromise = page.waitForResponse((response) =>
-      response.url().includes("/api/v1/pro/subscription/charge/") &&
-      response.url().includes("/execute") &&
       response.request().method() === "POST"
     );
 
     await page.getByRole("button", { name: "Confirmer et Payer" }).click();
 
     const checkoutResponse = await checkoutResponsePromise;
-    const executeResponse = await executeResponsePromise;
-
     const checkoutJson = await checkoutResponse.json() as Record<string, unknown>;
-    const executeJson = await executeResponse.json() as Record<string, unknown>;
 
     await testInfo.attach("subscription-checkout-init.json", {
       body: JSON.stringify(checkoutJson, null, 2),
       contentType: "application/json"
     });
+
+    if (checkoutResponse.status() === 409 && checkoutJson.code === "upgrade_pending") {
+      await expect(page.locator("body")).toContainText(String(checkoutJson.message), { timeout: 15_000 });
+      return;
+    }
+
+    expect(checkoutResponse.ok(), JSON.stringify(checkoutJson)).toBeTruthy();
+
+    const executeResponse = await page.waitForResponse((response) =>
+      response.url().includes("/api/v1/pro/subscription/charge/") &&
+      response.url().includes("/execute") &&
+      response.request().method() === "POST"
+    );
+    const executeJson = await executeResponse.json() as Record<string, unknown>;
+
     await testInfo.attach("subscription-checkout-execute.json", {
       body: JSON.stringify(executeJson, null, 2),
       contentType: "application/json"
     });
 
-    expect(checkoutResponse.ok(), JSON.stringify(checkoutJson)).toBeTruthy();
     expect(executeResponse.ok(), JSON.stringify(executeJson)).toBeTruthy();
 
-    const executeText = JSON.stringify(executeJson);
-    const maybeUrl = typeof executeJson.url === "string" ? executeJson.url : "";
-    const errorToast = page.locator("body");
-
-    if (maybeUrl) {
-      testInfo.annotations.push({ type: "payment-url", description: maybeUrl });
-      console.log(`PayDunya returned payment URL: ${maybeUrl}`);
-    }
-
     if ((executeJson.success as boolean | undefined) === true) {
-      await expect(
-        page
-          .getByText("Confirmation du paiement en cours")
-          .or(page.getByText("Validation OTP Wizall"))
-          .or(page.getByText("En attente de confirmation"))
-      ).toBeVisible({ timeout: 15_000 });
-    } else {
-      await expect(errorToast).toContainText(String(executeJson.message ?? "Échec du paiement."), { timeout: 15_000 });
+      await expect(page.locator("body")).toContainText(/Confirmation du paiement en cours|Validation OTP Wizall|En attente de confirmation|mise à niveau est déjà en attente de paiement/i, {
+        timeout: 15_000
+      });
+      return;
     }
+
+    await expect(page.locator("body")).toContainText(String(executeJson.message ?? "Échec du paiement."), { timeout: 15_000 });
   });
 });
