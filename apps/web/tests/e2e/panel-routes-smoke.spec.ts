@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const API_BASE_URL = (process.env.PW_API_BASE_URL ?? process.env.PW_BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const ADMIN_EMAIL = process.env.PW_ADMIN_EMAIL ?? "admin@beauteavenue.local";
-const ADMIN_PASSWORD = process.env.PW_ADMIN_PASSWORD ?? "admin1234";
+const ADMIN_PASSWORD = process.env.PW_ADMIN_PASSWORD ?? "supersecure";
 const PRO_EMAIL = process.env.PW_PRO_EMAIL ?? "aida@dionesignature.sn";
 const PRO_PASSWORD = process.env.PW_PRO_PASSWORD ?? "salon1234";
 

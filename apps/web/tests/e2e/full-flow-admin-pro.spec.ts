@@ -74,7 +74,7 @@ test.describe("Admin + Pro full business flow", () => {
     await test.step("Admin login and open the newly submitted dossier", async () => {
       await adminPage.goto("/admin/login");
       await adminPage.getByPlaceholder("nom@beauteavenue.com").fill(process.env.PW_ADMIN_EMAIL ?? "admin@beauteavenue.local");
-      await adminPage.getByPlaceholder("••••••••").fill(process.env.PW_ADMIN_PASSWORD ?? "admin1234");
+      await adminPage.getByPlaceholder("••••••••").fill(process.env.PW_ADMIN_PASSWORD ?? "supersecure");
 
       const loginResponsePromise = adminPage.waitForResponse((response) =>
         response.url().includes("/api/v1/auth/login") && response.request().method() === "POST"
@@ -99,7 +99,8 @@ test.describe("Admin + Pro full business flow", () => {
         response.url().includes("/api/v1/admin/salons/") && response.request().method() === "GET"
       );
 
-      await dossierRow.getByRole("link", { name: "Dossier" }).click();
+      await dossierRow.getByRole("button", { name: "Dossier" }).click();
+      await adminPage.getByRole("link", { name: "Voir le dossier" }).first().click();
       await expect(adminPage).toHaveURL(/\/admin\/salons\//);
 
       const detailResponse = await detailResponsePromise;
