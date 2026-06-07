@@ -1935,17 +1935,8 @@ export class ProController {
         return;
       }
 
-      const tempChargeId = `pending-${Date.now()}`;
-      const result = await paymentAdapter.initiateDeposit({
-        paymentId: existing?.id ?? tempChargeId,
-        amountXof,
-        description: `Abonnement ${body.action} (${body.billingCycle})`,
-        callbackUrl: `${config.webOrigin}/pro/subscription/callback`,
-        idempotencyKey,
-        phone: owner?.phone ?? undefined,
-        channel: body.channel
-      });
-
+      // Create or reset the charge row first so we have a real ID for the
+      // PayDunya invoice custom_data (webhook lookup) and return_url.
       const charge = existing
         ? await prisma.subscriptionCharge.update({
             where: { id: existing.id },
@@ -1954,13 +1945,28 @@ export class ProController {
               provider: toDbProvider(body.provider) ?? "paydunya",
               amountXof,
               chargeType: body.action,
-              providerTxId: result.providerRef,
+              providerTxId: null,
               invoiceId: null
             }
           })
         : await prisma.subscriptionCharge.create({
-            data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "paydunya", amountXof, idempotencyKey, chargeType: body.action, providerTxId: result.providerRef }
+            data: { subscriptionId: sub.id, provider: toDbProvider(body.provider) ?? "paydunya", amountXof, idempotencyKey, chargeType: body.action }
           });
+
+      const result = await paymentAdapter.initiateDeposit({
+        paymentId: charge.id,
+        amountXof,
+        description: `Abonnement ${body.action} (${body.billingCycle})`,
+        callbackUrl: `${config.webOrigin}/pro/subscription/callback?chargeId=${encodeURIComponent(charge.id)}`,
+        idempotencyKey,
+        phone: owner?.phone ?? undefined,
+        channel: body.channel
+      });
+
+      await prisma.subscriptionCharge.update({
+        where: { id: charge.id },
+        data: { providerTxId: result.providerRef }
+      });
 
       // Mark pending tier for upgrades so the UI knows an upgrade is in progress
       if (body.action === "upgrade") {
