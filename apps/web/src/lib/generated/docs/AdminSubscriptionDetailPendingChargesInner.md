@@ -1,30 +1,32 @@
 
-# ClientPaymentMethodCreateInput
+# AdminSubscriptionDetailPendingChargesInner
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
+`id` | string
+`amountXof` | number
+`chargeType` | string
 `provider` | string
-`phoneNumber` | string
-`label` | string
-`method` | string
-`country` | string
+`status` | string
+`createdAt` | Date
 
 ## Example
 
 ```typescript
-import type { ClientPaymentMethodCreateInput } from ''
+import type { AdminSubscriptionDetailPendingChargesInner } from ''
 
 // TODO: Update the object below with actual values
 const example = {
+  "id": null,
+  "amountXof": null,
+  "chargeType": null,
   "provider": null,
-  "phoneNumber": null,
-  "label": null,
-  "method": null,
-  "country": null,
-} satisfies ClientPaymentMethodCreateInput
+  "status": null,
+  "createdAt": null,
+} satisfies AdminSubscriptionDetailPendingChargesInner
 
 console.log(example)
 
@@ -33,7 +35,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ClientPaymentMethodCreateInput
+const exampleParsed = JSON.parse(exampleJSON) as AdminSubscriptionDetailPendingChargesInner
 console.log(exampleParsed)
 ```
 

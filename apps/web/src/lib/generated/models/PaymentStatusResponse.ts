@@ -74,7 +74,6 @@ export type PaymentStatusResponseStatusEnum = typeof PaymentStatusResponseStatus
  * @export
  */
 export const PaymentStatusResponseProviderEnum = {
-    Intech: 'intech',
     Paydunya: 'paydunya',
     Manual: 'manual'
 } as const;

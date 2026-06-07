@@ -303,10 +303,6 @@
           </div>
         </div>
       </transition>
-
-      <button @click="openCreateModal('manual')" class="absolute bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-10">
-        <PlusIcon class="w-7 h-7" />
-      </button>
     </div>
 
     <Modal

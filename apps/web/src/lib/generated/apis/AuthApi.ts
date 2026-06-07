@@ -94,6 +94,21 @@ import {
     EmailLoginInputToJSON,
 } from '../models/EmailLoginInput';
 import {
+    type EmailOtpAcceptedResponse,
+    EmailOtpAcceptedResponseFromJSON,
+    EmailOtpAcceptedResponseToJSON,
+} from '../models/EmailOtpAcceptedResponse';
+import {
+    type EmailOtpRequestInput,
+    EmailOtpRequestInputFromJSON,
+    EmailOtpRequestInputToJSON,
+} from '../models/EmailOtpRequestInput';
+import {
+    type EmailOtpVerifyInput,
+    EmailOtpVerifyInputFromJSON,
+    EmailOtpVerifyInputToJSON,
+} from '../models/EmailOtpVerifyInput';
+import {
     type LogoutResponse,
     LogoutResponseFromJSON,
     LogoutResponseToJSON,
@@ -150,6 +165,14 @@ export interface ApiV1AuthLoginPostRequest {
 
 export interface ApiV1AuthLogoutPostRequest {
     refreshInput?: RefreshInput;
+}
+
+export interface ApiV1AuthOtpEmailRequestPostRequest {
+    emailOtpRequestInput: EmailOtpRequestInput;
+}
+
+export interface ApiV1AuthOtpEmailVerifyPostRequest {
+    emailOtpVerifyInput: EmailOtpVerifyInput;
 }
 
 export interface ApiV1AuthOtpRequestPostRequest {
@@ -303,6 +326,100 @@ export class AuthApi extends runtime.BaseAPI {
      */
     async apiV1AuthLogoutPost(requestParameters: ApiV1AuthLogoutPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LogoutResponse> {
         const response = await this.apiV1AuthLogoutPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AuthOtpEmailRequestPost without sending the request
+     */
+    async apiV1AuthOtpEmailRequestPostRequestOpts(requestParameters: ApiV1AuthOtpEmailRequestPostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['emailOtpRequestInput'] == null) {
+            throw new runtime.RequiredError(
+                'emailOtpRequestInput',
+                'Required parameter "emailOtpRequestInput" was null or undefined when calling apiV1AuthOtpEmailRequestPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/auth/otp/email/request`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: EmailOtpRequestInputToJSON(requestParameters['emailOtpRequestInput']),
+        };
+    }
+
+    /**
+     * Request an OTP code via email
+     */
+    async apiV1AuthOtpEmailRequestPostRaw(requestParameters: ApiV1AuthOtpEmailRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EmailOtpAcceptedResponse>> {
+        const requestOptions = await this.apiV1AuthOtpEmailRequestPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => EmailOtpAcceptedResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Request an OTP code via email
+     */
+    async apiV1AuthOtpEmailRequestPost(requestParameters: ApiV1AuthOtpEmailRequestPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EmailOtpAcceptedResponse> {
+        const response = await this.apiV1AuthOtpEmailRequestPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1AuthOtpEmailVerifyPost without sending the request
+     */
+    async apiV1AuthOtpEmailVerifyPostRequestOpts(requestParameters: ApiV1AuthOtpEmailVerifyPostRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['emailOtpVerifyInput'] == null) {
+            throw new runtime.RequiredError(
+                'emailOtpVerifyInput',
+                'Required parameter "emailOtpVerifyInput" was null or undefined when calling apiV1AuthOtpEmailVerifyPost().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/auth/otp/email/verify`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: EmailOtpVerifyInputToJSON(requestParameters['emailOtpVerifyInput']),
+        };
+    }
+
+    /**
+     * Verify email OTP and create/login client
+     */
+    async apiV1AuthOtpEmailVerifyPostRaw(requestParameters: ApiV1AuthOtpEmailVerifyPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AuthSession>> {
+        const requestOptions = await this.apiV1AuthOtpEmailVerifyPostRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AuthSessionFromJSON(jsonValue));
+    }
+
+    /**
+     * Verify email OTP and create/login client
+     */
+    async apiV1AuthOtpEmailVerifyPost(requestParameters: ApiV1AuthOtpEmailVerifyPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthSession> {
+        const response = await this.apiV1AuthOtpEmailVerifyPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

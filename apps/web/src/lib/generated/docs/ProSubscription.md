@@ -8,6 +8,7 @@ Name | Type
 ------------ | -------------
 `id` | string
 `tier` | string
+`pendingTier` | string
 `status` | string
 `renewsAt` | Date
 `expiresAt` | Date
@@ -25,6 +26,7 @@ import type { ProSubscription } from ''
 const example = {
   "id": null,
   "tier": null,
+  "pendingTier": null,
   "status": null,
   "renewsAt": null,
   "expiresAt": null,

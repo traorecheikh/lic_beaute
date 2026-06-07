@@ -41,10 +41,10 @@ export interface ProSubscription {
     tier: ProSubscriptionTierEnum;
     /**
      * 
-     * @type {ProSubscriptionTierEnum}
+     * @type {ProSubscriptionPendingTierEnum}
      * @memberof ProSubscription
      */
-    pendingTier?: ProSubscriptionTierEnum | null;
+    pendingTier?: ProSubscriptionPendingTierEnum | null;
     /**
      * 
      * @type {ProSubscriptionStatusEnum}
@@ -102,6 +102,15 @@ export type ProSubscriptionTierEnum = typeof ProSubscriptionTierEnum[keyof typeo
 /**
  * @export
  */
+export const ProSubscriptionPendingTierEnum = {
+    Standard: 'standard',
+    Premium: 'premium'
+} as const;
+export type ProSubscriptionPendingTierEnum = typeof ProSubscriptionPendingTierEnum[keyof typeof ProSubscriptionPendingTierEnum];
+
+/**
+ * @export
+ */
 export const ProSubscriptionStatusEnum = {
     Inactive: 'inactive',
     Active: 'active',
@@ -141,7 +150,7 @@ export function ProSubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boo
         
         'id': json['id'],
         'tier': json['tier'],
-        'pendingTier': json['pendingTier'] ?? null,
+        'pendingTier': json['pendingTier'] == null ? undefined : json['pendingTier'],
         'status': json['status'],
         'renewsAt': (json['renewsAt'] == null ? null : new Date(json['renewsAt'])),
         'expiresAt': (json['expiresAt'] == null ? null : new Date(json['expiresAt'])),

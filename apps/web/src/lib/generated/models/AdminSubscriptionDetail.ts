@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AdminSubscriptionDetailPendingChargesInner } from './AdminSubscriptionDetailPendingChargesInner';
+import {
+    AdminSubscriptionDetailPendingChargesInnerFromJSON,
+    AdminSubscriptionDetailPendingChargesInnerFromJSONTyped,
+    AdminSubscriptionDetailPendingChargesInnerToJSON,
+    AdminSubscriptionDetailPendingChargesInnerToJSONTyped,
+} from './AdminSubscriptionDetailPendingChargesInner';
 import type { AdminSubscriptionDetailInvoicesInner } from './AdminSubscriptionDetailInvoicesInner';
 import {
     AdminSubscriptionDetailInvoicesInnerFromJSON,
@@ -125,6 +132,12 @@ export interface AdminSubscriptionDetail {
      * @memberof AdminSubscriptionDetail
      */
     invoices: Array<AdminSubscriptionDetailInvoicesInner>;
+    /**
+     * 
+     * @type {Array<AdminSubscriptionDetailPendingChargesInner>}
+     * @memberof AdminSubscriptionDetail
+     */
+    pendingCharges: Array<AdminSubscriptionDetailPendingChargesInner>;
 }
 
 
@@ -155,7 +168,6 @@ export type AdminSubscriptionDetailStatusEnum = typeof AdminSubscriptionDetailSt
  */
 export const AdminSubscriptionDetailBillingProviderEnum = {
     Paydunya: 'paydunya',
-    Intech: 'intech',
     Manual: 'manual'
 } as const;
 export type AdminSubscriptionDetailBillingProviderEnum = typeof AdminSubscriptionDetailBillingProviderEnum[keyof typeof AdminSubscriptionDetailBillingProviderEnum];
@@ -179,6 +191,7 @@ export function instanceOfAdminSubscriptionDetail(value: object): value is Admin
     if (!('entitlements' in value) || value['entitlements'] === undefined) return false;
     if (!('events' in value) || value['events'] === undefined) return false;
     if (!('invoices' in value) || value['invoices'] === undefined) return false;
+    if (!('pendingCharges' in value) || value['pendingCharges'] === undefined) return false;
     return true;
 }
 
@@ -206,6 +219,7 @@ export function AdminSubscriptionDetailFromJSONTyped(json: any, ignoreDiscrimina
         'entitlements': ((json['entitlements'] as Array<any>).map(AdminSubscriptionDetailEntitlementsInnerFromJSON)),
         'events': ((json['events'] as Array<any>).map(AdminSubscriptionDetailEventsInnerFromJSON)),
         'invoices': ((json['invoices'] as Array<any>).map(AdminSubscriptionDetailInvoicesInnerFromJSON)),
+        'pendingCharges': ((json['pendingCharges'] as Array<any>).map(AdminSubscriptionDetailPendingChargesInnerFromJSON)),
     };
 }
 
@@ -234,6 +248,7 @@ export function AdminSubscriptionDetailToJSONTyped(value?: AdminSubscriptionDeta
         'entitlements': ((value['entitlements'] as Array<any>).map(AdminSubscriptionDetailEntitlementsInnerToJSON)),
         'events': ((value['events'] as Array<any>).map(AdminSubscriptionDetailEventsInnerToJSON)),
         'invoices': ((value['invoices'] as Array<any>).map(AdminSubscriptionDetailInvoicesInnerToJSON)),
+        'pendingCharges': ((value['pendingCharges'] as Array<any>).map(AdminSubscriptionDetailPendingChargesInnerToJSON)),
     };
 }
 

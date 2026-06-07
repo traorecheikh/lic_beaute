@@ -9,6 +9,8 @@ Name | Type
 `redirectUrl` | string
 `chargeId` | string
 `resumed` | boolean
+`downgradeScheduled` | boolean
+`effectiveAt` | Date
 
 ## Example
 
@@ -20,6 +22,8 @@ const example = {
   "redirectUrl": null,
   "chargeId": null,
   "resumed": null,
+  "downgradeScheduled": null,
+  "effectiveAt": null,
 } satisfies ProSubscriptionCheckoutResult
 
 console.log(example)

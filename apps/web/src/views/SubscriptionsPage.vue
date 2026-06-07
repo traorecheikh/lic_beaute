@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -187,8 +187,16 @@ function quickAction(id: string, action: string) {
   overrideMutation.mutate({ id, action });
 }
 
-// Close dropdown on outside click
-document.addEventListener("click", () => { openDropdown.value = null; });
+function onDocumentClick() {
+  openDropdown.value = null;
+}
+
+onMounted(() => {
+  document.addEventListener("click", onDocumentClick);
+});
+onUnmounted(() => {
+  document.removeEventListener("click", onDocumentClick);
+});
 const debouncedSearch = refDebounced(search, 250);
 
 const subscriptionsQuery = useQuery({

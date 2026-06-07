@@ -8,6 +8,8 @@ Name | Type
 ------------ | -------------
 `phoneNumber` | string
 `label` | string
+`method` | string
+`country` | string
 
 ## Example
 
@@ -18,6 +20,8 @@ import type { ClientPaymentMethodUpdateInput } from ''
 const example = {
   "phoneNumber": null,
   "label": null,
+  "method": null,
+  "country": null,
 } satisfies ClientPaymentMethodUpdateInput
 
 console.log(example)

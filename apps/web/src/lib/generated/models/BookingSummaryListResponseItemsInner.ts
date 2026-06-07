@@ -128,7 +128,6 @@ export type BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum = typeo
  * @export
  */
 export const BookingSummaryListResponseItemsInnerPaymentProviderEnum = {
-    Intech: 'intech',
     Paydunya: 'paydunya',
     Manual: 'manual'
 } as const;

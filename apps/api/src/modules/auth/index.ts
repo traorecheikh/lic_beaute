@@ -295,7 +295,7 @@ export class AuthController {
               salonId: salon.id,
               label: doc.label,
               fileUrl: doc.fileUrl,
-              status: "pending_review"
+              status: doc.fileUrl ? "received" : "missing"
             }))
           });
         }

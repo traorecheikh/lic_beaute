@@ -84,10 +84,6 @@ export interface ApiV1PaymentsPaymentIdRefundPostRequest {
     paymentId: string;
 }
 
-export interface ApiV1PaymentsWebhooksIntechPostRequest {
-    paymentWebhookBody: PaymentWebhookBody;
-}
-
 export interface ApiV1PaymentsWebhooksPaydunyaPostRequest {
     paymentWebhookBody: PaymentWebhookBody;
 }
@@ -408,53 +404,6 @@ export class PaymentsApi extends runtime.BaseAPI {
      */
     async apiV1PaymentsPaymentIdRefundPost(requestParameters: ApiV1PaymentsPaymentIdRefundPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaymentStatusResponse> {
         const response = await this.apiV1PaymentsPaymentIdRefundPostRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for apiV1PaymentsWebhooksIntechPost without sending the request
-     */
-    async apiV1PaymentsWebhooksIntechPostRequestOpts(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['paymentWebhookBody'] == null) {
-            throw new runtime.RequiredError(
-                'paymentWebhookBody',
-                'Required parameter "paymentWebhookBody" was null or undefined when calling apiV1PaymentsWebhooksIntechPost().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-
-        let urlPath = `/api/v1/payments/webhooks/intech`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: PaymentWebhookBodyToJSON(requestParameters['paymentWebhookBody']),
-        };
-    }
-
-    /**
-     * Intech payment webhook callback
-     */
-    async apiV1PaymentsWebhooksIntechPostRaw(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1PaymentsWebhooksPaydunyaPost200Response>> {
-        const requestOptions = await this.apiV1PaymentsWebhooksIntechPostRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1PaymentsWebhooksPaydunyaPost200ResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Intech payment webhook callback
-     */
-    async apiV1PaymentsWebhooksIntechPost(requestParameters: ApiV1PaymentsWebhooksIntechPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1PaymentsWebhooksPaydunyaPost200Response> {
-        const response = await this.apiV1PaymentsWebhooksIntechPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

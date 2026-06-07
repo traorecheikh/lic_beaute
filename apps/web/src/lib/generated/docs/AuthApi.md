@@ -6,6 +6,8 @@ All URIs are relative to *http://localhost:3000*
 |------------- | ------------- | -------------|
 | [**apiV1AuthLoginPost**](AuthApi.md#apiv1authloginpost) | **POST** /api/v1/auth/login | Email login |
 | [**apiV1AuthLogoutPost**](AuthApi.md#apiv1authlogoutpost) | **POST** /api/v1/auth/logout | Logout current session |
+| [**apiV1AuthOtpEmailRequestPost**](AuthApi.md#apiv1authotpemailrequestpost) | **POST** /api/v1/auth/otp/email/request | Request an OTP code via email |
+| [**apiV1AuthOtpEmailVerifyPost**](AuthApi.md#apiv1authotpemailverifypost) | **POST** /api/v1/auth/otp/email/verify | Verify email OTP and create/login client |
 | [**apiV1AuthOtpRequestPost**](AuthApi.md#apiv1authotprequestpost) | **POST** /api/v1/auth/otp/request | Request an OTP code |
 | [**apiV1AuthOtpVerifyPost**](AuthApi.md#apiv1authotpverifypost) | **POST** /api/v1/auth/otp/verify | Verify OTP |
 | [**apiV1AuthRefreshPost**](AuthApi.md#apiv1authrefreshpost) | **POST** /api/v1/auth/refresh | Refresh access token |
@@ -160,6 +162,138 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | Session revoked |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiV1AuthOtpEmailRequestPost
+
+> EmailOtpAcceptedResponse apiV1AuthOtpEmailRequestPost(emailOtpRequestInput)
+
+Request an OTP code via email
+
+### Example
+
+```ts
+import {
+  Configuration,
+  AuthApi,
+} from '';
+import type { ApiV1AuthOtpEmailRequestPostRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new AuthApi();
+
+  const body = {
+    // EmailOtpRequestInput
+    emailOtpRequestInput: ...,
+  } satisfies ApiV1AuthOtpEmailRequestPostRequest;
+
+  try {
+    const data = await api.apiV1AuthOtpEmailRequestPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **emailOtpRequestInput** | [EmailOtpRequestInput](EmailOtpRequestInput.md) |  | |
+
+### Return type
+
+[**EmailOtpAcceptedResponse**](EmailOtpAcceptedResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **202** | OTP request accepted |  -  |
+| **409** | Email already in use |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiV1AuthOtpEmailVerifyPost
+
+> AuthSession apiV1AuthOtpEmailVerifyPost(emailOtpVerifyInput)
+
+Verify email OTP and create/login client
+
+### Example
+
+```ts
+import {
+  Configuration,
+  AuthApi,
+} from '';
+import type { ApiV1AuthOtpEmailVerifyPostRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new AuthApi();
+
+  const body = {
+    // EmailOtpVerifyInput
+    emailOtpVerifyInput: ...,
+  } satisfies ApiV1AuthOtpEmailVerifyPostRequest;
+
+  try {
+    const data = await api.apiV1AuthOtpEmailVerifyPost(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **emailOtpVerifyInput** | [EmailOtpVerifyInput](EmailOtpVerifyInput.md) |  | |
+
+### Return type
+
+[**AuthSession**](AuthSession.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Authenticated session |  -  |
+| **401** | Invalid or expired code |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

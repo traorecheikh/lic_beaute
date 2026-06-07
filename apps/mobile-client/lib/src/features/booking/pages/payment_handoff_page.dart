@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pinput/pinput.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
@@ -58,6 +59,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   bool _pciDssAccepted = false;
   bool _hasInitializedContactFields = false;
   bool _hasAppliedDefaultPaymentMethod = false;
+  bool _initScheduled = false;
 
   Future<bool> _launchExternalPaymentUri(
     Uri uri, {
@@ -123,14 +125,76 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     super.dispose();
   }
 
+  void _schedulePendingInit() {
+    if (_initScheduled) return;
+    _initScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _processPendingInit();
+      _initScheduled = false;
+    });
+  }
+
+  void _processPendingInit() {
+    if (!mounted) return;
+    final detailAsync = ref.read(bookingDetailResourceProvider(widget.bookingId));
+    final depositFromBooking = detailAsync.asData?.value.depositXof;
+    if (depositFromBooking != null && depositFromBooking <= 0) {
+      context.pushReplacement(AppRoutes.success(widget.bookingId));
+      return;
+    }
+
+    final methodsAsync = ref.read(paymentMethodsProvider);
+    final defaultMethod = methodsAsync.asData?.value
+        .where((m) => m.isDefault)
+        .firstOrNull;
+    final defaultChannel = _channelFromMethod(defaultMethod);
+
+    if (_selectedMethod == null && defaultChannel != null) {
+      setState(() => _selectedMethod = defaultChannel);
+    }
+
+    final profileAsync = ref.read(profileProvider);
+    final profile = profileAsync.asData?.value;
+
+    if ((profile != null || defaultMethod != null) && !_hasInitializedContactFields) {
+      _hasInitializedContactFields = true;
+      setState(() {
+        final defaultPhone = defaultMethod?.phoneNumber.trim();
+        final profilePhone = profile?.phone?.trim();
+        if (defaultPhone != null && defaultPhone.isNotEmpty) {
+          _phoneController.text = defaultPhone;
+          _selectedDjamoCountryCode = _inferDjamoCountryCodeFromMethod(defaultMethod);
+        } else if (profilePhone != null && profilePhone.isNotEmpty) {
+          _phoneController.text = profilePhone;
+          _selectedDjamoCountryCode = _inferDjamoCountryCode(profilePhone);
+        }
+        _nameController.text = profile?.fullName ?? '';
+        if ((profile?.email?.trim().isNotEmpty ?? false)) {
+          _emailController.text = profile!.email!.trim();
+        }
+      });
+    }
+
+    if (defaultMethod != null && !_hasAppliedDefaultPaymentMethod) {
+      _hasAppliedDefaultPaymentMethod = true;
+      final defaultPhone = defaultMethod.phoneNumber.trim();
+      final profilePhone = profile?.phone?.trim() ?? '';
+      if (defaultPhone.isNotEmpty &&
+          (_phoneController.text.trim().isEmpty || _phoneController.text.trim() == profilePhone)) {
+        setState(() {
+          _phoneController.text = defaultPhone;
+          _selectedDjamoCountryCode = _inferDjamoCountryCodeFromMethod(defaultMethod);
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(bookingDetailResourceProvider(widget.bookingId));
     final depositFromBooking = detailAsync.asData?.value.depositXof;
     if (depositFromBooking != null && depositFromBooking <= 0) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.pushReplacement(AppRoutes.success(widget.bookingId));
-      });
+      _schedulePendingInit();
       return const AppScaffold(
         body: Center(child: CircularProgressIndicator.adaptive()),
       );
@@ -143,50 +207,17 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     final defaultChannel = _channelFromMethod(defaultMethod);
 
     if (_selectedMethod == null && defaultChannel != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedMethod = defaultChannel);
-      });
+      _schedulePendingInit();
     }
 
     final profileAsync = ref.watch(profileProvider);
     final profile = profileAsync.asData?.value;
     if ((profile != null || defaultMethod != null) && !_hasInitializedContactFields) {
-      _hasInitializedContactFields = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            final defaultPhone = defaultMethod?.phoneNumber.trim();
-            final profilePhone = profile?.phone?.trim();
-            if (defaultPhone != null && defaultPhone.isNotEmpty) {
-              _phoneController.text = defaultPhone;
-              _selectedDjamoCountryCode = _inferDjamoCountryCodeFromMethod(defaultMethod);
-            } else if (profilePhone != null && profilePhone.isNotEmpty) {
-              _phoneController.text = profilePhone;
-              _selectedDjamoCountryCode = _inferDjamoCountryCode(profilePhone);
-            }
-            _nameController.text = profile?.fullName ?? '';
-            if ((profile?.email?.trim().isNotEmpty ?? false)) {
-              _emailController.text = profile!.email!.trim();
-            }
-          });
-        }
-      });
+      _schedulePendingInit();
     }
 
     if (defaultMethod != null && !_hasAppliedDefaultPaymentMethod) {
-      _hasAppliedDefaultPaymentMethod = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final defaultPhone = defaultMethod.phoneNumber.trim();
-        final profilePhone = profile?.phone?.trim() ?? '';
-        if (defaultPhone.isEmpty) return;
-        if (_phoneController.text.trim().isEmpty || _phoneController.text.trim() == profilePhone) {
-          setState(() {
-            _phoneController.text = defaultPhone;
-            _selectedDjamoCountryCode = _inferDjamoCountryCodeFromMethod(defaultMethod);
-          });
-        }
-      });
+      _schedulePendingInit();
     }
 
     final paydunyaMethodsAsync = ref.watch(availablePaydunyaMethodsProvider);
@@ -442,6 +473,32 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Security info banner
+            Container(
+              margin: EdgeInsets.only(bottom: 12.h),
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: AppColors.successContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppIcon('shield-check', color: AppColors.success, size: 20),
+                  gapW8,
+                  Expanded(
+                    child: Text(
+                      'Les données de votre carte sont transmises de manière sécurisée via PayDunya (prestataire de paiement agréé). Elles ne sont pas stockées sur nos serveurs.',
+                      style: AppTextStyles.bodyXs.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Text('Informations de la carte', style: AppTextStyles.labelLg),
             gapH12,
             _buildTextField(
@@ -500,24 +557,35 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               ],
             ),
             gapH12,
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Checkbox(
-                  value: _pciDssAccepted,
-                  onChanged: (val) => setState(() => _pciDssAccepted = val ?? false),
-                  activeColor: AppColors.primary,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 8.h),
-                    child: Text(
-                      "Je reconnais que la transaction est soumise aux règles de sécurité PCI-DSS et j'accepte de soumettre mes informations bancaires.",
-                      style: AppTextStyles.bodySm.copyWith(color: AppColors.error),
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: AppColors.successContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: _pciDssAccepted,
+                    onChanged: (val) => setState(() => _pciDssAccepted = val ?? false),
+                    activeColor: AppColors.primary,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Text(
+                        "J'accepte de soumettre mes informations bancaires via PayDunya. Mes données sont chiffrées en transit (TLS) et non stockées sur Beauté Avenue.",
+                        style: AppTextStyles.bodySm.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -869,17 +937,46 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                 style: AppTextStyles.bodySm,
               ),
               gapH16,
-              TextField(
-                controller: codeController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Code de validation (OTP)',
-                  filled: true,
-                  fillColor: AppColors.surfaceVariant,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide.none,
+              Center(
+                child: Pinput(
+                  length: 6,
+                  controller: codeController,
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
+                  defaultPinTheme: PinTheme(
+                    width: 44.w,
+                    height: 52.h,
+                    textStyle: AppTextStyles.headlineLg.copyWith(
+                      color: AppColors.onSurface,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppColors.outline.withValues(alpha: 0.5),
+                      ),
+                    ),
                   ),
+                  focusedPinTheme: PinTheme(
+                    width: 44.w,
+                    height: 52.h,
+                    textStyle: AppTextStyles.headlineLg.copyWith(
+                      color: AppColors.onSurface,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  onCompleted: (code) {
+                    if (code.trim().isNotEmpty) {
+                      Navigator.pop(context, code.trim());
+                    }
+                  },
                 ),
               ),
             ],

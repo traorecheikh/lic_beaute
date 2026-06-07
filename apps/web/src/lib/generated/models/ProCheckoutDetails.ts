@@ -50,6 +50,12 @@ export interface ProCheckoutDetails {
      * @type {string}
      * @memberof ProCheckoutDetails
      */
+    clientPhone: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProCheckoutDetails
+     */
     serviceName: string;
     /**
      * 
@@ -110,6 +116,7 @@ export function instanceOfProCheckoutDetails(value: object): value is ProCheckou
     if (!('bookingId' in value) || value['bookingId'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
     if (!('clientName' in value) || value['clientName'] === undefined) return false;
+    if (!('clientPhone' in value) || value['clientPhone'] === undefined) return false;
     if (!('serviceName' in value) || value['serviceName'] === undefined) return false;
     if (!('startsAt' in value) || value['startsAt'] === undefined) return false;
     if (!('staffName' in value) || value['staffName'] === undefined) return false;
@@ -133,6 +140,7 @@ export function ProCheckoutDetailsFromJSONTyped(json: any, ignoreDiscriminator: 
         'bookingId': json['bookingId'],
         'status': json['status'],
         'clientName': json['clientName'],
+        'clientPhone': json['clientPhone'],
         'serviceName': json['serviceName'],
         'startsAt': (new Date(json['startsAt'])),
         'staffName': json['staffName'],
@@ -157,6 +165,7 @@ export function ProCheckoutDetailsToJSONTyped(value?: ProCheckoutDetails | null,
         'bookingId': value['bookingId'],
         'status': value['status'],
         'clientName': value['clientName'],
+        'clientPhone': value['clientPhone'],
         'serviceName': value['serviceName'],
         'startsAt': value['startsAt'].toISOString(),
         'staffName': value['staffName'],

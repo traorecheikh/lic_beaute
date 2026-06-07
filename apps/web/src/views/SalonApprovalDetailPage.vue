@@ -169,10 +169,11 @@
                   class="aspect-[4/3] rounded-2xl bg-neutral-bg overflow-hidden relative mb-4 cursor-pointer"
                   @click="selectedDoc = document"
                 >
-                  <img 
-                    v-if="document.fileUrl" 
-                    :src="document.fileUrl" 
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  <embed
+                    v-if="resolveFileUrl(document.fileUrl)"
+                    :src="resolveFileUrl(document.fileUrl)!"
+                    type="application/pdf"
+                    class="w-full h-full"
                   />
                   <div v-else class="absolute inset-0 flex items-center justify-center text-cocoa/20">
                     <DocumentIcon class="w-12 h-12" />
@@ -205,11 +206,11 @@
           >
             <div class="flex flex-col items-center gap-6">
               <div class="w-full bg-neutral-bg/50 rounded-2xl overflow-hidden border border-outline-variant flex items-center justify-center min-h-[400px]">
-                <img 
-                  v-if="selectedDoc?.fileUrl" 
-                  :src="selectedDoc.fileUrl" 
-                  class="max-w-full h-auto shadow-sm" 
-                  alt="Aperçu du document"
+                <embed
+                  v-if="resolveFileUrl(selectedDoc?.fileUrl)"
+                  :src="resolveFileUrl(selectedDoc?.fileUrl)!"
+                  type="application/pdf"
+                  class="w-full h-[600px]"
                 />
                 <div v-else class="text-cocoa/80 italic">
                   Aucun visuel disponible pour ce document.
@@ -219,10 +220,10 @@
             <template #footer>
               <div class="flex items-center justify-end gap-3">
                 <button class="btn-secondary" @click="selectedDoc = null">Fermer</button>
-                <a 
-                  v-if="selectedDoc?.fileUrl" 
-                  :href="selectedDoc.fileUrl" 
-                  target="_blank" 
+                <a
+                  v-if="resolveFileUrl(selectedDoc?.fileUrl)"
+                  :href="resolveFileUrl(selectedDoc?.fileUrl)!"
+                  target="_blank"
                   class="btn-primary"
                   download
                 >
@@ -425,6 +426,17 @@ import {
 import { formatDateTime } from "@/lib/date";
 import { getErrorMessage } from "@/lib/errors";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { resolveApiBaseUrl } from "@/lib/api-base";
+
+function resolveFileUrl(fileUrl: string | null | undefined): string | null {
+  if (!fileUrl) return null;
+  try {
+    const path = new URL(fileUrl).pathname;
+    return resolveApiBaseUrl().replace(/\/$/, "") + path;
+  } catch {
+    return fileUrl;
+  }
+}
 
 const auth = useAdminAuthStore();
 const route = useRoute();

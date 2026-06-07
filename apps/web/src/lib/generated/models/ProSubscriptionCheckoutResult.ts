@@ -24,27 +24,37 @@ export interface ProSubscriptionCheckoutResult {
      * @type {string}
      * @memberof ProSubscriptionCheckoutResult
      */
-    redirectUrl: string | null;
+    redirectUrl?: string | null;
     /**
      * 
      * @type {string}
      * @memberof ProSubscriptionCheckoutResult
      */
-    chargeId: string;
+    chargeId?: string;
     /**
      * 
      * @type {boolean}
      * @memberof ProSubscriptionCheckoutResult
      */
     resumed?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProSubscriptionCheckoutResult
+     */
+    downgradeScheduled?: boolean;
+    /**
+     * 
+     * @type {Date}
+     * @memberof ProSubscriptionCheckoutResult
+     */
+    effectiveAt?: Date | null;
 }
 
 /**
  * Check if a given object implements the ProSubscriptionCheckoutResult interface.
  */
 export function instanceOfProSubscriptionCheckoutResult(value: object): value is ProSubscriptionCheckoutResult {
-    if (!('redirectUrl' in value) || value['redirectUrl'] === undefined) return false;
-    if (!('chargeId' in value) || value['chargeId'] === undefined) return false;
     return true;
 }
 
@@ -58,9 +68,11 @@ export function ProSubscriptionCheckoutResultFromJSONTyped(json: any, ignoreDisc
     }
     return {
         
-        'redirectUrl': json['redirectUrl'],
-        'chargeId': json['chargeId'],
+        'redirectUrl': json['redirectUrl'] == null ? undefined : json['redirectUrl'],
+        'chargeId': json['chargeId'] == null ? undefined : json['chargeId'],
         'resumed': json['resumed'] == null ? undefined : json['resumed'],
+        'downgradeScheduled': json['downgradeScheduled'] == null ? undefined : json['downgradeScheduled'],
+        'effectiveAt': json['effectiveAt'] == null ? undefined : (new Date(json['effectiveAt'])),
     };
 }
 
@@ -78,6 +90,8 @@ export function ProSubscriptionCheckoutResultToJSONTyped(value?: ProSubscription
         'redirectUrl': value['redirectUrl'],
         'chargeId': value['chargeId'],
         'resumed': value['resumed'],
+        'downgradeScheduled': value['downgradeScheduled'],
+        'effectiveAt': value['effectiveAt'] == null ? value['effectiveAt'] : value['effectiveAt'].toISOString(),
     };
 }
 

@@ -1,30 +1,24 @@
 
-# ClientPaymentMethodCreateInput
+# EmailOtpAcceptedResponse
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`provider` | string
-`phoneNumber` | string
-`label` | string
-`method` | string
-`country` | string
+`accepted` | boolean
+`destination` | string
 
 ## Example
 
 ```typescript
-import type { ClientPaymentMethodCreateInput } from ''
+import type { EmailOtpAcceptedResponse } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "provider": null,
-  "phoneNumber": null,
-  "label": null,
-  "method": null,
-  "country": null,
-} satisfies ClientPaymentMethodCreateInput
+  "accepted": null,
+  "destination": null,
+} satisfies EmailOtpAcceptedResponse
 
 console.log(example)
 
@@ -33,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as ClientPaymentMethodCreateInput
+const exampleParsed = JSON.parse(exampleJSON) as EmailOtpAcceptedResponse
 console.log(exampleParsed)
 ```
 

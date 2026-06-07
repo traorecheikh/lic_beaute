@@ -51,7 +51,6 @@ export interface ProSubscriptionBillingMethod {
  */
 export const ProSubscriptionBillingMethodProviderEnum = {
     Paydunya: 'paydunya',
-    Intech: 'intech',
     Manual: 'manual'
 } as const;
 export type ProSubscriptionBillingMethodProviderEnum = typeof ProSubscriptionBillingMethodProviderEnum[keyof typeof ProSubscriptionBillingMethodProviderEnum];

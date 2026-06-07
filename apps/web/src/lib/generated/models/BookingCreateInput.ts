@@ -68,7 +68,6 @@ export interface BookingCreateInput {
  * @export
  */
 export const BookingCreateInputProviderEnum = {
-    Intech: 'intech',
     Paydunya: 'paydunya',
     Manual: 'manual'
 } as const;
@@ -78,6 +77,27 @@ export type BookingCreateInputProviderEnum = typeof BookingCreateInputProviderEn
  * @export
  */
 export const BookingCreateInputChannelEnum = {
+    CarteBancaire: 'carte_bancaire',
+    WaveSenegal: 'wave_senegal',
+    OrangeSenegal: 'orange_senegal',
+    FreeSenegal: 'free_senegal',
+    WizallSenegal: 'wizall_senegal',
+    ExpressoSn: 'expresso_sn',
+    OmCi: 'om_ci',
+    MtnCi: 'mtn_ci',
+    MoovCi: 'moov_ci',
+    WaveCi: 'wave_ci',
+    OmBf: 'om_bf',
+    MoovBf: 'moov_bf',
+    MoovBj: 'moov_bj',
+    MtnBj: 'mtn_bj',
+    TMoneyTg: 't_money_tg',
+    MoovTg: 'moov_tg',
+    OmMl: 'om_ml',
+    MoovMl: 'moov_ml',
+    MtnCm: 'mtn_cm',
+    Djamo: 'djamo',
+    PaydunyaWallet: 'paydunya_wallet',
     Wave: 'wave',
     OrangeMoney: 'orange_money',
     FreeMoney: 'free_money',

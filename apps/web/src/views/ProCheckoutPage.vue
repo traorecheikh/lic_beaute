@@ -317,12 +317,33 @@ async function sendToClient() {
   const checkoutUrl = `${window.location.origin}/pro/checkout/${route.params.bookingId}`;
   const message = `Bonjour ${clientName}, voici le lien de suivi de votre encaissement: ${checkoutUrl}`;
 
-  try {
-    await navigator.clipboard.writeText(message);
-    toast.success("Message copié. Vous pouvez le coller dans un SMS.");
-  } catch {
-    toast.info(message);
+  // Try SMS deep link first (mobile-friendly)
+  const fallback = () => {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(message).then(() => {
+      toast.success("Message copié. Ouvrez vos SMS pour l'envoyer.");
+    }).catch(() => {
+      toast.info(message);
+    });
+  };
+
+  const clientPhone = checkoutQuery.data.value?.clientPhone?.trim();
+  if (clientPhone) {
+    const smsUri = `sms:${clientPhone}?body=${encodeURIComponent(message)}`;
+    const mailUri = `mailto:?subject=${encodeURIComponent('Encaissement Beauté Avenue')}&body=${encodeURIComponent(message)}`;
+
+    // Offer choice: SMS or copy
+    if (window.confirm(`Envoyer par SMS à ${clientPhone} ?\n\n"Annuler" pour copier le message dans le presse-papier.`)) {
+      try {
+        window.location.href = smsUri;
+        toast.success("Application SMS ouverte.");
+        return;
+      } catch {
+        // SMS URI not supported, fall through
+      }
+    }
   }
+  await fallback();
 }
 
 watch(

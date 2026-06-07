@@ -178,8 +178,7 @@
                     "depositMode"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1
+                }
               },
               "hours": {
                 "type": "array",
@@ -410,6 +409,54 @@
         ],
         "additionalProperties": false
       },
+      "EmailOtpRequestInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "additionalProperties": false
+      },
+      "EmailOtpVerifyInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "EmailOtpAcceptedResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "destination": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "destination"
+        ],
+        "additionalProperties": false
+      },
       "CurrentUser": {
         "type": "object",
         "properties": {
@@ -555,6 +602,77 @@
             "type": "string",
             "nullable": true
           },
+          "method": {
+            "type": "string",
+            "enum": [
+              "carte_bancaire",
+              "wave_senegal",
+              "orange_senegal",
+              "free_senegal",
+              "wizall_senegal",
+              "expresso_sn",
+              "om_ci",
+              "mtn_ci",
+              "moov_ci",
+              "wave_ci",
+              "om_bf",
+              "moov_bf",
+              "moov_bj",
+              "mtn_bj",
+              "t_money_tg",
+              "moov_tg",
+              "om_ml",
+              "moov_ml",
+              "mtn_cm",
+              "djamo",
+              "paydunya_wallet",
+              "wave",
+              "orange_money",
+              "free_money",
+              "paydunya_card",
+              "paydunya_airtel",
+              "paydunya_expresso",
+              "paydunya_free",
+              "paydunya_mpesa",
+              "paydunya_ng_airtel",
+              "paydunya_ng_mtn",
+              "paydunya_ng_9mobile",
+              "paydunya_ng_glo",
+              "paydunya_sam_airtel",
+              "paydunya_sam_mtn",
+              "paydunya_sam_safaricom",
+              "paydunya_tigo_rw",
+              "paydunya_airtel_rw",
+              "paydunya_mtn_rw",
+              "paydunya_mtn_ug",
+              "paydunya_airtel_ug",
+              "paydunya_orange_ml",
+              "paydunya_mtn_ci",
+              "paydunya_mtn_gh",
+              "paydunya_vodafone_gh",
+              "paydunya_airteltigo_gh",
+              "paydunya_tm_ci",
+              "paydunya_moov_tg",
+              "paydunya_togocel_tg",
+              "paydunya_wari_sn",
+              "paydunya_wave_sn",
+              "paydunya_cb_ci",
+              "paydunya_orange_sn",
+              "paydunya_free_sn",
+              "paydunya_yup_bj",
+              "paydunya_mtn_bj",
+              "paydunya_moov_ci",
+              "paydunya_orange_cm",
+              "paydunya_mtn_cm",
+              "paydunya_nexttel_cm",
+              "paydunya_camtel_cm"
+            ],
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
           "isDefault": {
             "type": "boolean"
           },
@@ -601,6 +719,77 @@
             "minLength": 1,
             "maxLength": 60,
             "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "carte_bancaire",
+              "wave_senegal",
+              "orange_senegal",
+              "free_senegal",
+              "wizall_senegal",
+              "expresso_sn",
+              "om_ci",
+              "mtn_ci",
+              "moov_ci",
+              "wave_ci",
+              "om_bf",
+              "moov_bf",
+              "moov_bj",
+              "mtn_bj",
+              "t_money_tg",
+              "moov_tg",
+              "om_ml",
+              "moov_ml",
+              "mtn_cm",
+              "djamo",
+              "paydunya_wallet",
+              "wave",
+              "orange_money",
+              "free_money",
+              "paydunya_card",
+              "paydunya_airtel",
+              "paydunya_expresso",
+              "paydunya_free",
+              "paydunya_mpesa",
+              "paydunya_ng_airtel",
+              "paydunya_ng_mtn",
+              "paydunya_ng_9mobile",
+              "paydunya_ng_glo",
+              "paydunya_sam_airtel",
+              "paydunya_sam_mtn",
+              "paydunya_sam_safaricom",
+              "paydunya_tigo_rw",
+              "paydunya_airtel_rw",
+              "paydunya_mtn_rw",
+              "paydunya_mtn_ug",
+              "paydunya_airtel_ug",
+              "paydunya_orange_ml",
+              "paydunya_mtn_ci",
+              "paydunya_mtn_gh",
+              "paydunya_vodafone_gh",
+              "paydunya_airteltigo_gh",
+              "paydunya_tm_ci",
+              "paydunya_moov_tg",
+              "paydunya_togocel_tg",
+              "paydunya_wari_sn",
+              "paydunya_wave_sn",
+              "paydunya_cb_ci",
+              "paydunya_orange_sn",
+              "paydunya_free_sn",
+              "paydunya_yup_bj",
+              "paydunya_mtn_bj",
+              "paydunya_moov_ci",
+              "paydunya_orange_cm",
+              "paydunya_mtn_cm",
+              "paydunya_nexttel_cm",
+              "paydunya_camtel_cm"
+            ]
+          },
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 8
           }
         },
         "required": [
@@ -621,6 +810,79 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 60,
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "carte_bancaire",
+              "wave_senegal",
+              "orange_senegal",
+              "free_senegal",
+              "wizall_senegal",
+              "expresso_sn",
+              "om_ci",
+              "mtn_ci",
+              "moov_ci",
+              "wave_ci",
+              "om_bf",
+              "moov_bf",
+              "moov_bj",
+              "mtn_bj",
+              "t_money_tg",
+              "moov_tg",
+              "om_ml",
+              "moov_ml",
+              "mtn_cm",
+              "djamo",
+              "paydunya_wallet",
+              "wave",
+              "orange_money",
+              "free_money",
+              "paydunya_card",
+              "paydunya_airtel",
+              "paydunya_expresso",
+              "paydunya_free",
+              "paydunya_mpesa",
+              "paydunya_ng_airtel",
+              "paydunya_ng_mtn",
+              "paydunya_ng_9mobile",
+              "paydunya_ng_glo",
+              "paydunya_sam_airtel",
+              "paydunya_sam_mtn",
+              "paydunya_sam_safaricom",
+              "paydunya_tigo_rw",
+              "paydunya_airtel_rw",
+              "paydunya_mtn_rw",
+              "paydunya_mtn_ug",
+              "paydunya_airtel_ug",
+              "paydunya_orange_ml",
+              "paydunya_mtn_ci",
+              "paydunya_mtn_gh",
+              "paydunya_vodafone_gh",
+              "paydunya_airteltigo_gh",
+              "paydunya_tm_ci",
+              "paydunya_moov_tg",
+              "paydunya_togocel_tg",
+              "paydunya_wari_sn",
+              "paydunya_wave_sn",
+              "paydunya_cb_ci",
+              "paydunya_orange_sn",
+              "paydunya_free_sn",
+              "paydunya_yup_bj",
+              "paydunya_mtn_bj",
+              "paydunya_moov_ci",
+              "paydunya_orange_cm",
+              "paydunya_mtn_cm",
+              "paydunya_nexttel_cm",
+              "paydunya_camtel_cm"
+            ],
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 8,
             "nullable": true
           }
         },
@@ -1397,6 +1659,27 @@
           "channel": {
             "type": "string",
             "enum": [
+              "carte_bancaire",
+              "wave_senegal",
+              "orange_senegal",
+              "free_senegal",
+              "wizall_senegal",
+              "expresso_sn",
+              "om_ci",
+              "mtn_ci",
+              "moov_ci",
+              "wave_ci",
+              "om_bf",
+              "moov_bf",
+              "moov_bj",
+              "mtn_bj",
+              "t_money_tg",
+              "moov_tg",
+              "om_ml",
+              "moov_ml",
+              "mtn_cm",
+              "djamo",
+              "paydunya_wallet",
               "wave",
               "orange_money",
               "free_money",
@@ -2487,6 +2770,58 @@
               ],
               "additionalProperties": false
             }
+          },
+          "pendingCharges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "amountXof": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "chargeType": {
+                  "type": "string",
+                  "enum": [
+                    "upgrade",
+                    "renewal"
+                  ]
+                },
+                "provider": {
+                  "type": "string",
+                  "enum": [
+                    "paydunya",
+                    "manual"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "authorized",
+                    "succeeded",
+                    "failed",
+                    "refunded"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "amountXof",
+                "chargeType",
+                "provider",
+                "status",
+                "createdAt"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -2503,7 +2838,8 @@
           "renewedAt",
           "entitlements",
           "events",
-          "invoices"
+          "invoices",
+          "pendingCharges"
         ],
         "additionalProperties": false
       },
@@ -3898,6 +4234,10 @@
             "type": "string",
             "nullable": true
           },
+          "clientPhone": {
+            "type": "string",
+            "nullable": true
+          },
           "serviceName": {
             "type": "string"
           },
@@ -3947,6 +4287,7 @@
           "bookingId",
           "status",
           "clientName",
+          "clientPhone",
           "serviceName",
           "startsAt",
           "staffName",
@@ -4158,6 +4499,14 @@
               "premium"
             ]
           },
+          "pendingTier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
+            ],
+            "nullable": true
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -4280,7 +4629,8 @@
             "type": "string",
             "enum": [
               "upgrade",
-              "renewal"
+              "renewal",
+              "downgrade"
             ]
           },
           "provider": {
@@ -4290,6 +4640,80 @@
               "manual"
             ],
             "default": "paydunya"
+          },
+          "billingCycle": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "annual"
+            ],
+            "default": "monthly"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "carte_bancaire",
+              "wave_senegal",
+              "orange_senegal",
+              "free_senegal",
+              "wizall_senegal",
+              "expresso_sn",
+              "om_ci",
+              "mtn_ci",
+              "moov_ci",
+              "wave_ci",
+              "om_bf",
+              "moov_bf",
+              "moov_bj",
+              "mtn_bj",
+              "t_money_tg",
+              "moov_tg",
+              "om_ml",
+              "moov_ml",
+              "mtn_cm",
+              "djamo",
+              "paydunya_wallet",
+              "wave",
+              "orange_money",
+              "free_money",
+              "paydunya_card",
+              "paydunya_airtel",
+              "paydunya_expresso",
+              "paydunya_free",
+              "paydunya_mpesa",
+              "paydunya_ng_airtel",
+              "paydunya_ng_mtn",
+              "paydunya_ng_9mobile",
+              "paydunya_ng_glo",
+              "paydunya_sam_airtel",
+              "paydunya_sam_mtn",
+              "paydunya_sam_safaricom",
+              "paydunya_tigo_rw",
+              "paydunya_airtel_rw",
+              "paydunya_mtn_rw",
+              "paydunya_mtn_ug",
+              "paydunya_airtel_ug",
+              "paydunya_orange_ml",
+              "paydunya_mtn_ci",
+              "paydunya_mtn_gh",
+              "paydunya_vodafone_gh",
+              "paydunya_airteltigo_gh",
+              "paydunya_tm_ci",
+              "paydunya_moov_tg",
+              "paydunya_togocel_tg",
+              "paydunya_wari_sn",
+              "paydunya_wave_sn",
+              "paydunya_cb_ci",
+              "paydunya_orange_sn",
+              "paydunya_free_sn",
+              "paydunya_yup_bj",
+              "paydunya_mtn_bj",
+              "paydunya_moov_ci",
+              "paydunya_orange_cm",
+              "paydunya_mtn_cm",
+              "paydunya_nexttel_cm",
+              "paydunya_camtel_cm"
+            ]
           }
         },
         "required": [
@@ -4310,12 +4734,16 @@
           },
           "resumed": {
             "type": "boolean"
+          },
+          "downgradeScheduled": {
+            "type": "boolean"
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
-        "required": [
-          "redirectUrl",
-          "chargeId"
-        ],
         "additionalProperties": false
       },
       "ProPayoutEvent": {
@@ -4399,6 +4827,27 @@
           "channel": {
             "type": "string",
             "enum": [
+              "carte_bancaire",
+              "wave_senegal",
+              "orange_senegal",
+              "free_senegal",
+              "wizall_senegal",
+              "expresso_sn",
+              "om_ci",
+              "mtn_ci",
+              "moov_ci",
+              "wave_ci",
+              "om_bf",
+              "moov_bf",
+              "moov_bj",
+              "mtn_bj",
+              "t_money_tg",
+              "moov_tg",
+              "om_ml",
+              "moov_ml",
+              "mtn_cm",
+              "djamo",
+              "paydunya_wallet",
               "wave",
               "orange_money",
               "free_money",
@@ -4579,7 +5028,8 @@
           "amount": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "number",
+                "minimum": 0
               },
               {
                 "type": "string"
@@ -4589,7 +5039,8 @@
           "amountWithoutFees": {
             "anyOf": [
               {
-                "type": "number"
+                "type": "number",
+                "minimum": 0
               },
               {
                 "type": "string"
@@ -5091,6 +5542,86 @@
         }
       }
     },
+    "/api/v1/auth/otp/email/request": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Request an OTP code via email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailOtpRequestInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "OTP request accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailOtpAcceptedResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already in use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/email/verify": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify email OTP and create/login client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailOtpVerifyInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "tags": [
@@ -5305,6 +5836,77 @@
                             "type": "string"
                           },
                           "label": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "method": {
+                            "type": "string",
+                            "enum": [
+                              "carte_bancaire",
+                              "wave_senegal",
+                              "orange_senegal",
+                              "free_senegal",
+                              "wizall_senegal",
+                              "expresso_sn",
+                              "om_ci",
+                              "mtn_ci",
+                              "moov_ci",
+                              "wave_ci",
+                              "om_bf",
+                              "moov_bf",
+                              "moov_bj",
+                              "mtn_bj",
+                              "t_money_tg",
+                              "moov_tg",
+                              "om_ml",
+                              "moov_ml",
+                              "mtn_cm",
+                              "djamo",
+                              "paydunya_wallet",
+                              "wave",
+                              "orange_money",
+                              "free_money",
+                              "paydunya_card",
+                              "paydunya_airtel",
+                              "paydunya_expresso",
+                              "paydunya_free",
+                              "paydunya_mpesa",
+                              "paydunya_ng_airtel",
+                              "paydunya_ng_mtn",
+                              "paydunya_ng_9mobile",
+                              "paydunya_ng_glo",
+                              "paydunya_sam_airtel",
+                              "paydunya_sam_mtn",
+                              "paydunya_sam_safaricom",
+                              "paydunya_tigo_rw",
+                              "paydunya_airtel_rw",
+                              "paydunya_mtn_rw",
+                              "paydunya_mtn_ug",
+                              "paydunya_airtel_ug",
+                              "paydunya_orange_ml",
+                              "paydunya_mtn_ci",
+                              "paydunya_mtn_gh",
+                              "paydunya_vodafone_gh",
+                              "paydunya_airteltigo_gh",
+                              "paydunya_tm_ci",
+                              "paydunya_moov_tg",
+                              "paydunya_togocel_tg",
+                              "paydunya_wari_sn",
+                              "paydunya_wave_sn",
+                              "paydunya_cb_ci",
+                              "paydunya_orange_sn",
+                              "paydunya_free_sn",
+                              "paydunya_yup_bj",
+                              "paydunya_mtn_bj",
+                              "paydunya_moov_ci",
+                              "paydunya_orange_cm",
+                              "paydunya_mtn_cm",
+                              "paydunya_nexttel_cm",
+                              "paydunya_camtel_cm"
+                            ],
+                            "nullable": true
+                          },
+                          "country": {
                             "type": "string",
                             "nullable": true
                           },

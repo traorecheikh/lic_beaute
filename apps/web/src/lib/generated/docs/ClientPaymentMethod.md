@@ -10,6 +10,8 @@ Name | Type
 `provider` | string
 `phoneNumber` | string
 `label` | string
+`method` | string
+`country` | string
 `isDefault` | boolean
 `lastUsedAt` | string
 `createdAt` | string
@@ -26,6 +28,8 @@ const example = {
   "provider": null,
   "phoneNumber": null,
   "label": null,
+  "method": null,
+  "country": null,
   "isDefault": null,
   "lastUsedAt": null,
   "createdAt": null,

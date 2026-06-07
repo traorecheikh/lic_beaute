@@ -357,28 +357,23 @@ test.describe("Sprint demo — full feature coverage", () => {
       await expect(page.getByText(svcName)).toBeVisible({ timeout: 10_000 });
     });
 
-    await test.step("Delete removes item (custom modal confirm)", async () => {
-      // Allow any background Vue Query refetch (triggered by invalidateQueries after create)
-      // to settle before we look for the card.
+    await test.step("Delete removes item (native window.confirm dialog)", async () => {
+      // Allow background Vue Query refetch to settle after create
       await page.waitForTimeout(1_500);
 
-      // Use filter+exact match: more precise than hasText (substring), avoids matching parent wrappers
+      // Use filter+exact match for the specific service card
       const card = page.locator("div.panel-clean").filter({
         has: page.getByText(svcName, { exact: true })
       });
       await expect(card).toBeVisible({ timeout: 10_000 });
 
-      // Click the delete (last) button inside the matched card
-      await card.locator("button").last().click();
-
-      // Wait for the custom modal (teleported to body) to appear
-      await page.getByRole("button", { name: "Supprimer" }).waitFor({ state: "visible", timeout: 8_000 });
-
+      // Register dialog handler BEFORE click — prod uses window.confirm(), not a Vue modal
       const deleteResp = page.waitForResponse(
         (r) => r.url().includes("/api/v1/pro/services") && r.request().method() === "DELETE",
         { timeout: 15_000 }
       );
-      await page.getByRole("button", { name: "Supprimer" }).click();
+      page.once("dialog", (dialog) => dialog.accept());
+      await card.locator("button").last().click();
       await deleteResp;
 
       await expect(page.getByText(svcName)).not.toBeVisible({ timeout: 8_000 });

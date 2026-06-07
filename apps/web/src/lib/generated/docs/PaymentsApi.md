@@ -10,7 +10,6 @@ All URIs are relative to *http://localhost:3000*
 | [**apiV1PaymentsPaymentIdGet**](PaymentsApi.md#apiv1paymentspaymentidget) | **GET** /api/v1/payments/{paymentId} | Get payment status |
 | [**apiV1PaymentsPaymentIdReconcilePost**](PaymentsApi.md#apiv1paymentspaymentidreconcilepost) | **POST** /api/v1/payments/{paymentId}/reconcile | Manually reconcile a payment (admin or pro) |
 | [**apiV1PaymentsPaymentIdRefundPost**](PaymentsApi.md#apiv1paymentspaymentidrefundpost) | **POST** /api/v1/payments/{paymentId}/refund | Refund a payment |
-| [**apiV1PaymentsWebhooksIntechPost**](PaymentsApi.md#apiv1paymentswebhooksintechpost) | **POST** /api/v1/payments/webhooks/intech | Intech payment webhook callback |
 | [**apiV1PaymentsWebhooksPaydunyaPost**](PaymentsApi.md#apiv1paymentswebhookspaydunyapost) | **POST** /api/v1/payments/webhooks/paydunya | PayDunya payment webhook callback |
 
 
@@ -418,71 +417,6 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | Refund result |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
-
-## apiV1PaymentsWebhooksIntechPost
-
-> ApiV1PaymentsWebhooksPaydunyaPost200Response apiV1PaymentsWebhooksIntechPost(paymentWebhookBody)
-
-Intech payment webhook callback
-
-### Example
-
-```ts
-import {
-  Configuration,
-  PaymentsApi,
-} from '';
-import type { ApiV1PaymentsWebhooksIntechPostRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new PaymentsApi();
-
-  const body = {
-    // PaymentWebhookBody
-    paymentWebhookBody: ...,
-  } satisfies ApiV1PaymentsWebhooksIntechPostRequest;
-
-  try {
-    const data = await api.apiV1PaymentsWebhooksIntechPost(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **paymentWebhookBody** | [PaymentWebhookBody](PaymentWebhookBody.md) |  | |
-
-### Return type
-
-[**ApiV1PaymentsWebhooksPaydunyaPost200Response**](ApiV1PaymentsWebhooksPaydunyaPost200Response.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: `application/json`
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | Webhook acknowledged |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

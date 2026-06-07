@@ -52,25 +52,17 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
 
     debugPrint('[BOOKING_CTA] tap salonId=$salonId');
     ref.read(bookingFunnelProvider.notifier).reset();
-    ref
-        .read(salonDetailProvider(salonId).future)
-        .timeout(const Duration(seconds: 12))
-        .then((_) {
-          debugPrint('[BOOKING_CTA] prefetch_ok salonId=$salonId -> bookingService');
-          if (!context.mounted) return;
-          context.push('${AppRoutes.bookingService}?salonId=$salonId');
-        })
-        .catchError((_) {
-          debugPrint('[BOOKING_CTA] prefetch_failed salonId=$salonId');
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Impossible d’ouvrir la réservation. Vérifiez votre connexion.',
-              ),
-            ),
-          );
-        });
+    // Navigate immediately — don't block on prefetch
+    if (!context.mounted) return;
+    context.push('${AppRoutes.bookingService}?salonId=$salonId');
+    // Fire-and-forget prefetch in background for faster subsequent loads
+    ref.read(salonDetailProvider(salonId).future).timeout(
+      const Duration(seconds: 12),
+    ).then((_) {
+      debugPrint('[BOOKING_CTA] background_prefetch_ok salonId=$salonId');
+    }).catchError((_) {
+      debugPrint('[BOOKING_CTA] background_prefetch_failed salonId=$salonId');
+    });
   }
 
   void _openGallery(BuildContext context, List<String> images, int index) {

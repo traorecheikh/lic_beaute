@@ -1857,6 +1857,10 @@ export class ProController {
       }
 
       // ── Guard: block invalid action/tier combinations ────────────────────
+      if (body.action === "activate" && sub.status === "active") {
+        fail(reply, 409, "already_active", "Votre abonnement est déjà actif.");
+        return;
+      }
       if (body.action === "upgrade" && sub.tier === "premium") {
         fail(reply, 409, "already_premium", "Vous êtes déjà sur le plan Premium.");
         return;
@@ -1899,12 +1903,14 @@ export class ProController {
         }
       });
       const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
-      // Upgrade always charges premium price; renewal charges current tier price
-      const priceKey = body.action === "upgrade"
-        ? "subscription_premium_price_xof"
-        : sub.tier === "premium"
+      // activate → standard price; upgrade → premium price; renewal → current tier price
+      const priceKey = body.action === "activate"
+        ? "subscription_standard_price_xof"
+        : body.action === "upgrade"
           ? "subscription_premium_price_xof"
-          : "subscription_standard_price_xof";
+          : sub.tier === "premium"
+            ? "subscription_premium_price_xof"
+            : "subscription_standard_price_xof";
       const priceStr = priceMap[priceKey];
       if (!priceStr) {
         fail(reply, 500, "pricing_not_configured", "Le prix de l'abonnement n'est pas configuré. Contactez l'administrateur.");
@@ -2088,6 +2094,7 @@ export class ProController {
 
       const isUpgrade = charge.chargeType === "upgrade";
       const isRenewal = charge.chargeType === "renewal";
+      const isActivate = charge.chargeType === "activate";
       const isAnnualCycle = charge.idempotencyKey.includes("-annual-");
       const cycleDays = isAnnualCycle ? 365 : 30;
       const now = new Date();
@@ -2096,7 +2103,9 @@ export class ProController {
       let newTier = sub?.tier ?? "standard";
       let newPendingTier = sub?.pendingTier ?? null;
 
-      if (isUpgrade) {
+      if (isActivate) {
+        newExpiresAt = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+      } else if (isUpgrade) {
         if (config.prorationEnabled) {
           newTier = "premium";
           newPendingTier = null;

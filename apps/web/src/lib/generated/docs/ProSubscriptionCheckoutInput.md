@@ -8,6 +8,8 @@ Name | Type
 ------------ | -------------
 `action` | string
 `provider` | string
+`billingCycle` | string
+`channel` | string
 
 ## Example
 
@@ -18,6 +20,8 @@ import type { ProSubscriptionCheckoutInput } from ''
 const example = {
   "action": null,
   "provider": null,
+  "billingCycle": null,
+  "channel": null,
 } satisfies ProSubscriptionCheckoutInput
 
 console.log(example)

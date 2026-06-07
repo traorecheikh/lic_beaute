@@ -37,6 +37,18 @@ export interface ClientPaymentMethodCreateInput {
      * @memberof ClientPaymentMethodCreateInput
      */
     label?: string | null;
+    /**
+     * 
+     * @type {ClientPaymentMethodCreateInputMethodEnum}
+     * @memberof ClientPaymentMethodCreateInput
+     */
+    method?: ClientPaymentMethodCreateInputMethodEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ClientPaymentMethodCreateInput
+     */
+    country?: string;
 }
 
 
@@ -44,11 +56,78 @@ export interface ClientPaymentMethodCreateInput {
  * @export
  */
 export const ClientPaymentMethodCreateInputProviderEnum = {
-    Intech: 'intech',
     Paydunya: 'paydunya',
     Manual: 'manual'
 } as const;
 export type ClientPaymentMethodCreateInputProviderEnum = typeof ClientPaymentMethodCreateInputProviderEnum[keyof typeof ClientPaymentMethodCreateInputProviderEnum];
+
+/**
+ * @export
+ */
+export const ClientPaymentMethodCreateInputMethodEnum = {
+    CarteBancaire: 'carte_bancaire',
+    WaveSenegal: 'wave_senegal',
+    OrangeSenegal: 'orange_senegal',
+    FreeSenegal: 'free_senegal',
+    WizallSenegal: 'wizall_senegal',
+    ExpressoSn: 'expresso_sn',
+    OmCi: 'om_ci',
+    MtnCi: 'mtn_ci',
+    MoovCi: 'moov_ci',
+    WaveCi: 'wave_ci',
+    OmBf: 'om_bf',
+    MoovBf: 'moov_bf',
+    MoovBj: 'moov_bj',
+    MtnBj: 'mtn_bj',
+    TMoneyTg: 't_money_tg',
+    MoovTg: 'moov_tg',
+    OmMl: 'om_ml',
+    MoovMl: 'moov_ml',
+    MtnCm: 'mtn_cm',
+    Djamo: 'djamo',
+    PaydunyaWallet: 'paydunya_wallet',
+    Wave: 'wave',
+    OrangeMoney: 'orange_money',
+    FreeMoney: 'free_money',
+    PaydunyaCard: 'paydunya_card',
+    PaydunyaAirtel: 'paydunya_airtel',
+    PaydunyaExpresso: 'paydunya_expresso',
+    PaydunyaFree: 'paydunya_free',
+    PaydunyaMpesa: 'paydunya_mpesa',
+    PaydunyaNgAirtel: 'paydunya_ng_airtel',
+    PaydunyaNgMtn: 'paydunya_ng_mtn',
+    PaydunyaNg9mobile: 'paydunya_ng_9mobile',
+    PaydunyaNgGlo: 'paydunya_ng_glo',
+    PaydunyaSamAirtel: 'paydunya_sam_airtel',
+    PaydunyaSamMtn: 'paydunya_sam_mtn',
+    PaydunyaSamSafaricom: 'paydunya_sam_safaricom',
+    PaydunyaTigoRw: 'paydunya_tigo_rw',
+    PaydunyaAirtelRw: 'paydunya_airtel_rw',
+    PaydunyaMtnRw: 'paydunya_mtn_rw',
+    PaydunyaMtnUg: 'paydunya_mtn_ug',
+    PaydunyaAirtelUg: 'paydunya_airtel_ug',
+    PaydunyaOrangeMl: 'paydunya_orange_ml',
+    PaydunyaMtnCi: 'paydunya_mtn_ci',
+    PaydunyaMtnGh: 'paydunya_mtn_gh',
+    PaydunyaVodafoneGh: 'paydunya_vodafone_gh',
+    PaydunyaAirteltigoGh: 'paydunya_airteltigo_gh',
+    PaydunyaTmCi: 'paydunya_tm_ci',
+    PaydunyaMoovTg: 'paydunya_moov_tg',
+    PaydunyaTogocelTg: 'paydunya_togocel_tg',
+    PaydunyaWariSn: 'paydunya_wari_sn',
+    PaydunyaWaveSn: 'paydunya_wave_sn',
+    PaydunyaCbCi: 'paydunya_cb_ci',
+    PaydunyaOrangeSn: 'paydunya_orange_sn',
+    PaydunyaFreeSn: 'paydunya_free_sn',
+    PaydunyaYupBj: 'paydunya_yup_bj',
+    PaydunyaMtnBj: 'paydunya_mtn_bj',
+    PaydunyaMoovCi: 'paydunya_moov_ci',
+    PaydunyaOrangeCm: 'paydunya_orange_cm',
+    PaydunyaMtnCm: 'paydunya_mtn_cm',
+    PaydunyaNexttelCm: 'paydunya_nexttel_cm',
+    PaydunyaCamtelCm: 'paydunya_camtel_cm'
+} as const;
+export type ClientPaymentMethodCreateInputMethodEnum = typeof ClientPaymentMethodCreateInputMethodEnum[keyof typeof ClientPaymentMethodCreateInputMethodEnum];
 
 
 /**
@@ -73,6 +152,8 @@ export function ClientPaymentMethodCreateInputFromJSONTyped(json: any, ignoreDis
         'provider': json['provider'],
         'phoneNumber': json['phoneNumber'],
         'label': json['label'] == null ? undefined : json['label'],
+        'method': json['method'] == null ? undefined : json['method'],
+        'country': json['country'] == null ? undefined : json['country'],
     };
 }
 
@@ -90,6 +171,8 @@ export function ClientPaymentMethodCreateInputToJSONTyped(value?: ClientPaymentM
         'provider': value['provider'],
         'phoneNumber': value['phoneNumber'],
         'label': value['label'],
+        'method': value['method'],
+        'country': value['country'],
     };
 }
 

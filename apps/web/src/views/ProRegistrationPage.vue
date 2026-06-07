@@ -271,7 +271,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, onUnmounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import {
@@ -428,9 +428,21 @@ async function loadRequiredDocs() {
   }
 }
 
+function onBeforeUnload(event: BeforeUnloadEvent) {
+  const hasData = form.salonName || form.fullName || form.email || form.phone || form.password || form.address || form.neighborhood || form.description;
+  if (hasData) {
+    event.preventDefault();
+  }
+}
+
 onMounted(() => {
   void loadCategories();
   void loadPricing();
+  window.addEventListener("beforeunload", onBeforeUnload);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("beforeunload", onBeforeUnload);
 });
 
 const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];

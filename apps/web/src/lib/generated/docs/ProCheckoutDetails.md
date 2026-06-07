@@ -9,6 +9,7 @@ Name | Type
 `bookingId` | string
 `status` | string
 `clientName` | string
+`clientPhone` | string
 `serviceName` | string
 `startsAt` | Date
 `staffName` | string
@@ -27,6 +28,7 @@ const example = {
   "bookingId": null,
   "status": null,
   "clientName": null,
+  "clientPhone": null,
   "serviceName": null,
   "startsAt": null,
   "staffName": null,

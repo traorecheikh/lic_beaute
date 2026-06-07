@@ -68,7 +68,6 @@ export type ProfileOptionsContactChannelsEnum = typeof ProfileOptionsContactChan
  * @export
  */
 export const ProfileOptionsPaymentProvidersEnum = {
-    Intech: 'intech',
     Paydunya: 'paydunya',
     Manual: 'manual'
 } as const;

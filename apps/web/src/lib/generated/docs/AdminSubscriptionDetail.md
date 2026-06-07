@@ -20,6 +20,7 @@ Name | Type
 `entitlements` | [Array&lt;AdminSubscriptionDetailEntitlementsInner&gt;](AdminSubscriptionDetailEntitlementsInner.md)
 `events` | [Array&lt;AdminSubscriptionDetailEventsInner&gt;](AdminSubscriptionDetailEventsInner.md)
 `invoices` | [Array&lt;AdminSubscriptionDetailInvoicesInner&gt;](AdminSubscriptionDetailInvoicesInner.md)
+`pendingCharges` | [Array&lt;AdminSubscriptionDetailPendingChargesInner&gt;](AdminSubscriptionDetailPendingChargesInner.md)
 
 ## Example
 
@@ -42,6 +43,7 @@ const example = {
   "entitlements": null,
   "events": null,
   "invoices": null,
+  "pendingCharges": null,
 } satisfies AdminSubscriptionDetail
 
 console.log(example)

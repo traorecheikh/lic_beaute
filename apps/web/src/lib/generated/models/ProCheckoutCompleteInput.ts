@@ -59,7 +59,6 @@ export interface ProCheckoutCompleteInput {
  */
 export const ProCheckoutCompleteInputPaymentMethodEnum = {
     Cash: 'cash',
-    Intech: 'intech',
     Other: 'other'
 } as const;
 export type ProCheckoutCompleteInputPaymentMethodEnum = typeof ProCheckoutCompleteInputPaymentMethodEnum[keyof typeof ProCheckoutCompleteInputPaymentMethodEnum];

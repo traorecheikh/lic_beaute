@@ -1,16 +1,22 @@
 import { expect, test } from "@playwright/test";
 
+const API_BASE_URL = (process.env.PW_API_BASE_URL ?? process.env.PW_BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
+
+async function waitForApi(page: import("@playwright/test").Page, maxSeconds = 30) {
+  for (let i = 0; i < maxSeconds; i += 1) {
+    try {
+      const health = await page.request.get(`${API_BASE_URL}/health`);
+      if (health.ok()) return;
+    } catch {
+      // API may still be booting during Playwright webServer startup.
+    }
+    await page.waitForTimeout(1_000);
+  }
+}
+
 test.describe("Admin + Pro full business flow", () => {
   test("register pro dossier, login pro, review dossier in admin", async ({ page, context }) => {
-    for (let i = 0; i < 30; i += 1) {
-      try {
-        const health = await context.request.get("${process.env.PW_BASE_URL ?? "http://127.0.0.1:3000"}/health");
-        if (health.ok()) break;
-      } catch {
-        // API may still be booting during Playwright webServer startup.
-      }
-      await page.waitForTimeout(1_000);
-    }
+    await waitForApi(page);
 
     const runId = Date.now();
     const proEmail = `pro.flow.${runId}@example.sn`;
@@ -19,7 +25,7 @@ test.describe("Admin + Pro full business flow", () => {
     const salonName = `Flow Salon ${runId}`;
 
     await test.step("Register pro owner dossier through live API contract", async () => {
-      const registerResponse = await context.request.post("${process.env.PW_BASE_URL ?? "http://127.0.0.1:3000"}/api/v1/auth/register", {
+      const registerResponse = await context.request.post(`${API_BASE_URL}/api/v1/auth/register`, {
         data: {
           type: "salon_owner",
           fullName: "Flow Owner",
@@ -59,9 +65,9 @@ test.describe("Admin + Pro full business flow", () => {
     await test.step("Pro owner can login", async () => {
       await page.goto("/pro/login");
       await page.locator("#email").fill(proEmail);
-      await page.getByLabel("Mot de passe").fill(proPassword);
+      await page.locator("#password").fill(proPassword);
       await Promise.all([
-        page.waitForURL(/\/pro\//),
+        page.waitForURL(/\/pro\/(calendar|dashboard)/),
         page.getByRole("button", { name: "Se connecter" }).click()
       ]);
       await expect(page).toHaveURL(/\/pro\/(calendar|dashboard)/);
@@ -132,7 +138,7 @@ test.describe("Admin + Pro full business flow", () => {
     });
 
     await test.step("Live API verification with bearer token", async () => {
-      const verifyResponse = await context.request.get(`${process.env.PW_BASE_URL ?? "http://127.0.0.1:3000"}/api/v1/admin/salons/${dossierId}`, {
+      const verifyResponse = await context.request.get(`${API_BASE_URL}/api/v1/admin/salons/${dossierId}`, {
         headers: {
           authorization: `Bearer ${adminToken}`
         }

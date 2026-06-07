@@ -267,7 +267,7 @@ export const proSubscriptionUpdateInputSchema = z
   });
 
 export const proSubscriptionCheckoutInputSchema = z.object({
-  action: z.enum(["upgrade", "renewal", "downgrade"]),
+  action: z.enum(["activate", "upgrade", "renewal", "downgrade"]),
   provider: z.enum(["paydunya", "manual"]).default("paydunya"),
   billingCycle: z.enum(["monthly", "annual"]).default("monthly"),
   channel: paymentChannelSchema.optional()
@@ -333,6 +333,7 @@ export const proCheckoutDetailsSchema = z.object({
   bookingId: z.string(),
   status: bookingStatusSchema,
   clientName: z.string().nullable(),
+  clientPhone: z.string().nullable(),
   serviceName: z.string(),
   startsAt: z.string().datetime(),
   staffName: z.string().nullable(),
