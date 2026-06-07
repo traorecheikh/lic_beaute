@@ -885,7 +885,12 @@ export class PayDunyaAdapter implements PaymentAdapter {
       return true;
     }
 
+    // Wave and OM always require the user to approve on their device; treat them
+    // as async regardless of what the execute response contains (safety net for
+    // unexpected non-URL responses from the live API).
     return new Set([
+      "wave_senegal",
+      "orange_senegal",
       "free_senegal",
       "expresso_sn",
       "moov_bf",

@@ -442,7 +442,11 @@
         <div v-if="checkoutStep === 'waiting'" class="space-y-4">
           <div class="rounded-3xl border border-outline-variant/40 bg-neutral-bg/40 px-5 py-6 text-center">
             <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <ArrowTrendingUpIcon class="h-6 w-6 text-primary" />
+              <svg v-if="!waitingTimedOut" class="h-6 w-6 text-primary animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <ArrowTrendingUpIcon v-else class="h-6 w-6 text-primary" />
             </div>
             <h4 class="text-sm font-bold text-espresso">
               {{ waitingTimedOut ? "En attente de confirmation" : "Confirmation du paiement en cours" }}
@@ -1123,7 +1127,9 @@ function enterWaitingStepWithFallback(
   waitingStartedAt = Date.now();
   checkoutStep.value = "waiting";
   openExternalPaymentLink(launchTargets.preferredUrl);
-  void verifyWaitingCharge(false);
+  // Delay the first poll so the user has time to interact with the payment link
+  // before we check PayDunya status (prevents false-positive immediate confirms).
+  scheduleWaitingPoll();
 }
 
 function reopenWaitingLink() {
