@@ -29,17 +29,21 @@
         </div>
       </div>
       <div class="flex flex-wrap gap-2 shrink-0">
+        <!-- Inactive / expired / cancelled: let the salon pick their starting tier -->
         <template v-if="subscriptionQuery.data.value?.status !== 'active'">
-          <button :disabled="isSubmitting" @click="openCheckoutModal('activate')" class="btn-primary text-sm">
-            Activer mon abonnement
+          <button :disabled="isSubmitting" @click="openCheckoutModal('activate', 'standard')" class="btn-secondary text-sm">
+            Activer Standard
+          </button>
+          <button :disabled="isSubmitting" @click="openCheckoutModal('activate', 'premium')" class="btn-gold text-sm">
+            Activer Premium
           </button>
         </template>
-        <template v-else-if="subscriptionQuery.data.value?.tier !== 'premium'">
-          <button :disabled="isSubmitting" @click="openCheckoutModal('upgrade')" class="btn-gold text-sm">Passer en Premium</button>
-        </template>
+        <!-- Active: show contextual actions -->
         <template v-else>
+          <button v-if="subscriptionQuery.data.value?.tier !== 'premium'" :disabled="isSubmitting" @click="openCheckoutModal('upgrade')" class="btn-gold text-sm">Passer en Premium</button>
           <button :disabled="isSubmitting" @click="openCheckoutModal('renewal')" class="btn-secondary text-sm">Renouveler</button>
-          <button v-if="!subscriptionQuery.data.value?.pendingTier" :disabled="downgradeMutation.isPending.value" @click="scheduleDowngrade" class="btn-secondary text-sm">Rétrograder au Standard</button>
+          <button v-if="subscriptionQuery.data.value?.tier === 'premium' && !subscriptionQuery.data.value?.pendingTier" :disabled="downgradeMutation.isPending.value" @click="scheduleDowngrade" class="btn-secondary text-sm">Rétrograder au Standard</button>
+          <button v-if="!subscriptionQuery.data.value?.isComplimentary" :disabled="cancelSubscriptionMutation.isPending.value" @click="cancelSubscriptionMutation.mutate()" class="text-[12px] text-red-500 hover:text-red-700 underline">Résilier</button>
         </template>
       </div>
     </div>
@@ -251,7 +255,7 @@
     <!-- Native Inline Subscription Checkout Modal -->
     <Modal
       :show="showCheckoutModal"
-      :title="checkoutAction === 'activate' ? 'Activer mon abonnement' : checkoutAction === 'upgrade' ? 'Passer en Premium' : 'Renouveler mon abonnement'"
+      :title="checkoutAction === 'activate' ? (checkoutTier === 'premium' ? 'Activer — Plan Premium' : 'Activer — Plan Standard') : checkoutAction === 'upgrade' ? 'Passer en Premium' : 'Renouveler mon abonnement'"
       subtitle="Choisissez votre moyen de paiement et finalisez."
       max-width="lg"
       @close="closeCheckoutModal"
@@ -566,7 +570,8 @@ import {
   fetchProSubscriptionChargeStatus,
   fetchProSubscription,
   fetchProSubscriptionFeatures,
-  updateProSubscription
+  updateProSubscription,
+  cancelProSubscription
 } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
@@ -699,6 +704,17 @@ const cancelDowngradeMutation = useMutation({
   }
 });
 
+const cancelSubscriptionMutation = useMutation({
+  mutationFn: () => cancelProSubscription(auth.accessToken ?? ""),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    toast.success("Abonnement résilié.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Impossible de résilier l'abonnement."));
+  }
+});
+
 const currentTier = computed(() => subscriptionQuery.data.value?.tier ?? "standard");
 
 const statusBadgeClass = computed(() => {
@@ -811,6 +827,7 @@ const CHECKOUT_WAITING_POLL_INTERVAL_MS = 6 * 1000;
 
 const showCheckoutModal = ref(false);
 const checkoutAction = ref<"activate" | "upgrade" | "renewal">("activate");
+const checkoutTier = ref<"standard" | "premium">("standard");
 const checkoutStep = ref<'select_method' | 'enter_details' | 'wizall_otp' | 'waiting'>('select_method');
 const billingCycle = ref<'monthly' | 'annual'>('monthly');
 const selectedCountry = ref('sn');
@@ -1144,9 +1161,10 @@ function openHostedWaitingLink() {
   openExternalPaymentLink(waitingHostedLaunchUrl.value);
 }
 
-function openCheckoutModal(action: "activate" | "upgrade" | "renewal" = "activate") {
+function openCheckoutModal(action: "activate" | "upgrade" | "renewal" = "activate", tier: "standard" | "premium" = "standard") {
   clearWaitingPoll();
   checkoutAction.value = action;
+  checkoutTier.value = action === "activate" ? tier : action === "upgrade" ? "premium" : (subscriptionQuery.data.value?.tier ?? "standard") as "standard" | "premium";
   checkoutStep.value = "select_method";
   billingCycle.value = "monthly";
   selectedCountry.value = billingMethod.value?.country ?? "sn";
@@ -1246,6 +1264,7 @@ async function handleCheckoutSubmit() {
   try {
     const initResult = await checkoutProSubscription(auth.accessToken ?? "", {
       action: checkoutAction.value,
+      tier: checkoutTier.value,
       provider: "paydunya",
       billingCycle: billingCycle.value,
       channel: selectedMethod.value

@@ -1869,10 +1869,6 @@ export class ProController {
         fail(reply, 409, "upgrade_pending", "Une mise à niveau est déjà en attente de paiement.");
         return;
       }
-      if (body.action === "renewal" && sub.tier === "standard") {
-        fail(reply, 409, "renewal_not_applicable", "Le renouvellement n'est pas applicable sur le plan Standard.");
-        return;
-      }
       if (body.action === "renewal" && sub.isComplimentary) {
         fail(reply, 409, "complimentary", "Les abonnements complémentaires ne nécessitent pas de renouvellement.");
         return;
@@ -1903,12 +1899,12 @@ export class ProController {
         }
       });
       const priceMap = Object.fromEntries(priceRows.map((r) => [r.key, r.value]));
-      // activate → standard price; upgrade → premium price; renewal → current tier price
-      const priceKey = body.action === "activate"
-        ? "subscription_standard_price_xof"
-        : body.action === "upgrade"
+      // activate: use requested tier (default standard); upgrade → premium; renewal → current tier
+      const priceKey = body.action === "upgrade"
+        ? "subscription_premium_price_xof"
+        : body.action === "activate" && body.tier === "premium"
           ? "subscription_premium_price_xof"
-          : sub.tier === "premium"
+          : body.action === "renewal" && sub.tier === "premium"
             ? "subscription_premium_price_xof"
             : "subscription_standard_price_xof";
       const priceStr = priceMap[priceKey];
@@ -1925,7 +1921,8 @@ export class ProController {
         ? Math.round(monthlyAmountXof * 12 * (100 - annualDiscountPercent) / 100)
         : monthlyAmountXof;
       const billingMonth = new Date().toISOString().slice(0, 7);
-      const idempotencyKey = `sub-${sub.id}-${body.action}-${body.billingCycle}-${billingMonth}`;
+      const tierSuffix = body.action === "activate" ? `-${body.tier ?? "standard"}` : "";
+      const idempotencyKey = `sub-${sub.id}-${body.action}${tierSuffix}-${body.billingCycle}-${billingMonth}`;
 
       const existing = await prisma.subscriptionCharge.findFirst({
         where: { idempotencyKey }
@@ -2216,6 +2213,31 @@ export class ProController {
       await prisma.subscription.update({
         where: { id: sub.id },
         data: { pendingTier: null }
+      });
+
+      ok(reply, { cancelled: true });
+    } catch (e) { handleError(e, reply); }
+  }
+
+  async cancelSubscription(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!ownerOnly(role, reply)) return;
+
+      const sub = await prisma.subscription.findUnique({ where: { salonId } });
+      if (!sub) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
+      if (sub.status === "inactive" || sub.status === "cancelled") {
+        fail(reply, 409, "already_inactive", "L'abonnement est déjà inactif.");
+        return;
+      }
+      if (sub.isComplimentary) {
+        fail(reply, 409, "complimentary", "Les abonnements complémentaires ne peuvent pas être résiliés ici.");
+        return;
+      }
+
+      await prisma.subscription.update({
+        where: { id: sub.id },
+        data: { status: "cancelled", renewsAt: null, expiresAt: null, pendingTier: null, autoRenew: false }
       });
 
       ok(reply, { cancelled: true });

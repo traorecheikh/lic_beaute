@@ -4628,9 +4628,17 @@
           "action": {
             "type": "string",
             "enum": [
+              "activate",
               "upgrade",
               "renewal",
               "downgrade"
+            ]
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
             ]
           },
           "provider": {

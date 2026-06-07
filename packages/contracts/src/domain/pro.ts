@@ -268,6 +268,7 @@ export const proSubscriptionUpdateInputSchema = z
 
 export const proSubscriptionCheckoutInputSchema = z.object({
   action: z.enum(["activate", "upgrade", "renewal", "downgrade"]),
+  tier: subscriptionTierSchema.optional(),
   provider: z.enum(["paydunya", "manual"]).default("paydunya"),
   billingCycle: z.enum(["monthly", "annual"]).default("monthly"),
   channel: paymentChannelSchema.optional()
