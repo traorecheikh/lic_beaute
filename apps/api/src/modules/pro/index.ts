@@ -1930,7 +1930,7 @@ export class ProController {
       const existing = await prisma.subscriptionCharge.findFirst({
         where: { idempotencyKey }
       });
-      if (existing?.status !== "failed" && existing?.providerTxId && isPaydunyaTokenCompatibleWithEnv(existing.providerTxId)) {
+      if (existing?.status !== "failed" && existing?.status !== "succeeded" && existing?.status !== "authorized" && existing?.providerTxId && isPaydunyaTokenCompatibleWithEnv(existing.providerTxId)) {
         ok(reply, { redirectUrl: null, chargeId: existing.id, resumed: true });
         return;
       }
