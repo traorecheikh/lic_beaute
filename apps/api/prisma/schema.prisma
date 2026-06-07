@@ -66,6 +66,7 @@ enum BlockedSlotScope {
 }
 
 enum SubscriptionChargeType {
+  activate
   upgrade
   renewal
   downgrade
