@@ -17,7 +17,8 @@ import {
   proStaffUpdateInputSchema,
   proSubscriptionCheckoutInputSchema,
   proSubscriptionUpdateInputSchema,
-  proSubscriptionExecuteInputSchema
+  proSubscriptionExecuteInputSchema,
+  proCancelSubscriptionInputSchema
 } from "@beauteavenue/contracts";
 
 import { getPaymentAdapter } from "../../adapters/index.js";
@@ -256,6 +257,77 @@ async function ensureProWriteAccess(salonId: string, reply: FastifyReply): Promi
     return false;
   }
   return true;
+}
+
+// ─── Retention offers per cancellation reason ───────────────────────────────
+
+interface RetentionOffer {
+  type: string;
+  title: string;
+  description: string;
+}
+
+function getRetentionOffer(reason: string, tier: "standard" | "premium"): RetentionOffer | null {
+  const offers: Record<string, RetentionOffer> = {
+    too_expensive: {
+      type: "discount",
+      title: "On ne vous laisse pas partir si facilement ✊",
+      description:
+        tier === "premium"
+          ? "On vous offre 30 jours Premium gratuits, et si vous restez, -25% sur les 3 prochains mois. Votre salon mérite le meilleur."
+          : "On descend le Standard à 10 000 FCFA/mois pendant 3 mois. Vous ne perdez rien, vous économisez."
+    },
+    missing_features: {
+      type: "feature_preview",
+      title: "On a encore des cartes dans notre manche 🃏",
+      description:
+        "Les rapports financiers détaillés, l'intégration WhatsApp et les campagnes SMS arrivent dans 15 jours. Activez-les gratuitement dès maintenant."
+    },
+    low_traffic: {
+      type: "visibility_boost",
+      title: "Vous êtes invisible ? On vous met en lumière 🔦",
+      description:
+        "On vous offre 30 jours de mise en avant dans l'application + badge 'Recommandé'. Vos clientes vous trouveront."
+    },
+    technical_issues: {
+      type: "dedicated_support",
+      title: "On règle ça ensemble, maintenant 🛠️",
+      description:
+        "Un expert dédié vous appelle sous 24h pour résoudre tous vos problèmes techniques. Sans frais."
+    },
+    poor_support: {
+      type: "priority_support",
+      title: "On va faire mieux, promis 🤝",
+      description:
+        "Un gestionnaire dédié vous est attribué. Réponse sous 1h ouvrée. Priorité absolue. Essayez 30 jours."
+    },
+    seasonal_closure: {
+      type: "pause_option",
+      title: "Pas besoin de tout arrêter ⏸️",
+      description:
+        "Mettez votre abonnement en pause au lieu de résilier. Vos données, vos avis, votre classement restent intacts. Vous reprenez quand vous voulez."
+    },
+    switching_competitor: {
+      type: "competitive_match",
+      title: "On ne lâche pas si facilement 🥊",
+      description:
+        "On égalise le prix de votre concurrent ET on vous ajoute 3 mois de fonctionnalités Premium gratuitement. Personne ne fait mieux."
+    },
+    business_closure: {
+      type: "data_preservation",
+      title: "Votre histoire mérite d'être conservée 📦",
+      description:
+        "On garde gratuitement toutes vos données (clients, avis, historique) pendant 6 mois. Si vous rouvrez, vous repartez de zéro… mais en mieux."
+    },
+    payment_issues: {
+      type: "manual_billing",
+      title: "Le paiement, c'est pas un frein 💳",
+      description:
+        "Passez en facturation manuelle : on vous envoie une facture chaque mois, vous payez par virement ou Wave. Pas de frais supplémentaires."
+    }
+  };
+
+  return offers[reason] ?? null;
 }
 
 export class ProController {
@@ -2236,12 +2308,71 @@ export class ProController {
         return;
       }
 
+      // Parse reason + additional info
+      const body = proCancelSubscriptionInputSchema.parse(request.body);
+      const reason = body.reason;
+      const additionalInfo = body.additionalInfo ?? null;
+
+      // Execute cancellation, storing the reason
       await prisma.subscription.update({
         where: { id: sub.id },
-        data: { status: "cancelled", renewsAt: null, expiresAt: null, pendingTier: null, autoRenew: false }
+        data: {
+          status: "cancelled",
+          renewedAt: null,
+          expiresAt: null,
+          pendingTier: null,
+          autoRenew: false,
+          cancelReason: reason,
+          cancelAdditionalInfo: additionalInfo,
+          cancelRequestedAt: new Date()
+        }
       });
 
-      ok(reply, { cancelled: true });
+      // Build personalised retention offer based on reason
+      const retentionOffer = getRetentionOffer(reason, sub.tier);
+
+      ok(reply, { cancelled: true, retentionOffer });
+    } catch (e) { handleError(e, reply); }
+  }
+
+  async retainSubscription(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { salonId, role } = await ensurePro(request);
+      if (!ownerOnly(role, reply)) return;
+
+      const sub = await prisma.subscription.findUnique({ where: { salonId } });
+      if (!sub || sub.status !== "cancelled") {
+        fail(reply, 409, "not_cancelled", "L'abonnement n'est pas en état résilié.");
+        return;
+      }
+      if (!sub.cancelReason) {
+        fail(reply, 409, "no_retention", "Aucune offre de rétention disponible.");
+        return;
+      }
+
+      // Reinstate the subscription
+      await prisma.subscription.update({
+        where: { id: sub.id },
+        data: {
+          status: "active",
+          cancelReason: null,
+          cancelAdditionalInfo: null,
+          cancelRequestedAt: null
+        }
+      });
+
+      // Log the retention event
+      await prisma.subscriptionEvent.create({
+        data: {
+          subscriptionId: sub.id,
+          eventType: "retained",
+          summary: `Client retenu (motif: ${sub.cancelReason}). Offre acceptée.`,
+          actorName: "client",
+          source: "pro"
+        }
+      });
+
+      ok(reply, { retained: true });
     } catch (e) { handleError(e, reply); }
   }
 

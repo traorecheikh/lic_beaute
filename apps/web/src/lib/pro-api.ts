@@ -370,16 +370,31 @@ export async function executeProSubscription(token: string, chargeId: string, pa
   }));
 }
 
-export async function cancelProSubscription(token: string) {
+export async function cancelProSubscription(token: string, body?: { reason: string; additionalInfo?: string }) {
   const cfg = getConfiguration(token);
   const basePath = cfg.basePath ?? "";
   const response = await fetch(`${basePath}/api/v1/pro/subscription/cancel`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({})) as { code?: string; message?: string };
+    throw new ApiError(response.status, payload.code ?? "unknown_error", payload.message ?? "Impossible de résilier l'abonnement.");
+  }
+  return response.json();
+}
+
+export async function retainProSubscription(token: string) {
+  const cfg = getConfiguration(token);
+  const basePath = cfg.basePath ?? "";
+  const response = await fetch(`${basePath}/api/v1/pro/subscription/retain`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({})) as { code?: string; message?: string };
-    throw new ApiError(response.status, payload.code ?? "unknown_error", payload.message ?? "Impossible de résilier l'abonnement.");
+    throw new ApiError(response.status, payload.code ?? "unknown_error", payload.message ?? "Impossible d'annuler la résiliation.");
   }
   return response.json();
 }

@@ -11,7 +11,8 @@ import {
   AdminSalonQueueItem,
   AdminSubscriptionDetail,
   AdminSubscriptionOverrideInput,
-  AdminSubscriptionSummary
+  AdminSubscriptionSummary,
+  type CancellationReason
 } from "@beauteavenue/contracts";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 
@@ -793,6 +794,53 @@ export async function overrideSubscription(
 }
 
 // ─── Manual extension (out-of-app payment) ────────────────────────────────────
+
+// ─── Cancellation stats ─────────────────────────────────────────────────────
+
+export async function getCancellationStats() {
+  const totalCancelled = await prisma.subscription.count({
+    where: { cancelReason: { not: null } }
+  });
+
+  const reasons = await prisma.subscription.groupBy({
+    by: ["cancelReason"],
+    where: { cancelReason: { not: null } },
+    _count: { cancelReason: true }
+  });
+
+  const stats = reasons
+    .filter((r): r is typeof r & { cancelReason: string } => r.cancelReason !== null)
+    .map((r) => ({
+      reason: r.cancelReason,
+      count: r._count.cancelReason,
+      percent: totalCancelled > 0 ? Math.round((r._count.cancelReason / totalCancelled) * 100) : 0
+    }));
+
+  const reasonLabels: Record<string, { label: string; emoji: string }> = {
+    too_expensive: { label: "Trop cher", emoji: "💰" },
+    missing_features: { label: "Fonctionnalités manquantes", emoji: "🔧" },
+    low_traffic: { label: "Manque de visibilité", emoji: "📉" },
+    technical_issues: { label: "Problèmes techniques", emoji: "⚡" },
+    poor_support: { label: "Support insatisfaisant", emoji: "🤷" },
+    seasonal_closure: { label: "Fermeture saisonnière", emoji: "🏖️" },
+    switching_competitor: { label: "Concurrence", emoji: "🏃" },
+    business_closure: { label: "Fermeture définitive", emoji: "🔒" },
+    payment_issues: { label: "Problèmes de paiement", emoji: "💳" },
+    other: { label: "Autre", emoji: "✍️" }
+  };
+
+  return {
+    totalCancelled,
+    items: stats.map((s) => ({
+      ...s,
+      label: reasonLabels[s.reason]?.label ?? s.reason,
+      emoji: reasonLabels[s.reason]?.emoji ?? "❓"
+    })),
+    retainedCount: await prisma.subscriptionEvent.count({
+      where: { eventType: "retained" }
+    })
+  };
+}
 
 export async function manualExtendSubscription(
   subscriptionId: string,

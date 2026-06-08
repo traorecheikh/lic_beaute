@@ -43,7 +43,7 @@
           <button v-if="subscriptionQuery.data.value?.tier !== 'premium'" :disabled="isSubmitting" @click="openCheckoutModal('upgrade')" class="btn-gold text-sm">Passer en Premium</button>
           <button :disabled="isSubmitting" @click="openCheckoutModal('renewal')" class="btn-secondary text-sm">Renouveler</button>
           <button v-if="subscriptionQuery.data.value?.tier === 'premium' && !subscriptionQuery.data.value?.pendingTier" :disabled="downgradeMutation.isPending.value" @click="scheduleDowngrade" class="btn-secondary text-sm">Rétrograder au Standard</button>
-          <button v-if="!subscriptionQuery.data.value?.isComplimentary" :disabled="cancelSubscriptionMutation.isPending.value" @click="cancelSubscriptionMutation.mutate()" class="text-[12px] text-red-500 hover:text-red-700 underline">Résilier</button>
+          <button v-if="!subscriptionQuery.data.value?.isComplimentary" :disabled="cancelSubscriptionMutation.isPending.value" @click="showCancelModal = true" class="text-[12px] text-red-500 hover:text-red-700 underline">Résilier</button>
         </template>
       </div>
     </div>
@@ -539,6 +539,16 @@
         </div>
       </template>
     </Modal>
+
+    <CancelSubscriptionModal
+      :show="showCancelModal"
+      :step="cancelStep"
+      :retention-offer="cancelRetentionOffer"
+      @close="handleCloseCancelModal"
+      @submit="handleCancelSubmit"
+      @accept="handleRetainAccept"
+      @confirm="handleCancelConfirm"
+    />
   </div>
 </template>
 
@@ -571,7 +581,8 @@ import {
   fetchProSubscription,
   fetchProSubscriptionFeatures,
   updateProSubscription,
-  cancelProSubscription
+  cancelProSubscription,
+  retainProSubscription
 } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
@@ -585,6 +596,7 @@ import {
 } from "@/lib/pro-billing";
 import { toast } from "vue-sonner";
 import Modal from "@/components/Modal.vue";
+import CancelSubscriptionModal from "@/components/CancelSubscriptionModal.vue";
 import type {
   ProSubscriptionCheckoutInput,
   ProSubscriptionUpdateInputBillingMethod
@@ -714,6 +726,70 @@ const cancelSubscriptionMutation = useMutation({
     toast.error(getErrorMessage(error, "Impossible de résilier l'abonnement."));
   }
 });
+
+// ─── Cancel subscription modal flow ──────────────────────────────────────────
+
+const showCancelModal = ref(false);
+const cancelStep = ref<"reason" | "retention" | "confirm">("reason");
+const cancelRetentionOffer = ref<{ title: string; description: string } | null>(null);
+const cancelPayload = ref<{ reason: string; additionalInfo: string }>({ reason: "", additionalInfo: "" });
+
+const cancelReasonMutation = useMutation({
+  mutationFn: (payload: { reason: string; additionalInfo: string }) =>
+    cancelProSubscription(auth.accessToken ?? "", payload),
+  onSuccess: async (result: any) => {
+    if (result.retentionOffer) {
+      cancelRetentionOffer.value = result.retentionOffer;
+      cancelStep.value = "retention";
+    } else {
+      cancelStep.value = "confirm";
+    }
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Impossible de résilier l'abonnement."));
+    showCancelModal.value = false;
+  }
+});
+
+const retainMutation = useMutation({
+  mutationFn: () => retainProSubscription(auth.accessToken ?? ""),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
+    toast.success("Offre acceptée ! Bienvenue à bord 🤝");
+    showCancelModal.value = false;
+    cancelStep.value = "reason";
+    cancelRetentionOffer.value = null;
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Impossible d'appliquer l'offre."));
+  }
+});
+
+function handleCancelSubmit(payload: { reason: string; additionalInfo: string }) {
+  cancelPayload.value = payload;
+  cancelReasonMutation.mutate(payload);
+}
+
+function handleRetainAccept() {
+  retainMutation.mutate();
+}
+
+function handleCancelConfirm() {
+  if (!cancelPayload.value.reason) {
+    cancelSubscriptionMutation.mutate();
+  }
+  showCancelModal.value = false;
+  cancelStep.value = "reason";
+  cancelRetentionOffer.value = null;
+  toast.success("Abonnement résilié.");
+}
+
+function handleCloseCancelModal() {
+  showCancelModal.value = false;
+  cancelStep.value = "reason";
+  cancelRetentionOffer.value = null;
+}
 
 const currentTier = computed(() => subscriptionQuery.data.value?.tier ?? "standard");
 

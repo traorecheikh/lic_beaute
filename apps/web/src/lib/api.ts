@@ -143,6 +143,16 @@ export async function fetchAdminDashboard(token: string) {
   });
 }
 
+export async function fetchCancellationStats(token: string) {
+  return request<{
+    totalCancelled: number;
+    retainedCount: number;
+    items: Array<{ reason: string; count: number; percent: number; label: string; emoji: string }>;
+  }>("/api/v1/admin/subscriptions/cancellation-stats", {
+    headers: authHeaders(token)
+  });
+}
+
 export async function fetchPendingSalons(
   token: string,
   query: Record<string, string | undefined>

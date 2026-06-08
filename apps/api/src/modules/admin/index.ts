@@ -37,6 +37,7 @@ import {
   listSubscriptions,
   manualExtendSubscription,
   overrideSubscription,
+  getCancellationStats,
   rejectSalon,
   requestSalonInfo,
   updatePlatformSetting,
@@ -195,6 +196,11 @@ export class AdminController {
     if (!result) { fail(reply, 404, "subscription_not_found", "Abonnement introuvable."); return; }
     await invalidateCacheTags(["kpi:admin", "kpi:pro"]);
     ok(reply, result);
+  }
+
+  async cancellationStats(request: FastifyRequest, reply: FastifyReply) {
+    if (!this.ensureAdmin(request, reply)) return;
+    ok(reply, await getCancellationStats());
   }
 
   async listAudit(request: FastifyRequest, reply: FastifyReply) {

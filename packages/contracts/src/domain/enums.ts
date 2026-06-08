@@ -54,6 +54,18 @@ export const clientBenefitStatusSchema = z.enum([
   "cancelled"
 ]);
 export const voucherRedemptionStatusSchema = z.enum(["active", "used", "expired"]);
+export const cancellationReasonSchema = z.enum([
+  "too_expensive",
+  "missing_features",
+  "low_traffic",
+  "technical_issues",
+  "poor_support",
+  "seasonal_closure",
+  "switching_competitor",
+  "business_closure",
+  "payment_issues",
+  "other"
+]);
 
 export type Role = z.infer<typeof roleSchema>;
 export type SalonApprovalStatus = z.infer<typeof salonApprovalStatusSchema>;
@@ -67,3 +79,4 @@ export type ClientContactChannel = z.infer<typeof clientContactChannelSchema>;
 export type ClientBenefitKind = z.infer<typeof clientBenefitKindSchema>;
 export type ClientBenefitStatus = z.infer<typeof clientBenefitStatusSchema>;
 export type VoucherRedemptionStatus = z.infer<typeof voucherRedemptionStatusSchema>;
+export type CancellationReason = z.infer<typeof cancellationReasonSchema>;

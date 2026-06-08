@@ -128,6 +128,17 @@
             </div>
           </div>
 
+          <!-- Cancellation Stats -->
+          <div class="bg-white rounded-3xl p-6 border border-outline-variant/60 space-y-4">
+            <h3 class="section-label">Résiliations</h3>
+            <PieChart v-if="cancellationStatsQuery.data.value?.items" :data="cancellationStatsQuery.data.value.items" :size="180" />
+            <div v-else class="text-center text-cocoa/40 text-xs py-8">Aucune donnée</div>
+            <div v-if="cancellationStatsQuery.data.value" class="flex justify-between border-t border-outline-variant/30 pt-4 text-xs">
+              <span class="text-cocoa/50">{{ cancellationStatsQuery.data.value.totalCancelled }} résiliations</span>
+              <span class="text-primary font-semibold">{{ cancellationStatsQuery.data.value.retainedCount }} retenus</span>
+            </div>
+          </div>
+
           <!-- Audit Summary Card -->
           <div class="bg-sand rounded-3xl p-8 border border-outline-variant/60 relative overflow-hidden group">
             <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/20 rounded-full transition-transform group-hover:scale-150"></div>
@@ -174,7 +185,8 @@ import MetricCard from "@/components/MetricCard.vue";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import StatePanel from "@/components/StatePanel.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { ApiError, fetchAdminDashboard } from "@/lib/api";
+import PieChart from "@/components/PieChart.vue";
+import { ApiError, fetchAdminDashboard, fetchCancellationStats } from "@/lib/api";
 import { useAdminAuthStore } from "@/stores/adminAuth";
 
 const auth = useAdminAuthStore();
@@ -184,6 +196,13 @@ const dashboardQuery = useQuery({
   queryKey: ["admin-dashboard"],
   queryFn: () => fetchAdminDashboard(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken))
+});
+
+const cancellationStatsQuery = useQuery({
+  queryKey: ["admin-cancellation-stats"],
+  queryFn: () => fetchCancellationStats(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken)),
+  refetchInterval: 60_000
 });
 
 const errorMessage = computed(() => {

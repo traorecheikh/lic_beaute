@@ -114,6 +114,19 @@ enum VoucherRedemptionStatus {
   expired
 }
 
+enum CancellationReason {
+  too_expensive
+  missing_features
+  low_traffic
+  technical_issues
+  poor_support
+  seasonal_closure
+  switching_competitor
+  business_closure
+  payment_issues
+  other
+}
+
 enum MediaPurpose {
   salon_cover
   salon_logo
@@ -345,9 +358,12 @@ model Subscription {
   billingProvider PaymentProvider?
   isComplimentary Boolean              @default(false)
   autoRenew       Boolean              @default(false)
-  pendingTier     SubscriptionTier?
-  startedAt         DateTime             @default(now())
-  renewedAt         DateTime?
+  pendingTier         SubscriptionTier?
+  cancelReason        CancellationReason?
+  cancelAdditionalInfo String?
+  cancelRequestedAt   DateTime?
+  startedAt           DateTime             @default(now())
+  renewedAt           DateTime?
   expiresAt         DateTime?
   gracePeriodEndsAt DateTime?
   createdAt         DateTime             @default(now())

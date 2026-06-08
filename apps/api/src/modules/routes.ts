@@ -162,6 +162,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/pro/subscription/charge/:chargeId/execute", (req, rep) => pro.executeSubscriptionPayment(req, rep));
   app.post("/api/v1/pro/subscription/cancel-downgrade", (req, rep) => pro.cancelDowngrade(req, rep));
   app.post("/api/v1/pro/subscription/cancel", (req, rep) => pro.cancelSubscription(req, rep));
+app.post("/api/v1/pro/subscription/retain", (req, rep) => pro.retainSubscription(req, rep));
   app.get("/api/v1/pro/subscription/charge/:chargeId/status", (req, rep) => pro.getChargeStatus(req, rep));
   app.get("/api/v1/pro/payouts", (req, rep) => pro.listPayouts(req, rep));
   app.get("/api/v1/pro/invoices", (req, rep) => pro.listInvoices(req, rep));
@@ -201,6 +202,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/admin/salons/:salonId/request-info", (req, rep) => admin.requestSalonInfo(req, rep));
   app.post("/api/v1/admin/salons/:salonId/send-password-reset", (req, rep) => admin.sendPasswordReset(req, rep));
   app.post("/api/v1/admin/salons/:salonId/send-magic-link", (req, rep) => admin.sendMagicLink(req, rep));
+  app.get("/api/v1/admin/subscriptions/cancellation-stats", (req, rep) => admin.cancellationStats(req, rep));
   app.get("/api/v1/admin/subscriptions", (req, rep) => admin.listSubscriptions(req, rep));
   app.get("/api/v1/admin/subscriptions/:subscriptionId", (req, rep) => admin.subscriptionDetail(req, rep));
   app.post("/api/v1/admin/subscriptions/:subscriptionId/override", (req, rep) => admin.overrideSubscription(req, rep));

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { bookingStatusSchema, salonApprovalStatusSchema, subscriptionStatusSchema, subscriptionTierSchema } from "./enums.js";
+import { bookingStatusSchema, salonApprovalStatusSchema, subscriptionStatusSchema, subscriptionTierSchema, cancellationReasonSchema } from "./enums.js";
 import { paymentChannelSchema } from "./payment.js";
 import { reviewSchema } from "./review.js";
 
@@ -282,6 +282,23 @@ export const proSubscriptionCheckoutResultSchema = z.object({
   effectiveAt: z.string().datetime().nullable().optional()
 });
 
+export const proCancelSubscriptionInputSchema = z.object({
+  reason: cancellationReasonSchema,
+  additionalInfo: z.string().max(500).optional()
+});
+
+export const proCancelSubscriptionResultSchema = z.object({
+  cancelled: z.boolean(),
+  retentionOffer: z
+    .object({
+      type: z.string(),
+      title: z.string(),
+      description: z.string(),
+      actionUrl: z.string().optional()
+    })
+    .nullable()
+});
+
 export const proInvoiceSchema = z.object({
   id: z.string(),
   invoiceNumber: z.string(),
@@ -421,6 +438,8 @@ export type ProSubscriptionUpdateInput = z.infer<typeof proSubscriptionUpdateInp
 export type ProBillingMethod = z.infer<typeof proBillingMethodSchema>;
 export type ProSubscriptionCheckoutInput = z.infer<typeof proSubscriptionCheckoutInputSchema>;
 export type ProSubscriptionCheckoutResult = z.infer<typeof proSubscriptionCheckoutResultSchema>;
+export type ProCancelSubscriptionInput = z.infer<typeof proCancelSubscriptionInputSchema>;
+export type ProCancelSubscriptionResult = z.infer<typeof proCancelSubscriptionResultSchema>;
 export type ProInvoice = z.infer<typeof proInvoiceSchema>;
 export type ProPayoutEvent = z.infer<typeof proPayoutEventSchema>;
 export type ProClientSummary = z.infer<typeof proClientSummarySchema>;
