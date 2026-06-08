@@ -53,6 +53,7 @@ export const config = {
   workerBatchSize: Number(process.env.WORKER_BATCH_SIZE ?? 25),
   workerDriver: (process.env.WORKER_DRIVER as "db" | "bull" | "hybrid" | undefined) ?? "hybrid",
   redisUrl: process.env.REDIS_URL ?? "",
+  restrictedFeatureEnabled: (process.env.RESTRICTED_FEATURE ?? "") === "on",
   cacheEnabled: (process.env.CACHE_ENABLED ?? "true") === "true",
   cacheVersion: process.env.CACHE_VERSION ?? "v1",
   cacheTtlCatalogSeconds: Number(process.env.CACHE_TTL_CATALOG_SECONDS ?? 45),

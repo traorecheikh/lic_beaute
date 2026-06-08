@@ -16,6 +16,7 @@ See [paydunya/taste.md](paydunya/taste.md)
 # ui
 See [ui/taste.md](ui/taste.md)
 # deployment
+- Gate new or experimental features behind environment variable flags (e.g., `RESTRICTED_FEATURE=on`). When the flag is unset or has any other value, the feature should be hidden entirely with a graceful fallback. Confidence: 0.70
 - For staging deployments, use the project's actual configured drivers/services (email, OTP, payment) instead of defaulting to `noop` or `mock` placeholders. Confidence: 0.60
 - Configure services (email, payment, OTP drivers) via environment variables, not by patching compiled files or source code. Confidence: 0.85
 - Let Coolify handle Docker pulls and restarts automatically after a git push instead of manually SSH-ing to run docker pull/restart. Confidence: 0.70

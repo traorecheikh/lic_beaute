@@ -268,6 +268,7 @@ interface RetentionOffer {
 }
 
 function getRetentionOffer(reason: string, tier: "standard" | "premium"): RetentionOffer | null {
+  if (!config.restrictedFeatureEnabled) return null;
   const offers: Record<string, RetentionOffer> = {
     too_expensive: {
       type: "discount",
