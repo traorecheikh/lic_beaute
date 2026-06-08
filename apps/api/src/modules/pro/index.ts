@@ -45,8 +45,9 @@ const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
 
 function isPaydunyaTokenCompatibleWithEnv(token: string | null | undefined) {
   if (!token) return false;
-  const isSandboxToken = token.startsWith("test_");
   if (config.paymentDriver !== "paydunya") return true;
+  if (token.startsWith("mock-")) return false;
+  const isSandboxToken = token.startsWith("test_");
   return config.paydunyaEnv === "sandbox" ? isSandboxToken : !isSandboxToken;
 }
 
