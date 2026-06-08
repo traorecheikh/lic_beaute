@@ -8,17 +8,20 @@
   >
     <!-- Step 1: Pick reason -->
     <template v-if="step === 'reason'">
-      <div class="space-y-3">
-        <p class="section-label mb-1">Motif de résiliation</p>
+      <div role="radiogroup" aria-labelledby="cancel-reason-label" class="space-y-3">
+        <p id="cancel-reason-label" class="section-label mb-1">Motif de résiliation <span class="text-red-400" aria-hidden="true">*</span></p>
         <button
           v-for="opt in reasonOptions"
           :key="opt.value"
           type="button"
+          role="radio"
+          :aria-checked="selectedReason === opt.value"
+          :aria-label="`${opt.label} — ${opt.hint}`"
           @click="selectedReason = opt.value"
           class="w-full flex items-center gap-3 p-4 rounded-2xl border text-left transition-all"
           :class="selectedReason === opt.value ? 'border-primary bg-primary/5 ring-2 ring-primary' : 'border-outline-variant/60 hover:border-cocoa/40'"
         >
-          <span class="text-lg">{{ opt.emoji }}</span>
+          <span class="text-lg" aria-hidden="true">{{ opt.emoji }}</span>
           <div>
             <p class="text-sm font-semibold text-espresso">{{ opt.label }}</p>
             <p class="text-xs text-cocoa/50">{{ opt.hint }}</p>
@@ -26,52 +29,53 @@
         </button>
       </div>
 
-      <div>
-        <label class="section-label mb-1 block">Dites-nous en plus (optionnel)</label>
+      <div class="mt-4">
+        <label for="cancel-additional-info" class="section-label mb-1 block">Dites-nous en plus (optionnel)</label>
         <textarea
+          id="cancel-additional-info"
           v-model="additionalInfo"
           class="input-shell min-h-[100px] resize-none"
           placeholder="Partagez-nous plus de détails pour nous aider à nous améliorer..."
           maxlength="500"
         ></textarea>
-        <p class="text-xs text-cocoa/40 text-right mt-1">{{ additionalInfo.length }}/500</p>
+        <p
+          aria-live="polite"
+          class="text-xs text-cocoa/60 text-right mt-1"
+          :class="{ 'text-red-500 font-semibold': additionalInfo.length >= 450 }"
+        >
+          {{ additionalInfo.length }}<span class="sr-only"> caractères sur </span>/ 500
+        </p>
       </div>
     </template>
 
     <!-- Step 2: Retention offer -->
     <template v-if="step === 'retention' && retentionOffer">
-      <div class="rounded-3xl bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 p-6 text-center space-y-4">
-        <div class="text-4xl">🎯</div>
+      <div aria-live="polite" class="rounded-3xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 p-6 text-center space-y-4">
+        <div class="text-4xl" aria-hidden="true">🎯</div>
         <h4 class="text-lg font-bold text-espresso">{{ retentionOffer.title }}</h4>
-        <p class="text-sm text-cocoa/70 leading-relaxed">{{ retentionOffer.description }}</p>
+        <p class="text-sm text-cocoa/80 leading-relaxed font-medium">{{ retentionOffer.description }}</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <button @click="$emit('accept')" class="btn-primary !py-3 text-sm flex items-center justify-center gap-2">
-            <CheckCircleIcon class="w-5 h-5" />
+            <CheckCircleIcon class="w-5 h-5" aria-hidden="true" />
             Accepter — Je reste !
           </button>
-          <button @click="$emit('confirm')" class="btn-secondary !py-3 text-sm">
-            Résilier quand même
-          </button>
+          <button @click="$emit('confirm')" class="btn-secondary !py-3 text-sm">Résilier quand même</button>
         </div>
       </div>
-      <p class="text-xs text-cocoa/30 text-center mt-3">Cette offre est unique et ne sera plus disponible après confirmation.</p>
+      <p class="text-xs text-cocoa/50 text-center mt-3">Cette offre est unique et ne sera plus disponible après confirmation.</p>
     </template>
 
     <!-- Step 3: Confirmation before final cancel -->
     <template v-if="step === 'confirm'">
-      <div class="rounded-3xl bg-red-50 border border-red-100 p-6 text-center space-y-4">
-        <div class="text-4xl">😔</div>
+      <div aria-live="assertive" class="rounded-3xl bg-red-50 border border-red-100 p-6 text-center space-y-4">
+        <div class="text-4xl" aria-hidden="true">😔</div>
         <h4 class="text-lg font-bold text-espresso">Confirmer la résiliation</h4>
-        <p class="text-sm text-cocoa/70 leading-relaxed">
+        <p class="text-sm text-cocoa/80 leading-relaxed">
           Vous êtes sur le point de résilier votre abonnement. Vos services seront suspendus et votre salon ne sera plus visible sur la marketplace.
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <button @click="$emit('confirm')" class="btn-primary !bg-red-500 !border-red-500 !py-3 text-sm">
-            Oui, résilier
-          </button>
-          <button @click="step = 'reason'" class="btn-secondary !py-3 text-sm">
-            Retour
-          </button>
+          <button @click="$emit('confirm')" class="btn-primary !bg-red-500 !border-red-500 !py-3 text-sm">Oui, résilier</button>
+          <button @click="$emit('back')" class="btn-secondary !py-3 text-sm">Retour au motif</button>
         </div>
       </div>
     </template>
@@ -83,6 +87,8 @@
           type="button"
           class="btn-primary text-xs"
           :disabled="!selectedReason"
+          :aria-disabled="!selectedReason"
+          :title="selectedReason ? undefined : 'Sélectionnez un motif pour continuer'"
           @click="$emit('submit', { reason: selectedReason, additionalInfo })"
         >
           Continuer
@@ -105,6 +111,7 @@ defineProps<{
 
 defineEmits<{
   close: [];
+  back: [];
   submit: [payload: { reason: string; additionalInfo: string }];
   accept: [];
   confirm: [];

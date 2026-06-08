@@ -6,7 +6,7 @@
         <p class="text-cocoa/60">Gérez votre plan, vos factures et votre mode de paiement.</p>
       </div>
       <div v-if="subscriptionQuery.data.value" class="shrink-0">
-        <span :class="statusBadgeClass">{{ statusBadgeLabel }}</span>
+        <span :class="statusBadgeClass"><span class="sr-only">Statut : </span>{{ statusBadgeLabel }}</span>
       </div>
     </div>
 
@@ -65,7 +65,10 @@
           <li v-for="feature in plan.features ?? []" :key="feature.label" class="flex items-center gap-2">
             <CheckCircleIcon v-if="feature.included" class="w-4 h-4 text-primary shrink-0" />
             <XCircleIcon v-else class="w-4 h-4 text-cocoa/20 shrink-0" />
-            <span :class="['text-[13px]', feature.included ? 'text-espresso' : 'text-cocoa/30 line-through']">{{ feature.label }}</span>
+            <span aria-hidden="true" :class="feature.included ? 'text-primary' : 'text-cocoa/20'">
+              {{ feature.included ? '✓' : '✗' }}
+            </span>
+            <span :class="['text-[13px]', feature.included ? 'text-espresso' : 'text-cocoa/50 line-through']">{{ feature.label }}</span>
           </li>
         </ul>
       </div>
@@ -79,12 +82,13 @@
             <h2 class="section-label">Historique des factures</h2>
             <span class="text-xs text-cocoa/40">{{ invoices.length }} facture{{ invoices.length !== 1 ? 's' : '' }}</span>
           </div>
-          <div v-if="invoicesQuery.isLoading.value" class="p-8 text-center text-cocoa/40 text-sm">Chargement...</div>
-          <div v-else-if="invoices.length === 0" class="p-8 text-center">
+          <div v-if="invoicesQuery.isLoading.value" class="p-8 text-center text-cocoa/60 text-sm" aria-busy="true">Chargement...</div>
+          <div v-else-if="invoices.length === 0" class="p-8 text-center" role="status">
             <p class="row-meta">Aucune facture pour le moment.</p>
-            <p class="text-xs text-cocoa/40 mt-1">Vos prochaines factures apparaîtront ici.</p>
+            <p class="text-xs text-cocoa/60 mt-1">Vos prochaines factures apparaîtront ici.</p>
           </div>
-          <table v-else class="w-full text-left border-collapse">
+          <table v-else class="w-full text-left border-collapse" aria-label="Historique des factures">
+            <caption class="sr-only">Liste des factures d'abonnement</caption>
             <thead>
               <tr class="bg-neutral-bg/40">
                 <th class="section-label px-6 py-3">Date</th>
@@ -103,8 +107,9 @@
                 </td>
                 <td class="px-6 py-4 text-sm font-bold text-espresso text-right">{{ invoice.amountLabel }}</td>
                 <td class="px-6 py-4 text-right">
-                  <button @click="openInvoice(invoice)" class="p-1.5 hover:bg-neutral-bg rounded-lg text-cocoa/40 hover:text-primary transition" title="Télécharger la facture">
-                    <ArrowDownTrayIcon class="w-4 h-4" />
+                  <button @click="openInvoice(invoice)" class="p-1.5 hover:bg-neutral-bg rounded-lg text-cocoa/60 hover:text-primary transition" aria-label="Télécharger la facture {{ invoice.invoiceNumber }}">
+                    <ArrowDownTrayIcon class="w-4 h-4" aria-hidden="true" />
+                    <span class="sr-only">Télécharger la facture {{ invoice.invoiceNumber }}</span>
                   </button>
                 </td>
               </tr>
@@ -150,6 +155,10 @@
               </p>
             </div>
             <button
+              type="button"
+              role="switch"
+              :aria-checked="subscriptionQuery.data.value?.autoRenew ?? false"
+              :aria-label="`Renouvellement automatique : ${subscriptionQuery.data.value?.autoRenew ? 'activé' : 'désactivé'}`"
               :disabled="toggleMutation.isPending.value"
               @click="toggleAutoRenew"
               :class="[
@@ -425,7 +434,7 @@
               </div>
               <div>
                 <label class="section-label mb-1 block">Code d'autorisation OTP</label>
-                <input v-model="mobileMoneyForm.otp" type="text" class="input-shell" placeholder="1234" />
+                <input v-model="mobileMoneyForm.otp" type="text" inputmode="numeric" class="input-shell" placeholder="1234" />
               </div>
             </div>
           </div>
@@ -439,7 +448,7 @@
           </p>
           <div>
             <label class="section-label mb-1 block">Code de validation (OTP)</label>
-            <input v-model="wizallOtpCode" type="text" class="input-shell" placeholder="12345" />
+            <input v-model="wizallOtpCode" type="text" inputmode="numeric" class="input-shell" placeholder="12345" />
           </div>
         </div>
 
@@ -548,6 +557,7 @@
       @submit="handleCancelSubmit"
       @accept="handleRetainAccept"
       @confirm="handleCancelConfirm"
+      @back="cancelStep = 'reason'"
     />
   </div>
 </template>
