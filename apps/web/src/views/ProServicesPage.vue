@@ -84,7 +84,8 @@
           <Squares2X2Icon class="w-10 h-10" />
         </div>
         <p class="row-primary text-lg mb-2">Votre carte de services est vide</p>
-        <p class="row-meta max-w-xs mx-auto mb-8">Commencez par ajouter vos prestations pour permettre à vos clients de réserver.</p>
+        <p class="row-meta max-w-sm mx-auto mb-2">Créez vos prestations pour que vos talents puissent être associés à des spécialités.</p>
+        <p class="row-meta max-w-xs mx-auto mb-8">Vos clients pourront alors réserver en ligne.</p>
         <button @click="addService" class="btn-primary">Créer ma première prestation</button>
       </div>
     </div>
@@ -161,15 +162,12 @@
                 </div>
                 <div>
                   <label class="section-label mb-2 block">Catégorie</label>
-                  <input
-                    v-model="createForm.category"
-                    class="input-shell"
-                    placeholder="ex: Coiffure, Ongles, Soins…"
-                    list="category-suggestions"
-                  />
-                  <datalist id="category-suggestions">
-                    <option v-for="cat in uniqueCategories" :key="cat" :value="cat" />
-                  </datalist>
+                  <select v-model="createForm.category" class="input-shell">
+                    <option value="" disabled>Sélectionner une catégorie</option>
+                    <option v-for="cat in platformCategories" :key="cat.id" :value="cat.name">
+                      {{ cat.name }}
+                    </option>
+                  </select>
                   <p class="text-[11px] text-cocoa/40 mt-2">La catégorie regroupe vos prestations dans votre catalogue.</p>
                 </div>
               </div>
@@ -340,6 +338,7 @@ import {
   InformationCircleIcon
 } from "@heroicons/vue/24/outline";
 import { createProService, deleteProService, fetchProServices, fetchProSubscriptionFeatures, updateProService } from "@/lib/pro-api";
+import { fetchPublicCategories } from "@/lib/api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -377,6 +376,14 @@ const featuresQuery = useQuery({
   queryFn: () => fetchProSubscriptionFeatures(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken))
 });
+
+const categoriesQuery = useQuery({
+  queryKey: ["platform-categories"],
+  queryFn: () => fetchPublicCategories(),
+  staleTime: 10 * 60 * 1000
+});
+
+const platformCategories = computed(() => categoriesQuery.data.value ?? []);
 
 const depositsAvailable = computed(() => {
   const f = featuresQuery.data.value as { deposits?: { available: boolean } } | undefined;

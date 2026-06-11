@@ -114,11 +114,20 @@
         </template>
         <div class="md:col-span-2">
           <label class="section-label mb-2 block">Spécialités</label>
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div v-if="availableServices.length > 0" class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label v-for="service in availableServices" :key="service.id" class="flex items-center gap-2 rounded-lg border border-outline-variant/50 px-3 py-2">
               <input :checked="createForm.serviceIds.includes(service.id)" @change="toggleService(service.id)" type="checkbox" class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20" />
               <span class="row-meta">{{ service.name }}</span>
             </label>
+          </div>
+          <div v-else class="rounded-xl border border-dashed border-outline-variant/50 p-6 text-center">
+            <p class="text-sm font-semibold text-cocoa/60 mb-1">Aucune prestation disponible</p>
+            <p class="text-xs text-cocoa/40 mb-4">
+              Vous devez d'abord créer des prestations pour assigner des spécialités à vos talents.
+            </p>
+            <RouterLink to="/pro/salon/services" class="btn-primary text-xs px-4 py-2">
+              Créer des prestations
+            </RouterLink>
           </div>
         </div>
       </div>

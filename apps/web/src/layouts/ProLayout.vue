@@ -7,9 +7,25 @@
           <RouterLink to="/pro/calendar" class="flex items-center gap-4 transition hover:opacity-80">
             <img src="/logo.png" alt="Beauté Avenue" class="h-10 w-auto object-contain" />
             <div class="hidden sm:block">
-              <p class="text-[17px] font-medium-bold tracking-tight text-espresso font-sans">
-                {{ auth.salonName ?? "Mon Salon" }}
-              </p>
+              <div class="flex items-center gap-2">
+                <p class="text-[17px] font-medium-bold tracking-tight text-espresso font-sans">
+                  {{ auth.salonName ?? "Mon Salon" }}
+                </p>
+                <div v-if="readinessStatus" class="relative group cursor-help">
+                  <div :class="['w-3 h-3 rounded-full transition-colors', readinessStatus.ready ? 'bg-green-500' : 'bg-red-400']"></div>
+                  <div class="absolute left-0 top-6 z-50 w-72 rounded-xl bg-surface p-4 shadow-xl ring-1 ring-outline-variant opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                    <p class="text-xs font-bold text-espresso mb-3" :class="readinessStatus.ready ? 'text-green-700' : 'text-cocoa/80'">
+                      {{ readinessStatus.ready ? '✓ Salon visible dans l\'application' : '✗ Salon non visible' }}
+                    </p>
+                    <div class="space-y-1.5">
+                      <div v-for="check in readinessStatus.checks" :key="check.label" class="flex items-center gap-2 text-[11px]" :class="check.ok ? 'text-green-600' : 'text-cocoa/60'">
+                        <span>{{ check.ok ? '✓' : '•' }}</span>
+                        <span>{{ check.label }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </RouterLink>
         </div>
@@ -174,7 +190,7 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import { useQuery } from "@tanstack/vue-query";
-import { fetchNotificationsUnreadCount, fetchProSalon, fetchProSubscription } from "@/lib/pro-api";
+import { fetchNotificationsUnreadCount, fetchProSalon, fetchProSubscription, fetchProServices, fetchProStaff } from "@/lib/pro-api";
 import { useProAuthStore } from "@/stores/proAuth";
 
 const auth = useProAuthStore();
@@ -205,6 +221,20 @@ const notifQuery = useQuery({
   enabled: computed(() => Boolean(auth.accessToken)),
   refetchInterval: 30_000,
   staleTime: 15_000
+});
+
+const servicesQuery = useQuery({
+  queryKey: ["pro-services", "layout"],
+  queryFn: () => fetchProServices(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager)),
+  staleTime: 60 * 1000
+});
+
+const staffQuery = useQuery({
+  queryKey: ["pro-staff", "layout"],
+  queryFn: () => fetchProStaff(auth.accessToken ?? ""),
+  enabled: computed(() => Boolean(auth.accessToken && auth.isManager)),
+  staleTime: 60 * 1000
 });
 
 const unreadCount = computed(() => notifQuery.data.value ?? 0);
@@ -241,6 +271,22 @@ const gracePeriodEndsAt = computed(() => {
   if (!v) return null;
   const d = v instanceof Date ? v : new Date(v as string);
   return d > new Date() ? d : null;
+});
+
+const readinessStatus = computed(() => {
+  if (!salonQuery.data.value) return null;
+  const salon = salonQuery.data.value as Record<string, unknown>;
+  const services = (servicesQuery.data.value ?? []) as Array<unknown>;
+  const staff = (staffQuery.data.value ?? []) as Array<unknown>;
+  const checks = [
+    { label: "Logo du salon", ok: Boolean(salon.logoUrl) },
+    { label: "Approbation du profil", ok: salon.approvalStatus === "approved" },
+    { label: "Visibilité marketplace activée", ok: salon.isVisibleInMarketplace === true },
+    { label: "Réservations activées", ok: salon.canReceiveBookings === true },
+    { label: "Au moins 1 prestation active", ok: services.length >= 1 },
+    { label: "Au moins 1 collaborateur actif", ok: staff.length >= 1 },
+  ];
+  return { ready: checks.every(c => c.ok), checks };
 });
 
 const graceDaysLeft = computed(() => {
