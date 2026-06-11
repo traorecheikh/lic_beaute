@@ -1783,7 +1783,7 @@ export class ProController {
         tier: sub.tier,
         pendingTier: sub.pendingTier ?? null,
         status: sub.status,
-        renewsAt: sub.renewedAt?.toISOString() ?? null,
+        renewsAt: sub.expiresAt?.toISOString() ?? null,
         expiresAt: sub.expiresAt?.toISOString() ?? null,
         gracePeriodEndsAt: sub.gracePeriodEndsAt?.toISOString() ?? null,
         isComplimentary: sub.isComplimentary,
