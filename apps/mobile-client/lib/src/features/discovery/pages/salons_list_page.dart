@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
@@ -91,11 +92,10 @@ class SalonsListPage extends ConsumerWidget {
                 if (items.isEmpty) {
                   return SizedBox(
                     height: MediaQuery.of(context).size.height * 0.55,
-                    child: Center(
-                      child: Text(
-                        'Aucun salon disponible.',
-                        style: AppTextStyles.bodyMd,
-                      ),
+                    child: AppEmptyState(
+                      icon: 'store',
+                      title: 'Aucun salon disponible',
+                      subtitle: 'Les salons de cette catégorie apparaîtront ici.',
                     ),
                   );
                 }

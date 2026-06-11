@@ -9,6 +9,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/session/session_store.dart';
+import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -96,6 +97,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         !hasAnyCatalogData;
     final showGlobalLoading = allCoreLoading;
     final showGlobalError = !showGlobalLoading && allCoreFailed;
+    final allLoaded = !topRatedAsync.isLoading && !trendingAsync.isLoading && !prestigeAsync.isLoading;
+    final showGlobalEmpty = !showGlobalLoading && !showGlobalError && allLoaded && !hasAnyCatalogData && !hasNearby;
 
     // Only show banner when permission is definitively denied (not on GPS timeout or empty results)
     final permDenied =
@@ -181,6 +184,21 @@ class _HomePageState extends ConsumerState<HomePage> {
                     fallbackTitle: 'Catalogue indisponible',
                     serverTitle: 'Le catalogue est indisponible',
                     onRetry: refreshAll,
+                  ),
+                ),
+              ),
+
+            if (showGlobalEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 120.h),
+                  child: AppEmptyState(
+                    icon: 'store',
+                    title: 'Aucun salon disponible',
+                    subtitle: 'Les salons proches de vous apparaîtront ici. Revenez bientôt !',
+                    action: refreshAll,
+                    actionLabel: 'Actualiser',
                   ),
                 ),
               ),
@@ -707,7 +725,17 @@ class _SalonListSliver extends StatelessWidget {
             .take(take)
             .toList();
         if (items.isEmpty) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
+          return SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              child: AppEmptyState(
+                icon: 'store',
+                title: 'Aucun salon pour le moment',
+                subtitle: 'Revenez bientôt, de nouveaux salons arrivent !',
+                compact: true,
+              ),
+            ),
+          );
         }
         return SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
