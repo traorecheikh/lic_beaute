@@ -90,7 +90,7 @@ final topRatedProvider =
       (ref) async {
   final api = ref.read(apiClientProvider).getSalonsApi();
   final response = await retryWithBackoff(
-    () => api.apiV1SalonsGet(sort: 'rating', pageSize: '50'),
+    () => api.apiV1SalonsGet(sort: 'rating', pageSize: '6'),
   );
   return response.data?.items.toList() ?? [];
 },
@@ -104,7 +104,7 @@ final trendingProvider =
   final response = await retryWithBackoff(
     () => api.apiV1SalonsGet(
       sort: 'trending',
-      pageSize: '50',
+      pageSize: '6',
     ),
   );
   return response.data?.items.toList() ?? [];

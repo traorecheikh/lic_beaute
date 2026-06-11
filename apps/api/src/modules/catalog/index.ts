@@ -150,6 +150,10 @@ export class CatalogController {
         ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
         WHERE s."approvalStatus" = 'approved'
           AND s."isVisibleInMarketplace" = true
+          AND s."canReceiveBookings" = true
+          AND s."logoUrl" IS NOT NULL
+          AND EXISTS (SELECT 1 FROM "Service" sv WHERE sv."salonId" = s.id AND sv."isActive" = true)
+          AND EXISTS (SELECT 1 FROM "Employee" e WHERE e."salonId" = s.id AND e."isActive" = true)
           AND s.latitude IS NOT NULL
           AND s.longitude IS NOT NULL
           AND s.latitude  BETWEEN ${lat - 0.045} AND ${lat + 0.045}
@@ -219,6 +223,10 @@ export class CatalogController {
         ) t ON t."salonId" = s.id
         WHERE s."approvalStatus" = 'approved'
           AND s."isVisibleInMarketplace" = true
+          AND s."canReceiveBookings" = true
+          AND s."logoUrl" IS NOT NULL
+          AND EXISTS (SELECT 1 FROM "Service" sv WHERE sv."salonId" = s.id AND sv."isActive" = true)
+          AND EXISTS (SELECT 1 FROM "Employee" e WHERE e."salonId" = s.id AND e."isActive" = true)
           ${cityParam     ? Prisma.sql`AND s.city = ${cityParam}`             : Prisma.empty}
           ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}`     : Prisma.empty}
           ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}`  : Prisma.empty}
@@ -255,7 +263,11 @@ export class CatalogController {
           where: {
             approvalStatus: "approved",
             isVisibleInMarketplace: true,
+            canReceiveBookings: true,
+            logoUrl: { not: null },
             isPrestige: true,
+            services: { some: { isActive: true } },
+            employees: { some: { isActive: true } },
             ...(q.city && { city: q.city })
           },
           select: {
@@ -268,7 +280,7 @@ export class CatalogController {
           skip: page * pageSize
         }),
         prisma.salon.count({
-          where: { approvalStatus: "approved", isVisibleInMarketplace: true, isPrestige: true }
+          where: { approvalStatus: "approved", isVisibleInMarketplace: true, canReceiveBookings: true, logoUrl: { not: null }, isPrestige: true, services: { some: { isActive: true } }, employees: { some: { isActive: true } } }
         })
       ]);
       const payload = {
@@ -302,6 +314,10 @@ export class CatalogController {
       ${minPrice != null || maxPrice != null ? Prisma.sql`JOIN "Service" srv ON srv."salonId" = s.id AND srv."isActive" = true` : Prisma.empty}
       WHERE s."approvalStatus" = 'approved'
         AND s."isVisibleInMarketplace" = true
+        AND s."canReceiveBookings" = true
+        AND s."logoUrl" IS NOT NULL
+        AND EXISTS (SELECT 1 FROM "Service" sv WHERE sv."salonId" = s.id AND sv."isActive" = true)
+        AND EXISTS (SELECT 1 FROM "Employee" e WHERE e."salonId" = s.id AND e."isActive" = true)
         ${cityParam     ? Prisma.sql`AND s.city = ${cityParam}`             : Prisma.empty}
         ${categoryParam ? Prisma.sql`AND s.category = ${categoryParam}`     : Prisma.empty}
         ${minPrice != null ? Prisma.sql`AND srv."priceXof" >= ${minPrice}`  : Prisma.empty}

@@ -25,3 +25,4 @@ See [ui/taste.md](ui/taste.md)
 - For mobile client authentication, use email-only login — disable phone number login entirely and send OTP via email for account creation. Confidence: 0.65
 - Include email masking/validation and password visibility toggle with validation in the mobile client login form. Confidence: 0.60
 - Use a `.env` file (loaded at runtime) for mobile client configuration values like API base URL instead of hardcoding them in Dart source code. Confidence: 0.80
+- Apply salon marketplace filtering criteria (logo uploaded, approvalStatus=approved, canReceiveBookings=true, isVisibleInMarketplace=true) at the API query level, not just client-side filtering. Confidence: 0.70
