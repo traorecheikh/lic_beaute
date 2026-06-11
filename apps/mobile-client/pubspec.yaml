@@ -93,6 +93,7 @@ dependencies:
   change_app_package_name: ^1.5.0
   phone_form_field: ^10.0.17
   one_of: ^1.5.0
+  flutter_dotenv: ^6.0.1
 
 
 dev_dependencies:
@@ -121,6 +122,7 @@ patrol:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/logo.png
     - assets/om.png
     - assets/wave.png
