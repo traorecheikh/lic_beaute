@@ -75,7 +75,7 @@ final nearbyProvider =
           lat: position.latitude,
           lng: position.longitude,
           sort: 'nearby',
-          pageSize: '6',
+          pageSize: '50',
         ),
       );
       final items = response.data?.items.toList() ?? [];
@@ -90,7 +90,7 @@ final topRatedProvider =
       (ref) async {
   final api = ref.read(apiClientProvider).getSalonsApi();
   final response = await retryWithBackoff(
-    () => api.apiV1SalonsGet(sort: 'rating', pageSize: '6'),
+    () => api.apiV1SalonsGet(sort: 'rating', pageSize: '50'),
   );
   return response.data?.items.toList() ?? [];
 },
@@ -104,7 +104,7 @@ final trendingProvider =
   final response = await retryWithBackoff(
     () => api.apiV1SalonsGet(
       sort: 'trending',
-      pageSize: '6',
+      pageSize: '50',
     ),
   );
   return response.data?.items.toList() ?? [];
