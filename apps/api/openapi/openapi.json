@@ -315,6 +315,12 @@
             "type": "string",
             "minLength": 2
           },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "nullable": true
+          },
           "city": {
             "type": "string",
             "minLength": 2,
@@ -10118,6 +10124,39 @@
                     "standard",
                     "premium",
                     "commissionPercent"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config/support": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Get support contact info",
+        "responses": {
+          "200": {
+            "description": "Support info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "phone": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "phone",
+                    "email"
                   ],
                   "additionalProperties": false
                 }

@@ -12,6 +12,8 @@ Name | Type | Description | Notes
 **provider** | **String** |  | 
 **phoneNumber** | **String** |  | 
 **label** | **String** |  | 
+**method** | **String** |  | [optional] 
+**country** | **String** |  | [optional] 
 **isDefault** | **bool** |  | 
 **lastUsedAt** | **String** |  | 
 **createdAt** | **String** |  | 

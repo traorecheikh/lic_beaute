@@ -40,6 +40,10 @@ function hashRefreshToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+function normalizePhoneNumber(phoneNumber: string) {
+  return phoneNumber.replace(/\s+/g, "").trim();
+}
+
 async function pruneExcessSessions(userId: string): Promise<void> {
   const sessions = await prisma.session.findMany({
     where: { userId },
@@ -589,7 +593,7 @@ export class AuthController {
 
   async logout(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
       const body = refreshInputSchema.safeParse(request.body);
       if (body.success) {
         // Targeted logout: delete only the session matching this refresh token.
@@ -607,7 +611,7 @@ export class AuthController {
 
   async me(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
       const user = await serializeCurrentUser(session.sub);
       if (!user) {
         fail(reply, 404, "user_not_found", "Utilisateur introuvable.");
@@ -626,7 +630,7 @@ export class AuthController {
 
   async updateMe(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
+      const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
       const body = updateMeInputSchema.parse(request.body);
       const media = body.avatarMediaId
         ? await prisma.mediaAsset.findUnique({ where: { id: body.avatarMediaId } })
@@ -679,10 +683,17 @@ export class AuthController {
       }
 
       await prisma.$transaction(async (tx) => {
+        const userUpdate: { fullName?: string; phone?: string | null } = {};
         if (body.fullName !== undefined) {
+          userUpdate.fullName = body.fullName;
+        }
+        if (body.phone !== undefined) {
+          userUpdate.phone = body.phone ? normalizePhoneNumber(body.phone) : null;
+        }
+        if (Object.keys(userUpdate).length > 0) {
           await tx.user.update({
             where: { id: session.sub },
-            data: { fullName: body.fullName }
+            data: userUpdate
           });
         }
 

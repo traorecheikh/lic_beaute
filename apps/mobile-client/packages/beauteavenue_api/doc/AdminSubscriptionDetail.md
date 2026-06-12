@@ -22,6 +22,7 @@ Name | Type | Description | Notes
 **entitlements** | [**BuiltList&lt;AdminSubscriptionDetailEntitlementsInner&gt;**](AdminSubscriptionDetailEntitlementsInner.md) |  | 
 **events** | [**BuiltList&lt;AdminSubscriptionDetailEventsInner&gt;**](AdminSubscriptionDetailEventsInner.md) |  | 
 **invoices** | [**BuiltList&lt;AdminSubscriptionDetailInvoicesInner&gt;**](AdminSubscriptionDetailInvoicesInner.md) |  | 
+**pendingCharges** | [**BuiltList&lt;AdminSubscriptionDetailPendingChargesInner&gt;**](AdminSubscriptionDetailPendingChargesInner.md) |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

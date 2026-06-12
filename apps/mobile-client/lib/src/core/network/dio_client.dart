@@ -90,9 +90,12 @@ class _AuthInterceptor extends Interceptor {
     }
 
     _isRefreshing = true;
+    String? attemptedRefreshToken;
     try {
-      final refreshToken = await secureStorage.read(StorageKeys.refreshToken);
-      if (refreshToken == null) {
+      attemptedRefreshToken = await secureStorage.read(
+        StorageKeys.refreshToken,
+      );
+      if (attemptedRefreshToken == null) {
         await _clearSession();
         handler.next(err);
         return;
@@ -100,7 +103,7 @@ class _AuthInterceptor extends Interceptor {
 
       final response = await dio.post<Map<String, dynamic>>(
         '/api/v1/auth/refresh',
-        data: {'refreshToken': refreshToken},
+        data: {'refreshToken': attemptedRefreshToken},
         options: Options(headers: {}), // no auth header on refresh
       );
 
@@ -108,7 +111,7 @@ class _AuthInterceptor extends Interceptor {
       final newRefresh = response.data?['refreshToken'] as String?;
 
       if (newAccess == null || newRefresh == null) {
-        await _clearSession();
+        await _clearSessionIfRefreshTokenMatches(attemptedRefreshToken);
         handler.next(err);
         return;
       }
@@ -129,7 +132,7 @@ class _AuthInterceptor extends Interceptor {
       }
       _queue.clear();
     } catch (_) {
-      await _clearSession();
+      await _clearSessionIfRefreshTokenMatches(attemptedRefreshToken);
       _queue.clear();
       handler.next(err);
     } finally {
@@ -143,6 +146,17 @@ class _AuthInterceptor extends Interceptor {
     await secureStorage.delete(StorageKeys.userId);
     if (onSessionCleared != null) {
       await onSessionCleared!();
+    }
+  }
+
+  Future<void> _clearSessionIfRefreshTokenMatches(
+    String? attemptedRefreshToken,
+  ) async {
+    final currentRefreshToken = await secureStorage.read(
+      StorageKeys.refreshToken,
+    );
+    if (currentRefreshToken == attemptedRefreshToken) {
+      await _clearSession();
     }
   }
 

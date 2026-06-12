@@ -30,6 +30,12 @@ export interface UpdateMeInput {
      * @type {string}
      * @memberof UpdateMeInput
      */
+    phone?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateMeInput
+     */
     city?: string | null;
     /**
      * 
@@ -113,6 +119,7 @@ export function UpdateMeInputFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
         
         'fullName': json['fullName'] == null ? undefined : json['fullName'],
+        'phone': json['phone'] == null ? undefined : json['phone'],
         'city': json['city'] == null ? undefined : json['city'],
         'avatarMediaId': json['avatarMediaId'] == null ? undefined : json['avatarMediaId'],
         'preferredContactChannel': json['preferredContactChannel'] == null ? undefined : json['preferredContactChannel'],
@@ -136,6 +143,7 @@ export function UpdateMeInputToJSONTyped(value?: UpdateMeInput | null, ignoreDis
     return {
         
         'fullName': value['fullName'],
+        'phone': value['phone'],
         'city': value['city'],
         'avatarMediaId': value['avatarMediaId'],
         'preferredContactChannel': value['preferredContactChannel'],

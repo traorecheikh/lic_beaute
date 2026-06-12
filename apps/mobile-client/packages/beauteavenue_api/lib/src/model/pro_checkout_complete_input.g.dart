@@ -10,9 +10,6 @@ const ProCheckoutCompleteInputPaymentMethodEnum
     _$proCheckoutCompleteInputPaymentMethodEnum_cash =
     const ProCheckoutCompleteInputPaymentMethodEnum._('cash');
 const ProCheckoutCompleteInputPaymentMethodEnum
-    _$proCheckoutCompleteInputPaymentMethodEnum_intech =
-    const ProCheckoutCompleteInputPaymentMethodEnum._('intech');
-const ProCheckoutCompleteInputPaymentMethodEnum
     _$proCheckoutCompleteInputPaymentMethodEnum_other =
     const ProCheckoutCompleteInputPaymentMethodEnum._('other');
 
@@ -21,8 +18,6 @@ ProCheckoutCompleteInputPaymentMethodEnum
   switch (name) {
     case 'cash':
       return _$proCheckoutCompleteInputPaymentMethodEnum_cash;
-    case 'intech':
-      return _$proCheckoutCompleteInputPaymentMethodEnum_intech;
     case 'other':
       return _$proCheckoutCompleteInputPaymentMethodEnum_other;
     default:
@@ -34,7 +29,6 @@ final BuiltSet<ProCheckoutCompleteInputPaymentMethodEnum>
     _$proCheckoutCompleteInputPaymentMethodEnumValues = BuiltSet<
         ProCheckoutCompleteInputPaymentMethodEnum>(const <ProCheckoutCompleteInputPaymentMethodEnum>[
   _$proCheckoutCompleteInputPaymentMethodEnum_cash,
-  _$proCheckoutCompleteInputPaymentMethodEnum_intech,
   _$proCheckoutCompleteInputPaymentMethodEnum_other,
 ]);
 
@@ -46,12 +40,10 @@ class _$ProCheckoutCompleteInputPaymentMethodEnumSerializer
     implements PrimitiveSerializer<ProCheckoutCompleteInputPaymentMethodEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'cash': 'cash',
-    'intech': 'intech',
     'other': 'other',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'cash': 'cash',
-    'intech': 'intech',
     'other': 'other',
   };
 

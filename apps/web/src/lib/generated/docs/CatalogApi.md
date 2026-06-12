@@ -5,6 +5,7 @@ All URIs are relative to *http://localhost:3000*
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
 | [**apiV1ConfigPricingGet**](CatalogApi.md#apiv1configpricingget) | **GET** /api/v1/config/pricing | Get subscription pricing tiers |
+| [**apiV1ConfigSupportGet**](CatalogApi.md#apiv1configsupportget) | **GET** /api/v1/config/support | Get support contact info |
 | [**apiV1SalonsIdAvailabilityGet**](CatalogApi.md#apiv1salonsidavailabilityget) | **GET** /api/v1/salons/{id}/availability | Get available booking slots |
 | [**apiV1SalonsIdReviewsGet**](CatalogApi.md#apiv1salonsidreviewsget) | **GET** /api/v1/salons/{id}/reviews | List salon reviews |
 
@@ -63,6 +64,63 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | Pricing info |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## apiV1ConfigSupportGet
+
+> ApiV1ConfigSupportGet200Response apiV1ConfigSupportGet()
+
+Get support contact info
+
+### Example
+
+```ts
+import {
+  Configuration,
+  CatalogApi,
+} from '';
+import type { ApiV1ConfigSupportGetRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new CatalogApi();
+
+  try {
+    const data = await api.apiV1ConfigSupportGet();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ApiV1ConfigSupportGet200Response**](ApiV1ConfigSupportGet200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Support info |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

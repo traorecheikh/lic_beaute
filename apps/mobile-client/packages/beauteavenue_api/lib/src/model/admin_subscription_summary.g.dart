@@ -86,9 +86,6 @@ const AdminSubscriptionSummaryBillingProviderEnum
     _$adminSubscriptionSummaryBillingProviderEnum_paydunya =
     const AdminSubscriptionSummaryBillingProviderEnum._('paydunya');
 const AdminSubscriptionSummaryBillingProviderEnum
-    _$adminSubscriptionSummaryBillingProviderEnum_intech =
-    const AdminSubscriptionSummaryBillingProviderEnum._('intech');
-const AdminSubscriptionSummaryBillingProviderEnum
     _$adminSubscriptionSummaryBillingProviderEnum_manual =
     const AdminSubscriptionSummaryBillingProviderEnum._('manual');
 
@@ -97,8 +94,6 @@ AdminSubscriptionSummaryBillingProviderEnum
   switch (name) {
     case 'paydunya':
       return _$adminSubscriptionSummaryBillingProviderEnum_paydunya;
-    case 'intech':
-      return _$adminSubscriptionSummaryBillingProviderEnum_intech;
     case 'manual':
       return _$adminSubscriptionSummaryBillingProviderEnum_manual;
     default:
@@ -110,7 +105,6 @@ final BuiltSet<AdminSubscriptionSummaryBillingProviderEnum>
     _$adminSubscriptionSummaryBillingProviderEnumValues = BuiltSet<
         AdminSubscriptionSummaryBillingProviderEnum>(const <AdminSubscriptionSummaryBillingProviderEnum>[
   _$adminSubscriptionSummaryBillingProviderEnum_paydunya,
-  _$adminSubscriptionSummaryBillingProviderEnum_intech,
   _$adminSubscriptionSummaryBillingProviderEnum_manual,
 ]);
 
@@ -197,12 +191,10 @@ class _$AdminSubscriptionSummaryBillingProviderEnumSerializer
         PrimitiveSerializer<AdminSubscriptionSummaryBillingProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
 

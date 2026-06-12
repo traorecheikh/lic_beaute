@@ -92,6 +92,8 @@ class _$ProCheckoutDetails extends ProCheckoutDetails {
   @override
   final String? clientName;
   @override
+  final String? clientPhone;
+  @override
   final String serviceName;
   @override
   final DateTime startsAt;
@@ -114,6 +116,7 @@ class _$ProCheckoutDetails extends ProCheckoutDetails {
       {required this.bookingId,
       required this.status,
       this.clientName,
+      this.clientPhone,
       required this.serviceName,
       required this.startsAt,
       this.staffName,
@@ -138,6 +141,7 @@ class _$ProCheckoutDetails extends ProCheckoutDetails {
         bookingId == other.bookingId &&
         status == other.status &&
         clientName == other.clientName &&
+        clientPhone == other.clientPhone &&
         serviceName == other.serviceName &&
         startsAt == other.startsAt &&
         staffName == other.staffName &&
@@ -153,6 +157,7 @@ class _$ProCheckoutDetails extends ProCheckoutDetails {
     _$hash = $jc(_$hash, bookingId.hashCode);
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, clientName.hashCode);
+    _$hash = $jc(_$hash, clientPhone.hashCode);
     _$hash = $jc(_$hash, serviceName.hashCode);
     _$hash = $jc(_$hash, startsAt.hashCode);
     _$hash = $jc(_$hash, staffName.hashCode);
@@ -170,6 +175,7 @@ class _$ProCheckoutDetails extends ProCheckoutDetails {
           ..add('bookingId', bookingId)
           ..add('status', status)
           ..add('clientName', clientName)
+          ..add('clientPhone', clientPhone)
           ..add('serviceName', serviceName)
           ..add('startsAt', startsAt)
           ..add('staffName', staffName)
@@ -196,6 +202,10 @@ class ProCheckoutDetailsBuilder
   String? _clientName;
   String? get clientName => _$this._clientName;
   set clientName(String? clientName) => _$this._clientName = clientName;
+
+  String? _clientPhone;
+  String? get clientPhone => _$this._clientPhone;
+  set clientPhone(String? clientPhone) => _$this._clientPhone = clientPhone;
 
   String? _serviceName;
   String? get serviceName => _$this._serviceName;
@@ -238,6 +248,7 @@ class ProCheckoutDetailsBuilder
       _bookingId = $v.bookingId;
       _status = $v.status;
       _clientName = $v.clientName;
+      _clientPhone = $v.clientPhone;
       _serviceName = $v.serviceName;
       _startsAt = $v.startsAt;
       _staffName = $v.staffName;
@@ -273,6 +284,7 @@ class ProCheckoutDetailsBuilder
             status: BuiltValueNullFieldError.checkNotNull(
                 status, r'ProCheckoutDetails', 'status'),
             clientName: clientName,
+            clientPhone: clientPhone,
             serviceName: BuiltValueNullFieldError.checkNotNull(
                 serviceName, r'ProCheckoutDetails', 'serviceName'),
             startsAt: BuiltValueNullFieldError.checkNotNull(

@@ -7,6 +7,7 @@ import '../network/connectivity_provider.dart';
 import '../network/dio_client.dart';
 import '../services/fcm_registration_service.dart';
 import '../storage/secure_storage.dart';
+import '../storage/app_model_cache.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────
 
@@ -127,6 +128,12 @@ class SessionNotifier extends Notifier<SessionState> {
   Future<void> logout() async {
     final storage = ref.read(secureStorageProvider);
     await storage.deleteAll();
+    ref.read(fcmRegistrationServiceProvider).reset();
+    await AppModelCache.remove(StorageKeys.profileBox, StorageKeys.currentUser);
+    await AppModelCache.remove(
+      StorageKeys.profileBox,
+      StorageKeys.paymentMethods,
+    );
     state = const SessionState();
   }
 }

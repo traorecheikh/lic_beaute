@@ -27,6 +27,12 @@ export interface ProSubscriptionCheckoutInput {
     action: ProSubscriptionCheckoutInputActionEnum;
     /**
      * 
+     * @type {ProSubscriptionCheckoutInputTierEnum}
+     * @memberof ProSubscriptionCheckoutInput
+     */
+    tier?: ProSubscriptionCheckoutInputTierEnum;
+    /**
+     * 
      * @type {ProSubscriptionCheckoutInputProviderEnum}
      * @memberof ProSubscriptionCheckoutInput
      */
@@ -50,11 +56,21 @@ export interface ProSubscriptionCheckoutInput {
  * @export
  */
 export const ProSubscriptionCheckoutInputActionEnum = {
+    Activate: 'activate',
     Upgrade: 'upgrade',
     Renewal: 'renewal',
     Downgrade: 'downgrade'
 } as const;
 export type ProSubscriptionCheckoutInputActionEnum = typeof ProSubscriptionCheckoutInputActionEnum[keyof typeof ProSubscriptionCheckoutInputActionEnum];
+
+/**
+ * @export
+ */
+export const ProSubscriptionCheckoutInputTierEnum = {
+    Standard: 'standard',
+    Premium: 'premium'
+} as const;
+export type ProSubscriptionCheckoutInputTierEnum = typeof ProSubscriptionCheckoutInputTierEnum[keyof typeof ProSubscriptionCheckoutInputTierEnum];
 
 /**
  * @export
@@ -162,6 +178,7 @@ export function ProSubscriptionCheckoutInputFromJSONTyped(json: any, ignoreDiscr
     return {
         
         'action': json['action'],
+        'tier': json['tier'] == null ? undefined : json['tier'],
         'provider': json['provider'] == null ? undefined : json['provider'],
         'billingCycle': json['billingCycle'] == null ? undefined : json['billingCycle'],
         'channel': json['channel'] == null ? undefined : json['channel'],
@@ -180,6 +197,7 @@ export function ProSubscriptionCheckoutInputToJSONTyped(value?: ProSubscriptionC
     return {
         
         'action': value['action'],
+        'tier': value['tier'],
         'provider': value['provider'],
         'billingCycle': value['billingCycle'],
         'channel': value['channel'],

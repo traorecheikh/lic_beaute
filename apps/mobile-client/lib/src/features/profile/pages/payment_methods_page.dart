@@ -16,7 +16,8 @@ import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../models/account_models.dart';
 import '../providers/payment_methods_provider.dart';
-import '../../booking/providers/payment_methods_provider.dart' as booking_payment_methods;
+import '../../booking/providers/payment_methods_provider.dart'
+    as booking_payment_methods;
 import '../widgets/payment_tile.dart';
 import '../widgets/profile_card_shell.dart';
 
@@ -58,23 +59,29 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   @override
   Widget build(BuildContext context) {
     final methodsAsync = ref.watch(paymentMethodsProvider);
-    final paydunyaMethodsAsync = ref.watch(booking_payment_methods.availablePaydunyaMethodsProvider);
-    final availableChannels = paydunyaMethodsAsync.asData?.value
+    final paydunyaMethodsAsync = ref.watch(
+      booking_payment_methods.availablePaydunyaMethodsProvider,
+    );
+    final availableChannels =
+        paydunyaMethodsAsync.asData?.value
             .where((method) => method.enabled)
             .toList() ??
         const <booking_payment_methods.PaydunyaMethodRecord>[];
     final channelItems = availableChannels.isNotEmpty
         ? availableChannels
         : _fallbackChannelLabels.entries
-            .map((entry) => booking_payment_methods.PaydunyaMethodRecord(
+              .map(
+                (entry) => booking_payment_methods.PaydunyaMethodRecord(
                   code: entry.key,
                   country: '',
                   label: entry.value,
                   enabled: true,
-                ))
-            .toList();
+                ),
+              )
+              .toList();
 
-    if (!channelItems.any((item) => item.code == _channel) && channelItems.isNotEmpty) {
+    if (!channelItems.any((item) => item.code == _channel) &&
+        channelItems.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _channel = channelItems.first.code);
       });
@@ -159,10 +166,9 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                         label: 'Opérateur',
                         value: _channel,
                         items: channelItems.map((item) => item.code).toList(),
-                        itemLabel: (value) =>
-                            channelItems
-                                .firstWhere((item) => item.code == value)
-                                .label,
+                        itemLabel: (value) => channelItems
+                            .firstWhere((item) => item.code == value)
+                            .label,
                         onChanged: (val) => setState(() => _channel = val),
                       ),
                       gapH16,
@@ -191,18 +197,21 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         .read(booking_payment_methods.availablePaydunyaMethodsProvider)
         .asData
         ?.value;
-    final channelItems = (paydunyaMethods?.where((item) => item.enabled).toList() ??
-            const <booking_payment_methods.PaydunyaMethodRecord>[])
-        .isNotEmpty
+    final channelItems =
+        (paydunyaMethods?.where((item) => item.enabled).toList() ??
+                const <booking_payment_methods.PaydunyaMethodRecord>[])
+            .isNotEmpty
         ? paydunyaMethods!.where((item) => item.enabled).toList()
         : _fallbackChannelLabels.entries
-            .map((entry) => booking_payment_methods.PaydunyaMethodRecord(
+              .map(
+                (entry) => booking_payment_methods.PaydunyaMethodRecord(
                   code: entry.key,
                   country: '',
                   label: entry.value,
                   enabled: true,
-                ))
-            .toList();
+                ),
+              )
+              .toList();
     var selectedChannel = _resolveExistingChannel(method, channelItems);
     bool saving = false;
 
@@ -232,8 +241,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Modifier le moyen de paiement',
-                        style: AppTextStyles.labelLg),
+                    Text(
+                      'Modifier le moyen de paiement',
+                      style: AppTextStyles.labelLg,
+                    ),
                     SizedBox(height: 20.h),
                     AppDropdown<String>(
                       label: 'Opérateur',
@@ -242,7 +253,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                       itemLabel: (value) => channelItems
                           .firstWhere((item) => item.code == value)
                           .label,
-                      onChanged: (val) => setSheetState(() => selectedChannel = val),
+                      onChanged: (val) =>
+                          setSheetState(() => selectedChannel = val),
                     ),
                     gapH16,
                     _buildPhoneField(phoneController),
@@ -296,15 +308,17 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                                 setSheetState(() => saving = false);
                                 if (context.mounted) {
                                   await context.handleHttpError(
-                                      error, 'Mise à jour impossible.');
+                                    error,
+                                    'Mise à jour impossible.',
+                                  );
                                 }
                               }
                             },
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
+            );
           },
         );
       },
@@ -336,7 +350,9 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         context.go(widget.nextRoute);
         return;
       }
-      final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
+      final returnTo = GoRouterState.of(
+        context,
+      ).uri.queryParameters['returnTo'];
       if (returnTo != null && returnTo.isNotEmpty) {
         context.go(Uri.decodeComponent(returnTo));
       }
@@ -369,10 +385,11 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
 
   Widget _buildPhoneField(TextEditingController controller) {
     final countriesAsync = ref.watch(supportedCountriesProvider);
-    final selectedCountry = countriesAsync.asData?.value?.firstWhere(
+    final countries = countriesAsync.asData?.value ?? kPhoneCountries;
+    final selectedCountry = countries.firstWhere(
       (c) => _resolveChannelCountry()?.toUpperCase() == c.code,
-      orElse: () => (countriesAsync.asData?.value ?? kPhoneCountries)[0],
-    ) ?? kPhoneCountries[0];
+      orElse: () => countries[0],
+    );
 
     return Semantics(
       label: 'Numéro de téléphone pour le moyen de paiement',
@@ -380,7 +397,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         controller: controller,
         labelText: 'Numéro de téléphone',
         initialCountry: selectedCountry,
-        countries: countriesAsync.asData?.value ?? kPhoneCountries,
+        countries: countries,
         onCountryChanged: (_) {
           // Country change handled by the channel selection
         },
@@ -389,7 +406,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   }
 
   String _resolveChannelLabel() {
-    final liveMethods = ref.read(booking_payment_methods.availablePaydunyaMethodsProvider).asData?.value;
+    final liveMethods = ref
+        .read(booking_payment_methods.availablePaydunyaMethodsProvider)
+        .asData
+        ?.value;
     final matched = liveMethods?.firstWhere(
       (item) => item.code == _channel,
       orElse: () => booking_payment_methods.PaydunyaMethodRecord(
@@ -403,17 +423,22 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   }
 
   String? _resolveChannelCountry() {
-    final liveMethods = ref.read(booking_payment_methods.availablePaydunyaMethodsProvider).asData?.value;
+    final liveMethods = ref
+        .read(booking_payment_methods.availablePaydunyaMethodsProvider)
+        .asData
+        ?.value;
     final channelItems = liveMethods?.isNotEmpty == true
         ? liveMethods!
         : _fallbackChannelLabels.entries
-            .map((entry) => booking_payment_methods.PaydunyaMethodRecord(
+              .map(
+                (entry) => booking_payment_methods.PaydunyaMethodRecord(
                   code: entry.key,
                   country: '',
                   label: entry.value,
                   enabled: true,
-                ))
-            .toList();
+                ),
+              )
+              .toList();
     return _resolveChannelCountryForCode(_channel, channelItems);
   }
 

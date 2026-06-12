@@ -50,9 +50,6 @@ final BuiltSet<PaymentStatusResponseStatusEnum>
 ]);
 
 const PaymentStatusResponseProviderEnum
-    _$paymentStatusResponseProviderEnum_intech =
-    const PaymentStatusResponseProviderEnum._('intech');
-const PaymentStatusResponseProviderEnum
     _$paymentStatusResponseProviderEnum_paydunya =
     const PaymentStatusResponseProviderEnum._('paydunya');
 const PaymentStatusResponseProviderEnum
@@ -62,8 +59,6 @@ const PaymentStatusResponseProviderEnum
 PaymentStatusResponseProviderEnum _$paymentStatusResponseProviderEnumValueOf(
     String name) {
   switch (name) {
-    case 'intech':
-      return _$paymentStatusResponseProviderEnum_intech;
     case 'paydunya':
       return _$paymentStatusResponseProviderEnum_paydunya;
     case 'manual':
@@ -76,7 +71,6 @@ PaymentStatusResponseProviderEnum _$paymentStatusResponseProviderEnumValueOf(
 final BuiltSet<PaymentStatusResponseProviderEnum>
     _$paymentStatusResponseProviderEnumValues = BuiltSet<
         PaymentStatusResponseProviderEnum>(const <PaymentStatusResponseProviderEnum>[
-  _$paymentStatusResponseProviderEnum_intech,
   _$paymentStatusResponseProviderEnum_paydunya,
   _$paymentStatusResponseProviderEnum_manual,
 ]);
@@ -127,12 +121,10 @@ class _$PaymentStatusResponseStatusEnumSerializer
 class _$PaymentStatusResponseProviderEnumSerializer
     implements PrimitiveSerializer<PaymentStatusResponseProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };

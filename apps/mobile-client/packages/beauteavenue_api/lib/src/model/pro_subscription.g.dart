@@ -28,6 +28,30 @@ final BuiltSet<ProSubscriptionTierEnum> _$proSubscriptionTierEnumValues =
   _$proSubscriptionTierEnum_premium,
 ]);
 
+const ProSubscriptionPendingTierEnum _$proSubscriptionPendingTierEnum_standard =
+    const ProSubscriptionPendingTierEnum._('standard');
+const ProSubscriptionPendingTierEnum _$proSubscriptionPendingTierEnum_premium =
+    const ProSubscriptionPendingTierEnum._('premium');
+
+ProSubscriptionPendingTierEnum _$proSubscriptionPendingTierEnumValueOf(
+    String name) {
+  switch (name) {
+    case 'standard':
+      return _$proSubscriptionPendingTierEnum_standard;
+    case 'premium':
+      return _$proSubscriptionPendingTierEnum_premium;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<ProSubscriptionPendingTierEnum>
+    _$proSubscriptionPendingTierEnumValues = BuiltSet<
+        ProSubscriptionPendingTierEnum>(const <ProSubscriptionPendingTierEnum>[
+  _$proSubscriptionPendingTierEnum_standard,
+  _$proSubscriptionPendingTierEnum_premium,
+]);
+
 const ProSubscriptionStatusEnum _$proSubscriptionStatusEnum_inactive =
     const ProSubscriptionStatusEnum._('inactive');
 const ProSubscriptionStatusEnum _$proSubscriptionStatusEnum_active =
@@ -72,6 +96,9 @@ final BuiltSet<ProSubscriptionStatusEnum> _$proSubscriptionStatusEnumValues =
 
 Serializer<ProSubscriptionTierEnum> _$proSubscriptionTierEnumSerializer =
     _$ProSubscriptionTierEnumSerializer();
+Serializer<ProSubscriptionPendingTierEnum>
+    _$proSubscriptionPendingTierEnumSerializer =
+    _$ProSubscriptionPendingTierEnumSerializer();
 Serializer<ProSubscriptionStatusEnum> _$proSubscriptionStatusEnumSerializer =
     _$ProSubscriptionStatusEnumSerializer();
 
@@ -101,6 +128,36 @@ class _$ProSubscriptionTierEnumSerializer
           Serializers serializers, Object serialized,
           {FullType specifiedType = FullType.unspecified}) =>
       ProSubscriptionTierEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
+class _$ProSubscriptionPendingTierEnumSerializer
+    implements PrimitiveSerializer<ProSubscriptionPendingTierEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'standard': 'standard',
+    'premium': 'premium',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[ProSubscriptionPendingTierEnum];
+  @override
+  final String wireName = 'ProSubscriptionPendingTierEnum';
+
+  @override
+  Object serialize(
+          Serializers serializers, ProSubscriptionPendingTierEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  ProSubscriptionPendingTierEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      ProSubscriptionPendingTierEnum.valueOf(
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 
@@ -147,6 +204,8 @@ class _$ProSubscription extends ProSubscription {
   @override
   final ProSubscriptionTierEnum tier;
   @override
+  final ProSubscriptionPendingTierEnum? pendingTier;
+  @override
   final ProSubscriptionStatusEnum status;
   @override
   final DateTime? renewsAt;
@@ -167,6 +226,7 @@ class _$ProSubscription extends ProSubscription {
   _$ProSubscription._(
       {required this.id,
       required this.tier,
+      this.pendingTier,
       required this.status,
       this.renewsAt,
       this.expiresAt,
@@ -188,6 +248,7 @@ class _$ProSubscription extends ProSubscription {
     return other is ProSubscription &&
         id == other.id &&
         tier == other.tier &&
+        pendingTier == other.pendingTier &&
         status == other.status &&
         renewsAt == other.renewsAt &&
         expiresAt == other.expiresAt &&
@@ -202,6 +263,7 @@ class _$ProSubscription extends ProSubscription {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, tier.hashCode);
+    _$hash = $jc(_$hash, pendingTier.hashCode);
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, renewsAt.hashCode);
     _$hash = $jc(_$hash, expiresAt.hashCode);
@@ -218,6 +280,7 @@ class _$ProSubscription extends ProSubscription {
     return (newBuiltValueToStringHelper(r'ProSubscription')
           ..add('id', id)
           ..add('tier', tier)
+          ..add('pendingTier', pendingTier)
           ..add('status', status)
           ..add('renewsAt', renewsAt)
           ..add('expiresAt', expiresAt)
@@ -240,6 +303,11 @@ class ProSubscriptionBuilder
   ProSubscriptionTierEnum? _tier;
   ProSubscriptionTierEnum? get tier => _$this._tier;
   set tier(ProSubscriptionTierEnum? tier) => _$this._tier = tier;
+
+  ProSubscriptionPendingTierEnum? _pendingTier;
+  ProSubscriptionPendingTierEnum? get pendingTier => _$this._pendingTier;
+  set pendingTier(ProSubscriptionPendingTierEnum? pendingTier) =>
+      _$this._pendingTier = pendingTier;
 
   ProSubscriptionStatusEnum? _status;
   ProSubscriptionStatusEnum? get status => _$this._status;
@@ -282,6 +350,7 @@ class ProSubscriptionBuilder
     if ($v != null) {
       _id = $v.id;
       _tier = $v.tier;
+      _pendingTier = $v.pendingTier;
       _status = $v.status;
       _renewsAt = $v.renewsAt;
       _expiresAt = $v.expiresAt;
@@ -316,6 +385,7 @@ class ProSubscriptionBuilder
                 id, r'ProSubscription', 'id'),
             tier: BuiltValueNullFieldError.checkNotNull(
                 tier, r'ProSubscription', 'tier'),
+            pendingTier: pendingTier,
             status: BuiltValueNullFieldError.checkNotNull(
                 status, r'ProSubscription', 'status'),
             renewsAt: renewsAt,

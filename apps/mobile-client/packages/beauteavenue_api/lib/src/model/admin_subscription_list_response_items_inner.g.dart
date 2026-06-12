@@ -87,10 +87,6 @@ const AdminSubscriptionListResponseItemsInnerBillingProviderEnum
     const AdminSubscriptionListResponseItemsInnerBillingProviderEnum._(
         'paydunya');
 const AdminSubscriptionListResponseItemsInnerBillingProviderEnum
-    _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech =
-    const AdminSubscriptionListResponseItemsInnerBillingProviderEnum._(
-        'intech');
-const AdminSubscriptionListResponseItemsInnerBillingProviderEnum
     _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_manual =
     const AdminSubscriptionListResponseItemsInnerBillingProviderEnum._(
         'manual');
@@ -101,8 +97,6 @@ AdminSubscriptionListResponseItemsInnerBillingProviderEnum
   switch (name) {
     case 'paydunya':
       return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_paydunya;
-    case 'intech':
-      return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech;
     case 'manual':
       return _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_manual;
     default:
@@ -115,7 +109,6 @@ final BuiltSet<AdminSubscriptionListResponseItemsInnerBillingProviderEnum>
     BuiltSet<
         AdminSubscriptionListResponseItemsInnerBillingProviderEnum>(const <AdminSubscriptionListResponseItemsInnerBillingProviderEnum>[
   _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_paydunya,
-  _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_intech,
   _$adminSubscriptionListResponseItemsInnerBillingProviderEnum_manual,
 ]);
 
@@ -209,12 +202,10 @@ class _$AdminSubscriptionListResponseItemsInnerBillingProviderEnumSerializer
             AdminSubscriptionListResponseItemsInnerBillingProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
 

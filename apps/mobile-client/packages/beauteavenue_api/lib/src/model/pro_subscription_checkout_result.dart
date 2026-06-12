@@ -14,16 +14,24 @@ part 'pro_subscription_checkout_result.g.dart';
 /// * [redirectUrl] 
 /// * [chargeId] 
 /// * [resumed] 
+/// * [downgradeScheduled] 
+/// * [effectiveAt] 
 @BuiltValue()
 abstract class ProSubscriptionCheckoutResult implements Built<ProSubscriptionCheckoutResult, ProSubscriptionCheckoutResultBuilder> {
   @BuiltValueField(wireName: r'redirectUrl')
   String? get redirectUrl;
 
   @BuiltValueField(wireName: r'chargeId')
-  String get chargeId;
+  String? get chargeId;
 
   @BuiltValueField(wireName: r'resumed')
   bool? get resumed;
+
+  @BuiltValueField(wireName: r'downgradeScheduled')
+  bool? get downgradeScheduled;
+
+  @BuiltValueField(wireName: r'effectiveAt')
+  DateTime? get effectiveAt;
 
   ProSubscriptionCheckoutResult._();
 
@@ -48,21 +56,39 @@ class _$ProSubscriptionCheckoutResultSerializer implements PrimitiveSerializer<P
     ProSubscriptionCheckoutResult object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'redirectUrl';
-    yield object.redirectUrl == null ? null : serializers.serialize(
-      object.redirectUrl,
-      specifiedType: const FullType.nullable(String),
-    );
-    yield r'chargeId';
-    yield serializers.serialize(
-      object.chargeId,
-      specifiedType: const FullType(String),
-    );
+    if (object.redirectUrl != null) {
+      yield r'redirectUrl';
+      yield serializers.serialize(
+        object.redirectUrl,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.chargeId != null) {
+      yield r'chargeId';
+      yield serializers.serialize(
+        object.chargeId,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.resumed != null) {
       yield r'resumed';
       yield serializers.serialize(
         object.resumed,
         specifiedType: const FullType(bool),
+      );
+    }
+    if (object.downgradeScheduled != null) {
+      yield r'downgradeScheduled';
+      yield serializers.serialize(
+        object.downgradeScheduled,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.effectiveAt != null) {
+      yield r'effectiveAt';
+      yield serializers.serialize(
+        object.effectiveAt,
+        specifiedType: const FullType.nullable(DateTime),
       );
     }
   }
@@ -109,6 +135,21 @@ class _$ProSubscriptionCheckoutResultSerializer implements PrimitiveSerializer<P
             specifiedType: const FullType(bool),
           ) as bool;
           result.resumed = valueDes;
+          break;
+        case r'downgradeScheduled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.downgradeScheduled = valueDes;
+          break;
+        case r'effectiveAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.effectiveAt = valueDes;
           break;
         default:
           unhandled.add(key);

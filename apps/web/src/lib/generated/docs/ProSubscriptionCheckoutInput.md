@@ -7,6 +7,7 @@
 Name | Type
 ------------ | -------------
 `action` | string
+`tier` | string
 `provider` | string
 `billingCycle` | string
 `channel` | string
@@ -19,6 +20,7 @@ import type { ProSubscriptionCheckoutInput } from ''
 // TODO: Update the object below with actual values
 const example = {
   "action": null,
+  "tier": null,
   "provider": null,
   "billingCycle": null,
   "channel": null,

@@ -27,14 +27,68 @@ import { ResponseError } from "@/lib/generated/runtime";
 
 import { ApiError } from "./api";
 import { resolveApiBaseUrl } from "./api-base";
+import type { ProSubscriptionChargeStatusResult } from "./pro-billing";
 
 const apiBaseUrl = resolveApiBaseUrl();
+
+type ProAuthSession = {
+  accessToken: string;
+  refreshToken: string;
+  expiresInSeconds: number;
+};
+
+export type PaydunyaMethodRecord = {
+  code: string;
+  country: string;
+  label: string;
+  enabled: boolean;
+};
+
+export type PaydunyaMethodListResult = {
+  methods: PaydunyaMethodRecord[];
+};
+
+export type ProSubscriptionFeatureTier = {
+  tier: "standard" | "premium";
+  label: string;
+  priceLabel: string;
+  features?: Array<{
+    label: string;
+    included: boolean;
+  }>;
+};
+
+export type ProSubscriptionFeaturesResult = {
+  billingProviders?: {
+    paydunya?: boolean;
+    manual?: boolean;
+  };
+  planTiers?: ProSubscriptionFeatureTier[];
+};
+
+type ProSessionController = {
+  getAccessToken(): string | null;
+  getRefreshToken(): string | null;
+  applySession(session: ProAuthSession): void;
+  clearSessionIfRefreshTokenMatches(refreshToken: string | null): void;
+};
+
+let proSessionController: ProSessionController | null = null;
+let refreshPromise: Promise<boolean> | null = null;
+
+export function registerProSessionController(controller: ProSessionController) {
+  proSessionController = controller;
+}
 
 function getConfiguration(token?: string) {
   return new Configuration({
     basePath: apiBaseUrl,
     accessToken: token
   });
+}
+
+function resolveAccessToken(token?: string) {
+  return proSessionController?.getAccessToken() ?? token;
 }
 
 function getAuthApi(token?: string) {
@@ -49,12 +103,18 @@ function getProApi(token: string) {
   return new ProApi(getConfiguration(token));
 }
 
-async function withApiError<T>(operation: () => Promise<T>) {
+async function withApiError<T>(operation: () => Promise<T>, retry?: () => Promise<T>) {
   try {
     return await operation();
   } catch (error) {
     if (error instanceof ResponseError) {
       const statusCode = error.response.status;
+      if (statusCode === 401 && retry && !error.response.url.includes("/api/v1/auth/refresh")) {
+        const refreshed = await refreshSessionWithSingleFlight();
+        if (refreshed) {
+          return retry();
+        }
+      }
       let code = "unknown_error";
       let message = "Une erreur est survenue.";
 
@@ -75,6 +135,68 @@ async function withApiError<T>(operation: () => Promise<T>) {
 
     throw error;
   }
+}
+
+async function refreshSessionWithSingleFlight(): Promise<boolean> {
+  if (!proSessionController) return false;
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const attemptedRefreshToken = proSessionController?.getRefreshToken() ?? null;
+    if (!attemptedRefreshToken) return false;
+
+    try {
+      const session = await getAuthApi().apiV1AuthRefreshPost({
+        refreshInput: { refreshToken: attemptedRefreshToken }
+      });
+      proSessionController?.applySession(session);
+      return true;
+    } catch {
+      proSessionController?.clearSessionIfRefreshTokenMatches(attemptedRefreshToken);
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+async function fetchProAuthResponse(path: string, init: RequestInit, token?: string, canRetryUnauthorized = true): Promise<Response> {
+  const accessToken = resolveAccessToken(token);
+  const headers = new Headers(init.headers ?? {});
+  if (init.body != null && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (accessToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    ...init,
+    headers
+  });
+
+  if (response.status === 401 && canRetryUnauthorized && proSessionController && !path.startsWith("/api/v1/auth/")) {
+    const refreshed = await refreshSessionWithSingleFlight();
+    if (refreshed) {
+      return fetchProAuthResponse(path, init, token, false);
+    }
+  }
+
+  if (!response.ok) {
+    const payload = await response.json().catch(async () => ({
+      code: "unknown_error",
+      message: await response.text().catch(() => "Une erreur est survenue.")
+    })) as { code?: string; message?: string };
+    throw new ApiError(response.status, payload.code ?? "unknown_error", payload.message ?? "Une erreur est survenue.");
+  }
+
+  return response;
+}
+
+async function fetchWithProAuth<T>(path: string, init: RequestInit, token?: string, canRetryUnauthorized = true): Promise<T> {
+  const response = await fetchProAuthResponse(path, init, token, canRetryUnauthorized);
+  return response.json() as Promise<T>;
 }
 
 export const dayOfWeekLabel: Record<number, string> = {
@@ -110,7 +232,10 @@ export async function verifyProOtp(payload: OtpVerifyInput) {
 }
 
 export async function fetchProCurrentUser(token: string) {
-  return withApiError(() => getAuthApi(token).apiV1MeGet());
+  return withApiError(
+    () => getAuthApi(resolveAccessToken(token)).apiV1MeGet(),
+    () => getAuthApi(resolveAccessToken(token)).apiV1MeGet()
+  );
 }
 
 export async function logoutPro(token: string, refreshToken?: string) {
@@ -126,55 +251,94 @@ export async function refreshProSession(refreshToken: string) {
 }
 
 export async function fetchProDashboard(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProDashboardGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProDashboardGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProDashboardGet()
+  );
 }
 
 export async function fetchProBookings(token: string, query: ApiV1ProBookingsGetRequest = {}) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsGet(query));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsGet(query),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsGet(query)
+  );
 }
 
 export async function fetchProBooking(token: string, bookingId: string) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsBookingIdGet({ bookingId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdGet({ bookingId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdGet({ bookingId })
+  );
 }
 
 export async function acceptProBooking(token: string, bookingId: string) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsBookingIdAcceptPost({ bookingId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdAcceptPost({ bookingId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdAcceptPost({ bookingId })
+  );
 }
 
 export async function rejectProBooking(token: string, bookingId: string) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsBookingIdRejectPost({ bookingId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdRejectPost({ bookingId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdRejectPost({ bookingId })
+  );
 }
 
 export async function startProBooking(token: string, bookingId: string) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsBookingIdStartPost({ bookingId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdStartPost({ bookingId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdStartPost({ bookingId })
+  );
 }
 
 export async function completeProBooking(token: string, bookingId: string) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsBookingIdCompletePost({ bookingId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdCompletePost({ bookingId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsBookingIdCompletePost({ bookingId })
+  );
 }
 
 export async function createManualProBooking(token: string, payload: ProManualBookingInput) {
-  return withApiError(() => getProApi(token).apiV1ProBookingsManualPost({ proManualBookingInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsManualPost({ proManualBookingInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsManualPost({ proManualBookingInput: payload })
+  );
 }
 
 export async function fetchProClients(token: string, search?: string) {
-  return withApiError(() => getProApi(token).apiV1ProClientsGet({ search }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsGet({ search }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsGet({ search })
+  );
 }
 
 export async function fetchProClient(token: string, clientId: string) {
-  return withApiError(() => getProApi(token).apiV1ProClientsClientIdGet({ clientId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsClientIdGet({ clientId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsClientIdGet({ clientId })
+  );
 }
 
 export async function createClientBenefit(token: string, payload: ProClientBenefitCreateInput) {
-  return withApiError(() => getProApi(token).apiV1ProClientsBenefitsPost({ proClientBenefitCreateInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsBenefitsPost({ proClientBenefitCreateInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsBenefitsPost({ proClientBenefitCreateInput: payload })
+  );
 }
 
 export async function createProVoucher(token: string, payload: ProVoucherCreateInput) {
-  return withApiError(() => getProApi(token).apiV1ProVouchersPost({ proVoucherCreateInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProVouchersPost({ proVoucherCreateInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProVouchersPost({ proVoucherCreateInput: payload })
+  );
 }
 
 export async function fetchProCheckout(token: string, bookingId: string) {
-  return withApiError(() => getProApi(token).apiV1ProCheckoutBookingIdGet({ bookingId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProCheckoutBookingIdGet({ bookingId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProCheckoutBookingIdGet({ bookingId })
+  );
 }
 
 export async function completeProCheckout(token: string, bookingId: string, payload: {
@@ -182,46 +346,36 @@ export async function completeProCheckout(token: string, bookingId: string, payl
   softpayMethod?: string;
   discountXof: number;
   lineItems: Array<{ name: string; amountXof: number }>;
-}) {
-  const cfg = getConfiguration(token);
-  const basePath = cfg.basePath ?? "";
-  const response = await fetch(`${basePath}/api/v1/pro/checkout/${bookingId}/complete`, {
+}): Promise<{
+  paymentId: string;
+  status: string;
+}> {
+  return fetchWithProAuth(`/api/v1/pro/checkout/${bookingId}/complete`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json"
-    },
+    headers: { Accept: "application/json" },
     body: JSON.stringify(payload)
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new ApiError(response.status, "checkout_complete_failed", text);
-  }
-  return response.json();
+  }, token);
 }
 
-export async function fetchPaymentMethods(token: string) {
-  // GET /api/v1/payments/methods — not yet in generated client
-  const cfg = getConfiguration(token);
-  const basePath = cfg.basePath ?? "";
-  const response = await fetch(`${basePath}/api/v1/payments/methods`, {
+export async function fetchPaymentMethods(token: string): Promise<PaydunyaMethodListResult> {
+  return fetchWithProAuth<PaydunyaMethodListResult>("/api/v1/payments/methods", {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json"
-    }
-  });
-  if (!response.ok) throw new ApiError(response.status, "get_payment_methods_failed", await response.text());
-  return response.json();
+    headers: { Accept: "application/json" }
+  }, token);
 }
 
 export async function fetchProSalon(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProSalonGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSalonGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSalonGet()
+  );
 }
 
 export async function updateProSalon(token: string, payload: ProSalonUpdateInput) {
-  return withApiError(() => getProApi(token).apiV1ProSalonPatch({ proSalonUpdateInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSalonPatch({ proSalonUpdateInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSalonPatch({ proSalonUpdateInput: payload })
+  );
 }
 
 export async function uploadProMedia(
@@ -229,233 +383,228 @@ export async function uploadProMedia(
   file: File,
   purpose: string
 ) {
-  return withApiError(async () => {
-    const formData = new FormData();
-    formData.append("purpose", purpose);
-    formData.append("file", file);
-
-    const uploadResponse = await fetch(`${apiBaseUrl}/api/v1/media/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-        // No Content-Type — browser sets it automatically with boundary for multipart/form-data
-      },
-      body: formData
-    });
-
-    if (!uploadResponse.ok) {
-      const payload = await uploadResponse.json().catch(() => ({})) as { code?: string; message?: string };
-      throw new ApiError(uploadResponse.status, payload.code ?? "upload_failed", payload.message ?? "Échec du téléversement.");
-    }
-
-    const result = await uploadResponse.json() as { assetId: string; publicUrl?: string };
-
-    return { id: result.assetId, publicUrl: result.publicUrl ?? "" };
-  });
+  const formData = new FormData();
+  formData.append("purpose", purpose);
+  formData.append("file", file);
+  const result = await fetchWithProAuth<{ assetId: string; publicUrl?: string }>("/api/v1/media/upload", {
+    method: "POST",
+    body: formData
+  }, token);
+  return { id: result.assetId, publicUrl: result.publicUrl ?? "" };
 }
 
 /** Delete a previously uploaded media asset (soft-delete in DB). */
 export async function deleteProMediaAsset(token: string, mediaId: string) {
-  return withApiError(() => getMediaApi(token).apiV1MediaMediaIdDelete({ mediaId }));
+  return withApiError(
+    () => getMediaApi(resolveAccessToken(token) ?? token).apiV1MediaMediaIdDelete({ mediaId }),
+    () => getMediaApi(resolveAccessToken(token) ?? token).apiV1MediaMediaIdDelete({ mediaId })
+  );
 }
 
 export async function fetchProServices(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProServicesGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesGet()
+  );
 }
 
 export async function createProService(token: string, payload: ProServiceCreateInput) {
-  return withApiError(() => getProApi(token).apiV1ProServicesPost({ proServiceCreateInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesPost({ proServiceCreateInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesPost({ proServiceCreateInput: payload })
+  );
 }
 
 export async function updateProService(token: string, serviceId: string, payload: ProServiceUpdateInput) {
-  return withApiError(() => getProApi(token).apiV1ProServicesServiceIdPatch({
-    serviceId,
-    proServiceUpdateInput: payload
-  }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesServiceIdPatch({
+      serviceId,
+      proServiceUpdateInput: payload
+    }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesServiceIdPatch({
+      serviceId,
+      proServiceUpdateInput: payload
+    })
+  );
 }
 
 export async function deleteProService(token: string, serviceId: string) {
-  return withApiError(() => getProApi(token).apiV1ProServicesServiceIdDelete({ serviceId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesServiceIdDelete({ serviceId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProServicesServiceIdDelete({ serviceId })
+  );
 }
 
 export async function fetchProStaff(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProStaffGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffGet()
+  );
 }
 
 export async function createProStaff(token: string, payload: ProStaffCreateInput) {
-  return withApiError(() => getProApi(token).apiV1ProStaffPost({ proStaffCreateInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffPost({ proStaffCreateInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffPost({ proStaffCreateInput: payload })
+  );
 }
 
 export async function updateProStaff(token: string, employeeId: string, payload: ProStaffUpdateInput) {
-  return withApiError(() => getProApi(token).apiV1ProStaffEmployeeIdPatch({
-    employeeId,
-    proStaffUpdateInput: payload
-  }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffEmployeeIdPatch({
+      employeeId,
+      proStaffUpdateInput: payload
+    }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffEmployeeIdPatch({
+      employeeId,
+      proStaffUpdateInput: payload
+    })
+  );
 }
 
 export async function deleteProStaff(token: string, employeeId: string) {
-  return withApiError(() => getProApi(token).apiV1ProStaffEmployeeIdDelete({ employeeId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffEmployeeIdDelete({ employeeId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProStaffEmployeeIdDelete({ employeeId })
+  );
 }
 
 export async function resendProStaffInvite(token: string, employeeId: string): Promise<{ sent: boolean; email: string }> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/pro/staff/${employeeId}/resend-invite`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` }
-  });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({ message: "Envoi impossible." })) as { code?: string; message?: string };
-    throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Envoi impossible.");
-  }
-  return response.json() as Promise<{ sent: boolean; email: string }>;
+  return fetchWithProAuth(`/api/v1/pro/staff/${employeeId}/resend-invite`, {
+    method: "POST"
+  }, token);
 }
 
 export async function fetchProHours(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProHoursGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProHoursGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProHoursGet()
+  );
 }
 
 export async function updateProHours(token: string, hours: ProSalonProfileHoursInner[]) {
-  return withApiError(() => getProApi(token).apiV1ProHoursPut({ proSalonProfileHoursInner: hours }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProHoursPut({ proSalonProfileHoursInner: hours }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProHoursPut({ proSalonProfileHoursInner: hours })
+  );
 }
 
 export async function fetchProBlockedSlots(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProBlockedSlotsGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBlockedSlotsGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBlockedSlotsGet()
+  );
 }
 
 export async function createProBlockedSlot(token: string, payload: ProBlockedSlotCreateInput) {
-  return withApiError(() => getProApi(token).apiV1ProBlockedSlotsPost({ proBlockedSlotCreateInput: payload }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBlockedSlotsPost({ proBlockedSlotCreateInput: payload }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBlockedSlotsPost({ proBlockedSlotCreateInput: payload })
+  );
 }
 
 export async function deleteProBlockedSlot(token: string, slotId: string) {
-  return withApiError(() => getProApi(token).apiV1ProBlockedSlotsSlotIdDelete({ slotId }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBlockedSlotsSlotIdDelete({ slotId }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBlockedSlotsSlotIdDelete({ slotId })
+  );
 }
 
 export async function fetchProAnalytics(token: string, period: "7d" | "30d" | "90d") {
-  return withApiError(() => getProApi(token).apiV1ProAnalyticsGet({ period }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProAnalyticsGet({ period }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProAnalyticsGet({ period })
+  );
 }
 
 export async function fetchProSubscription(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProSubscriptionGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionGet()
+  );
 }
 
-export async function fetchProSubscriptionFeatures(token: string) {
-  const cfg = getConfiguration(token);
-  const basePath = cfg.basePath ?? "";
-  const response = await fetch(`${basePath}/api/v1/pro/subscription/features`, {
+export async function fetchProSubscriptionFeatures(token: string): Promise<ProSubscriptionFeaturesResult> {
+  return fetchWithProAuth<ProSubscriptionFeaturesResult>("/api/v1/pro/subscription/features", {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json"
-    }
-  });
-  if (!response.ok) throw new ApiError(response.status, "fetch_features_failed", await response.text());
-  return response.json();
+    headers: { Accept: "application/json" }
+  }, token);
 }
 
 export async function updateProSubscription(token: string, payload: ProSubscriptionUpdateInput) {
-  return withApiError(() => getProApi(token).apiV1ProSubscriptionPatch({
-    proSubscriptionUpdateInput: payload
-  }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionPatch({
+      proSubscriptionUpdateInput: payload
+    }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionPatch({
+      proSubscriptionUpdateInput: payload
+    })
+  );
 }
 
 export async function checkoutProSubscription(token: string, payload: ProSubscriptionCheckoutInput) {
-  return withApiError(() => getProApi(token).apiV1ProSubscriptionCheckoutPost({
-    proSubscriptionCheckoutInput: payload
-  }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionCheckoutPost({
+      proSubscriptionCheckoutInput: payload
+    }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionCheckoutPost({
+      proSubscriptionCheckoutInput: payload
+    })
+  );
 }
 
 export async function executeProSubscription(token: string, chargeId: string, payload: ProSubscriptionExecuteInput) {
-  return withApiError(() => getProApi(token).apiV1ProSubscriptionChargeChargeIdExecutePost({
-    chargeId,
-    proSubscriptionExecuteInput: payload
-  }));
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionChargeChargeIdExecutePost({
+      chargeId,
+      proSubscriptionExecuteInput: payload
+    }),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProSubscriptionChargeChargeIdExecutePost({
+      chargeId,
+      proSubscriptionExecuteInput: payload
+    })
+  );
 }
 
-export async function cancelProSubscription(token: string, body?: { reason: string; additionalInfo?: string }) {
-  const cfg = getConfiguration(token);
-  const basePath = cfg.basePath ?? "";
-  const response = await fetch(`${basePath}/api/v1/pro/subscription/cancel`, {
+export async function cancelProSubscription(token: string, body?: { reason: string; additionalInfo?: string }): Promise<{ ok: boolean }> {
+  return fetchWithProAuth<{ ok: boolean }>("/api/v1/pro/subscription/cancel", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined
-  });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({})) as { code?: string; message?: string };
-    throw new ApiError(response.status, payload.code ?? "unknown_error", payload.message ?? "Impossible de résilier l'abonnement.");
-  }
-  return response.json();
+  }, token);
 }
 
-export async function retainProSubscription(token: string) {
-  const cfg = getConfiguration(token);
-  const basePath = cfg.basePath ?? "";
-  const response = await fetch(`${basePath}/api/v1/pro/subscription/retain`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
-  });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({})) as { code?: string; message?: string };
-    throw new ApiError(response.status, payload.code ?? "unknown_error", payload.message ?? "Impossible d'annuler la résiliation.");
-  }
-  return response.json();
+export async function retainProSubscription(token: string): Promise<{ ok: boolean }> {
+  return fetchWithProAuth<{ ok: boolean }>("/api/v1/pro/subscription/retain", {
+    method: "POST"
+  }, token);
 }
 
-export async function fetchProSubscriptionChargeStatus(token: string, chargeId: string) {
-  const cfg = getConfiguration(token);
-  const basePath = cfg.basePath ?? "";
-  const response = await fetch(`${basePath}/api/v1/pro/subscription/charge/${chargeId}/status`, {
+export async function fetchProSubscriptionChargeStatus(token: string, chargeId: string): Promise<ProSubscriptionChargeStatusResult> {
+  return fetchWithProAuth<ProSubscriptionChargeStatusResult>(`/api/v1/pro/subscription/charge/${chargeId}/status`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json"
-    }
-  });
-  if (!response.ok) {
-    let code = "unknown_error";
-    let message = "Impossible de récupérer le statut du paiement.";
-    try {
-      const payload = (await response.clone().json()) as { code?: string; message?: string };
-      code = payload.code ?? code;
-      message = payload.message ?? message;
-    } catch {
-      // ignore parsing failures and use fallback message
-    }
-    throw new ApiError(response.status, code, message);
-  }
-  return response.json();
+    headers: { Accept: "application/json" }
+  }, token);
 }
 
 export async function fetchProInvoices(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProInvoicesGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProInvoicesGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProInvoicesGet()
+  );
 }
 
 export async function downloadProInvoicePdf(token: string, invoiceId: string) {
-  return withApiError(async () => {
-    const response = await fetch(`${apiBaseUrl}/api/v1/pro/invoices/${invoiceId}/pdf`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      let code = "unknown_error";
-      let message = "Téléchargement impossible.";
-      try {
-        const payload = (await response.clone().json()) as { code?: string; message?: string };
-        code = payload.code ?? code;
-        message = payload.message ?? message;
-      } catch {
-        // ignore parsing failures and use fallback message
-      }
-      throw new ApiError(response.status, code, message);
-    }
-
-    return response.blob();
-  });
+  const response = await fetchProAuthResponse(`/api/v1/pro/invoices/${invoiceId}/pdf`, {
+    method: "GET"
+  }, token);
+  return response.blob();
 }
 
 export async function fetchProPayouts(token: string) {
-  return withApiError(() => getProApi(token).apiV1ProPayoutsGet());
+  return withApiError(
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProPayoutsGet(),
+    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProPayoutsGet()
+  );
 }
 
 function getNotificationsApi(token: string) {
@@ -464,21 +613,33 @@ function getNotificationsApi(token: string) {
 
 export async function fetchNotificationsUnreadCount(token: string): Promise<number> {
   return withApiError(async () => {
-    const result = await getNotificationsApi(token).apiV1NotificationsGet({});
+    const result = await getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsGet({});
+    return (result as unknown as { unreadCount: number }).unreadCount ?? 0;
+  }, async () => {
+    const result = await getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsGet({});
     return (result as unknown as { unreadCount: number }).unreadCount ?? 0;
   });
 }
 
 export async function fetchNotifications(token: string) {
-  return withApiError(() => getNotificationsApi(token).apiV1NotificationsGet());
+  return withApiError(
+    () => getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsGet(),
+    () => getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsGet()
+  );
 }
 
 export async function markNotificationRead(token: string, id: string) {
-  return withApiError(() => getNotificationsApi(token).apiV1NotificationsIdReadPost({ id }));
+  return withApiError(
+    () => getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsIdReadPost({ id }),
+    () => getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsIdReadPost({ id })
+  );
 }
 
 export async function markAllNotificationsRead(token: string) {
-  return withApiError(() => getNotificationsApi(token).apiV1NotificationsReadAllPost());
+  return withApiError(
+    () => getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsReadAllPost(),
+    () => getNotificationsApi(resolveAccessToken(token) ?? token).apiV1NotificationsReadAllPost()
+  );
 }
 
 export async function redeemStaffInviteToken(inviteToken: string, userId: string): Promise<{ accessToken: string; refreshToken: string }> {

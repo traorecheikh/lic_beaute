@@ -8,9 +8,11 @@ import 'package:beauteavenue_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**redirectUrl** | **String** |  | 
-**chargeId** | **String** |  | 
+**redirectUrl** | **String** |  | [optional] 
+**chargeId** | **String** |  | [optional] 
 **resumed** | **bool** |  | [optional] 
+**downgradeScheduled** | **bool** |  | [optional] 
+**effectiveAt** | [**DateTime**](DateTime.md) |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

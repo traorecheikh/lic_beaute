@@ -7,9 +7,6 @@ part of 'payment_initiate_input.dart';
 // **************************************************************************
 
 const PaymentInitiateInputProviderEnum
-    _$paymentInitiateInputProviderEnum_intech =
-    const PaymentInitiateInputProviderEnum._('intech');
-const PaymentInitiateInputProviderEnum
     _$paymentInitiateInputProviderEnum_paydunya =
     const PaymentInitiateInputProviderEnum._('paydunya');
 const PaymentInitiateInputProviderEnum
@@ -19,8 +16,6 @@ const PaymentInitiateInputProviderEnum
 PaymentInitiateInputProviderEnum _$paymentInitiateInputProviderEnumValueOf(
     String name) {
   switch (name) {
-    case 'intech':
-      return _$paymentInitiateInputProviderEnum_intech;
     case 'paydunya':
       return _$paymentInitiateInputProviderEnum_paydunya;
     case 'manual':
@@ -33,11 +28,60 @@ PaymentInitiateInputProviderEnum _$paymentInitiateInputProviderEnumValueOf(
 final BuiltSet<PaymentInitiateInputProviderEnum>
     _$paymentInitiateInputProviderEnumValues = BuiltSet<
         PaymentInitiateInputProviderEnum>(const <PaymentInitiateInputProviderEnum>[
-  _$paymentInitiateInputProviderEnum_intech,
   _$paymentInitiateInputProviderEnum_paydunya,
   _$paymentInitiateInputProviderEnum_manual,
 ]);
 
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_carteBancaire =
+    const PaymentInitiateInputChannelEnum._('carteBancaire');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_waveSenegal =
+    const PaymentInitiateInputChannelEnum._('waveSenegal');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_orangeSenegal =
+    const PaymentInitiateInputChannelEnum._('orangeSenegal');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_freeSenegal =
+    const PaymentInitiateInputChannelEnum._('freeSenegal');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_wizallSenegal =
+    const PaymentInitiateInputChannelEnum._('wizallSenegal');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_expressoSn =
+    const PaymentInitiateInputChannelEnum._('expressoSn');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_omCi =
+    const PaymentInitiateInputChannelEnum._('omCi');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_mtnCi =
+    const PaymentInitiateInputChannelEnum._('mtnCi');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_moovCi =
+    const PaymentInitiateInputChannelEnum._('moovCi');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_waveCi =
+    const PaymentInitiateInputChannelEnum._('waveCi');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_omBf =
+    const PaymentInitiateInputChannelEnum._('omBf');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_moovBf =
+    const PaymentInitiateInputChannelEnum._('moovBf');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_moovBj =
+    const PaymentInitiateInputChannelEnum._('moovBj');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_mtnBj =
+    const PaymentInitiateInputChannelEnum._('mtnBj');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_tMoneyTg =
+    const PaymentInitiateInputChannelEnum._('tMoneyTg');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_moovTg =
+    const PaymentInitiateInputChannelEnum._('moovTg');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_omMl =
+    const PaymentInitiateInputChannelEnum._('omMl');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_moovMl =
+    const PaymentInitiateInputChannelEnum._('moovMl');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_mtnCm =
+    const PaymentInitiateInputChannelEnum._('mtnCm');
+const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_djamo =
+    const PaymentInitiateInputChannelEnum._('djamo');
+const PaymentInitiateInputChannelEnum
+    _$paymentInitiateInputChannelEnum_paydunyaWallet =
+    const PaymentInitiateInputChannelEnum._('paydunyaWallet');
 const PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnum_wave =
     const PaymentInitiateInputChannelEnum._('wave');
 const PaymentInitiateInputChannelEnum
@@ -161,6 +205,48 @@ const PaymentInitiateInputChannelEnum
 PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnumValueOf(
     String name) {
   switch (name) {
+    case 'carteBancaire':
+      return _$paymentInitiateInputChannelEnum_carteBancaire;
+    case 'waveSenegal':
+      return _$paymentInitiateInputChannelEnum_waveSenegal;
+    case 'orangeSenegal':
+      return _$paymentInitiateInputChannelEnum_orangeSenegal;
+    case 'freeSenegal':
+      return _$paymentInitiateInputChannelEnum_freeSenegal;
+    case 'wizallSenegal':
+      return _$paymentInitiateInputChannelEnum_wizallSenegal;
+    case 'expressoSn':
+      return _$paymentInitiateInputChannelEnum_expressoSn;
+    case 'omCi':
+      return _$paymentInitiateInputChannelEnum_omCi;
+    case 'mtnCi':
+      return _$paymentInitiateInputChannelEnum_mtnCi;
+    case 'moovCi':
+      return _$paymentInitiateInputChannelEnum_moovCi;
+    case 'waveCi':
+      return _$paymentInitiateInputChannelEnum_waveCi;
+    case 'omBf':
+      return _$paymentInitiateInputChannelEnum_omBf;
+    case 'moovBf':
+      return _$paymentInitiateInputChannelEnum_moovBf;
+    case 'moovBj':
+      return _$paymentInitiateInputChannelEnum_moovBj;
+    case 'mtnBj':
+      return _$paymentInitiateInputChannelEnum_mtnBj;
+    case 'tMoneyTg':
+      return _$paymentInitiateInputChannelEnum_tMoneyTg;
+    case 'moovTg':
+      return _$paymentInitiateInputChannelEnum_moovTg;
+    case 'omMl':
+      return _$paymentInitiateInputChannelEnum_omMl;
+    case 'moovMl':
+      return _$paymentInitiateInputChannelEnum_moovMl;
+    case 'mtnCm':
+      return _$paymentInitiateInputChannelEnum_mtnCm;
+    case 'djamo':
+      return _$paymentInitiateInputChannelEnum_djamo;
+    case 'paydunyaWallet':
+      return _$paymentInitiateInputChannelEnum_paydunyaWallet;
     case 'wave':
       return _$paymentInitiateInputChannelEnum_wave;
     case 'orangeMoney':
@@ -249,6 +335,27 @@ PaymentInitiateInputChannelEnum _$paymentInitiateInputChannelEnumValueOf(
 final BuiltSet<PaymentInitiateInputChannelEnum>
     _$paymentInitiateInputChannelEnumValues = BuiltSet<
         PaymentInitiateInputChannelEnum>(const <PaymentInitiateInputChannelEnum>[
+  _$paymentInitiateInputChannelEnum_carteBancaire,
+  _$paymentInitiateInputChannelEnum_waveSenegal,
+  _$paymentInitiateInputChannelEnum_orangeSenegal,
+  _$paymentInitiateInputChannelEnum_freeSenegal,
+  _$paymentInitiateInputChannelEnum_wizallSenegal,
+  _$paymentInitiateInputChannelEnum_expressoSn,
+  _$paymentInitiateInputChannelEnum_omCi,
+  _$paymentInitiateInputChannelEnum_mtnCi,
+  _$paymentInitiateInputChannelEnum_moovCi,
+  _$paymentInitiateInputChannelEnum_waveCi,
+  _$paymentInitiateInputChannelEnum_omBf,
+  _$paymentInitiateInputChannelEnum_moovBf,
+  _$paymentInitiateInputChannelEnum_moovBj,
+  _$paymentInitiateInputChannelEnum_mtnBj,
+  _$paymentInitiateInputChannelEnum_tMoneyTg,
+  _$paymentInitiateInputChannelEnum_moovTg,
+  _$paymentInitiateInputChannelEnum_omMl,
+  _$paymentInitiateInputChannelEnum_moovMl,
+  _$paymentInitiateInputChannelEnum_mtnCm,
+  _$paymentInitiateInputChannelEnum_djamo,
+  _$paymentInitiateInputChannelEnum_paydunyaWallet,
   _$paymentInitiateInputChannelEnum_wave,
   _$paymentInitiateInputChannelEnum_orangeMoney,
   _$paymentInitiateInputChannelEnum_freeMoney,
@@ -301,12 +408,10 @@ Serializer<PaymentInitiateInputChannelEnum>
 class _$PaymentInitiateInputProviderEnumSerializer
     implements PrimitiveSerializer<PaymentInitiateInputProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
@@ -333,6 +438,27 @@ class _$PaymentInitiateInputProviderEnumSerializer
 class _$PaymentInitiateInputChannelEnumSerializer
     implements PrimitiveSerializer<PaymentInitiateInputChannelEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
+    'carteBancaire': 'carte_bancaire',
+    'waveSenegal': 'wave_senegal',
+    'orangeSenegal': 'orange_senegal',
+    'freeSenegal': 'free_senegal',
+    'wizallSenegal': 'wizall_senegal',
+    'expressoSn': 'expresso_sn',
+    'omCi': 'om_ci',
+    'mtnCi': 'mtn_ci',
+    'moovCi': 'moov_ci',
+    'waveCi': 'wave_ci',
+    'omBf': 'om_bf',
+    'moovBf': 'moov_bf',
+    'moovBj': 'moov_bj',
+    'mtnBj': 'mtn_bj',
+    'tMoneyTg': 't_money_tg',
+    'moovTg': 'moov_tg',
+    'omMl': 'om_ml',
+    'moovMl': 'moov_ml',
+    'mtnCm': 'mtn_cm',
+    'djamo': 'djamo',
+    'paydunyaWallet': 'paydunya_wallet',
     'wave': 'wave',
     'orangeMoney': 'orange_money',
     'freeMoney': 'free_money',
@@ -375,6 +501,27 @@ class _$PaymentInitiateInputChannelEnumSerializer
     'paydunyaCamtelCm': 'paydunya_camtel_cm',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
+    'carte_bancaire': 'carteBancaire',
+    'wave_senegal': 'waveSenegal',
+    'orange_senegal': 'orangeSenegal',
+    'free_senegal': 'freeSenegal',
+    'wizall_senegal': 'wizallSenegal',
+    'expresso_sn': 'expressoSn',
+    'om_ci': 'omCi',
+    'mtn_ci': 'mtnCi',
+    'moov_ci': 'moovCi',
+    'wave_ci': 'waveCi',
+    'om_bf': 'omBf',
+    'moov_bf': 'moovBf',
+    'moov_bj': 'moovBj',
+    'mtn_bj': 'mtnBj',
+    't_money_tg': 'tMoneyTg',
+    'moov_tg': 'moovTg',
+    'om_ml': 'omMl',
+    'moov_ml': 'moovMl',
+    'mtn_cm': 'mtnCm',
+    'djamo': 'djamo',
+    'paydunya_wallet': 'paydunyaWallet',
     'wave': 'wave',
     'orange_money': 'orangeMoney',
     'free_money': 'freeMoney',

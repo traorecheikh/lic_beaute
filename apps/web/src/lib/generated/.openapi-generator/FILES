@@ -64,6 +64,7 @@ docs/ApiV1BookingsBookingIdReviewPost201Response.md
 docs/ApiV1BookingsBookingIdReviewPostRequest.md
 docs/ApiV1ConfigPricingGet200Response.md
 docs/ApiV1ConfigPricingGet200ResponseStandard.md
+docs/ApiV1ConfigSupportGet200Response.md
 docs/ApiV1MeAddressesAddressIdPatchRequest.md
 docs/ApiV1MeAddressesGet200Response.md
 docs/ApiV1MeAddressesGet200ResponseItemsInner.md
@@ -253,6 +254,7 @@ models/ApiV1BookingsBookingIdReviewPost201Response.ts
 models/ApiV1BookingsBookingIdReviewPostRequest.ts
 models/ApiV1ConfigPricingGet200Response.ts
 models/ApiV1ConfigPricingGet200ResponseStandard.ts
+models/ApiV1ConfigSupportGet200Response.ts
 models/ApiV1MeAddressesAddressIdPatchRequest.ts
 models/ApiV1MeAddressesGet200Response.ts
 models/ApiV1MeAddressesGet200ResponseItemsInner.ts

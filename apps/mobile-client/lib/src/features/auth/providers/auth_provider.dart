@@ -52,10 +52,7 @@ class AuthActions {
 
   Future<void> requestEmailOtp({required String email}) async {
     final dio = _ref.read(dioProvider);
-    await dio.post(
-      '/api/v1/auth/otp/email/request',
-      data: {'email': email},
-    );
+    await dio.post('/api/v1/auth/otp/email/request', data: {'email': email});
   }
 
   Future<void> verifyEmailOtp({
@@ -118,9 +115,15 @@ class AuthActions {
   }
 
   Future<void> logout() async {
+    final session = _ref.read(sessionProvider);
     try {
-      final api = _ref.read(apiClientProvider).getAuthApi();
-      await api.apiV1AuthLogoutPost();
+      final dio = _ref.read(dioProvider);
+      await dio.post<void>(
+        '/api/v1/auth/logout',
+        data: session.refreshToken == null
+            ? const <String, dynamic>{}
+            : {'refreshToken': session.refreshToken},
+      );
     } finally {
       await _ref.read(sessionProvider.notifier).logout();
     }

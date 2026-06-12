@@ -30,5 +30,5 @@ Future<List<T>> fetchCachedItemList<T>({
     items = (cached?['items'] as List<dynamic>?) ?? const [];
   }
 
-  return items.cast<Map<String, dynamic>>().map(fromJson).toList();
+  return AppModelCache.normalizeMapList(items).map(fromJson).toList();
 }

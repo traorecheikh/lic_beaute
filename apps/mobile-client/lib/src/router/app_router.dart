@@ -149,10 +149,9 @@ String? resolveRequiredSetupRedirect({
   }
 
   if (cachedPaymentMethods != null) {
-    final items = (cachedPaymentMethods['items'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map(PaymentMethodRecord.fromJson)
-        .toList();
+    final items = AppModelCache.normalizeMapList(
+      (cachedPaymentMethods['items'] as List<dynamic>? ?? const []),
+    ).map(PaymentMethodRecord.fromJson).toList();
     if (items.isEmpty) {
       if (location == AppRoutes.profilePayments) return null;
       return AppRoutes.profilePaymentsSetup(next: location);
@@ -301,7 +300,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'payment-methods',
                 builder: (_, state) => PaymentMethodsPage(
                   requiredSetup: state.uri.queryParameters['required'] == '1',
-                  nextRoute: state.uri.queryParameters['next'] ?? AppRoutes.home,
+                  nextRoute:
+                      state.uri.queryParameters['next'] ?? AppRoutes.home,
                 ),
               ),
               // Promos hidden —
@@ -524,14 +524,19 @@ class _BookingRouteErrorPage extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.onPrimary,
-                    padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 32.w,
+                      vertical: 14.h,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                   ),
                   child: Text(
                     "Retour à l'accueil",
-                    style: AppTextStyles.labelLg.copyWith(color: AppColors.onPrimary),
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: AppColors.onPrimary,
+                    ),
                   ),
                 ),
               ],

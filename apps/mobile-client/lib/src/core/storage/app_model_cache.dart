@@ -49,7 +49,25 @@ class AppModelCache {
   static Map<String, dynamic>? getMap(String boxName, String key) {
     final data = _dataFor(boxName, key);
     if (data is! Map) return null;
-    return Map<String, dynamic>.from(data);
+    return normalizeMap(data);
+  }
+
+  static Map<String, dynamic> normalizeMap(Map<dynamic, dynamic> value) {
+    return value.map(
+      (key, entry) => MapEntry(key.toString(), _normalizeValue(entry)),
+    );
+  }
+
+  static List<Map<String, dynamic>> normalizeMapList(List<dynamic> values) {
+    return values
+        .whereType<Map>()
+        .map((value) => normalizeMap(value))
+        .toList(growable: false);
+  }
+
+  static Future<void> remove(String boxName, String key) async {
+    final box = _boxFor(boxName);
+    await box.delete(key);
   }
 
   static DateTime? getCachedAt(String boxName, String key) {
@@ -66,6 +84,14 @@ class AppModelCache {
     final cached = box.get(key);
     if (cached is! Map) return null;
     return cached['data'];
+  }
+
+  static Object? _normalizeValue(Object? value) {
+    if (value is Map) return normalizeMap(value);
+    if (value is List) {
+      return value.map(_normalizeValue).toList(growable: false);
+    }
+    return value;
   }
 
   static dynamic _boxFor(String boxName) {

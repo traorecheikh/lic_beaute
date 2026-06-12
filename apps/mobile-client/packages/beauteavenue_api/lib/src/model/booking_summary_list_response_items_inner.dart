@@ -64,7 +64,7 @@ abstract class BookingSummaryListResponseItemsInner implements Built<BookingSumm
 
   @BuiltValueField(wireName: r'paymentProvider')
   BookingSummaryListResponseItemsInnerPaymentProviderEnum? get paymentProvider;
-  // enum paymentProviderEnum {  intech,  paydunya,  manual,  };
+  // enum paymentProviderEnum {  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'paymentId')
   String? get paymentId;
@@ -346,8 +346,6 @@ class BookingSummaryListResponseItemsInnerDepositPaymentStatusEnum extends EnumC
 
 class BookingSummaryListResponseItemsInnerPaymentProviderEnum extends EnumClass {
 
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const BookingSummaryListResponseItemsInnerPaymentProviderEnum intech = _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const BookingSummaryListResponseItemsInnerPaymentProviderEnum paydunya = _$bookingSummaryListResponseItemsInnerPaymentProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'manual')

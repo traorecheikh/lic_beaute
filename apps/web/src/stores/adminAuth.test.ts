@@ -6,18 +6,20 @@ import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
 import { useAdminAuthStore } from "./adminAuth";
 
-const { fetchCurrentUser, loginAdmin, logoutAdmin, refreshAdminSession } = vi.hoisted(() => ({
+const { fetchCurrentUser, loginAdmin, logoutAdmin, refreshAdminSession, registerAdminSessionController } = vi.hoisted(() => ({
   fetchCurrentUser: vi.fn(),
   loginAdmin: vi.fn(),
   logoutAdmin: vi.fn(),
-  refreshAdminSession: vi.fn()
+  refreshAdminSession: vi.fn(),
+  registerAdminSessionController: vi.fn()
 }));
 
 vi.mock("@/lib/api", () => ({
   fetchCurrentUser,
   loginAdmin,
   logoutAdmin,
-  refreshAdminSession
+  refreshAdminSession,
+  registerAdminSessionController
 }));
 
 function installLocalStorage() {

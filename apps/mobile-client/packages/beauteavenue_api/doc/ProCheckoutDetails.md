@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **bookingId** | **String** |  | 
 **status** | **String** |  | 
 **clientName** | **String** |  | 
+**clientPhone** | **String** |  | 
 **serviceName** | **String** |  | 
 **startsAt** | [**DateTime**](DateTime.md) |  | 
 **staffName** | **String** |  | 

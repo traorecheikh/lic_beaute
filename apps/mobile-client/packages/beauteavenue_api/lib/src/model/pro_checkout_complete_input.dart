@@ -21,7 +21,7 @@ part 'pro_checkout_complete_input.g.dart';
 abstract class ProCheckoutCompleteInput implements Built<ProCheckoutCompleteInput, ProCheckoutCompleteInputBuilder> {
   @BuiltValueField(wireName: r'paymentMethod')
   ProCheckoutCompleteInputPaymentMethodEnum get paymentMethod;
-  // enum paymentMethodEnum {  cash,  intech,  other,  };
+  // enum paymentMethodEnum {  cash,  other,  };
 
   @BuiltValueField(wireName: r'lineItems')
   BuiltList<ProCheckoutDetailsLineItemsInner> get lineItems;
@@ -164,8 +164,6 @@ class ProCheckoutCompleteInputPaymentMethodEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'cash')
   static const ProCheckoutCompleteInputPaymentMethodEnum cash = _$proCheckoutCompleteInputPaymentMethodEnum_cash;
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const ProCheckoutCompleteInputPaymentMethodEnum intech = _$proCheckoutCompleteInputPaymentMethodEnum_intech;
   @BuiltValueEnumConst(wireName: r'other')
   static const ProCheckoutCompleteInputPaymentMethodEnum other = _$proCheckoutCompleteInputPaymentMethodEnum_other;
 

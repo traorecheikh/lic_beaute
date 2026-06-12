@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | 
 **tier** | **String** |  | 
+**pendingTier** | **String** |  | [optional] 
 **status** | **String** |  | 
 **renewsAt** | [**DateTime**](DateTime.md) |  | 
 **expiresAt** | [**DateTime**](DateTime.md) |  | 

@@ -10,9 +10,6 @@ const ProSubscriptionBillingMethodProviderEnum
     _$proSubscriptionBillingMethodProviderEnum_paydunya =
     const ProSubscriptionBillingMethodProviderEnum._('paydunya');
 const ProSubscriptionBillingMethodProviderEnum
-    _$proSubscriptionBillingMethodProviderEnum_intech =
-    const ProSubscriptionBillingMethodProviderEnum._('intech');
-const ProSubscriptionBillingMethodProviderEnum
     _$proSubscriptionBillingMethodProviderEnum_manual =
     const ProSubscriptionBillingMethodProviderEnum._('manual');
 
@@ -21,8 +18,6 @@ ProSubscriptionBillingMethodProviderEnum
   switch (name) {
     case 'paydunya':
       return _$proSubscriptionBillingMethodProviderEnum_paydunya;
-    case 'intech':
-      return _$proSubscriptionBillingMethodProviderEnum_intech;
     case 'manual':
       return _$proSubscriptionBillingMethodProviderEnum_manual;
     default:
@@ -34,7 +29,6 @@ final BuiltSet<ProSubscriptionBillingMethodProviderEnum>
     _$proSubscriptionBillingMethodProviderEnumValues = BuiltSet<
         ProSubscriptionBillingMethodProviderEnum>(const <ProSubscriptionBillingMethodProviderEnum>[
   _$proSubscriptionBillingMethodProviderEnum_paydunya,
-  _$proSubscriptionBillingMethodProviderEnum_intech,
   _$proSubscriptionBillingMethodProviderEnum_manual,
 ]);
 
@@ -46,12 +40,10 @@ class _$ProSubscriptionBillingMethodProviderEnumSerializer
     implements PrimitiveSerializer<ProSubscriptionBillingMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
 

@@ -92,6 +92,8 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**apiV1AdminSubscriptionsSubscriptionIdOverridePost**](doc/AdminApi.md#apiv1adminsubscriptionssubscriptionidoverridepost) | **POST** /api/v1/admin/subscriptions/{subscriptionId}/override | Apply admin subscription override
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthLoginPost**](doc/AuthApi.md#apiv1authloginpost) | **POST** /api/v1/auth/login | Email login
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthLogoutPost**](doc/AuthApi.md#apiv1authlogoutpost) | **POST** /api/v1/auth/logout | Logout current session
+[*AuthApi*](doc/AuthApi.md) | [**apiV1AuthOtpEmailRequestPost**](doc/AuthApi.md#apiv1authotpemailrequestpost) | **POST** /api/v1/auth/otp/email/request | Request an OTP code via email
+[*AuthApi*](doc/AuthApi.md) | [**apiV1AuthOtpEmailVerifyPost**](doc/AuthApi.md#apiv1authotpemailverifypost) | **POST** /api/v1/auth/otp/email/verify | Verify email OTP and create/login client
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthOtpRequestPost**](doc/AuthApi.md#apiv1authotprequestpost) | **POST** /api/v1/auth/otp/request | Request an OTP code
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthOtpVerifyPost**](doc/AuthApi.md#apiv1authotpverifypost) | **POST** /api/v1/auth/otp/verify | Verify OTP
 [*AuthApi*](doc/AuthApi.md) | [**apiV1AuthRefreshPost**](doc/AuthApi.md#apiv1authrefreshpost) | **POST** /api/v1/auth/refresh | Refresh access token
@@ -119,6 +121,7 @@ Class | Method | HTTP request | Description
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsGet**](doc/BookingsApi.md#apiv1bookingsget) | **GET** /api/v1/bookings | List bookings
 [*BookingsApi*](doc/BookingsApi.md) | [**apiV1BookingsPost**](doc/BookingsApi.md#apiv1bookingspost) | **POST** /api/v1/bookings | Create booking
 [*CatalogApi*](doc/CatalogApi.md) | [**apiV1ConfigPricingGet**](doc/CatalogApi.md#apiv1configpricingget) | **GET** /api/v1/config/pricing | Get subscription pricing tiers
+[*CatalogApi*](doc/CatalogApi.md) | [**apiV1ConfigSupportGet**](doc/CatalogApi.md#apiv1configsupportget) | **GET** /api/v1/config/support | Get support contact info
 [*CatalogApi*](doc/CatalogApi.md) | [**apiV1SalonsIdAvailabilityGet**](doc/CatalogApi.md#apiv1salonsidavailabilityget) | **GET** /api/v1/salons/{id}/availability | Get available booking slots
 [*CatalogApi*](doc/CatalogApi.md) | [**apiV1SalonsIdReviewsGet**](doc/CatalogApi.md#apiv1salonsidreviewsget) | **GET** /api/v1/salons/{id}/reviews | List salon reviews
 [*FavoritesApi*](doc/FavoritesApi.md) | [**apiV1FavoritesGet**](doc/FavoritesApi.md#apiv1favoritesget) | **GET** /api/v1/favorites | List client favorites
@@ -140,7 +143,6 @@ Class | Method | HTTP request | Description
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdGet**](doc/PaymentsApi.md#apiv1paymentspaymentidget) | **GET** /api/v1/payments/{paymentId} | Get payment status
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdReconcilePost**](doc/PaymentsApi.md#apiv1paymentspaymentidreconcilepost) | **POST** /api/v1/payments/{paymentId}/reconcile | Manually reconcile a payment (admin or pro)
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsPaymentIdRefundPost**](doc/PaymentsApi.md#apiv1paymentspaymentidrefundpost) | **POST** /api/v1/payments/{paymentId}/refund | Refund a payment
-[*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsWebhooksIntechPost**](doc/PaymentsApi.md#apiv1paymentswebhooksintechpost) | **POST** /api/v1/payments/webhooks/intech | Intech payment webhook callback
 [*PaymentsApi*](doc/PaymentsApi.md) | [**apiV1PaymentsWebhooksPaydunyaPost**](doc/PaymentsApi.md#apiv1paymentswebhookspaydunyapost) | **POST** /api/v1/payments/webhooks/paydunya | PayDunya payment webhook callback
 [*ProApi*](doc/ProApi.md) | [**apiV1ProAnalyticsGet**](doc/ProApi.md#apiv1proanalyticsget) | **GET** /api/v1/pro/analytics | Get salon analytics
 [*ProApi*](doc/ProApi.md) | [**apiV1ProBlockedSlotsGet**](doc/ProApi.md#apiv1problockedslotsget) | **GET** /api/v1/pro/blocked-slots | List blocked slots
@@ -209,6 +211,7 @@ Class | Method | HTTP request | Description
  - [AdminSubscriptionDetailEntitlementsInner](doc/AdminSubscriptionDetailEntitlementsInner.md)
  - [AdminSubscriptionDetailEventsInner](doc/AdminSubscriptionDetailEventsInner.md)
  - [AdminSubscriptionDetailInvoicesInner](doc/AdminSubscriptionDetailInvoicesInner.md)
+ - [AdminSubscriptionDetailPendingChargesInner](doc/AdminSubscriptionDetailPendingChargesInner.md)
  - [AdminSubscriptionListResponse](doc/AdminSubscriptionListResponse.md)
  - [AdminSubscriptionListResponseItemsInner](doc/AdminSubscriptionListResponseItemsInner.md)
  - [AdminSubscriptionListResponseSummary](doc/AdminSubscriptionListResponseSummary.md)
@@ -240,6 +243,7 @@ Class | Method | HTTP request | Description
  - [ApiV1BookingsBookingIdReviewPostRequest](doc/ApiV1BookingsBookingIdReviewPostRequest.md)
  - [ApiV1ConfigPricingGet200Response](doc/ApiV1ConfigPricingGet200Response.md)
  - [ApiV1ConfigPricingGet200ResponseStandard](doc/ApiV1ConfigPricingGet200ResponseStandard.md)
+ - [ApiV1ConfigSupportGet200Response](doc/ApiV1ConfigSupportGet200Response.md)
  - [ApiV1MeAddressesAddressIdPatchRequest](doc/ApiV1MeAddressesAddressIdPatchRequest.md)
  - [ApiV1MeAddressesGet200Response](doc/ApiV1MeAddressesGet200Response.md)
  - [ApiV1MeAddressesGet200ResponseItemsInner](doc/ApiV1MeAddressesGet200ResponseItemsInner.md)
@@ -277,6 +281,9 @@ Class | Method | HTTP request | Description
  - [CurrentUser](doc/CurrentUser.md)
  - [DeletedResponse](doc/DeletedResponse.md)
  - [EmailLoginInput](doc/EmailLoginInput.md)
+ - [EmailOtpAcceptedResponse](doc/EmailOtpAcceptedResponse.md)
+ - [EmailOtpRequestInput](doc/EmailOtpRequestInput.md)
+ - [EmailOtpVerifyInput](doc/EmailOtpVerifyInput.md)
  - [FavoriteItem](doc/FavoriteItem.md)
  - [FavoriteListResponse](doc/FavoriteListResponse.md)
  - [HealthGet200Response](doc/HealthGet200Response.md)

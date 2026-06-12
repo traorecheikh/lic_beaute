@@ -24,6 +24,11 @@ import {
     ApiV1ConfigPricingGet200ResponseToJSON,
 } from '../models/ApiV1ConfigPricingGet200Response';
 import {
+    type ApiV1ConfigSupportGet200Response,
+    ApiV1ConfigSupportGet200ResponseFromJSON,
+    ApiV1ConfigSupportGet200ResponseToJSON,
+} from '../models/ApiV1ConfigSupportGet200Response';
+import {
     type ApiV1SalonsIdAvailabilityGet200ResponseInner,
     ApiV1SalonsIdAvailabilityGet200ResponseInnerFromJSON,
     ApiV1SalonsIdAvailabilityGet200ResponseInnerToJSON,
@@ -86,6 +91,43 @@ export class CatalogApi extends runtime.BaseAPI {
      */
     async apiV1ConfigPricingGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1ConfigPricingGet200Response> {
         const response = await this.apiV1ConfigPricingGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for apiV1ConfigSupportGet without sending the request
+     */
+    async apiV1ConfigSupportGetRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/config/support`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get support contact info
+     */
+    async apiV1ConfigSupportGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiV1ConfigSupportGet200Response>> {
+        const requestOptions = await this.apiV1ConfigSupportGetRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiV1ConfigSupportGet200ResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get support contact info
+     */
+    async apiV1ConfigSupportGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiV1ConfigSupportGet200Response> {
+        const response = await this.apiV1ConfigSupportGetRaw(initOverrides);
         return await response.value();
     }
 

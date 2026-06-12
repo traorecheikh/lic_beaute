@@ -7,6 +7,7 @@
 Name | Type
 ------------ | -------------
 `fullName` | string
+`phone` | string
 `city` | string
 `avatarMediaId` | string
 `preferredContactChannel` | string
@@ -24,6 +25,7 @@ import type { UpdateMeInput } from ''
 // TODO: Update the object below with actual values
 const example = {
   "fullName": null,
+  "phone": null,
   "city": null,
   "avatarMediaId": null,
   "preferredContactChannel": null,

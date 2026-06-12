@@ -10,6 +10,7 @@ import {
   logoutPro,
   magicLoginPro,
   redeemStaffInviteToken,
+  registerProSessionController,
   refreshProSession,
   resetProPassword,
   setupProAccount,
@@ -51,14 +52,17 @@ export const useProAuthStore = defineStore("pro-auth", () => {
   }
 
   async function refreshSessionIfPossible(): Promise<boolean> {
-    if (!refreshToken.value) return false;
+    const attemptedRefreshToken = refreshToken.value;
+    if (!attemptedRefreshToken) return false;
     try {
-      const session = await refreshProSession(refreshToken.value);
+      const session = await refreshProSession(attemptedRefreshToken);
       accessToken.value = session.accessToken;
       refreshToken.value = session.refreshToken;
       return true;
     } catch {
-      clearSession();
+      if (refreshToken.value === attemptedRefreshToken) {
+        clearSession();
+      }
       return false;
     }
   }
@@ -97,29 +101,7 @@ export const useProAuthStore = defineStore("pro-auth", () => {
         salonApprovalStatus.value = null;
       }
     } catch (error) {
-      const isAuthError = error instanceof ApiError && error.statusCode === 401;
-      if (isAuthError && (await refreshSessionIfPossible()) && accessToken.value) {
-        try {
-          const user = await fetchProCurrentUser(accessToken.value);
-          if (!isProRole(user.role)) {
-            clearSession();
-            return;
-          }
-          currentUser.value = user;
-          try {
-            const salon = await fetchProSalon(accessToken.value) as any;
-            salonName.value = salon.name;
-            salonApprovalStatus.value = (salon.approvalStatus as string) ?? null;
-          } catch {
-            salonName.value = null;
-            salonApprovalStatus.value = null;
-          }
-        } catch (retryError) {
-          if (retryError instanceof ApiError && retryError.statusCode === 401) {
-            clearSession();
-          }
-        }
-      } else if (isAuthError) {
+      if (error instanceof ApiError && [401, 403, 404].includes(error.statusCode)) {
         clearSession();
       }
     } finally {
@@ -168,6 +150,20 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     clearSession();
     initialized.value = true;
   }
+
+  registerProSessionController({
+    getAccessToken: () => accessToken.value,
+    getRefreshToken: () => refreshToken.value,
+    applySession: (session) => {
+      accessToken.value = session.accessToken;
+      refreshToken.value = session.refreshToken;
+    },
+    clearSessionIfRefreshTokenMatches: (attemptedRefreshToken) => {
+      if (refreshToken.value === attemptedRefreshToken) {
+        clearSession();
+      }
+    }
+  });
 
   return {
     accessToken,

@@ -30,6 +30,10 @@ function calcFee(amountXof: number, commissionPercent: number) {
   return { platformFeeXof: fee, payoutAmountXof: amountXof - fee };
 }
 
+function normalizePhoneNumber(phoneNumber: string) {
+  return phoneNumber.replace(/\s+/g, "").trim();
+}
+
 // ─── Replay protection ──────────────────────────────────────────────────────
 // Deduplicates webhook deliveries by idempotencyKey within a sliding window.
 // The window exceeds PayDunya's delivery timeout (~30 s) so retries don't
@@ -109,9 +113,21 @@ export class PaymentController {
       if (payment.booking.clientId !== session.sub) { fail(reply, 403, "forbidden", "Accès interdit."); return; }
       const client = await prisma.user.findUnique({
         where: { id: session.sub },
-        select: { phone: true }
+        select: {
+          phone: true,
+          clientPaymentMethods: {
+            where: { isDefault: true },
+            orderBy: { updatedAt: "desc" },
+            select: { phoneNumber: true }
+          }
+        }
       });
-      if (config.paymentDriver === "paydunya" && !client?.phone) {
+      const resolvedPhone = client?.phone?.trim()
+        ? normalizePhoneNumber(client.phone)
+        : client?.clientPaymentMethods?.[0]?.phoneNumber?.trim()
+          ? normalizePhoneNumber(client.clientPaymentMethods[0].phoneNumber)
+          : undefined;
+      if (config.paymentDriver === "paydunya" && !resolvedPhone) {
         fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
         return;
       }
@@ -124,7 +140,7 @@ export class PaymentController {
         callbackUrl,
         idempotencyKey: payment.idempotencyKey,
         channel: body.channel,
-        phone: client?.phone ?? undefined
+        phone: resolvedPhone
       });
 
       await prisma.payment.update({

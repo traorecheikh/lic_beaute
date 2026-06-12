@@ -20,23 +20,26 @@ void main() {
       );
     });
 
-    test('forces payment setup when profile exists but no payment methods exist', () {
-      expect(
-        resolveRequiredSetupRedirect(
-          location: AppRoutes.bookingsList,
-          cachedProfile: {
-            'id': 'user_1',
-            'fullName': 'Awa Ndiaye',
-            'preferredContactChannel': 'phone',
-            'pushOptIn': true,
-            'marketingOptIn': false,
-            'preferredLanguage': 'fr',
-          },
-          cachedPaymentMethods: {'items': []},
-        ),
-        AppRoutes.profilePaymentsSetup(next: AppRoutes.bookingsList),
-      );
-    });
+    test(
+      'forces payment setup when profile exists but no payment methods exist',
+      () {
+        expect(
+          resolveRequiredSetupRedirect(
+            location: AppRoutes.bookingsList,
+            cachedProfile: {
+              'id': 'user_1',
+              'fullName': 'Awa Ndiaye',
+              'preferredContactChannel': 'phone',
+              'pushOptIn': true,
+              'marketingOptIn': false,
+              'preferredLanguage': 'fr',
+            },
+            cachedPaymentMethods: {'items': []},
+          ),
+          AppRoutes.profilePaymentsSetup(next: AppRoutes.bookingsList),
+        );
+      },
+    );
 
     test('does not redirect when already on the required setup route', () {
       expect(
@@ -77,12 +80,44 @@ void main() {
                 'method': 'orange_senegal',
                 'country': 'sn',
                 'isDefault': true,
-              }
-            ]
+              },
+            ],
           },
         ),
         isNull,
       );
     });
+
+    test(
+      'normalizes hive-shaped dynamic payment method maps before redirect checks',
+      () {
+        expect(
+          resolveRequiredSetupRedirect(
+            location: AppRoutes.home,
+            cachedProfile: {
+              'id': 'user_1',
+              'fullName': 'Awa Ndiaye',
+              'preferredContactChannel': 'phone',
+              'pushOptIn': true,
+              'marketingOptIn': false,
+              'preferredLanguage': 'fr',
+            },
+            cachedPaymentMethods: {
+              'items': [
+                Map<dynamic, dynamic>.from({
+                  'id': 'pm_1',
+                  'provider': 'paydunya',
+                  'phoneNumber': '771234567',
+                  'method': 'orange_senegal',
+                  'country': 'sn',
+                  'isDefault': true,
+                }),
+              ],
+            },
+          ),
+          isNull,
+        );
+      },
+    );
   });
 }

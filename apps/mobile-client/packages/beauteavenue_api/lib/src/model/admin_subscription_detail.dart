@@ -7,6 +7,7 @@ import 'package:beauteavenue_api/src/model/admin_subscription_detail_entitlement
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_events_inner.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_invoices_inner.dart';
+import 'package:beauteavenue_api/src/model/admin_subscription_detail_pending_charges_inner.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -29,6 +30,7 @@ part 'admin_subscription_detail.g.dart';
 /// * [entitlements] 
 /// * [events] 
 /// * [invoices] 
+/// * [pendingCharges] 
 @BuiltValue()
 abstract class AdminSubscriptionDetail implements Built<AdminSubscriptionDetail, AdminSubscriptionDetailBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -50,7 +52,7 @@ abstract class AdminSubscriptionDetail implements Built<AdminSubscriptionDetail,
 
   @BuiltValueField(wireName: r'billingProvider')
   AdminSubscriptionDetailBillingProviderEnum? get billingProvider;
-  // enum billingProviderEnum {  paydunya,  intech,  manual,  };
+  // enum billingProviderEnum {  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'expiresAt')
   DateTime? get expiresAt;
@@ -75,6 +77,9 @@ abstract class AdminSubscriptionDetail implements Built<AdminSubscriptionDetail,
 
   @BuiltValueField(wireName: r'invoices')
   BuiltList<AdminSubscriptionDetailInvoicesInner> get invoices;
+
+  @BuiltValueField(wireName: r'pendingCharges')
+  BuiltList<AdminSubscriptionDetailPendingChargesInner> get pendingCharges;
 
   AdminSubscriptionDetail._();
 
@@ -168,6 +173,11 @@ class _$AdminSubscriptionDetailSerializer implements PrimitiveSerializer<AdminSu
     yield serializers.serialize(
       object.invoices,
       specifiedType: const FullType(BuiltList, [FullType(AdminSubscriptionDetailInvoicesInner)]),
+    );
+    yield r'pendingCharges';
+    yield serializers.serialize(
+      object.pendingCharges,
+      specifiedType: const FullType(BuiltList, [FullType(AdminSubscriptionDetailPendingChargesInner)]),
     );
   }
 
@@ -293,6 +303,13 @@ class _$AdminSubscriptionDetailSerializer implements PrimitiveSerializer<AdminSu
           ) as BuiltList<AdminSubscriptionDetailInvoicesInner>;
           result.invoices.replace(valueDes);
           break;
+        case r'pendingCharges':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(AdminSubscriptionDetailPendingChargesInner)]),
+          ) as BuiltList<AdminSubscriptionDetailPendingChargesInner>;
+          result.pendingCharges.replace(valueDes);
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -364,8 +381,6 @@ class AdminSubscriptionDetailBillingProviderEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const AdminSubscriptionDetailBillingProviderEnum paydunya = _$adminSubscriptionDetailBillingProviderEnum_paydunya;
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const AdminSubscriptionDetailBillingProviderEnum intech = _$adminSubscriptionDetailBillingProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'manual')
   static const AdminSubscriptionDetailBillingProviderEnum manual = _$adminSubscriptionDetailBillingProviderEnum_manual;
 

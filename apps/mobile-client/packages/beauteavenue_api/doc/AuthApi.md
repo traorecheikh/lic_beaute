@@ -11,6 +11,8 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**apiV1AuthLoginPost**](AuthApi.md#apiv1authloginpost) | **POST** /api/v1/auth/login | Email login
 [**apiV1AuthLogoutPost**](AuthApi.md#apiv1authlogoutpost) | **POST** /api/v1/auth/logout | Logout current session
+[**apiV1AuthOtpEmailRequestPost**](AuthApi.md#apiv1authotpemailrequestpost) | **POST** /api/v1/auth/otp/email/request | Request an OTP code via email
+[**apiV1AuthOtpEmailVerifyPost**](AuthApi.md#apiv1authotpemailverifypost) | **POST** /api/v1/auth/otp/email/verify | Verify email OTP and create/login client
 [**apiV1AuthOtpRequestPost**](AuthApi.md#apiv1authotprequestpost) | **POST** /api/v1/auth/otp/request | Request an OTP code
 [**apiV1AuthOtpVerifyPost**](AuthApi.md#apiv1authotpverifypost) | **POST** /api/v1/auth/otp/verify | Verify OTP
 [**apiV1AuthRefreshPost**](AuthApi.md#apiv1authrefreshpost) | **POST** /api/v1/auth/refresh | Refresh access token
@@ -107,6 +109,88 @@ Name | Type | Description  | Notes
 ### Authorization
 
 [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiV1AuthOtpEmailRequestPost**
+> EmailOtpAcceptedResponse apiV1AuthOtpEmailRequestPost(emailOtpRequestInput)
+
+Request an OTP code via email
+
+### Example
+```dart
+import 'package:beauteavenue_api/api.dart';
+
+final api = BeauteavenueApi().getAuthApi();
+final EmailOtpRequestInput emailOtpRequestInput = ; // EmailOtpRequestInput | 
+
+try {
+    final response = api.apiV1AuthOtpEmailRequestPost(emailOtpRequestInput);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling AuthApi->apiV1AuthOtpEmailRequestPost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **emailOtpRequestInput** | [**EmailOtpRequestInput**](EmailOtpRequestInput.md)|  | 
+
+### Return type
+
+[**EmailOtpAcceptedResponse**](EmailOtpAcceptedResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiV1AuthOtpEmailVerifyPost**
+> AuthSession apiV1AuthOtpEmailVerifyPost(emailOtpVerifyInput)
+
+Verify email OTP and create/login client
+
+### Example
+```dart
+import 'package:beauteavenue_api/api.dart';
+
+final api = BeauteavenueApi().getAuthApi();
+final EmailOtpVerifyInput emailOtpVerifyInput = ; // EmailOtpVerifyInput | 
+
+try {
+    final response = api.apiV1AuthOtpEmailVerifyPost(emailOtpVerifyInput);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling AuthApi->apiV1AuthOtpEmailVerifyPost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **emailOtpVerifyInput** | [**EmailOtpVerifyInput**](EmailOtpVerifyInput.md)|  | 
+
+### Return type
+
+[**AuthSession**](AuthSession.md)
+
+### Authorization
+
+No authorization required
 
 ### HTTP request headers
 

@@ -38,11 +38,11 @@ abstract class BookingCreateInput implements Built<BookingCreateInput, BookingCr
 
   @BuiltValueField(wireName: r'provider')
   BookingCreateInputProviderEnum? get provider;
-  // enum providerEnum {  intech,  paydunya,  manual,  };
+  // enum providerEnum {  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'channel')
   BookingCreateInputChannelEnum? get channel;
-  // enum channelEnum {  wave,  orange_money,  free_money,  paydunya_card,  paydunya_airtel,  paydunya_expresso,  paydunya_free,  paydunya_mpesa,  paydunya_ng_airtel,  paydunya_ng_mtn,  paydunya_ng_9mobile,  paydunya_ng_glo,  paydunya_sam_airtel,  paydunya_sam_mtn,  paydunya_sam_safaricom,  paydunya_tigo_rw,  paydunya_airtel_rw,  paydunya_mtn_rw,  paydunya_mtn_ug,  paydunya_airtel_ug,  paydunya_orange_ml,  paydunya_mtn_ci,  paydunya_mtn_gh,  paydunya_vodafone_gh,  paydunya_airteltigo_gh,  paydunya_tm_ci,  paydunya_moov_tg,  paydunya_togocel_tg,  paydunya_wari_sn,  paydunya_wave_sn,  paydunya_cb_ci,  paydunya_orange_sn,  paydunya_free_sn,  paydunya_yup_bj,  paydunya_mtn_bj,  paydunya_moov_ci,  paydunya_orange_cm,  paydunya_mtn_cm,  paydunya_nexttel_cm,  paydunya_camtel_cm,  };
+  // enum channelEnum {  carte_bancaire,  wave_senegal,  orange_senegal,  free_senegal,  wizall_senegal,  expresso_sn,  om_ci,  mtn_ci,  moov_ci,  wave_ci,  om_bf,  moov_bf,  moov_bj,  mtn_bj,  t_money_tg,  moov_tg,  om_ml,  moov_ml,  mtn_cm,  djamo,  paydunya_wallet,  wave,  orange_money,  free_money,  paydunya_card,  paydunya_airtel,  paydunya_expresso,  paydunya_free,  paydunya_mpesa,  paydunya_ng_airtel,  paydunya_ng_mtn,  paydunya_ng_9mobile,  paydunya_ng_glo,  paydunya_sam_airtel,  paydunya_sam_mtn,  paydunya_sam_safaricom,  paydunya_tigo_rw,  paydunya_airtel_rw,  paydunya_mtn_rw,  paydunya_mtn_ug,  paydunya_airtel_ug,  paydunya_orange_ml,  paydunya_mtn_ci,  paydunya_mtn_gh,  paydunya_vodafone_gh,  paydunya_airteltigo_gh,  paydunya_tm_ci,  paydunya_moov_tg,  paydunya_togocel_tg,  paydunya_wari_sn,  paydunya_wave_sn,  paydunya_cb_ci,  paydunya_orange_sn,  paydunya_free_sn,  paydunya_yup_bj,  paydunya_mtn_bj,  paydunya_moov_ci,  paydunya_orange_cm,  paydunya_mtn_cm,  paydunya_nexttel_cm,  paydunya_camtel_cm,  };
 
   BookingCreateInput._();
 
@@ -213,8 +213,6 @@ class _$BookingCreateInputSerializer implements PrimitiveSerializer<BookingCreat
 
 class BookingCreateInputProviderEnum extends EnumClass {
 
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const BookingCreateInputProviderEnum intech = _$bookingCreateInputProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const BookingCreateInputProviderEnum paydunya = _$bookingCreateInputProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'manual')
@@ -230,6 +228,48 @@ class BookingCreateInputProviderEnum extends EnumClass {
 
 class BookingCreateInputChannelEnum extends EnumClass {
 
+  @BuiltValueEnumConst(wireName: r'carte_bancaire')
+  static const BookingCreateInputChannelEnum carteBancaire = _$bookingCreateInputChannelEnum_carteBancaire;
+  @BuiltValueEnumConst(wireName: r'wave_senegal')
+  static const BookingCreateInputChannelEnum waveSenegal = _$bookingCreateInputChannelEnum_waveSenegal;
+  @BuiltValueEnumConst(wireName: r'orange_senegal')
+  static const BookingCreateInputChannelEnum orangeSenegal = _$bookingCreateInputChannelEnum_orangeSenegal;
+  @BuiltValueEnumConst(wireName: r'free_senegal')
+  static const BookingCreateInputChannelEnum freeSenegal = _$bookingCreateInputChannelEnum_freeSenegal;
+  @BuiltValueEnumConst(wireName: r'wizall_senegal')
+  static const BookingCreateInputChannelEnum wizallSenegal = _$bookingCreateInputChannelEnum_wizallSenegal;
+  @BuiltValueEnumConst(wireName: r'expresso_sn')
+  static const BookingCreateInputChannelEnum expressoSn = _$bookingCreateInputChannelEnum_expressoSn;
+  @BuiltValueEnumConst(wireName: r'om_ci')
+  static const BookingCreateInputChannelEnum omCi = _$bookingCreateInputChannelEnum_omCi;
+  @BuiltValueEnumConst(wireName: r'mtn_ci')
+  static const BookingCreateInputChannelEnum mtnCi = _$bookingCreateInputChannelEnum_mtnCi;
+  @BuiltValueEnumConst(wireName: r'moov_ci')
+  static const BookingCreateInputChannelEnum moovCi = _$bookingCreateInputChannelEnum_moovCi;
+  @BuiltValueEnumConst(wireName: r'wave_ci')
+  static const BookingCreateInputChannelEnum waveCi = _$bookingCreateInputChannelEnum_waveCi;
+  @BuiltValueEnumConst(wireName: r'om_bf')
+  static const BookingCreateInputChannelEnum omBf = _$bookingCreateInputChannelEnum_omBf;
+  @BuiltValueEnumConst(wireName: r'moov_bf')
+  static const BookingCreateInputChannelEnum moovBf = _$bookingCreateInputChannelEnum_moovBf;
+  @BuiltValueEnumConst(wireName: r'moov_bj')
+  static const BookingCreateInputChannelEnum moovBj = _$bookingCreateInputChannelEnum_moovBj;
+  @BuiltValueEnumConst(wireName: r'mtn_bj')
+  static const BookingCreateInputChannelEnum mtnBj = _$bookingCreateInputChannelEnum_mtnBj;
+  @BuiltValueEnumConst(wireName: r't_money_tg')
+  static const BookingCreateInputChannelEnum tMoneyTg = _$bookingCreateInputChannelEnum_tMoneyTg;
+  @BuiltValueEnumConst(wireName: r'moov_tg')
+  static const BookingCreateInputChannelEnum moovTg = _$bookingCreateInputChannelEnum_moovTg;
+  @BuiltValueEnumConst(wireName: r'om_ml')
+  static const BookingCreateInputChannelEnum omMl = _$bookingCreateInputChannelEnum_omMl;
+  @BuiltValueEnumConst(wireName: r'moov_ml')
+  static const BookingCreateInputChannelEnum moovMl = _$bookingCreateInputChannelEnum_moovMl;
+  @BuiltValueEnumConst(wireName: r'mtn_cm')
+  static const BookingCreateInputChannelEnum mtnCm = _$bookingCreateInputChannelEnum_mtnCm;
+  @BuiltValueEnumConst(wireName: r'djamo')
+  static const BookingCreateInputChannelEnum djamo = _$bookingCreateInputChannelEnum_djamo;
+  @BuiltValueEnumConst(wireName: r'paydunya_wallet')
+  static const BookingCreateInputChannelEnum paydunyaWallet = _$bookingCreateInputChannelEnum_paydunyaWallet;
   @BuiltValueEnumConst(wireName: r'wave')
   static const BookingCreateInputChannelEnum wave = _$bookingCreateInputChannelEnum_wave;
   @BuiltValueEnumConst(wireName: r'orange_money')

@@ -6,8 +6,6 @@ part of 'booking_create_input.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
-const BookingCreateInputProviderEnum _$bookingCreateInputProviderEnum_intech =
-    const BookingCreateInputProviderEnum._('intech');
 const BookingCreateInputProviderEnum _$bookingCreateInputProviderEnum_paydunya =
     const BookingCreateInputProviderEnum._('paydunya');
 const BookingCreateInputProviderEnum _$bookingCreateInputProviderEnum_manual =
@@ -16,8 +14,6 @@ const BookingCreateInputProviderEnum _$bookingCreateInputProviderEnum_manual =
 BookingCreateInputProviderEnum _$bookingCreateInputProviderEnumValueOf(
     String name) {
   switch (name) {
-    case 'intech':
-      return _$bookingCreateInputProviderEnum_intech;
     case 'paydunya':
       return _$bookingCreateInputProviderEnum_paydunya;
     case 'manual':
@@ -30,11 +26,58 @@ BookingCreateInputProviderEnum _$bookingCreateInputProviderEnumValueOf(
 final BuiltSet<BookingCreateInputProviderEnum>
     _$bookingCreateInputProviderEnumValues = BuiltSet<
         BookingCreateInputProviderEnum>(const <BookingCreateInputProviderEnum>[
-  _$bookingCreateInputProviderEnum_intech,
   _$bookingCreateInputProviderEnum_paydunya,
   _$bookingCreateInputProviderEnum_manual,
 ]);
 
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_carteBancaire =
+    const BookingCreateInputChannelEnum._('carteBancaire');
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_waveSenegal =
+    const BookingCreateInputChannelEnum._('waveSenegal');
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_orangeSenegal =
+    const BookingCreateInputChannelEnum._('orangeSenegal');
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_freeSenegal =
+    const BookingCreateInputChannelEnum._('freeSenegal');
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_wizallSenegal =
+    const BookingCreateInputChannelEnum._('wizallSenegal');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_expressoSn =
+    const BookingCreateInputChannelEnum._('expressoSn');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_omCi =
+    const BookingCreateInputChannelEnum._('omCi');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_mtnCi =
+    const BookingCreateInputChannelEnum._('mtnCi');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_moovCi =
+    const BookingCreateInputChannelEnum._('moovCi');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_waveCi =
+    const BookingCreateInputChannelEnum._('waveCi');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_omBf =
+    const BookingCreateInputChannelEnum._('omBf');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_moovBf =
+    const BookingCreateInputChannelEnum._('moovBf');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_moovBj =
+    const BookingCreateInputChannelEnum._('moovBj');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_mtnBj =
+    const BookingCreateInputChannelEnum._('mtnBj');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_tMoneyTg =
+    const BookingCreateInputChannelEnum._('tMoneyTg');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_moovTg =
+    const BookingCreateInputChannelEnum._('moovTg');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_omMl =
+    const BookingCreateInputChannelEnum._('omMl');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_moovMl =
+    const BookingCreateInputChannelEnum._('moovMl');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_mtnCm =
+    const BookingCreateInputChannelEnum._('mtnCm');
+const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_djamo =
+    const BookingCreateInputChannelEnum._('djamo');
+const BookingCreateInputChannelEnum
+    _$bookingCreateInputChannelEnum_paydunyaWallet =
+    const BookingCreateInputChannelEnum._('paydunyaWallet');
 const BookingCreateInputChannelEnum _$bookingCreateInputChannelEnum_wave =
     const BookingCreateInputChannelEnum._('wave');
 const BookingCreateInputChannelEnum
@@ -157,6 +200,48 @@ const BookingCreateInputChannelEnum
 BookingCreateInputChannelEnum _$bookingCreateInputChannelEnumValueOf(
     String name) {
   switch (name) {
+    case 'carteBancaire':
+      return _$bookingCreateInputChannelEnum_carteBancaire;
+    case 'waveSenegal':
+      return _$bookingCreateInputChannelEnum_waveSenegal;
+    case 'orangeSenegal':
+      return _$bookingCreateInputChannelEnum_orangeSenegal;
+    case 'freeSenegal':
+      return _$bookingCreateInputChannelEnum_freeSenegal;
+    case 'wizallSenegal':
+      return _$bookingCreateInputChannelEnum_wizallSenegal;
+    case 'expressoSn':
+      return _$bookingCreateInputChannelEnum_expressoSn;
+    case 'omCi':
+      return _$bookingCreateInputChannelEnum_omCi;
+    case 'mtnCi':
+      return _$bookingCreateInputChannelEnum_mtnCi;
+    case 'moovCi':
+      return _$bookingCreateInputChannelEnum_moovCi;
+    case 'waveCi':
+      return _$bookingCreateInputChannelEnum_waveCi;
+    case 'omBf':
+      return _$bookingCreateInputChannelEnum_omBf;
+    case 'moovBf':
+      return _$bookingCreateInputChannelEnum_moovBf;
+    case 'moovBj':
+      return _$bookingCreateInputChannelEnum_moovBj;
+    case 'mtnBj':
+      return _$bookingCreateInputChannelEnum_mtnBj;
+    case 'tMoneyTg':
+      return _$bookingCreateInputChannelEnum_tMoneyTg;
+    case 'moovTg':
+      return _$bookingCreateInputChannelEnum_moovTg;
+    case 'omMl':
+      return _$bookingCreateInputChannelEnum_omMl;
+    case 'moovMl':
+      return _$bookingCreateInputChannelEnum_moovMl;
+    case 'mtnCm':
+      return _$bookingCreateInputChannelEnum_mtnCm;
+    case 'djamo':
+      return _$bookingCreateInputChannelEnum_djamo;
+    case 'paydunyaWallet':
+      return _$bookingCreateInputChannelEnum_paydunyaWallet;
     case 'wave':
       return _$bookingCreateInputChannelEnum_wave;
     case 'orangeMoney':
@@ -245,6 +330,27 @@ BookingCreateInputChannelEnum _$bookingCreateInputChannelEnumValueOf(
 final BuiltSet<BookingCreateInputChannelEnum>
     _$bookingCreateInputChannelEnumValues = BuiltSet<
         BookingCreateInputChannelEnum>(const <BookingCreateInputChannelEnum>[
+  _$bookingCreateInputChannelEnum_carteBancaire,
+  _$bookingCreateInputChannelEnum_waveSenegal,
+  _$bookingCreateInputChannelEnum_orangeSenegal,
+  _$bookingCreateInputChannelEnum_freeSenegal,
+  _$bookingCreateInputChannelEnum_wizallSenegal,
+  _$bookingCreateInputChannelEnum_expressoSn,
+  _$bookingCreateInputChannelEnum_omCi,
+  _$bookingCreateInputChannelEnum_mtnCi,
+  _$bookingCreateInputChannelEnum_moovCi,
+  _$bookingCreateInputChannelEnum_waveCi,
+  _$bookingCreateInputChannelEnum_omBf,
+  _$bookingCreateInputChannelEnum_moovBf,
+  _$bookingCreateInputChannelEnum_moovBj,
+  _$bookingCreateInputChannelEnum_mtnBj,
+  _$bookingCreateInputChannelEnum_tMoneyTg,
+  _$bookingCreateInputChannelEnum_moovTg,
+  _$bookingCreateInputChannelEnum_omMl,
+  _$bookingCreateInputChannelEnum_moovMl,
+  _$bookingCreateInputChannelEnum_mtnCm,
+  _$bookingCreateInputChannelEnum_djamo,
+  _$bookingCreateInputChannelEnum_paydunyaWallet,
   _$bookingCreateInputChannelEnum_wave,
   _$bookingCreateInputChannelEnum_orangeMoney,
   _$bookingCreateInputChannelEnum_freeMoney,
@@ -297,12 +403,10 @@ Serializer<BookingCreateInputChannelEnum>
 class _$BookingCreateInputProviderEnumSerializer
     implements PrimitiveSerializer<BookingCreateInputProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
@@ -329,6 +433,27 @@ class _$BookingCreateInputProviderEnumSerializer
 class _$BookingCreateInputChannelEnumSerializer
     implements PrimitiveSerializer<BookingCreateInputChannelEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
+    'carteBancaire': 'carte_bancaire',
+    'waveSenegal': 'wave_senegal',
+    'orangeSenegal': 'orange_senegal',
+    'freeSenegal': 'free_senegal',
+    'wizallSenegal': 'wizall_senegal',
+    'expressoSn': 'expresso_sn',
+    'omCi': 'om_ci',
+    'mtnCi': 'mtn_ci',
+    'moovCi': 'moov_ci',
+    'waveCi': 'wave_ci',
+    'omBf': 'om_bf',
+    'moovBf': 'moov_bf',
+    'moovBj': 'moov_bj',
+    'mtnBj': 'mtn_bj',
+    'tMoneyTg': 't_money_tg',
+    'moovTg': 'moov_tg',
+    'omMl': 'om_ml',
+    'moovMl': 'moov_ml',
+    'mtnCm': 'mtn_cm',
+    'djamo': 'djamo',
+    'paydunyaWallet': 'paydunya_wallet',
     'wave': 'wave',
     'orangeMoney': 'orange_money',
     'freeMoney': 'free_money',
@@ -371,6 +496,27 @@ class _$BookingCreateInputChannelEnumSerializer
     'paydunyaCamtelCm': 'paydunya_camtel_cm',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
+    'carte_bancaire': 'carteBancaire',
+    'wave_senegal': 'waveSenegal',
+    'orange_senegal': 'orangeSenegal',
+    'free_senegal': 'freeSenegal',
+    'wizall_senegal': 'wizallSenegal',
+    'expresso_sn': 'expressoSn',
+    'om_ci': 'omCi',
+    'mtn_ci': 'mtnCi',
+    'moov_ci': 'moovCi',
+    'wave_ci': 'waveCi',
+    'om_bf': 'omBf',
+    'moov_bf': 'moovBf',
+    'moov_bj': 'moovBj',
+    'mtn_bj': 'mtnBj',
+    't_money_tg': 'tMoneyTg',
+    'moov_tg': 'moovTg',
+    'om_ml': 'omMl',
+    'moov_ml': 'moovMl',
+    'mtn_cm': 'mtnCm',
+    'djamo': 'djamo',
+    'paydunya_wallet': 'paydunyaWallet',
     'wave': 'wave',
     'orange_money': 'orangeMoney',
     'free_money': 'freeMoney',

@@ -52,6 +52,7 @@ export * from './ApiV1BookingsBookingIdReviewPost201Response';
 export * from './ApiV1BookingsBookingIdReviewPostRequest';
 export * from './ApiV1ConfigPricingGet200Response';
 export * from './ApiV1ConfigPricingGet200ResponseStandard';
+export * from './ApiV1ConfigSupportGet200Response';
 export * from './ApiV1MeAddressesAddressIdPatchRequest';
 export * from './ApiV1MeAddressesGet200Response';
 export * from './ApiV1MeAddressesGet200ResponseItemsInner';

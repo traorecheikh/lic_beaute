@@ -131,6 +131,8 @@ class _$UpdateMeInput extends UpdateMeInput {
   @override
   final String? fullName;
   @override
+  final String? phone;
+  @override
   final String? city;
   @override
   final String? avatarMediaId;
@@ -152,6 +154,7 @@ class _$UpdateMeInput extends UpdateMeInput {
 
   _$UpdateMeInput._(
       {this.fullName,
+      this.phone,
       this.city,
       this.avatarMediaId,
       this.preferredContactChannel,
@@ -173,6 +176,7 @@ class _$UpdateMeInput extends UpdateMeInput {
     if (identical(other, this)) return true;
     return other is UpdateMeInput &&
         fullName == other.fullName &&
+        phone == other.phone &&
         city == other.city &&
         avatarMediaId == other.avatarMediaId &&
         preferredContactChannel == other.preferredContactChannel &&
@@ -187,6 +191,7 @@ class _$UpdateMeInput extends UpdateMeInput {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, fullName.hashCode);
+    _$hash = $jc(_$hash, phone.hashCode);
     _$hash = $jc(_$hash, city.hashCode);
     _$hash = $jc(_$hash, avatarMediaId.hashCode);
     _$hash = $jc(_$hash, preferredContactChannel.hashCode);
@@ -203,6 +208,7 @@ class _$UpdateMeInput extends UpdateMeInput {
   String toString() {
     return (newBuiltValueToStringHelper(r'UpdateMeInput')
           ..add('fullName', fullName)
+          ..add('phone', phone)
           ..add('city', city)
           ..add('avatarMediaId', avatarMediaId)
           ..add('preferredContactChannel', preferredContactChannel)
@@ -222,6 +228,10 @@ class UpdateMeInputBuilder
   String? _fullName;
   String? get fullName => _$this._fullName;
   set fullName(String? fullName) => _$this._fullName = fullName;
+
+  String? _phone;
+  String? get phone => _$this._phone;
+  set phone(String? phone) => _$this._phone = phone;
 
   String? _city;
   String? get city => _$this._city;
@@ -272,6 +282,7 @@ class UpdateMeInputBuilder
     final $v = _$v;
     if ($v != null) {
       _fullName = $v.fullName;
+      _phone = $v.phone;
       _city = $v.city;
       _avatarMediaId = $v.avatarMediaId;
       _preferredContactChannel = $v.preferredContactChannel;
@@ -302,6 +313,7 @@ class UpdateMeInputBuilder
     final _$result = _$v ??
         _$UpdateMeInput._(
           fullName: fullName,
+          phone: phone,
           city: city,
           avatarMediaId: avatarMediaId,
           preferredContactChannel: preferredContactChannel,

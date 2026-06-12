@@ -15,6 +15,7 @@ part 'pro_subscription.g.dart';
 /// Properties:
 /// * [id] 
 /// * [tier] 
+/// * [pendingTier] 
 /// * [status] 
 /// * [renewsAt] 
 /// * [expiresAt] 
@@ -30,6 +31,10 @@ abstract class ProSubscription implements Built<ProSubscription, ProSubscription
   @BuiltValueField(wireName: r'tier')
   ProSubscriptionTierEnum get tier;
   // enum tierEnum {  standard,  premium,  };
+
+  @BuiltValueField(wireName: r'pendingTier')
+  ProSubscriptionPendingTierEnum? get pendingTier;
+  // enum pendingTierEnum {  standard,  premium,  };
 
   @BuiltValueField(wireName: r'status')
   ProSubscriptionStatusEnum get status;
@@ -86,6 +91,13 @@ class _$ProSubscriptionSerializer implements PrimitiveSerializer<ProSubscription
       object.tier,
       specifiedType: const FullType(ProSubscriptionTierEnum),
     );
+    if (object.pendingTier != null) {
+      yield r'pendingTier';
+      yield serializers.serialize(
+        object.pendingTier,
+        specifiedType: const FullType.nullable(ProSubscriptionPendingTierEnum),
+      );
+    }
     yield r'status';
     yield serializers.serialize(
       object.status,
@@ -157,6 +169,14 @@ class _$ProSubscriptionSerializer implements PrimitiveSerializer<ProSubscription
             specifiedType: const FullType(ProSubscriptionTierEnum),
           ) as ProSubscriptionTierEnum;
           result.tier = valueDes;
+          break;
+        case r'pendingTier':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(ProSubscriptionPendingTierEnum),
+          ) as ProSubscriptionPendingTierEnum?;
+          if (valueDes == null) continue;
+          result.pendingTier = valueDes;
           break;
         case r'status':
           final valueDes = serializers.deserialize(
@@ -253,6 +273,21 @@ class ProSubscriptionTierEnum extends EnumClass {
 
   static BuiltSet<ProSubscriptionTierEnum> get values => _$proSubscriptionTierEnumValues;
   static ProSubscriptionTierEnum valueOf(String name) => _$proSubscriptionTierEnumValueOf(name);
+}
+
+class ProSubscriptionPendingTierEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'standard')
+  static const ProSubscriptionPendingTierEnum standard = _$proSubscriptionPendingTierEnum_standard;
+  @BuiltValueEnumConst(wireName: r'premium')
+  static const ProSubscriptionPendingTierEnum premium = _$proSubscriptionPendingTierEnum_premium;
+
+  static Serializer<ProSubscriptionPendingTierEnum> get serializer => _$proSubscriptionPendingTierEnumSerializer;
+
+  const ProSubscriptionPendingTierEnum._(String name): super(name);
+
+  static BuiltSet<ProSubscriptionPendingTierEnum> get values => _$proSubscriptionPendingTierEnumValues;
+  static ProSubscriptionPendingTierEnum valueOf(String name) => _$proSubscriptionPendingTierEnumValueOf(name);
 }
 
 class ProSubscriptionStatusEnum extends EnumClass {

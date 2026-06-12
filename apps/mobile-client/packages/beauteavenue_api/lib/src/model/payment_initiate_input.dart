@@ -22,11 +22,11 @@ abstract class PaymentInitiateInput implements Built<PaymentInitiateInput, Payme
 
   @BuiltValueField(wireName: r'provider')
   PaymentInitiateInputProviderEnum get provider;
-  // enum providerEnum {  intech,  paydunya,  manual,  };
+  // enum providerEnum {  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'channel')
   PaymentInitiateInputChannelEnum? get channel;
-  // enum channelEnum {  wave,  orange_money,  free_money,  paydunya_card,  paydunya_airtel,  paydunya_expresso,  paydunya_free,  paydunya_mpesa,  paydunya_ng_airtel,  paydunya_ng_mtn,  paydunya_ng_9mobile,  paydunya_ng_glo,  paydunya_sam_airtel,  paydunya_sam_mtn,  paydunya_sam_safaricom,  paydunya_tigo_rw,  paydunya_airtel_rw,  paydunya_mtn_rw,  paydunya_mtn_ug,  paydunya_airtel_ug,  paydunya_orange_ml,  paydunya_mtn_ci,  paydunya_mtn_gh,  paydunya_vodafone_gh,  paydunya_airteltigo_gh,  paydunya_tm_ci,  paydunya_moov_tg,  paydunya_togocel_tg,  paydunya_wari_sn,  paydunya_wave_sn,  paydunya_cb_ci,  paydunya_orange_sn,  paydunya_free_sn,  paydunya_yup_bj,  paydunya_mtn_bj,  paydunya_moov_ci,  paydunya_orange_cm,  paydunya_mtn_cm,  paydunya_nexttel_cm,  paydunya_camtel_cm,  };
+  // enum channelEnum {  carte_bancaire,  wave_senegal,  orange_senegal,  free_senegal,  wizall_senegal,  expresso_sn,  om_ci,  mtn_ci,  moov_ci,  wave_ci,  om_bf,  moov_bf,  moov_bj,  mtn_bj,  t_money_tg,  moov_tg,  om_ml,  moov_ml,  mtn_cm,  djamo,  paydunya_wallet,  wave,  orange_money,  free_money,  paydunya_card,  paydunya_airtel,  paydunya_expresso,  paydunya_free,  paydunya_mpesa,  paydunya_ng_airtel,  paydunya_ng_mtn,  paydunya_ng_9mobile,  paydunya_ng_glo,  paydunya_sam_airtel,  paydunya_sam_mtn,  paydunya_sam_safaricom,  paydunya_tigo_rw,  paydunya_airtel_rw,  paydunya_mtn_rw,  paydunya_mtn_ug,  paydunya_airtel_ug,  paydunya_orange_ml,  paydunya_mtn_ci,  paydunya_mtn_gh,  paydunya_vodafone_gh,  paydunya_airteltigo_gh,  paydunya_tm_ci,  paydunya_moov_tg,  paydunya_togocel_tg,  paydunya_wari_sn,  paydunya_wave_sn,  paydunya_cb_ci,  paydunya_orange_sn,  paydunya_free_sn,  paydunya_yup_bj,  paydunya_mtn_bj,  paydunya_moov_ci,  paydunya_orange_cm,  paydunya_mtn_cm,  paydunya_nexttel_cm,  paydunya_camtel_cm,  };
 
   PaymentInitiateInput._();
 
@@ -143,8 +143,6 @@ class _$PaymentInitiateInputSerializer implements PrimitiveSerializer<PaymentIni
 
 class PaymentInitiateInputProviderEnum extends EnumClass {
 
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const PaymentInitiateInputProviderEnum intech = _$paymentInitiateInputProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const PaymentInitiateInputProviderEnum paydunya = _$paymentInitiateInputProviderEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'manual')
@@ -160,6 +158,48 @@ class PaymentInitiateInputProviderEnum extends EnumClass {
 
 class PaymentInitiateInputChannelEnum extends EnumClass {
 
+  @BuiltValueEnumConst(wireName: r'carte_bancaire')
+  static const PaymentInitiateInputChannelEnum carteBancaire = _$paymentInitiateInputChannelEnum_carteBancaire;
+  @BuiltValueEnumConst(wireName: r'wave_senegal')
+  static const PaymentInitiateInputChannelEnum waveSenegal = _$paymentInitiateInputChannelEnum_waveSenegal;
+  @BuiltValueEnumConst(wireName: r'orange_senegal')
+  static const PaymentInitiateInputChannelEnum orangeSenegal = _$paymentInitiateInputChannelEnum_orangeSenegal;
+  @BuiltValueEnumConst(wireName: r'free_senegal')
+  static const PaymentInitiateInputChannelEnum freeSenegal = _$paymentInitiateInputChannelEnum_freeSenegal;
+  @BuiltValueEnumConst(wireName: r'wizall_senegal')
+  static const PaymentInitiateInputChannelEnum wizallSenegal = _$paymentInitiateInputChannelEnum_wizallSenegal;
+  @BuiltValueEnumConst(wireName: r'expresso_sn')
+  static const PaymentInitiateInputChannelEnum expressoSn = _$paymentInitiateInputChannelEnum_expressoSn;
+  @BuiltValueEnumConst(wireName: r'om_ci')
+  static const PaymentInitiateInputChannelEnum omCi = _$paymentInitiateInputChannelEnum_omCi;
+  @BuiltValueEnumConst(wireName: r'mtn_ci')
+  static const PaymentInitiateInputChannelEnum mtnCi = _$paymentInitiateInputChannelEnum_mtnCi;
+  @BuiltValueEnumConst(wireName: r'moov_ci')
+  static const PaymentInitiateInputChannelEnum moovCi = _$paymentInitiateInputChannelEnum_moovCi;
+  @BuiltValueEnumConst(wireName: r'wave_ci')
+  static const PaymentInitiateInputChannelEnum waveCi = _$paymentInitiateInputChannelEnum_waveCi;
+  @BuiltValueEnumConst(wireName: r'om_bf')
+  static const PaymentInitiateInputChannelEnum omBf = _$paymentInitiateInputChannelEnum_omBf;
+  @BuiltValueEnumConst(wireName: r'moov_bf')
+  static const PaymentInitiateInputChannelEnum moovBf = _$paymentInitiateInputChannelEnum_moovBf;
+  @BuiltValueEnumConst(wireName: r'moov_bj')
+  static const PaymentInitiateInputChannelEnum moovBj = _$paymentInitiateInputChannelEnum_moovBj;
+  @BuiltValueEnumConst(wireName: r'mtn_bj')
+  static const PaymentInitiateInputChannelEnum mtnBj = _$paymentInitiateInputChannelEnum_mtnBj;
+  @BuiltValueEnumConst(wireName: r't_money_tg')
+  static const PaymentInitiateInputChannelEnum tMoneyTg = _$paymentInitiateInputChannelEnum_tMoneyTg;
+  @BuiltValueEnumConst(wireName: r'moov_tg')
+  static const PaymentInitiateInputChannelEnum moovTg = _$paymentInitiateInputChannelEnum_moovTg;
+  @BuiltValueEnumConst(wireName: r'om_ml')
+  static const PaymentInitiateInputChannelEnum omMl = _$paymentInitiateInputChannelEnum_omMl;
+  @BuiltValueEnumConst(wireName: r'moov_ml')
+  static const PaymentInitiateInputChannelEnum moovMl = _$paymentInitiateInputChannelEnum_moovMl;
+  @BuiltValueEnumConst(wireName: r'mtn_cm')
+  static const PaymentInitiateInputChannelEnum mtnCm = _$paymentInitiateInputChannelEnum_mtnCm;
+  @BuiltValueEnumConst(wireName: r'djamo')
+  static const PaymentInitiateInputChannelEnum djamo = _$paymentInitiateInputChannelEnum_djamo;
+  @BuiltValueEnumConst(wireName: r'paydunya_wallet')
+  static const PaymentInitiateInputChannelEnum paydunyaWallet = _$paymentInitiateInputChannelEnum_paydunyaWallet;
   @BuiltValueEnumConst(wireName: r'wave')
   static const PaymentInitiateInputChannelEnum wave = _$paymentInitiateInputChannelEnum_wave;
   @BuiltValueEnumConst(wireName: r'orange_money')

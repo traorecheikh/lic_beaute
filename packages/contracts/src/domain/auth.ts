@@ -70,6 +70,7 @@ export const refreshInputSchema = z.object({
 
 export const updateMeInputSchema = z.object({
   fullName: z.string().min(2).optional(),
+  phone: z.string().min(8).max(20).nullable().optional(),
   city: z.string().min(2).max(120).nullable().optional(),
   avatarMediaId: z.string().nullable().optional(),
   preferredContactChannel: clientContactChannelSchema.optional(),

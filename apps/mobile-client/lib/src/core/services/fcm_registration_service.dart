@@ -35,6 +35,10 @@ class FcmRegistrationService {
     messaging.onTokenRefresh.listen(_sendToken);
   }
 
+  void reset() {
+    _registered = false;
+  }
+
   Future<void> _sendToken(String token) async {
     try {
       await _dio.post<void>(
@@ -53,7 +57,8 @@ class FcmRegistrationService {
   static Future<String> _getDeviceId() async {
     final existing = await _storage.read(key: _deviceIdKey);
     if (existing != null) return existing;
-    final id = '${Platform.operatingSystem}-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(999999)}';
+    final id =
+        '${Platform.operatingSystem}-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(999999)}';
     await _storage.write(key: _deviceIdKey, value: id);
     return id;
   }

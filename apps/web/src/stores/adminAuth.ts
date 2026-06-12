@@ -2,7 +2,7 @@ import type { CurrentUser } from "@beauteavenue/contracts";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
-import { ApiError, fetchCurrentUser, loginAdmin, logoutAdmin, refreshAdminSession } from "@/lib/api";
+import { ApiError, fetchCurrentUser, loginAdmin, logoutAdmin, refreshAdminSession, registerAdminSessionController } from "@/lib/api";
 
 export const useAdminAuthStore = defineStore("admin-auth", () => {
   const accessToken = ref<string | null>(null);
@@ -19,14 +19,17 @@ export const useAdminAuthStore = defineStore("admin-auth", () => {
   }
 
   async function refreshSessionIfPossible(): Promise<boolean> {
-    if (!refreshToken.value) return false;
+    const attemptedRefreshToken = refreshToken.value;
+    if (!attemptedRefreshToken) return false;
     try {
-      const session = await refreshAdminSession(refreshToken.value);
+      const session = await refreshAdminSession(attemptedRefreshToken);
       accessToken.value = session.accessToken;
       refreshToken.value = session.refreshToken;
       return true;
     } catch {
-      clearSession();
+      if (refreshToken.value === attemptedRefreshToken) {
+        clearSession();
+      }
       return false;
     }
   }
@@ -41,16 +44,7 @@ export const useAdminAuthStore = defineStore("admin-auth", () => {
     try {
       currentUser.value = await fetchCurrentUser(accessToken.value);
     } catch (error) {
-      const isAuthError = error instanceof ApiError && error.statusCode === 401;
-      if (isAuthError && (await refreshSessionIfPossible()) && accessToken.value) {
-        try {
-          currentUser.value = await fetchCurrentUser(accessToken.value);
-        } catch (retryError) {
-          if (retryError instanceof ApiError && retryError.statusCode === 401) {
-            clearSession();
-          }
-        }
-      } else if (isAuthError) {
+      if (error instanceof ApiError && [401, 403, 404].includes(error.statusCode)) {
         clearSession();
       }
     } finally {
@@ -76,6 +70,20 @@ export const useAdminAuthStore = defineStore("admin-auth", () => {
     clearSession();
     initialized.value = true;
   }
+
+  registerAdminSessionController({
+    getAccessToken: () => accessToken.value,
+    getRefreshToken: () => refreshToken.value,
+    applySession: (session) => {
+      accessToken.value = session.accessToken;
+      refreshToken.value = session.refreshToken;
+    },
+    clearSessionIfRefreshTokenMatches: (attemptedRefreshToken) => {
+      if (refreshToken.value === attemptedRefreshToken) {
+        clearSession();
+      }
+    }
+  });
 
   return { accessToken, refreshToken, currentUser, initialized, isAuthenticated, clearSession, refreshSessionIfPossible, restoreSession, login, logout };
 }, {

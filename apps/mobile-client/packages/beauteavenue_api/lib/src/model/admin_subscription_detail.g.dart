@@ -86,9 +86,6 @@ const AdminSubscriptionDetailBillingProviderEnum
     _$adminSubscriptionDetailBillingProviderEnum_paydunya =
     const AdminSubscriptionDetailBillingProviderEnum._('paydunya');
 const AdminSubscriptionDetailBillingProviderEnum
-    _$adminSubscriptionDetailBillingProviderEnum_intech =
-    const AdminSubscriptionDetailBillingProviderEnum._('intech');
-const AdminSubscriptionDetailBillingProviderEnum
     _$adminSubscriptionDetailBillingProviderEnum_manual =
     const AdminSubscriptionDetailBillingProviderEnum._('manual');
 
@@ -97,8 +94,6 @@ AdminSubscriptionDetailBillingProviderEnum
   switch (name) {
     case 'paydunya':
       return _$adminSubscriptionDetailBillingProviderEnum_paydunya;
-    case 'intech':
-      return _$adminSubscriptionDetailBillingProviderEnum_intech;
     case 'manual':
       return _$adminSubscriptionDetailBillingProviderEnum_manual;
     default:
@@ -110,7 +105,6 @@ final BuiltSet<AdminSubscriptionDetailBillingProviderEnum>
     _$adminSubscriptionDetailBillingProviderEnumValues = BuiltSet<
         AdminSubscriptionDetailBillingProviderEnum>(const <AdminSubscriptionDetailBillingProviderEnum>[
   _$adminSubscriptionDetailBillingProviderEnum_paydunya,
-  _$adminSubscriptionDetailBillingProviderEnum_intech,
   _$adminSubscriptionDetailBillingProviderEnum_manual,
 ]);
 
@@ -196,12 +190,10 @@ class _$AdminSubscriptionDetailBillingProviderEnumSerializer
     implements PrimitiveSerializer<AdminSubscriptionDetailBillingProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
 
@@ -255,6 +247,8 @@ class _$AdminSubscriptionDetail extends AdminSubscriptionDetail {
   final BuiltList<AdminSubscriptionDetailEventsInner> events;
   @override
   final BuiltList<AdminSubscriptionDetailInvoicesInner> invoices;
+  @override
+  final BuiltList<AdminSubscriptionDetailPendingChargesInner> pendingCharges;
 
   factory _$AdminSubscriptionDetail(
           [void Function(AdminSubscriptionDetailBuilder)? updates]) =>
@@ -274,7 +268,8 @@ class _$AdminSubscriptionDetail extends AdminSubscriptionDetail {
       this.renewedAt,
       required this.entitlements,
       required this.events,
-      required this.invoices})
+      required this.invoices,
+      required this.pendingCharges})
       : super._();
   @override
   AdminSubscriptionDetail rebuild(
@@ -302,7 +297,8 @@ class _$AdminSubscriptionDetail extends AdminSubscriptionDetail {
         renewedAt == other.renewedAt &&
         entitlements == other.entitlements &&
         events == other.events &&
-        invoices == other.invoices;
+        invoices == other.invoices &&
+        pendingCharges == other.pendingCharges;
   }
 
   @override
@@ -322,6 +318,7 @@ class _$AdminSubscriptionDetail extends AdminSubscriptionDetail {
     _$hash = $jc(_$hash, entitlements.hashCode);
     _$hash = $jc(_$hash, events.hashCode);
     _$hash = $jc(_$hash, invoices.hashCode);
+    _$hash = $jc(_$hash, pendingCharges.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -342,7 +339,8 @@ class _$AdminSubscriptionDetail extends AdminSubscriptionDetail {
           ..add('renewedAt', renewedAt)
           ..add('entitlements', entitlements)
           ..add('events', events)
-          ..add('invoices', invoices))
+          ..add('invoices', invoices)
+          ..add('pendingCharges', pendingCharges))
         .toString();
   }
 }
@@ -422,6 +420,15 @@ class AdminSubscriptionDetailBuilder
   set invoices(ListBuilder<AdminSubscriptionDetailInvoicesInner>? invoices) =>
       _$this._invoices = invoices;
 
+  ListBuilder<AdminSubscriptionDetailPendingChargesInner>? _pendingCharges;
+  ListBuilder<AdminSubscriptionDetailPendingChargesInner> get pendingCharges =>
+      _$this._pendingCharges ??=
+          ListBuilder<AdminSubscriptionDetailPendingChargesInner>();
+  set pendingCharges(
+          ListBuilder<AdminSubscriptionDetailPendingChargesInner>?
+              pendingCharges) =>
+      _$this._pendingCharges = pendingCharges;
+
   AdminSubscriptionDetailBuilder() {
     AdminSubscriptionDetail._defaults(this);
   }
@@ -443,6 +450,7 @@ class AdminSubscriptionDetailBuilder
       _entitlements = $v.entitlements.toBuilder();
       _events = $v.events.toBuilder();
       _invoices = $v.invoices.toBuilder();
+      _pendingCharges = $v.pendingCharges.toBuilder();
       _$v = null;
     }
     return this;
@@ -488,6 +496,7 @@ class AdminSubscriptionDetailBuilder
             entitlements: entitlements.build(),
             events: events.build(),
             invoices: invoices.build(),
+            pendingCharges: pendingCharges.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -498,6 +507,8 @@ class AdminSubscriptionDetailBuilder
         events.build();
         _$failedField = 'invoices';
         invoices.build();
+        _$failedField = 'pendingCharges';
+        pendingCharges.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'AdminSubscriptionDetail', _$failedField, e.toString());

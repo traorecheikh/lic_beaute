@@ -275,7 +275,7 @@ const gracePeriodEndsAt = computed(() => {
 
 const readinessStatus = computed(() => {
   if (!salonQuery.data.value) return null;
-  const salon = salonQuery.data.value as Record<string, unknown>;
+  const salon = salonQuery.data.value;
   const services = (servicesQuery.data.value ?? []) as Array<unknown>;
   const staff = (staffQuery.data.value ?? []) as Array<unknown>;
   const checks = [

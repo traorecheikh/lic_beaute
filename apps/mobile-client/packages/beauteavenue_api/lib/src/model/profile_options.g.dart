@@ -56,9 +56,6 @@ final BuiltSet<ProfileOptionsContactChannelsEnum>
 ]);
 
 const ProfileOptionsPaymentProvidersEnum
-    _$profileOptionsPaymentProvidersEnum_intech =
-    const ProfileOptionsPaymentProvidersEnum._('intech');
-const ProfileOptionsPaymentProvidersEnum
     _$profileOptionsPaymentProvidersEnum_paydunya =
     const ProfileOptionsPaymentProvidersEnum._('paydunya');
 const ProfileOptionsPaymentProvidersEnum
@@ -68,8 +65,6 @@ const ProfileOptionsPaymentProvidersEnum
 ProfileOptionsPaymentProvidersEnum _$profileOptionsPaymentProvidersEnumValueOf(
     String name) {
   switch (name) {
-    case 'intech':
-      return _$profileOptionsPaymentProvidersEnum_intech;
     case 'paydunya':
       return _$profileOptionsPaymentProvidersEnum_paydunya;
     case 'manual':
@@ -82,7 +77,6 @@ ProfileOptionsPaymentProvidersEnum _$profileOptionsPaymentProvidersEnumValueOf(
 final BuiltSet<ProfileOptionsPaymentProvidersEnum>
     _$profileOptionsPaymentProvidersEnumValues = BuiltSet<
         ProfileOptionsPaymentProvidersEnum>(const <ProfileOptionsPaymentProvidersEnum>[
-  _$profileOptionsPaymentProvidersEnum_intech,
   _$profileOptionsPaymentProvidersEnum_paydunya,
   _$profileOptionsPaymentProvidersEnum_manual,
 ]);
@@ -159,12 +153,10 @@ class _$ProfileOptionsContactChannelsEnumSerializer
 class _$ProfileOptionsPaymentProvidersEnumSerializer
     implements PrimitiveSerializer<ProfileOptionsPaymentProvidersEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };

@@ -14,6 +14,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_city_dropdown.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -30,10 +31,12 @@ class EditProfilePage extends ConsumerStatefulWidget {
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _saving = false;
   bool _uploadingAvatar = false;
   String? _localAvatarPath;
   String? _selectedCity;
+  PhoneCountry _phoneCountry = kPhoneCountries.first;
   String _contactChannel = 'phone';
   String _language = 'fr';
   bool _pushOptIn = true;
@@ -43,6 +46,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   @override
   void dispose() {
     _fullNameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -64,6 +68,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           if (!_didSeedControllers) {
             _didSeedControllers = true;
             _fullNameController.text = profile.fullName;
+            _seedPhone(profile.phone);
             _selectedCity = profile.city;
             _contactChannel = profile.preferredContactChannel;
             _language = profile.preferredLanguage;
@@ -96,7 +101,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                       : null),
                             child:
                                 (_localAvatarPath == null && !hasRemoteAvatar)
-                                ? AppIcon('user', size: 44, color: AppColors.primary)
+                                ? AppIcon(
+                                    'user',
+                                    size: 44,
+                                    color: AppColors.primary,
+                                  )
                                 : null,
                           ),
                           Positioned(
@@ -137,6 +146,25 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       validator: (value) {
                         if (value == null || value.trim().length < 2) {
                           return 'Nom complet requis';
+                        }
+                        return null;
+                      },
+                    ),
+                    gapH16,
+                    AppPhoneField(
+                      controller: _phoneController,
+                      labelText: 'Numéro de téléphone',
+                      initialCountry: _phoneCountry,
+                      onCountryChanged: (country) =>
+                          setState(() => _phoneCountry = country),
+                      validator: (value) {
+                        final digits = (value ?? '').replaceAll(
+                          RegExp(r'\D'),
+                          '',
+                        );
+                        if (digits.isEmpty) return null;
+                        if (digits.length != _phoneCountry.digits) {
+                          return 'Numéro invalide (${_phoneCountry.digits} chiffres attendus)';
                         }
                         return null;
                       },
@@ -258,6 +286,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           .read(profileProvider.notifier)
           .updateProfile(
             fullName: _fullNameController.text.trim(),
+            phone: _resolvedPhoneValue(),
             city: _selectedCity,
             preferredContactChannel: _contactChannel,
             pushOptIn: _pushOptIn,
@@ -283,6 +312,37 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       default:
         return 'Téléphone';
     }
+  }
+
+  void _seedPhone(String? rawPhone) {
+    final cleaned = (rawPhone ?? '').replaceAll(RegExp(r'\s+'), '');
+    if (cleaned.isEmpty) {
+      _phoneController.text = '';
+      _phoneCountry = kPhoneCountries.first;
+      return;
+    }
+
+    for (final country in kPhoneCountries) {
+      final dialDigits = country.dialCode.replaceAll(RegExp(r'\D'), '');
+      if (cleaned.startsWith(country.dialCode) ||
+          cleaned.startsWith(dialDigits)) {
+        final withoutDialCode = cleaned
+            .replaceFirst(country.dialCode, '')
+            .replaceFirst(dialDigits, '');
+        _phoneCountry = country;
+        _phoneController.text = withoutDialCode;
+        return;
+      }
+    }
+
+    _phoneController.text = cleaned.replaceAll(RegExp(r'\D'), '');
+    _phoneCountry = kPhoneCountries.first;
+  }
+
+  String? _resolvedPhoneValue() {
+    final nationalDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+    if (nationalDigits.isEmpty) return null;
+    return '${_phoneCountry.dialCode}$nationalDigits';
   }
 
   Widget _buildTextField({

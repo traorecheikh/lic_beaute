@@ -56,6 +56,13 @@ type AuthSession = {
   expiresInSeconds: number;
 };
 
+type AdminSessionController = {
+  getAccessToken(): string | null;
+  getRefreshToken(): string | null;
+  applySession(session: AuthSession): void;
+  clearSessionIfRefreshTokenMatches(refreshToken: string | null): void;
+};
+
 export class ApiError extends Error {
   readonly field: string | undefined;
   constructor(
@@ -70,6 +77,12 @@ export class ApiError extends Error {
 }
 
 const apiBaseUrl = resolveApiBaseUrl();
+let adminSessionController: AdminSessionController | null = null;
+let refreshPromise: Promise<boolean> | null = null;
+
+export function registerAdminSessionController(controller: AdminSessionController) {
+  adminSessionController = controller;
+}
 
 function buildUrl(path: string, query?: Record<string, string | undefined>) {
   const url = new URL(path, apiBaseUrl);
@@ -85,14 +98,32 @@ function buildUrl(path: string, query?: Record<string, string | undefined>) {
   return url.toString();
 }
 
-async function request<T>(path: string, options: RequestInit = {}, query?: Record<string, string | undefined>) {
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  query?: Record<string, string | undefined>,
+  canRetryUnauthorized = true
+) {
+  const headers = new Headers(options.headers ?? {});
   const response = await fetch(buildUrl(path, query), {
     ...options,
     headers: {
       ...(options.body != null ? { "Content-Type": "application/json" } : {}),
-      ...(options.headers ?? {})
+      ...Object.fromEntries(headers.entries())
     }
   });
+
+  if (response.status === 401 && canRetryUnauthorized && shouldRetryWithRefresh(path, headers)) {
+    const refreshed = await refreshSessionWithSingleFlight();
+    if (refreshed) {
+      const nextToken = adminSessionController?.getAccessToken();
+      if (nextToken) {
+        const retryHeaders = new Headers(options.headers ?? {});
+        retryHeaders.set("authorization", `Bearer ${nextToken}`);
+        return request<T>(path, { ...options, headers: retryHeaders }, query, false);
+      }
+    }
+  }
 
   if (!response.ok) {
     const fallback = { code: "unknown_error", message: "Une erreur est survenue." };
@@ -101,6 +132,36 @@ async function request<T>(path: string, options: RequestInit = {}, query?: Recor
   }
 
   return (await response.json()) as T;
+}
+
+function shouldRetryWithRefresh(path: string, headers: Headers) {
+  return !path.startsWith("/api/v1/auth/") && headers.has("authorization") && adminSessionController !== null;
+}
+
+async function refreshSessionWithSingleFlight(): Promise<boolean> {
+  if (!adminSessionController) return false;
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const attemptedRefreshToken = adminSessionController?.getRefreshToken() ?? null;
+    if (!attemptedRefreshToken) return false;
+
+    try {
+      const session = await request<AuthSession>("/api/v1/auth/refresh", {
+        method: "POST",
+        body: JSON.stringify({ refreshToken: attemptedRefreshToken })
+      });
+      adminSessionController?.applySession(session);
+      return true;
+    } catch {
+      adminSessionController?.clearSessionIfRefreshTokenMatches(attemptedRefreshToken);
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 function authHeaders(token: string) {

@@ -20,7 +20,7 @@ part 'pro_subscription_update_input_billing_method.g.dart';
 abstract class ProSubscriptionUpdateInputBillingMethod implements Built<ProSubscriptionUpdateInputBillingMethod, ProSubscriptionUpdateInputBillingMethodBuilder> {
   @BuiltValueField(wireName: r'provider')
   ProSubscriptionUpdateInputBillingMethodProviderEnum get provider;
-  // enum providerEnum {  paydunya,  intech,  manual,  };
+  // enum providerEnum {  paydunya,  manual,  };
 
   @BuiltValueField(wireName: r'accountNumber')
   String get accountNumber;
@@ -162,8 +162,6 @@ class ProSubscriptionUpdateInputBillingMethodProviderEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const ProSubscriptionUpdateInputBillingMethodProviderEnum paydunya = _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya;
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const ProSubscriptionUpdateInputBillingMethodProviderEnum intech = _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech;
   @BuiltValueEnumConst(wireName: r'manual')
   static const ProSubscriptionUpdateInputBillingMethodProviderEnum manual = _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual;
 

@@ -57,6 +57,7 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
 
   Future<void> updateProfile({
     String? fullName,
+    String? phone,
     String? city,
     String? preferredContactChannel,
     bool? pushOptIn,
@@ -65,8 +66,10 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
   }) async {
     final payload = <String, dynamic>{
       if (fullName != null) 'fullName': fullName,
+      if (phone != null) 'phone': phone,
       if (city != null) 'city': city,
-      if (preferredContactChannel != null) 'preferredContactChannel': preferredContactChannel,
+      if (preferredContactChannel != null)
+        'preferredContactChannel': preferredContactChannel,
       if (pushOptIn != null) 'pushOptIn': pushOptIn,
       if (marketingOptIn != null) 'marketingOptIn': marketingOptIn,
       if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
@@ -75,6 +78,7 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     if (previous != null) {
       final next = previous.copyWith(
         fullName: fullName,
+        phone: phone,
         city: city,
         preferredContactChannel: preferredContactChannel,
         pushOptIn: pushOptIn,

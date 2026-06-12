@@ -725,6 +725,32 @@ describe("AuthController", () => {
     expect(mocks.ok).toHaveBeenCalled();
   });
 
+  it("updateMe persists normalized phone on the user record", async () => {
+    mocks.requireRole.mockReturnValue({ sub: "u1" });
+    const tx = {
+      user: { update: vi.fn() },
+      session: { deleteMany: vi.fn() },
+      clientProfile: { upsert: vi.fn() }
+    };
+    mocks.prisma.$transaction.mockImplementation(async (cb: (txArg: any) => Promise<any>) => cb(tx));
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: "u1",
+      fullName: "Updated",
+      email: "u@example.com",
+      phone: "771234567",
+      role: "client",
+      salonId: null,
+      clientProfile: null
+    });
+
+    await c.updateMe({ body: { phone: "77 123 45 67" } } as never, {} as never);
+
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      data: { phone: "771234567" }
+    });
+  });
+
   it("updateMe with fullName only skips clientProfile upsert branch", async () => {
     mocks.requireRole.mockReturnValue({ sub: "u1" });
     const tx = {
@@ -745,6 +771,35 @@ describe("AuthController", () => {
     await c.updateMe({ body: { fullName: "Only Name" } } as never, {} as never);
     expect(tx.user.update).toHaveBeenCalled();
     expect(tx.clientProfile.upsert).not.toHaveBeenCalled();
+  });
+
+  it("auth shared endpoints allow salon_manager", async () => {
+    mocks.requireRole.mockReturnValue({ sub: "manager_1", role: "salon_manager" });
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: "manager_1",
+      fullName: "Manager",
+      email: "manager@example.com",
+      phone: "770000000",
+      role: "salon_manager",
+      salonId: "salon_1",
+      clientProfile: null
+    });
+    mocks.prisma.$transaction.mockImplementation(async (cb: (txArg: any) => Promise<any>) =>
+      cb({
+        user: { update: vi.fn() },
+        session: { deleteMany: vi.fn() },
+        clientProfile: { upsert: vi.fn() }
+      })
+    );
+
+    await c.logout({ body: { refreshToken: "r" } } as never, {} as never);
+    await c.me({} as never, {} as never);
+    await c.updateMe({ body: { fullName: "Manager Updated" } } as never, {} as never);
+
+    expect(mocks.requireRole).toHaveBeenNthCalledWith(1, expect.anything(), ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
+    expect(mocks.requireRole).toHaveBeenNthCalledWith(2, expect.anything(), ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
+    expect(mocks.requireRole).toHaveBeenNthCalledWith(3, expect.anything(), ["platform_admin", "client", "salon_owner", "salon_staff", "salon_manager"]);
+    expect(mocks.ok).toHaveBeenCalled();
   });
 
   it("updateMe succeeds with password rotation flow", async () => {

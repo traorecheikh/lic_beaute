@@ -31,7 +31,7 @@ abstract class ProfileOptions implements Built<ProfileOptions, ProfileOptionsBui
 
   @BuiltValueField(wireName: r'paymentProviders')
   BuiltList<ProfileOptionsPaymentProvidersEnum> get paymentProviders;
-  // enum paymentProvidersEnum {  intech,  paydunya,  manual,  };
+  // enum paymentProvidersEnum {  paydunya,  manual,  };
 
   ProfileOptions._();
 
@@ -188,8 +188,6 @@ class ProfileOptionsContactChannelsEnum extends EnumClass {
 
 class ProfileOptionsPaymentProvidersEnum extends EnumClass {
 
-  @BuiltValueEnumConst(wireName: r'intech')
-  static const ProfileOptionsPaymentProvidersEnum intech = _$profileOptionsPaymentProvidersEnum_intech;
   @BuiltValueEnumConst(wireName: r'paydunya')
   static const ProfileOptionsPaymentProvidersEnum paydunya = _$profileOptionsPaymentProvidersEnum_paydunya;
   @BuiltValueEnumConst(wireName: r'manual')

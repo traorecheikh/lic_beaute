@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost:3000*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**apiV1ConfigPricingGet**](CatalogApi.md#apiv1configpricingget) | **GET** /api/v1/config/pricing | Get subscription pricing tiers
+[**apiV1ConfigSupportGet**](CatalogApi.md#apiv1configsupportget) | **GET** /api/v1/config/support | Get support contact info
 [**apiV1SalonsIdAvailabilityGet**](CatalogApi.md#apiv1salonsidavailabilityget) | **GET** /api/v1/salons/{id}/availability | Get available booking slots
 [**apiV1SalonsIdReviewsGet**](CatalogApi.md#apiv1salonsidreviewsget) | **GET** /api/v1/salons/{id}/reviews | List salon reviews
 
@@ -39,6 +40,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**ApiV1ConfigPricingGet200Response**](ApiV1ConfigPricingGet200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiV1ConfigSupportGet**
+> ApiV1ConfigSupportGet200Response apiV1ConfigSupportGet()
+
+Get support contact info
+
+### Example
+```dart
+import 'package:beauteavenue_api/api.dart';
+
+final api = BeauteavenueApi().getCatalogApi();
+
+try {
+    final response = api.apiV1ConfigSupportGet();
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling CatalogApi->apiV1ConfigSupportGet: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ApiV1ConfigSupportGet200Response**](ApiV1ConfigSupportGet200Response.md)
 
 ### Authorization
 

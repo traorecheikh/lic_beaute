@@ -10,16 +10,24 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
   @override
   final String? redirectUrl;
   @override
-  final String chargeId;
+  final String? chargeId;
   @override
   final bool? resumed;
+  @override
+  final bool? downgradeScheduled;
+  @override
+  final DateTime? effectiveAt;
 
   factory _$ProSubscriptionCheckoutResult(
           [void Function(ProSubscriptionCheckoutResultBuilder)? updates]) =>
       (ProSubscriptionCheckoutResultBuilder()..update(updates))._build();
 
   _$ProSubscriptionCheckoutResult._(
-      {this.redirectUrl, required this.chargeId, this.resumed})
+      {this.redirectUrl,
+      this.chargeId,
+      this.resumed,
+      this.downgradeScheduled,
+      this.effectiveAt})
       : super._();
   @override
   ProSubscriptionCheckoutResult rebuild(
@@ -36,7 +44,9 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
     return other is ProSubscriptionCheckoutResult &&
         redirectUrl == other.redirectUrl &&
         chargeId == other.chargeId &&
-        resumed == other.resumed;
+        resumed == other.resumed &&
+        downgradeScheduled == other.downgradeScheduled &&
+        effectiveAt == other.effectiveAt;
   }
 
   @override
@@ -45,6 +55,8 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
     _$hash = $jc(_$hash, redirectUrl.hashCode);
     _$hash = $jc(_$hash, chargeId.hashCode);
     _$hash = $jc(_$hash, resumed.hashCode);
+    _$hash = $jc(_$hash, downgradeScheduled.hashCode);
+    _$hash = $jc(_$hash, effectiveAt.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -54,7 +66,9 @@ class _$ProSubscriptionCheckoutResult extends ProSubscriptionCheckoutResult {
     return (newBuiltValueToStringHelper(r'ProSubscriptionCheckoutResult')
           ..add('redirectUrl', redirectUrl)
           ..add('chargeId', chargeId)
-          ..add('resumed', resumed))
+          ..add('resumed', resumed)
+          ..add('downgradeScheduled', downgradeScheduled)
+          ..add('effectiveAt', effectiveAt))
         .toString();
   }
 }
@@ -77,6 +91,15 @@ class ProSubscriptionCheckoutResultBuilder
   bool? get resumed => _$this._resumed;
   set resumed(bool? resumed) => _$this._resumed = resumed;
 
+  bool? _downgradeScheduled;
+  bool? get downgradeScheduled => _$this._downgradeScheduled;
+  set downgradeScheduled(bool? downgradeScheduled) =>
+      _$this._downgradeScheduled = downgradeScheduled;
+
+  DateTime? _effectiveAt;
+  DateTime? get effectiveAt => _$this._effectiveAt;
+  set effectiveAt(DateTime? effectiveAt) => _$this._effectiveAt = effectiveAt;
+
   ProSubscriptionCheckoutResultBuilder() {
     ProSubscriptionCheckoutResult._defaults(this);
   }
@@ -87,6 +110,8 @@ class ProSubscriptionCheckoutResultBuilder
       _redirectUrl = $v.redirectUrl;
       _chargeId = $v.chargeId;
       _resumed = $v.resumed;
+      _downgradeScheduled = $v.downgradeScheduled;
+      _effectiveAt = $v.effectiveAt;
       _$v = null;
     }
     return this;
@@ -109,9 +134,10 @@ class ProSubscriptionCheckoutResultBuilder
     final _$result = _$v ??
         _$ProSubscriptionCheckoutResult._(
           redirectUrl: redirectUrl,
-          chargeId: BuiltValueNullFieldError.checkNotNull(
-              chargeId, r'ProSubscriptionCheckoutResult', 'chargeId'),
+          chargeId: chargeId,
           resumed: resumed,
+          downgradeScheduled: downgradeScheduled,
+          effectiveAt: effectiveAt,
         );
     replace(_$result);
     return _$result;

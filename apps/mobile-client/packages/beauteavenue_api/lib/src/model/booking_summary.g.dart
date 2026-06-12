@@ -88,9 +88,6 @@ final BuiltSet<BookingSummaryDepositPaymentStatusEnum>
 ]);
 
 const BookingSummaryPaymentProviderEnum
-    _$bookingSummaryPaymentProviderEnum_intech =
-    const BookingSummaryPaymentProviderEnum._('intech');
-const BookingSummaryPaymentProviderEnum
     _$bookingSummaryPaymentProviderEnum_paydunya =
     const BookingSummaryPaymentProviderEnum._('paydunya');
 const BookingSummaryPaymentProviderEnum
@@ -100,8 +97,6 @@ const BookingSummaryPaymentProviderEnum
 BookingSummaryPaymentProviderEnum _$bookingSummaryPaymentProviderEnumValueOf(
     String name) {
   switch (name) {
-    case 'intech':
-      return _$bookingSummaryPaymentProviderEnum_intech;
     case 'paydunya':
       return _$bookingSummaryPaymentProviderEnum_paydunya;
     case 'manual':
@@ -114,7 +109,6 @@ BookingSummaryPaymentProviderEnum _$bookingSummaryPaymentProviderEnumValueOf(
 final BuiltSet<BookingSummaryPaymentProviderEnum>
     _$bookingSummaryPaymentProviderEnumValues = BuiltSet<
         BookingSummaryPaymentProviderEnum>(const <BookingSummaryPaymentProviderEnum>[
-  _$bookingSummaryPaymentProviderEnum_intech,
   _$bookingSummaryPaymentProviderEnum_paydunya,
   _$bookingSummaryPaymentProviderEnum_manual,
 ]);
@@ -204,12 +198,10 @@ class _$BookingSummaryDepositPaymentStatusEnumSerializer
 class _$BookingSummaryPaymentProviderEnumSerializer
     implements PrimitiveSerializer<BookingSummaryPaymentProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'intech': 'intech',
     'paydunya': 'paydunya',
     'manual': 'manual',
   };

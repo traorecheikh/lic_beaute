@@ -13,6 +13,7 @@ part 'update_me_input.g.dart';
 ///
 /// Properties:
 /// * [fullName] 
+/// * [phone] 
 /// * [city] 
 /// * [avatarMediaId] 
 /// * [preferredContactChannel] 
@@ -25,6 +26,9 @@ part 'update_me_input.g.dart';
 abstract class UpdateMeInput implements Built<UpdateMeInput, UpdateMeInputBuilder> {
   @BuiltValueField(wireName: r'fullName')
   String? get fullName;
+
+  @BuiltValueField(wireName: r'phone')
+  String? get phone;
 
   @BuiltValueField(wireName: r'city')
   String? get city;
@@ -80,6 +84,13 @@ class _$UpdateMeInputSerializer implements PrimitiveSerializer<UpdateMeInput> {
       yield serializers.serialize(
         object.fullName,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.phone != null) {
+      yield r'phone';
+      yield serializers.serialize(
+        object.phone,
+        specifiedType: const FullType.nullable(String),
       );
     }
     if (object.city != null) {
@@ -167,6 +178,14 @@ class _$UpdateMeInputSerializer implements PrimitiveSerializer<UpdateMeInput> {
             specifiedType: const FullType(String),
           ) as String;
           result.fullName = valueDes;
+          break;
+        case r'phone':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.phone = valueDes;
           break;
         case r'city':
           final valueDes = serializers.deserialize(

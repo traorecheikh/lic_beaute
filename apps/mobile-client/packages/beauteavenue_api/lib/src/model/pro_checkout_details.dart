@@ -16,6 +16,7 @@ part 'pro_checkout_details.g.dart';
 /// * [bookingId] 
 /// * [status] 
 /// * [clientName] 
+/// * [clientPhone] 
 /// * [serviceName] 
 /// * [startsAt] 
 /// * [staffName] 
@@ -34,6 +35,9 @@ abstract class ProCheckoutDetails implements Built<ProCheckoutDetails, ProChecko
 
   @BuiltValueField(wireName: r'clientName')
   String? get clientName;
+
+  @BuiltValueField(wireName: r'clientPhone')
+  String? get clientPhone;
 
   @BuiltValueField(wireName: r'serviceName')
   String get serviceName;
@@ -92,6 +96,11 @@ class _$ProCheckoutDetailsSerializer implements PrimitiveSerializer<ProCheckoutD
     yield r'clientName';
     yield object.clientName == null ? null : serializers.serialize(
       object.clientName,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'clientPhone';
+    yield object.clientPhone == null ? null : serializers.serialize(
+      object.clientPhone,
       specifiedType: const FullType.nullable(String),
     );
     yield r'serviceName';
@@ -173,6 +182,14 @@ class _$ProCheckoutDetailsSerializer implements PrimitiveSerializer<ProCheckoutD
           ) as String?;
           if (valueDes == null) continue;
           result.clientName = valueDes;
+          break;
+        case r'clientPhone':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.clientPhone = valueDes;
           break;
         case r'serviceName':
           final valueDes = serializers.deserialize(

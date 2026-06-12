@@ -22,6 +22,7 @@ doc/AdminSubscriptionDetail.md
 doc/AdminSubscriptionDetailEntitlementsInner.md
 doc/AdminSubscriptionDetailEventsInner.md
 doc/AdminSubscriptionDetailInvoicesInner.md
+doc/AdminSubscriptionDetailPendingChargesInner.md
 doc/AdminSubscriptionListResponse.md
 doc/AdminSubscriptionListResponseItemsInner.md
 doc/AdminSubscriptionListResponseSummary.md
@@ -53,6 +54,7 @@ doc/ApiV1BookingsBookingIdReviewPost201Response.md
 doc/ApiV1BookingsBookingIdReviewPostRequest.md
 doc/ApiV1ConfigPricingGet200Response.md
 doc/ApiV1ConfigPricingGet200ResponseStandard.md
+doc/ApiV1ConfigSupportGet200Response.md
 doc/ApiV1MeAddressesAddressIdPatchRequest.md
 doc/ApiV1MeAddressesGet200Response.md
 doc/ApiV1MeAddressesGet200ResponseItemsInner.md
@@ -93,6 +95,9 @@ doc/ClientVoucher.md
 doc/CurrentUser.md
 doc/DeletedResponse.md
 doc/EmailLoginInput.md
+doc/EmailOtpAcceptedResponse.md
+doc/EmailOtpRequestInput.md
+doc/EmailOtpVerifyInput.md
 doc/FavoriteItem.md
 doc/FavoriteListResponse.md
 doc/FavoritesApi.md
@@ -227,6 +232,7 @@ lib/src/model/admin_subscription_detail.dart
 lib/src/model/admin_subscription_detail_entitlements_inner.dart
 lib/src/model/admin_subscription_detail_events_inner.dart
 lib/src/model/admin_subscription_detail_invoices_inner.dart
+lib/src/model/admin_subscription_detail_pending_charges_inner.dart
 lib/src/model/admin_subscription_list_response.dart
 lib/src/model/admin_subscription_list_response_items_inner.dart
 lib/src/model/admin_subscription_list_response_summary.dart
@@ -258,6 +264,7 @@ lib/src/model/api_v1_bookings_booking_id_review_post201_response.dart
 lib/src/model/api_v1_bookings_booking_id_review_post_request.dart
 lib/src/model/api_v1_config_pricing_get200_response.dart
 lib/src/model/api_v1_config_pricing_get200_response_standard.dart
+lib/src/model/api_v1_config_support_get200_response.dart
 lib/src/model/api_v1_me_addresses_address_id_patch_request.dart
 lib/src/model/api_v1_me_addresses_get200_response.dart
 lib/src/model/api_v1_me_addresses_get200_response_items_inner.dart
@@ -296,6 +303,9 @@ lib/src/model/current_user.dart
 lib/src/model/date.dart
 lib/src/model/deleted_response.dart
 lib/src/model/email_login_input.dart
+lib/src/model/email_otp_accepted_response.dart
+lib/src/model/email_otp_request_input.dart
+lib/src/model/email_otp_verify_input.dart
 lib/src/model/favorite_item.dart
 lib/src/model/favorite_list_response.dart
 lib/src/model/health_get200_response.dart
@@ -383,10 +393,8 @@ lib/src/model/update_me_input.dart
 lib/src/model/updated_response.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/paydunya_execute_payment_input_test.dart
-test/paydunya_execute_payment_response_other_url_test.dart
-test/paydunya_execute_payment_response_test.dart
-test/paydunya_method_list_response_methods_inner_test.dart
-test/paydunya_method_list_response_test.dart
-test/pro_subscription_execute_input_test.dart
-test/pro_subscription_execute_response_test.dart
+test/admin_subscription_detail_pending_charges_inner_test.dart
+test/api_v1_config_support_get200_response_test.dart
+test/email_otp_accepted_response_test.dart
+test/email_otp_request_input_test.dart
+test/email_otp_verify_input_test.dart

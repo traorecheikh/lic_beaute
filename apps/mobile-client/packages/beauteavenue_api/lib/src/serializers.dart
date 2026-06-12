@@ -34,6 +34,7 @@ import 'package:beauteavenue_api/src/model/admin_subscription_detail.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_entitlements_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_events_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_detail_invoices_inner.dart';
+import 'package:beauteavenue_api/src/model/admin_subscription_detail_pending_charges_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_list_response.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_list_response_items_inner.dart';
 import 'package:beauteavenue_api/src/model/admin_subscription_list_response_summary.dart';
@@ -65,6 +66,7 @@ import 'package:beauteavenue_api/src/model/api_v1_bookings_booking_id_review_pos
 import 'package:beauteavenue_api/src/model/api_v1_bookings_booking_id_review_post_request.dart';
 import 'package:beauteavenue_api/src/model/api_v1_config_pricing_get200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_config_pricing_get200_response_standard.dart';
+import 'package:beauteavenue_api/src/model/api_v1_config_support_get200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_addresses_address_id_patch_request.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_addresses_get200_response.dart';
 import 'package:beauteavenue_api/src/model/api_v1_me_addresses_get200_response_items_inner.dart';
@@ -102,6 +104,9 @@ import 'package:beauteavenue_api/src/model/client_voucher.dart';
 import 'package:beauteavenue_api/src/model/current_user.dart';
 import 'package:beauteavenue_api/src/model/deleted_response.dart';
 import 'package:beauteavenue_api/src/model/email_login_input.dart';
+import 'package:beauteavenue_api/src/model/email_otp_accepted_response.dart';
+import 'package:beauteavenue_api/src/model/email_otp_request_input.dart';
+import 'package:beauteavenue_api/src/model/email_otp_verify_input.dart';
 import 'package:beauteavenue_api/src/model/favorite_item.dart';
 import 'package:beauteavenue_api/src/model/favorite_list_response.dart';
 import 'package:beauteavenue_api/src/model/health_get200_response.dart';
@@ -211,6 +216,7 @@ part 'serializers.g.dart';
   AdminSubscriptionDetailEntitlementsInner,
   AdminSubscriptionDetailEventsInner,
   AdminSubscriptionDetailInvoicesInner,
+  AdminSubscriptionDetailPendingChargesInner,
   AdminSubscriptionListResponse,
   AdminSubscriptionListResponseItemsInner,
   AdminSubscriptionListResponseSummary,
@@ -242,6 +248,7 @@ part 'serializers.g.dart';
   ApiV1BookingsBookingIdReviewPostRequest,
   ApiV1ConfigPricingGet200Response,
   ApiV1ConfigPricingGet200ResponseStandard,
+  ApiV1ConfigSupportGet200Response,
   ApiV1MeAddressesAddressIdPatchRequest,
   ApiV1MeAddressesGet200Response,
   ApiV1MeAddressesGet200ResponseItemsInner,
@@ -279,6 +286,9 @@ part 'serializers.g.dart';
   CurrentUser,
   DeletedResponse,
   EmailLoginInput,
+  EmailOtpAcceptedResponse,
+  EmailOtpRequestInput,
+  EmailOtpVerifyInput,
   FavoriteItem,
   FavoriteListResponse,
   HealthGet200Response,

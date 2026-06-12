@@ -100,6 +100,33 @@ describe("PaymentController", () => {
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "phone_required", expect.any(String));
   });
 
+  it("initiate falls back to default payment method phone for paydunya", async () => {
+    mocks.prisma.payment.findFirst.mockResolvedValue({
+      id: "p4",
+      bookingId: "b4",
+      amountXof: 1000,
+      idempotencyKey: "k4",
+      booking: { clientId: "u1" }
+    });
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      phone: null,
+      clientPaymentMethods: [{ phoneNumber: "77 123 45 67" }]
+    });
+    mocks.adapter.initiateDeposit.mockResolvedValue({
+      providerRef: "pref4",
+      providerToken: "tok4",
+      redirectUrl: "https://pay/fallback",
+      expiresAt: new Date()
+    });
+
+    await c.initiate({ body: { bookingId: "b4", provider: "paydunya" } } as never, {} as never);
+
+    expect(mocks.adapter.initiateDeposit).toHaveBeenCalledWith(expect.objectContaining({
+      phone: "771234567"
+    }));
+    expect(mocks.ok).toHaveBeenCalled();
+  });
+
   it("status returns 404 when payment missing", async () => {
     mocks.requireRole.mockReturnValue({ sub: "u1", role: "client" });
     mocks.prisma.payment.findUnique.mockResolvedValue(null);

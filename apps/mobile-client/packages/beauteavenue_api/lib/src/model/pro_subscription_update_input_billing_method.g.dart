@@ -10,9 +10,6 @@ const ProSubscriptionUpdateInputBillingMethodProviderEnum
     _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya =
     const ProSubscriptionUpdateInputBillingMethodProviderEnum._('paydunya');
 const ProSubscriptionUpdateInputBillingMethodProviderEnum
-    _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech =
-    const ProSubscriptionUpdateInputBillingMethodProviderEnum._('intech');
-const ProSubscriptionUpdateInputBillingMethodProviderEnum
     _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual =
     const ProSubscriptionUpdateInputBillingMethodProviderEnum._('manual');
 
@@ -21,8 +18,6 @@ ProSubscriptionUpdateInputBillingMethodProviderEnum
   switch (name) {
     case 'paydunya':
       return _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya;
-    case 'intech':
-      return _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech;
     case 'manual':
       return _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual;
     default:
@@ -34,7 +29,6 @@ final BuiltSet<ProSubscriptionUpdateInputBillingMethodProviderEnum>
     _$proSubscriptionUpdateInputBillingMethodProviderEnumValues = BuiltSet<
         ProSubscriptionUpdateInputBillingMethodProviderEnum>(const <ProSubscriptionUpdateInputBillingMethodProviderEnum>[
   _$proSubscriptionUpdateInputBillingMethodProviderEnum_paydunya,
-  _$proSubscriptionUpdateInputBillingMethodProviderEnum_intech,
   _$proSubscriptionUpdateInputBillingMethodProviderEnum_manual,
 ]);
 
@@ -48,12 +42,10 @@ class _$ProSubscriptionUpdateInputBillingMethodProviderEnumSerializer
             ProSubscriptionUpdateInputBillingMethodProviderEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'paydunya': 'paydunya',
-    'intech': 'intech',
     'manual': 'manual',
   };
 
