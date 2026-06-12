@@ -7,14 +7,17 @@ describe("push module", () => {
     vi.unstubAllGlobals();
   });
 
-  it("throws in production when FCM base64 is missing", async () => {
+  it("does not throw on import or on use when FCM base64 is missing in production", async () => {
+    const warn = vi.fn();
     vi.doMock("../config.js", () => ({
       config: { pushDriver: "fcm", fcmServiceAccountJsonB64: "", nodeEnv: "production" }
     }));
-    vi.doMock("./logger.js", () => ({ logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() } }));
+    vi.doMock("./logger.js", () => ({ logger: { warn, error: vi.fn(), info: vi.fn() } }));
     vi.doMock("./db/prisma.js", () => ({ prisma: { pushToken: { updateMany: vi.fn() } } }));
 
-    await expect(import("./push.js")).rejects.toThrow(/required in production/);
+    const mod = await import("./push.js");
+    await mod.sendPush("t", { title: "", body: "" });
+    expect(warn).toHaveBeenCalledWith("[PUSH] sendPush skipped — no FCM credentials available");
   });
 
   it("warns and skips send when no account in development", async () => {
@@ -43,19 +46,22 @@ describe("push module", () => {
     vi.doMock("./db/prisma.js", () => ({ prisma: { pushToken: { updateMany: vi.fn() } } }));
     const mod = await import("./push.js");
     await mod.sendPush("token1", { title: "t", body: "b" });
-    expect(warn).toHaveBeenCalledWith("[PUSH] sendPush skipped — no FCM service account available", { pushToken: "token1" });
+    expect(warn).toHaveBeenCalledWith("[PUSH] sendPush skipped — no FCM credentials available");
   });
 
-  it("throws in production when FCM base64 is invalid", async () => {
+  it("warns on use when FCM base64 is invalid in production", async () => {
+    const warn = vi.fn();
     vi.doMock("../config.js", () => ({
       config: { pushDriver: "fcm", fcmServiceAccountJsonB64: "%%%bad%%%", nodeEnv: "production" }
     }));
-    vi.doMock("./logger.js", () => ({ logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() } }));
+    vi.doMock("./logger.js", () => ({ logger: { warn, error: vi.fn(), info: vi.fn() } }));
     vi.doMock("./db/prisma.js", () => ({ prisma: { pushToken: { updateMany: vi.fn() } } }));
-    await expect(import("./push.js")).rejects.toThrow(/decode failed/);
+    const mod = await import("./push.js");
+    await mod.sendPush("t", { title: "", body: "" });
+    expect(warn).toHaveBeenCalledWith("[PUSH] sendPush skipped — no FCM credentials available");
   });
 
-  it("warns in development when FCM service account misses required fields", async () => {
+  it("warns on use when FCM service account misses required fields in development", async () => {
     const warn = vi.fn();
     const service = Buffer.from(JSON.stringify({ project_id: "p1" }), "utf8").toString("base64");
     vi.doMock("../config.js", () => ({
@@ -65,7 +71,7 @@ describe("push module", () => {
     vi.doMock("./db/prisma.js", () => ({ prisma: { pushToken: { updateMany: vi.fn() } } }));
     const mod = await import("./push.js");
     await mod.sendPush("token1", { title: "t", body: "b" });
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith("[PUSH] sendPush skipped — no FCM credentials available");
   });
 
   it("revokes dead token on 400/404 failures", async () => {

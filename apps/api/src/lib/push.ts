@@ -13,10 +13,7 @@ type FcmServiceAccount = {
 function decodeAndValidateFcm(): FcmServiceAccount | null {
   if (config.pushDriver !== "fcm") return null;
   if (!config.fcmServiceAccountJsonB64) {
-    if (config.nodeEnv === "production") {
-      throw new Error("FCM_SERVICE_ACCOUNT_JSON_B64 is required in production when PUSH_DRIVER=fcm");
-    }
-    logger.warn("[PUSH] FCM_SERVICE_ACCOUNT_JSON_B64 not set — push delivery disabled");
+    // Delay the throw to first use so workers don't crash at import time.
     return null;
   }
 
@@ -28,15 +25,22 @@ function decodeAndValidateFcm(): FcmServiceAccount | null {
     }
     return parsed as FcmServiceAccount;
   } catch (err) {
-    if (config.nodeEnv === "production") {
-      throw new Error(`FCM_SERVICE_ACCOUNT_JSON_B64 decode failed: ${String(err)}`);
-    }
-    logger.warn("[PUSH] FCM_SERVICE_ACCOUNT_JSON_B64 decode failed — push delivery disabled", { err: String(err) });
+    // Delay the throw to first use.
     return null;
   }
 }
 
 export const fcmServiceAccount = decodeAndValidateFcm();
+let _fcmFailLogged = false;
+
+function ensureFcm(): FcmServiceAccount {
+  const sa = fcmServiceAccount;
+  if (sa) return sa;
+  if (config.nodeEnv === "production" && config.pushDriver === "fcm") {
+    throw new Error("FCM_SERVICE_ACCOUNT_JSON_B64 is required in production when PUSH_DRIVER=fcm");
+  }
+  throw new Error("Push delivery disabled (no FCM credentials)");
+}
 
 // Cache the OAuth2 access token to avoid a service-account round-trip per push.
 let _cachedToken: { token: string; expiresAt: number } | null = null;
@@ -98,14 +102,20 @@ export async function sendPush(
   message: { title: string; body: string },
   data?: Record<string, string>
 ) {
-  if (!fcmServiceAccount) {
-    logger.warn("[PUSH] sendPush skipped — no FCM service account available", { pushToken });
+  let sa: FcmServiceAccount;
+  try {
+    sa = ensureFcm();
+  } catch {
+    if (!_fcmFailLogged) {
+      _fcmFailLogged = true;
+      logger.warn("[PUSH] sendPush skipped — no FCM credentials available");
+    }
     return;
   }
 
   try {
-    const accessToken = await getAccessToken(fcmServiceAccount);
-    const url = `https://fcm.googleapis.com/v1/projects/${fcmServiceAccount.project_id}/messages:send`;
+    const accessToken = await getAccessToken(sa);
+    const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
     const payload: Record<string, unknown> = {
       token: pushToken,
