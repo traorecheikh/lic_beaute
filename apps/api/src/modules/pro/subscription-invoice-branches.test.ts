@@ -97,12 +97,15 @@ describe("Pro subscription/invoice branches", () => {
 
     await c.subscriptionCheckout({ body: { action: "upgrade", provider: "paydunya" } } as never, reply);
 
-    expect(mocks.prisma.subscriptionCharge.update).toHaveBeenCalledWith({
+    // First update resets the failed charge to pending
+    expect(mocks.prisma.subscriptionCharge.update).toHaveBeenNthCalledWith(1, {
       where: { id: "ch_failed" },
-      data: expect.objectContaining({
-        status: "pending",
-        providerTxId: "pref_new"
-      })
+      data: expect.objectContaining({ status: "pending" })
+    });
+    // Second update sets the new providerTxId
+    expect(mocks.prisma.subscriptionCharge.update).toHaveBeenNthCalledWith(2, {
+      where: { id: "ch_failed" },
+      data: expect.objectContaining({ providerTxId: "pref_new" })
     });
   });
 
@@ -130,6 +133,18 @@ describe("Pro subscription/invoice branches", () => {
   });
 
   it("executeSubscriptionPayment marks charge failed when PayDunya says already initiated", async () => {
+    // $transaction must execute the callback for _markSubscriptionChargeFailed.
+    // The callback uses tx.auditLog (plus possibly tx.subscription for upgrade case)
+    mocks.prisma.$transaction.mockImplementation(async (cb: any) => {
+      if (typeof cb === "function") {
+        return cb({
+          subscriptionCharge: mocks.prisma.subscriptionCharge,
+          subscription: mocks.prisma.subscription,
+          auditLog: { create: vi.fn() }
+        });
+      }
+      return [];
+    });
     mocks.prisma.subscriptionCharge.findUnique.mockResolvedValue({
       id: "ch3",
       status: "pending",

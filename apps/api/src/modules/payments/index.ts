@@ -111,6 +111,10 @@ export class PaymentController {
         where: { id: session.sub },
         select: { phone: true }
       });
+      if (config.paymentDriver === "paydunya" && !client?.phone) {
+        fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
+        return;
+      }
 
       const callbackUrl = `${config.webOrigin}/payment/callback`;
       const result = await paymentAdapter.initiateDeposit({
