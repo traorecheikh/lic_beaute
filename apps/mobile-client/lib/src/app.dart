@@ -1,9 +1,13 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import 'core/reactivity/app_reactivity.dart';
+import 'core/services/foreground_notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_connectivity_banner.dart';
 import 'core/widgets/app_connectivity_recovery.dart';
@@ -15,6 +19,23 @@ class ClientApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
+    // Wire notification tap handler — runs once
+    ForegroundNotificationService.onNotificationTap = (data) {
+      developer.log('[NOTIFICATION] tapped with type=${data['type']}', name: 'push');
+      final type = data['type'];
+      if (type == null) {
+        router.go(AppRoutes.bookingsList);
+        return;
+      }
+      switch (type) {
+        case 'booking_reminder':
+        case 'new_booking_salon':
+          router.go(AppRoutes.bookingsList);
+        default:
+          router.go(AppRoutes.notifications);
+      }
+    };
 
     return ScreenUtilInit(
       designSize: const Size(390, 844),

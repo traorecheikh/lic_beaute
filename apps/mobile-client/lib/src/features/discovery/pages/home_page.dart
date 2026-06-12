@@ -100,10 +100,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     final allLoaded = !topRatedAsync.isLoading && !trendingAsync.isLoading && !prestigeAsync.isLoading;
     final showGlobalEmpty = !showGlobalLoading && !showGlobalError && allLoaded && !hasAnyCatalogData && !hasNearby;
 
-    // Only show banner when permission is definitively denied (not on GPS timeout or empty results)
+    // Show banner when permission is not granted OR GPS is off
     final permDenied =
         locationStatus.asData?.value == LocationStatus.denied ||
-        locationStatus.asData?.value == LocationStatus.deniedForever;
+        locationStatus.asData?.value == LocationStatus.deniedForever ||
+        locationStatus.asData?.value == LocationStatus.serviceDisabled;
     final showBanner =
         !bannerDismissed && !locationStatus.isLoading && permDenied;
 
@@ -147,10 +148,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                             );
                             if (granted == true) {
                               ref.invalidate(nearbyProvider);
+                              ref.invalidate(locationStatusProvider);
                             }
-                            ref
-                                .read(locationBannerDismissedProvider.notifier)
-                                .dismiss();
                           },
                         ),
                       ),

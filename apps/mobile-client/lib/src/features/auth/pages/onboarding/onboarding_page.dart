@@ -47,6 +47,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final box = Hive.box<dynamic>(StorageKeys.settingsBox);
     await box.put(StorageKeys.onboardingCompleted, true);
     if (!mounted) return;
+    final granted = await context.push<bool>(AppRoutes.locationPermission);
+    if (!mounted) return;
     context.go(AppRoutes.auth);
   }
 
