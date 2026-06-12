@@ -362,6 +362,19 @@ export async function fetchPublicCategories(): Promise<{ id: string; name: strin
   return request<{ id: string; name: string }[]>("/api/v1/platform/categories", { method: "GET" });
 }
 
+/** Public endpoint to check if email or phone is already taken. No auth required. */
+export async function checkPublicUniqueness(fields: { email?: string; phone?: string; name?: string }): Promise<{ email?: "available" | "taken"; phone?: "available" | "taken"; name?: "available" | "taken" }> {
+  const params = new URLSearchParams();
+  if (fields.email) params.set("email", fields.email);
+  if (fields.phone) params.set("phone", fields.phone);
+  if (fields.name) params.set("name", fields.name);
+  const qs = params.toString();
+  return request<{ email?: "available" | "taken"; phone?: "available" | "taken"; name?: "available" | "taken" }>(
+    `/api/v1/platform/check-uniqueness${qs ? `?${qs}` : ""}`,
+    { method: "GET" }
+  );
+}
+
 export async function uploadRegistrationDoc(file: File): Promise<{ url: string }> {
   const formData = new FormData();
   formData.append("file", file);

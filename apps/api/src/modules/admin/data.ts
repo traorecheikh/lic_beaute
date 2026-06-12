@@ -530,8 +530,8 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
 
 // ─── Uniqueness check ─────────────────────────────────────────────────────────
 
-export async function checkSalonUniqueness(fields: { email?: string; phone?: string }) {
-  const result: { email?: "available" | "taken"; phone?: "available" | "taken" } = {};
+export async function checkSalonUniqueness(fields: { email?: string; phone?: string; name?: string }) {
+  const result: { email?: "available" | "taken"; phone?: "available" | "taken"; name?: "available" | "taken" } = {};
   if (fields.email) {
     const existing = await prisma.user.findUnique({ where: { email: fields.email }, select: { id: true } });
     result.email = existing ? "taken" : "available";
@@ -539,6 +539,10 @@ export async function checkSalonUniqueness(fields: { email?: string; phone?: str
   if (fields.phone) {
     const existing = await prisma.user.findFirst({ where: { phone: fields.phone }, select: { id: true } });
     result.phone = existing ? "taken" : "available";
+  }
+  if (fields.name) {
+    const existing = await prisma.salon.findFirst({ where: { name: { equals: fields.name, mode: "insensitive" } }, select: { id: true } });
+    result.name = existing ? "taken" : "available";
   }
   return result;
 }

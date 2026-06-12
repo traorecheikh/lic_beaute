@@ -285,6 +285,11 @@ export class AdminController {
     ok(reply, await listRequiredDocuments());
   }
 
+  async checkUniquenessPublic(request: FastifyRequest, reply: FastifyReply) {
+    const { email, phone, name } = request.query as { email?: string; phone?: string; name?: string };
+    ok(reply, await checkSalonUniqueness({ email, phone, name }));
+  }
+
   async upsertDocument(request: FastifyRequest, reply: FastifyReply) {
     const token = this.ensureAdmin(request, reply);
     if (!token) return;

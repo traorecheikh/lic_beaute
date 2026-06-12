@@ -33,7 +33,10 @@
             <div class="md:col-span-2">
               <label for="salon-name" class="section-label mb-3 block">Nom du salon</label>
               <input id="salon-name" type="text" v-model="form.salonName" name="salon_name" autocomplete="organization" required :aria-invalid="Boolean(fieldErrors.salonName)" aria-describedby="salon-name-error" :class="['input-shell text-base py-3', fieldErrors.salonName ? 'border-red-400' : '']" placeholder="Beauté Divine" />
-              <p id="salon-name-error" v-if="fieldErrors.salonName" class="text-xs text-red-600 mt-1">{{ fieldErrors.salonName }}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <p id="salon-name-error" v-if="fieldErrors.salonName" class="text-xs text-red-600">{{ fieldErrors.salonName }}</p>
+                <span v-if="validatingSalonName" class="text-[10px] text-cocoa/40">Vérification...</span>
+              </div>
             </div>
             <div>
               <label for="salon-city" class="section-label mb-3 block">Ville</label>
@@ -78,12 +81,18 @@
                   @input="onPhoneInput"
                 />
               </div>
-              <p id="owner-phone-error" v-if="fieldErrors.phone" class="text-xs text-red-600 mt-1">{{ fieldErrors.phone }}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <p id="owner-phone-error" v-if="fieldErrors.phone" class="text-xs text-red-600">{{ fieldErrors.phone }}</p>
+                <span v-if="validatingPhone" class="text-[10px] text-cocoa/40">Vérification...</span>
+              </div>
             </div>
             <div>
               <label for="owner-email" class="section-label mb-3 block">Email professionnel</label>
               <input id="owner-email" type="email" v-model="form.email" name="owner_email" autocomplete="email" required :aria-invalid="Boolean(fieldErrors.email)" aria-describedby="owner-email-error" :class="['input-shell text-base py-3', fieldErrors.email ? 'border-red-400' : '']" placeholder="contact@monsalon.com" />
-              <p id="owner-email-error" v-if="fieldErrors.email" class="text-xs text-red-600 mt-1">{{ fieldErrors.email }}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <p id="owner-email-error" v-if="fieldErrors.email" class="text-xs text-red-600">{{ fieldErrors.email }}</p>
+                <span v-if="validatingEmail" class="text-[10px] text-cocoa/40">Vérification...</span>
+              </div>
             </div>
             <div>
               <label for="owner-name" class="section-label mb-3 block">Nom complet du gérant</label>
@@ -271,9 +280,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, computed } from "vue";
+import { ref, reactive, onMounted, onUnmounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
+import { refDebounced } from "@vueuse/core";
 import {
   XMarkIcon,
   PlusIcon,
@@ -288,7 +298,7 @@ import {
   DocumentCheckIcon
 } from "@heroicons/vue/24/outline";
 import { registerProOwner } from "@/lib/pro-api";
-import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories, fetchPublicPricing } from "@/lib/api";
+import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories, fetchPublicPricing, checkPublicUniqueness } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 
 const router = useRouter();
@@ -459,6 +469,54 @@ const form = reactive({
   neighborhood: "",
   description: "",
   teamSize: "Juste moi"
+});
+
+const validatingEmail = ref(false);
+const validatingPhone = ref(false);
+const validatingSalonName = ref(false);
+
+// Debounced uniqueness watchers
+const rawEmail = ref("");
+const rawPhone = ref("");
+const rawSalonName = ref("");
+watch(() => form.email, (v) => { rawEmail.value = v; });
+watch(() => form.phone.replace(/\D+/g, ""), (v) => { rawPhone.value = v; });
+watch(() => form.salonName, (v) => { rawSalonName.value = v; });
+const debouncedEmail = refDebounced(rawEmail, 600);
+const debouncedPhone = refDebounced(rawPhone, 600);
+const debouncedSalonName = refDebounced(rawSalonName, 600);
+
+watch(debouncedEmail, async (email) => {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  validatingEmail.value = true;
+  try {
+    const result = await checkPublicUniqueness({ email });
+    if (result.email === "taken") fieldErrors.email = "Cet email est déjà associé à un salon.";
+    else delete fieldErrors.email;
+  } catch { /* ignore */ }
+  finally { validatingEmail.value = false; }
+});
+
+watch(debouncedPhone, async (phone) => {
+  if (!phone || phone.length < 8) return;
+  validatingPhone.value = true;
+  try {
+    const result = await checkPublicUniqueness({ phone });
+    if (result.phone === "taken") fieldErrors.phone = "Ce numéro est déjà associé à un salon.";
+    else delete fieldErrors.phone;
+  } catch { /* ignore */ }
+  finally { validatingPhone.value = false; }
+});
+
+watch(debouncedSalonName, async (name) => {
+  if (!name || name.trim().length < 2) return;
+  validatingSalonName.value = true;
+  try {
+    const result = await checkPublicUniqueness({ name: name.trim() });
+    if (result.name === "taken") fieldErrors.salonName = "Ce nom de salon est déjà utilisé.";
+    else delete fieldErrors.salonName;
+  } catch { /* ignore */ }
+  finally { validatingSalonName.value = false; }
 });
 
 function onPhoneInput(event: Event) {

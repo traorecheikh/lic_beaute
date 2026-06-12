@@ -55,6 +55,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/auth/upload-registration-doc", uploadDocLimit, (req, rep) => media.uploadRegistrationDoc(req, rep));
   app.get("/api/v1/platform/registration-docs", (req, rep) => admin.listDocumentsPublic(req, rep));
   app.get("/api/v1/platform/categories", (req, rep) => admin.listCategoriesPublic(req, rep));
+  app.get("/api/v1/platform/check-uniqueness", (req, rep) => admin.checkUniquenessPublic(req, rep));
   app.post("/api/v1/auth/otp/request", otpLimit, (req, rep) => auth.requestOtp(req, rep));
   app.post("/api/v1/auth/otp/verify", otpLimit, (req, rep) => auth.verifyOtp(req, rep));
   app.post("/api/v1/auth/otp/email/request", otpLimit, (req, rep) => auth.requestEmailOtp(req, rep));

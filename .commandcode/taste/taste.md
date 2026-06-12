@@ -15,6 +15,9 @@ See [paydunya/taste.md](paydunya/taste.md)
 
 # ui
 See [ui/taste.md](ui/taste.md)
+# architecture
+- When implementing uniqueness validation for pro registration, include salon name (nom de salon) alongside email and phone. Confidence: 0.65
+
 # deployment
 - Gate new or experimental features behind environment variable flags (e.g., `RESTRICTED_FEATURE=on`). When the flag is unset or has any other value, the feature should be hidden entirely with a graceful fallback. Confidence: 0.70
 - For staging deployments, use the project's actual configured drivers/services (email, OTP, payment) instead of defaulting to `noop` or `mock` placeholders. Confidence: 0.60
