@@ -137,8 +137,8 @@ export const useProAuthStore = defineStore("pro-auth", () => {
     await applySession(session.accessToken, session.refreshToken);
   }
 
-  async function loginWithInviteToken(inviteToken: string) {
-    const session = await redeemStaffInviteToken(inviteToken);
+  async function loginWithInviteToken(inviteToken: string, userId: string) {
+    const session = await redeemStaffInviteToken(inviteToken, userId);
     await applySession(session.accessToken, session.refreshToken);
   }
 

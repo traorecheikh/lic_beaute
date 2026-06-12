@@ -743,11 +743,20 @@ export class PaymentController {
             status: "Confirmée"
           }) : undefined;
 
+          const { buildEmailHtml } = await import("../../lib/email-html.js");
           await sendEmail({
             to: meta.clientEmail,
             subject: "Votre réservation est confirmée — BeautéAvenue",
             text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur BeautéAvenue.`,
-            html: `<p>Bonjour,</p><p>Votre réservation pour <strong>${meta.serviceName}</strong> est confirmée.</p><p>Vous trouverez en pièce jointe votre confirmation de réservation.</p><p>À très bientôt sur BeautéAvenue.</p>`,
+            html: buildEmailHtml({
+              preheader: "Réservation confirmée",
+              greeting: "Bonjour,",
+              bodyLines: [
+                `Votre réservation pour <strong>${meta.serviceName}</strong> est confirmée.`
+              ],
+              ignoreNote: false,
+              footerNote: "À très bientôt sur BeautéAvenue."
+            }),
             attachments: pdf ? [{ filename: `confirmation-${meta.bookingId.slice(0, 8)}.pdf`, content: pdf, contentType: "application/pdf" }] : undefined
           }).catch((err) => logger.warn("[PAYMENT] confirmation email failed", { to: meta.clientEmail, err }));
         } catch (err) {
@@ -867,6 +876,8 @@ export class PaymentController {
     if (ownerContact.email) {
       const ownerName = ownerContact.fullName ?? "";
       const salonName = ownerContact.salonName ?? "Votre salon";
+      const { buildEmailHtml } = await import("../../lib/email-html.js");
+      const amountLabel = (charge.amountXof / 100).toLocaleString("fr-FR");
 
       if (newStatus === "succeeded") {
         const chargeTypeLabel = charge.chargeType === "upgrade" ? "Passage Premium" : "Renouvellement";
@@ -877,9 +888,21 @@ export class PaymentController {
             `Bonjour ${ownerName},\n\n` +
             `Le paiement de votre abonnement pour "${salonName}" a été confirmé.\n` +
             `Type: ${chargeTypeLabel}\n` +
-            `Montant: ${(charge.amountXof / 100).toLocaleString("fr-FR")} FCFA\n\n` +
+            `Montant: ${amountLabel} FCFA\n\n` +
             `Consultez votre espace pro pour voir votre abonnement.\n\n` +
-            `— L'équipe Beauté Avenue`
+            `— L'équipe Beauté Avenue`,
+          html: buildEmailHtml({
+            preheader: "Paiement confirmé",
+            greeting: `Bonjour ${ownerName},`,
+            bodyLines: [
+              `Le paiement de votre abonnement pour <strong>${salonName}</strong> a été confirmé.`,
+              `<strong>Type :</strong> ${chargeTypeLabel}`,
+              `<strong>Montant :</strong> ${amountLabel} FCFA`
+            ],
+            cta: { url: `${config.webOrigin}/pro/billing`, label: "Voir mon abonnement" },
+            ignoreNote: false,
+            footerNote: "— L'équipe Beauté Avenue"
+          })
         }).catch((err) =>
           logger.warn("_applySubscriptionChargeStatus: success email failed", {
             err: String(err), chargeId: charge.id
@@ -892,9 +915,21 @@ export class PaymentController {
           text:
             `Bonjour ${ownerName},\n\n` +
             `Le paiement de votre abonnement pour "${salonName}" a échoué.\n` +
-            `Montant: ${(charge.amountXof / 100).toLocaleString("fr-FR")} FCFA\n\n` +
+            `Montant: ${amountLabel} FCFA\n\n` +
             `Veuillez réessayer depuis votre espace abonnement.\n\n` +
-            `— L'équipe Beauté Avenue`
+            `— L'équipe Beauté Avenue`,
+          html: buildEmailHtml({
+            preheader: "Paiement échoué",
+            greeting: `Bonjour ${ownerName},`,
+            bodyLines: [
+              `Le paiement de votre abonnement pour <strong>${salonName}</strong> a échoué.`,
+              `<strong>Montant :</strong> ${amountLabel} FCFA`,
+              `Veuillez réessayer depuis votre espace abonnement.`
+            ],
+            cta: { url: `${config.webOrigin}/pro/billing`, label: "Réessayer" },
+            ignoreNote: false,
+            footerNote: "— L'équipe Beauté Avenue"
+          })
         }).catch((err) =>
           logger.warn("_applySubscriptionChargeStatus: failure email failed", {
             err: String(err), chargeId: charge.id

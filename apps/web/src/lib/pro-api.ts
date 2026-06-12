@@ -481,12 +481,12 @@ export async function markAllNotificationsRead(token: string) {
   return withApiError(() => getNotificationsApi(token).apiV1NotificationsReadAllPost());
 }
 
-export async function redeemStaffInviteToken(inviteToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+export async function redeemStaffInviteToken(inviteToken: string, userId: string): Promise<{ accessToken: string; refreshToken: string }> {
   return withApiError(async () => {
     const response = await fetch(`${apiBaseUrl}/api/v1/auth/staff-invite/redeem`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: inviteToken })
+      body: JSON.stringify({ token: inviteToken, userId })
     });
     if (!response.ok) {
       const payload = await response.json().catch(() => ({ message: "Lien invalide ou expiré." })) as { code?: string; message?: string };

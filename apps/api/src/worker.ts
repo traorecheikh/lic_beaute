@@ -148,11 +148,20 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
       ).catch((err) => logger.warn("[WORKER] push reminder failed", { bookingId: booking.id, err }));
 
       if (booking.client.email) {
+        const { buildEmailHtml } = await import("./lib/email-html.js");
         await sendEmail({
           to: booking.client.email,
           subject: `Rappel — Votre RDV pour ${booking.service.name} ${windowLabel}`,
           text: `Bonjour,\n\nRappel : votre rendez-vous pour "${booking.service.name}" est prévu ${windowLabel}.\n\nÀ bientôt sur BeautéAvenue.`,
-          html: `<p>Bonjour,</p><p>Rappel : votre rendez-vous pour <strong>${booking.service.name}</strong> est prévu <strong>${windowLabel}</strong>.</p><p>À bientôt sur BeautéAvenue.</p>`
+          html: buildEmailHtml({
+            preheader: `Rappel de réservation ${windowLabel}`,
+            greeting: "Bonjour,",
+            bodyLines: [
+              `Rappel : votre rendez-vous pour <strong>${booking.service.name}</strong> est prévu <strong>${windowLabel}</strong>.`
+            ],
+            ignoreNote: false,
+            footerNote: "À bientôt sur BeautéAvenue."
+          })
         }).catch((err) => logger.warn("[WORKER] reminder email failed", { to: booking.client.email, err }));
       }
       return;
@@ -183,10 +192,22 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
       ));
       const ownerEmail = salonStaff.find((u) => u.email)?.email;
       if (ownerEmail) {
+        const { buildEmailHtml } = await import("./lib/email-html.js");
         await sendEmail({
           to: ownerEmail,
           subject: `Nouvelle réservation — ${serviceName}`,
-          text: `Bonjour,\n\n${clientName} vient de réserver "${serviceName}" pour le ${startsLabel}.\n\nConsultez l'agenda sur votre espace pro.\n\n— L'équipe Beauté Avenue`
+          text: `Bonjour,\n\n${clientName} vient de réserver "${serviceName}" pour le ${startsLabel}.\n\nConsultez l'agenda sur votre espace pro.\n\n— L'équipe Beauté Avenue`,
+          html: buildEmailHtml({
+            preheader: "Nouvelle réservation",
+            greeting: "Bonjour,",
+            bodyLines: [
+              `<strong>${clientName}</strong> vient de réserver <strong>"${serviceName}"</strong> pour le <strong>${startsLabel}</strong>.`,
+              `Consultez l'agenda sur votre espace pro.`
+            ],
+            cta: { url: `${config.webOrigin}/pro/calendar`, label: "Voir mon agenda" },
+            ignoreNote: false,
+            footerNote: "— L'équipe Beauté Avenue"
+          })
         }).catch((err) => logger.warn("[WORKER] new_booking_salon email failed", { to: ownerEmail, err }));
       }
       return;
@@ -226,11 +247,29 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
       const emailText = isResubmission
         ? `Le salon "${salonName}" a fourni les informations complémentaires demandées et attend votre validation.\n\nConnectez-vous au backoffice : /admin/salons/${salonId}`
         : `Un nouveau salon "${salonName}" a soumis son dossier et attend votre approbation.\n\nConnectez-vous au backoffice : /admin/salons/${salonId}`;
+      const { buildEmailHtml } = await import("./lib/email-html.js");
       await Promise.all(
         adminUsers
           .filter((u) => u.email)
           .map((u) =>
-            sendEmail({ to: u.email!, subject: emailSubject, text: emailText })
+            sendEmail({
+              to: u.email!,
+              subject: emailSubject,
+              text: emailText,
+              html: buildEmailHtml({
+                preheader: isResubmission ? "Dossier mis à jour" : "Nouveau dossier à valider",
+                greeting: "Bonjour,",
+                bodyLines: [
+                  isResubmission
+                    ? `Le salon <strong>${salonName}</strong> a fourni les informations complémentaires demandées.`
+                    : `Un nouveau salon <strong>${salonName}</strong> a soumis son dossier.`,
+                  isResubmission ? "Il attend votre validation." : "Il attend votre approbation."
+                ],
+                cta: { url: `${config.webOrigin ?? "https://admin.beauteavenue.sn"}/admin/salons/${salonId}`, label: "Voir le dossier" },
+                ignoreNote: false,
+                footerNote: "— Beauté Avenue"
+              })
+            })
               .catch((err) => logger.warn("[WORKER] salon_submitted_admin email failed", { to: u.email, err }))
           )
       );
@@ -276,6 +315,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
     case "subscription_expiry_check": {
       const now = new Date();
       const graceDurationMs = 3 * 24 * 60 * 60 * 1000;
+      const { buildEmailHtml } = await import("./lib/email-html.js");
 
       // Step 1: active → past_due (grace starts)
       const toGrace = await prisma.subscription.findMany({
@@ -295,7 +335,17 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
             to: ownerEmail,
             subject: "Votre abonnement BeautéAvenue expire dans 3 jours",
             text: `Bonjour,\n\nVotre abonnement a expiré. Vous disposez de 3 jours (jusqu'au ${gracePeriodEndsAt.toLocaleDateString("fr-FR")}) pour renouveler avant que votre salon ne soit suspendu.\n\nRenouvelez sur https://beauteavenue.sn/pro/subscription`,
-            html: `<p>Bonjour,</p><p>Votre abonnement a expiré. Vous disposez de <strong>3 jours</strong> (jusqu'au ${gracePeriodEndsAt.toLocaleDateString("fr-FR")}) pour renouveler avant que votre salon ne soit suspendu.</p><p><a href="https://beauteavenue.sn/pro/subscription">Renouveler maintenant</a></p>`
+            html: buildEmailHtml({
+              preheader: "Votre abonnement a expiré",
+              greeting: "Bonjour,",
+              bodyLines: [
+                `Votre abonnement a expiré.`,
+                `Vous disposez de <strong>3 jours</strong> (jusqu'au <strong>${gracePeriodEndsAt.toLocaleDateString("fr-FR")}</strong>) pour renouveler avant que votre salon ne soit suspendu.`
+              ],
+              cta: { url: "https://beauteavenue.sn/pro/subscription", label: "Renouveler mon abonnement" },
+              ignoreNote: false,
+              footerNote: "— L'équipe Beauté Avenue"
+            })
           }).catch((err) => logger.warn("[WORKER] grace email failed", { to: ownerEmail, err }));
         }
       }
@@ -333,7 +383,17 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
             to: ownerEmail,
             subject: "Votre salon BeautéAvenue est suspendu",
             text: `Bonjour,\n\nVotre abonnement a expiré et votre salon est maintenant suspendu. Pour le réactiver, renouvelez votre abonnement sur https://beauteavenue.sn/pro/subscription`,
-            html: `<p>Bonjour,</p><p>Votre abonnement a expiré et votre salon est maintenant <strong>suspendu</strong>.</p><p><a href="https://beauteavenue.sn/pro/subscription">Réactiver mon abonnement</a></p>`
+            html: buildEmailHtml({
+              preheader: "Votre salon est suspendu",
+              greeting: "Bonjour,",
+              bodyLines: [
+                `Votre abonnement a expiré et votre salon est maintenant <strong>suspendu</strong>.`,
+                `Pour le réactiver, renouvelez votre abonnement.`
+              ],
+              cta: { url: "https://beauteavenue.sn/pro/subscription", label: "Réactiver mon abonnement" },
+              ignoreNote: false,
+              footerNote: "— L'équipe Beauté Avenue"
+            })
           }).catch((err) => logger.warn("[WORKER] expired email failed", { to: ownerEmail, err }));
         }
       }

@@ -133,7 +133,7 @@ onMounted(async () => {
   if (typeof route.query.inviteToken === "string") {
     loading.value = true;
     try {
-      await auth.loginWithInviteToken(route.query.inviteToken);
+      await auth.loginWithInviteToken(route.query.inviteToken, route.query.userId as string ?? "");
       toast.success(`Bienvenue ${auth.currentUser?.fullName ?? ""}`.trim());
       await router.push("/pro/calendar");
     } catch (error) {

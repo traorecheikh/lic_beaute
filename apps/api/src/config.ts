@@ -1,6 +1,5 @@
 import { fileURLToPath } from "node:url";
 import { resolve, isAbsolute } from "node:path";
-import crypto from "node:crypto";
 
 import "dotenv/config";
 
@@ -18,7 +17,6 @@ export const config = {
   databaseConnectRetryDelayMs: Number(process.env.DATABASE_CONNECT_RETRY_DELAY_MS ?? 750),
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret",
-  jwtInviteSecret: process.env.JWT_INVITE_SECRET ?? crypto.randomBytes(32).toString("hex"),
   jwtAccessTtlSeconds: Number(process.env.JWT_ACCESS_TTL_SECONDS ?? 7200),
   jwtRefreshTtlSeconds: Number(process.env.JWT_REFRESH_TTL_SECONDS ?? 2592000),
   emailDriver: process.env.EMAIL_DRIVER ?? "noop",

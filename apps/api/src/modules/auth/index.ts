@@ -342,6 +342,7 @@ export class AuthController {
         payload: { salonId: result.salon.id, salonName: result.salon.name, resubmission: false }
       }).catch((err) => logger.warn("auth.register: salon_submitted_admin enqueue failed", { err }));
 
+      const { buildEmailHtml } = await import("../../lib/email-html.js");
       void sendEmail({
         to: body.email,
         subject: "Inscription reçue — Beauté Avenue Pro",
@@ -350,7 +351,19 @@ export class AuthController {
           `Votre dossier pour "${body.salon.name}" a bien été enregistré sur Beauté Avenue.\n` +
           `Statut actuel : en attente de validation.\n\n` +
           `Vous pouvez vous connecter pour suivre l'évolution de votre dossier.\n\n` +
-          `— L'équipe Beauté Avenue`
+          `— L'équipe Beauté Avenue`,
+        html: buildEmailHtml({
+          preheader: "Votre inscription a été reçue",
+          greeting: `Bonjour ${body.fullName},`,
+          bodyLines: [
+            `Votre dossier pour <strong>${body.salon.name}</strong> a bien été enregistré sur <strong>Beauté Avenue</strong>.`,
+            `Statut actuel : <strong>en attente de validation</strong>.`,
+            `Vous pouvez vous connecter à votre espace pro pour suivre l'évolution de votre dossier.`
+          ],
+          cta: { url: `${config.webOrigin}/pro/`, label: "Suivre mon dossier" },
+          ignoreNote: false,
+          footerNote: "— L'équipe Beauté Avenue"
+        })
       }).catch((err) => logger.error("auth.register salon_owner: failed to send welcome email", { err: String(err), to: body.email }));
       ok(reply, tokens, 201);
     }
@@ -645,10 +658,22 @@ export class AuthController {
           await tx.session.deleteMany({ where: { userId: session.sub } });
         });
         if (user.email) {
+          const { buildEmailHtml } = await import("../../lib/email-html.js");
           void sendEmail({
             to: user.email,
             subject: "Votre mot de passe a été modifié — Beauté Avenue",
-            text: `Bonjour ${user.fullName ?? ""},\n\nVotre mot de passe a bien été modifié. Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.\n\n— Beauté Avenue`
+            text: `Bonjour ${user.fullName ?? ""},\n\nVotre mot de passe a bien été modifié. Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.\n\n— Beauté Avenue`,
+            html: buildEmailHtml({
+              preheader: "Mot de passe modifié",
+              greeting: `Bonjour ${user.fullName ?? ""},`,
+              bodyLines: [
+                `Votre mot de passe a bien été modifié.`,
+                `Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.`
+              ],
+              cta: { url: `${config.webOrigin}/pro/login`, label: "Me connecter" },
+              ignoreNote: false,
+              footerNote: "— Beauté Avenue"
+            })
           });
         }
       }
@@ -881,35 +906,35 @@ export class AuthController {
 
   async redeemStaffInvite(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { token } = request.body as { token?: string };
-      if (!token || typeof token !== "string") {
-        fail(reply, 400, "missing_token", "Token manquant.");
+      const { token, userId } = request.body as { token?: string; userId?: string };
+      if (!token || !userId || typeof token !== "string" || typeof userId !== "string") {
+        fail(reply, 400, "missing_fields", "Token et userId requis.");
         return;
       }
-      let payload: { sub?: string; type?: string; jti?: string };
-      try {
-        const jwt = await import("jsonwebtoken");
-        payload = jwt.default.verify(token, config.jwtInviteSecret, { algorithms: ["HS256"] }) as { sub?: string; type?: string; jti?: string };
-      } catch {
-        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide ou expiré.");
-        return;
-      }
-      if (payload.type !== "staff_invite" || !payload.sub) {
-        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide.");
-        return;
-      }
-      if (!payload.jti) {
-        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide (ancien format).");
-        return;
-      }
-      const inviteKey = `invite:${payload.jti}`;
+      const inviteKey = `invite:${userId}`;
       const inviteRecord = await prisma.platformSetting.findUnique({ where: { key: inviteKey } });
       if (!inviteRecord) {
         fail(reply, 401, "invite_already_used", "Ce lien d'invitation a déjà été utilisé ou est invalide.");
         return;
       }
+      let entry: { tokenHash: string; expiresAt: number };
+      try { entry = JSON.parse(inviteRecord.value) as { tokenHash: string; expiresAt: number }; }
+      catch { fail(reply, 401, "invalid_invite_token", "Lien d'invitation corrompu."); return; }
+      if (entry.expiresAt < Date.now()) {
+        await prisma.platformSetting.delete({ where: { key: inviteKey } }).catch(() => {});
+        fail(reply, 401, "invite_expired", "Ce lien d'invitation a expiré (24h).");
+        return;
+      }
+      const expectedHash = createHash("sha256").update(token).digest("hex");
+      const tokenBuf = Buffer.from(expectedHash, "hex");
+      const actualBuf = Buffer.from(entry.tokenHash, "hex");
+      const valid = tokenBuf.length === actualBuf.length && timingSafeEqual(tokenBuf, actualBuf);
+      if (!valid) {
+        fail(reply, 401, "invalid_invite_token", "Lien d'invitation invalide.");
+        return;
+      }
       const user = await prisma.user.findUnique({
-        where: { id: payload.sub },
+        where: { id: userId },
         select: { id: true, role: true }
       });
       if (!user || !["salon_staff", "salon_manager", "salon_owner"].includes(user.role)) {
@@ -963,11 +988,23 @@ export class AuthController {
       update: { codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS), failedAttempts: 0 }
     });
 
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
     void sendEmail({
       to: body.email,
       subject: "Votre code de vérification — Beauté Avenue",
       text: `Bonjour,\n\nVotre code de vérification Beauté Avenue est : ${code}\n\nCe code est valable 5 minutes. Ne le partagez à personne.\n\n— L'équipe Beauté Avenue`,
-      html: `<p>Bonjour,</p><p>Votre code de vérification Beauté Avenue est :</p><p style="font-size:24px;font-weight:bold;letter-spacing:4px;text-align:center;padding:16px;background:#f5f5f5;border-radius:8px;">${code}</p><p>Ce code est valable <strong>5 minutes</strong>. Ne le partagez à personne.</p><p>— L'équipe Beauté Avenue</p>`
+      html: buildEmailHtml({
+        preheader: "Votre code de vérification",
+        greeting: "Bonjour,",
+        bodyLines: [
+          `Votre code de vérification <strong>Beauté Avenue</strong> est :`,
+          `<p style="font-family:monospace;font-size:28px;font-weight:700;letter-spacing:6px;text-align:center;padding:16px;background:#f7f4f2;border-radius:10px;margin:12px 0;color:#3c2e2a">${code}</p>`,
+          `Ce code est valable <strong>5 minutes</strong>. Ne le partagez à personne.`
+        ],
+        cta: undefined,
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
     }).catch((err) => logger.error("auth.requestEmailOtp: failed to send email", { err: String(err), to: body.email }));
 
     reply.code(202).send({ accepted: true, destination: body.email });

@@ -366,6 +366,7 @@ export async function approveSalon(salonId: string, actorName: string) {
 
   const owner = await getSalonOwnerContact(salonId);
   if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
     await sendEmail({
       to: owner.email,
       subject: "Votre salon est approuvé sur Beauté Avenue",
@@ -373,7 +374,18 @@ export async function approveSalon(salonId: string, actorName: string) {
         `Bonjour ${owner.fullName ?? ""},\n\n` +
         `Excellente nouvelle: le salon "${salon.name}" a été approuvé.\n` +
         `Dernière étape: activez votre abonnement pour rendre le salon visible et recevoir des réservations.\n\n` +
-        `— L'équipe Beauté Avenue`
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Votre dossier a été validé",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Excellente nouvelle ! Le salon <strong>${salon.name}</strong> a été approuvé.`,
+          `Dernière étape : <strong>activez votre abonnement</strong> pour rendre votre salon visible et recevoir vos premières réservations.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/billing`, label: "Activer mon abonnement" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
     }).catch((err) =>
       logger.error("approveSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
     );
@@ -404,6 +416,7 @@ export async function rejectSalon(salonId: string, input: AdminSalonDecisionInpu
 
   const owner = await getSalonOwnerContact(salonId);
   if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
     sendEmail({
       to: owner.email,
       subject: "Dossier salon refusé — Beauté Avenue",
@@ -412,7 +425,19 @@ export async function rejectSalon(salonId: string, input: AdminSalonDecisionInpu
         `Le dossier du salon "${salon.name}" a été refusé.\n` +
         `Motif: ${input.reason}\n\n` +
         `Vous pouvez corriger les éléments demandés puis soumettre à nouveau.\n\n` +
-        `— L'équipe Beauté Avenue`
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Votre dossier n'a pas été validé",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Le dossier du salon <strong>${salon.name}</strong> a été refusé.`,
+          `<strong>Motif :</strong> ${input.reason}`,
+          `Vous pouvez corriger les éléments demandés dans votre espace, puis soumettre à nouveau votre dossier.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/profile`, label: "Modifier mon dossier" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
     }).catch((err) =>
       logger.error("rejectSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
     );
@@ -443,6 +468,7 @@ export async function requestSalonInfo(salonId: string, input: AdminSalonDecisio
 
   const owner = await getSalonOwnerContact(salonId);
   if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
     await sendEmail({
       to: owner.email,
       subject: "Informations complémentaires requises — Beauté Avenue",
@@ -451,7 +477,19 @@ export async function requestSalonInfo(salonId: string, input: AdminSalonDecisio
         `Votre dossier pour "${salon.name}" nécessite des informations complémentaires.\n` +
         `Détail: ${input.reason}\n\n` +
         `Connectez-vous à votre espace pro pour mettre à jour votre dossier.\n\n` +
-        `— L'équipe Beauté Avenue`
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Informations complémentaires requises",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Votre dossier pour <strong>${salon.name}</strong> nécessite des informations complémentaires.`,
+          `<strong>Détail :</strong> ${input.reason}`,
+          `Connectez-vous à votre espace pro pour mettre à jour votre dossier.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/profile`, label: "Mettre à jour mon dossier" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
     }).catch((err) =>
       logger.error("requestSalonInfo: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
     );
@@ -519,10 +557,24 @@ export async function createSalon(data: AdminSalonCreateInput, actorName: string
     relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
   });
 
+  const { buildEmailHtml } = await import("../../lib/email-html.js");
   sendEmail({
     to: data.ownerEmail,
     subject: "Bienvenue sur Beauté Avenue — Activez votre espace pro",
-    text: `Bonjour ${data.ownerName},\n\nVotre espace pro Beauté Avenue a été créé.\n\nActivez votre compte en définissant votre mot de passe via le lien ci-dessous (valable 72h) :\n${setupLink ?? "(lien non disponible — contactez l'administrateur)"}\n\n— L'équipe Beauté Avenue`
+    text: `Bonjour ${data.ownerName},\n\nVotre espace pro Beauté Avenue a été créé.\n\nActivez votre compte en définissant votre mot de passe via le lien ci-dessous (valable 72h) :\n${setupLink ?? "(lien non disponible — contactez l'administrateur)"}\n\n— L'équipe Beauté Avenue`,
+    html: buildEmailHtml({
+      preheader: "Activez votre espace professionnel",
+      greeting: `Bonjour ${data.ownerName},`,
+      bodyLines: [
+        `Votre espace professionnel <strong>Beauté Avenue</strong> a été créé.`,
+        `Activez votre compte en définissant votre mot de passe via le bouton ci-dessous.`
+      ],
+      cta: setupLink ? { url: setupLink, label: "Activer mon espace" } : undefined,
+      expiryNote: "Ce lien expire dans 72 heures.",
+      usageNote: "Il ne peut être utilisé qu'une seule fois.",
+      ignoreNote: false,
+      footerNote: "— L'équipe Beauté Avenue"
+    })
   }).catch((err) => logger.error("createSalon: failed to send setup email", { err: String(err), ownerEmail: data.ownerEmail }));
 
   return await getPendingSalonDetail(salon.id);
@@ -775,6 +827,7 @@ export async function overrideSubscription(
 
   const owner = await getSalonOwnerContact(sub.salonId);
   if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
     await sendEmail({
       to: owner.email,
       subject: "Mise à jour abonnement salon — Beauté Avenue",
@@ -784,7 +837,20 @@ export async function overrideSubscription(
         `Action: ${input.action}\n` +
         `Motif: ${input.reason}\n\n` +
         `Consultez votre espace pro pour voir le statut actuel.\n\n` +
-        `— L'équipe Beauté Avenue`
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Mise à jour de votre abonnement",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Votre abonnement pour <strong>${sub.salon.name}</strong> a été mis à jour par l'administration.`,
+          `<strong>Action :</strong> ${input.action}`,
+          `<strong>Motif :</strong> ${input.reason}`,
+          `Consultez votre espace pro pour voir le statut actuel.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/billing`, label: "Voir mon abonnement" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
     }).catch((err) =>
       logger.error("overrideSubscription: failed to send subscription email", {
         err: String(err),
@@ -940,22 +1006,39 @@ export async function manualExtendSubscription(
 
   const owner = await getSalonOwnerContact(sub.salon.id);
   if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
     const expiryLabel = newExpiresAt.toLocaleDateString("fr-FR", {
       year: "numeric", month: "long", day: "numeric"
     });
+    const amountLabel = (input.amountXof / 100).toLocaleString("fr-FR");
     await sendEmail({
       to: owner.email,
       subject: "Abonnement prolongé — Beauté Avenue",
       text:
         `Bonjour ${owner.fullName ?? ""},\n\n` +
         `Votre abonnement pour "${sub.salon.name}" a été prolongé manuellement.\n` +
-        `Montant: ${(input.amountXof / 100).toLocaleString("fr-FR")} FCFA\n` +
+        `Montant: ${amountLabel} FCFA\n` +
         `Durée: ${input.durationDays} jours\n` +
         `Nouvelle date d'expiration: ${expiryLabel}\n` +
         `Motif: ${input.reason}\n` +
         `Référence: ${input.reference}\n\n` +
         `Consultez votre espace pro pour voir votre abonnement.\n\n` +
-        `— L'équipe Beauté Avenue`
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Votre abonnement a été prolongé",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Votre abonnement pour <strong>${sub.salon.name}</strong> a été prolongé manuellement.`,
+          `<strong>Montant :</strong> ${amountLabel} FCFA`,
+          `<strong>Durée :</strong> ${input.durationDays} jours`,
+          `<strong>Nouvelle date d'expiration :</strong> ${expiryLabel}`,
+          `<strong>Motif :</strong> ${input.reason}`,
+          `Référence : ${input.reference}`
+        ],
+        cta: { url: `${config.webOrigin}/pro/billing`, label: "Voir mon abonnement" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
     }).catch((err) =>
       logger.error("manualExtendSubscription: failed to send email", {
         err: String(err), ownerEmail: owner.email, subscriptionId
@@ -1238,10 +1321,22 @@ export async function sendMagicLink(salonId: string, actorName: string): Promise
 
   const magicLink = `${config.webOrigin}/pro/magic-login?token=${rawToken}&email=${encodeURIComponent(ownerEmail)}`;
 
+  const { buildEmailHtml } = await import("../../lib/email-html.js");
   await sendEmail({
     to: ownerEmail,
     subject: "Beauté Avenue — Lien de connexion rapide",
-    text: `Bonjour ${ownerName},\n\nUn administrateur vous a envoyé un lien de connexion rapide pour votre salon.\n\nCliquez sur le lien ci-dessous pour vous connecter automatiquement (valable 24h) :\n${magicLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`
+    text: `Bonjour ${ownerName},\n\nUn administrateur vous a envoyé un lien de connexion rapide pour votre salon.\n\nCliquez sur le lien ci-dessous pour vous connecter automatiquement (valable 24h) :\n${magicLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`,
+    html: buildEmailHtml({
+      preheader: "Connexion rapide à votre espace pro",
+      greeting: `Bonjour ${ownerName},`,
+      bodyLines: [
+        `Un administrateur vous a envoyé un lien de connexion rapide pour votre salon <strong>${salon.name}</strong>.`,
+        `Cliquez sur le bouton ci-dessous pour vous connecter automatiquement.`
+      ],
+      cta: { url: magicLink, label: "Me connecter" },
+      expiryNote: "Ce lien expire dans 24 heures.",
+      usageNote: "Il ne peut être utilisé qu'une seule fois."
+    })
   });
 
   await writeAuditLog({
@@ -1285,10 +1380,22 @@ export async function sendPasswordReset(salonId: string, actorName: string): Pro
 
   const resetLink = `${config.webOrigin}/pro/reset-password?token=${rawToken}&email=${encodeURIComponent(ownerEmail)}`;
 
+  const { buildEmailHtml } = await import("../../lib/email-html.js");
   await sendEmail({
     to: ownerEmail,
     subject: "Beauté Avenue — Réinitialisation de votre mot de passe",
-    text: `Bonjour ${ownerName},\n\nVotre administrateur a initié une réinitialisation de votre mot de passe.\n\nCliquez sur le lien ci-dessous pour définir un nouveau mot de passe (valable 72h) :\n${resetLink}\n\n— L'équipe Beauté Avenue`
+    text: `Bonjour ${ownerName},\n\nVotre administrateur a initié une réinitialisation de votre mot de passe.\n\nCliquez sur le lien ci-dessous pour définir un nouveau mot de passe (valable 72h) :\n${resetLink}\n\n— L'équipe Beauté Avenue`,
+    html: buildEmailHtml({
+      preheader: "Réinitialisation de votre mot de passe",
+      greeting: `Bonjour ${ownerName},`,
+      bodyLines: [
+        `Un administrateur a initié une réinitialisation de votre mot de passe pour <strong>${salon.name}</strong>.`,
+        `Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe.`
+      ],
+      cta: { url: resetLink, label: "Réinitialiser mon mot de passe" },
+      expiryNote: "Ce lien expire dans 72 heures.",
+      usageNote: "Il ne peut être utilisé qu'une seule fois."
+    })
   });
 
   await writeAuditLog({

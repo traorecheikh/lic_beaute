@@ -788,20 +788,17 @@ export class ProController {
       // Send invite email if the staff has an email address
       if (result.user.email) {
         try {
-          const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { name: true } });
-          const jwt = await import("jsonwebtoken");
           const crypto = await import("node:crypto");
-          const jti = crypto.randomUUID();
-          const token = jwt.default.sign(
-            { sub: result.user.id, type: "staff_invite", jti },
-            config.jwtInviteSecret,
-            { expiresIn: "24h" }
-          );
+          const { buildEmailHtml, escapeHtml } = await import("../../lib/email-html.js");
+          const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { name: true } });
+          const rawToken = crypto.randomBytes(32).toString("hex");
+          const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+          const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
           await prisma.platformSetting.create({
-            data: { group: "security", key: `invite:${jti}`, value: "pending", description: `Staff invite token for ${result.user.id}` }
+            data: { group: "security", key: `invite:${result.user.id}`, value: JSON.stringify({ tokenHash, expiresAt }), description: `Staff invite token for ${result.user.id}` }
           });
-          const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${encodeURIComponent(token)}`;
-          const staffName = result.user.fullName;
+          const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${rawToken}&userId=${encodeURIComponent(result.user.id)}`;
+          const staffName = result.user.fullName ?? "collaborateur";
           const salonName = salon?.name ?? "Votre salon";
           await sendEmail({
             to: result.user.email,
@@ -814,8 +811,19 @@ export class ProController {
               `Accédez à votre compte (lien valable 24h) :`,
               loginUrl,
               ``,
+              `Ce lien ne peut être utilisé qu'une seule fois.`,
+              ``,
               `Si vous ne connaissez pas ce salon, ignorez ce message.`
-            ].join("\n")
+            ].join("\n"),
+            html: buildEmailHtml({
+              greeting: `Bonjour ${staffName},`,
+              bodyLines: [
+                `<strong>${escapeHtml(salonName)}</strong> vous invite à rejoindre votre espace professionnel <strong>Beauté Avenue</strong>.`,
+              ],
+              cta: { url: loginUrl, label: "Accéder à mon espace" },
+              expiryNote: "Ce lien expire dans 24 heures.",
+              usageNote: "Il ne peut être utilisé qu'une seule fois."
+            })
           });
         } catch (emailErr) {
           logger.warn("createStaff: invite email failed", { userId: result.user.id, email: result.user.email, err: emailErr });
@@ -935,21 +943,20 @@ export class ProController {
         return;
       }
 
-      // Generate a short-lived signed invite token with one-time-use tracking
-      const jwt = await import("jsonwebtoken");
+      // Generate a short-lived opaque token with one-time-use tracking
       const crypto = await import("node:crypto");
-      const jti = crypto.randomUUID();
-      const token = jwt.default.sign(
-        { sub: employee.user.id, type: "staff_invite", jti },
-        config.jwtInviteSecret,
-        { expiresIn: "24h" }
-      );
-      await prisma.platformSetting.create({
-        data: { group: "security", key: `invite:${jti}`, value: "pending", description: `Staff invite token for ${employee.user.id}` }
+      const { buildEmailHtml, escapeHtml } = await import("../../lib/email-html.js");
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      await prisma.platformSetting.upsert({
+        where: { key: `invite:${employee.userId}` },
+        create: { group: "security", key: `invite:${employee.userId}`, value: JSON.stringify({ tokenHash, expiresAt }), description: `Staff invite token for ${employee.userId}` },
+        update: { value: JSON.stringify({ tokenHash, expiresAt }) }
       });
 
-      const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${encodeURIComponent(token)}`;
-      const staffName = employee.user.fullName;
+      const loginUrl = `${config.webOrigin}/pro/login?inviteToken=${rawToken}&userId=${encodeURIComponent(employee.userId)}`;
+      const staffName = employee.user.fullName ?? "collaborateur";
       const salonName = employee.salon.name;
       await sendEmail({
         to: employee.user.email,
@@ -962,8 +969,19 @@ export class ProController {
           `Accédez à votre compte (lien valable 24h) :`,
           loginUrl,
           ``,
+          `Ce lien ne peut être utilisé qu'une seule fois.`,
+          ``,
           `Si vous ne connaissez pas ce salon, ignorez ce message.`
-        ].join("\n")
+        ].join("\n"),
+        html: buildEmailHtml({
+          greeting: `Bonjour ${staffName},`,
+          bodyLines: [
+            `<strong>${escapeHtml(salonName)}</strong> vous invite à rejoindre votre espace professionnel <strong>Beauté Avenue</strong>.`,
+          ],
+          cta: { url: loginUrl, label: "Accéder à mon espace" },
+          expiryNote: "Ce lien expire dans 24 heures.",
+          usageNote: "Il ne peut être utilisé qu'une seule fois."
+        })
       });
 
       ok(reply, { sent: true, email: employee.user.email });
