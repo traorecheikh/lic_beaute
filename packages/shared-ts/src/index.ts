@@ -21,3 +21,4 @@ export function formatMoneyXof(amount: number) {
 
 export { validateForm } from "./validate-form.js";
 export type { FieldErrors, ValidationResult } from "./validate-form.js";
+export { SERVICE_CATEGORY_MAP } from "./services.js";

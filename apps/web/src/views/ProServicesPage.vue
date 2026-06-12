@@ -153,14 +153,34 @@
               <div class="bg-neutral-bg/40 rounded-2xl p-6 space-y-5">
                 <div>
                   <label class="section-label mb-2 block">Nom de la prestation</label>
-                  <input
-                    v-model="createForm.name"
-                    class="input-shell text-base"
-                    placeholder="ex: Brushing + Soin profond"
-                    autofocus
-                  />
+                  <div class="relative">
+                    <input
+                      v-model="createForm.name"
+                      class="input-shell text-base"
+                      placeholder="Tapez le nom de la prestation…"
+                      autofocus
+                      @input="onServiceNameInput"
+                      @focus="showServiceSuggestions = true"
+                      @blur="onServiceNameBlur"
+                    />
+                    <div
+                      v-if="showServiceSuggestions && filteredServices.length > 0"
+                      class="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl ring-1 ring-outline-variant max-h-60 overflow-y-auto"
+                    >
+                      <button
+                        v-for="svc in filteredServices"
+                        :key="svc.name"
+                        type="button"
+                        class="w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-bg transition flex items-center justify-between"
+                        @mousedown.prevent="selectServiceSuggestion(svc)"
+                      >
+                        <span class="font-medium text-espresso">{{ svc.name }}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-cocoa/40">{{ svc.category }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div>
+                <div v-if="!autoCategory">
                   <label class="section-label mb-2 block">Catégorie</label>
                   <select v-model="createForm.category" class="input-shell">
                     <option value="" disabled>Sélectionner une catégorie</option>
@@ -323,7 +343,7 @@
 import { computed, reactive, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { proServiceCreateInputSchema } from "@beauteavenue/contracts";
-import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
+import { formatMoneyXof, validateForm, SERVICE_CATEGORY_MAP } from "@beauteavenue/shared-ts";
 import { toast } from "vue-sonner";
 import {
   PlusIcon,
@@ -348,6 +368,8 @@ const showCreateForm = ref(false);
 const editingServiceId = ref<string | null>(null);
 const selectedCategory = ref("all");
 const wizardStep = ref(1);
+const showServiceSuggestions = ref(false);
+const autoCategory = ref("");
 
 const depositOptions = [
   { value: "none", label: "Pas d'acompte", description: "Les clients réservent sans payer à l'avance." },
@@ -384,6 +406,39 @@ const categoriesQuery = useQuery({
 });
 
 const platformCategories = computed(() => categoriesQuery.data.value ?? []);
+
+const serviceNameMap = SERVICE_CATEGORY_MAP as Record<string, string>;
+const filteredServices = computed(() => {
+  const q = createForm.name.toLowerCase().trim();
+  if (!q) return [];
+  return Object.entries(serviceNameMap)
+    .filter(([name]) => name.toLowerCase().includes(q))
+    .slice(0, 20)
+    .map(([name, category]) => ({ name, category }));
+});
+
+function onServiceNameInput() {
+  showServiceSuggestions.value = true;
+  const matched = serviceNameMap[createForm.name.trim()];
+  if (matched) {
+    autoCategory.value = matched;
+    createForm.category = matched;
+  } else {
+    autoCategory.value = "";
+  }
+}
+
+function onServiceNameBlur() {
+  // Delay to allow click on suggestion
+  setTimeout(() => { showServiceSuggestions.value = false; }, 200);
+}
+
+function selectServiceSuggestion(svc: { name: string; category: string }) {
+  createForm.name = svc.name;
+  createForm.category = svc.category;
+  autoCategory.value = svc.category;
+  showServiceSuggestions.value = false;
+}
 
 const depositsAvailable = computed(() => {
   const f = featuresQuery.data.value as { deposits?: { available: boolean } } | undefined;

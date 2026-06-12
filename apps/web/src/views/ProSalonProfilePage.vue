@@ -51,17 +51,27 @@
               </button>
             </div>
           </div>
-          <button type="button" @click="triggerPhotoUpload" class="aspect-square rounded-2xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center gap-2 text-cocoa/40 hover:border-primary/40 hover:text-primary transition group">
-            <PlusIcon class="w-8 h-8 group-hover:scale-110 transition" />
-            <span class="text-[10px] font-bold uppercase tracking-widest">Ajouter</span>
+          <button
+            type="button"
+            @click="triggerPhotoUpload"
+            :class="[
+              'aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition group',
+              isGalleryFull
+                ? 'border-outline-variant/30 bg-neutral-bg/50 cursor-not-allowed text-cocoa/20'
+                : 'border-outline-variant text-cocoa/40 hover:border-primary/40 hover:text-primary'
+            ]"
+            :title="isGalleryFull ? galleryLimitTooltip : 'Ajouter une photo'"
+          >
+            <PlusIcon class="w-8 h-8 group-hover:scale-110 transition" :class="isGalleryFull ? 'opacity-30' : ''" />
+            <span class="text-[10px] font-bold uppercase tracking-widest">{{ isGalleryFull ? 'Limite atteinte' : 'Ajouter' }}</span>
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <input ref="photoUploadInput" type="file" accept="image/*" class="hidden" @change="onPhotoSelected" />
-          <button type="button" class="btn-secondary px-3 py-1 text-[10px]" @click="triggerPhotoUpload" :disabled="uploadingPhoto">
-            {{ uploadingPhoto ? "Téléversement..." : "Téléverser une photo" }}
+          <button type="button" class="btn-secondary px-3 py-1 text-[10px]" @click="triggerPhotoUpload" :disabled="uploadingPhoto || isGalleryFull" :title="isGalleryFull ? galleryLimitTooltip : ''">
+            {{ uploadingPhoto ? "Téléversement..." : isGalleryFull ? "Limite atteinte" : "Téléverser une photo" }}
           </button>
-          <button type="button" class="btn-secondary px-3 py-1 text-[10px]" @click="openAddPhotoModal">
+          <button type="button" class="btn-secondary px-3 py-1 text-[10px]" @click="openAddPhotoModal" :disabled="isGalleryFull" :title="isGalleryFull ? galleryLimitTooltip : ''">
             Ajouter via URL
           </button>
         </div>
@@ -331,6 +341,19 @@ const salonQuery = useQuery({
   queryKey: ["pro-salon"],
   queryFn: () => fetchProSalon(auth.accessToken ?? ""),
   enabled: computed(() => Boolean(auth.accessToken && auth.isOwner))
+});
+
+const salonTier = computed(() => (salonQuery.data.value as Record<string, unknown> | undefined)?.subscriptionTier as string | undefined);
+
+const galleryLimit = computed(() => salonTier.value === "premium" ? 50 : 3);
+
+const galleryRemaining = computed(() => galleryLimit.value - photos.value.length);
+
+const isGalleryFull = computed(() => galleryRemaining.value <= 0);
+
+const galleryLimitTooltip = computed(() => {
+  if (salonTier.value === "premium") return "Limite de 50 photos atteinte.";
+  return "Plan Standard limité à 3 photos. Passez en Premium pour en ajouter plus.";
 });
 
 const saveMutation = useMutation({
