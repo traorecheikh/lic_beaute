@@ -57,6 +57,12 @@
                   <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
                   <span class="text-espresso font-bold">{{ service.priceLabel }}</span>
                 </div>
+                <div v-if="service.deposit > 0" class="flex items-center gap-1.5 mt-1">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/10 text-[10px] font-bold text-secondary">
+                    Acompte {{ service.depositLabel }}
+                  </span>
+                  <span class="text-[10px] text-cocoa/40 italic">déduit du total</span>
+                </div>
               </div>
             </div>
 
@@ -157,16 +163,19 @@
                     <input
                       v-model="createForm.name"
                       class="input-shell text-base"
-                      placeholder="Tapez le nom de la prestation…"
+                      placeholder="Recherchez ou sélectionnez une prestation…"
                       autofocus
                       @input="onServiceNameInput"
                       @focus="showServiceSuggestions = true"
                       @blur="onServiceNameBlur"
                     />
                     <div
-                      v-if="showServiceSuggestions && filteredServices.length > 0"
+                      v-if="showServiceSuggestions"
                       class="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl ring-1 ring-outline-variant max-h-60 overflow-y-auto"
                     >
+                      <div v-if="filteredServices.length === 0" class="px-4 py-3 text-xs text-cocoa/40 text-center">
+                        Tapez pour voir les suggestions
+                      </div>
                       <button
                         v-for="svc in filteredServices"
                         :key="svc.name"
@@ -179,8 +188,9 @@
                       </button>
                     </div>
                   </div>
+                  <p class="text-[11px] text-cocoa/40 mt-2">Sélectionnez une prestation dans la liste pour définir automatiquement sa catégorie.</p>
                 </div>
-                <div v-if="!autoCategory">
+                <div v-if="createForm.name.trim() && !autoCategory">
                   <label class="section-label mb-2 block">Catégorie</label>
                   <select v-model="createForm.category" class="input-shell">
                     <option value="" disabled>Sélectionner une catégorie</option>
@@ -188,13 +198,12 @@
                       {{ cat.name }}
                     </option>
                   </select>
-                  <p class="text-[11px] text-cocoa/40 mt-2">La catégorie regroupe vos prestations dans votre catalogue.</p>
                 </div>
               </div>
 
               <div class="flex gap-3 pt-2">
                 <button type="button" @click="cancelCreateService" class="btn-secondary h-[52px] px-6 text-sm">Annuler</button>
-                <button type="button" @click="nextStep" :disabled="!createForm.name.trim() || !createForm.category.trim()" class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20">
+                <button type="button" @click="nextStep" :disabled="!selectedValidService || !createForm.category.trim()" class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20">
                   Continuer →
                 </button>
               </div>
@@ -236,8 +245,23 @@
 
               <div class="flex gap-3 pt-2">
                 <button type="button" @click="wizardStep = 1" class="btn-secondary h-[52px] px-6 text-sm">← Retour</button>
-                <button type="button" @click="nextStep" :disabled="!createForm.priceXof || !createForm.durationMinutes" class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20">
+                <button
+                  v-if="depositsAvailable"
+                  type="button"
+                  @click="nextStep"
+                  :disabled="!createForm.priceXof || !createForm.durationMinutes"
+                  class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20"
+                >
                   Continuer →
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  @click="submitService"
+                  :disabled="actionPending"
+                  class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20"
+                >
+                  {{ actionPendingLabel }}
                 </button>
               </div>
             </div>
@@ -325,13 +349,6 @@
                 </button>
               </div>
             </div>
-            <!-- else: no deposit step, show submit on step 2 -->
-            <div v-if="wizardStep === 2 && !depositsAvailable" class="flex gap-3 pt-2">
-              <button type="button" @click="wizardStep = 1" class="btn-secondary h-[52px] px-6 text-sm">← Retour</button>
-              <button type="button" @click="submitService" :disabled="actionPending" class="btn-primary flex-1 h-[52px] text-sm shadow-lg shadow-primary/20">
-                {{ actionPendingLabel }}
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -370,6 +387,7 @@ const selectedCategory = ref("all");
 const wizardStep = ref(1);
 const showServiceSuggestions = ref(false);
 const autoCategory = ref("");
+const selectedValidService = ref(false);
 
 const depositOptions = [
   { value: "none", label: "Pas d'acompte", description: "Les clients réservent sans payer à l'avance." },
@@ -419,12 +437,14 @@ const filteredServices = computed(() => {
 
 function onServiceNameInput() {
   showServiceSuggestions.value = true;
+  selectedValidService.value = false;
   const matched = serviceNameMap[createForm.name.trim()];
   if (matched) {
     autoCategory.value = matched;
     createForm.category = matched;
   } else {
     autoCategory.value = "";
+    createForm.category = "";
   }
 }
 
@@ -437,6 +457,7 @@ function selectServiceSuggestion(svc: { name: string; category: string }) {
   createForm.name = svc.name;
   createForm.category = svc.category;
   autoCategory.value = svc.category;
+  selectedValidService.value = true;
   showServiceSuggestions.value = false;
 }
 
@@ -547,12 +568,14 @@ const actionPendingLabel = computed(() => {
 function addService() {
   showCreateForm.value = true;
   editingServiceId.value = null;
+  selectedValidService.value = false;
   wizardStep.value = 1;
 }
 
 function cancelCreateService() {
   showCreateForm.value = false;
   editingServiceId.value = null;
+  selectedValidService.value = false;
   wizardStep.value = 1;
   createForm.name = "";
   createForm.category = "";
@@ -602,6 +625,7 @@ function deleteService(id: string) {
 
 function editService(service: any) {
   editingServiceId.value = service.id;
+  selectedValidService.value = true;
   wizardStep.value = 1;
   showCreateForm.value = true;
   createForm.name = service.name;
@@ -611,6 +635,7 @@ function editService(service: any) {
   createForm.depositMode = service.depositMode;
   createForm.depositAmountXof = service.depositAmountXof;
   createForm.depositPercent = service.depositPercent || 20;
+  autoCategory.value = service.category;
 }
 </script>
 
