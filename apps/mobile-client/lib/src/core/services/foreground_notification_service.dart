@@ -1,20 +1,16 @@
-import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:go_router/go_router.dart';
 
-// Shown whenever a push arrives while the app is in the foreground.
-// Android uses the "high_importance" channel so the system plays the
-// default notification sound (same behaviour as background pushes).
+/// Shows local notifications for foreground FCM messages and handles taps
+/// from all app life-cycle states (terminated, background, foreground).
 class ForegroundNotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
   /// Called when the user taps a notification.
-  /// Receives the FCM data payload (map of strings).
+  /// Receives the FCM data payload as `Map<String, String>`.
   static void Function(Map<String, String> data)? onNotificationTap;
 
   static Future<void> init() async {
@@ -33,10 +29,9 @@ class ForegroundNotificationService {
         iOS: iosSettings,
       ),
       onDidReceiveNotificationResponse: (response) {
-        // Foreground tap from local notification
         final payload = response.payload;
         if (payload != null && payload.isNotEmpty) {
-          _handleTap(payload);
+          _handlePayload(payload);
         }
       },
     );
@@ -54,21 +49,20 @@ class ForegroundNotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(androidChannel);
 
-    // Handle notification tap when app was in background
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleRemoteMessage);
+    // Background tap
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
 
-    // Handle notification that launched the app from terminated state
+    // Terminated → app launch
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
-      _handleRemoteMessage(initialMessage);
+      _handleMessage(initialMessage);
     }
 
-    // Display local notification for every foreground FCM message
+    // Foreground → show local notification
     FirebaseMessaging.onMessage.listen((message) {
       final notification = message.notification;
       if (notification == null) return;
 
-      // Encode data as payload string for tap handling
       final data = message.data;
       String? payload;
       if (data.isNotEmpty) {
@@ -99,21 +93,13 @@ class ForegroundNotificationService {
     });
   }
 
-  static void _handleRemoteMessage(RemoteMessage message) {
+  static void _handleMessage(RemoteMessage message) {
     final data = message.data;
-    if (data.isNotEmpty) {
-      _handleTap(data);
-    }
+    if (data.isEmpty) return;
+    _notify(data);
   }
 
-  static void _handleTap(Map<String, String> data) {
-    developer.log('[NOTIFICATION] tapped with data: $data');
-    onNotificationTap?.call(data);
-  }
-
-  static void _handleTap(String payload) {
-    developer.log('[NOTIFICATION] tapped with payload: $payload');
-    // Parse payload string back to map
+  static void _handlePayload(String payload) {
     final data = <String, String>{};
     for (final part in payload.split('&')) {
       final eq = part.indexOf('=');
@@ -122,7 +108,13 @@ class ForegroundNotificationService {
       }
     }
     if (data.isNotEmpty) {
-      onNotificationTap?.call(data);
+      _notify(data);
     }
+  }
+
+  static void _notify(Map<String, dynamic> data) {
+    final stringMap = data.map((k, v) => MapEntry(k, v.toString()));
+    developer.log('[NOTIFICATION] tapped with data: $stringMap', name: 'push');
+    onNotificationTap?.call(stringMap);
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_contacts.dart';
-import '../network/dio_client.dart';
 import '../session/session_store.dart';
 
 class SupportConfig {

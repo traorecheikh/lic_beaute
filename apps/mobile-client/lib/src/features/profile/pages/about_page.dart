@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
-import '../../../../core/providers/support_config_provider.dart';
+import '../../../core/providers/support_config_provider.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_top_bar.dart';
 

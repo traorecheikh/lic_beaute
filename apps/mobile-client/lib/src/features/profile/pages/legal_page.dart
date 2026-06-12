@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/providers/support_config_provider.dart';
+import '../../../core/providers/support_config_provider.dart';
 import '../../../core/constants/app_contacts.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
