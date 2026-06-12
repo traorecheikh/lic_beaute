@@ -110,7 +110,7 @@ describe("PaymentController", () => {
     });
     mocks.prisma.user.findUnique.mockResolvedValue({
       phone: null,
-      clientPaymentMethods: [{ phoneNumber: "77 123 45 67" }]
+      paymentMethods: [{ phoneNumber: "77 123 45 67" }]
     });
     mocks.adapter.initiateDeposit.mockResolvedValue({
       providerRef: "pref4",

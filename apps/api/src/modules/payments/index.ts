@@ -115,7 +115,7 @@ export class PaymentController {
         where: { id: session.sub },
         select: {
           phone: true,
-          clientPaymentMethods: {
+          paymentMethods: {
             where: { isDefault: true },
             orderBy: { updatedAt: "desc" },
             select: { phoneNumber: true }
@@ -124,8 +124,8 @@ export class PaymentController {
       });
       const resolvedPhone = client?.phone?.trim()
         ? normalizePhoneNumber(client.phone)
-        : client?.clientPaymentMethods?.[0]?.phoneNumber?.trim()
-          ? normalizePhoneNumber(client.clientPaymentMethods[0].phoneNumber)
+        : client?.paymentMethods?.[0]?.phoneNumber?.trim()
+          ? normalizePhoneNumber(client.paymentMethods[0].phoneNumber)
           : undefined;
       if (config.paymentDriver === "paydunya" && !resolvedPhone) {
         fail(reply, 422, "phone_required", "Numéro de téléphone requis pour initier ce paiement.");
