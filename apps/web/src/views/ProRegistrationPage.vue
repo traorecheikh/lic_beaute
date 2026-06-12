@@ -25,6 +25,11 @@
         </div>
       </header>
 
+      <p class="text-[13px] text-cocoa/60 mb-4 text-right">
+        Déjà inscrit ?
+        <RouterLink to="/pro/login" class="font-bold text-primary hover:text-primary/80">Connectez-vous</RouterLink>
+      </p>
+
       <section class="panel-clean p-4 md:p-5 shadow-lg shadow-espresso/5 border-none">
         
         <!-- Step 1: Identity & Salon -->

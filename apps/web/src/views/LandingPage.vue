@@ -41,7 +41,7 @@
             <a href="#client" class="btn-primary px-8 py-3.5 text-[13px] tracking-wide">
               Réserver maintenant
             </a>
-            <RouterLink to="/pro/register" class="btn-secondary px-8 py-3.5 text-[13px]">
+            <RouterLink to="/pro/login" class="btn-secondary px-8 py-3.5 text-[13px]">
               Espace Professionnel
             </RouterLink>
           </div>
