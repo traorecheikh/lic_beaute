@@ -56,12 +56,20 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
       });
       if (existingRelease) return;
 
+      // Carry forward fees from the "held" event
+      const heldEvent = await prisma.settlementEvent.findFirst({
+        where: { paymentId: payment.id, eventType: "held" },
+        select: { platformFeeXof: true, payoutAmountXof: true }
+      });
+
       await prisma.settlementEvent.create({
         data: {
           bookingId: booking.id,
           paymentId: payment.id,
           eventType: "released",
           amountXof: payment.amountXof,
+          platformFeeXof: heldEvent?.platformFeeXof ?? 0,
+          payoutAmountXof: heldEvent?.payoutAmountXof ?? payment.amountXof,
           providerReference: payment.providerTxId ?? undefined
         }
       });

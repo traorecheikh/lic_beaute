@@ -102,7 +102,8 @@ describe("handleJob — deposit_settlement", () => {
       id: bookingId,
       payments: [{ id: paymentId, amountXof: 12_000, providerTxId: "txn_1" }]
     });
-    mocks.prisma.settlementEvent.findFirst.mockResolvedValue(null);
+    mocks.prisma.settlementEvent.findFirst.mockResolvedValueOnce(null); // existing release
+    mocks.prisma.settlementEvent.findFirst.mockResolvedValueOnce({ platformFeeXof: 600, payoutAmountXof: 11_400 }); // held event
 
     await handleJob("deposit_settlement", { bookingId });
 
@@ -112,6 +113,8 @@ describe("handleJob — deposit_settlement", () => {
         paymentId,
         eventType: "released",
         amountXof: 12_000,
+        platformFeeXof: 600,
+        payoutAmountXof: 11_400,
         providerReference: "txn_1"
       }
     });

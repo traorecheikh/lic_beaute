@@ -14,6 +14,22 @@ import { prisma } from "../../lib/db/prisma.js";
 import { buildBookingConfirmationPdf } from "../../lib/pdf.js";
 import { sendNotification } from "../notifications/index.js";
 
+// ─── Fee helpers ────────────────────────────────────────────────────────────
+const COMMISSION_CACHE_TTL = 60;
+
+async function getCommissionPercent(): Promise<number> {
+  const setting = await prisma.platformSetting.findUnique({
+    where: { key: "commission_rate_percent" },
+    select: { value: true }
+  });
+  return parseFloat(setting?.value ?? "5");
+}
+
+function calcFee(amountXof: number, commissionPercent: number) {
+  const fee = Math.round(amountXof * commissionPercent / 100);
+  return { platformFeeXof: fee, payoutAmountXof: amountXof - fee };
+}
+
 // ─── Replay protection ──────────────────────────────────────────────────────
 // Deduplicates webhook deliveries by idempotencyKey within a sliding window.
 // The window exceeds PayDunya's delivery timeout (~30 s) so retries don't
@@ -657,12 +673,16 @@ export class PaymentController {
             }
           });
           if (!existingSettlement) {
+            const commissionPercent = await getCommissionPercent();
+            const { platformFeeXof, payoutAmountXof } = calcFee(payment.amountXof, commissionPercent);
             await tx.settlementEvent.create({
               data: {
                 bookingId: payment.bookingId,
                 paymentId: payment.id,
                 eventType: "held",
                 amountXof: payment.amountXof,
+                platformFeeXof,
+                payoutAmountXof,
                 providerReference: providerRefOverride
               }
             });

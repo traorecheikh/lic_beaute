@@ -678,6 +678,8 @@ model SettlementEvent {
   paymentId         String?
   eventType         SettlementEventType
   amountXof         Int
+  platformFeeXof    Int                 @default(0)
+  payoutAmountXof   Int                 @default(0)
   providerReference String?
   createdAt         DateTime            @default(now())
   booking           Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
