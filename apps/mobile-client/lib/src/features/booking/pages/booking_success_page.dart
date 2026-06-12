@@ -28,6 +28,7 @@ class _BookingSuccessPageState extends ConsumerState<BookingSuccessPage>
   late final AnimationController _ctrl;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
+  final _shareKey = GlobalKey();
 
   @override
   void initState() {
@@ -65,6 +66,7 @@ class _BookingSuccessPageState extends ConsumerState<BookingSuccessPage>
           SliverFillRemaining(
             hasScrollBody: false,
             child: _SuccessBody(
+              shareKey: _shareKey,
               salonName: resource.salonName,
               serviceName: resource.serviceName,
               dateLabel: resource.formattedDate,
@@ -82,6 +84,7 @@ class _BookingSuccessPageState extends ConsumerState<BookingSuccessPage>
 
 class _SuccessBody extends StatelessWidget {
   const _SuccessBody({
+    required this.shareKey,
     required this.salonName,
     required this.serviceName,
     required this.dateLabel,
@@ -91,124 +94,138 @@ class _SuccessBody extends StatelessWidget {
     required this.staleAt,
   });
 
+  final GlobalKey shareKey;
   final String salonName, serviceName, dateLabel, bookingId;
   final Animation<double> scale, fade;
   final DateTime? staleAt;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 28.w),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
-          ScaleTransition(
-            scale: scale,
-            child: Container(
-              width: 100.r,
-              height: 100.r,
-              decoration: const BoxDecoration(
-                color: AppColors.successContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: AppIcon('check', size: 48, color: AppColors.success),
-              ),
+    return Stack(
+      children: [
+        // Off-screen share card (pre-rendered via RepaintBoundary)
+        Positioned(
+          left: -9999,
+          top: 0,
+          child: RepaintBoundary(
+            key: shareKey,
+            child: BookingShareCard(
+              salonName: salonName,
+              service: serviceName,
+              date: dateLabel,
+              time: '',
+              staffName: 'Beauté Avenue',
             ),
           ),
-          SizedBox(height: 28.h),
-          FadeTransition(
-            opacity: fade,
-            child: Column(
-              children: [
-                if (staleAt != null) ...[
-                  StaleDataNotice(cachedAt: staleAt!),
-                  SizedBox(height: 20.h),
-                ],
-                Text(
-                  "Réservation confirmée !",
-                  style: AppTextStyles.displaySm,
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  "Votre acompte a bien été reçu. À très vite au salon !",
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 28.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
+              ScaleTransition(
+                scale: scale,
+                child: Container(
+                  width: 100.r,
+                  height: 100.r,
+                  decoration: const BoxDecoration(
+                    color: AppColors.successContainer,
+                    shape: BoxShape.circle,
                   ),
-                  textAlign: TextAlign.center,
+                  child: Center(
+                    child: AppIcon('check', size: 48, color: AppColors.success),
+                  ),
                 ),
-              ],
-            ),
-          ),
-          SizedBox(height: 32.h),
-          FadeTransition(
-            opacity: fade,
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.r),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: AppShadows.card,
               ),
-              child: Column(
-                children: [
-                  _SummaryRow(icon: "sparkle", label: salonName),
-                  SizedBox(height: 12.h),
-                  const AppDivider(),
-                  SizedBox(height: 12.h),
-                  _SummaryRow(icon: "star", label: serviceName),
-                  if (dateLabel.isNotEmpty) ...[
-                    SizedBox(height: 12.h),
-                    const AppDivider(),
-                    SizedBox(height: 12.h),
-                    _SummaryRow(icon: "calendar", label: dateLabel),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const Spacer(),
-          FadeTransition(
-            opacity: fade,
-            child: Column(
-              children: [
-                AppButton.primary(
-                  onPressed: () =>
-                      context.go(AppRoutes.bookingDetailPath(bookingId)),
-                  label: "Voir mon rendez-vous",
-                ),
-                SizedBox(height: 12.h),
-                AppButton.outline(
-                  onPressed: () {
-                    AppHaptics.light();
-                    AppShare.card(
-                      context: context,
-                      card: BookingShareCard(
-                        salonName: salonName,
-                        service: serviceName,
-                        date: dateLabel,
-                        time: '',
-                        staffName: 'Beauté Avenue',
+              SizedBox(height: 28.h),
+              FadeTransition(
+                opacity: fade,
+                child: Column(
+                  children: [
+                    if (staleAt != null) ...[
+                      StaleDataNotice(cachedAt: staleAt!),
+                      SizedBox(height: 20.h),
+                    ],
+                    Text(
+                      "Réservation confirmée !",
+                      style: AppTextStyles.displaySm,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      "Votre acompte a bien été reçu. À très vite au salon !",
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: AppColors.onSurfaceVariant,
                       ),
-                      text: "Je viens de réserver chez $salonName !",
-                    );
-                  },
-                  label: "Partager ma réservation",
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 12.h),
-                AppButton.text(
-                  onPressed: () => context.go(AppRoutes.home),
-                  label: "Retour à l'accueil",
+              ),
+              SizedBox(height: 32.h),
+              FadeTransition(
+                opacity: fade,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(20.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(20.r),
+                    boxShadow: AppShadows.card,
+                  ),
+                  child: Column(
+                    children: [
+                      _SummaryRow(icon: "sparkle", label: salonName),
+                      SizedBox(height: 12.h),
+                      const AppDivider(),
+                      SizedBox(height: 12.h),
+                      _SummaryRow(icon: "star", label: serviceName),
+                      if (dateLabel.isNotEmpty) ...[
+                        SizedBox(height: 12.h),
+                        const AppDivider(),
+                        SizedBox(height: 12.h),
+                        _SummaryRow(icon: "calendar", label: dateLabel),
+                      ],
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+              const Spacer(),
+              FadeTransition(
+                opacity: fade,
+                child: Column(
+                  children: [
+                    AppButton.primary(
+                      onPressed: () =>
+                          context.go(AppRoutes.bookingDetailPath(bookingId)),
+                      label: "Voir mon rendez-vous",
+                    ),
+                    SizedBox(height: 12.h),
+                    AppButton.outline(
+                      onPressed: () {
+                        AppHaptics.light();
+                        AppShare.card(
+                          context: context,
+                          repaintKey: shareKey,
+                          text: "Je viens de réserver chez $salonName !",
+                        );
+                      },
+                      label: "Partager ma réservation",
+                    ),
+                    SizedBox(height: 12.h),
+                    AppButton.text(
+                      onPressed: () => context.go(AppRoutes.home),
+                      label: "Retour à l'accueil",
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20.h),
+            ],
           ),
-          SizedBox(height: 20.h),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

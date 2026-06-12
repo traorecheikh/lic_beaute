@@ -964,13 +964,6 @@ export class AuthController {
   async requestEmailOtp(request: FastifyRequest, reply: FastifyReply) {
     const body = emailOtpRequestSchema.parse(request.body);
 
-    // Check that email is not already taken
-    const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
-    if (existingUser) {
-      fail(reply, 409, "email_already_used", "Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.");
-      return;
-    }
-
     const rateLimit = await checkOtpRateLimit(`email:${body.email}`);
     if (!rateLimit.allowed) {
       fail(reply, 429, "otp_rate_limited", `Trop de tentatives. Réessayez dans ${rateLimit.retryAfterSeconds}s.`);
@@ -1037,16 +1030,14 @@ export class AuthController {
     }
     await prisma.emailOtpChallenge.deleteMany({ where: { email: body.email } });
 
-    // Check again — email could have been registered between OTP request and verify
+    // If user already exists, sign them in (login flow)
+    // If not, create a new account (registration flow)
     let user = await prisma.user.findUnique({ where: { email: body.email } });
-    if (user) {
-      fail(reply, 409, "email_already_used", "Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.");
-      return;
+    if (!user) {
+      user = await prisma.user.create({
+        data: { fullName: "", email: body.email, role: "client" }
+      });
     }
-
-    user = await prisma.user.create({
-      data: { fullName: "", email: body.email, role: "client" }
-    });
 
     const tokens = signSession(user.id, user.role, user.tokenVersion);
     await pruneExcessSessions(user.id);

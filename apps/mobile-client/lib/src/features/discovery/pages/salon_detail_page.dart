@@ -33,6 +33,7 @@ class SalonDetailPage extends ConsumerStatefulWidget {
 
 class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
   final _heroCtrl = PageController();
+  final _shareKey = GlobalKey();
   int _heroPage = 0;
 
   @override
@@ -150,13 +151,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                             AppHaptics.light();
                             AppShare.card(
                               context: context,
-                              card: SalonShareCard(
-                                salonName: salon.name,
-                                category: salon.category,
-                                location:
-                                    '${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
-                                rating: salon.averageRating.toDouble(),
-                              ),
+                              repaintKey: _shareKey,
                               text:
                                   'Découvrez ${salon.name} sur Beauté Avenue.',
                             );
@@ -508,6 +503,22 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // Off-screen share card (pre-rendered via RepaintBoundary)
+              Positioned(
+                left: -9999,
+                top: 0,
+                child: RepaintBoundary(
+                  key: _shareKey,
+                  child: SalonShareCard(
+                    salonName: salon.name,
+                    category: salon.category,
+                    location:
+                        '${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
+                    rating: salon.averageRating.toDouble(),
+                  ),
                 ),
               ),
 

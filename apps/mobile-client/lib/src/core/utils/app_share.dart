@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
@@ -16,23 +15,43 @@ abstract final class AppShare {
     await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
 
-  /// Render [card] to PNG and open the native share sheet.
+  /// Render the widget wrapped by [repaintKey]'s [RepaintBoundary] to PNG
+  /// and open the native share sheet. Shows a loading spinner while painting.
   static Future<void> card({
     required BuildContext context,
-    required Widget card,
+    required GlobalKey repaintKey,
     String filename = 'partage.png',
     String? text,
   }) async {
-    final ctrl = ScreenshotController();
-    final bytes = await ctrl.captureFromLongWidget(
-      card,
-      pixelRatio: 3.0,
+    // Show loading spinner
+    showDialog(
       context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
-    await _shareBytes(bytes, filename, text: text);
+
+    try {
+      final boundary = repaintKey.currentContext!.findRenderObject()
+          as RenderRepaintBoundary;
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      final bytes = byteData!.buffer.asUint8List();
+
+      if (context.mounted) Navigator.of(context).pop(); // close spinner
+      await _shareBytes(bytes, filename, text: text);
+    } catch (e) {
+      if (context.mounted) Navigator.of(context).pop();
+      rethrow;
+    }
   }
 
-  static Future<void> _shareBytes(Uint8List bytes, String filename, {String? text}) async {
+  static Future<void> _shareBytes(
+    Uint8List bytes,
+    String filename, {
+    String? text,
+  }) async {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes);
@@ -44,7 +63,7 @@ abstract final class AppShare {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shareable cards (rendered off-screen to PNG)
+// Shareable cards (rendered via RepaintBoundary)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class BookingShareCard extends StatelessWidget {
@@ -71,10 +90,7 @@ class BookingShareCard extends StatelessWidget {
       title: salonName,
       subtitle: service,
       children: [
-        _Row(
-          icon: 'calendar',
-          label: '$date · $time',
-        ),
+        _Row(icon: 'calendar', label: '$date · $time'),
         const SizedBox(height: 14),
         _Row(icon: 'user', label: staffName),
         if (price.isNotEmpty) ...[
@@ -106,16 +122,10 @@ class SalonShareCard extends StatelessWidget {
       title: salonName,
       subtitle: category,
       children: [
-        _Row(
-          icon: 'map-pin',
-          label: location,
-        ),
+        _Row(icon: 'map-pin', label: location),
         if (rating != null) ...[
           const SizedBox(height: 14),
-          _Row(
-            icon: 'star',
-            label: '$rating / 5.0',
-          ),
+          _Row(icon: 'star', label: '$rating / 5.0'),
         ],
       ],
     );
@@ -250,4 +260,3 @@ class _Row extends StatelessWidget {
     );
   }
 }
-
