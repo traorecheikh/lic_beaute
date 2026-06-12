@@ -61,7 +61,7 @@ describe("PayDunyaAdapter", () => {
 
     expect(result.providerRef).toBe("test_token_1");
     expect(result.providerToken).toBe("test_token_1");
-    expect(result.redirectUrl).toBe("https://app.paydunya.com/sandbox-checkout/invoice/test_token_1");
+    expect(result.redirectUrl).toBe("https://paydunya.com/sandbox-checkout/invoice/test_token_1");
     expect(result.expiresAt).toBeInstanceOf(Date);
 
     const init = fetchMock.mock.calls[0][1] as RequestInit;

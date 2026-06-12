@@ -390,7 +390,10 @@ export class PayDunyaAdapter implements PaymentAdapter {
     }
 
     return {
-      redirectUrl: `${this.checkoutHost}/invoice/${json.token}`,
+      redirectUrl:
+        typeof json.response_text === "string" && /^https?:\/\//i.test(json.response_text)
+          ? json.response_text
+          : `${this.checkoutHost}/invoice/${json.token}`,
       providerRef: json.token,
       providerToken: json.token,
       expiresAt: new Date(Date.now() + 30 * 60 * 1000)

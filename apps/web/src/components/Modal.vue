@@ -23,7 +23,7 @@
 
         <!-- Modal Content -->
         <div
-          class="relative w-full bg-white rounded-[2rem] shadow-2xl shadow-espresso/20 overflow-hidden flex flex-col"
+          class="relative w-full max-h-[calc(100vh-2rem)] sm:max-h-[min(88vh,52rem)] bg-white rounded-[2rem] shadow-2xl shadow-espresso/20 overflow-hidden flex flex-col"
           :class="maxWidthClass"
         >
           <!-- Header -->

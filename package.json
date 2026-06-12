@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "dev": "pnpm --parallel --filter @beauteavenue/api --filter @beauteavenue/web-admin dev",
+    "dev": "pnpm docker:up:detached && pnpm db:migrate && pnpm db:seed && (pnpm dev:api & pnpm dev:worker & pnpm dev:web & wait)",
     "dev:api": "pnpm --filter @beauteavenue/api dev",
     "dev:worker": "pnpm --filter @beauteavenue/api worker:dev",
     "dev:web": "pnpm --filter @beauteavenue/web-admin dev",
