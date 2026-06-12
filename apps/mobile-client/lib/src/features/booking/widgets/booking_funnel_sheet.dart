@@ -110,7 +110,9 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
     required String serviceId,
   }) async {
     final candidates = salon.staff
-        .where((s) => s.serviceIds.contains(serviceId))
+        .where(
+          (s) => s.serviceIds.contains(serviceId) || s.serviceIds.isEmpty,
+        )
         .toList();
     if (candidates.isEmpty) return null;
 
@@ -555,7 +557,9 @@ class _StaffStep extends ConsumerWidget {
           const Center(child: Text("Impossible de charger l'équipe.")),
       data: (salon) {
         final staff = (salon?.staff.toList() ?? [])
-            .where((e) => e.serviceIds.contains(serviceId))
+            .where(
+              (e) => e.serviceIds.contains(serviceId) || e.serviceIds.isEmpty,
+            )
             .toList();
 
         final items =

@@ -52,7 +52,13 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
         // Filter staff to those who can perform the chosen service.
         final allStaff = salon.staff.toList();
         final staff = (serviceId != null && serviceId.isNotEmpty)
-            ? allStaff.where((s) => s.serviceIds.contains(serviceId)).toList()
+            ? allStaff
+                .where(
+                  (s) =>
+                      s.serviceIds.contains(serviceId) ||
+                      s.serviceIds.isEmpty,
+                )
+                .toList()
             : allStaff;
         debugPrint(
           '[BOOKING_STAFF] render salonId=${widget.salonId} serviceId=$serviceId staff=${staff.length}',
