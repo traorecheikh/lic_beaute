@@ -18,8 +18,8 @@ const DEFAULT_SETTINGS = [
   { group: "pricing", key: "subscription_annual_discount_percent", value: "0",                       description: "Réduction annuelle (%)" },
   { group: "pricing", key: "deposit_minimum_xof",              value: "2000",                        description: "Acompte minimum (XOF)" },
   { group: "pricing", key: "cancellation_window_hours",        value: "24",                          description: "Fenêtre d'annulation gratuite (heures)" },
-  { group: "general", key: "support_email",                    value: "support@beauteavenue.local",  description: "Email du support" },
-  { group: "general", key: "support_phone",                    value: "+221338001234",               description: "Téléphone du support" },
+  { group: "general", key: "support_email",                    value: "support@beauteavenue.sn",  description: "Email du support" },
+  { group: "general", key: "support_phone",                    value: "+221338671010",               description: "Téléphone du support" },
   { group: "general", key: "booking_advance_days_max",         value: "30",                          description: "Horizon de réservation max (jours)" },
   { group: "general", key: "salon_approval_sla_days",          value: "3",                           description: "Délai SLA approbation salon (jours)" },
   // Payment method toggles — enabled by default, manageable via admin backoffice

@@ -2594,6 +2594,22 @@ export const openApiSpec = {
       }
     },
 
+    "/api/v1/config/support": {
+      get: {
+        tags: ["catalog"],
+        summary: "Get support contact info",
+        responses: {
+          200: {
+            description: "Support info",
+            content: { "application/json": { schema: toOpenApiSchema(z.object({
+              phone: z.string(),
+              email: z.string()
+            })) } }
+          }
+        }
+      }
+    },
+
     "/api/v1/salons/{salonId}/public-media": {
       get: {
         tags: ["media"],

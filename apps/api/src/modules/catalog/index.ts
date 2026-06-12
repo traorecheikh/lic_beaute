@@ -539,6 +539,26 @@ export class CatalogController {
     ok(reply, value);
   }
 
+  async supportConfig(_request: FastifyRequest, reply: FastifyReply) {
+    const { value, cacheStatus } = await getOrSetCachedJson({
+      key: "catalog:support",
+      ttlSeconds: config.cacheTtlCatalogSeconds,
+      tags: ["catalog:pricing"],
+      load: async () => {
+        const rows = await prisma.platformSetting.findMany({
+          where: { key: { in: ["support_email", "support_phone"] } }
+        });
+        const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+        return {
+          phone: map["support_phone"] ?? "+221338671010",
+          email: map["support_email"] ?? "support@beauteavenue.sn"
+        };
+      }
+    });
+    reply.header("x-cache", cacheStatus);
+    ok(reply, value);
+  }
+
   async addFavorite(request: FastifyRequest, reply: FastifyReply) {
     try {
       const session = requireRole(request, ["client"]);

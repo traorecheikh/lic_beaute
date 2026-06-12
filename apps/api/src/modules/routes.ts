@@ -91,6 +91,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/salons/:id/availability", (req, rep) => catalog.availability(req, rep));
   app.get("/api/v1/salons/:id/reviews", (req, rep) => catalog.reviews(req, rep));
   app.get("/api/v1/config/pricing", (req, rep) => catalog.pricing(req, rep));
+  app.get("/api/v1/config/support", (req, rep) => catalog.supportConfig(req, rep));
 
   // ── Favorites ─────────────────────────────────────────────────────────────
   app.get("/api/v1/favorites", (req, rep) => catalog.listFavorites(req, rep));

@@ -66,6 +66,11 @@ export const subscriptionFeaturesSchema = z.object({
   )
 });
 
+export const supportConfigSchema = z.object({
+  phone: z.string(),
+  email: z.string(),
+});
+
 export type PlatformSetting = z.infer<typeof platformSettingSchema>;
 export type PlatformSalonCategory = z.infer<typeof platformSalonCategorySchema>;
 export type PlatformRequiredDocument = z.infer<typeof platformRequiredDocumentSchema>;
@@ -73,3 +78,4 @@ export type UpdatePlatformSettingInput = z.infer<typeof updatePlatformSettingInp
 export type UpsertSalonCategoryInput = z.infer<typeof upsertSalonCategoryInputSchema>;
 export type UpsertRequiredDocumentInput = z.infer<typeof upsertRequiredDocumentInputSchema>;
 export type SubscriptionFeatures = z.infer<typeof subscriptionFeaturesSchema>;
+export type SupportConfig = z.infer<typeof supportConfigSchema>;
