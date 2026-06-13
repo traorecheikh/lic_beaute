@@ -13,8 +13,8 @@ Dio createDio(
   final dio = Dio(
     BaseOptions(
       baseUrl: AppEnv.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 25),
+      receiveTimeout: const Duration(seconds: 45),
       headers: const {'Content-Type': 'application/json'},
     ),
   );

@@ -77,17 +77,31 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     Uri uri, {
     bool preferNonBrowser = false,
   }) async {
-    if (preferNonBrowser) {
-      final launchedNonBrowser = await launchUrl(
+    try {
+      if (preferNonBrowser) {
+        final launchedNonBrowser = await launchUrl(
+          uri,
+          mode: LaunchMode.externalNonBrowserApplication,
+        );
+        if (launchedNonBrowser) {
+          return true;
+        }
+      }
+
+      final launched = await launchUrl(
         uri,
-        mode: LaunchMode.externalNonBrowserApplication,
+        mode: LaunchMode.externalApplication,
       );
-      if (launchedNonBrowser) {
-        return true;
+      if (launched) return true;
+
+      return launchUrl(uri, mode: LaunchMode.platformDefault);
+    } catch (_) {
+      try {
+        return launchUrl(uri, mode: LaunchMode.platformDefault);
+      } catch (_) {
+        return false;
       }
     }
-
-    return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<bool> _launchExternalPaymentCandidates(
@@ -884,9 +898,12 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     String? preferredLaunchUrl,
     String? secondaryLaunchUrl,
     String? hostedLaunchUrl,
+    String? channel,
+    bool pendingProviderConfirmation = false,
   }) async {
     if (!mounted) return;
     bool confirmed = false;
+    final preferNonBrowser = true;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -909,33 +926,33 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               : () async {
                   final launched = await _launchExternalPaymentCandidates([
                     preferredLaunchUrl,
-                  ], preferNonBrowser: true);
+                  ], preferNonBrowser: preferNonBrowser);
                   if (!launched && mounted) {
                     AppSnackbar.error(
                       context,
-                      'Impossible de rouvrir ${paydunyaLaunchLabel(preferredLaunchUrl)}.',
+                      'Impossible de rouvrir ${paydunyaLaunchLabel(preferredLaunchUrl, channel: channel)}.',
                     );
                   }
                 },
           preferredLaunchLabel: preferredLaunchUrl == null
               ? null
-              : paydunyaLaunchLabel(preferredLaunchUrl),
+              : paydunyaLaunchLabel(preferredLaunchUrl, channel: channel),
           onReopenSecondary: secondaryLaunchUrl == null
               ? null
               : () async {
                   final launched = await _launchExternalPaymentCandidates([
                     secondaryLaunchUrl,
-                  ], preferNonBrowser: true);
+                  ], preferNonBrowser: preferNonBrowser);
                   if (!launched && mounted) {
                     AppSnackbar.error(
                       context,
-                      'Impossible d’ouvrir ${paydunyaLaunchLabel(secondaryLaunchUrl)}.',
+                      'Impossible d\'ouvrir ${paydunyaLaunchLabel(secondaryLaunchUrl, channel: channel)}.',
                     );
                   }
                 },
           secondaryLaunchLabel: secondaryLaunchUrl == null
               ? null
-              : paydunyaLaunchLabel(secondaryLaunchUrl),
+              : paydunyaLaunchLabel(secondaryLaunchUrl, channel: channel),
           onOpenHosted: hostedLaunchUrl == null
               ? null
               : () async {
@@ -945,15 +962,16 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                   if (!launched && mounted) {
                     AppSnackbar.error(
                       context,
-                      'Impossible d’ouvrir ${paydunyaLaunchLabel(hostedLaunchUrl)}.',
+                      'Impossible d\'ouvrir ${paydunyaLaunchLabel(hostedLaunchUrl, channel: channel)}.',
                     );
                   }
                 },
           hostedLaunchLabel: hostedLaunchUrl == null
               ? null
-              : paydunyaLaunchLabel(hostedLaunchUrl),
+              : paydunyaLaunchLabel(hostedLaunchUrl, channel: channel),
           reconcile: (id) =>
               ref.read(paymentInitiateProvider.notifier).reconcile(id),
+          pendingProviderConfirmation: pendingProviderConfirmation,
         );
       },
     );
@@ -1116,6 +1134,24 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         throw Exception('Échec de la création du paiement.');
       }
 
+      final existingStatus = paymentResult?['status'] as String?;
+      if (existingStatus == 'authorized' || existingStatus == 'succeeded') {
+        final reconciled = await ref
+            .read(paymentInitiateProvider.notifier)
+            .reconcile(paymentId);
+        if (!context.mounted) return;
+        if (reconciled == 'succeeded') {
+          Navigator.of(context).pop(true);
+          return;
+        }
+        if (mounted) {
+          await _pollPaymentConfirmationWithLaunchTargets(
+            paymentId: paymentId,
+          );
+        }
+        return;
+      }
+
       final Map<String, dynamic> details = {};
       if (_selectedMethod == 'carte_bancaire') {
         details['fullName'] = _nameController.text.trim();
@@ -1176,6 +1212,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               omUrl: omUrl,
               maxitUrl: maxitUrl,
               hostedUrl: url,
+              channel: _selectedMethod,
             ),
             preferNonBrowser: true,
           );
@@ -1186,13 +1223,20 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             }
           }
           if (mounted) {
+            final effectiveSecondary = (omUrl != null && maxitUrl != null && omUrl != maxitUrl)
+                ? maxitUrl
+                : null;
+            final effectiveHosted = _selectedMethod == 'orange_senegal'
+                ? null
+                : url;
             await _pollPaymentConfirmationWithLaunchTargets(
               paymentId: paymentId,
               preferredLaunchUrl: omUrl ?? maxitUrl,
-              secondaryLaunchUrl: omUrl != null && maxitUrl != null
-                  ? maxitUrl
-                  : null,
-              hostedLaunchUrl: url,
+              secondaryLaunchUrl: effectiveSecondary,
+              hostedLaunchUrl: effectiveHosted,
+              channel: _selectedMethod,
+              pendingProviderConfirmation:
+                  executeResult?['pendingProviderConfirmation'] == true,
             );
           }
           return;
@@ -1240,7 +1284,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             await _pollPaymentConfirmationWithLaunchTargets(
               paymentId: paymentId,
               preferredLaunchUrl: url,
-              hostedLaunchUrl: url,
+              channel: _selectedMethod,
             );
           }
           return;
@@ -1418,6 +1462,7 @@ class _PaymentWaitingSheet extends StatefulWidget {
     this.onOpenHosted,
     this.hostedLaunchLabel,
     required this.reconcile,
+    this.pendingProviderConfirmation = false,
   });
 
   final String paymentId;
@@ -1430,6 +1475,7 @@ class _PaymentWaitingSheet extends StatefulWidget {
   final Future<void> Function()? onOpenHosted;
   final String? hostedLaunchLabel;
   final Future<String?> Function(String paymentId) reconcile;
+  final bool pendingProviderConfirmation;
 
   @override
   State<_PaymentWaitingSheet> createState() => _PaymentWaitingSheetState();
@@ -1439,9 +1485,12 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
     with WidgetsBindingObserver {
   static const _pollInterval = Duration(seconds: 6);
   static const _timeout = Duration(minutes: 5);
+  static const _confirmPaidDelay = Duration(seconds: 30);
+  static const _maxConsecutiveFailures = 3;
   bool _manualChecking = false;
   bool _backgroundChecking = false;
   int _elapsed = 0;
+  int _consecutiveFailures = 0;
   Timer? _timer;
 
   @override
@@ -1462,6 +1511,10 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _consecutiveFailures = 0;
+      if (_timer == null && _elapsed < _timeout.inSeconds) {
+        _startPolling();
+      }
       unawaited(_runCheck(showLoading: false));
     }
   }
@@ -1471,7 +1524,6 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
       _elapsed += _pollInterval.inSeconds;
       if (_elapsed >= _timeout.inSeconds) {
         _timer?.cancel();
-        // Timeout — let user stay on page, webhook will eventually come
         return;
       }
       await _runCheck(showLoading: false);
@@ -1479,6 +1531,7 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
   }
 
   Future<void> _check() async {
+    _consecutiveFailures = 0;
     await _runCheck(showLoading: true);
   }
 
@@ -1492,6 +1545,7 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
     try {
       final status = await widget.reconcile(widget.paymentId);
       if (!mounted) return;
+      _consecutiveFailures = 0;
       if (status == 'succeeded') {
         _timer?.cancel();
         widget.onConfirmed();
@@ -1500,37 +1554,59 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
         widget.onFailed('Le paiement a échoué. Veuillez réessayer.');
       }
     } catch (_) {
-      // Network error — keep polling
+      _consecutiveFailures++;
+      if (_consecutiveFailures >= _maxConsecutiveFailures) {
+        _timer?.cancel();
+        _timer = null;
+      }
     } finally {
       _backgroundChecking = false;
-      if (mounted && showLoading) {
-        setState(() => _manualChecking = false);
-      }
+      if (mounted) setState(() => _manualChecking = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final timedOut = _elapsed >= _timeout.inSeconds;
+    final networkLost = _consecutiveFailures >= _maxConsecutiveFailures;
+    final showConfirmPaid = widget.pendingProviderConfirmation &&
+        _elapsed >= _confirmPaidDelay.inSeconds;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: AppColors.outlineVariant,
-              borderRadius: BorderRadius.circular(2.r),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.outlineVariant,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
             ),
-          ),
-          SizedBox(height: 28.h),
-          if (!timedOut) ...[
+            SizedBox(height: 28.h),
+          if (networkLost) ...[
+            AppIcon('wifi-off', color: AppColors.onSurfaceVariant, size: 48),
+            SizedBox(height: 20.h),
+            Text(
+              'Connexion perdue',
+              style: AppTextStyles.labelLg,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Vérifiez votre connexion internet et réessayez.',
+              style: AppTextStyles.bodySm.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ] else if (!timedOut) ...[
             SizedBox(
               width: 48.r,
               height: 48.r,
@@ -1576,6 +1652,13 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
             onPressed: _manualChecking ? null : _check,
             isLoading: _manualChecking,
           ),
+          if (showConfirmPaid) ...[
+            SizedBox(height: 12.h),
+            AppButton.primary(
+              label: "J'ai effectué le paiement",
+              onPressed: _manualChecking ? null : _check,
+            ),
+          ],
           if (widget.onReopenPreferred != null) ...[
             SizedBox(height: 12.h),
             AppButton.outline(
@@ -1607,6 +1690,7 @@ class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
             ),
           ],
         ],
+        ),
       ),
     );
   }

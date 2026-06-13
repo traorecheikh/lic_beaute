@@ -40,15 +40,6 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   final _phoneController = TextEditingController();
   String _channel = 'wave_senegal';
   bool _saving = false;
-  static const Map<String, String> _fallbackChannelLabels = {
-    'wave_senegal': 'Wave Sénégal',
-    'orange_senegal': 'Orange Money Sénégal',
-    'free_senegal': 'Free Money Sénégal',
-    'wizall_senegal': 'Wizall Sénégal',
-    'expresso_sn': 'Expresso Sénégal',
-    'djamo': 'Djamo',
-    'paydunya_wallet': 'Portefeuille PayDunya',
-  };
 
   @override
   void dispose() {
@@ -62,23 +53,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     final paydunyaMethodsAsync = ref.watch(
       booking_payment_methods.availablePaydunyaMethodsProvider,
     );
-    final availableChannels =
-        paydunyaMethodsAsync.asData?.value
+    final channelItems = paydunyaMethodsAsync.asData?.value
             .where((method) => method.enabled)
             .toList() ??
         const <booking_payment_methods.PaydunyaMethodRecord>[];
-    final channelItems = availableChannels.isNotEmpty
-        ? availableChannels
-        : _fallbackChannelLabels.entries
-              .map(
-                (entry) => booking_payment_methods.PaydunyaMethodRecord(
-                  code: entry.key,
-                  country: '',
-                  label: entry.value,
-                  enabled: true,
-                ),
-              )
-              .toList();
 
     if (!channelItems.any((item) => item.code == _channel) &&
         channelItems.isNotEmpty) {
@@ -198,20 +176,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         .asData
         ?.value;
     final channelItems =
-        (paydunyaMethods?.where((item) => item.enabled).toList() ??
-                const <booking_payment_methods.PaydunyaMethodRecord>[])
-            .isNotEmpty
-        ? paydunyaMethods!.where((item) => item.enabled).toList()
-        : _fallbackChannelLabels.entries
-              .map(
-                (entry) => booking_payment_methods.PaydunyaMethodRecord(
-                  code: entry.key,
-                  country: '',
-                  label: entry.value,
-                  enabled: true,
-                ),
-              )
-              .toList();
+        paydunyaMethods?.where((item) => item.enabled).toList() ??
+            const <booking_payment_methods.PaydunyaMethodRecord>[];
     var selectedChannel = _resolveExistingChannel(method, channelItems);
     bool saving = false;
 
@@ -415,11 +381,11 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       orElse: () => booking_payment_methods.PaydunyaMethodRecord(
         code: _channel,
         country: '',
-        label: _fallbackChannelLabels[_channel] ?? _channel,
+        label: _channel,
         enabled: true,
       ),
     );
-    return matched?.label ?? (_fallbackChannelLabels[_channel] ?? _channel);
+    return matched?.label ?? _channel;
   }
 
   String? _resolveChannelCountry() {
@@ -427,18 +393,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         .read(booking_payment_methods.availablePaydunyaMethodsProvider)
         .asData
         ?.value;
-    final channelItems = liveMethods?.isNotEmpty == true
-        ? liveMethods!
-        : _fallbackChannelLabels.entries
-              .map(
-                (entry) => booking_payment_methods.PaydunyaMethodRecord(
-                  code: entry.key,
-                  country: '',
-                  label: entry.value,
-                  enabled: true,
-                ),
-              )
-              .toList();
+    final channelItems = liveMethods ?? const <booking_payment_methods.PaydunyaMethodRecord>[];
     return _resolveChannelCountryForCode(_channel, channelItems);
   }
 
@@ -471,7 +426,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       orElse: () => booking_payment_methods.PaydunyaMethodRecord(
         code: channelCode,
         country: '',
-        label: _fallbackChannelLabels[channelCode] ?? channelCode,
+        label: channelCode,
         enabled: true,
       ),
     );

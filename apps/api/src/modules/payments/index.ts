@@ -104,12 +104,30 @@ export class PaymentController {
       const session = requireRole(request, ["client"]);
       const body = paymentInitiateInputSchema.parse(request.body);
 
-      const payment = await prisma.payment.findFirst({
+      let payment = await prisma.payment.findFirst({
         where: { bookingId: body.bookingId, status: "pending" },
         include: { booking: true },
         orderBy: { createdAt: "desc" }
       });
-      if (!payment) { fail(reply, 404, "payment_not_found", "Aucun paiement en attente pour cette réservation."); return; }
+
+      if (!payment) {
+        const existing = await prisma.payment.findFirst({
+          where: { bookingId: body.bookingId, status: { in: ["authorized", "succeeded"] } },
+          include: { booking: true },
+          orderBy: { createdAt: "desc" }
+        });
+        if (existing) {
+          ok(reply, {
+            paymentId: existing.id,
+            redirectUrl: null,
+            expiresAt: null,
+            status: existing.status
+          });
+          return;
+        }
+        fail(reply, 404, "payment_not_found", "Aucun paiement en attente pour cette réservation.");
+        return;
+      }
       if (payment.booking.clientId !== session.sub) { fail(reply, 403, "forbidden", "Accès interdit."); return; }
       const client = await prisma.user.findUnique({
         where: { id: session.sub },
@@ -282,15 +300,20 @@ export class PaymentController {
         return;
       }
 
-      const guard = await this._claimReconcileWindow(payment.id);
-      if (!guard.allowed) {
-        fail(
-          reply,
-          429,
-          "reconcile_throttled",
-          `Réconciliation trop fréquente. Réessayez dans ${Math.ceil(guard.retryAfterMs / 1000)}s.`
-        );
-        return;
+      const authorizedLongEnough = payment.status === "authorized"
+        && (Date.now() - payment.updatedAt.getTime()) > 60_000;
+
+      if (!authorizedLongEnough) {
+        const guard = await this._claimReconcileWindow(payment.id);
+        if (!guard.allowed) {
+          fail(
+            reply,
+            429,
+            "reconcile_throttled",
+            `Réconciliation trop fréquente. Réessayez dans ${Math.ceil(guard.retryAfterMs / 1000)}s.`
+          );
+          return;
+        }
       }
 
       const remoteStatus = await paymentAdapter.fetchPaymentStatus({ providerToken: payment.webhookSignature });
@@ -654,7 +677,7 @@ export class PaymentController {
             service: { select: { name: true } }
           }
         });
-        const shouldAutoConfirm = booking?.status === "pending";
+        const shouldAutoConfirm = newStatus === "succeeded" && booking?.status === "pending";
 
         await tx.booking.update({
           where: { id: payment.bookingId },

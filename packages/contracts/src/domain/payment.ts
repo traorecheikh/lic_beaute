@@ -74,8 +74,9 @@ export const paymentInitiateInputSchema = z.object({
 
 export const paymentInitiateResponseSchema = z.object({
   paymentId: z.string(),
-  redirectUrl: z.string(),
-  expiresAt: z.string().datetime()
+  redirectUrl: z.string().nullable(),
+  expiresAt: z.string().datetime().nullable(),
+  status: paymentStatusSchema.optional()
 });
 
 export const paymentStatusResponseSchema = z.object({
