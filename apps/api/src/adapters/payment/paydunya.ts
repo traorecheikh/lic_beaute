@@ -590,7 +590,7 @@ export class PayDunyaAdapter implements PaymentAdapter {
         code,
         country: entry.country,
         label: entry.label,
-        enabled: (settingMap.get(SENEGAL_TOGGLE_BY_CODE[code] ?? "") ?? "true") === "true"
+        enabled: (settingMap.get(SENEGAL_TOGGLE_BY_CODE[code] ?? "") ?? "false") === "true"
       }));
   }
 

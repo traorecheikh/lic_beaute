@@ -116,7 +116,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                       'Enregistrez un compte mobile money pour simplifier vos réservations.',
                 )
               else
-                ...methods.map(
+                ...methods.take(2).map(
                   (method) => Padding(
                     padding: EdgeInsets.only(bottom: 12.h),
                     child: PaymentTile(
@@ -130,6 +130,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   ),
                 ),
               SizedBox(height: 12.h),
+              if (methods.length < 2)
               Form(
                 key: _addFormKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,

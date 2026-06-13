@@ -104,81 +104,109 @@ class _AppDropdownSheet<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.72;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
-            child: Row(
-              children: [
-                Expanded(child: Text(label, style: AppTextStyles.headlineSm)),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: AppIcon('close', color: AppColors.onSurfaceVariant, size: 22),
-                ),
-              ],
+    final maxHeight = MediaQuery.of(context).size.height * 0.5;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 12.h),
+            Container(
+              width: 36.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.outlineVariant,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
             ),
-          ),
-          SizedBox(height: 14.h),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
-              itemCount: items.length,
-              separatorBuilder: (_, _) => SizedBox(height: 6.h),
-              itemBuilder: (_, i) {
-                final item = items[i];
-                final isSelected = item == value;
-                return GestureDetector(
-                  onTap: () => Navigator.of(context).pop(item),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 18.w,
-                      vertical: 14.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primaryLight
-                          : AppColors.surface,
-                      borderRadius: BorderRadius.circular(14.r),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.outlineVariant,
+            Padding(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 8.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(label, style: AppTextStyles.headlineSm),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: EdgeInsets.all(6.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceVariant,
+                        shape: BoxShape.circle,
                       ),
-                      boxShadow: isSelected ? AppShadows.card : null,
-                    ),
-                    child: Row(
-                      children: [
-                        if (itemLeading != null) ...[
-                          itemLeading!(item),
-                          gapW12,
-                        ],
-                        Expanded(
-                          child: Text(
-                            itemLabel(item),
-                            style: AppTextStyles.labelLg.copyWith(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.onSurface,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          AppIcon('check', color: AppColors.primary, size: 18),
-                      ],
+                      child: AppIcon('close', color: AppColors.onSurfaceVariant, size: 16),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
-          ),
-        ],
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 32.h),
+                itemCount: items.length,
+                itemBuilder: (_, i) {
+                  final item = items[i];
+                  final isSelected = item == value;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 8.h),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => Navigator.of(context).pop(item),
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 16.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.06)
+                                : AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          child: Row(
+                            children: [
+                              if (itemLeading != null) ...[
+                                itemLeading!(item),
+                                SizedBox(width: 14.w),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  itemLabel(item),
+                                  style: AppTextStyles.labelLg.copyWith(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : AppColors.onSurface,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 150),
+                                opacity: isSelected ? 1.0 : 0.0,
+                                child: AppIcon('check-circle', color: AppColors.primary, size: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
