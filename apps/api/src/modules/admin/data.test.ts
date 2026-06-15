@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => {
     salon: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
     subscription: { count: vi.fn(), upsert: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
     auditLog: { count: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
-    emailAudit: { findMany: vi.fn() },
+    emailAudit: { findMany: vi.fn(), count: vi.fn() },
     user: { findUnique: vi.fn(), findFirst: vi.fn() },
     platformSetting: { create: vi.fn(), findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn() },
     platformSalonCategory: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
@@ -136,6 +136,7 @@ describe("admin data module", () => {
       documents: [{ label: "ID", status: "missing" }]
     };
     mocks.prisma.salon.findMany.mockResolvedValue([salon]);
+    mocks.prisma.salon.count.mockResolvedValue(1);
     const pending = await listPendingSalons({});
     const listed = await listSalons({});
     expect(pending.total).toBe(1);
@@ -149,6 +150,7 @@ describe("admin data module", () => {
         subscriptionIntentTier: "premium", latestAdminNote: null, staffMembers: [], documents: []
       }
     ]);
+    mocks.prisma.salon.count.mockResolvedValue(1);
     const pending = await listPendingSalons({ status: "needs_info", category: "nails", city: "Thi", search: "B" });
     expect(pending.items[0]?.ownerName).toBe("—");
 
@@ -609,6 +611,7 @@ describe("admin data module", () => {
 
   it("audit/settings/config helpers work", async () => {
     mocks.prisma.auditLog.findMany.mockResolvedValue([{ id: "a1", action: "x", summary: "s", entityType: "salon", entityId: "s1", actorName: "Admin", createdAt: new Date(), severity: "info" }]);
+    mocks.prisma.auditLog.count.mockResolvedValue(1);
     const events = await listAuditEvents({});
     expect(events.total).toBe(1);
 
@@ -667,6 +670,7 @@ describe("admin data module", () => {
         createdAt: new Date()
       }
     ]);
+    mocks.prisma.emailAudit.count.mockResolvedValueOnce(1);
     const out = await listEmailAuditEvents({ status: "sent", driver: "smtp", to: "owner" });
     expect(out.total).toBe(1);
     expect(out.items[0]?.to).toBe("owner@example.com");

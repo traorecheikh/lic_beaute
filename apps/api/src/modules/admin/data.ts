@@ -326,6 +326,320 @@ export async function listSalons(filters: { search?: string; status?: string; pa
   return { items, total, page, pageSize };
 }
 
+export async function getPendingSalonDetail(salonId: string): Promise<AdminSalonDetail | null> {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    include: {
+      staffMembers: { where: { role: "salon_owner" } },
+      services: true,
+      documents: true,
+      gallery: { orderBy: { position: "asc" } },
+      subscription: { select: { id: true } }
+    }
+  });
+
+  if (!salon) return null;
+
+  const owner = salon.staffMembers[0];
+
+  return {
+    id: salon.id,
+    subscriptionId: salon.subscription?.id ?? null,
+    salonName: salon.name,
+    category: salon.category,
+    city: salon.city,
+    address: salon.address,
+    description: salon.description,
+    owner: {
+      fullName: owner?.fullName ?? "—",
+      email: owner?.email ?? "",
+      phone: owner?.phone ?? ""
+    },
+    approvalStatus: salon.approvalStatus as AdminSalonDetail["approvalStatus"],
+    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonDetail["subscriptionIntentTier"],
+    submittedAt: salon.submittedAt.toISOString(),
+    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
+    latestAdminNote: salon.latestAdminNote,
+    gallery: salon.gallery.map((img) => img.url),
+    services: salon.services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      durationMinutes: s.durationMinutes,
+      priceXof: s.priceXof,
+      depositMode: s.depositMode as "none" | "fixed" | "percent",
+      depositAmountXof: s.depositAmountXof,
+      depositPercent: s.depositPercent
+    })),
+    documents: salon.documents.map((d) => ({
+      label: d.label,
+      status: d.status as "received" | "missing" | "invalid",
+      note: d.note,
+      fileUrl: d.fileUrl
+    }))
+  };
+}
+
+export async function approveSalon(salonId: string, actorName: string) {
+  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+  if (!salon) return null;
+
+  const updated = await prisma.salon.update({
+    where: { id: salonId },
+    data: { approvalStatus: "approved", isVisibleInMarketplace: false, canReceiveBookings: false, latestAdminNote: "Salon approuvé. Activation en attente d'un abonnement actif." }
+  });
+
+  await prisma.subscription.upsert({
+    where: { salonId },
+    create: { salonId, tier: salon.subscriptionIntentTier, status: "inactive" },
+    update: {}
+  });
+
+  await writeAuditLog({
+    action: "salon.approved",
+    summary: `Salon ${salon.name} approuvé.`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify({ salonId, approvalStatus: "approved" }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+
+  const owner = await getSalonOwnerContact(salonId);
+  if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
+    await sendEmail({
+      to: owner.email,
+      subject: "Votre salon est approuvé sur Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Excellente nouvelle: le salon "${salon.name}" a été approuvé.\n` +
+        `Dernière étape: activez votre abonnement pour rendre le salon visible et recevoir des réservations.\n\n` +
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Votre dossier a été validé",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Excellente nouvelle ! Le salon <strong>${salon.name}</strong> a été approuvé.`,
+          `Dernière étape : <strong>activez votre abonnement</strong> pour rendre votre salon visible et recevoir vos premières réservations.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/billing`, label: "Activer mon abonnement" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
+    }).catch((err) =>
+      logger.error("approveSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
+    );
+  }
+
+  return getPendingSalonDetail(updated.id);
+}
+
+export async function rejectSalon(salonId: string, input: AdminSalonDecisionInput, actorName: string) {
+  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+  if (!salon) return null;
+
+  await prisma.salon.update({
+    where: { id: salonId },
+    data: { approvalStatus: "rejected", latestAdminNote: input.reason }
+  });
+
+  await writeAuditLog({
+    action: "salon.rejected",
+    summary: `Salon ${salon.name} rejeté.`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify({ reason: input.reason }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+
+  const owner = await getSalonOwnerContact(salonId);
+  if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
+    sendEmail({
+      to: owner.email,
+      subject: "Dossier salon refusé — Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Le dossier du salon "${salon.name}" a été refusé.\n` +
+        `Motif: ${input.reason}\n\n` +
+        `Vous pouvez corriger les éléments demandés puis soumettre à nouveau.\n\n` +
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Votre dossier n'a pas été validé",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Le dossier du salon <strong>${salon.name}</strong> a été refusé.`,
+          `<strong>Motif :</strong> ${input.reason}`,
+          `Vous pouvez corriger les éléments demandés dans votre espace, puis soumettre à nouveau votre dossier.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/profile`, label: "Modifier mon dossier" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
+    }).catch((err) =>
+      logger.error("rejectSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
+    );
+  }
+
+  return getPendingSalonDetail(salonId);
+}
+
+export async function requestSalonInfo(salonId: string, input: AdminSalonDecisionInput, actorName: string) {
+  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+  if (!salon) return null;
+
+  await prisma.salon.update({
+    where: { id: salonId },
+    data: { approvalStatus: "needs_info", latestAdminNote: input.reason }
+  });
+
+  await writeAuditLog({
+    action: "salon.request_info",
+    summary: `Informations complémentaires demandées à ${salon.name}.`,
+    entityType: "salon",
+    entityId: salonId,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify({ reason: input.reason }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
+  });
+
+  const owner = await getSalonOwnerContact(salonId);
+  if (owner?.email) {
+    const { buildEmailHtml } = await import("../../lib/email-html.js");
+    await sendEmail({
+      to: owner.email,
+      subject: "Informations complémentaires requises — Beauté Avenue",
+      text:
+        `Bonjour ${owner.fullName ?? ""},\n\n` +
+        `Votre dossier pour "${salon.name}" nécessite des informations complémentaires.\n` +
+        `Détail: ${input.reason}\n\n` +
+        `Connectez-vous à votre espace pro pour mettre à jour votre dossier.\n\n` +
+        `— L'équipe Beauté Avenue`,
+      html: buildEmailHtml({
+        preheader: "Informations complémentaires requises",
+        greeting: `Bonjour ${owner.fullName ?? ""},`,
+        bodyLines: [
+          `Votre dossier pour <strong>${salon.name}</strong> nécessite des informations complémentaires.`,
+          `<strong>Détail :</strong> ${input.reason}`,
+          `Connectez-vous à votre espace pro pour mettre à jour votre dossier.`
+        ],
+        cta: { url: `${config.webOrigin}/pro/profile`, label: "Mettre à jour mon dossier" },
+        ignoreNote: false,
+        footerNote: "— L'équipe Beauté Avenue"
+      })
+    }).catch((err) =>
+      logger.error("requestSalonInfo: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
+    );
+  }
+
+  return getPendingSalonDetail(salonId);
+}
+
+export async function createSalon(data: AdminSalonCreateInput, actorName: string) {
+  // Placeholder password — never exposed to anyone; owner sets theirs via setup link.
+  const internalPassword = randomBytes(32).toString("hex");
+
+  const salon = await prisma.salon.create({
+    data: {
+      name: data.name,
+      category: data.category,
+      city: data.city,
+      address: data.address,
+      description: data.description,
+      approvalStatus: "approved",
+      isVisibleInMarketplace: true,
+      canReceiveBookings: true,
+      staffMembers: {
+        create: {
+          fullName: data.ownerName,
+          email: data.ownerEmail,
+          phone: data.ownerPhone,
+          role: "salon_owner",
+          passwordHash: await argon2.hash(internalPassword)
+        }
+      }
+    }
+  });
+
+  await prisma.subscription.create({
+    data: { salonId: salon.id, tier: "standard", status: "active" }
+  });
+
+  // Generate a one-time 72h setup token and store its hash in platformSetting.
+  const owner = await prisma.user.findUnique({ where: { email: data.ownerEmail }, select: { id: true } });
+  const setupLink = await (async () => {
+    if (!owner) return null;
+    const rawToken = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
+    await prisma.platformSetting.create({
+      data: {
+        group: "security",
+        key: `auth:setup:${owner.id}`,
+        value: JSON.stringify({ tokenHash, expiresAt }),
+        description: "Account setup token (single-use)"
+      }
+    });
+    return `${config.webOrigin}/pro/setup-account?token=${rawToken}&email=${encodeURIComponent(data.ownerEmail)}`;
+  })();
+
+  await writeAuditLog({
+    action: "salon.created",
+    summary: `Salon ${salon.name} créé manuellement.`,
+    entityType: "salon",
+    entityId: salon.id,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify({ name: data.name, ownerEmail: data.ownerEmail, city: data.city }),
+    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
+  });
+
+  const { buildEmailHtml } = await import("../../lib/email-html.js");
+  sendEmail({
+    to: data.ownerEmail,
+    subject: "Bienvenue sur Beauté Avenue — Activez votre espace pro",
+    text: `Bonjour ${data.ownerName},\n\nVotre espace pro Beauté Avenue a été créé.\n\nActivez votre compte en définissant votre mot de passe via le lien ci-dessous (valable 72h) :\n${setupLink ?? "(lien non disponible — contactez l'administrateur)"}\n\n— L'équipe Beauté Avenue`,
+    html: buildEmailHtml({
+      preheader: "Activez votre espace professionnel",
+      greeting: `Bonjour ${data.ownerName},`,
+      bodyLines: [
+        `Votre espace professionnel <strong>Beauté Avenue</strong> a été créé.`,
+        `Activez votre compte en définissant votre mot de passe via le bouton ci-dessous.`
+      ],
+      cta: setupLink ? { url: setupLink, label: "Activer mon espace" } : undefined,
+      expiryNote: "Ce lien expire dans 72 heures.",
+      usageNote: "Il ne peut être utilisé qu'une seule fois.",
+      ignoreNote: false,
+      footerNote: "— L'équipe Beauté Avenue"
+    })
+  }).catch((err) => logger.error("createSalon: failed to send setup email", { err: String(err), ownerEmail: data.ownerEmail }));
+
+  return await getPendingSalonDetail(salon.id);
+}
+
+// ─── Uniqueness check ─────────────────────────────────────────────────────────
+
+export async function checkSalonUniqueness(fields: { email?: string; phone?: string; name?: string }) {
+  const result: { email?: "available" | "taken"; phone?: "available" | "taken"; name?: "available" | "taken" } = {};
+  if (fields.email) {
+    const existing = await prisma.user.findUnique({ where: { email: fields.email }, select: { id: true } });
+    result.email = existing ? "taken" : "available";
+  }
+  if (fields.phone) {
+    const existing = await prisma.user.findFirst({ where: { phone: fields.phone }, select: { id: true } });
+    result.phone = existing ? "taken" : "available";
+  }
+  if (fields.name) {
+    const existing = await prisma.salon.findFirst({ where: { name: { equals: fields.name, mode: "insensitive" } }, select: { id: true } });
+    result.name = existing ? "taken" : "available";
+  }
+  return result;
+}
+
 // ─── Subscriptions ────────────────────────────────────────────────────────────
 
 export async function listSubscriptions(filters: {
