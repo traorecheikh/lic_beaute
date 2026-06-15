@@ -77,8 +77,39 @@
                Traitement...
             </span>
           </button>
+
+          <p class="text-center text-sm mt-4">
+            <button type="button" @click="forgotEmail = email; showForgotModal = true" class="font-semibold text-primary hover:text-primary/80">Mot de passe oublié ?</button>
+          </p>
         </form>
       </article>
+
+      <!-- Forgot password modal -->
+      <Teleport to="body">
+        <div v-if="showForgotModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div class="absolute inset-0 bg-espresso/30 backdrop-blur-sm" @click="showForgotModal = false"></div>
+          <div class="relative bg-white rounded-lg border border-outline-variant/60 shadow-2xl w-full max-w-md p-8 space-y-6">
+            <div>
+              <h3 class="text-lg font-bold text-espresso">Mot de passe oublié</h3>
+              <p class="text-[12px] text-cocoa/70 mt-1">Entrez votre adresse e-mail. Nous vous enverrons un lien de réinitialisation.</p>
+            </div>
+            <form @submit.prevent="handleForgotPassword" class="space-y-4">
+              <div>
+                <label class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest block ml-0.5 mb-2">Adresse e-mail</label>
+                <input v-model="forgotEmail" type="email" required class="input-shell bg-neutral-bg/30 border border-outline-variant/60" placeholder="nom@beauteavenue.com" />
+                <p v-if="forgotError" class="text-[10px] font-bold text-error mt-1 uppercase tracking-wider">{{ forgotError }}</p>
+              </div>
+              <div class="flex gap-3 justify-end">
+                <button type="button" class="btn-secondary px-4 py-2 text-[11px] font-bold uppercase tracking-wider" @click="showForgotModal = false">Annuler</button>
+                <button type="submit" :disabled="forgotLoading" class="btn-primary px-6 py-2 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2">
+                  <svg v-if="forgotLoading" class="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  <span>{{ forgotLoading ? 'Envoi…' : 'Envoyer le lien' }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </Teleport>
 
       <footer class="mt-8 text-center">
         <p class="text-[9px] font-bold uppercase tracking-[0.4em] text-cocoa/20">Système d'Exploitation Centralisé • v1.0</p>
@@ -96,6 +127,7 @@ import { EnvelopeIcon, LockClosedIcon } from "@heroicons/vue/24/outline";
 
 import { getErrorMessage } from "@/lib/errors";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { forgotPassword } from "@/lib/api";
 import { validateForm } from "@beauteavenue/shared-ts";
 
 const auth = useAdminAuthStore();
@@ -106,6 +138,11 @@ const email = ref("");
 const password = ref("");
 const isSubmitting = ref(false);
 const errors = reactive<Record<string, string>>({});
+
+const showForgotModal = ref(false);
+const forgotEmail = ref("");
+const forgotLoading = ref(false);
+const forgotError = ref("");
 
 const showExpiredBanner = computed(() => route.query.expired === "1");
 
@@ -133,6 +170,24 @@ async function handleSubmit() {
     toast.error(message);
   } finally {
     isSubmitting.value = false;
+  }
+}
+
+async function handleForgotPassword() {
+  forgotError.value = "";
+  const trimmed = forgotEmail.value.trim();
+  if (!trimmed) { forgotError.value = "Adresse e-mail requise."; return; }
+
+  forgotLoading.value = true;
+  try {
+    await forgotPassword(trimmed);
+    showForgotModal.value = false;
+    toast.success("Si un compte existe avec cette adresse, un lien de réinitialisation a été envoyé.");
+    forgotEmail.value = "";
+  } catch (error) {
+    forgotError.value = getErrorMessage(error, "Impossible d'envoyer le lien pour le moment.");
+  } finally {
+    forgotLoading.value = false;
   }
 }
 </script>

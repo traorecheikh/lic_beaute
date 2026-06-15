@@ -167,6 +167,12 @@ export const resetPasswordInputSchema = z
     }
   });
 
+export const forgotPasswordInputSchema = z.object({
+  email: z.string().email("Adresse e-mail invalide.")
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordInputSchema>;
+
 export const emailOtpRequestSchema = z.object({
   email: z.string().email()
 });

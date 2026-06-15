@@ -40,7 +40,7 @@
             </div>
 
             <div class="text-sm">
-              <button type="button" @click="toast.info('Réinitialisation par e-mail disponible prochainement.')" class="font-semibold text-primary hover:text-primary/80">Mot de passe oublié ?</button>
+              <button type="button" @click="forgotEmail = email; showForgotModal = true" class="font-semibold text-primary hover:text-primary/80">Mot de passe oublié ?</button>
             </div>
           </div>
 
@@ -69,6 +69,36 @@
         <RouterLink to="/pro/register" class="font-bold text-primary hover:text-primary/80">Ouvrez votre salon gratuitement</RouterLink>
       </p>
     </div>
+
+    <!-- Forgot password modal -->
+    <Teleport to="body">
+      <div v-if="showForgotModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-espresso/30 backdrop-blur-sm" @click="showForgotModal = false"></div>
+        <div class="relative panel-clean w-full max-w-md p-8 space-y-6">
+          <div>
+            <h3 class="text-lg font-bold text-espresso">Mot de passe oublié</h3>
+            <p class="row-meta mt-1">Entrez votre adresse e-mail professionnelle. Nous vous enverrons un lien de réinitialisation.</p>
+          </div>
+          <form @submit.prevent="handleForgotPassword" class="space-y-4">
+            <div>
+              <label for="forgot-email" class="section-label mb-2 block">Adresse e-mail</label>
+              <input id="forgot-email" v-model="forgotEmail" type="email" required class="input-shell" placeholder="marie@monsalon.com" />
+              <p v-if="forgotError" class="text-[11px] text-error font-medium mt-1">{{ forgotError }}</p>
+            </div>
+            <div class="flex gap-3 justify-end">
+              <button type="button" class="btn-secondary px-4 py-2" @click="showForgotModal = false">Annuler</button>
+              <button type="submit" :disabled="forgotLoading" class="btn-primary px-6 py-2 flex items-center gap-2">
+                <svg v-if="forgotLoading" class="animate-spin w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
+                  <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>{{ forgotLoading ? 'Envoi…' : 'Envoyer le lien' }}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -79,6 +109,7 @@ import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/vue/24/outline";
 import { useProAuthStore } from "@/stores/proAuth";
+import { forgotPassword } from "@/lib/pro-api";
 import { getErrorMessage } from "@/lib/errors";
 import { validateForm } from "@beauteavenue/shared-ts";
 
@@ -91,6 +122,11 @@ const password = ref("");
 const showPassword = ref(false);
 const loading = ref(false);
 const fieldErrors = reactive<Record<string, string>>({});
+
+const showForgotModal = ref(false);
+const forgotEmail = ref("");
+const forgotLoading = ref(false);
+const forgotError = ref("");
 
 function validate(): boolean {
   Object.keys(fieldErrors).forEach((k) => delete fieldErrors[k]);
@@ -122,6 +158,24 @@ async function handleLogin() {
     toast.error(getErrorMessage(error, "Connexion impossible pour le moment."));
   } finally {
     loading.value = false;
+  }
+}
+
+async function handleForgotPassword() {
+  forgotError.value = "";
+  const trimmed = forgotEmail.value.trim();
+  if (!trimmed) { forgotError.value = "Adresse e-mail requise."; return; }
+
+  forgotLoading.value = true;
+  try {
+    await forgotPassword(trimmed);
+    showForgotModal.value = false;
+    toast.success("Si un compte existe avec cette adresse, un lien de réinitialisation a été envoyé.");
+    forgotEmail.value = "";
+  } catch (error) {
+    forgotError.value = getErrorMessage(error, "Impossible d'envoyer le lien pour le moment.");
+  } finally {
+    forgotLoading.value = false;
   }
 }
 

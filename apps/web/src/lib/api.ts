@@ -15,6 +15,9 @@ import type {
   PlatformRequiredDocument,
   PlatformSalonCategory,
   PlatformSetting,
+  ProService,
+  ProServiceCreateInput,
+  ProServiceUpdateInput,
   UpsertRequiredDocumentInput,
   UpsertSalonCategoryInput
 } from "@beauteavenue/contracts";
@@ -280,6 +283,35 @@ export function requestSalonInfo(token: string, salonId: string, payload: AdminS
   return mutateSalonDecision(token, salonId, "request-info", payload);
 }
 
+export async function fetchAdminSalonServices(token: string, salonId: string) {
+  return request<ProService[]>(`/api/v1/admin/salons/${salonId}/services`, {
+    headers: authHeaders(token)
+  });
+}
+
+export async function createAdminSalonService(token: string, salonId: string, payload: ProServiceCreateInput) {
+  return request<ProService>(`/api/v1/admin/salons/${salonId}/services`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function updateAdminSalonService(token: string, salonId: string, serviceId: string, payload: ProServiceUpdateInput) {
+  return request<ProService>(`/api/v1/admin/salons/${salonId}/services/${serviceId}`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function deleteAdminSalonService(token: string, salonId: string, serviceId: string) {
+  return request<{ deleted: boolean }>(`/api/v1/admin/salons/${salonId}/services/${serviceId}`, {
+    method: "DELETE",
+    headers: authHeaders(token)
+  });
+}
+
 export async function fetchSubscriptions(token: string, query: Record<string, string | undefined>) {
   return request<AdminSubscriptionListResponse>(
     "/api/v1/admin/subscriptions",
@@ -405,6 +437,13 @@ export async function sendPasswordReset(token: string, salonId: string) {
   return request<{ sent: boolean }>(`/api/v1/admin/salons/${salonId}/send-password-reset`, {
     method: "POST",
     headers: authHeaders(token)
+  });
+}
+
+export async function forgotPassword(email: string): Promise<{ sent: boolean }> {
+  return request<{ sent: boolean }>("/api/v1/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email })
   });
 }
 

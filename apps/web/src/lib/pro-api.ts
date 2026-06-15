@@ -10,6 +10,7 @@ import {
   type OtpVerifyInput,
   type RegisterInput,
   type ProBlockedSlotCreateInput,
+  type ProBookingDetail,
   type ProSalonProfileHoursInner,
   type ProSalonUpdateInput,
   type ProServiceCreateInput,
@@ -21,6 +22,7 @@ import {
   type ProSubscriptionUpdateInput,
   type ProManualBookingInput,
   type ProClientBenefitCreateInput,
+  type ProClientSummary,
   type ProVoucherCreateInput
 } from "@/lib/generated";
 import { ResponseError } from "@/lib/generated/runtime";
@@ -52,6 +54,7 @@ export type ProSubscriptionFeatureTier = {
   tier: "standard" | "premium";
   label: string;
   priceLabel: string;
+  priceXof?: number;
   features?: Array<{
     label: string;
     included: boolean;
@@ -257,11 +260,18 @@ export async function fetchProDashboard(token: string) {
   );
 }
 
-export async function fetchProBookings(token: string, query: ApiV1ProBookingsGetRequest = {}) {
-  return withApiError(
-    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsGet(query),
-    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProBookingsGet(query)
-  );
+export async function fetchProBookings(token: string, query: { status?: string; date?: string; page?: number; pageSize?: number } = {}) {
+  const params = new URLSearchParams();
+  if (query.status) params.set("status", query.status);
+  if (query.date) params.set("date", query.date);
+  params.set("page", String(query.page ?? 0));
+  params.set("pageSize", String(query.pageSize ?? 20));
+  const basePath = resolveApiBaseUrl();
+  const resp = await fetch(`${basePath}/api/v1/pro/bookings?${params}`, {
+    headers: { Authorization: `Bearer ${resolveAccessToken(token) ?? token}` }
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json() as Promise<{ items: ProBookingDetail[]; total: number; page: number; pageSize: number }>;
 }
 
 export async function fetchProBooking(token: string, bookingId: string) {
@@ -306,11 +316,17 @@ export async function createManualProBooking(token: string, payload: ProManualBo
   );
 }
 
-export async function fetchProClients(token: string, search?: string) {
-  return withApiError(
-    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsGet({ search }),
-    () => getProApi(resolveAccessToken(token) ?? token).apiV1ProClientsGet({ search })
-  );
+export async function fetchProClients(token: string, search?: string, page = 0, pageSize = 20) {
+  const params = new URLSearchParams();
+  if (search) params.set("search", search);
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  const basePath = resolveApiBaseUrl();
+  const resp = await fetch(`${basePath}/api/v1/pro/clients?${params}`, {
+    headers: { Authorization: `Bearer ${resolveAccessToken(token) ?? token}` }
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json() as Promise<{ items: ProClientSummary[]; total: number; page: number; pageSize: number }>;
 }
 
 export async function fetchProClient(token: string, clientId: string) {
@@ -654,6 +670,21 @@ export async function redeemStaffInviteToken(inviteToken: string, userId: string
       throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Lien invalide ou expiré.");
     }
     return response.json() as Promise<{ accessToken: string; refreshToken: string }>;
+  });
+}
+
+export async function forgotPassword(email: string): Promise<{ sent: boolean }> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Impossible d'envoyer le lien." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Impossible d'envoyer le lien.");
+    }
+    return response.json() as Promise<{ sent: boolean }>;
   });
 }
 

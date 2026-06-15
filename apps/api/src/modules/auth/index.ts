@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 
@@ -805,6 +805,71 @@ export class AuthController {
       } else {
         fail(reply, 500, "internal_error", "Erreur interne.");
       }
+    }
+  }
+
+  async forgotPassword(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { email } = request.body as { email?: string };
+      if (!email || typeof email !== "string") {
+        fail(reply, 400, "missing_fields", "L'adresse e-mail est requise.");
+        return;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, role: true, email: true }
+      });
+
+      if (!user) {
+        ok(reply, { sent: true });
+        return;
+      }
+
+      if (!["salon_owner", "salon_manager", "salon_staff", "platform_admin"].includes(user.role)) {
+        ok(reply, { sent: true });
+        return;
+      }
+
+      const rawToken = randomBytes(32).toString("hex");
+      const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+      const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
+
+      await prisma.platformSetting.upsert({
+        where: { key: `auth:reset:${user.id}` },
+        create: {
+          group: "security",
+          key: `auth:reset:${user.id}`,
+          value: JSON.stringify({ tokenHash, expiresAt }),
+          description: "Password reset token (single-use)"
+        },
+        update: { value: JSON.stringify({ tokenHash, expiresAt }) }
+      });
+
+      const resetLink = `${config.webOrigin}/pro/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
+      const { buildEmailHtml } = await import("../../lib/email-html.js");
+      await sendEmail({
+        to: email,
+        subject: "Beauté Avenue — Réinitialisation de votre mot de passe",
+        text: `Bonjour,\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur le lien ci-dessous pour définir un nouveau mot de passe (valable 72h) :\n${resetLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`,
+        html: buildEmailHtml({
+          preheader: "Réinitialisation de votre mot de passe",
+          greeting: "Bonjour,",
+          bodyLines: [
+            "Vous avez demandé la réinitialisation de votre mot de passe.",
+            "Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe."
+          ],
+          cta: { url: resetLink, label: "Réinitialiser mon mot de passe" },
+          expiryNote: "Ce lien expire dans 72 heures.",
+          ignoreNote: true
+        })
+      });
+
+      ok(reply, { sent: true });
+    } catch (e) {
+      logger.error("forgotPassword error", { err: String(e) });
+      ok(reply, { sent: true });
     }
   }
 
