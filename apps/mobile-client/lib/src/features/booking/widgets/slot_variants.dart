@@ -56,31 +56,39 @@ String _fmtDur(Duration d) {
 bool _chosen(Map<String, dynamic>? sel, Map<String, dynamic> s) =>
     sel?['startsAt'] == s['startsAt'];
 
-enum _Period { matin, apresMidi, soir }
+enum _Period { matin, midi, apresMidi, soiree, nuit }
 
 extension _PE on _Period {
   String get label => switch (this) {
         _Period.matin => 'Matin',
+        _Period.midi => 'Midi',
         _Period.apresMidi => 'Après-midi',
-        _Period.soir => 'Soir',
+        _Period.soiree => 'Soirée',
+        _Period.nuit => 'Nuit',
       };
   String get icon => switch (this) {
         _Period.matin => '☀️',
+        _Period.midi => '🍽️',
         _Period.apresMidi => '⛅',
-        _Period.soir => '🌙',
+        _Period.soiree => '🌆',
+        _Period.nuit => '🌙',
       };
   Color get color => switch (this) {
         _Period.matin => const Color(0xFFF59E0B),
+        _Period.midi => const Color(0xFFF97316),
         _Period.apresMidi => const Color(0xFF3B82F6),
-        _Period.soir => const Color(0xFF8B5CF6),
+        _Period.soiree => const Color(0xFF8B5CF6),
+        _Period.nuit => const Color(0xFF6366F1),
       };
 }
 
 _Period _period(Map<String, dynamic> s) {
   final h = _dt(s).hour;
   if (h < 12) return _Period.matin;
+  if (h < 14) return _Period.midi;
   if (h < 17) return _Period.apresMidi;
-  return _Period.soir;
+  if (h < 20) return _Period.soiree;
+  return _Period.nuit;
 }
 
 Map<_Period, List<Map<String, dynamic>>> _byPeriod(List<Map<String, dynamic>> slots) {
@@ -256,7 +264,7 @@ class _V1State extends State<V1SlotBlockFilter> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '${b.toString().padLeft(2, '0')}h–${(b + 2).toString().padLeft(2, '0')}h',
+                    '${b.toString().padLeft(2, '0')}h-${(b + 2).toString().padLeft(2, '0')}h',
                     style: AppTextStyles.labelMd.copyWith(
                       color: sel
                           ? AppColors.white
@@ -524,7 +532,9 @@ class _V5State extends State<V5SlotAccordion> {
   void initState() {
     super.initState();
     final p = _byPeriod(widget.slots);
-    if (p.isNotEmpty) _open = p.keys.first;
+    if (p.isNotEmpty) {
+      _open = p.entries.reduce((a, b) => a.value.length >= b.value.length ? a : b).key;
+    }
   }
 
   @override

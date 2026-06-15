@@ -45,14 +45,7 @@ Future<CachedResource<SalonDetail>> _fetchSalonDetail(
   }
 }
 
-final salonDetailProvider = FutureProvider.autoDispose.family<SalonDetail?, String>((
-  ref,
-  salonId,
-) async {
-  final resource = await _fetchSalonDetail(ref, salonId);
-  return resource.data;
-});
-
+/// Single source of truth for salon detail. Returns the full CachedResource.
 final salonDetailResourceProvider =
     FutureProvider.autoDispose.family<CachedResource<SalonDetail>, String>((
       ref,
@@ -61,8 +54,18 @@ final salonDetailResourceProvider =
       return _fetchSalonDetail(ref, salonId);
     });
 
+/// Convenience accessor that extracts just the SalonDetail data.
+/// Delegates to [salonDetailResourceProvider] so both share the same cache.
+final salonDetailProvider = FutureProvider.autoDispose.family<SalonDetail?, String>((
+  ref,
+  salonId,
+) async {
+  final resource = await ref.watch(salonDetailResourceProvider(salonId).future);
+  return resource.data;
+});
+
 final salonAvailabilityProvider =
-    FutureProvider.family<
+    FutureProvider.autoDispose.family<
       List<dynamic>,
       ({String salonId, String date, String serviceId, String? employeeId})
     >((ref, params) async {

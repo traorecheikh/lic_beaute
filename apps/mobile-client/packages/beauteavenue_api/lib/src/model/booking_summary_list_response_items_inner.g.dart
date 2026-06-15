@@ -262,6 +262,8 @@ class _$BookingSummaryListResponseItemsInner
   @override
   final String salonName;
   @override
+  final String? salonLogoUrl;
+  @override
   final String serviceId;
   @override
   final String serviceName;
@@ -293,6 +295,7 @@ class _$BookingSummaryListResponseItemsInner
       {required this.id,
       required this.salonId,
       required this.salonName,
+      this.salonLogoUrl,
       required this.serviceId,
       required this.serviceName,
       required this.startsAt,
@@ -320,6 +323,7 @@ class _$BookingSummaryListResponseItemsInner
         id == other.id &&
         salonId == other.salonId &&
         salonName == other.salonName &&
+        salonLogoUrl == other.salonLogoUrl &&
         serviceId == other.serviceId &&
         serviceName == other.serviceName &&
         startsAt == other.startsAt &&
@@ -338,6 +342,7 @@ class _$BookingSummaryListResponseItemsInner
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, salonId.hashCode);
     _$hash = $jc(_$hash, salonName.hashCode);
+    _$hash = $jc(_$hash, salonLogoUrl.hashCode);
     _$hash = $jc(_$hash, serviceId.hashCode);
     _$hash = $jc(_$hash, serviceName.hashCode);
     _$hash = $jc(_$hash, startsAt.hashCode);
@@ -358,6 +363,7 @@ class _$BookingSummaryListResponseItemsInner
           ..add('id', id)
           ..add('salonId', salonId)
           ..add('salonName', salonName)
+          ..add('salonLogoUrl', salonLogoUrl)
           ..add('serviceId', serviceId)
           ..add('serviceName', serviceName)
           ..add('startsAt', startsAt)
@@ -389,6 +395,10 @@ class BookingSummaryListResponseItemsInnerBuilder
   String? _salonName;
   String? get salonName => _$this._salonName;
   set salonName(String? salonName) => _$this._salonName = salonName;
+
+  String? _salonLogoUrl;
+  String? get salonLogoUrl => _$this._salonLogoUrl;
+  set salonLogoUrl(String? salonLogoUrl) => _$this._salonLogoUrl = salonLogoUrl;
 
   String? _serviceId;
   String? get serviceId => _$this._serviceId;
@@ -451,6 +461,7 @@ class BookingSummaryListResponseItemsInnerBuilder
       _id = $v.id;
       _salonId = $v.salonId;
       _salonName = $v.salonName;
+      _salonLogoUrl = $v.salonLogoUrl;
       _serviceId = $v.serviceId;
       _serviceName = $v.serviceName;
       _startsAt = $v.startsAt;
@@ -489,6 +500,7 @@ class BookingSummaryListResponseItemsInnerBuilder
               salonId, r'BookingSummaryListResponseItemsInner', 'salonId'),
           salonName: BuiltValueNullFieldError.checkNotNull(
               salonName, r'BookingSummaryListResponseItemsInner', 'salonName'),
+          salonLogoUrl: salonLogoUrl,
           serviceId: BuiltValueNullFieldError.checkNotNull(
               serviceId, r'BookingSummaryListResponseItemsInner', 'serviceId'),
           serviceName: BuiltValueNullFieldError.checkNotNull(serviceName,

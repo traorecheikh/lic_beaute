@@ -15,6 +15,7 @@ part 'booking_summary_list_response_items_inner.g.dart';
 /// * [id] 
 /// * [salonId] 
 /// * [salonName] 
+/// * [salonLogoUrl] 
 /// * [serviceId] 
 /// * [serviceName] 
 /// * [startsAt] 
@@ -35,6 +36,9 @@ abstract class BookingSummaryListResponseItemsInner implements Built<BookingSumm
 
   @BuiltValueField(wireName: r'salonName')
   String get salonName;
+
+  @BuiltValueField(wireName: r'salonLogoUrl')
+  String? get salonLogoUrl;
 
   @BuiltValueField(wireName: r'serviceId')
   String get serviceId;
@@ -106,6 +110,11 @@ class _$BookingSummaryListResponseItemsInnerSerializer implements PrimitiveSeria
     yield serializers.serialize(
       object.salonName,
       specifiedType: const FullType(String),
+    );
+    yield r'salonLogoUrl';
+    yield object.salonLogoUrl == null ? null : serializers.serialize(
+      object.salonLogoUrl,
+      specifiedType: const FullType.nullable(String),
     );
     yield r'serviceId';
     yield serializers.serialize(
@@ -200,6 +209,14 @@ class _$BookingSummaryListResponseItemsInnerSerializer implements PrimitiveSeria
             specifiedType: const FullType(String),
           ) as String;
           result.salonName = valueDes;
+          break;
+        case r'salonLogoUrl':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.salonLogoUrl = valueDes;
           break;
         case r'serviceId':
           final valueDes = serializers.deserialize(

@@ -12,3 +12,4 @@ export * from './PaymentsApi';
 export * from './ProApi';
 export * from './PushApi';
 export * from './SalonsApi';
+export * from './SearchApi';

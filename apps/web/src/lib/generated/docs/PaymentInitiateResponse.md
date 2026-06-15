@@ -9,6 +9,7 @@ Name | Type
 `paymentId` | string
 `redirectUrl` | string
 `expiresAt` | Date
+`status` | string
 
 ## Example
 
@@ -20,6 +21,7 @@ const example = {
   "paymentId": null,
   "redirectUrl": null,
   "expiresAt": null,
+  "status": null,
 } satisfies PaymentInitiateResponse
 
 console.log(example)

@@ -17,7 +17,6 @@ import '../../../router/app_router.dart';
 import '../../booking/utils/booking_format.dart';
 import '../../../core/utils/status_labels.dart';
 import '../../discovery/providers/cached_resource.dart';
-import '../../discovery/providers/salon_detail_provider.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
 import '../providers/booking_actions_provider.dart';
 import '../providers/bookings_list_provider.dart';
@@ -41,18 +40,8 @@ class BookingDetailPage extends ConsumerWidget {
       serverTitle: 'Le détail du rendez-vous est indisponible',
       sliverBuilder: (resource) {
         final salonId = resource.salonId;
-        final serviceId = resource.serviceId;
-        final salonDetail = salonId.isEmpty
-            ? null
-            : ref.watch(salonDetailProvider(salonId)).asData?.value;
-        final service = (salonDetail == null || serviceId.isEmpty)
-            ? null
-            : salonDetail.services.where((s) => s.id == serviceId).firstOrNull;
-
-        final fallbackPrice = service?.priceXof.toInt();
-        final fallbackDeposit = service?.depositRequiredXof?.toInt() ?? 0;
-        final totalAmountXof = resource.priceXof ?? fallbackPrice;
-        final depositAmountXof = resource.depositXof ?? fallbackDeposit;
+        final totalAmountXof = resource.priceXof;
+        final depositAmountXof = resource.depositXof ?? 0;
         final hasDeposit = depositAmountXof > 0;
         final depositPaidXof = (resource.depositPaidXof ?? 0).clamp(
           0,

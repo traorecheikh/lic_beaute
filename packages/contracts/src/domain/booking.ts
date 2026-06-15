@@ -21,6 +21,7 @@ export const bookingSummarySchema = z.object({
   id: z.string(),
   salonId: z.string(),
   salonName: z.string(),
+  salonLogoUrl: z.string().nullable(),
   serviceId: z.string(),
   serviceName: z.string(),
   startsAt: z.string().datetime(),

@@ -30,14 +30,34 @@ export interface PaymentInitiateResponse {
      * @type {string}
      * @memberof PaymentInitiateResponse
      */
-    redirectUrl: string;
+    redirectUrl: string | null;
     /**
      * 
      * @type {Date}
      * @memberof PaymentInitiateResponse
      */
-    expiresAt: Date;
+    expiresAt: Date | null;
+    /**
+     * 
+     * @type {PaymentInitiateResponseStatusEnum}
+     * @memberof PaymentInitiateResponse
+     */
+    status?: PaymentInitiateResponseStatusEnum;
 }
+
+
+/**
+ * @export
+ */
+export const PaymentInitiateResponseStatusEnum = {
+    Pending: 'pending',
+    Authorized: 'authorized',
+    Succeeded: 'succeeded',
+    Failed: 'failed',
+    Refunded: 'refunded'
+} as const;
+export type PaymentInitiateResponseStatusEnum = typeof PaymentInitiateResponseStatusEnum[keyof typeof PaymentInitiateResponseStatusEnum];
+
 
 /**
  * Check if a given object implements the PaymentInitiateResponse interface.
@@ -61,7 +81,8 @@ export function PaymentInitiateResponseFromJSONTyped(json: any, ignoreDiscrimina
         
         'paymentId': json['paymentId'],
         'redirectUrl': json['redirectUrl'],
-        'expiresAt': (new Date(json['expiresAt'])),
+        'expiresAt': (json['expiresAt'] == null ? null : new Date(json['expiresAt'])),
+        'status': json['status'] == null ? undefined : json['status'],
     };
 }
 
@@ -78,7 +99,8 @@ export function PaymentInitiateResponseToJSONTyped(value?: PaymentInitiateRespon
         
         'paymentId': value['paymentId'],
         'redirectUrl': value['redirectUrl'],
-        'expiresAt': value['expiresAt'].toISOString(),
+        'expiresAt': value['expiresAt'] == null ? value['expiresAt'] : value['expiresAt'].toISOString(),
+        'status': value['status'],
     };
 }
 

@@ -304,7 +304,7 @@ export class PaymentController {
         && (Date.now() - payment.updatedAt.getTime()) > 60_000;
 
       if (!authorizedLongEnough) {
-        const guard = await this._claimReconcileWindow(payment.id);
+        const guard = await this._checkReconcileWindow(payment.id);
         if (!guard.allowed) {
           fail(
             reply,
@@ -316,7 +316,21 @@ export class PaymentController {
         }
       }
 
-      const remoteStatus = await paymentAdapter.fetchPaymentStatus({ providerToken: payment.webhookSignature });
+      let remoteStatus;
+      try {
+        remoteStatus = await paymentAdapter.fetchPaymentStatus({ providerToken: payment.webhookSignature });
+      } catch (providerError) {
+        const msg = String(providerError);
+        const isTransient = !msg.includes("401") && !msg.includes("403") && !msg.includes("404");
+        if (isTransient) {
+          await new Promise((r) => setTimeout(r, 2000));
+          remoteStatus = await paymentAdapter.fetchPaymentStatus({ providerToken: payment.webhookSignature });
+        } else {
+          throw providerError;
+        }
+      }
+
+      await this._claimReconcileWindow(payment.id);
       await this._applyPaymentStatus(payment, remoteStatus, JSON.stringify({
         source: "reconcile",
         paymentId: payment.id,
@@ -589,26 +603,29 @@ export class PaymentController {
     return true;
   }
 
-  private async _claimReconcileWindow(paymentId: string): Promise<{ allowed: true } | { allowed: false; retryAfterMs: number }> {
+  private async _checkReconcileWindow(paymentId: string): Promise<{ allowed: true } | { allowed: false; retryAfterMs: number }> {
     const key = `payment:reconcile:last:${paymentId}`;
     const minInterval = config.paymentReconcileMinIntervalMs;
     const now = Date.now();
 
-    return prisma.$transaction(async (tx) => {
-      const existing = await tx.platformSetting.findUnique({ where: { key }, select: { value: true } });
-      const lastTs = existing ? Number(existing.value) : 0;
-      if (Number.isFinite(lastTs) && lastTs > 0) {
-        const elapsed = now - lastTs;
-        if (elapsed < minInterval) {
-          return { allowed: false as const, retryAfterMs: minInterval - elapsed };
-        }
+    const existing = await prisma.platformSetting.findUnique({ where: { key }, select: { value: true } });
+    const lastTs = existing ? Number(existing.value) : 0;
+    if (Number.isFinite(lastTs) && lastTs > 0) {
+      const elapsed = now - lastTs;
+      if (elapsed < minInterval) {
+        return { allowed: false as const, retryAfterMs: minInterval - elapsed };
       }
-      await tx.platformSetting.upsert({
-        where: { key },
-        create: { group: "payment_runtime", key, value: String(now), description: `Last reconcile timestamp for payment ${paymentId}` },
-        update: { value: String(now) }
-      });
-      return { allowed: true as const };
+    }
+    return { allowed: true as const };
+  }
+
+  private async _claimReconcileWindow(paymentId: string): Promise<void> {
+    const key = `payment:reconcile:last:${paymentId}`;
+    const now = Date.now();
+    await prisma.platformSetting.upsert({
+      where: { key },
+      create: { group: "payment_runtime", key, value: String(now), description: `Last reconcile timestamp for payment ${paymentId}` },
+      update: { value: String(now) }
     });
   }
 
@@ -774,7 +791,7 @@ export class PaymentController {
             where: { id: meta.bookingId },
             include: { salon: { select: { name: true } }, service: { select: { name: true, priceXof: true } }, client: { select: { fullName: true } } }
           });
-          const pdf = booking ? buildBookingConfirmationPdf({
+          const pdf = booking ? await buildBookingConfirmationPdf({
             salonName: booking.salon.name,
             serviceName: booking.service.name,
             clientName: booking.client.fullName,
@@ -789,7 +806,7 @@ export class PaymentController {
           const { buildEmailHtml } = await import("../../lib/email-html.js");
           await sendEmail({
             to: meta.clientEmail,
-            subject: "Votre réservation est confirmée — BeautéAvenue",
+            subject: "Votre réservation est confirmée | Beauté Avenue",
             text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur BeautéAvenue.`,
             html: buildEmailHtml({
               preheader: "Réservation confirmée",
@@ -926,14 +943,14 @@ export class PaymentController {
         const chargeTypeLabel = charge.chargeType === "upgrade" ? "Passage Premium" : "Renouvellement";
         await sendEmail({
           to: ownerContact.email,
-          subject: "Paiement abonnement confirmé — Beauté Avenue",
+          subject: "Paiement abonnement confirmé | Beauté Avenue",
           text:
             `Bonjour ${ownerName},\n\n` +
             `Le paiement de votre abonnement pour "${salonName}" a été confirmé.\n` +
             `Type: ${chargeTypeLabel}\n` +
             `Montant: ${amountLabel} FCFA\n\n` +
-            `Consultez votre espace pro pour voir votre abonnement.\n\n` +
-            `— L'équipe Beauté Avenue`,
+            `Consultez votre espace pro pour suivre votre abonnement.\n\n` +
+            `L'équipe Beauté Avenue`,
           html: buildEmailHtml({
             preheader: "Paiement confirmé",
             greeting: `Bonjour ${ownerName},`,
@@ -944,7 +961,7 @@ export class PaymentController {
             ],
             cta: { url: `${config.webOrigin}/pro/billing`, label: "Voir mon abonnement" },
             ignoreNote: false,
-            footerNote: "— L'équipe Beauté Avenue"
+            footerNote: "L'équipe Beauté Avenue"
           })
         }).catch((err) =>
           logger.warn("_applySubscriptionChargeStatus: success email failed", {
@@ -954,13 +971,13 @@ export class PaymentController {
       } else if (newStatus === "failed") {
         await sendEmail({
           to: ownerContact.email,
-          subject: "Paiement abonnement échoué — Beauté Avenue",
+          subject: "Paiement abonnement échoué | Beauté Avenue",
           text:
             `Bonjour ${ownerName},\n\n` +
             `Le paiement de votre abonnement pour "${salonName}" a échoué.\n` +
             `Montant: ${amountLabel} FCFA\n\n` +
             `Veuillez réessayer depuis votre espace abonnement.\n\n` +
-            `— L'équipe Beauté Avenue`,
+            `L'équipe Beauté Avenue`,
           html: buildEmailHtml({
             preheader: "Paiement échoué",
             greeting: `Bonjour ${ownerName},`,
@@ -971,7 +988,7 @@ export class PaymentController {
             ],
             cta: { url: `${config.webOrigin}/pro/billing`, label: "Réessayer" },
             ignoreNote: false,
-            footerNote: "— L'équipe Beauté Avenue"
+            footerNote: "L'équipe Beauté Avenue"
           })
         }).catch((err) =>
           logger.warn("_applySubscriptionChargeStatus: failure email failed", {

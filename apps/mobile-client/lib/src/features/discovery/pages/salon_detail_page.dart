@@ -193,6 +193,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                 itemCount: images.length,
                                 itemBuilder: (_, i) => CachedNetworkImage(
                                   imageUrl: images[i],
+                                  memCacheWidth: 800,
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -451,6 +452,8 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                             imageUrl: images[i],
                                             width: 160.w,
                                             height: 120.h,
+                                            memCacheWidth: 320,
+                                            memCacheHeight: 240,
                                             fit: BoxFit.cover,
                                           ),
                                         ),

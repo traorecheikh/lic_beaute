@@ -58,7 +58,7 @@ function calcDepositAmount(service: {
 function bookingSummary(booking: {
   id: string;
   salonId: string;
-  salon: { name: string };
+  salon: { name: string; logoUrl: string | null };
   serviceId: string;
   service: { name: string };
   startsAt: Date;
@@ -79,6 +79,7 @@ function bookingSummary(booking: {
     id: booking.id,
     salonId: booking.salonId,
     salonName: booking.salon.name,
+    salonLogoUrl: booking.salon.logoUrl ?? null,
     serviceId: booking.serviceId,
     serviceName: booking.service.name,
     startsAt: booking.startsAt.toISOString(),

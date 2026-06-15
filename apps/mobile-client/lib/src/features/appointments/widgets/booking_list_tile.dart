@@ -1,16 +1,14 @@
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_icon_box.dart';
-import '../../discovery/providers/salon_detail_provider.dart';
 import 'booking_status_chip.dart';
 
-class BookingListTile extends ConsumerWidget {
+class BookingListTile extends StatelessWidget {
   const BookingListTile({
     required this.booking,
     required this.isUpcoming,
@@ -21,22 +19,13 @@ class BookingListTile extends ConsumerWidget {
   final bool isUpcoming;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final date = booking.startsAt.toLocal();
     final dateLabel =
         '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
     final timeLabel =
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    final salonDetail = ref
-        .watch(salonDetailProvider(booking.salonId))
-        .asData
-        ?.value;
-    final salonImageUrl =
-        (salonDetail?.logoUrl != null && salonDetail!.logoUrl!.isNotEmpty)
-        ? salonDetail.logoUrl
-        : ((salonDetail?.gallery.isNotEmpty ?? false)
-              ? salonDetail!.gallery.first
-              : null);
+    final salonImageUrl = booking.salonLogoUrl;
     final hasImage = salonImageUrl != null && salonImageUrl.isNotEmpty;
 
     return Container(
@@ -55,6 +44,8 @@ class BookingListTile extends ConsumerWidget {
                     imageUrl: salonImageUrl,
                     width: 48.r,
                     height: 48.r,
+                    memCacheWidth: 96,
+                    memCacheHeight: 96,
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) => AppIconBox(
                       size: 48.r,

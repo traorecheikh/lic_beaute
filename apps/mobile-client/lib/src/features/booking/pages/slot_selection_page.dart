@@ -40,7 +40,6 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
   DateTime _selected = DateTime.now().add(const Duration(days: 1));
   Map<String, dynamic>? _selectedSlot;
   bool _isRescheduling = false;
-  SlotVariant _variant = SlotVariant.v1BlockFilter;
 
   static const _weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -104,7 +103,6 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDateStrip(),
-          _buildVariantSwitcher(),
           Expanded(
             child: AppAsyncView(
               value: availabilityAsync,
@@ -233,53 +231,6 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
     );
   }
 
-  Widget _buildVariantSwitcher() {
-    final idx = SlotVariant.values.indexOf(_variant);
-    return Container(
-      margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: AppColors.outlineVariant),
-        boxShadow: AppShadows.sm,
-      ),
-      child: Row(children: [
-        _variantNavBtn('chevron-left',
-            () => setState(() => _variant = _variant.prev)),
-        Expanded(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(
-              _variant.label,
-              style: AppTextStyles.labelMd.copyWith(color: AppColors.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            Text(
-              '${idx + 1} / ${SlotVariant.values.length}',
-              style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-          ]),
-        ),
-        _variantNavBtn('chevron-right',
-            () => setState(() => _variant = _variant.next)),
-      ]),
-    );
-  }
-
-  Widget _variantNavBtn(String icon, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 36.w,
-          height: 36.w,
-          decoration: BoxDecoration(
-            color: AppColors.neutral,
-            borderRadius: BorderRadius.circular(18.r),
-          ),
-          child: Center(child: AppIcon(icon, color: AppColors.primary, size: 20)),
-        ),
-      );
-
   void _skipToNextDay() {
     setState(() {
       _selectedSlot = null;
@@ -329,16 +280,16 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
 
     final typed = slots.whereType<Map<String, dynamic>>().toList();
     return buildSlotVariant(
-      variant: _variant,
+      variant: SlotVariant.v5Accordion,
       slots: typed,
       selected: _selectedSlot,
       onSelect: (s) => setState(() => _selectedSlot = s),
-      variantKey: ValueKey('${_ymd(_selected)}-${_variant.name}'),
+      variantKey: ValueKey('${_ymd(_selected)}-v5'),
     );
   }
 
   String _selectedSlotLabel() {
-    if (_selectedSlot == null) return '–';
+    if (_selectedSlot == null) return '-';
     final startsAt = DateTime.parse(
       _selectedSlot!['startsAt'] as String,
     ).toLocal();

@@ -30,6 +30,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       title: titleWidget ?? (title != null ? Text(title!) : null),
       actions: actions,
       leading: leading ?? (showBackButton ? AppBackButton(onPressed: onBack) : null),

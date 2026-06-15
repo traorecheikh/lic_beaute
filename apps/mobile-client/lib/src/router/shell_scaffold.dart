@@ -32,6 +32,8 @@ class ShellScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final index = _currentIndex(context);
     final session = ref.watch(sessionProvider);
+    final location = GoRouterState.of(context).matchedLocation;
+    final isSearchPage = location == '/search';
 
     Future<void> handleTabTap(int i) async {
       if (i == 0) {
@@ -51,11 +53,13 @@ class ShellScaffold extends ConsumerWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: _BottomNav(
-        currentIndex: index,
-        tabs: _tabs,
-        onTap: handleTabTap,
-      ),
+      bottomNavigationBar: isSearchPage
+          ? null
+          : _BottomNav(
+              currentIndex: index,
+              tabs: _tabs,
+              onTap: handleTabTap,
+            ),
     );
   }
 }

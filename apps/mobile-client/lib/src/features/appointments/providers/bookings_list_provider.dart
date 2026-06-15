@@ -63,27 +63,6 @@ final bookingsListProvider =
       }
     });
 
-final bookingDetailProvider = FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((
-  ref,
-  bookingId,
-) async {
-  final result = await _fetchBookingDetail(ref, bookingId);
-  return result.data;
-});
-
-final bookingDetailResourceProvider =
-    FutureProvider.autoDispose.family<CachedResource<Map<String, dynamic>>, String>((
-      ref,
-      bookingId,
-    ) async {
-      final result = await _fetchBookingDetail(ref, bookingId);
-      return CachedResource(
-        data: result.data,
-        isStale: result.isStale,
-        cachedAt: result.cachedAt,
-      );
-    });
-
 Future<({Map<String, dynamic>? data, DateTime? cachedAt, bool isStale})>
 _fetchBookingDetail(Ref ref, String bookingId) async {
   final session = ref.watch(sessionProvider);
@@ -119,3 +98,27 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
     rethrow;
   }
 }
+
+/// Single source of truth for booking detail. Returns the full CachedResource.
+final bookingDetailResourceProvider =
+    FutureProvider.autoDispose.family<CachedResource<Map<String, dynamic>>, String>((
+      ref,
+      bookingId,
+    ) async {
+      final result = await _fetchBookingDetail(ref, bookingId);
+      return CachedResource(
+        data: result.data,
+        isStale: result.isStale,
+        cachedAt: result.cachedAt,
+      );
+    });
+
+/// Convenience accessor that extracts just the Map data.
+/// Delegates to [bookingDetailResourceProvider] so both share the same cache.
+final bookingDetailProvider = FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((
+  ref,
+  bookingId,
+) async {
+  final resource = await ref.watch(bookingDetailResourceProvider(bookingId).future);
+  return resource.data;
+});

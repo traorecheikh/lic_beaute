@@ -41,24 +41,15 @@ class FavoritesState {
 class FavoritesNotifier extends Notifier<FavoritesState> {
   @override
   FavoritesState build() {
-    Future.microtask(_load);
+    // Derive IDs from favoritesListProvider instead of making a separate API call.
+    ref.listen(favoritesListProvider, (_, next) {
+      final items = next.asData?.value.data;
+      if (items != null) {
+        final ids = items.map((s) => s.id).whereType<String>().toSet();
+        state = FavoritesState(salonIds: ids);
+      }
+    });
     return const FavoritesState();
-  }
-
-  Future<void> _load() async {
-    state = state.copyWith(loading: true);
-    try {
-      final dio = ref.read(dioProvider);
-      final response = await dio.get<Map<String, dynamic>>('/api/v1/favorites');
-      final items = (response.data?['items'] as List<dynamic>?) ?? [];
-      final ids = items
-          .map((e) => (e as Map<String, dynamic>)['id'] as String?)
-          .whereType<String>()
-          .toSet();
-      state = FavoritesState(salonIds: ids);
-    } catch (_) {
-      state = state.copyWith(loading: false);
-    }
   }
 
   Future<void> toggle(String salonId) async {

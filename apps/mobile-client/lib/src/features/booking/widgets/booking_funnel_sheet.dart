@@ -988,7 +988,7 @@ class _ReviewStep extends ConsumerWidget {
     final funnel = ref.watch(bookingFunnelProvider);
     final slotText = funnel.slotDate != null && funnel.slotTime != null
         ? '${_fmtDate(funnel.slotDate!)} · ${funnel.slotTime}'
-        : '—';
+        : '-';
     final total = funnel.servicePrice ?? 0;
     final deposit = funnel.depositAmount ?? 0;
     final remaining = (total - deposit).clamp(0, total);
@@ -1011,7 +1011,7 @@ class _ReviewStep extends ConsumerWidget {
             children: [
               Text('Résumé', style: AppTextStyles.labelLg),
               gapH16,
-              _ReviewRow(icon: 'sparkle', label: funnel.serviceName ?? '—'),
+              _ReviewRow(icon: 'sparkle', label: funnel.serviceName ?? '-'),
               _ReviewRow(icon: 'calendar', label: slotText),
               _ReviewRow(
                 icon: 'user',

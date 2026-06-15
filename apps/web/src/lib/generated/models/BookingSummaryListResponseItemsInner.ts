@@ -42,6 +42,12 @@ export interface BookingSummaryListResponseItemsInner {
      * @type {string}
      * @memberof BookingSummaryListResponseItemsInner
      */
+    salonLogoUrl: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingSummaryListResponseItemsInner
+     */
     serviceId: string;
     /**
      * 
@@ -141,6 +147,7 @@ export function instanceOfBookingSummaryListResponseItemsInner(value: object): v
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('salonId' in value) || value['salonId'] === undefined) return false;
     if (!('salonName' in value) || value['salonName'] === undefined) return false;
+    if (!('salonLogoUrl' in value) || value['salonLogoUrl'] === undefined) return false;
     if (!('serviceId' in value) || value['serviceId'] === undefined) return false;
     if (!('serviceName' in value) || value['serviceName'] === undefined) return false;
     if (!('startsAt' in value) || value['startsAt'] === undefined) return false;
@@ -167,6 +174,7 @@ export function BookingSummaryListResponseItemsInnerFromJSONTyped(json: any, ign
         'id': json['id'],
         'salonId': json['salonId'],
         'salonName': json['salonName'],
+        'salonLogoUrl': json['salonLogoUrl'],
         'serviceId': json['serviceId'],
         'serviceName': json['serviceName'],
         'startsAt': (new Date(json['startsAt'])),
@@ -194,6 +202,7 @@ export function BookingSummaryListResponseItemsInnerToJSONTyped(value?: BookingS
         'id': value['id'],
         'salonId': value['salonId'],
         'salonName': value['salonName'],
+        'salonLogoUrl': value['salonLogoUrl'],
         'serviceId': value['serviceId'],
         'serviceName': value['serviceName'],
         'startsAt': value['startsAt'].toISOString(),

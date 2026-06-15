@@ -9,6 +9,7 @@ Name | Type
 `id` | string
 `salonId` | string
 `salonName` | string
+`salonLogoUrl` | string
 `serviceId` | string
 `serviceName` | string
 `startsAt` | Date
@@ -30,6 +31,7 @@ const example = {
   "id": null,
   "salonId": null,
   "salonName": null,
+  "salonLogoUrl": null,
   "serviceId": null,
   "serviceName": null,
   "startsAt": null,

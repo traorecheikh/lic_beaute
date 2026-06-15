@@ -271,7 +271,7 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
       for (final s in candidates) s.id: _StaffLoadScore(staffId: s.id),
     };
 
-    const horizonDays = 5;
+    const horizonDays = 2;
     for (var dayOffset = 1; dayOffset <= horizonDays; dayOffset++) {
       final probeDate = DateTime.now().add(Duration(days: dayOffset));
       final date = _ymd(probeDate);
