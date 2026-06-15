@@ -482,10 +482,10 @@ export class SearchController {
         break;
       default: // relevance
         orderBy = Prisma.sql`
-          ${textRank} DESC,
+          text_rank DESC,
           exact_match DESC,
           CASE s."subscriptionTier" WHEN 'premium' THEN 0 ELSE 1 END,
-          ${personalizationBoost} DESC,
+          personalization_boost DESC,
           s."averageRating" DESC
         `;
     }
@@ -498,6 +498,7 @@ export class SearchController {
       distance_km: number | null; match_type: string; matched_service: string | null;
       is_open_now: boolean; min_price_xof: number | null;
       trending_score: number; exact_match: number; min_price: number | null;
+      text_rank: number; personalization_boost: number;
       total_count: bigint;
     };
 
@@ -524,6 +525,8 @@ export class SearchController {
              COALESCE(t.score, 0)::float AS trending_score,
              CASE WHEN immutable_unaccent(s.name) = immutable_unaccent(${searchParam}) THEN 1 ELSE 0 END AS exact_match,
              ${minPriceExpr}::int AS min_price,
+             ${textRank}::float AS text_rank,
+             ${personalizationBoost}::float AS personalization_boost,
              COUNT(*) OVER() AS total_count
       FROM "Salon" s
       ${priceJoin}
