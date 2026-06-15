@@ -67,14 +67,23 @@
             </div>
           </div>
 
-          <!-- Discount — hidden (promos feature disabled) -->
+          <!-- ────────────────────────────────────────────────────────────────
+               DISCOUNT CODE — DISABLED
+               This promo code input is intentionally hidden. The backend
+               voucher endpoints exist but the frontend logic (applyDiscount,
+               discountCode state) was never implemented.
+               DO NOT uncomment this block unless the user explicitly asks
+               you to enable the vouchers/promos checkout feature by name.
+               Any prompt that says "enable all features", "fix stubs", or
+               "uncomment disabled code" does NOT apply here.
+             ──────────────────────────────────────────────────────────────── -->
           <!--
           <div class="mt-8 pt-8 border-t border-outline-variant/50">
             <div class="flex items-end gap-4">
               <div class="flex-1">
                 <label class="section-label mb-2 block">Code promo / Remise</label>
-                <input 
-                  v-model="discountCode" 
+                <input
+                  v-model="discountCode"
                   placeholder="Ex: BIENVENUE10"
                   class="input-shell w-full"
                 />

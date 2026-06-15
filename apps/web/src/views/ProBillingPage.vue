@@ -31,11 +31,11 @@
       <div class="flex flex-wrap gap-2 shrink-0">
         <!-- Inactive / expired / cancelled: let the salon pick their starting tier -->
         <template v-if="subscriptionQuery.data.value?.status !== 'active'">
-          <button :disabled="isSubmitting" @click="openCheckoutModal('activate', 'standard')" class="btn-secondary text-sm">
-            Activer Standard
+          <button :disabled="isSubmitting" @click="handleActivate('standard')" class="btn-secondary text-sm">
+            Activer Standard{{ isStandardFree ? ' - Gratuit' : '' }}
           </button>
-          <button :disabled="isSubmitting" @click="openCheckoutModal('activate', 'premium')" class="btn-gold text-sm">
-            Activer Premium
+          <button :disabled="isSubmitting" @click="handleActivate('premium')" class="btn-gold text-sm">
+            Activer Premium{{ isPremiumFree ? ' - Gratuit' : '' }}
           </button>
         </template>
         <!-- Active: show contextual actions -->
@@ -264,7 +264,7 @@
     <!-- Native Inline Subscription Checkout Modal -->
     <Modal
       :show="showCheckoutModal"
-      :title="checkoutAction === 'activate' ? (checkoutTier === 'premium' ? 'Activer — Plan Premium' : 'Activer — Plan Standard') : checkoutAction === 'upgrade' ? 'Passer en Premium' : 'Renouveler mon abonnement'"
+      :title="checkoutAction === 'activate' ? (checkoutTier === 'premium' ? 'Activer - Plan Premium' : 'Activer - Plan Standard') : checkoutAction === 'upgrade' ? 'Passer en Premium' : 'Renouveler mon abonnement'"
       subtitle="Choisissez votre moyen de paiement et finalisez."
       max-width="lg"
       @close="closeCheckoutModal"
@@ -628,6 +628,16 @@ const paymentMethodForm = reactive({
 
 const features = computed(() => featuresQuery.data.value);
 
+const isStandardFree = computed(() => {
+  const tier = featuresQuery.data.value?.planTiers?.find((t: any) => t.tier === "standard");
+  return tier?.priceXof === 0;
+});
+
+const isPremiumFree = computed(() => {
+  const tier = featuresQuery.data.value?.planTiers?.find((t: any) => t.tier === "premium");
+  return tier?.priceXof === 0;
+});
+
 const providerLabelMap: Record<string, string> = {
   paydunya: "PayDunya (Carte ou Mobile Money)",
   manual: "Manuel (hors ligne)"
@@ -820,7 +830,7 @@ const statusBadgeLabel = computed(() => {
   if (status === "paused") return "En pause";
   if (status === "cancelled") return "Annulé";
   if (status === "inactive") return "Inactif";
-  return status ?? "—";
+  return status ?? "-";
 });
 
 const renewsInDays = computed<number | null>(() => {
@@ -839,7 +849,8 @@ const planTiers = computed(() => {
     {
       tier: "standard" as const,
       label: "Standard",
-      priceLabel: "15 000 XOF",
+      priceLabel: "200 XOF",
+      priceXof: 200,
       features: [
         { label: "Agenda illimité", included: true },
         { label: "Gestion de l'équipe", included: true },
@@ -853,7 +864,8 @@ const planTiers = computed(() => {
     {
       tier: "premium" as const,
       label: "Premium",
-      priceLabel: "30 000 XOF",
+      priceLabel: "300 XOF",
+      priceXof: 300,
       features: [
         { label: "Agenda illimité", included: true },
         { label: "Gestion de l'équipe", included: true },
@@ -1247,6 +1259,28 @@ function openHostedWaitingLink() {
   openExternalPaymentLink(waitingHostedLaunchUrl.value);
 }
 
+async function handleActivate(tier: "standard" | "premium") {
+  const isFree = tier === "standard" ? isStandardFree.value : isPremiumFree.value;
+  if (!isFree) {
+    openCheckoutModal("activate", tier);
+    return;
+  }
+  isSubmitting.value = true;
+  try {
+    await checkoutProSubscription(auth.accessToken ?? "", {
+      action: "activate",
+      tier,
+      provider: "paydunya",
+      billingCycle: "monthly"
+    });
+    await finalizeSuccessfulCharge();
+  } catch (error) {
+    toast.error(getErrorMessage(error, "Erreur lors de l'activation."));
+  } finally {
+    isSubmitting.value = false;
+  }
+}
+
 function openCheckoutModal(action: "activate" | "upgrade" | "renewal" = "activate", tier: "standard" | "premium" = "standard") {
   clearWaitingPoll();
   checkoutAction.value = action;
@@ -1355,6 +1389,12 @@ async function handleCheckoutSubmit() {
       billingCycle: billingCycle.value,
       channel: selectedMethod.value
     } as any);
+
+    // Free tier: subscription already activated server-side, skip payment
+    if (!initResult.redirectUrl && initResult.chargeId) {
+      await finalizeSuccessfulCharge();
+      return;
+    }
 
     const nextChargeId = initResult.chargeId;
     if (!nextChargeId) {

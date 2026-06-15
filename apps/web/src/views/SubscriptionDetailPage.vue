@@ -199,7 +199,7 @@
                   <select v-model="selectedChargeId" class="input-shell text-[13px] rounded-xl h-12">
                     <option value="" disabled>Sélectionnez une charge...</option>
                     <option v-for="c in subscriptionQuery.data.value.pendingCharges" :key="c.id" :value="c.id">
-                      {{ formatMoneyXof(c.amountXof) }} — {{ c.chargeType === 'upgrade' ? 'Upgrade' : 'Renouvellement' }} ({{ c.createdAt.substring(0, 10) }})
+                      {{ formatMoneyXof(c.amountXof) }} - {{ c.chargeType === 'upgrade' ? 'Upgrade' : 'Renouvellement' }} ({{ c.createdAt.substring(0, 10) }})
                     </option>
                   </select>
                   <p v-if="subscriptionQuery.data.value.pendingCharges.length === 0" class="row-meta italic px-1">Aucune charge en attente pour cet abonnement.</p>

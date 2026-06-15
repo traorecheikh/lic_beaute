@@ -118,7 +118,7 @@ const bookingsQuery = useQuery({
 });
 
 const bookingById = computed(() => {
-  return new Map((bookingsQuery.data.value ?? []).map((booking) => [booking.id, booking]));
+  return new Map((bookingsQuery.data.value?.items ?? []).map((booking) => [booking.id, booking]));
 });
 
 const transactions = computed(() => {

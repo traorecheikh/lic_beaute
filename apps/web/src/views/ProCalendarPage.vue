@@ -504,7 +504,7 @@ const debouncedClientSearch = refDebounced(clientSearchText, 300);
 const isClientDropdownOpen = ref(false);
 
 const filteredDropdownClients = computed(() => {
-  return (clientsQuery.data.value ?? []).slice(0, 10);
+  return (clientsQuery.data.value?.items ?? []).slice(0, 10);
 });
 
 function selectClientDropdown(client: any) {
@@ -700,7 +700,7 @@ const staffMembers = computed(() => {
   if (mapped.length > 0) return mapped;
 
   const bookingPeople = Array.from(
-    new Set((bookingsQuery.data.value ?? []).map((booking) => booking.employeeName).filter(Boolean))
+    new Set((bookingsQuery.data.value?.items ?? []).map((booking) => booking.employeeName).filter(Boolean))
   ) as string[];
 
   if (bookingPeople.length === 0) {
@@ -746,7 +746,7 @@ function mapBooking(booking: ProBookingDetail) {
     clientInitials: client.split(" ").slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join(""),
     phone: booking.clientPhone ?? null,
     service: booking.serviceName,
-    timeRange: `${start.format("HH:mm")} – ${end.format("HH:mm")}`,
+    timeRange: `${start.format("HH:mm")} - ${end.format("HH:mm")}`,
     duration: durationMinutes,
     price: formatMoneyXof(booking.depositAmountXof),
     source: booking.source,
@@ -771,7 +771,7 @@ function mapBlockedSlot(slot: ProBlockedSlot) {
     reason: slot.reason ?? null,
     scope: slot.scope,
     employeeId: slot.employeeId ?? null,
-    timeRange: `${start.format("HH:mm")} – ${end.format("HH:mm")}`,
+    timeRange: `${start.format("HH:mm")} - ${end.format("HH:mm")}`,
     dateStr: start.format("YYYY-MM-DD"),
     dateLabel: start.format("dddd DD MMMM YYYY")
   };
@@ -780,7 +780,7 @@ function mapBlockedSlot(slot: ProBlockedSlot) {
 // ── Computed views ────────────────────────────────────────────────────────────
 
 const bookings = computed(() =>
-  (bookingsQuery.data.value ?? [])
+  (bookingsQuery.data.value?.items ?? [])
     .map(mapBooking)
     .filter((b) => selectedEmployeeId.value === "all" || b.staffId === selectedEmployeeId.value)
 );
@@ -790,7 +790,7 @@ const weekBookingsByDate = computed(() => {
   const result: Record<string, ReturnType<typeof mapBooking>[]> = {};
   queries.forEach((q, offset) => {
     const dateStr = weekDayKeys.value[offset];
-    const rows = (q.data.value ?? []).map(mapBooking);
+    const rows = (q.data.value?.items ?? []).map(mapBooking);
     result[dateStr] = selectedEmployeeId.value === "all"
       ? rows
       : rows.filter((b) => b.staffId === selectedEmployeeId.value);

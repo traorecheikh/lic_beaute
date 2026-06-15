@@ -232,6 +232,123 @@
               </div>
             </template>
           </Modal>
+
+      <!-- Service Create/Edit Modal -->
+      <Modal
+        :show="serviceModalOpen"
+        :title="editingService ? 'Modifier la prestation' : 'Nouvelle prestation'"
+        subtitle="Configurer les détails de la prestation"
+        max-width="lg"
+        @close="serviceModalOpen = false"
+      >
+        <form @submit.prevent="submitService" class="space-y-5">
+          <label class="block space-y-2">
+            <span class="section-label">Nom</span>
+            <input
+              v-model="serviceForm.name"
+              type="text"
+              class="input-shell w-full"
+              placeholder="Ex: Brushing"
+              required
+            />
+          </label>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="block space-y-2">
+              <span class="section-label">Durée (min)</span>
+              <input
+                v-model.number="serviceForm.durationMinutes"
+                type="number"
+                class="input-shell w-full"
+                min="5"
+                required
+              />
+            </label>
+            <label class="block space-y-2">
+              <span class="section-label">Prix (XOF)</span>
+              <input
+                v-model.number="serviceForm.priceXof"
+                type="number"
+                class="input-shell w-full"
+                min="0"
+                required
+              />
+            </label>
+          </div>
+          <label class="block space-y-2">
+            <span class="section-label">Catégorie</span>
+            <input
+              v-model="serviceForm.category"
+              type="text"
+              class="input-shell w-full"
+              placeholder="Ex: Coiffure"
+            />
+          </label>
+          <div class="space-y-2">
+            <span class="section-label">Acompte</span>
+            <div class="flex gap-3">
+              <label
+                v-for="mode in depositModes"
+                :key="mode.value"
+                class="cursor-pointer flex items-center justify-center py-2 px-4 rounded-xl border-2 transition-all text-[12px] font-semibold"
+                :class="serviceForm.depositMode === mode.value ? 'border-primary bg-primary/5 text-espresso' : 'border-outline-variant bg-white text-cocoa/80'"
+              >
+                <input type="radio" v-model="serviceForm.depositMode" :value="mode.value" class="sr-only" />
+                {{ mode.label }}
+              </label>
+            </div>
+            <div v-if="serviceForm.depositMode === 'fixed'" class="mt-2">
+              <input
+                v-model.number="serviceForm.depositAmountXof"
+                type="number"
+                class="input-shell w-full"
+                min="0"
+                placeholder="Montant en XOF"
+              />
+            </div>
+            <div v-if="serviceForm.depositMode === 'percent'" class="mt-2">
+              <input
+                v-model.number="serviceForm.depositPercent"
+                type="number"
+                class="input-shell w-full"
+                min="1"
+                max="100"
+                placeholder="Pourcentage (1-100)"
+              />
+            </div>
+          </div>
+          <p v-if="serviceError" class="text-[12px] font-bold text-error">{{ serviceError }}</p>
+        </form>
+        <template #footer>
+          <div class="flex items-center justify-end gap-3">
+            <button class="btn-secondary" @click="serviceModalOpen = false">Annuler</button>
+            <button class="btn-primary" :disabled="serviceMutation.isPending.value" @click="submitService">
+              {{ editingService ? 'Mettre à jour' : 'Créer' }}
+            </button>
+          </div>
+        </template>
+      </Modal>
+
+      <!-- Delete Service Confirmation -->
+      <Modal
+        :show="!!deletingService"
+        title="Supprimer la prestation"
+        subtitle="Action irréversible"
+        max-width="sm"
+        @close="deletingService = null"
+      >
+        <p class="text-[13px] text-cocoa/80">
+          Voulez-vous vraiment désactiver <strong>{{ deletingService?.name }}</strong> ?
+          La prestation sera masquée mais les réservations existantes seront conservées.
+        </p>
+        <template #footer>
+          <div class="flex items-center justify-end gap-3">
+            <button class="btn-secondary" @click="deletingService = null">Annuler</button>
+            <button class="btn-primary bg-error hover:bg-error/80" :disabled="deleteServiceMutation.isPending.value" @click="deleteServiceMutation.mutate()">
+              Désactiver
+            </button>
+          </div>
+        </template>
+      </Modal>
         </div>
 
         <!-- Catalog & Media (5 cols) -->
@@ -258,21 +375,58 @@
           </section>
 
           <section class="space-y-4">
-            <h3 class="text-[11px] font-bold text-cocoa/60 uppercase tracking-[0.3em] px-2">Catalogue Services</h3>
+            <div class="flex items-center justify-between px-2">
+              <h3 class="text-[11px] font-bold text-cocoa/60 uppercase tracking-[0.3em]">Catalogue Services</h3>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors"
+                @click="openServiceModal()"
+              >
+                <PlusIcon class="w-3.5 h-3.5" />
+                Ajouter
+              </button>
+            </div>
             <div class="space-y-2">
               <article
-                v-for="service in salonQuery.data.value.services"
+                v-for="service in servicesQuery.data.value ?? []"
                 :key="service.id"
                 class="bg-white rounded-xl border border-outline-variant p-4 flex items-center justify-between"
+                :class="{ 'opacity-50': !service.isActive }"
               >
                 <div class="space-y-0.5">
-                  <p class="text-[13px] font-semibold text-espresso">{{ service.name }}</p>
+                  <p class="text-[13px] font-semibold text-espresso">
+                    {{ service.name }}
+                    <span v-if="!service.isActive" class="text-[10px] font-bold text-cocoa/40 uppercase tracking-widest ml-2">Inactive</span>
+                  </p>
                   <p class="text-[12px] text-cocoa/80">
                     {{ service.durationMinutes }} min • {{ formatMoneyXof(service.priceXof) }}
+                    <span v-if="service.depositMode !== 'none'" class="ml-1 text-[10px] text-secondary">
+                      (Acompte: {{ service.depositMode === 'fixed' ? formatMoneyXof(service.depositAmountXof ?? 0) : service.depositPercent + '%' }})
+                    </span>
                   </p>
                 </div>
-                <StatusBadge :value="service.depositMode" class="scale-75 origin-right" />
+                <div class="flex items-center gap-2">
+                  <StatusBadge :value="service.depositMode" class="scale-75 origin-right" />
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-lg hover:bg-sand transition-colors text-cocoa/40 hover:text-espresso"
+                    @click="openServiceModal(service)"
+                  >
+                    <PencilIcon class="w-4 h-4" />
+                  </button>
+                  <button
+                    v-if="service.isActive"
+                    type="button"
+                    class="p-1.5 rounded-lg hover:bg-error/10 transition-colors text-cocoa/40 hover:text-error"
+                    @click="confirmDeleteService(service)"
+                  >
+                    <TrashIcon class="w-4 h-4" />
+                  </button>
+                </div>
               </article>
+              <p v-if="(servicesQuery.data.value ?? []).length === 0" class="text-[12px] text-cocoa/60 italic px-2 py-4 text-center">
+                Aucune prestation configurée.
+              </p>
             </div>
           </section>
         </div>
@@ -407,7 +561,7 @@ import { adminSalonDecisionSchema } from "@beauteavenue/contracts";
 import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { CheckIcon, QuestionMarkCircleIcon, XMarkIcon, DocumentIcon } from "@heroicons/vue/24/outline";
+import { CheckIcon, QuestionMarkCircleIcon, XMarkIcon, DocumentIcon, PlusIcon, PencilIcon, TrashIcon } from "@heroicons/vue/24/outline";
 
 import Modal from "@/components/Modal.vue";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
@@ -416,12 +570,16 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import {
   ApiError,
   approveSalonRequest,
+  createAdminSalonService,
+  deleteAdminSalonService,
+  fetchAdminSalonServices,
   fetchPlatformRequiredDocuments,
   fetchSalonDetail,
   rejectSalonRequest,
   requestSalonInfo,
   sendMagicLink,
-  sendPasswordReset
+  sendPasswordReset,
+  updateAdminSalonService
 } from "@/lib/api";
 import { formatDateTime } from "@/lib/date";
 import { getErrorMessage } from "@/lib/errors";
@@ -448,6 +606,136 @@ const action = ref<"approve" | "reject" | "request-info">("approve");
 const reason = ref("");
 const mutationError = ref("");
 const selectedDoc = ref<any>(null);
+
+// ── Service Management ──
+
+const serviceModalOpen = ref(false);
+const editingService = ref<any>(null);
+const deletingService = ref<any>(null);
+const serviceError = ref("");
+
+const depositModes = [
+  { value: "none", label: "Aucun" },
+  { value: "fixed", label: "Fixe" },
+  { value: "percent", label: "%" }
+];
+
+const serviceForm = ref({
+  name: "",
+  category: "",
+  durationMinutes: 45,
+  priceXof: 0,
+  depositMode: "none" as "none" | "fixed" | "percent",
+  depositAmountXof: undefined as number | undefined,
+  depositPercent: undefined as number | undefined
+});
+
+function openServiceModal(service?: any) {
+  editingService.value = service ?? null;
+  serviceError.value = "";
+  if (service) {
+    serviceForm.value = {
+      name: service.name,
+      category: service.category,
+      durationMinutes: service.durationMinutes,
+      priceXof: service.priceXof,
+      depositMode: service.depositMode,
+      depositAmountXof: service.depositAmountXof ?? undefined,
+      depositPercent: service.depositPercent ?? undefined
+    };
+  } else {
+    serviceForm.value = {
+      name: "",
+      category: "",
+      durationMinutes: 45,
+      priceXof: 0,
+      depositMode: "none",
+      depositAmountXof: undefined,
+      depositPercent: undefined
+    };
+  }
+  serviceModalOpen.value = true;
+}
+
+function confirmDeleteService(service: any) {
+  deletingService.value = service;
+}
+
+const servicesQuery = useQuery({
+  queryKey: computed(() => ["admin-salon-services", salonId.value]),
+  queryFn: () => fetchAdminSalonServices(auth.accessToken ?? "", salonId.value),
+  enabled: computed(() => Boolean(auth.accessToken))
+});
+
+const serviceMutation = useMutation({
+  mutationFn: async () => {
+    const payload: any = {
+      name: serviceForm.value.name.trim(),
+      category: serviceForm.value.category.trim() || "general",
+      durationMinutes: serviceForm.value.durationMinutes,
+      priceXof: serviceForm.value.priceXof,
+      depositMode: serviceForm.value.depositMode
+    };
+    if (serviceForm.value.depositMode === "fixed") {
+      payload.depositAmountXof = serviceForm.value.depositAmountXof ?? 0;
+    }
+    if (serviceForm.value.depositMode === "percent") {
+      payload.depositPercent = serviceForm.value.depositPercent ?? 0;
+    }
+    if (editingService.value) {
+      return updateAdminSalonService(auth.accessToken ?? "", salonId.value, editingService.value.id, payload);
+    }
+    return createAdminSalonService(auth.accessToken ?? "", salonId.value, payload);
+  },
+  onSuccess: async () => {
+    serviceModalOpen.value = false;
+    serviceError.value = "";
+    await queryClient.invalidateQueries({ queryKey: ["admin-salon-services", salonId.value] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-salon-detail", salonId.value] });
+    toast.success(editingService.value ? "Prestation mise à jour." : "Prestation créée.");
+  },
+  onError: (error) => {
+    serviceError.value = getErrorMessage(error, "Opération impossible.");
+    toast.error(serviceError.value);
+  }
+});
+
+const deleteServiceMutation = useMutation({
+  mutationFn: async () => {
+    if (!deletingService.value) return;
+    return deleteAdminSalonService(auth.accessToken ?? "", salonId.value, deletingService.value.id);
+  },
+  onSuccess: async () => {
+    deletingService.value = null;
+    await queryClient.invalidateQueries({ queryKey: ["admin-salon-services", salonId.value] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-salon-detail", salonId.value] });
+    toast.success("Prestation désactivée.");
+  },
+  onError: (error) => {
+    toast.error(getErrorMessage(error, "Suppression impossible."));
+  }
+});
+
+function submitService() {
+  if (!serviceForm.value.name.trim()) {
+    serviceError.value = "Le nom est requis.";
+    return;
+  }
+  if (serviceForm.value.durationMinutes < 5) {
+    serviceError.value = "La durée minimale est de 5 minutes.";
+    return;
+  }
+  if (serviceForm.value.depositMode === "fixed" && !serviceForm.value.depositAmountXof) {
+    serviceError.value = "Le montant de l'acompte est requis.";
+    return;
+  }
+  if (serviceForm.value.depositMode === "percent" && !serviceForm.value.depositPercent) {
+    serviceError.value = "Le pourcentage de l'acompte est requis.";
+    return;
+  }
+  serviceError.value = "";
+  serviceMutation.mutate();
+}
 
 const predefinedMotifs: Record<"reject" | "request-info", string[]> = {
   "reject": [

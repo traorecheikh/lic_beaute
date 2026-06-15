@@ -94,7 +94,7 @@
               <select v-model="manualForm.serviceId" class="input-shell" required>
                 <option value="">Sélectionner une prestation</option>
                 <option v-for="svc in servicesQuery.data.value ?? []" :key="svc.id" :value="svc.id">
-                  {{ svc.name }} — {{ svc.durationMinutes }} min
+                  {{ svc.name }} - {{ svc.durationMinutes }} min
                 </option>
               </select>
             </div>
@@ -290,7 +290,7 @@ const clientsQuery = useQuery({
 });
 
 const filteredDropdownClients = computed(() => {
-  return (clientsQuery.data.value ?? []).slice(0, 10);
+  return (clientsQuery.data.value?.items ?? []).slice(0, 10);
 });
 
 function selectClientDropdown(client: any) {
@@ -410,7 +410,7 @@ const kpis = computed(() => {
 });
 
 const pendingRequests = computed(() => {
-  return (pendingQuery.data.value ?? []).map((booking) => {
+  return (pendingQuery.data.value?.items ?? []).map((booking) => {
     const clientName = booking.clientName ?? "Client";
     return {
       id: booking.id,

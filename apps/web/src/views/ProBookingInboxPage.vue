@@ -56,6 +56,14 @@
             <p class="text-[10px] text-cocoa/40 font-semibold uppercase tracking-widest">Payé: {{ booking.deposit }}</p>
           </div>
         </div>
+
+        <!-- Pagination -->
+        <div v-if="(bookingsQuery.data.value?.total ?? 0) > 50" class="flex items-center justify-between px-4 py-3 panel-clean">
+          <p class="text-[12px] text-cocoa/60">
+            {{ bookingsQuery.data.value?.total ?? 0 }} réservation{{ (bookingsQuery.data.value?.total ?? 0) > 1 ? 's' : '' }}
+          </p>
+          <p class="text-[11px] text-cocoa/40 italic">Affiche les 50 plus récentes</p>
+        </div>
       </div>
 
       <!-- Detail Panel (Fixed on desktop) -->
@@ -161,7 +169,7 @@ const selectedBookingQuery = useQuery({
 });
 
 const bookingRows = computed(() => {
-  return (bookingsQuery.data.value ?? []).map((booking) => {
+  return (bookingsQuery.data.value?.items ?? []).map((booking) => {
     const startsAt = dayjs(booking.startsAt);
     const clientName = booking.clientName ?? "Client";
     return {

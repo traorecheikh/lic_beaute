@@ -24,7 +24,7 @@
             type="button"
             role="radio"
             :aria-checked="selectedReason === opt.value"
-            :aria-label="`${opt.label} — ${opt.hint}`"
+            :aria-label="`${opt.label} : ${opt.hint}`"
             @click="selectedReason = opt.value"
             class="w-full rounded-[1.35rem] border px-4 py-3 text-left transition-all duration-150"
             :class="selectedReason === opt.value ? 'border-primary bg-primary/5 shadow-[0_0_0_1px_rgba(215,102,143,0.18)]' : 'border-outline-variant/60 hover:border-cocoa/35 hover:bg-neutral-bg/40'"
@@ -83,7 +83,7 @@
         <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <button @click="$emit('accept')" class="btn-primary !py-3 text-sm flex items-center justify-center gap-2">
             <CheckCircleIcon class="w-5 h-5" aria-hidden="true" />
-            Accepter — Je reste !
+            Accepter, je reste !
           </button>
           <button @click="$emit('confirm')" class="btn-secondary !py-3 text-sm">Résilier quand même</button>
         </div>

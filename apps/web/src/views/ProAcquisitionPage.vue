@@ -57,11 +57,11 @@
                 <td class="px-6 py-4 text-sm font-semibold text-espresso">{{ feature.name }}</td>
                 <td class="px-6 py-4 text-center">
                   <CheckCircleIcon v-if="feature.standard" class="w-5 h-5 text-secondary mx-auto" />
-                  <span v-else class="text-cocoa/20">—</span>
+                  <span v-else class="text-cocoa/20">-</span>
                 </td>
                 <td class="px-6 py-4 text-center">
                   <CheckCircleIcon v-if="feature.premium" class="w-5 h-5 text-primary mx-auto" />
-                  <span v-else class="text-cocoa/20">—</span>
+                  <span v-else class="text-cocoa/20">-</span>
                 </td>
               </tr>
             </tbody>

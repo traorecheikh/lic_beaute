@@ -59,6 +59,7 @@ export const subscriptionFeaturesSchema = z.object({
       tier: z.enum(["standard", "premium"]),
       label: z.string(),
       priceLabel: z.string(),
+      priceXof: z.number().int().nonnegative().optional(),
       features: z.array(
         z.object({ label: z.string(), included: z.boolean() })
       )

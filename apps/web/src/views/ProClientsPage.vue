@@ -52,6 +52,32 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination -->
+        <div v-if="clientsTotalPages > 1" class="flex items-center justify-between px-6 py-4 border-t border-outline-variant/30">
+          <p class="text-[12px] text-cocoa/60">
+            {{ clientsQuery.data.value?.total ?? 0 }} client{{ (clientsQuery.data.value?.total ?? 0) > 1 ? 's' : '' }}
+          </p>
+          <div class="flex items-center gap-2">
+            <button
+              class="btn-secondary text-xs px-3 py-1.5"
+              :disabled="clientsPage === 0 || clientsQuery.isLoading.value"
+              @click="clientsPage--"
+            >
+              Précédent
+            </button>
+            <span class="text-[12px] text-cocoa/60 tabular-nums">
+              {{ clientsPage + 1 }} / {{ clientsTotalPages }}
+            </span>
+            <button
+              class="btn-secondary text-xs px-3 py-1.5"
+              :disabled="clientsPage >= clientsTotalPages - 1 || clientsQuery.isLoading.value"
+              @click="clientsPage++"
+            >
+              Suivant
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Detail Side Panel (Desktop) -->
@@ -146,6 +172,9 @@ import { formatMoneyXof } from "@beauteavenue/shared-ts";
 
 const searchQuery = ref("");
 const debouncedSearch = refDebounced(searchQuery, 300);
+
+// Reset to page 0 when search changes
+watch(debouncedSearch, () => { clientsPage.value = 0; });
 const selectedId = ref<string | null>(null);
 const router = useRouter();
 const auth = useProAuthStore();
@@ -160,14 +189,22 @@ const benefitForm = ref({
   expiresAt: ""
 });
 
+const clientsPage = ref(0);
+const clientsPageSize = 20;
+
 const clientsQuery = useQuery({
-  queryKey: computed(() => ["pro-clients", debouncedSearch.value.trim()]),
-  queryFn: () => fetchProClients(auth.accessToken ?? "", debouncedSearch.value.trim() || undefined),
+  queryKey: computed(() => ["pro-clients", debouncedSearch.value.trim(), clientsPage.value]),
+  queryFn: () => fetchProClients(auth.accessToken ?? "", debouncedSearch.value.trim() || undefined, clientsPage.value, clientsPageSize),
   enabled: computed(() => Boolean(auth.accessToken))
 });
 
+const clientsTotalPages = computed(() => {
+  const total = clientsQuery.data.value?.total ?? 0;
+  return Math.max(1, Math.ceil(total / clientsPageSize));
+});
+
 const filteredClients = computed(() => {
-  return (clientsQuery.data.value ?? []).map((client) => {
+  return (clientsQuery.data.value?.items ?? []).map((client) => {
     const initials = client.fullName
       .split(" ")
       .slice(0, 2)

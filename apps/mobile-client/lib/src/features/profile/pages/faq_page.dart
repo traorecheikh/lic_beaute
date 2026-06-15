@@ -36,7 +36,7 @@ class FaqPage extends StatelessWidget {
     ),
     _FaqItem(
       q: "L'application est-elle disponible partout au Sénégal ?",
-      a: "Nous sommes actuellement disponibles à Dakar et dans ses environs. D'autres villes seront ajoutées prochainement.",
+      a: "Nous sommes actuellement disponibles à Dakar et dans ses environs. Consultez la carte des salons pour voir les zones couvertes.",
     ),
     _FaqItem(
       q: "Comment signaler un problème ?",

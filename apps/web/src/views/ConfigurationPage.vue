@@ -1046,6 +1046,24 @@ async function saveSettings() {
   const keys = Object.keys(pendingChanges);
   if (!keys.length) return;
 
+  // Warn when changing subscription price from 0 (free) to paid
+  const priceKeys = ["subscription_standard_price_xof", "subscription_premium_price_xof"];
+  for (const key of priceKeys) {
+    if (pendingChanges[key] !== undefined) {
+      const original = settingsQuery.data.value?.find(s => s.key === key)?.value;
+      const newValue = pendingChanges[key];
+      if (original === "0" && newValue !== "0" && parseInt(newValue, 10) > 0) {
+        const tierLabel = key.includes("standard") ? "Standard" : "Premium";
+        const confirmed = confirm(
+          `Attention : vous passez le plan ${tierLabel} de Gratuit à ${parseInt(newValue, 10).toLocaleString("fr-FR")} XOF.\n\n` +
+          `Les salons concernés recevront une notification et disposeront de 30 jours de grâce. ` +
+          `Passé ce délai, leur abonnement expirera et ils devront payer pour continuer. Continuer ?`
+        );
+        if (!confirmed) return;
+      }
+    }
+  }
+
   let hasErrors = false;
   for (const key of keys) {
     const err = validateSetting(key, pendingChanges[key]);

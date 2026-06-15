@@ -10,8 +10,9 @@ import '../core/reactivity/app_reactivity.dart';
 import '../core/session/session_store.dart';
 import '../core/storage/app_model_cache.dart';
 import '../core/theme/app_theme.dart';
-import '../core/widgets/app_back_button.dart';
 import '../core/widgets/app_icon.dart';
+import '../core/widgets/app_scaffold.dart';
+import '../core/widgets/app_top_bar.dart';
 import '../features/appointments/pages/booking_detail_page.dart';
 import '../features/appointments/pages/booking_manage_page.dart';
 import '../features/appointments/pages/bookings_list_page.dart';
@@ -487,14 +488,10 @@ class _BookingRouteErrorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.neutral,
-      appBar: AppBar(
-        backgroundColor: AppColors.neutral,
-        elevation: 0,
-        leading: AppBackButton(
-          onPressed: () => GoRouter.of(context).go(AppRoutes.home),
-        ),
+    return AppScaffold(
+      appBar: AppTopBar(
+        showBackButton: true,
+        onBack: () => GoRouter.of(context).go(AppRoutes.home),
       ),
       body: SafeArea(
         child: Center(

@@ -32,10 +32,10 @@ abstract final class AppStrings {
   static const favoritesEmpty = "Aucun salon favori pour l'instant.";
 
   // ── Booking funnel ────────────────────────────────────────────────────────
-  static const bookingStep1 = 'Étape 1/4 — Prestation';
-  static const bookingStep2 = 'Étape 2/4 — Créneau';
-  static const bookingStep3 = 'Étape 3/4 — Confirmation';
-  static const bookingStep4 = 'Étape 4/4 — Paiement';
+  static const bookingStep1 = 'Étape 1/4 - Prestation';
+  static const bookingStep2 = 'Étape 2/4 - Créneau';
+  static const bookingStep3 = 'Étape 3/4 - Confirmation';
+  static const bookingStep4 = 'Étape 4/4 - Paiement';
   static const selectServiceTitle = 'Choisir une prestation';
   static const selectStaffTitle = 'Choisir un prestataire';
   static const noPreference = 'Pas de préférence';

@@ -79,7 +79,15 @@ const router = createRouter({
           name: "pro-clients",
           component: () => import("@/views/ProClientsPage.vue")
         },
-        // Vouchers hidden — promos feature disabled
+        // ──────────────────────────────────────────────────────────────────────
+        // VOUCHERS / PROMOS — DISABLED
+        // This feature is intentionally hidden. The route, page component
+        // (ProVouchersPage.vue), and backend endpoints exist but are NOT
+        // wired up. DO NOT uncomment this block unless the user explicitly
+        // asks you to enable the vouchers/promos feature by name.
+        // Any prompt that says "enable all features", "fix stubs", or
+        // "uncomment disabled code" does NOT apply here.
+        // ──────────────────────────────────────────────────────────────────────
         // {
         //   path: "vouchers",
         //   name: "pro-vouchers",
