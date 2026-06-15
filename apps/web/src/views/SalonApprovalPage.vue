@@ -129,13 +129,36 @@
             </div>
           </article>
         </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
+          <p class="row-meta">
+            Page {{ page + 1 }} sur {{ totalPages }} · {{ salonsQuery.data.value?.total ?? 0 }} dossiers
+          </p>
+          <div class="flex gap-2">
+            <button
+              :disabled="page === 0"
+              class="btn-secondary px-4 py-2 rounded-full text-[11px] disabled:opacity-40"
+              @click="page--"
+            >
+              Précédent
+            </button>
+            <button
+              :disabled="page >= totalPages - 1"
+              class="btn-secondary px-4 py-2 rounded-full text-[11px] disabled:opacity-40"
+              @click="page++"
+            >
+              Suivant
+            </button>
+          </div>
+        </div>
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -165,6 +188,8 @@ const city = ref("");
 const openDropdown = ref<string | null>(null);
 const debouncedSearch = refDebounced(search, 250);
 const debouncedCity = refDebounced(city, 250);
+const page = ref(0);
+const pageSize = 20;
 
 const approveMutation = useMutation({
   mutationFn: ({ id, tier }: { id: string; tier: string }) =>
@@ -205,14 +230,23 @@ function quickAction(id: string, action: string) {
 document.addEventListener("click", () => { openDropdown.value = null; });
 
 const salonsQuery = useQuery({
-  queryKey: computed(() => ["admin-salons", debouncedSearch.value, status.value, debouncedCity.value]),
+  queryKey: computed(() => ["admin-salons", debouncedSearch.value, status.value, debouncedCity.value, page.value]),
   queryFn: () =>
     fetchSalons(auth.accessToken ?? "", {
       search: debouncedSearch.value || undefined,
       status: status.value || undefined,
-      city: debouncedCity.value || undefined
+      city: debouncedCity.value || undefined,
+      page: String(page.value),
+      pageSize: String(pageSize)
     }),
   enabled: computed(() => Boolean(auth.accessToken))
+});
+
+watch([debouncedSearch, status, debouncedCity], () => { page.value = 0; });
+
+const totalPages = computed(() => {
+  const total = salonsQuery.data.value?.total ?? 0;
+  return Math.ceil(total / pageSize);
 });
 
 const errorMessage = computed(() => {

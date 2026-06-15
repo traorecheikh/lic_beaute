@@ -6,7 +6,9 @@ import {
   updatePlatformSettingInputSchema,
   upsertSalonCategoryInputSchema,
   upsertRequiredDocumentInputSchema,
-  adminSalonCreateInputSchema
+  adminSalonCreateInputSchema,
+  proServiceCreateInputSchema,
+  proServiceUpdateInputSchema
 } from "@beauteavenue/contracts";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
@@ -80,14 +82,20 @@ export class AdminController {
 
   async listPendingSalons(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    const filters = adminSalonQueueFiltersSchema.parse(request.query);
-    ok(reply, await listPendingSalons(filters));
+    const q = request.query as Record<string, string | undefined>;
+    const filters = adminSalonQueueFiltersSchema.parse(q);
+    const page = Math.max(0, parseInt(q.page ?? "0", 10));
+    const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
+    ok(reply, await listPendingSalons({ ...filters, page, pageSize }));
   }
 
   async listSalons(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    const filters = z.object({ search: z.string().optional(), status: z.string().optional() }).parse(request.query);
-    ok(reply, await listSalons(filters));
+    const q = request.query as Record<string, string | undefined>;
+    const page = Math.max(0, parseInt(q.page ?? "0", 10));
+    const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
+    const filters = z.object({ search: z.string().optional(), status: z.string().optional() }).parse(q);
+    ok(reply, await listSalons({ ...filters, page, pageSize }));
   }
 
   async salonDetail(request: FastifyRequest, reply: FastifyReply) {
@@ -158,12 +166,15 @@ export class AdminController {
 
   async listSubscriptions(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
+    const q = request.query as Record<string, string | undefined>;
+    const page = Math.max(0, parseInt(q.page ?? "0", 10));
+    const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
     const query = z.object({
       search: z.string().optional(),
       tier: z.enum(["standard", "premium"]).optional(),
       status: z.enum(["inactive", "active", "past_due", "cancelled", "expired", "paused"]).optional()
-    }).parse(request.query);
-    ok(reply, await listSubscriptions(query));
+    }).parse(q);
+    ok(reply, await listSubscriptions({ ...query, page, pageSize }));
   }
 
   async subscriptionDetail(request: FastifyRequest, reply: FastifyReply) {
@@ -205,8 +216,11 @@ export class AdminController {
 
   async listAudit(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
-    const filters = adminAuditFiltersSchema.parse(request.query);
-    ok(reply, await listAuditEvents(filters));
+    const q = request.query as Record<string, string | undefined>;
+    const page = Math.max(0, parseInt(q.page ?? "0", 10));
+    const pageSize = Math.min(200, Math.max(1, parseInt(q.pageSize ?? "50", 10)));
+    const filters = adminAuditFiltersSchema.parse(q);
+    ok(reply, await listAuditEvents({ ...filters, page, pageSize }));
   }
 
   async auditDetail(request: FastifyRequest, reply: FastifyReply) {
@@ -219,12 +233,15 @@ export class AdminController {
 
   async listEmailAudit(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
+    const q = request.query as Record<string, string | undefined>;
+    const page = Math.max(0, parseInt(q.page ?? "0", 10));
+    const pageSize = Math.min(200, Math.max(1, parseInt(q.pageSize ?? "50", 10)));
     const filters = z.object({
       status: z.string().optional(),
       driver: z.string().optional(),
       to: z.string().optional()
-    }).parse(request.query);
-    ok(reply, await listEmailAuditEvents(filters));
+    }).parse(q);
+    ok(reply, await listEmailAuditEvents({ ...filters, page, pageSize }));
   }
 
   // ── Configuration ────────────────────────────────────────────────────────
@@ -246,9 +263,89 @@ export class AdminController {
     }
     const { value } = updatePlatformSettingInputSchema.parse(request.body);
     const actorName = await this.resolveActorName(token.sub);
+
+    // Detect price change from free (0) to paid — notify affected salons
+    const isPriceKey = key === "subscription_standard_price_xof" || key === "subscription_premium_price_xof";
+    if (isPriceKey) {
+      const current = await prisma.platformSetting.findUnique({ where: { key } });
+      const oldPrice = parseInt(current?.value ?? "0", 10);
+      const newPrice = parseInt(value, 10);
+      if (oldPrice === 0 && newPrice > 0) {
+        const tier = key.includes("standard") ? "standard" : "premium";
+        await this.notifyFreeSubscribersOfPriceChange(key, tier, newPrice);
+      }
+    }
+
     const updated = await updatePlatformSetting(key, value, actorName);
     await invalidateCacheTags(["kpi:admin", "kpi:pro", "catalog:pricing"]);
     ok(reply, updated);
+  }
+
+  private async notifyFreeSubscribersOfPriceChange(settingKey: string, tier: string, newPriceXof: number) {
+    // Find active subscriptions for this tier that were activated for free
+    const freeSubs = await prisma.subscription.findMany({
+      where: {
+        tier: tier as any,
+        status: "active",
+        expiresAt: null, // free subscriptions have no expiry
+        charges: {
+          some: { amountXof: 0, status: "succeeded" }
+        }
+      },
+      include: {
+        salon: {
+          include: {
+            staffMembers: {
+              where: { role: "salon_owner" },
+              select: { id: true, fullName: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (freeSubs.length === 0) return;
+
+    const tierLabel = tier === "premium" ? "Premium" : "Standard";
+    const priceLabel = newPriceXof.toLocaleString("fr-FR");
+    const gracePeriodEnds = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const graceDateLabel = gracePeriodEnds.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+    const title = `Changement de tarif — Plan ${tierLabel}`;
+    const body = `Le plan ${tierLabel} n'est plus gratuit. Nouveau tarif : ${priceLabel} XOF/mois. ` +
+      `Votre accès actuel est conservé jusqu'au ${graceDateLabel}. Passé cette date, vous devrez souscrire pour continuer.`;
+
+    // Set 30-day grace period on affected subscriptions
+    await prisma.subscription.updateMany({
+      where: {
+        id: { in: freeSubs.map((s) => s.id) }
+      },
+      data: {
+        expiresAt: gracePeriodEnds
+      }
+    });
+
+    // Notify each salon owner
+    for (const sub of freeSubs) {
+      for (const owner of sub.salon.staffMembers) {
+        await prisma.notification.create({
+          data: { userId: owner.id, title, body, channel: "push" }
+        }).catch(() => {});
+      }
+    }
+
+    // Write audit log
+    await prisma.auditLog.create({
+      data: {
+        action: "pricing_change_free_to_paid",
+        summary: `${freeSubs.length} abonnement(s) ${tierLabel} gratuit(s) : période de grâce de 30 jours jusqu'au ${graceDateLabel}`,
+        entityType: "PlatformSetting",
+        entityId: settingKey,
+        actorName: "system",
+        severity: "warning",
+        payloadJson: JSON.stringify({ tier, newPriceXof, affectedCount: freeSubs.length })
+      }
+    });
   }
 
   async listCategories(request: FastifyRequest, reply: FastifyReply) {
@@ -386,7 +483,7 @@ export class AdminController {
     const amountLabel = invoice.amountXof.toLocaleString("fr-FR");
     const billingProvider = invoice.subscription.billingProvider === "paydunya" ? "PayDunya" : "Manuel";
 
-    const pdf = buildInvoicePdf({
+    const pdf = await buildInvoicePdf({
       invoiceNumber: invoice.invoiceNumber,
       issuedAt,
       status: invoice.status === "paid" ? "Payé" : invoice.status === "comped" ? "Offert" : "Émis",
@@ -431,5 +528,95 @@ export class AdminController {
       if (msg === "owner_not_found") { fail(reply, 422, "owner_not_found", "Aucun gérant trouvé pour ce salon."); return; }
       fail(reply, 500, "internal_error", "Erreur lors de l'envoi du lien magique.");
     }
+  }
+
+  // ── Salon Services ────────────────────────────────────────────────────────
+
+  async listSalonServices(request: FastifyRequest, reply: FastifyReply) {
+    if (!this.ensureAdmin(request, reply)) return;
+    const { salonId } = request.params as { salonId: string };
+    const services = await prisma.service.findMany({
+      where: { salonId },
+      orderBy: { displayOrder: "asc" }
+    });
+    ok(reply, services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      category: s.category,
+      durationMinutes: s.durationMinutes,
+      priceXof: s.priceXof,
+      depositMode: s.depositMode,
+      depositAmountXof: s.depositAmountXof,
+      depositPercent: s.depositPercent,
+      isActive: s.isActive,
+      displayOrder: s.displayOrder
+    })));
+  }
+
+  async createSalonService(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    try {
+      const { salonId } = request.params as { salonId: string };
+      const salon = await prisma.salon.findUnique({ where: { id: salonId }, select: { id: true } });
+      if (!salon) { fail(reply, 404, "salon_not_found", "Salon introuvable."); return; }
+      const body = proServiceCreateInputSchema.parse(request.body);
+      const count = await prisma.service.count({ where: { salonId } });
+      const service = await prisma.service.create({
+        data: { salonId, displayOrder: count, ...body }
+      });
+      await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
+      ok(reply, {
+        id: service.id,
+        name: service.name,
+        category: service.category,
+        durationMinutes: service.durationMinutes,
+        priceXof: service.priceXof,
+        depositMode: service.depositMode,
+        depositAmountXof: service.depositAmountXof,
+        depositPercent: service.depositPercent,
+        isActive: service.isActive,
+        displayOrder: service.displayOrder
+      }, 201);
+    } catch (e) { handleError(e, reply); }
+  }
+
+  async updateSalonService(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    try {
+      const { salonId, serviceId } = request.params as { salonId: string; serviceId: string };
+      const existing = await prisma.service.findFirst({ where: { id: serviceId, salonId } });
+      if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
+      const body = proServiceUpdateInputSchema.parse(request.body);
+      const service = await prisma.service.update({
+        where: { id: serviceId },
+        data: body
+      });
+      await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
+      ok(reply, {
+        id: service.id,
+        name: service.name,
+        category: service.category,
+        durationMinutes: service.durationMinutes,
+        priceXof: service.priceXof,
+        depositMode: service.depositMode,
+        depositAmountXof: service.depositAmountXof,
+        depositPercent: service.depositPercent,
+        isActive: service.isActive,
+        displayOrder: service.displayOrder
+      });
+    } catch (e) { handleError(e, reply); }
+  }
+
+  async deleteSalonService(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    const { salonId, serviceId } = request.params as { salonId: string; serviceId: string };
+    const existing = await prisma.service.findFirst({ where: { id: serviceId, salonId } });
+    if (!existing) { fail(reply, 404, "service_not_found", "Service introuvable."); return; }
+    await prisma.service.update({ where: { id: serviceId }, data: { isActive: false } });
+    await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
+    ok(reply, { deleted: true });
   }
 }

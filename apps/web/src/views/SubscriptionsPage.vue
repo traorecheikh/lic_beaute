@@ -132,12 +132,35 @@
           </table>
         </div>
       </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
+        <p class="row-meta">
+          Page {{ page + 1 }} sur {{ totalPages }} · {{ subscriptionsData?.total ?? 0 }} abonnements
+        </p>
+        <div class="flex gap-2">
+          <button
+            :disabled="page === 0"
+            class="btn-secondary px-4 py-2 rounded-full text-[11px] disabled:opacity-40"
+            @click="page--"
+          >
+            Précédent
+          </button>
+          <button
+            :disabled="page >= totalPages - 1"
+            class="btn-secondary px-4 py-2 rounded-full text-[11px] disabled:opacity-40"
+            @click="page++"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -164,6 +187,8 @@ const search = ref("");
 const tier = ref("");
 const status = ref("");
 const openDropdown = ref<string | null>(null);
+const page = ref(0);
+const pageSize = 20;
 
 const overrideMutation = useMutation({
   mutationFn: ({ id, action }: { id: string; action: string }) =>
@@ -200,16 +225,24 @@ onUnmounted(() => {
 const debouncedSearch = refDebounced(search, 250);
 
 const subscriptionsQuery = useQuery({
-  queryKey: computed(() => ["admin-subscriptions", debouncedSearch.value, tier.value, status.value]),
+  queryKey: computed(() => ["admin-subscriptions", debouncedSearch.value, tier.value, status.value, page.value]),
   queryFn: () => fetchSubscriptions(auth.accessToken ?? "", {
     search: debouncedSearch.value || undefined,
     tier: tier.value || undefined,
-    status: status.value || undefined
+    status: status.value || undefined,
+    page: String(page.value),
+    pageSize: String(pageSize)
   }),
   enabled: computed(() => Boolean(auth.accessToken))
 });
 
+watch([debouncedSearch, tier, status], () => { page.value = 0; });
+
 const subscriptionsData = computed(() => subscriptionsQuery.data.value ?? null);
+const totalPages = computed(() => {
+  const total = subscriptionsData.value?.total ?? 0;
+  return Math.ceil(total / pageSize);
+});
 const hasFilters = computed(() => Boolean(debouncedSearch.value || tier.value || status.value));
 
 const errorMessage = computed(() => {

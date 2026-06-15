@@ -166,11 +166,34 @@
         </div>
       </div>
     </template>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
+      <p class="row-meta">
+        Page {{ page + 1 }} sur {{ totalPages }} · {{ activeQuery.data.value?.total ?? 0 }} événements
+      </p>
+      <div class="flex gap-2">
+        <button
+          :disabled="page === 0"
+          class="btn-secondary px-4 py-2 rounded-full text-[11px] disabled:opacity-40"
+          @click="page--"
+        >
+          Précédent
+        </button>
+        <button
+          :disabled="page >= totalPages - 1"
+          class="btn-secondary px-4 py-2 rounded-full text-[11px] disabled:opacity-40"
+          @click="page++"
+        >
+          Suivant
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 import { refDebounced } from "@vueuse/core";
 import { InformationCircleIcon, MagnifyingGlassIcon, UserIcon } from "@heroicons/vue/24/outline";
@@ -195,32 +218,45 @@ const emailStatus = ref("");
 const debouncedActor = refDebounced(actor, 250);
 const debouncedEntityType = refDebounced(entityType, 250);
 const debouncedEmailTo = refDebounced(emailTo, 250);
+const page = ref(0);
+const pageSize = 50;
+
+watch([debouncedActor, debouncedEntityType, actionFilter, fromDate, toDate, auditMode], () => { page.value = 0; });
 
 const auditQuery = useQuery({
-  queryKey: computed(() => ["admin-audit", debouncedActor.value, debouncedEntityType.value, actionFilter.value, fromDate.value, toDate.value]),
+  queryKey: computed(() => ["admin-audit", debouncedActor.value, debouncedEntityType.value, actionFilter.value, fromDate.value, toDate.value, page.value]),
   queryFn: () =>
     fetchAuditEvents(auth.accessToken ?? "", {
       actor: debouncedActor.value || undefined,
       entityType: debouncedEntityType.value || undefined,
       action: actionFilter.value || undefined,
       from: fromDate.value || undefined,
-      to: toDate.value || undefined
+      to: toDate.value || undefined,
+      page: String(page.value),
+      pageSize: String(pageSize)
     }),
   enabled: computed(() => Boolean(auth.accessToken) && auditMode.value === "system")
 });
 
 const emailAuditQuery = useQuery({
-  queryKey: computed(() => ["admin-email-audit", debouncedEmailTo.value, emailDriver.value, emailStatus.value]),
+  queryKey: computed(() => ["admin-email-audit", debouncedEmailTo.value, emailDriver.value, emailStatus.value, page.value]),
   queryFn: () =>
     fetchEmailAuditEvents(auth.accessToken ?? "", {
       to: debouncedEmailTo.value || undefined,
       driver: emailDriver.value || undefined,
-      status: emailStatus.value || undefined
+      status: emailStatus.value || undefined,
+      page: String(page.value),
+      pageSize: String(pageSize)
     }),
   enabled: computed(() => Boolean(auth.accessToken) && auditMode.value === "email")
 });
 
 const activeQuery = computed(() => (auditMode.value === "system" ? auditQuery : emailAuditQuery));
+
+const totalPages = computed(() => {
+  const total = activeQuery.value.data.value?.total ?? 0;
+  return Math.ceil(total / pageSize);
+});
 
 const errorMessage = computed(() => {
   const error = activeQuery.value.error.value;

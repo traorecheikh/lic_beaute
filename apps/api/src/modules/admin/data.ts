@@ -212,391 +212,118 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
 
 // ─── Salon queue ──────────────────────────────────────────────────────────────
 
-export async function listPendingSalons(filters: AdminSalonQueueFilters) {
-  const salons = await prisma.salon.findMany({
-    where: {
-      approvalStatus: filters.status
-        ? { equals: filters.status as any }
-        : { in: ["pending_review", "needs_info"] },
-      ...(filters.category && { category: filters.category }),
-      ...(filters.city && { city: { contains: filters.city, mode: "insensitive" } }),
-      ...(filters.search && {
-        OR: [
-          { name: { contains: filters.search, mode: "insensitive" } },
-          { city: { contains: filters.search, mode: "insensitive" } },
-          { staffMembers: { some: { role: "salon_owner", fullName: { contains: filters.search, mode: "insensitive" } } } }
-        ]
-      })
-    },
-    include: {
-      staffMembers: { where: { role: "salon_owner" }, select: { fullName: true } },
-      documents: true
-    },
-    orderBy: { submittedAt: "asc" }
-  });
+export async function listPendingSalons(filters: AdminSalonQueueFilters & { page?: number; pageSize?: number }) {
+  const page = Math.max(0, filters.page ?? 0);
+  const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 20));
 
-  const items: AdminSalonQueueItem[] = salons.map((salon) => ({
-    id: salon.id,
-    salonName: salon.name,
-    category: salon.category,
-    city: salon.city,
-    ownerName: salon.staffMembers[0]?.fullName ?? "—",
-    submittedAt: salon.submittedAt.toISOString(),
-    approvalStatus: salon.approvalStatus as AdminSalonQueueItem["approvalStatus"],
-    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonQueueItem["subscriptionIntentTier"],
-    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
-    latestAdminNote: salon.latestAdminNote
-  }));
-
-  return { items, total: items.length };
-}
-
-export async function listSalons(filters: { search?: string; status?: string }) {
-  const salons = await prisma.salon.findMany({
-    where: {
-      ...(filters.status && { approvalStatus: filters.status as any }),
-      ...(filters.search && {
-        OR: [
-          { name: { contains: filters.search, mode: "insensitive" } },
-          { city: { contains: filters.search, mode: "insensitive" } }
-        ]
-      })
-    },
-    include: {
-      staffMembers: { where: { role: "salon_owner" }, select: { fullName: true } },
-      documents: true
-    },
-    orderBy: { createdAt: "desc" }
-  });
-
-  const items: AdminSalonQueueItem[] = salons.map((salon) => ({
-    id: salon.id,
-    salonName: salon.name,
-    category: salon.category,
-    city: salon.city,
-    ownerName: salon.staffMembers[0]?.fullName ?? "—",
-    submittedAt: salon.submittedAt.toISOString(),
-    approvalStatus: salon.approvalStatus as AdminSalonQueueItem["approvalStatus"],
-    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonQueueItem["subscriptionIntentTier"],
-    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
-    latestAdminNote: salon.latestAdminNote
-  }));
-
-  return { items, total: items.length };
-}
-
-export async function getPendingSalonDetail(salonId: string): Promise<AdminSalonDetail | null> {
-  const salon = await prisma.salon.findUnique({
-    where: { id: salonId },
-    include: {
-      staffMembers: { where: { role: "salon_owner" } },
-      services: true,
-      documents: true,
-      gallery: { orderBy: { position: "asc" } },
-      subscription: { select: { id: true } }
-    }
-  });
-
-  if (!salon) return null;
-
-  const owner = salon.staffMembers[0];
-
-  return {
-    id: salon.id,
-    subscriptionId: salon.subscription?.id ?? null,
-    salonName: salon.name,
-    category: salon.category,
-    city: salon.city,
-    address: salon.address,
-    description: salon.description,
-    owner: {
-      fullName: owner?.fullName ?? "—",
-      email: owner?.email ?? "",
-      phone: owner?.phone ?? ""
-    },
-    approvalStatus: salon.approvalStatus as AdminSalonDetail["approvalStatus"],
-    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonDetail["subscriptionIntentTier"],
-    submittedAt: salon.submittedAt.toISOString(),
-    missingEvidence: salon.documents.filter((d) => d.status !== "received").map((d) => d.label),
-    latestAdminNote: salon.latestAdminNote,
-    gallery: salon.gallery.map((img) => img.url),
-    services: salon.services.map((s) => ({
-      id: s.id,
-      name: s.name,
-      durationMinutes: s.durationMinutes,
-      priceXof: s.priceXof,
-      depositMode: s.depositMode as "none" | "fixed" | "percent",
-      depositAmountXof: s.depositAmountXof,
-      depositPercent: s.depositPercent
-    })),
-    documents: salon.documents.map((d) => ({
-      label: d.label,
-      status: d.status as "received" | "missing" | "invalid",
-      note: d.note,
-      fileUrl: d.fileUrl
-    }))
-  };
-}
-
-export async function approveSalon(salonId: string, actorName: string) {
-  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
-  if (!salon) return null;
-
-  const updated = await prisma.salon.update({
-    where: { id: salonId },
-    data: { approvalStatus: "approved", isVisibleInMarketplace: false, canReceiveBookings: false, latestAdminNote: "Salon approuvé. Activation en attente d'un abonnement actif." }
-  });
-
-  await prisma.subscription.upsert({
-    where: { salonId },
-    create: { salonId, tier: salon.subscriptionIntentTier, status: "inactive" },
-    update: {}
-  });
-
-  await writeAuditLog({
-    action: "salon.approved",
-    summary: `Salon ${salon.name} approuvé.`,
-    entityType: "salon",
-    entityId: salonId,
-    actorName,
-    severity: "info",
-    payloadJson: JSON.stringify({ salonId, approvalStatus: "approved" }),
-    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
-  });
-
-  const owner = await getSalonOwnerContact(salonId);
-  if (owner?.email) {
-    const { buildEmailHtml } = await import("../../lib/email-html.js");
-    await sendEmail({
-      to: owner.email,
-      subject: "Votre salon est approuvé sur Beauté Avenue",
-      text:
-        `Bonjour ${owner.fullName ?? ""},\n\n` +
-        `Excellente nouvelle: le salon "${salon.name}" a été approuvé.\n` +
-        `Dernière étape: activez votre abonnement pour rendre le salon visible et recevoir des réservations.\n\n` +
-        `— L'équipe Beauté Avenue`,
-      html: buildEmailHtml({
-        preheader: "Votre dossier a été validé",
-        greeting: `Bonjour ${owner.fullName ?? ""},`,
-        bodyLines: [
-          `Excellente nouvelle ! Le salon <strong>${salon.name}</strong> a été approuvé.`,
-          `Dernière étape : <strong>activez votre abonnement</strong> pour rendre votre salon visible et recevoir vos premières réservations.`
-        ],
-        cta: { url: `${config.webOrigin}/pro/billing`, label: "Activer mon abonnement" },
-        ignoreNote: false,
-        footerNote: "— L'équipe Beauté Avenue"
-      })
-    }).catch((err) =>
-      logger.error("approveSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
-    );
-  }
-
-  return getPendingSalonDetail(updated.id);
-}
-
-export async function rejectSalon(salonId: string, input: AdminSalonDecisionInput, actorName: string) {
-  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
-  if (!salon) return null;
-
-  await prisma.salon.update({
-    where: { id: salonId },
-    data: { approvalStatus: "rejected", latestAdminNote: input.reason }
-  });
-
-  await writeAuditLog({
-    action: "salon.rejected",
-    summary: `Salon ${salon.name} rejeté.`,
-    entityType: "salon",
-    entityId: salonId,
-    actorName,
-    severity: "warning",
-    payloadJson: JSON.stringify({ reason: input.reason }),
-    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
-  });
-
-  const owner = await getSalonOwnerContact(salonId);
-  if (owner?.email) {
-    const { buildEmailHtml } = await import("../../lib/email-html.js");
-    sendEmail({
-      to: owner.email,
-      subject: "Dossier salon refusé — Beauté Avenue",
-      text:
-        `Bonjour ${owner.fullName ?? ""},\n\n` +
-        `Le dossier du salon "${salon.name}" a été refusé.\n` +
-        `Motif: ${input.reason}\n\n` +
-        `Vous pouvez corriger les éléments demandés puis soumettre à nouveau.\n\n` +
-        `— L'équipe Beauté Avenue`,
-      html: buildEmailHtml({
-        preheader: "Votre dossier n'a pas été validé",
-        greeting: `Bonjour ${owner.fullName ?? ""},`,
-        bodyLines: [
-          `Le dossier du salon <strong>${salon.name}</strong> a été refusé.`,
-          `<strong>Motif :</strong> ${input.reason}`,
-          `Vous pouvez corriger les éléments demandés dans votre espace, puis soumettre à nouveau votre dossier.`
-        ],
-        cta: { url: `${config.webOrigin}/pro/profile`, label: "Modifier mon dossier" },
-        ignoreNote: false,
-        footerNote: "— L'équipe Beauté Avenue"
-      })
-    }).catch((err) =>
-      logger.error("rejectSalon: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
-    );
-  }
-
-  return getPendingSalonDetail(salonId);
-}
-
-export async function requestSalonInfo(salonId: string, input: AdminSalonDecisionInput, actorName: string) {
-  const salon = await prisma.salon.findUnique({ where: { id: salonId } });
-  if (!salon) return null;
-
-  await prisma.salon.update({
-    where: { id: salonId },
-    data: { approvalStatus: "needs_info", latestAdminNote: input.reason }
-  });
-
-  await writeAuditLog({
-    action: "salon.request_info",
-    summary: `Informations complémentaires demandées à ${salon.name}.`,
-    entityType: "salon",
-    entityId: salonId,
-    actorName,
-    severity: "warning",
-    payloadJson: JSON.stringify({ reason: input.reason }),
-    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salonId}` }]
-  });
-
-  const owner = await getSalonOwnerContact(salonId);
-  if (owner?.email) {
-    const { buildEmailHtml } = await import("../../lib/email-html.js");
-    await sendEmail({
-      to: owner.email,
-      subject: "Informations complémentaires requises — Beauté Avenue",
-      text:
-        `Bonjour ${owner.fullName ?? ""},\n\n` +
-        `Votre dossier pour "${salon.name}" nécessite des informations complémentaires.\n` +
-        `Détail: ${input.reason}\n\n` +
-        `Connectez-vous à votre espace pro pour mettre à jour votre dossier.\n\n` +
-        `— L'équipe Beauté Avenue`,
-      html: buildEmailHtml({
-        preheader: "Informations complémentaires requises",
-        greeting: `Bonjour ${owner.fullName ?? ""},`,
-        bodyLines: [
-          `Votre dossier pour <strong>${salon.name}</strong> nécessite des informations complémentaires.`,
-          `<strong>Détail :</strong> ${input.reason}`,
-          `Connectez-vous à votre espace pro pour mettre à jour votre dossier.`
-        ],
-        cta: { url: `${config.webOrigin}/pro/profile`, label: "Mettre à jour mon dossier" },
-        ignoreNote: false,
-        footerNote: "— L'équipe Beauté Avenue"
-      })
-    }).catch((err) =>
-      logger.error("requestSalonInfo: failed to send decision email", { err: String(err), ownerEmail: owner.email, salonId })
-    );
-  }
-
-  return getPendingSalonDetail(salonId);
-}
-
-export async function createSalon(data: AdminSalonCreateInput, actorName: string) {
-  // Placeholder password — never exposed to anyone; owner sets theirs via setup link.
-  const internalPassword = randomBytes(32).toString("hex");
-
-  const salon = await prisma.salon.create({
-    data: {
-      name: data.name,
-      category: data.category,
-      city: data.city,
-      address: data.address,
-      description: data.description,
-      approvalStatus: "approved",
-      isVisibleInMarketplace: true,
-      canReceiveBookings: true,
-      staffMembers: {
-        create: {
-          fullName: data.ownerName,
-          email: data.ownerEmail,
-          phone: data.ownerPhone,
-          role: "salon_owner",
-          passwordHash: await argon2.hash(internalPassword)
-        }
+  const [salons, total] = await Promise.all([
+    prisma.salon.findMany({
+      where: {
+        approvalStatus: filters.status
+          ? { equals: filters.status as any }
+          : { in: ["pending_review", "needs_info"] },
+        ...(filters.category && { category: filters.category }),
+        ...(filters.city && { city: { contains: filters.city, mode: "insensitive" } }),
+        ...(filters.search && {
+          OR: [
+            { name: { contains: filters.search, mode: "insensitive" } },
+            { city: { contains: filters.search, mode: "insensitive" } },
+            { staffMembers: { some: { role: "salon_owner", fullName: { contains: filters.search, mode: "insensitive" } } } }
+          ]
+        })
+      },
+      include: {
+        staffMembers: { where: { role: "salon_owner" }, select: { fullName: true } },
+        documents: true
+      },
+      orderBy: { submittedAt: "asc" },
+      take: pageSize,
+      skip: page * pageSize
+    }),
+    prisma.salon.count({
+      where: {
+        approvalStatus: filters.status
+          ? { equals: filters.status as any }
+          : { in: ["pending_review", "needs_info"] },
+        ...(filters.category && { category: filters.category }),
+        ...(filters.city && { city: { contains: filters.city, mode: "insensitive" } }),
+        ...(filters.search && {
+          OR: [
+            { name: { contains: filters.search, mode: "insensitive" } },
+            { city: { contains: filters.search, mode: "insensitive" } },
+            { staffMembers: { some: { role: "salon_owner", fullName: { contains: filters.search, mode: "insensitive" } } } }
+          ]
+        })
       }
-    }
-  });
-
-  await prisma.subscription.create({
-    data: { salonId: salon.id, tier: "standard", status: "active" }
-  });
-
-  // Generate a one-time 72h setup token and store its hash in platformSetting.
-  const owner = await prisma.user.findUnique({ where: { email: data.ownerEmail }, select: { id: true } });
-  const setupLink = await (async () => {
-    if (!owner) return null;
-    const rawToken = randomBytes(32).toString("hex");
-    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-    const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
-    await prisma.platformSetting.create({
-      data: {
-        group: "security",
-        key: `auth:setup:${owner.id}`,
-        value: JSON.stringify({ tokenHash, expiresAt }),
-        description: "Account setup token (single-use)"
-      }
-    });
-    return `${config.webOrigin}/pro/setup-account?token=${rawToken}&email=${encodeURIComponent(data.ownerEmail)}`;
-  })();
-
-  await writeAuditLog({
-    action: "salon.created",
-    summary: `Salon ${salon.name} créé manuellement.`,
-    entityType: "salon",
-    entityId: salon.id,
-    actorName,
-    severity: "info",
-    payloadJson: JSON.stringify({ name: data.name, ownerEmail: data.ownerEmail, city: data.city }),
-    relatedLinks: [{ label: salon.name, href: `/admin/salons/${salon.id}` }]
-  });
-
-  const { buildEmailHtml } = await import("../../lib/email-html.js");
-  sendEmail({
-    to: data.ownerEmail,
-    subject: "Bienvenue sur Beauté Avenue — Activez votre espace pro",
-    text: `Bonjour ${data.ownerName},\n\nVotre espace pro Beauté Avenue a été créé.\n\nActivez votre compte en définissant votre mot de passe via le lien ci-dessous (valable 72h) :\n${setupLink ?? "(lien non disponible — contactez l'administrateur)"}\n\n— L'équipe Beauté Avenue`,
-    html: buildEmailHtml({
-      preheader: "Activez votre espace professionnel",
-      greeting: `Bonjour ${data.ownerName},`,
-      bodyLines: [
-        `Votre espace professionnel <strong>Beauté Avenue</strong> a été créé.`,
-        `Activez votre compte en définissant votre mot de passe via le bouton ci-dessous.`
-      ],
-      cta: setupLink ? { url: setupLink, label: "Activer mon espace" } : undefined,
-      expiryNote: "Ce lien expire dans 72 heures.",
-      usageNote: "Il ne peut être utilisé qu'une seule fois.",
-      ignoreNote: false,
-      footerNote: "— L'équipe Beauté Avenue"
     })
-  }).catch((err) => logger.error("createSalon: failed to send setup email", { err: String(err), ownerEmail: data.ownerEmail }));
+  ]);
 
-  return await getPendingSalonDetail(salon.id);
+  const items: AdminSalonQueueItem[] = salons.map((salon) => ({
+    id: salon.id,
+    salonName: salon.name,
+    category: salon.category,
+    city: salon.city,
+    ownerName: salon.staffMembers[0]?.fullName ?? "—",
+    submittedAt: salon.submittedAt.toISOString(),
+    approvalStatus: salon.approvalStatus as AdminSalonQueueItem["approvalStatus"],
+    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonQueueItem["subscriptionIntentTier"],
+    missingEvidence: (salon.documents as Array<{ status: string; label: string }>).filter((d) => d.status !== "received").map((d) => d.label),
+    latestAdminNote: salon.latestAdminNote
+  }));
+
+  return { items, total, page, pageSize };
 }
 
-// ─── Uniqueness check ─────────────────────────────────────────────────────────
+export async function listSalons(filters: { search?: string; status?: string; page?: number; pageSize?: number }) {
+  const page = Math.max(0, filters.page ?? 0);
+  const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 20));
 
-export async function checkSalonUniqueness(fields: { email?: string; phone?: string; name?: string }) {
-  const result: { email?: "available" | "taken"; phone?: "available" | "taken"; name?: "available" | "taken" } = {};
-  if (fields.email) {
-    const existing = await prisma.user.findUnique({ where: { email: fields.email }, select: { id: true } });
-    result.email = existing ? "taken" : "available";
-  }
-  if (fields.phone) {
-    const existing = await prisma.user.findFirst({ where: { phone: fields.phone }, select: { id: true } });
-    result.phone = existing ? "taken" : "available";
-  }
-  if (fields.name) {
-    const existing = await prisma.salon.findFirst({ where: { name: { equals: fields.name, mode: "insensitive" } }, select: { id: true } });
-    result.name = existing ? "taken" : "available";
-  }
-  return result;
+  const [salons, total] = await Promise.all([
+    prisma.salon.findMany({
+      where: {
+        ...(filters.status && { approvalStatus: filters.status as any }),
+        ...(filters.search && {
+          OR: [
+            { name: { contains: filters.search, mode: "insensitive" } },
+            { city: { contains: filters.search, mode: "insensitive" } }
+          ]
+        })
+      },
+      include: {
+        staffMembers: { where: { role: "salon_owner" }, select: { fullName: true } },
+        documents: true
+      },
+      orderBy: { createdAt: "desc" },
+      take: pageSize,
+      skip: page * pageSize
+    }),
+    prisma.salon.count({
+      where: {
+        ...(filters.status && { approvalStatus: filters.status as any }),
+        ...(filters.search && {
+          OR: [
+            { name: { contains: filters.search, mode: "insensitive" } },
+            { city: { contains: filters.search, mode: "insensitive" } }
+          ]
+        })
+      }
+    })
+  ]);
+
+  const items: AdminSalonQueueItem[] = salons.map((salon) => ({
+    id: salon.id,
+    salonName: salon.name,
+    category: salon.category,
+    city: salon.city,
+    ownerName: salon.staffMembers[0]?.fullName ?? "—",
+    submittedAt: salon.submittedAt.toISOString(),
+    approvalStatus: salon.approvalStatus as AdminSalonQueueItem["approvalStatus"],
+    subscriptionIntentTier: salon.subscriptionIntentTier as AdminSalonQueueItem["subscriptionIntentTier"],
+    missingEvidence: (salon.documents as Array<{ status: string; label: string }>).filter((d) => d.status !== "received").map((d) => d.label),
+    latestAdminNote: salon.latestAdminNote
+  }));
+
+  return { items, total, page, pageSize };
 }
 
 // ─── Subscriptions ────────────────────────────────────────────────────────────
@@ -605,18 +332,31 @@ export async function listSubscriptions(filters: {
   search?: string;
   tier?: AdminSubscriptionSummary["tier"];
   status?: AdminSubscriptionSummary["status"];
+  page?: number;
+  pageSize?: number;
 }) {
-  const subscriptions = await prisma.subscription.findMany({
-    where: {
-      ...(filters.tier && { tier: filters.tier }),
-      ...(filters.status && { status: filters.status as any }),
-      ...(filters.search && { salon: { name: { contains: filters.search, mode: "insensitive" } } })
-    },
-    include: { salon: { select: { name: true } } },
-    orderBy: { createdAt: "desc" }
-  });
+  const page = Math.max(0, filters.page ?? 0);
+  const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 20));
 
-  const [premiumCount, standardCount, pausedCount] = await Promise.all([
+  const [subscriptions, total, premiumCount, standardCount, pausedCount] = await Promise.all([
+    prisma.subscription.findMany({
+      where: {
+        ...(filters.tier && { tier: filters.tier }),
+        ...(filters.status && { status: filters.status as any }),
+        ...(filters.search && { salon: { name: { contains: filters.search, mode: "insensitive" } } })
+      },
+      include: { salon: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: pageSize,
+      skip: page * pageSize
+    }),
+    prisma.subscription.count({
+      where: {
+        ...(filters.tier && { tier: filters.tier }),
+        ...(filters.status && { status: filters.status as any }),
+        ...(filters.search && { salon: { name: { contains: filters.search, mode: "insensitive" } } })
+      }
+    }),
     prisma.subscription.count({ where: { tier: "premium" } }),
     prisma.subscription.count({ where: { tier: "standard" } }),
     prisma.subscription.count({ where: { status: "paused" } })
@@ -634,7 +374,7 @@ export async function listSubscriptions(filters: {
     isComplimentary: sub.isComplimentary
   }));
 
-  return { summary: { premiumCount, standardCount, pausedCount }, items, total: items.length };
+  return { summary: { premiumCount, standardCount, pausedCount }, items, total, page, pageSize };
 }
 
 export async function getSubscriptionDetail(subscriptionId: string): Promise<AdminSubscriptionDetail | null> {
@@ -1062,16 +802,29 @@ export async function manualExtendSubscription(
 
 // ─── Audit log ────────────────────────────────────────────────────────────────
 
-export async function listAuditEvents(filters: { actor?: string; entityType?: string; action?: string }) {
-  const events = await prisma.auditLog.findMany({
-    where: {
-      ...(filters.actor && { actorName: { contains: filters.actor, mode: "insensitive" } }),
-      ...(filters.entityType && { entityType: filters.entityType }),
-      ...(filters.action && { action: { contains: filters.action } })
-    },
-    orderBy: { createdAt: "desc" },
-    take: 200
-  });
+export async function listAuditEvents(filters: { actor?: string; entityType?: string; action?: string; page?: number; pageSize?: number }) {
+  const page = Math.max(0, filters.page ?? 0);
+  const pageSize = Math.min(200, Math.max(1, filters.pageSize ?? 50));
+
+  const [events, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      where: {
+        ...(filters.actor && { actorName: { contains: filters.actor, mode: "insensitive" } }),
+        ...(filters.entityType && { entityType: filters.entityType }),
+        ...(filters.action && { action: { contains: filters.action } })
+      },
+      orderBy: { createdAt: "desc" },
+      take: pageSize,
+      skip: page * pageSize
+    }),
+    prisma.auditLog.count({
+      where: {
+        ...(filters.actor && { actorName: { contains: filters.actor, mode: "insensitive" } }),
+        ...(filters.entityType && { entityType: filters.entityType }),
+        ...(filters.action && { action: { contains: filters.action } })
+      }
+    })
+  ]);
 
   return {
     items: events.map((e) => ({
@@ -1084,20 +837,35 @@ export async function listAuditEvents(filters: { actor?: string; entityType?: st
       createdAt: e.createdAt.toISOString(),
       severity: e.severity as "info" | "warning" | "critical"
     })),
-    total: events.length
+    total,
+    page,
+    pageSize
   };
 }
 
-export async function listEmailAuditEvents(filters: { status?: string; driver?: string; to?: string }) {
-  const events = await prisma.emailAudit.findMany({
-    where: {
-      ...(filters.status && { status: filters.status }),
-      ...(filters.driver && { driver: filters.driver }),
-      ...(filters.to && { to: { contains: filters.to, mode: "insensitive" } })
-    },
-    orderBy: { createdAt: "desc" },
-    take: 200
-  });
+export async function listEmailAuditEvents(filters: { status?: string; driver?: string; to?: string; page?: number; pageSize?: number }) {
+  const page = Math.max(0, filters.page ?? 0);
+  const pageSize = Math.min(200, Math.max(1, filters.pageSize ?? 50));
+
+  const [events, total] = await Promise.all([
+    prisma.emailAudit.findMany({
+      where: {
+        ...(filters.status && { status: filters.status }),
+        ...(filters.driver && { driver: filters.driver }),
+        ...(filters.to && { to: { contains: filters.to, mode: "insensitive" } })
+      },
+      orderBy: { createdAt: "desc" },
+      take: pageSize,
+      skip: page * pageSize
+    }),
+    prisma.emailAudit.count({
+      where: {
+        ...(filters.status && { status: filters.status }),
+        ...(filters.driver && { driver: filters.driver }),
+        ...(filters.to && { to: { contains: filters.to, mode: "insensitive" } })
+      }
+    })
+  ]);
 
   return {
     items: events.map((e) => ({
@@ -1109,7 +877,9 @@ export async function listEmailAuditEvents(filters: { status?: string; driver?: 
       errorMessage: e.errorMessage,
       createdAt: e.createdAt.toISOString()
     })),
-    total: events.length
+    total,
+    page,
+    pageSize
   };
 }
 
