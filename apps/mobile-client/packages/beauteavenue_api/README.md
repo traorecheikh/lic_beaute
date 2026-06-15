@@ -187,6 +187,9 @@ Class | Method | HTTP request | Description
 [*PushApi*](doc/PushApi.md) | [**apiV1PushTokensTokenIdDelete**](doc/PushApi.md#apiv1pushtokenstokeniddelete) | **DELETE** /api/v1/push-tokens/{tokenId} | Revoke a push notification token
 [*SalonsApi*](doc/SalonsApi.md) | [**apiV1SalonsGet**](doc/SalonsApi.md#apiv1salonsget) | **GET** /api/v1/salons | List salons
 [*SalonsApi*](doc/SalonsApi.md) | [**apiV1SalonsIdGet**](doc/SalonsApi.md#apiv1salonsidget) | **GET** /api/v1/salons/{id} | Salon details
+[*SearchApi*](doc/SearchApi.md) | [**apiV1SearchEventsPost**](doc/SearchApi.md#apiv1searcheventspost) | **POST** /api/v1/search/events | Track search interaction events for personalization
+[*SearchApi*](doc/SearchApi.md) | [**apiV1SearchSalonsGet**](doc/SearchApi.md#apiv1searchsalonsget) | **GET** /api/v1/search/salons | Search salons with ranked results, facets, and discovery modules
+[*SearchApi*](doc/SearchApi.md) | [**apiV1SearchSuggestionsGet**](doc/SearchApi.md#apiv1searchsuggestionsget) | **GET** /api/v1/search/suggestions | Get search suggestions and autocomplete
 
 
 ## Documentation For Models
@@ -367,6 +370,19 @@ Class | Method | HTTP request | Description
  - [SalonSummary](doc/SalonSummary.md)
  - [SalonSummaryListResponse](doc/SalonSummaryListResponse.md)
  - [SalonSummaryListResponseItemsInner](doc/SalonSummaryListResponseItemsInner.md)
+ - [SearchEventsRequest](doc/SearchEventsRequest.md)
+ - [SearchEventsRequestEventsInner](doc/SearchEventsRequestEventsInner.md)
+ - [SearchEventsResponse](doc/SearchEventsResponse.md)
+ - [SearchSalonsResponse](doc/SearchSalonsResponse.md)
+ - [SearchSalonsResponseFacets](doc/SearchSalonsResponseFacets.md)
+ - [SearchSalonsResponseFacetsCategoriesInner](doc/SearchSalonsResponseFacetsCategoriesInner.md)
+ - [SearchSalonsResponseModulesInner](doc/SearchSalonsResponseModulesInner.md)
+ - [SearchSalonsResponsePageInfo](doc/SearchSalonsResponsePageInfo.md)
+ - [SearchSalonsResponseQuery](doc/SearchSalonsResponseQuery.md)
+ - [SearchSuggestionsResponse](doc/SearchSuggestionsResponse.md)
+ - [SearchSuggestionsResponseEntityHintsInner](doc/SearchSuggestionsResponseEntityHintsInner.md)
+ - [SearchSuggestionsResponseSuggestionsInner](doc/SearchSuggestionsResponseSuggestionsInner.md)
+ - [SearchSuggestionsResponseTopMatchesInner](doc/SearchSuggestionsResponseTopMatchesInner.md)
  - [UpdateMeInput](doc/UpdateMeInput.md)
  - [UpdatedResponse](doc/UpdatedResponse.md)
 

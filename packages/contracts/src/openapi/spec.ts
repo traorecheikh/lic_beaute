@@ -83,6 +83,14 @@ import {
 import { salonDetailSchema, salonSummarySchema } from "../domain/salon.js";
 import { favoriteItemSchema, favoriteListResponseSchema } from "../domain/favorite.js";
 import {
+  searchSuggestionsQuerySchema,
+  searchSuggestionsResponseSchema,
+  searchSalonsQuerySchema,
+  searchSalonsResponseSchema,
+  searchEventsRequestSchema,
+  searchEventsResponseSchema,
+} from "../domain/search.js";
+import {
   paymentInitiateInputSchema,
   paymentInitiateResponseSchema,
   paymentStatusResponseSchema,
@@ -197,6 +205,11 @@ const schemaEntries = {
   SalonDetail: salonDetailSchema,
   FavoriteItem: favoriteItemSchema,
   FavoriteListResponse: favoriteListResponseSchema,
+
+  SearchSuggestionsResponse: searchSuggestionsResponseSchema,
+  SearchSalonsResponse: searchSalonsResponseSchema,
+  SearchEventsRequest: searchEventsRequestSchema,
+  SearchEventsResponse: searchEventsResponseSchema,
 
   BookingCreateInput: bookingCreateSchema,
   BookingSummary: bookingSummarySchema,
@@ -782,6 +795,8 @@ export const openApiSpec = {
       get: {
         tags: ["salons"],
         summary: "List salons",
+        deprecated: true,
+        description: "Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.",
         parameters: [
           queryParam("city"),
           queryParam("category"),
@@ -881,6 +896,69 @@ export const openApiSpec = {
           }
         }
       })
+    },
+
+    "/api/v1/search/suggestions": {
+      get: {
+        tags: ["search"],
+        summary: "Get search suggestions and autocomplete",
+        parameters: [
+          { name: "q", in: "query", required: true, schema: { type: "string" } },
+          { name: "lat", in: "query", required: false, schema: { type: "number" } },
+          { name: "lng", in: "query", required: false, schema: { type: "number" } },
+          queryParam("category"),
+          queryParam("city"),
+        ],
+        responses: {
+          200: {
+            description: "Search suggestions",
+            content: { "application/json": { schema: ref("SearchSuggestionsResponse") } }
+          }
+        }
+      }
+    },
+    "/api/v1/search/salons": {
+      get: {
+        tags: ["search"],
+        summary: "Search salons with ranked results, facets, and discovery modules",
+        parameters: [
+          { name: "q", in: "query", required: true, schema: { type: "string" } },
+          { name: "lat", in: "query", required: false, schema: { type: "number" } },
+          { name: "lng", in: "query", required: false, schema: { type: "number" } },
+          queryParam("category"),
+          queryParam("city"),
+          queryParam("neighborhood"),
+          { name: "minPrice", in: "query", required: false, schema: { type: "integer" } },
+          { name: "maxPrice", in: "query", required: false, schema: { type: "integer" } },
+          { name: "openNow", in: "query", required: false, schema: { type: "boolean" } },
+          { name: "bookableSoon", in: "query", required: false, schema: { type: "boolean" } },
+          { name: "sort", in: "query", required: false, schema: { type: "string", enum: ["relevance", "nearby", "trending", "prestige", "price_asc", "price_desc"] } },
+          queryParam("cursor"),
+          { name: "limit", in: "query", required: false, schema: { type: "integer" } },
+        ],
+        responses: {
+          200: {
+            description: "Search results with facets and modules",
+            content: { "application/json": { schema: ref("SearchSalonsResponse") } }
+          }
+        }
+      }
+    },
+    "/api/v1/search/events": {
+      post: {
+        tags: ["search"],
+        summary: "Track search interaction events for personalization",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: ref("SearchEventsRequest") } }
+        },
+        responses: {
+          200: {
+            description: "Events accepted",
+            content: { "application/json": { schema: ref("SearchEventsResponse") } }
+          }
+        }
+      }
     },
 
     "/api/v1/bookings": {

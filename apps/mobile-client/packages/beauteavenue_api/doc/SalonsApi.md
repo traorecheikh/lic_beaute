@@ -18,6 +18,8 @@ Method | HTTP request | Description
 
 List salons
 
+Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.
+
 ### Example
 ```dart
 import 'package:beauteavenue_api/api.dart';

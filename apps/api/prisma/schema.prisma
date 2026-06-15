@@ -769,3 +769,50 @@ model ClientVoucherRedemption {
   @@unique([userId, voucherId])
   @@index([userId, status])
 }
+
+// ─── Search personalization ─────────────────────────────────────────────────
+
+enum SearchEventType {
+  search_submitted
+  suggestion_tapped
+  filter_applied
+  result_opened
+  module_item_opened
+}
+
+model SearchEvent {
+  id          String          @id @default(cuid())
+  userId      String?
+  sessionKey  String
+  eventType   SearchEventType
+  query       String?
+  salonId     String?
+  category    String?
+  city        String?
+  position    Int?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+
+  @@index([sessionKey, createdAt])
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model SearchProfile {
+  id                  String   @id @default(cuid())
+  sessionKey          String   @unique
+  userId              String?
+  preferredCategories Json     @default("[]")
+  preferredCities     Json     @default("[]")
+  preferredNeighborhoods Json  @default("[]")
+  priceMin            Int?
+  priceMax            Int?
+  prestigeAffinity    Float    @default(0)
+  distanceToleranceKm Float   @default(5)
+  lastQueries         Json     @default("[]")
+  interactionCount    Int      @default(0)
+  updatedAt           DateTime @updatedAt
+  createdAt           DateTime @default(now())
+
+  @@index([userId])
+}

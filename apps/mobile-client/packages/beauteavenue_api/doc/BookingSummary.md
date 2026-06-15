@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **id** | **String** |  | 
 **salonId** | **String** |  | 
 **salonName** | **String** |  | 
+**salonLogoUrl** | **String** |  | 
 **serviceId** | **String** |  | 
 **serviceName** | **String** |  | 
 **startsAt** | [**DateTime**](DateTime.md) |  | 

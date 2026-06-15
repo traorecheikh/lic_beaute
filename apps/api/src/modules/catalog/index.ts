@@ -83,6 +83,10 @@ function searchRank(searchParam: string) {
 }
 
 export class CatalogController {
+  /**
+   * @deprecated Use SearchController.search() for search queries.
+   * This method is kept for backward-compatible discovery feeds (nearby, trending, prestige, rating).
+   */
   async list(request: FastifyRequest, reply: FastifyReply) {
     const q = request.query as {
       city?: string;
@@ -103,6 +107,11 @@ export class CatalogController {
     const sort = q.sort ?? "rating";
     const minPrice = q.minPrice != null ? parseInt(q.minPrice, 10) : null;
     const maxPrice = q.maxPrice != null ? parseInt(q.maxPrice, 10) : null;
+
+    reply.header("deprecation", "true");
+    reply.header("sunset", "2026-09-01");
+    reply.header("link", '</api/v1/search/salons>; rel="successor-version"');
+
     const cacheKey = `catalog:list:${JSON.stringify({
       city: q.city ?? null,
       category: q.category ?? null,
@@ -529,8 +538,8 @@ export class CatalogController {
         const rows = await prisma.platformSetting.findMany({ where: { key: { in: keys } } });
         const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
         return {
-          standard: { tier: "standard", priceXof: parseInt(map["subscription_standard_price_xof"] ?? "15000", 10), label: "Standard" },
-          premium: { tier: "premium", priceXof: parseInt(map["subscription_premium_price_xof"] ?? "25000", 10), label: "Premium" },
+          standard: { tier: "standard", priceXof: parseInt(map["subscription_standard_price_xof"] ?? "200", 10), label: "Standard" },
+          premium: { tier: "premium", priceXof: parseInt(map["subscription_premium_price_xof"] ?? "300", 10), label: "Premium" },
           commissionPercent: parseFloat(map["commission_rate_percent"] ?? "5")
         };
       }

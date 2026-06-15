@@ -51,6 +51,7 @@ export class SalonsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for apiV1SalonsGet without sending the request
+     * @deprecated
      */
     async apiV1SalonsGetRequestOpts(requestParameters: ApiV1SalonsGetRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
@@ -101,7 +102,9 @@ export class SalonsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.
      * List salons
+     * @deprecated
      */
     async apiV1SalonsGetRaw(requestParameters: ApiV1SalonsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SalonSummaryListResponse>> {
         const requestOptions = await this.apiV1SalonsGetRequestOpts(requestParameters);
@@ -111,7 +114,9 @@ export class SalonsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.
      * List salons
+     * @deprecated
      */
     async apiV1SalonsGet(requestParameters: ApiV1SalonsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SalonSummaryListResponse> {
         const response = await this.apiV1SalonsGetRaw(requestParameters, initOverrides);

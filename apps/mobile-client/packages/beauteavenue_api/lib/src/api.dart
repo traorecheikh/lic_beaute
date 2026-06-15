@@ -21,6 +21,7 @@ import 'package:beauteavenue_api/src/api/payments_api.dart';
 import 'package:beauteavenue_api/src/api/pro_api.dart';
 import 'package:beauteavenue_api/src/api/push_api.dart';
 import 'package:beauteavenue_api/src/api/salons_api.dart';
+import 'package:beauteavenue_api/src/api/search_api.dart';
 
 class BeauteavenueApi {
   static const String basePath = r'http://localhost:3000';
@@ -186,5 +187,11 @@ class BeauteavenueApi {
   /// by doing that all interceptors will not be executed
   SalonsApi getSalonsApi() {
     return SalonsApi(dio, serializers);
+  }
+
+  /// Get SearchApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  SearchApi getSearchApi() {
+    return SearchApi(dio, serializers);
   }
 }

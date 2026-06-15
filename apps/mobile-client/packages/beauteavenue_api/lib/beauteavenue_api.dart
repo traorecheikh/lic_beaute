@@ -22,6 +22,7 @@ export 'package:beauteavenue_api/src/api/payments_api.dart';
 export 'package:beauteavenue_api/src/api/pro_api.dart';
 export 'package:beauteavenue_api/src/api/push_api.dart';
 export 'package:beauteavenue_api/src/api/salons_api.dart';
+export 'package:beauteavenue_api/src/api/search_api.dart';
 
 export 'package:beauteavenue_api/src/model/admin_audit_detail.dart';
 export 'package:beauteavenue_api/src/model/admin_audit_detail_related_links_inner.dart';
@@ -199,6 +200,19 @@ export 'package:beauteavenue_api/src/model/salon_detail_team_display.dart';
 export 'package:beauteavenue_api/src/model/salon_summary.dart';
 export 'package:beauteavenue_api/src/model/salon_summary_list_response.dart';
 export 'package:beauteavenue_api/src/model/salon_summary_list_response_items_inner.dart';
+export 'package:beauteavenue_api/src/model/search_events_request.dart';
+export 'package:beauteavenue_api/src/model/search_events_request_events_inner.dart';
+export 'package:beauteavenue_api/src/model/search_events_response.dart';
+export 'package:beauteavenue_api/src/model/search_salons_response.dart';
+export 'package:beauteavenue_api/src/model/search_salons_response_facets.dart';
+export 'package:beauteavenue_api/src/model/search_salons_response_facets_categories_inner.dart';
+export 'package:beauteavenue_api/src/model/search_salons_response_modules_inner.dart';
+export 'package:beauteavenue_api/src/model/search_salons_response_page_info.dart';
+export 'package:beauteavenue_api/src/model/search_salons_response_query.dart';
+export 'package:beauteavenue_api/src/model/search_suggestions_response.dart';
+export 'package:beauteavenue_api/src/model/search_suggestions_response_entity_hints_inner.dart';
+export 'package:beauteavenue_api/src/model/search_suggestions_response_suggestions_inner.dart';
+export 'package:beauteavenue_api/src/model/search_suggestions_response_top_matches_inner.dart';
 export 'package:beauteavenue_api/src/model/update_me_input.dart';
 export 'package:beauteavenue_api/src/model/updated_response.dart';
 

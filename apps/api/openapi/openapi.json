@@ -1635,6 +1635,677 @@
         ],
         "additionalProperties": false
       },
+      "SearchSuggestionsResponse": {
+        "type": "object",
+        "properties": {
+          "normalizedQuery": {
+            "type": "string"
+          },
+          "didYouMean": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "salon",
+                    "service",
+                    "category",
+                    "neighborhood",
+                    "city",
+                    "recent"
+                  ]
+                },
+                "salonId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "logoUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "subtitle": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "text",
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "entityHints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "category",
+                    "city",
+                    "neighborhood"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "type",
+                "value",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "topMatches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "logoUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "city": {
+                  "type": "string"
+                },
+                "neighborhood": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "averageRating": {
+                  "type": "number"
+                },
+                "latitude": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "longitude": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "subscriptionTier": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "premium"
+                  ]
+                },
+                "featured": {
+                  "type": "boolean"
+                },
+                "isPrestige": {
+                  "type": "boolean"
+                },
+                "prestigeScore": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "distanceKm": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "matchType": {
+                  "type": "string",
+                  "enum": [
+                    "exact",
+                    "prefix",
+                    "service",
+                    "fuzzy",
+                    "location"
+                  ]
+                },
+                "matchedService": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "isOpenNow": {
+                  "type": "boolean"
+                },
+                "minPriceXof": {
+                  "type": "number",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "category",
+                "logoUrl",
+                "city",
+                "neighborhood",
+                "averageRating",
+                "latitude",
+                "longitude",
+                "subscriptionTier",
+                "featured",
+                "isPrestige",
+                "prestigeScore",
+                "distanceKm"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "normalizedQuery",
+          "didYouMean",
+          "suggestions",
+          "entityHints",
+          "topMatches"
+        ],
+        "additionalProperties": false
+      },
+      "SearchSalonsResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "string"
+              },
+              "corrected": {
+                "type": "string",
+                "nullable": true
+              },
+              "interpretedEntities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "category",
+                        "city",
+                        "neighborhood"
+                      ]
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "value",
+                    "count"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "normalized",
+              "corrected",
+              "interpretedEntities"
+            ],
+            "additionalProperties": false
+          },
+          "facets": {
+            "type": "object",
+            "properties": {
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "count"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "cities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "count"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "neighborhoods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "count"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "priceRanges": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "count"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "openNowCount": {
+                "type": "integer"
+              },
+              "bookableSoonCount": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "categories",
+              "cities",
+              "neighborhoods",
+              "priceRanges",
+              "openNowCount",
+              "bookableSoonCount"
+            ],
+            "additionalProperties": false
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "logoUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "city": {
+                  "type": "string"
+                },
+                "neighborhood": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "averageRating": {
+                  "type": "number"
+                },
+                "latitude": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "longitude": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "subscriptionTier": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "premium"
+                  ]
+                },
+                "featured": {
+                  "type": "boolean"
+                },
+                "isPrestige": {
+                  "type": "boolean"
+                },
+                "prestigeScore": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "distanceKm": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "matchType": {
+                  "type": "string",
+                  "enum": [
+                    "exact",
+                    "prefix",
+                    "service",
+                    "fuzzy",
+                    "location"
+                  ]
+                },
+                "matchedService": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "isOpenNow": {
+                  "type": "boolean"
+                },
+                "minPriceXof": {
+                  "type": "number",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "category",
+                "logoUrl",
+                "city",
+                "neighborhood",
+                "averageRating",
+                "latitude",
+                "longitude",
+                "subscriptionTier",
+                "featured",
+                "isPrestige",
+                "prestigeScore",
+                "distanceKm"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "near_you",
+                    "bookable_now",
+                    "prestige_for_query",
+                    "trending_for_query",
+                    "continue_exploring"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "logoUrl": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "neighborhood": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "averageRating": {
+                        "type": "number"
+                      },
+                      "latitude": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "longitude": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "subscriptionTier": {
+                        "type": "string",
+                        "enum": [
+                          "standard",
+                          "premium"
+                        ]
+                      },
+                      "featured": {
+                        "type": "boolean"
+                      },
+                      "isPrestige": {
+                        "type": "boolean"
+                      },
+                      "prestigeScore": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "distanceKm": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "matchType": {
+                        "type": "string",
+                        "enum": [
+                          "exact",
+                          "prefix",
+                          "service",
+                          "fuzzy",
+                          "location"
+                        ]
+                      },
+                      "matchedService": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "isOpenNow": {
+                        "type": "boolean"
+                      },
+                      "minPriceXof": {
+                        "type": "number",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "category",
+                      "logoUrl",
+                      "city",
+                      "neighborhood",
+                      "averageRating",
+                      "latitude",
+                      "longitude",
+                      "subscriptionTier",
+                      "featured",
+                      "isPrestige",
+                      "prestigeScore",
+                      "distanceKm"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "title",
+                "items"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "pageInfo": {
+            "type": "object",
+            "properties": {
+              "nextCursor": {
+                "type": "string",
+                "nullable": true
+              },
+              "totalApprox": {
+                "type": "integer"
+              },
+              "hasMore": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "nextCursor",
+              "totalApprox",
+              "hasMore"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "query",
+          "facets",
+          "results",
+          "modules",
+          "pageInfo"
+        ],
+        "additionalProperties": false
+      },
+      "SearchEventsRequest": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionKey": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "eventType": {
+                  "type": "string",
+                  "enum": [
+                    "search_submitted",
+                    "suggestion_tapped",
+                    "filter_applied",
+                    "result_opened",
+                    "module_item_opened"
+                  ]
+                },
+                "query": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "salonId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "category": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "city": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "position": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": {},
+                  "nullable": true
+                }
+              },
+              "required": [
+                "sessionKey",
+                "eventType"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "events"
+        ],
+        "additionalProperties": false
+      },
+      "SearchEventsResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "additionalProperties": false
+      },
       "BookingCreateInput": {
         "type": "object",
         "properties": {
@@ -1748,6 +2419,10 @@
           "salonName": {
             "type": "string"
           },
+          "salonLogoUrl": {
+            "type": "string",
+            "nullable": true
+          },
           "serviceId": {
             "type": "string"
           },
@@ -1806,6 +2481,7 @@
           "id",
           "salonId",
           "salonName",
+          "salonLogoUrl",
           "serviceId",
           "serviceName",
           "startsAt",
@@ -1835,6 +2511,10 @@
                 },
                 "salonName": {
                   "type": "string"
+                },
+                "salonLogoUrl": {
+                  "type": "string",
+                  "nullable": true
                 },
                 "serviceId": {
                   "type": "string"
@@ -1894,6 +2574,7 @@
                 "id",
                 "salonId",
                 "salonName",
+                "salonLogoUrl",
                 "serviceId",
                 "serviceName",
                 "startsAt",
@@ -4918,11 +5599,23 @@
             "type": "string"
           },
           "redirectUrl": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "expiresAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "authorized",
+              "succeeded",
+              "failed",
+              "refunded"
+            ]
           }
         },
         "required": [
@@ -6350,6 +7043,8 @@
           "salons"
         ],
         "summary": "List salons",
+        "deprecated": true,
+        "description": "Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.",
         "parameters": [
           {
             "name": "city",
@@ -6579,6 +7274,232 @@
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/api/v1/search/suggestions": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Get search suggestions and autocomplete",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchSuggestionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/salons": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search salons with ranked results, facets, and discovery modules",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "neighborhood",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "openNow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "bookableSoon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "relevance",
+                "nearby",
+                "trending",
+                "prestige",
+                "price_asc",
+                "price_desc"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results with facets and modules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchSalonsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/events": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Track search interaction events for personalization",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchEventsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Events accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchEventsResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/bookings": {

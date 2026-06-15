@@ -11,5 +11,6 @@ export * from "./domain/pro.js";
 export * from "./domain/review.js";
 export * from "./domain/media.js";
 export * from "./domain/salon.js";
+export * from "./domain/search.js";
 export * from "./http/common.js";
 export * from "./openapi/spec.js";

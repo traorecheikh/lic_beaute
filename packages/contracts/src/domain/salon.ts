@@ -41,6 +41,10 @@ export const salonSummarySchema = z.object({
   distanceKm: z.number().nullable()
 });
 
+/**
+ * @deprecated Use searchSalonsQuerySchema with GET /api/v1/search/salons instead.
+ * This schema is kept for backward-compatible discovery feeds only.
+ */
 export const salonListQuerySchema = z.object({
   city: z.string().optional(),
   category: z.string().optional(),

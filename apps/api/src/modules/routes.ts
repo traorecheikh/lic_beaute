@@ -13,6 +13,7 @@ import { MediaController } from "./media/index.js";
 import { NotificationController } from "./notifications/index.js";
 import { PaymentController } from "./payments/index.js";
 import { ProController } from "./pro/index.js";
+import { SearchController } from "./search/index.js";
 
 export async function registerRoutes(app: FastifyInstance, databaseRuntime: DatabaseRuntime) {
   const auth = new AuthController();
@@ -25,6 +26,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   const notifications = new NotificationController();
   const media = new MediaController();
   const adminMedia = new AdminMediaController();
+  const search = new SearchController();
 
   // ── Health ────────────────────────────────────────────────────────────────
   app.get("/health", async () => {
@@ -64,6 +66,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/auth/staff-invite/redeem", authLimit, (req, rep) => auth.redeemStaffInvite(req, rep));
   app.post("/api/v1/auth/logout", (req, rep) => auth.logout(req, rep));
   app.post("/api/v1/auth/setup-account", authLimit, (req, rep) => auth.setupAccount(req, rep));
+  app.post("/api/v1/auth/forgot-password", authLimit, (req, rep) => auth.forgotPassword(req, rep));
   app.post("/api/v1/auth/reset-password", authLimit, (req, rep) => auth.resetPassword(req, rep));
   app.post("/api/v1/auth/magic-login", authLimit, (req, rep) => auth.magicLogin(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
@@ -97,6 +100,11 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.get("/api/v1/favorites", (req, rep) => catalog.listFavorites(req, rep));
   app.post("/api/v1/favorites/:salonId", (req, rep) => catalog.addFavorite(req, rep));
   app.delete("/api/v1/favorites/:salonId", (req, rep) => catalog.removeFavorite(req, rep));
+
+  // ── Search ────────────────────────────────────────────────────────────────
+  app.get("/api/v1/search/suggestions", (req, rep) => search.suggestions(req, rep));
+  app.get("/api/v1/search/salons", (req, rep) => search.search(req, rep));
+  app.post("/api/v1/search/events", (req, rep) => search.trackEvents(req, rep));
 
   // ── Bookings ──────────────────────────────────────────────────────────────
   app.get("/api/v1/bookings", (req, rep) => bookings.list(req, rep));
@@ -222,4 +230,10 @@ app.post("/api/v1/pro/subscription/retain", (req, rep) => pro.retainSubscription
   app.get("/api/v1/admin/config/documents", (req, rep) => admin.listDocuments(req, rep));
   app.post("/api/v1/admin/config/documents", (req, rep) => admin.upsertDocument(req, rep));
   app.delete("/api/v1/admin/config/documents/:id", (req, rep) => admin.deleteDocument(req, rep));
+
+  // ── Admin Salon Services ──────────────────────────────────────────────────
+  app.get("/api/v1/admin/salons/:salonId/services", (req, rep) => admin.listSalonServices(req, rep));
+  app.post("/api/v1/admin/salons/:salonId/services", (req, rep) => admin.createSalonService(req, rep));
+  app.patch("/api/v1/admin/salons/:salonId/services/:serviceId", (req, rep) => admin.updateSalonService(req, rep));
+  app.delete("/api/v1/admin/salons/:salonId/services/:serviceId", (req, rep) => admin.deleteSalonService(req, rep));
 }

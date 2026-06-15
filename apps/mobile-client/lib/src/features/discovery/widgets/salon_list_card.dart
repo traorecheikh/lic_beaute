@@ -58,6 +58,8 @@ class SalonListCard extends StatelessWidget {
                       imageUrl: displayImageUrl,
                       width: h,
                       height: h,
+                      memCacheWidth: (h * 2).toInt(),
+                      memCacheHeight: (h * 2).toInt(),
                       fit: BoxFit.cover,
                     )
                   : Container(
@@ -127,29 +129,34 @@ class SalonListCard extends StatelessWidget {
 String? _salonName(Object? salon) => switch (salon) {
   SalonSummary s => s.name,
   SalonSummaryListResponseItemsInner s => s.name,
+  SearchSuggestionsResponseTopMatchesInner s => s.name,
   _ => null,
 };
 
 String? _salonCategory(Object? salon) => switch (salon) {
   SalonSummary s => s.category,
   SalonSummaryListResponseItemsInner s => s.category,
+  SearchSuggestionsResponseTopMatchesInner s => s.category,
   _ => null,
 };
 
 String? _salonCity(Object? salon) => switch (salon) {
   SalonSummary s => s.city,
   SalonSummaryListResponseItemsInner s => s.city,
+  SearchSuggestionsResponseTopMatchesInner s => s.city,
   _ => null,
 };
 
 String? _salonRating(Object? salon) => switch (salon) {
   SalonSummary s => s.averageRating.toStringAsFixed(1),
   SalonSummaryListResponseItemsInner s => s.averageRating.toStringAsFixed(1),
+  SearchSuggestionsResponseTopMatchesInner s => s.averageRating.toStringAsFixed(1),
   _ => null,
 };
 
 String? _salonLogoUrl(Object? salon) => switch (salon) {
   SalonSummary s => s.logoUrl,
   SalonSummaryListResponseItemsInner s => s.logoUrl,
+  SearchSuggestionsResponseTopMatchesInner s => s.logoUrl,
   _ => null,
 };

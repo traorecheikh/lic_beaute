@@ -182,6 +182,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PaymentInitiateInputChannelEnum.serializer)
       ..add(PaymentInitiateInputProviderEnum.serializer)
       ..add(PaymentInitiateResponse.serializer)
+      ..add(PaymentInitiateResponseStatusEnum.serializer)
       ..add(PaymentReconcileResponse.serializer)
       ..add(PaymentReconcileResponseProviderEnum.serializer)
       ..add(PaymentReconcileResponseStatusEnum.serializer)
@@ -292,6 +293,26 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SalonSummaryListResponseItemsInner.serializer)
       ..add(SalonSummaryListResponseItemsInnerSubscriptionTierEnum.serializer)
       ..add(SalonSummarySubscriptionTierEnum.serializer)
+      ..add(SearchEventsRequest.serializer)
+      ..add(SearchEventsRequestEventsInner.serializer)
+      ..add(SearchEventsRequestEventsInnerEventTypeEnum.serializer)
+      ..add(SearchEventsResponse.serializer)
+      ..add(SearchSalonsResponse.serializer)
+      ..add(SearchSalonsResponseFacets.serializer)
+      ..add(SearchSalonsResponseFacetsCategoriesInner.serializer)
+      ..add(SearchSalonsResponseModulesInner.serializer)
+      ..add(SearchSalonsResponseModulesInnerTypeEnum.serializer)
+      ..add(SearchSalonsResponsePageInfo.serializer)
+      ..add(SearchSalonsResponseQuery.serializer)
+      ..add(SearchSuggestionsResponse.serializer)
+      ..add(SearchSuggestionsResponseEntityHintsInner.serializer)
+      ..add(SearchSuggestionsResponseEntityHintsInnerTypeEnum.serializer)
+      ..add(SearchSuggestionsResponseSuggestionsInner.serializer)
+      ..add(SearchSuggestionsResponseSuggestionsInnerTypeEnum.serializer)
+      ..add(SearchSuggestionsResponseTopMatchesInner.serializer)
+      ..add(SearchSuggestionsResponseTopMatchesInnerMatchTypeEnum.serializer)
+      ..add(SearchSuggestionsResponseTopMatchesInnerSubscriptionTierEnum
+          .serializer)
       ..add(UpdateMeInput.serializer)
       ..add(UpdateMeInputPreferredContactChannelEnum.serializer)
       ..add(UpdateMeInputPreferredLanguageEnum.serializer)
@@ -437,6 +458,61 @@ Serializers _$serializers = (Serializers().toBuilder()
               const [const FullType(SalonSummaryListResponseItemsInner)]),
           () => ListBuilder<SalonSummaryListResponseItemsInner>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SearchEventsRequestEventsInner)]),
+          () => ListBuilder<SearchEventsRequestEventsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSalonsResponseFacetsCategoriesInner)
+          ]),
+          () => ListBuilder<SearchSalonsResponseFacetsCategoriesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSalonsResponseFacetsCategoriesInner)
+          ]),
+          () => ListBuilder<SearchSalonsResponseFacetsCategoriesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSalonsResponseFacetsCategoriesInner)
+          ]),
+          () => ListBuilder<SearchSalonsResponseFacetsCategoriesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSalonsResponseFacetsCategoriesInner)
+          ]),
+          () => ListBuilder<SearchSalonsResponseFacetsCategoriesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSuggestionsResponseEntityHintsInner)
+          ]),
+          () => ListBuilder<SearchSuggestionsResponseEntityHintsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSuggestionsResponseSuggestionsInner)
+          ]),
+          () => ListBuilder<SearchSuggestionsResponseSuggestionsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [
+            const FullType(SearchSuggestionsResponseEntityHintsInner)
+          ]),
+          () => ListBuilder<SearchSuggestionsResponseEntityHintsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SearchSuggestionsResponseTopMatchesInner)]),
+          () => ListBuilder<SearchSuggestionsResponseTopMatchesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SearchSuggestionsResponseTopMatchesInner)]),
+          () => ListBuilder<SearchSuggestionsResponseTopMatchesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SearchSuggestionsResponseTopMatchesInner)]),
+          () => ListBuilder<SearchSuggestionsResponseTopMatchesInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SearchSalonsResponseModulesInner)]),
+          () => ListBuilder<SearchSalonsResponseModulesInner>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
       ..addBuilderFactory(
@@ -522,6 +598,12 @@ Serializers _$serializers = (Serializers().toBuilder()
             const FullType(ApiV1AdminSalonsPost201ResponseDocumentsInner)
           ]),
           () => ListBuilder<ApiV1AdminSalonsPost201ResponseDocumentsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltMap, const [
+            const FullType(String),
+            const FullType.nullable(JsonObject)
+          ]),
+          () => MapBuilder<String, JsonObject?>())
       ..addBuilderFactory(
           const FullType(BuiltMap, const [
             const FullType(String),

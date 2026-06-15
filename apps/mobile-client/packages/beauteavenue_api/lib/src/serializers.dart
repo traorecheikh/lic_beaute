@@ -190,6 +190,19 @@ import 'package:beauteavenue_api/src/model/salon_detail_team_display.dart';
 import 'package:beauteavenue_api/src/model/salon_summary.dart';
 import 'package:beauteavenue_api/src/model/salon_summary_list_response.dart';
 import 'package:beauteavenue_api/src/model/salon_summary_list_response_items_inner.dart';
+import 'package:beauteavenue_api/src/model/search_events_request.dart';
+import 'package:beauteavenue_api/src/model/search_events_request_events_inner.dart';
+import 'package:beauteavenue_api/src/model/search_events_response.dart';
+import 'package:beauteavenue_api/src/model/search_salons_response.dart';
+import 'package:beauteavenue_api/src/model/search_salons_response_facets.dart';
+import 'package:beauteavenue_api/src/model/search_salons_response_facets_categories_inner.dart';
+import 'package:beauteavenue_api/src/model/search_salons_response_modules_inner.dart';
+import 'package:beauteavenue_api/src/model/search_salons_response_page_info.dart';
+import 'package:beauteavenue_api/src/model/search_salons_response_query.dart';
+import 'package:beauteavenue_api/src/model/search_suggestions_response.dart';
+import 'package:beauteavenue_api/src/model/search_suggestions_response_entity_hints_inner.dart';
+import 'package:beauteavenue_api/src/model/search_suggestions_response_suggestions_inner.dart';
+import 'package:beauteavenue_api/src/model/search_suggestions_response_top_matches_inner.dart';
 import 'package:beauteavenue_api/src/model/update_me_input.dart';
 import 'package:beauteavenue_api/src/model/updated_response.dart';
 
@@ -372,6 +385,19 @@ part 'serializers.g.dart';
   SalonSummary,
   SalonSummaryListResponse,
   SalonSummaryListResponseItemsInner,
+  SearchEventsRequest,
+  SearchEventsRequestEventsInner,
+  SearchEventsResponse,
+  SearchSalonsResponse,
+  SearchSalonsResponseFacets,
+  SearchSalonsResponseFacetsCategoriesInner,
+  SearchSalonsResponseModulesInner,
+  SearchSalonsResponsePageInfo,
+  SearchSalonsResponseQuery,
+  SearchSuggestionsResponse,
+  SearchSuggestionsResponseEntityHintsInner,
+  SearchSuggestionsResponseSuggestionsInner,
+  SearchSuggestionsResponseTopMatchesInner,
   UpdateMeInput,
   UpdatedResponse,
 ])

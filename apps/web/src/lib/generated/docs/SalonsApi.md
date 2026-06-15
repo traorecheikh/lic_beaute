@@ -15,6 +15,8 @@ All URIs are relative to *http://localhost:3000*
 
 List salons
 
+Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.
+
 ### Example
 
 ```ts

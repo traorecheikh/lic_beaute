@@ -22,6 +22,7 @@ dependencies:
   # HTTP
   dio: ^5.7.0
   pretty_dio_logger: ^1.4.0
+  built_collection: ^5.1.1
 
   # Responsive design (.r .sp .w .h)
   flutter_screenutil: ^5.9.3
@@ -118,6 +119,12 @@ patrol:
     package_name: sn.lic.beauteavenu
   ios:
     bundle_id: sn.lic.beauteavenu
+
+flutter_launcher_icons:
+  image_path: "assets/logo.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

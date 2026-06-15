@@ -22,7 +22,7 @@ class SalonsApi {
   const SalonsApi(this._dio, this._serializers);
 
   /// List salons
-  /// 
+  /// Deprecated. Use GET /api/v1/search/salons for search, and the sort-specific feed endpoints for discovery. This endpoint is kept for backward compatibility with non-search catalog feeds only.
   ///
   /// Parameters:
   /// * [city] 
@@ -42,6 +42,7 @@ class SalonsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [SalonSummaryListResponse] as data
   /// Throws [DioException] if API call or serialization fails
+  @Deprecated('This operation has been deprecated')
   Future<Response<SalonSummaryListResponse>> apiV1SalonsGet({ 
     String? city,
     String? category,
