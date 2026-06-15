@@ -1,43 +1,331 @@
-function escapePdfText(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+
+const PAGE = {
+  width: 595.28,
+  height: 841.89,
+  marginX: 40,
+  marginTop: 48,
+  marginBottom: 52
+};
+
+const COLORS = {
+  ink: rgb(0.16, 0.13, 0.11),
+  muted: rgb(0.45, 0.39, 0.35),
+  line: rgb(0.86, 0.82, 0.78),
+  panel: rgb(0.98, 0.97, 0.95),
+  header: rgb(0.95, 0.92, 0.88),
+  accent: rgb(0.72, 0.52, 0.30),
+  success: rgb(0.17, 0.44, 0.29)
+};
+
+type PdfContext = {
+  doc: PDFDocument;
+  page: PDFPage;
+  font: PDFFont;
+  fontBold: PDFFont;
+  cursorY: number;
+};
+
+function normalizePdfText(text: string) {
+  return text
+    .replace(/[\u202f\u00a0]/g, " ")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, "\"")
+    .replace(/[–—]/g, "-")
+    .replace(/…/g, "...");
 }
 
-function buildPdf(content: string): Buffer {
-  const objects = [
-    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n",
-    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n",
-    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >> endobj\n",
-    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n",
-    "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj\n",
-    `6 0 obj << /Length ${Buffer.byteLength(content, "utf8")} >> stream\n${content}\nendstream\nendobj\n`
-  ];
+function widthOf(font: PDFFont, text: string, size: number) {
+  return font.widthOfTextAtSize(normalizePdfText(text), size);
+}
 
-  let pdf = "%PDF-1.4\n";
-  const offsets = [0];
-  for (const object of objects) {
-    offsets.push(Buffer.byteLength(pdf, "utf8"));
-    pdf += object;
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
+  const normalized = normalizePdfText(text).replace(/\s+/g, " ").trim();
+  if (!normalized) return [""];
+
+  const words = normalized.split(" ");
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (widthOf(font, candidate, size) <= maxWidth) {
+      current = candidate;
+      continue;
+    }
+
+    if (current) lines.push(current);
+    current = word;
   }
 
-  const xrefStart = Buffer.byteLength(pdf, "utf8");
-  const xref = [
-    `xref\n0 ${objects.length + 1}`,
-    "0000000000 65535 f ",
-    ...offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n `)
-  ].join("\n");
-
-  const trailer = [
-    "trailer",
-    `<< /Size ${objects.length + 1} /Root 1 0 R >>`,
-    "startxref",
-    String(xrefStart),
-    "%%EOF"
-  ].join("\n");
-
-  return Buffer.from(`${pdf}${xref}\n${trailer}\n`, "utf8");
+  if (current) lines.push(current);
+  return lines;
 }
 
-export function buildBookingConfirmationPdf(input: {
+function drawTextBlock(
+  ctx: PdfContext,
+  text: string,
+  options: {
+    x?: number;
+    size?: number;
+    maxWidth?: number;
+    lineHeight?: number;
+    color?: ReturnType<typeof rgb>;
+    bold?: boolean;
+  } = {}
+) {
+  const x = options.x ?? PAGE.marginX;
+  const size = options.size ?? 11;
+  const font = options.bold ? ctx.fontBold : ctx.font;
+  const maxWidth = options.maxWidth ?? PAGE.width - PAGE.marginX * 2;
+  const lineHeight = options.lineHeight ?? size + 4;
+  const lines = wrapText(text, font, size, maxWidth);
+
+  for (const line of lines) {
+    ctx.page.drawText(normalizePdfText(line), {
+      x,
+      y: ctx.cursorY,
+      size,
+      font,
+      color: options.color ?? COLORS.ink
+    });
+    ctx.cursorY -= lineHeight;
+  }
+}
+
+function drawLabelValue(
+  ctx: PdfContext,
+  label: string,
+  value: string,
+  options: { valueColor?: ReturnType<typeof rgb> } = {}
+) {
+  const size = 10;
+  const labelWidth = widthOf(ctx.fontBold, label, size);
+  const x = PAGE.marginX;
+  ctx.page.drawText(normalizePdfText(label), { x, y: ctx.cursorY, size, font: ctx.fontBold, color: COLORS.muted });
+  ctx.page.drawText(normalizePdfText(value), {
+    x: x + labelWidth + 6,
+    y: ctx.cursorY,
+    size,
+    font: ctx.font,
+    color: options.valueColor ?? COLORS.ink
+  });
+  ctx.cursorY -= 16;
+}
+
+function drawSectionTitle(ctx: PdfContext, title: string) {
+  ctx.page.drawText(normalizePdfText(title), {
+    x: PAGE.marginX,
+    y: ctx.cursorY,
+    size: 12,
+    font: ctx.fontBold,
+    color: COLORS.ink
+  });
+  ctx.cursorY -= 18;
+}
+
+function drawHeader(ctx: PdfContext, title: string, subtitle: string, topRight: string[]) {
+  const headerHeight = 104;
+  const headerTop = PAGE.height - PAGE.marginTop;
+  const headerBottom = headerTop - headerHeight;
+  const width = PAGE.width - PAGE.marginX * 2;
+
+  ctx.page.drawRectangle({
+    x: PAGE.marginX,
+    y: headerBottom,
+    width,
+    height: headerHeight,
+    color: COLORS.header
+  });
+
+  ctx.page.drawRectangle({
+    x: PAGE.marginX,
+    y: headerBottom,
+    width: 8,
+    height: headerHeight,
+    color: COLORS.accent
+  });
+
+  ctx.page.drawText("Beauté Avenue", {
+    x: PAGE.marginX + 18,
+    y: headerTop - 34,
+    size: 22,
+    font: ctx.fontBold,
+    color: COLORS.ink
+  });
+  ctx.page.drawText(normalizePdfText(title), {
+    x: PAGE.marginX + 18,
+    y: headerTop - 56,
+    size: 13,
+    font: ctx.font,
+    color: COLORS.muted
+  });
+  ctx.page.drawText(normalizePdfText(subtitle), {
+    x: PAGE.marginX + 18,
+    y: headerTop - 76,
+    size: 10,
+    font: ctx.font,
+    color: COLORS.muted
+  });
+
+  let rightY = headerTop - 30;
+  for (const line of topRight) {
+    const textWidth = widthOf(ctx.font, line, 10);
+    ctx.page.drawText(normalizePdfText(line), {
+      x: PAGE.marginX + width - 18 - textWidth,
+      y: rightY,
+      size: 10,
+      font: ctx.font,
+      color: COLORS.ink
+    });
+    rightY -= 16;
+  }
+
+  ctx.cursorY = headerBottom - 30;
+}
+
+function drawInfoPanel(ctx: PdfContext, rows: Array<{ label: string; value: string; valueColor?: ReturnType<typeof rgb> }>) {
+  const lineHeight = 16;
+  const panelHeight = 22 + rows.length * lineHeight;
+  const topY = ctx.cursorY;
+  const bottomY = topY - panelHeight;
+
+  ctx.page.drawRectangle({
+    x: PAGE.marginX,
+    y: bottomY,
+    width: PAGE.width - PAGE.marginX * 2,
+    height: panelHeight,
+    color: COLORS.panel
+  });
+
+  ctx.cursorY = topY - 18;
+  for (const row of rows) {
+    drawLabelValue(ctx, row.label, row.value, { valueColor: row.valueColor });
+  }
+  ctx.cursorY = bottomY - 24;
+}
+
+function drawAmountTable(
+  ctx: PdfContext,
+  rows: Array<{ label: string; amount: string }>,
+  totalLabel: string,
+  totalAmount: string
+) {
+  const tableWidth = PAGE.width - PAGE.marginX * 2;
+  const headerHeight = 24;
+  const rowHeight = 28;
+  const totalHeight = 32;
+  const topY = ctx.cursorY;
+  const headerBottom = topY - headerHeight;
+  const rowsBottom = headerBottom - rows.length * rowHeight;
+  const tableBottom = rowsBottom - totalHeight;
+
+  ctx.page.drawRectangle({
+    x: PAGE.marginX,
+    y: headerBottom,
+    width: tableWidth,
+    height: headerHeight,
+    color: COLORS.panel
+  });
+
+  ctx.page.drawLine({
+    start: { x: PAGE.marginX, y: headerBottom },
+    end: { x: PAGE.marginX + tableWidth, y: headerBottom },
+    thickness: 1,
+    color: COLORS.line
+  });
+
+  ctx.page.drawText("Libellé", {
+    x: PAGE.marginX + 16,
+    y: topY - 16,
+    size: 10,
+    font: ctx.fontBold,
+    color: COLORS.muted
+  });
+  ctx.page.drawText("Montant", {
+    x: PAGE.marginX + tableWidth - 74,
+    y: topY - 16,
+    size: 10,
+    font: ctx.fontBold,
+    color: COLORS.muted
+  });
+
+  rows.forEach((row, index) => {
+    const rowTop = headerBottom - index * rowHeight;
+    const rowY = rowTop - 18;
+    const amountWidth = widthOf(ctx.fontBold, row.amount, 11);
+
+    ctx.page.drawText(normalizePdfText(row.label), {
+      x: PAGE.marginX + 16,
+      y: rowY,
+      size: 11,
+      font: ctx.font,
+      color: COLORS.ink
+    });
+    ctx.page.drawText(normalizePdfText(row.amount), {
+      x: PAGE.marginX + tableWidth - 16 - amountWidth,
+      y: rowY,
+      size: 11,
+      font: ctx.fontBold,
+      color: COLORS.ink
+    });
+
+    ctx.page.drawLine({
+      start: { x: PAGE.marginX, y: rowTop - rowHeight },
+      end: { x: PAGE.marginX + tableWidth, y: rowTop - rowHeight },
+      thickness: 1,
+      color: COLORS.line
+    });
+  });
+
+  const totalAmountWidth = widthOf(ctx.fontBold, totalAmount, 12);
+  ctx.page.drawText(normalizePdfText(totalLabel), {
+    x: PAGE.marginX + 16,
+    y: rowsBottom - 20,
+    size: 12,
+    font: ctx.fontBold,
+    color: COLORS.ink
+  });
+  ctx.page.drawText(normalizePdfText(totalAmount), {
+    x: PAGE.marginX + tableWidth - 16 - totalAmountWidth,
+    y: rowsBottom - 20,
+    size: 12,
+    font: ctx.fontBold,
+    color: COLORS.ink
+  });
+
+  ctx.cursorY = tableBottom - 28;
+}
+
+function drawFooter(ctx: PdfContext, lines: string[]) {
+  let footerY = PAGE.marginBottom;
+  for (const line of lines.reverse()) {
+    ctx.page.drawText(normalizePdfText(line), {
+      x: PAGE.marginX,
+      y: footerY,
+      size: 9,
+      font: ctx.font,
+      color: COLORS.muted
+    });
+    footerY += 14;
+  }
+}
+
+async function createPdf(): Promise<PdfContext> {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const page = doc.addPage([PAGE.width, PAGE.height]);
+  return {
+    doc,
+    page,
+    font,
+    fontBold,
+    cursorY: PAGE.height - PAGE.marginTop
+  };
+}
+
+export async function buildBookingConfirmationPdf(input: {
   salonName: string;
   serviceName: string;
   clientName: string;
@@ -47,275 +335,82 @@ export function buildBookingConfirmationPdf(input: {
   totalAmountXof: number;
   bookingId: string;
   status: string;
-}): Buffer {
-  const content = [
-    // Header background bar
-    "0.95 0.89 0.84 rg",
-    "40 770 515 48 re",
-    "f",
-    // Brand
-    "BT",
-    "/F2 20 Tf",
-    "52 795 Td",
-    "(Beaut\\351 Avenue) Tj",
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 781 Td",
-    "(Confirmation de r\\351servation) Tj",
-    "ET",
-    // Booking metadata
-    "BT",
-    "/F1 10 Tf",
-    "370 796 Td",
-    `(${escapePdfText(`R\\351servation N° ${input.bookingId.slice(0, 12)}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "370 782 Td",
-    `(${escapePdfText(`Statut: ${input.status}`)}) Tj`,
-    "ET",
-    // Salon section
-    "BT",
-    "/F2 12 Tf",
-    "52 736 Td",
-    "(D\\351tails de la r\\351servation) Tj",
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 720 Td",
-    `(${escapePdfText(`Salon: ${input.salonName}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 706 Td",
-    `(${escapePdfText(`Service: ${input.serviceName}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 692 Td",
-    `(${escapePdfText(`Client: ${input.clientName}`)}) Tj`,
-    "ET",
-    // Date section
-    "BT",
-    "/F2 12 Tf",
-    "52 662 Td",
-    "(Horaires) Tj",
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 646 Td",
-    `(${escapePdfText(`D\\351but: ${input.startsAt}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 632 Td",
-    `(${escapePdfText(`Fin: ${input.endsAt}`)}) Tj`,
-    "ET",
-    // Table header
-    "0.93 0.92 0.90 rg",
-    "40 598 515 26 re",
-    "f",
-    "BT",
-    "/F2 10 Tf",
-    "56 606 Td",
-    "(Libell\\351) Tj",
-    "ET",
-    "BT",
-    "/F2 10 Tf",
-    "485 606 Td",
-    "(Montant) Tj",
-    "ET",
-    // Grid lines
-    "0.82 0.80 0.76 RG",
-    "1 w",
-    "40 598 m 555 598 l S",
-    "40 572 m 555 572 l S",
-    // Line items
-    "BT",
-    "/F1 11 Tf",
-    "56 580 Td",
-    `(${escapePdfText(input.serviceName)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 11 Tf",
-    "485 580 Td",
-    `(${escapePdfText(`${input.totalAmountXof.toLocaleString("fr-FR")} FCFA`)}) Tj`,
-    "ET",
-    // Deposit line
-    input.depositAmountXof > 0 ? [
-      "BT",
-      "/F1 11 Tf",
-      "56 554 Td",
-      "(Acompte vers\\351) Tj",
-      "ET",
-      "BT",
-      "/F1 11 Tf",
-      "485 554 Td",
-      `(${escapePdfText(`${input.depositAmountXof.toLocaleString("fr-FR")} FCFA`)}) Tj`,
-      "ET",
-      "BT",
-      "/F2 12 Tf",
-      "56 528 Td",
-      "(Reste \\340 payer) Tj",
-      "ET",
-      "BT",
-      "/F2 12 Tf",
-      "450 528 Td",
-      `(${escapePdfText(`${(input.totalAmountXof - input.depositAmountXof).toLocaleString("fr-FR")} FCFA`)}) Tj`,
-      "ET"
-    ].join("\n") : [
-      "BT",
-      "/F2 12 Tf",
-      "56 554 Td",
-      "(Total TTC) Tj",
-      "ET",
-      "BT",
-      "/F2 12 Tf",
-      "450 554 Td",
-      `(${escapePdfText(`${input.totalAmountXof.toLocaleString("fr-FR")} FCFA`)}) Tj`,
-      "ET"
-    ].join("\n"),
-    // Footer
-    "BT",
-    "/F1 9 Tf",
-    "52 100 Td",
-    "(Merci pour votre confiance. Ce document sert de justificatif.) Tj",
-    "ET",
-    "BT",
-    "/F1 9 Tf",
-    "52 86 Td",
-    "(support@beauteavenue.com  |  +221 33 800 12 34) Tj",
-    "ET"
-  ].join("\n");
+}): Promise<Buffer> {
+  const ctx = await createPdf();
+  drawHeader(ctx, "Confirmation de réservation", "Document client", [
+    `Référence ${input.bookingId.slice(0, 12)}`,
+    `Statut ${input.status}`
+  ]);
 
-  return buildPdf(content);
+  drawInfoPanel(ctx, [
+    { label: "Salon", value: input.salonName },
+    { label: "Service", value: input.serviceName },
+    { label: "Client", value: input.clientName },
+    { label: "Début", value: input.startsAt },
+    { label: "Fin", value: input.endsAt }
+  ]);
+
+  drawSectionTitle(ctx, "Montants");
+  const rows = [
+    { label: input.serviceName, amount: `${input.totalAmountXof.toLocaleString("fr-FR")} FCFA` }
+  ];
+  if (input.depositAmountXof > 0) {
+    rows.push({ label: "Acompte déjà réglé", amount: `${input.depositAmountXof.toLocaleString("fr-FR")} FCFA` });
+  }
+
+  drawAmountTable(
+    ctx,
+    rows,
+    input.depositAmountXof > 0 ? "Reste à régler" : "Total TTC",
+    `${(input.depositAmountXof > 0 ? input.totalAmountXof - input.depositAmountXof : input.totalAmountXof).toLocaleString("fr-FR")} FCFA`
+  );
+
+  drawTextBlock(ctx, "Présentez ce document au salon si une confirmation vous est demandée.", {
+    size: 10,
+    color: COLORS.muted
+  });
+  drawFooter(ctx, [
+    "Service client : support@beauteavenue.com | +221 33 800 12 34",
+    "Merci pour votre confiance."
+  ]);
+
+  return Buffer.from(await ctx.doc.save());
 }
 
-export function buildInvoicePdf(input: {
+export async function buildInvoicePdf(input: {
   invoiceNumber: string;
   issuedAt: string;
   status: string;
   amountLabel: string;
   billingProvider: string;
   salonName: string;
-}): Buffer {
-  const rows = [
-    { label: "Abonnement mensuel", amount: input.amountLabel }
-  ];
-  const lineItems = rows
-    .map((row, index) => ({
-      y: 642 - index * 26,
-      ...row
-    }))
-    .map((row) => [
-      "BT",
-      `/F1 11 Tf`,
-      `56 ${row.y} Td`,
-      `(${escapePdfText(row.label)}) Tj`,
-      "ET",
-      "BT",
-      `/F1 11 Tf`,
-      `485 ${row.y} Td`,
-      `(${escapePdfText(row.amount)} FCFA) Tj`,
-      "ET"
-    ].join("\n"))
-    .join("\n");
+}): Promise<Buffer> {
+  const ctx = await createPdf();
+  drawHeader(ctx, "Facture d'abonnement", "Document de facturation", [
+    `Facture ${input.invoiceNumber}`,
+    `Émise le ${input.issuedAt}`,
+    `Statut ${input.status}`
+  ]);
 
-  const content = [
-    // Header background bar
-    "0.95 0.93 0.89 rg",
-    "40 770 515 48 re",
-    "f",
-    // Brand
-    "BT",
-    "/F2 20 Tf",
-    "52 795 Td",
-    "(Beaut\\351 Avenue) Tj",
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 781 Td",
-    "(Facture d\\'abonnement) Tj",
-    "ET",
-    // Invoice metadata
-    "BT",
-    "/F1 10 Tf",
-    "370 796 Td",
-    `(${escapePdfText(`N° ${input.invoiceNumber}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "370 782 Td",
-    `(${escapePdfText(`Date ${input.issuedAt}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "370 768 Td",
-    `(${escapePdfText(`Statut ${input.status}`)}) Tj`,
-    "ET",
-    // Billing section label
-    "BT",
-    "/F2 12 Tf",
-    "52 736 Td",
-    "(D\\351tails de facturation) Tj",
-    "ET",
-    // Detail text
-    "BT",
-    "/F1 10 Tf",
-    "52 720 Td",
-    `(${escapePdfText(`Salon: ${input.salonName}`)}) Tj`,
-    "ET",
-    "BT",
-    "/F1 10 Tf",
-    "52 706 Td",
-    `(${escapePdfText(`Mode de r\\350glement: ${input.billingProvider}`)}) Tj`,
-    "ET",
-    // Table header
-    "0.93 0.92 0.90 rg",
-    "40 668 515 26 re",
-    "f",
-    "BT",
-    "/F2 10 Tf",
-    "56 676 Td",
-    "(Libell\\351) Tj",
-    "ET",
-    "BT",
-    "/F2 10 Tf",
-    "485 676 Td",
-    "(Montant) Tj",
-    "ET",
-    // Row grid lines
-    "0.82 0.80 0.76 RG",
-    "1 w",
-    "40 668 m 555 668 l S",
-    "40 638 m 555 638 l S",
-    "40 612 m 555 612 l S",
-    // Line items
-    lineItems,
-    // Total
-    "BT",
-    "/F2 12 Tf",
-    "56 586 Td",
-    "(Total TTC) Tj",
-    "ET",
-    "BT",
-    "/F2 12 Tf",
-    `450 586 Td`,
-    `(${escapePdfText(`${input.amountLabel} FCFA`)}) Tj`,
-    "ET",
-    // Footer
-    "BT",
-    "/F1 9 Tf",
-    "52 100 Td",
-    "(Merci pour votre confiance.) Tj",
-    "ET",
-    "BT",
-    "/F1 9 Tf",
-    "52 86 Td",
-    "(support@beauteavenue.com  |  +221 33 800 12 34) Tj",
-    "ET"
-  ].join("\n");
+  drawInfoPanel(ctx, [
+    { label: "Salon", value: input.salonName },
+    { label: "Mode de paiement", value: input.billingProvider },
+    { label: "Montant", value: `${input.amountLabel} FCFA`, valueColor: COLORS.success }
+  ]);
 
-  return buildPdf(content);
+  drawSectionTitle(ctx, "Détail");
+  drawAmountTable(ctx, [
+    { label: "Abonnement mensuel Beauté Avenue", amount: `${input.amountLabel} FCFA` }
+  ], "Total à payer", `${input.amountLabel} FCFA`);
+
+  drawTextBlock(ctx, "Cette facture confirme votre abonnement et peut être conservée comme justificatif comptable.", {
+    size: 10,
+    color: COLORS.muted
+  });
+  drawFooter(ctx, [
+    "Service client : support@beauteavenue.com | +221 33 800 12 34",
+    "Merci pour votre confiance."
+  ]);
+
+  return Buffer.from(await ctx.doc.save());
 }

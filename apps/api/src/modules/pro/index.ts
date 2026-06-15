@@ -1107,22 +1107,30 @@ export class ProController {
         where.startsAt = { gte: d, lt: next };
       }
 
-      const bookings = await prisma.booking.findMany({
-        where,
-        include: { client: { select: { fullName: true, phone: true } }, service: { select: { name: true } }, employee: { select: { displayName: true } }, payments: { take: 1, orderBy: { createdAt: "desc" } } },
-        orderBy: [{ status: "asc" }, { startsAt: "asc" }],
-        take: pageSize,
-        skip: page * pageSize
-      });
+      const [total, bookings] = await Promise.all([
+        prisma.booking.count({ where }),
+        prisma.booking.findMany({
+          where,
+          include: { client: { select: { fullName: true, phone: true } }, service: { select: { name: true } }, employee: { select: { displayName: true } }, payments: { take: 1, orderBy: { createdAt: "desc" } } },
+          orderBy: [{ status: "asc" }, { startsAt: "asc" }],
+          take: pageSize,
+          skip: page * pageSize
+        })
+      ]);
 
-      ok(reply, bookings.map((b) => ({
-        id: b.id, salonId: b.salonId, serviceId: b.serviceId, serviceName: b.service.name,
-        employeeId: b.employeeId, employeeName: b.employee?.displayName ?? null,
-        clientId: b.clientId, clientName: b.client?.fullName ?? null, clientPhone: b.client?.phone ?? null,
-        startsAt: b.startsAt.toISOString(), endsAt: b.endsAt.toISOString(),
-        status: b.status, source: b.source, depositAmountXof: b.depositAmountXof,
-        createdAt: b.createdAt.toISOString()
-      })));
+      ok(reply, {
+        items: bookings.map((b) => ({
+          id: b.id, salonId: b.salonId, serviceId: b.serviceId, serviceName: b.service.name,
+          employeeId: b.employeeId, employeeName: b.employee?.displayName ?? null,
+          clientId: b.clientId, clientName: b.client?.fullName ?? null, clientPhone: b.client?.phone ?? null,
+          startsAt: b.startsAt.toISOString(), endsAt: b.endsAt.toISOString(),
+          status: b.status, source: b.source, depositAmountXof: b.depositAmountXof,
+          createdAt: b.createdAt.toISOString()
+        })),
+        total,
+        page,
+        pageSize
+      });
     } catch (e) { handleError(e, reply); }
   }
 
@@ -1391,8 +1399,10 @@ export class ProController {
   async listClients(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId } = await ensurePro(request);
-      const query = request.query as { search?: string };
+      const query = request.query as { search?: string; page?: string; pageSize?: string };
       const search = query.search?.trim();
+      const page = Math.max(0, parseInt(query.page ?? "0", 10));
+      const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize ?? "20", 10)));
 
       const userWhere: Prisma.UserWhereInput = {
         bookings: { some: { salonId } }
@@ -1406,58 +1416,63 @@ export class ProController {
         ];
       }
 
-      const clients = await prisma.user.findMany({
-        where: userWhere,
-        select: {
-          id: true,
-          fullName: true,
-          phone: true,
-          email: true,
-          bookings: {
-            where: { salonId },
-            select: {
-              startsAt: true,
-              depositAmountXof: true,
-              payments: {
-                where: { status: "succeeded" },
-                select: { amountXof: true }
-              }
-            },
-            orderBy: { startsAt: "desc" }
-          }
-        },
-        take: 50
-      });
+      const [total, clients] = await Promise.all([
+        prisma.user.count({ where: userWhere }),
+        prisma.user.findMany({
+          where: userWhere,
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            email: true
+          },
+          skip: page * pageSize,
+          take: pageSize,
+          orderBy: { createdAt: "desc" }
+        })
+      ]);
+
+      // Batch-fetch aggregated stats for this page of clients only
+      const clientIds = clients.map((c) => c.id);
+      const stats = clientIds.length > 0
+        ? await prisma.booking.groupBy({
+            by: ["clientId"],
+            where: { salonId, clientId: { in: clientIds }, status: { in: ["completed", "confirmed", "in_progress"] } },
+            _count: { id: true },
+            _max: { startsAt: true }
+          })
+        : [];
+
+      // Build lookup maps
+      const statsMap = new Map(stats.map((s) => [s.clientId, s]));
+      const paymentsByClient = new Map<string, number>();
+      if (clientIds.length > 0) {
+        const payRows = await prisma.$queryRaw<{ clientId: string; total: bigint }[]>`
+          SELECT b."clientId", COALESCE(SUM(p."amountXof"), 0) as total
+          FROM "Booking" b
+          LEFT JOIN "Payment" p ON p."bookingId" = b.id AND p.status = 'succeeded'
+          WHERE b."salonId" = ${salonId} AND b."clientId" = ANY(${clientIds})
+          GROUP BY b."clientId"
+        `;
+        for (const row of payRows) {
+          paymentsByClient.set(row.clientId, Number(row.total));
+        }
+      }
 
       const formattedClients = clients.map((client) => {
-        let totalSpentXof = 0;
-        let lastVisitAt = null;
-
-        for (const booking of client.bookings) {
-          totalSpentXof += booking.payments[0]?.amountXof ?? 0;
-          if (!lastVisitAt || booking.startsAt > lastVisitAt) {
-            lastVisitAt = booking.startsAt;
-          }
-        }
-
+        const s = statsMap.get(client.id);
         return {
           id: client.id,
           fullName: client.fullName,
           phone: client.phone,
           email: client.email,
-          visitCount: client.bookings.length,
-          totalSpentXof,
-          lastVisitAt: lastVisitAt ? lastVisitAt.toISOString() : null
+          visitCount: s?._count.id ?? 0,
+          totalSpentXof: paymentsByClient.get(client.id) ?? 0,
+          lastVisitAt: s?._max.startsAt?.toISOString() ?? null
         };
       });
 
-      formattedClients.sort((a, b) => {
-        const timeA = a.lastVisitAt ? new Date(a.lastVisitAt).getTime() : 0;
-        const timeB = b.lastVisitAt ? new Date(b.lastVisitAt).getTime() : 0;
-        return timeB - timeA;
-      });
-
-      ok(reply, formattedClients);
+      ok(reply, { items: formattedClients, total, page, pageSize });
     } catch (e) { handleError(e, reply); }
   }
 
@@ -1633,19 +1648,35 @@ export class ProController {
   async listReviews(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { salonId } = await ensurePro(request);
-      const reviews = await prisma.review.findMany({
-        where: { salonId }, orderBy: { createdAt: "desc" },
-        select: { id: true, rating: true, comment: true, createdAt: true, responseText: true, updatedAt: true, clientId: true }
+      const q = request.query as { page?: string; pageSize?: string };
+      const page = Math.max(0, parseInt(q.page ?? "0", 10));
+      const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? "20", 10)));
+
+      const [total, reviews] = await Promise.all([
+        prisma.review.count({ where: { salonId } }),
+        prisma.review.findMany({
+          where: { salonId },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, rating: true, comment: true, createdAt: true, responseText: true, updatedAt: true, clientId: true },
+          skip: page * pageSize,
+          take: pageSize
+        })
+      ]);
+
+      ok(reply, {
+        items: reviews.map((r) => ({
+          id: r.id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.createdAt.toISOString(),
+          responseText: r.responseText,
+          responseAt: r.responseText ? r.updatedAt.toISOString() : null,
+          clientId: r.clientId
+        })),
+        total,
+        page,
+        pageSize
       });
-      ok(reply, reviews.map((r) => ({
-        id: r.id,
-        rating: r.rating,
-        comment: r.comment,
-        createdAt: r.createdAt.toISOString(),
-        responseText: r.responseText,
-        responseAt: r.responseText ? r.updatedAt.toISOString() : null,
-        clientId: r.clientId
-      })));
     } catch (e) { handleError(e, reply); }
   }
 
@@ -1733,7 +1764,8 @@ export class ProController {
           {
             tier: "standard",
             label: "Standard",
-            priceLabel: `${priceMap["subscription_standard_price_xof"] ?? "15 000"} XOF`,
+            priceLabel: (() => { const p = parseInt(priceMap["subscription_standard_price_xof"] ?? "200", 10); return p === 0 ? "Gratuit" : `${p.toLocaleString("fr-FR")} XOF`; })(),
+            priceXof: parseInt(priceMap["subscription_standard_price_xof"] ?? "200", 10),
             features: [
               { label: "Agenda illimité", included: true },
               { label: "Gestion de l'équipe", included: true },
@@ -1747,7 +1779,8 @@ export class ProController {
           {
             tier: "premium",
             label: "Premium",
-            priceLabel: `${priceMap["subscription_premium_price_xof"] ?? "30 000"} XOF`,
+            priceLabel: (() => { const p = parseInt(priceMap["subscription_premium_price_xof"] ?? "300", 10); return p === 0 ? "Gratuit" : `${p.toLocaleString("fr-FR")} XOF`; })(),
+            priceXof: parseInt(priceMap["subscription_premium_price_xof"] ?? "300", 10),
             features: [
               { label: "Agenda illimité", included: true },
               { label: "Gestion de l'équipe", included: true },
@@ -2016,6 +2049,31 @@ export class ProController {
       const tierSuffix = body.action === "activate" ? `-${body.tier ?? "standard"}` : "";
       const idempotencyKey = `sub-${sub.id}-${body.action}${tierSuffix}-${body.billingCycle}-${billingMonth}`;
 
+      // ── Free tier bypass: activate immediately without payment ───────────
+      if (amountXof === 0) {
+        const existing = await prisma.subscriptionCharge.findFirst({
+          where: { idempotencyKey, status: "succeeded" }
+        });
+        if (existing) {
+          ok(reply, { chargeId: existing.id });
+          return;
+        }
+        const freeCharge = await prisma.subscriptionCharge.create({
+          data: {
+            subscriptionId: sub.id,
+            provider: toDbProvider(body.provider) ?? "paydunya",
+            amountXof: 0,
+            idempotencyKey,
+            chargeType: body.action,
+            status: "succeeded",
+            providerTxId: "free-tier"
+          }
+        });
+        await this._settleSuccessfulSubscriptionCharge(freeCharge, "free-tier", JSON.stringify({ free: true }));
+        ok(reply, { chargeId: freeCharge.id });
+        return;
+      }
+
       const existing = await prisma.subscriptionCharge.findFirst({
         where: { idempotencyKey }
       });
@@ -2173,7 +2231,7 @@ export class ProController {
           subscriptionId: charge.subscriptionId,
           invoiceNumber: `INV-SUB-${charge.id.slice(0, 8).toUpperCase()}`,
           amountXof: charge.amountXof,
-          status: "paid"
+          status: charge.amountXof === 0 ? "comped" : "paid"
         }
       });
 
@@ -2193,13 +2251,14 @@ export class ProController {
       const isAnnualCycle = charge.idempotencyKey.includes("-annual-");
       const cycleDays = isAnnualCycle ? 365 : 30;
       const now = new Date();
+      const isFree = charge.amountXof === 0;
 
       let newExpiresAt: Date | undefined;
       let newTier = sub?.tier ?? "standard";
       let newPendingTier = sub?.pendingTier ?? null;
 
       if (isActivate) {
-        newExpiresAt = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+        newExpiresAt = isFree ? undefined : new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
       } else if (isUpgrade) {
         if (config.prorationEnabled) {
           newTier = "premium";
@@ -2214,8 +2273,12 @@ export class ProController {
           newTier = sub.pendingTier;
           newPendingTier = null;
         }
-        const baseDate = sub?.expiresAt && sub.expiresAt > now ? sub.expiresAt : now;
-        newExpiresAt = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+        if (isFree) {
+          newExpiresAt = undefined;
+        } else {
+          const baseDate = sub?.expiresAt && sub.expiresAt > now ? sub.expiresAt : now;
+          newExpiresAt = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+        }
       }
 
       await tx.subscription.update({
@@ -2225,7 +2288,8 @@ export class ProController {
           pendingTier: newPendingTier,
           status: "active",
           renewedAt: now,
-          expiresAt: newExpiresAt
+          expiresAt: newExpiresAt ?? null,
+          autoRenew: !isFree
         }
       });
 
@@ -2460,7 +2524,7 @@ export class ProController {
       const billingProvider = toPublicBillingProvider(providerSetting?.value ?? sub.billingProvider ?? "manual");
       const providerLabel =
         billingProvider === "manual" ? "Manuel" : "Intech";
-      const pdf = buildInvoicePdf({
+      const pdf = await buildInvoicePdf({
         invoiceNumber: invoice.invoiceNumber,
         issuedAt,
         status: invoice.status,
