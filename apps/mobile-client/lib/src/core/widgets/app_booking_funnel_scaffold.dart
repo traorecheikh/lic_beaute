@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
@@ -32,31 +31,14 @@ class AppBookingFunnelScaffold extends ConsumerStatefulWidget {
 
 class _AppBookingFunnelScaffoldState
     extends ConsumerState<AppBookingFunnelScaffold> {
-  AsyncValue<SalonDetail?> _salonAsync = const AsyncLoading();
-
-  @override
-  void initState() {
-    super.initState();
-    // Read current value (if already loaded) without subscribing.
-    final current = ref.read(salonDetailProvider(widget.salonId));
-    if (current.hasValue) {
-      _salonAsync = current;
-    }
-    // Listen for changes but apply them after the frame to avoid
-    // setState-during-build when two scaffolds mount simultaneously.
-    ref.listen(salonDetailProvider(widget.salonId), (_, next) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _salonAsync = next);
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final salonAsync = ref.watch(salonDetailProvider(widget.salonId));
+
     debugPrint(
       '[BOOKING_SCAFFOLD] salonId=${widget.salonId} '
-      'loading=${_salonAsync.isLoading} hasError=${_salonAsync.hasError} '
-      'hasValue=${_salonAsync.hasValue}',
+      'loading=${salonAsync.isLoading} hasError=${salonAsync.hasError} '
+      'hasValue=${salonAsync.hasValue}',
     );
 
     Future<void> refresh() =>
@@ -74,7 +56,7 @@ class _AppBookingFunnelScaffoldState
       ),
       bottomNavigationBar: widget.bottomNavigationBar,
       body: AppAsyncView(
-        value: _salonAsync,
+        value: salonAsync,
         errorTitle: "Impossible de charger le salon",
         serverTitle: "Le salon est indisponible",
         onRetry: refresh,

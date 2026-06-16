@@ -41,12 +41,11 @@ class FavoritesState {
 class FavoritesNotifier extends Notifier<FavoritesState> {
   @override
   FavoritesState build() {
-    // Derive IDs from favoritesListProvider instead of making a separate API call.
     ref.listen(favoritesListProvider, (_, next) {
       final items = next.asData?.value.data;
       if (items != null) {
         final ids = items.map((s) => s.id).whereType<String>().toSet();
-        state = FavoritesState(salonIds: ids);
+        Future.microtask(() => state = FavoritesState(salonIds: ids));
       }
     });
     return const FavoritesState();
