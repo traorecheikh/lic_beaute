@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -62,10 +61,8 @@ void main() {
     test('updateProfile with null fields builds correct map structure', () {
       // Unit test the payload construction logic directly
       final payload = <String, dynamic>{
-        if ('Awa' != null) 'fullName': 'Awa',
-        if (null != null) 'city': null,
-        if (true != null) 'pushOptIn': true,
-        if (null != null) 'marketingOptIn': null,
+        'fullName': 'Awa',
+        if (true) 'pushOptIn': true,
       };
 
       expect(payload.containsKey('fullName'), isTrue);

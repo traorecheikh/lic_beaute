@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../../lib/src/features/auth/pages/auth_choice_page.dart';
+import 'package:beauteavenue_mobile_client/src/features/auth/pages/auth_choice_page.dart';
 import '../../../test_harness.dart';
 
 /// Sets the test surface to a phone-like size so [AuthChoicePage] content

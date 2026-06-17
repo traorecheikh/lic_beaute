@@ -7,6 +7,7 @@ class AppPressable extends StatefulWidget {
     this.opacity = 0.5,
     this.duration = const Duration(milliseconds: 200),
     this.enabled = true,
+    this.minSize,
     super.key,
   });
 
@@ -15,6 +16,9 @@ class AppPressable extends StatefulWidget {
   final double opacity;
   final Duration duration;
   final bool enabled;
+  /// Minimum touch target size for accessibility (WCAG SC 2.5.8).
+  /// Defaults to 44x44 logical pixels when [onTap] is non-null.
+  final Size? minSize;
 
   @override
   State<AppPressable> createState() => _AppPressableState();
@@ -41,16 +45,24 @@ class _AppPressableState extends State<AppPressable> {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveMinSize = widget.minSize ??
+        (widget.onTap != null ? const Size(44, 44) : Size.zero);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.enabled ? _onTap : null,
       onTapDown: widget.enabled ? _onTapDown : null,
       onTapUp: widget.enabled ? _onTapUp : null,
       onTapCancel: widget.enabled ? _onTapCancel : null,
-      child: AnimatedOpacity(
-        opacity: !widget.enabled ? 0.4 : (_pressed ? widget.opacity : 1.0),
-        duration: widget.duration,
-        child: widget.child,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: effectiveMinSize.width,
+          minHeight: effectiveMinSize.height,
+        ),
+        child: AnimatedOpacity(
+          opacity: !widget.enabled ? 0.4 : (_pressed ? widget.opacity : 1.0),
+          duration: widget.duration,
+          child: widget.child,
+        ),
       ),
     );
   }

@@ -58,8 +58,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
             .toList() ??
         const <booking_payment_methods.PaydunyaMethodRecord>[];
 
-    if (!channelItems.any((item) => item.code == _channel) &&
-        channelItems.isNotEmpty) {
+    if (channelItems.isNotEmpty &&
+        !channelItems.any((item) => item.code == _channel)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _channel = channelItems.first.code);
       });
@@ -222,7 +222,6 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                           .firstWhere((item) => item.code == value)
                           .label,
                       onChanged: (val) {
-                        if (val == null) return;
                         setSheetState(() {
                           final prevChannel = selectedChannel;
                           selectedChannel = val;

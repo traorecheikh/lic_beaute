@@ -61,7 +61,7 @@ final searchSuggestionsProvider = FutureProvider.family<
     SearchSuggestionsResponse?,
     ({String query, double? lat, double? lng, String? category, String? city})>(
   (ref, params) async {
-    if (params.query.length < 1) return null;
+    if (params.query.isEmpty) return null;
     final api = ref.read(apiClientProvider).getSearchApi();
     final response = await retryWithBackoff(
       () => api.apiV1SearchSuggestionsGet(

@@ -49,9 +49,6 @@ class BookingDetailPage extends ConsumerWidget {
           depositAmountXof,
         );
         final isDepositPaid = hasDeposit && depositPaidXof > 0;
-        final depositLabel = !hasDeposit
-            ? 'Aucun acompte'
-            : (isDepositPaid ? 'Acompte payé' : 'Acompte requis');
         final remainingXof = totalAmountXof == null
             ? null
             : (totalAmountXof - depositPaidXof).clamp(

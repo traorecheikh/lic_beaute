@@ -26,7 +26,7 @@ class SupportPage extends ConsumerWidget {
       ),
       body: configAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Impossible de charger les contacts.')),
+        error: (_, _) => const Center(child: Text('Impossible de charger les contacts.')),
         data: (config) => ListView(
           padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
           children: [

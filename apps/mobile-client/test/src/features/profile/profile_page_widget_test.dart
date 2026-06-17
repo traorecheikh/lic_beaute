@@ -1,11 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:beauteavenue_mobile_client/src/features/profile/models/account_models.dart';
-import 'package:beauteavenue_mobile_client/src/features/profile/pages/profile_page.dart';
-import 'package:beauteavenue_mobile_client/src/features/profile/pages/vouchers_page.dart';
-import 'package:beauteavenue_mobile_client/src/features/profile/pages/memberships_page.dart';
-
-import '../../../test_harness.dart';
 
 void main() {
   group('ProfilePage - model helpers', () {

@@ -45,6 +45,12 @@ abstract final class AppColors {
   static const success = Color(0xFF2E7D5E);
   static const successContainer = Color(0xFFD1F2E4);
 
+  // ── Warning (pending states, sync notices) ────────────────────────────────
+  static const warning = Color(0xFF8C6A1C);
+  static const warningContainer = Color(0xFFFFF8E8);
+  static const warningOutline = Color(0xFFE8D6A6);
+  static const onWarningContainer = Color(0xFF6F5718);
+
   // ── Booking status ────────────────────────────────────────────────────────
   static const statusPendingBg = Color(0xFFFFF8ED);
   static const statusPendingText = Color(0xFF92600A);

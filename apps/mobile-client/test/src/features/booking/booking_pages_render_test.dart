@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../lib/src/features/appointments/providers/bookings_list_provider.dart'
+import 'package:beauteavenue_mobile_client/src/features/appointments/providers/bookings_list_provider.dart'
     show bookingDetailResourceProvider;
-import '../../../../lib/src/features/booking/pages/booking_review_page.dart';
-import '../../../../lib/src/features/booking/pages/booking_success_page.dart';
-import '../../../../lib/src/features/booking/providers/booking_create_provider.dart';
-import '../../../../lib/src/features/booking/providers/booking_funnel_provider.dart';
-import '../../../../lib/src/features/discovery/providers/cached_resource.dart';
+import 'package:beauteavenue_mobile_client/src/features/booking/pages/booking_review_page.dart';
+import 'package:beauteavenue_mobile_client/src/features/booking/pages/booking_success_page.dart';
+import 'package:beauteavenue_mobile_client/src/features/booking/providers/booking_create_provider.dart';
+import 'package:beauteavenue_mobile_client/src/features/booking/providers/booking_funnel_provider.dart';
+import 'package:beauteavenue_mobile_client/src/features/discovery/providers/cached_resource.dart';
 import '../../../test_harness.dart' show buildTestableRouterWidget;
 
 // ── Mock notifier for BookingFunnelState ──────────────────────────────────

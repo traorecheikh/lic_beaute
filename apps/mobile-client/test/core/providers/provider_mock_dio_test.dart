@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:beauteavenue_mobile_client/src/core/network/app_network_error.dart';
 import 'package:beauteavenue_mobile_client/src/features/booking/providers/booking_create_provider.dart';
 import 'package:beauteavenue_mobile_client/src/features/booking/providers/payment_methods_provider.dart';
-import 'package:beauteavenue_mobile_client/src/features/profile/providers/profile_provider.dart';
-import 'package:beauteavenue_mobile_client/src/features/profile/models/account_models.dart';
 
 void main() {
   group('PaymentInitiateNotifier execute - nullable syntax fix', () {
@@ -13,7 +11,6 @@ void main() {
       final payload = <String, dynamic>{
         'paymentId': 'pay_123',
         'method': 'orange_senegal',
-        if (null != null) 'details': <String, dynamic>{},
       };
       expect(payload.containsKey('details'), isFalse);
       expect(payload.length, 2);
@@ -24,7 +21,7 @@ void main() {
       final payload = <String, dynamic>{
         'paymentId': 'pay_123',
         'method': 'orange_senegal',
-        if (details != null) 'details': details,
+        'details': details,
       };
       expect(payload.containsKey('details'), isTrue);
       expect(payload['details'], {'phone': '771234567'});
@@ -34,10 +31,8 @@ void main() {
   group('ProfileProvider updateProfile - nullable syntax fix', () {
     test('omits null fields from payload via collection-if', () {
       final payload = <String, dynamic>{
-        if ('Awa' != null) 'fullName': 'Awa',
-        if (null != null) 'city': null,
-        if (true != null) 'pushOptIn': true,
-        if (null != null) 'preferredLanguage': null,
+        'fullName': 'Awa',
+        'pushOptIn': true,
       };
       expect(payload.containsKey('fullName'), isTrue);
       expect(payload.containsKey('city'), isFalse);
@@ -51,7 +46,6 @@ void main() {
     test('omits comment key when comment is null', () {
       final payload = <String, dynamic>{
         'rating': 5,
-        if (null != null) 'comment': 'Great!',
       };
       expect(payload.containsKey('comment'), isFalse);
       expect(payload.length, 1);
@@ -61,7 +55,7 @@ void main() {
       final comment = 'Excellent service!';
       final payload = <String, dynamic>{
         'rating': 5,
-        if (comment != null) 'comment': comment,
+        'comment': comment,
       };
       expect(payload.containsKey('comment'), isTrue);
       expect(payload['comment'], 'Excellent service!');

@@ -19,7 +19,7 @@ class AboutPage extends ConsumerWidget {
       appBar: const AppTopBar(title: 'À propos', showBackButton: true),
       body: configAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Erreur')),
+        error: (_, _) => const Center(child: Text('Erreur')),
         data: (config) => SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 60.h),
           child: Column(

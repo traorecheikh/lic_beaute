@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers/support_config_provider.dart';
-import '../../../core/constants/app_contacts.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -43,7 +42,7 @@ class LegalPage extends ConsumerWidget {
       appBar: const AppTopBar(title: 'Mentions Légales', showBackButton: true),
       body: configAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Erreur')),
+        error: (_, _) => const Center(child: Text('Erreur')),
         data: (config) => ListView(
           padding: EdgeInsets.all(24.w),
           children: [

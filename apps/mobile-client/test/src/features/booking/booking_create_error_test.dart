@@ -3,10 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:beauteavenue_mobile_client/src/features/booking/providers/booking_create_provider.dart';
 
-Map<String, dynamic> _responseData(String? message) {
-  return message != null ? {'message': message} : {};
-}
-
 DioException _dioError({
   int? statusCode,
   DioExceptionType type = DioExceptionType.badResponse,

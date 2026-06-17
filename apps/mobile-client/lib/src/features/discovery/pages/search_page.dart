@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -1093,12 +1094,14 @@ class _ModuleSalonCard extends StatelessWidget {
     final logoUrl = salon.logoUrl as String?;
 
     final imgWidget = logoUrl != null && logoUrl.isNotEmpty
-        ? Image.network(
-            logoUrl,
+        ? CachedNetworkImage(
+            imageUrl: logoUrl,
             height: 80.h,
             width: 140.w,
             fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
+            memCacheHeight: (160.h).toInt(),
+            memCacheWidth: (280.w).toInt(),
+            errorWidget: (_, _, _) => Container(
               height: 80.h,
               width: 140.w,
               color: AppColors.surfaceVariant,

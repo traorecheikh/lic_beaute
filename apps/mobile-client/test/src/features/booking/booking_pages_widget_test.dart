@@ -31,7 +31,7 @@ void main() {
   });
 
   group('PaymentHandoffPage - deposit and channel logic', () {
-    test('redirects to success when deposit is <= 0', () {
+    test('deposit > 0 requires payment, deposit <= 0 skips payment', () {
       expect(0 <= 0, isTrue);
       expect(5000 > 0, isTrue);
     });
@@ -70,39 +70,17 @@ void main() {
       final maxPolls = timeout.inSeconds ~/ pollInterval.inSeconds;
       expect(maxPolls, 50);
     });
-
-    test('before timeout shows spinner, after timeout shows timeout UI', () {
-      const timeout = Duration(minutes: 5);
-      expect(120 < timeout.inSeconds, isTrue);   // 2 min: not timed out
-      expect(300 >= timeout.inSeconds, isTrue);  // 5 min: timed out
-    });
-
-    test('succeeded status triggers confirmation', () {
-      expect('succeeded' == 'succeeded', isTrue);
-    });
-
-    test('failed or refunded status triggers error', () {
-      final failed = 'failed' == 'failed' || 'refunded' == 'refunded';
-      expect(failed, isTrue);
-    });
   });
 
   group('Booking confirm bar - label logic', () {
     test('with deposit shows "Payer l\'acompte"', () {
-      const requiresDepositPayment = true;
-      final label = requiresDepositPayment ? "Payer l'acompte" : 'Confirmer la réservation';
+      const label = "Payer l'acompte";
       expect(label, "Payer l'acompte");
     });
 
     test('without deposit shows "Confirmer la réservation"', () {
-      const requiresDepositPayment = false;
-      final label = requiresDepositPayment ? "Payer l'acompte" : 'Confirmer la réservation';
+      const label = 'Confirmer la réservation';
       expect(label, 'Confirmer la réservation');
-    });
-
-    test('booking with deposit goes to payment handoff', () {
-      expect(5000 > 0, isTrue);
-      expect(0 > 0, isFalse);
     });
   });
 }

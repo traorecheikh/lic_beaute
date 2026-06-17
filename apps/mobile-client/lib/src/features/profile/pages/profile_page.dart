@@ -114,23 +114,22 @@ class ProfilePage extends ConsumerWidget {
                             vertical: 10.h,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E8),
+                            color: AppColors.warningContainer,
                             borderRadius: BorderRadius.circular(AppRadius.lg.r),
-                            border: Border.all(color: const Color(0xFFE8D6A6)),
+                            border: Border.all(color: AppColors.warningOutline),
                           ),
                           child: Row(
                             children: [
                               AppIcon(
                                 'refresh',
                                 size: 20,
-                                color: const Color(0xFF8C6A1C),
+                                color: AppColors.warning,
                               ),
                               SizedBox(width: 10.w),
-                              Expanded(
-                                child: Text(
+                              Expanded(                                  child: Text(
                                   'Modifications en attente de synchronisation.',
                                   style: AppTextStyles.bodySm.copyWith(
-                                    color: const Color(0xFF6F5718),
+                                    color: AppColors.onWarningContainer,
                                   ),
                                 ),
                               ),

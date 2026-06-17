@@ -1,10 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'package:beauteavenue_mobile_client/src/core/utils/status_labels.dart';
 import 'package:beauteavenue_mobile_client/src/features/booking/utils/booking_format.dart';
 
@@ -80,30 +75,13 @@ void main() {
     });
 
     test('deposit label logic', () {
-      const hasDeposit = true;
-      const isDepositPaid = false;
-      final depositLabel = !hasDeposit
-          ? 'Aucun acompte'
-          : (isDepositPaid ? 'Acompte payé' : 'Acompte requis');
-      expect(depositLabel, 'Acompte requis');
-    });
-
-    test('deposit paid label when deposit is paid', () {
-      const hasDeposit = true;
-      const isDepositPaid = true;
-      final depositLabel = !hasDeposit
-          ? 'Aucun acompte'
-          : (isDepositPaid ? 'Acompte payé' : 'Acompte requis');
-      expect(depositLabel, 'Acompte payé');
-    });
-
-    test('no deposit label when no deposit required', () {
-      const hasDeposit = false;
-      const isDepositPaid = false;
-      final depositLabel = !hasDeposit
-          ? 'Aucun acompte'
-          : (isDepositPaid ? 'Acompte payé' : 'Acompte requis');
-      expect(depositLabel, 'Aucun acompte');
+      String depositLabel(bool hasDeposit, bool isDepositPaid) {
+        if (!hasDeposit) return 'Aucun acompte';
+        return isDepositPaid ? 'Acompte payé' : 'Acompte requis';
+      }
+      expect(depositLabel(true, false), 'Acompte requis');
+      expect(depositLabel(true, true), 'Acompte payé');
+      expect(depositLabel(false, false), 'Aucun acompte');
     });
   });
 

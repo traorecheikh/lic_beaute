@@ -3,6 +3,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client.js";
 import argon2 from "argon2";
+import { SERVICE_CATEGORY_MAP } from "@beauteavenue/shared-ts";
 
 const adapter = new PrismaPg({
   connectionString:
@@ -70,6 +71,34 @@ async function main() {
     if (result) seeded++;
   }
   console.log(`[seed-admin] platform settings upserted: ${seeded}/${DEFAULT_SETTINGS.length}`);
+
+  // ── Default platform categories (idempotent) ────────────────────────────────
+  const salonCategories = [
+    { name: "Coiffure", slug: "coiffure" },
+    { name: "Ongles", slug: "ongles" },
+    { name: "Spa & Bien-être", slug: "spa" },
+    { name: "Esthétique", slug: "esthetique" },
+    { name: "Maquillage", slug: "maquillage" },
+  ];
+  for (const c of salonCategories) {
+    await prisma.platformSalonCategory.upsert({
+      where: { slug: c.slug },
+      update: c,
+      create: { ...c, enabled: true }
+    });
+  }
+
+  // ── Platform service suggestions (idempotent) ──────────────────────────────
+  let suggestionsSeeded = 0;
+  for (const [name, category] of Object.entries(SERVICE_CATEGORY_MAP)) {
+    const result = await prisma.platformServiceSuggestion.upsert({
+      where: { name },
+      update: { category },
+      create: { name, category, enabled: true }
+    });
+    if (result) suggestionsSeeded++;
+  }
+  console.log(`[seed-admin] platform service suggestions upserted: ${suggestionsSeeded}/${Object.keys(SERVICE_CATEGORY_MAP).length}`);
 
   // ── Test pro account (staging / first-run fallback) ─────────────────────────
   // Creates a fully-approved salon + owner so the pro dashboard can be tested

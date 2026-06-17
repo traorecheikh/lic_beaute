@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:beauteavenue_mobile_client/src/features/booking/providers/booking_create_provider.dart';
 import 'package:beauteavenue_mobile_client/src/features/booking/paydunya_launch.dart';
 
 /// Simulates an initiate payment response from the API.
