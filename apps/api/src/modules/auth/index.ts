@@ -15,7 +15,7 @@ import {
   updateMeInputSchema
 } from "@beauteavenue/contracts";
 
-import { createOtpAdapter, getR2Adapter, getStorageAdapter } from "../../adapters/index.js";
+import { createOtpAdapter, getStorageAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { sendEmail } from "../../lib/email.js";
@@ -24,6 +24,7 @@ import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
 import { signSession, verifyRefreshToken } from "../../lib/auth/session.js";
+import { checkRateLimit, checkAccountRateLimit } from "../../lib/rate-limit.js";
 
 const otpAdapter = createOtpAdapter(config.otpDriver, {
   atApiKey: config.atApiKey,
@@ -50,8 +51,8 @@ async function pruneExcessSessions(userId: string): Promise<void> {
     orderBy: { createdAt: "asc" },
     select: { id: true }
   });
-  if (sessions.length >= MAX_SESSIONS_PER_USER) {
-    const excess = sessions.slice(0, sessions.length - MAX_SESSIONS_PER_USER + 1);
+  if (sessions.length > MAX_SESSIONS_PER_USER) {
+    const excess = sessions.slice(0, sessions.length - MAX_SESSIONS_PER_USER);
     await prisma.session.deleteMany({ where: { id: { in: excess.map((s) => s.id) } } });
   }
 }
@@ -99,36 +100,14 @@ async function clearOtpChallenge(phone: string) {
 }
 
 async function checkOtpRateLimit(phone: string): Promise<{ allowed: false; retryAfterSeconds: number } | { allowed: true }> {
-  const key = `otp:ratelimit:${hashValue(phone)}`;
-  const now = Date.now();
-
-  const existing = await prisma.platformSetting.findUnique({
-    where: { key },
-    select: { value: true }
-  });
-
-  if (existing) {
-    const record = JSON.parse(existing.value) as { count: number; windowStart: number };
-    if (now - record.windowStart < OTP_RATE_LIMIT_WINDOW_MS) {
-      if (record.count >= OTP_RATE_LIMIT_MAX) {
-        const retryAfterSeconds = Math.ceil((OTP_RATE_LIMIT_WINDOW_MS - (now - record.windowStart)) / 1000);
-        return { allowed: false, retryAfterSeconds };
-      }
-      await prisma.platformSetting.update({
-        where: { key },
-        data: { value: JSON.stringify({ count: record.count + 1, windowStart: record.windowStart }) }
-      });
-      return { allowed: true };
-    }
-  }
-
-  await prisma.platformSetting.upsert({
-    where: { key },
-    create: { group: "security", key, value: JSON.stringify({ count: 1, windowStart: now }), description: "OTP rate limit" },
-    update: { value: JSON.stringify({ count: 1, windowStart: now }) }
-  });
-
-  return { allowed: true };
+  const result = await checkRateLimit(
+    "otp",
+    [{ type: "phone", phone }],
+    OTP_RATE_LIMIT_MAX,
+    Math.ceil(OTP_RATE_LIMIT_WINDOW_MS / 1000)
+  );
+  if (result.allowed) return { allowed: true };
+  return { allowed: false, retryAfterSeconds: result.retryAfterSeconds };
 }
 
 function constantTimeEquals(a: string, b: string): boolean {
@@ -162,19 +141,14 @@ async function serializeCurrentUser(userId: string) {
       if (media.publicUrl) {
         avatarUrl = media.publicUrl;
       } else if (media.ownerType === "user" && media.ownerId === user.id) {
-        getStorageAdapter(config.storageDriver, {
+        const storage = getStorageAdapter(config.storageDriver, {
           storagePath: config.storagePath,
-          r2AccountId: config.r2AccountId,
-          r2AccessKeyId: config.r2AccessKeyId,
-          r2SecretAccessKey: config.r2SecretAccessKey,
-          r2Bucket: config.r2Bucket,
           mediaPublicBaseUrl: config.mediaPublicBaseUrl
         });
-        const r2 = getR2Adapter();
         const objectKey = media.finalObjectKey ?? media.objectKey;
-        if (r2 && objectKey) {
+        if (objectKey) {
           try {
-            avatarUrl = await r2.presignGet(objectKey, 600);
+            avatarUrl = await storage.presignGet(objectKey, 600);
           } catch {
             // Keep nullable avatar when presign fails.
           }
@@ -331,7 +305,6 @@ export class AuthController {
       });
 
       const tokens = signSession(result.user.id, "salon_owner", result.user.tokenVersion);
-      await pruneExcessSessions(result.user.id);
       await prisma.session.create({
         data: {
           userId: result.user.id,
@@ -341,6 +314,7 @@ export class AuthController {
           expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
         }
       });
+      await pruneExcessSessions(result.user.id);
       void enqueueJob({
         type: "salon_submitted_admin",
         payload: { salonId: result.salon.id, salonName: result.salon.name, resubmission: false }
@@ -440,7 +414,6 @@ export class AuthController {
     await prisma.platformSetting.deleteMany({ where: { key: lockoutKey } });
 
     const tokens = signSession(user.id, user.role, user.tokenVersion);
-    await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
         userId: user.id,
@@ -450,6 +423,7 @@ export class AuthController {
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
     });
+    await pruneExcessSessions(user.id);
     ok(reply, tokens);
   }
 
@@ -529,7 +503,6 @@ export class AuthController {
     }
 
     const tokens = signSession(user.id, user.role, user.tokenVersion);
-    await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
         userId: user.id,
@@ -539,6 +512,7 @@ export class AuthController {
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
     });
+    await pruneExcessSessions(user.id);
     ok(reply, tokens);
   }
 
@@ -789,15 +763,15 @@ export class AuthController {
 
       // Token valid — set password and consume token atomically
       await prisma.$transaction([
-        prisma.user.update({ where: { id: user.id }, data: { passwordHash: await argon2.hash(password) } }),
+        prisma.user.update({ where: { id: user.id }, data: { passwordHash: await argon2.hash(password), tokenVersion: { increment: 1 } } }),
         prisma.platformSetting.delete({ where: { key: settingKey } })
       ]);
 
       const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
-      await pruneExcessSessions(user.id);
       await prisma.session.create({
         data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
       });
+      await pruneExcessSessions(user.id);
       ok(reply, session);
     } catch (e) {
       if (e instanceof HttpAuthError) {
@@ -813,6 +787,13 @@ export class AuthController {
       const { email } = request.body as { email?: string };
       if (!email || typeof email !== "string") {
         fail(reply, 400, "missing_fields", "L'adresse e-mail est requise.");
+        return;
+      }
+
+      // Per-account + per-IP rate limiting: 3 req/15min per email, 30 req/min per IP
+      const rl = await checkAccountRateLimit("forgot-password", email, request, 3, 30, 900);
+      if (!rl.allowed) {
+        fail(reply, 429, "rate_limited", `Trop de tentatives. Réessayez dans ${rl.retryAfterSeconds}s.`);
         return;
       }
 
@@ -880,6 +861,13 @@ export class AuthController {
         fail(reply, 400, "missing_fields", "token, email et password sont requis.");
         return;
       }
+
+      // Per-account + per-IP rate limiting: 5 req/15min per email, 30 req/min per IP
+      const rl = await checkAccountRateLimit("reset-password", email, request, 5, 30, 900);
+      if (!rl.allowed) {
+        fail(reply, 429, "rate_limited", `Trop de tentatives. Réessayez dans ${rl.retryAfterSeconds}s.`);
+        return;
+      }
       if (password.length < 8) {
         fail(reply, 422, "password_too_short", "Le mot de passe doit contenir au moins 8 caractères.");
         return;
@@ -909,15 +897,15 @@ export class AuthController {
       if (!valid) { fail(reply, 401, "invalid_reset_token", "Lien de réinitialisation invalide."); return; }
 
       await prisma.$transaction([
-        prisma.user.update({ where: { id: user.id }, data: { passwordHash: await argon2.hash(password) } }),
+        prisma.user.update({ where: { id: user.id }, data: { passwordHash: await argon2.hash(password), tokenVersion: { increment: 1 } } }),
         prisma.platformSetting.delete({ where: { key: settingKey } })
       ]);
 
       const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
-      await pruneExcessSessions(user.id);
       await prisma.session.create({
         data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
       });
+      await pruneExcessSessions(user.id);
       ok(reply, session);
     } catch (e) {
       if (e instanceof HttpAuthError) { fail(reply, e.statusCode, e.code, e.message); }
@@ -930,6 +918,13 @@ export class AuthController {
       const { token, email } = request.body as { token?: string; email?: string };
       if (!token || !email || typeof token !== "string" || typeof email !== "string") {
         fail(reply, 400, "missing_fields", "token et email sont requis.");
+        return;
+      }
+
+      // Per-account + per-IP rate limiting: 5 req/15min per email, 30 req/min per IP
+      const rl = await checkAccountRateLimit("magic-login", email, request, 5, 30, 900);
+      if (!rl.allowed) {
+        fail(reply, 429, "rate_limited", `Trop de tentatives. Réessayez dans ${rl.retryAfterSeconds}s.`);
         return;
       }
 
@@ -962,7 +957,6 @@ export class AuthController {
       }
 
       // Token valid — consume token and create session atomically
-      await pruneExcessSessions(user.id);
       const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
       await prisma.$transaction([
         prisma.platformSetting.delete({ where: { key: settingKey } }),
@@ -970,6 +964,7 @@ export class AuthController {
           data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
         })
       ]);
+      await pruneExcessSessions(user.id);
       ok(reply, session);
     } catch (e) {
       if (e instanceof HttpAuthError) {
@@ -1017,17 +1012,15 @@ export class AuthController {
         fail(reply, 403, "forbidden", "Ce compte n'a pas accès à l'espace professionnel.");
         return;
       }
+      const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
       await prisma.$transaction(async (tx) => {
         await tx.platformSetting.delete({ where: { key: inviteKey } });
-        await pruneExcessSessions(user.id);
-        const session = signSession(user.id, user.role as import("../../lib/auth/session.js").AccessTokenRole);
         await tx.session.create({
           data: { userId: user.id, refreshToken: hashRefreshToken(session.refreshToken), clientType: "web", expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000) }
         });
-        return session;
-      }).then((session) => {
-        ok(reply, session);
       });
+      await pruneExcessSessions(user.id);
+      ok(reply, session);
     } catch (e) {
       if (e instanceof HttpAuthError) {
         fail(reply, e.statusCode, e.code, e.message);
@@ -1116,7 +1109,6 @@ export class AuthController {
     }
 
     const tokens = signSession(user.id, user.role, user.tokenVersion);
-    await pruneExcessSessions(user.id);
     await prisma.session.create({
       data: {
         userId: user.id,
@@ -1126,6 +1118,7 @@ export class AuthController {
         expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
       }
     });
+    await pruneExcessSessions(user.id);
     ok(reply, tokens);
   }
 }

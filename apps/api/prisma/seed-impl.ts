@@ -4,6 +4,7 @@ import argon2 from "argon2";
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { SERVICE_CATEGORY_MAP } from "@beauteavenue/shared-ts";
 
 const seedDir = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(seedDir, "../../../.env") });
@@ -766,7 +767,7 @@ async function main() {
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
 
-    await prisma.salon.update({ where: { id: salon.id }, data: { averageRating } });
+    await prisma.salon.update({ where: { id: salon.id }, data: { averageRating, reviewCount: reviews.length } });
 
     const fresh = await prisma.salon.findUniqueOrThrow({
       where: { id: salon.id },
@@ -824,6 +825,15 @@ async function main() {
   ];
   for (const c of salonCategories) {
     await prisma.platformSalonCategory.upsert({ where: { slug: c.slug }, update: c, create: { ...c, enabled: true } });
+  }
+
+  // Seed standard service suggestions
+  for (const [name, category] of Object.entries(SERVICE_CATEGORY_MAP)) {
+    await prisma.platformServiceSuggestion.upsert({
+      where: { name },
+      update: { category },
+      create: { name, category, enabled: true }
+    });
   }
 
   // ── Test fixtures — predictable IDs ────────────────────────────────────────

@@ -32,6 +32,7 @@ export const salonSummarySchema = z.object({
   city: z.string(),
   neighborhood: z.string().nullable(),
   averageRating: z.number().min(0).max(5),
+  reviewCount: z.number().int(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   subscriptionTier: subscriptionTierSchema,

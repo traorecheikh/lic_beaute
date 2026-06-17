@@ -19,6 +19,7 @@ class SalonListCard extends StatelessWidget {
     this.trailing,
     this.height,
     this.radius,
+    this.heroTag,
     super.key,
   });
 
@@ -28,17 +29,38 @@ class SalonListCard extends StatelessWidget {
   final Widget? trailing;
   final double? height;
   final double? radius;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
     final h = height ?? 96.h;
-    final r = radius ?? 20.r;
+    final r = radius ?? AppRadius.xl.r;
 
     final displayName = _salonName(salon) ?? name ?? '';
     final displayCategory = _salonCategory(salon) ?? category ?? '';
     final displayLocation = _salonCity(salon) ?? location ?? '';
-    final displayRating = _salonRating(salon) ?? rating ?? '0.0';
+    final displayRating = _salonRating(salon) ?? rating;
     final displayImageUrl = _salonLogoUrl(salon) ?? imageUrl ?? '';
+    final displayId = _salonId(salon);
+    final activeHeroTag = heroTag ?? (displayId != null ? 'salon_image_$displayId' : null);
+
+    final imageWidget = displayImageUrl.isNotEmpty
+        ? CachedNetworkImage(
+            imageUrl: displayImageUrl,
+            width: h,
+            height: h,
+            memCacheWidth: (h * 2).toInt(),
+            memCacheHeight: (h * 2).toInt(),
+            fit: BoxFit.cover,
+          )
+        : Container(
+            width: h,
+            height: h,
+            color: AppColors.primaryLight,
+            child: Center(
+              child: AppIcon('sparkle', size: 26, color: AppColors.primary),
+            ),
+          );
 
     return GestureDetector(
       onTap: onTap,
@@ -53,23 +75,12 @@ class SalonListCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.horizontal(left: Radius.circular(r)),
-              child: displayImageUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: displayImageUrl,
-                      width: h,
-                      height: h,
-                      memCacheWidth: (h * 2).toInt(),
-                      memCacheHeight: (h * 2).toInt(),
-                      fit: BoxFit.cover,
+              child: activeHeroTag != null
+                  ? Hero(
+                      tag: activeHeroTag,
+                      child: imageWidget,
                     )
-                  : Container(
-                      width: h,
-                      height: h,
-                      color: AppColors.primaryLight,
-                      child: Center(
-                        child: AppIcon('sparkle', size: 26, color: AppColors.primary),
-                      ),
-                    ),
+                  : imageWidget,
             ),
             Expanded(
               child: Padding(
@@ -104,21 +115,23 @@ class SalonListCard extends StatelessWidget {
                           ),
                         ),
                         SizedBox(width: 6.w),
-                        AppIcon('star', size: 11, color: AppColors.secondary),
-                        SizedBox(width: 3.w),
-                        Text(
-                          displayRating,
-                          style: AppTextStyles.labelSm.copyWith(
-                            color: AppColors.onSurface,
+                        if (displayRating != null) ...[
+                          AppIcon('star', size: 11, color: AppColors.secondary),
+                          SizedBox(width: 3.w),
+                          Text(
+                            displayRating,
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: AppColors.onSurface,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
             ),
-            ?trailing,
+            if (trailing != null) trailing!,
           ],
         ),
       ),
@@ -148,9 +161,11 @@ String? _salonCity(Object? salon) => switch (salon) {
 };
 
 String? _salonRating(Object? salon) => switch (salon) {
-  SalonSummary s => s.averageRating.toStringAsFixed(1),
-  SalonSummaryListResponseItemsInner s => s.averageRating.toStringAsFixed(1),
-  SearchSuggestionsResponseTopMatchesInner s => s.averageRating.toStringAsFixed(1),
+  SalonSummary s when s.reviewCount >= 3 => s.averageRating.toStringAsFixed(1),
+  SalonSummaryListResponseItemsInner s when s.reviewCount >= 3 =>
+    s.averageRating.toStringAsFixed(1),
+  SearchSuggestionsResponseTopMatchesInner s when s.reviewCount >= 3 =>
+    s.averageRating.toStringAsFixed(1),
   _ => null,
 };
 
@@ -158,5 +173,12 @@ String? _salonLogoUrl(Object? salon) => switch (salon) {
   SalonSummary s => s.logoUrl,
   SalonSummaryListResponseItemsInner s => s.logoUrl,
   SearchSuggestionsResponseTopMatchesInner s => s.logoUrl,
+  _ => null,
+};
+
+String? _salonId(Object? salon) => switch (salon) {
+  SalonSummary s => s.id,
+  SalonSummaryListResponseItemsInner s => s.id,
+  SearchSuggestionsResponseTopMatchesInner s => s.id,
   _ => null,
 };

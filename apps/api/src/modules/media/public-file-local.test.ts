@@ -16,10 +16,6 @@ vi.mock("../../config.js", () => ({
   config: {
     storageDriver: "local",
     storagePath: ".data",
-    r2AccountId: "a",
-    r2AccessKeyId: "k",
-    r2SecretAccessKey: "s",
-    r2Bucket: "b",
     mediaPublicBaseUrl: "https://media.example.com",
     maxUploadBytes: 10_000
   }
@@ -28,8 +24,7 @@ vi.mock("../../lib/http.js", () => ({ fail: mocks.fail, ok: mocks.ok }));
 vi.mock("../../lib/logger.js", () => ({ logger: mocks.logger }));
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../adapters/index.js", () => ({
-  getStorageAdapter: vi.fn(() => mocks.storage),
-  getR2Adapter: vi.fn(() => null)
+  getStorageAdapter: vi.fn(() => mocks.storage)
 }));
 vi.mock("../../lib/auth/index.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../lib/auth/index.js")>();

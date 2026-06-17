@@ -34,7 +34,7 @@ class AuthChoicePage extends StatelessWidget {
                   // Large logo
                   Image.asset(
                     'assets/logo.png',
-                    height: 120.h,
+                    height: 160.h,
                     fit: BoxFit.contain,
                   ),
                   SizedBox(height: 20.h),
@@ -94,7 +94,7 @@ class AuthChoicePage extends StatelessWidget {
                   AppPressable(
                     onTap: () => context.go(AppRoutes.home),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                       child: Text(
                         'Continuer sans compte',
                         style: AppTextStyles.labelMd.copyWith(

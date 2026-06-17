@@ -177,6 +177,7 @@ class _BaseShareCard extends StatelessWidget {
                     Text(
                       'Beauté Avenue',
                       style: AppTextStyles.labelLg.copyWith(
+                        fontSize: 15,
                         color: AppColors.white,
                         letterSpacing: 0.5,
                         fontWeight: FontWeight.bold,
@@ -197,6 +198,7 @@ class _BaseShareCard extends StatelessWidget {
                 Text(
                   subtitle,
                   style: AppTextStyles.bodyLg.copyWith(
+                    fontSize: 16,
                     color: AppColors.white.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w500,
                   ),
@@ -222,6 +224,7 @@ class _BaseShareCard extends StatelessWidget {
                     'Découvrez sur Beauté Avenue',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.labelMd.copyWith(
+                      fontSize: 13,
                       color: AppColors.primary,
                       letterSpacing: 1.0,
                       fontWeight: FontWeight.bold,
@@ -252,6 +255,7 @@ class _Row extends StatelessWidget {
           child: Text(
             label,
             style: AppTextStyles.bodyLg.copyWith(
+              fontSize: 16,
               color: AppColors.onSurface,
               fontWeight: FontWeight.w500,
             ),

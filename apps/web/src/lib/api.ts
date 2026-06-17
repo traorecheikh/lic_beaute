@@ -19,7 +19,9 @@ import type {
   ProServiceCreateInput,
   ProServiceUpdateInput,
   UpsertRequiredDocumentInput,
-  UpsertSalonCategoryInput
+  UpsertSalonCategoryInput,
+  PlatformServiceSuggestion,
+  UpsertPlatformServiceSuggestionInput
 } from "@beauteavenue/contracts";
 import { resolveApiBaseUrl } from "./api-base";
 
@@ -411,6 +413,27 @@ export async function deletePlatformCategory(token: string, id: string) {
   });
 }
 
+export async function fetchPlatformServiceSuggestions(token: string) {
+  return request<PlatformServiceSuggestion[]>(`/api/v1/admin/config/service-suggestions`, {
+    headers: authHeaders(token)
+  });
+}
+
+export async function upsertPlatformServiceSuggestion(token: string, data: UpsertPlatformServiceSuggestionInput) {
+  return request<PlatformServiceSuggestion>(`/api/v1/admin/config/service-suggestions`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data)
+  });
+}
+
+export async function deletePlatformServiceSuggestion(token: string, id: string) {
+  return request<void>(`/api/v1/admin/config/service-suggestions/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(token)
+  });
+}
+
 export async function fetchPlatformRequiredDocuments(token: string) {
   return request<PlatformRequiredDocument[]>(`/api/v1/admin/config/documents`, {
     headers: authHeaders(token)
@@ -462,6 +485,10 @@ export async function fetchPublicCategories(): Promise<{ id: string; name: strin
   return request<{ id: string; name: string }[]>("/api/v1/platform/categories", { method: "GET" });
 }
 
+export async function fetchPublicServiceSuggestions(): Promise<{ id: string; name: string; category: string }[]> {
+  return request<{ id: string; name: string; category: string }[]>("/api/v1/platform/service-suggestions", { method: "GET" });
+}
+
 /** Public endpoint to check if email or phone is already taken. No auth required. */
 export async function checkPublicUniqueness(fields: { email?: string; phone?: string; name?: string }): Promise<{ email?: "available" | "taken"; phone?: "available" | "taken"; name?: "available" | "taken" }> {
   const params = new URLSearchParams();
@@ -496,3 +523,61 @@ export async function changePassword(token: string, currentPassword: string, new
     body: JSON.stringify({ currentPassword, newPassword })
   });
 }
+
+export async function fetchAdminMerchantPayouts(token: string, filters?: { salonId?: string; status?: string; page?: number; limit?: number }) {
+  const params = new URLSearchParams();
+  if (filters?.salonId) params.set("salonId", filters.salonId);
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.page !== undefined) params.set("page", filters.page.toString());
+  if (filters?.limit !== undefined) params.set("limit", filters.limit.toString());
+  const qs = params.toString();
+  return request<any[]>(`/api/v1/admin/payouts${qs ? `?${qs}` : ""}`, {
+    headers: authHeaders(token)
+  });
+}
+
+export async function fetchAdminMerchantPayoutDetail(token: string, payoutId: string) {
+  return request<any>(`/api/v1/admin/payouts/${payoutId}`, {
+    headers: authHeaders(token)
+  });
+}
+
+export async function reconcileAdminPayout(token: string, payoutId: string) {
+  return request<any>(`/api/v1/admin/payouts/${payoutId}/reconcile`, {
+    method: "POST",
+    headers: authHeaders(token)
+  });
+}
+
+export async function retryAdminPayout(token: string, payoutId: string, reason: string) {
+  return request<any>(`/api/v1/admin/payouts/${payoutId}/retry`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ reason })
+  });
+}
+
+export async function approveAdminPayout(token: string, payoutId: string, reason: string) {
+  return request<any>(`/api/v1/admin/payouts/${payoutId}/approve`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ reason })
+  });
+}
+
+export async function cancelAdminPayout(token: string, payoutId: string, reason: string) {
+  return request<any>(`/api/v1/admin/payouts/${payoutId}/cancel`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ reason })
+  });
+}
+
+export async function verifySalonPayoutSettings(token: string, salonId: string, status: "verified" | "rejected") {
+  return request<any>(`/api/v1/admin/salons/${salonId}/payout-settings/verify`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ status })
+  });
+}
+

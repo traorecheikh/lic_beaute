@@ -9,7 +9,6 @@ import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_booking_header_badge.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
-import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
@@ -59,7 +58,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                   gapH24,
                   Text(
                     "Comment s'est passée\nvotre expérience ?",
-                    style: AppTextStyles.displaySm,
+                    style: AppTextStyles.headlineMd,
                     textAlign: TextAlign.center,
                   ),
                   gapH8,
@@ -70,7 +69,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 44.h),
+                  gapH32,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(5, (i) {
@@ -82,19 +81,26 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                           setState(() => _rating = star);
                         },
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w),
-                          child: AppIcon(
-                            active ? 'star-filled' : 'star',
-                            size: 40,
-                            color: active
-                                ? AppColors.secondary
-                                : AppColors.outlineVariant,
+                            padding: EdgeInsets.symmetric(horizontal: 6.w),
+                            child: AnimatedScale(
+                              scale: active ? 1.15 : 1.0,
+                              duration: const Duration(milliseconds: 150),
+                              curve: Curves.easeOutBack,
+                              child: Icon(
+                                active
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
+                                size: 40.r,
+                                color: active
+                                    ? AppColors.secondary
+                                    : AppColors.outlineVariant,
+                              ),
+                            ),
                           ),
-                        ),
                       );
                     }),
                   ),
-                  SizedBox(height: 48.h),
+                  gapH32,
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text('Votre commentaire', style: AppTextStyles.labelLg),
@@ -109,7 +115,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                       filled: true,
                       fillColor: AppColors.surface,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.r),
+                        borderRadius: BorderRadius.circular(AppRadius.md.r),
                         borderSide: BorderSide.none,
                       ),
                     ),

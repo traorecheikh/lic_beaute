@@ -65,6 +65,12 @@ import {
   downloadInvoicePdf
 } from "./subscription.js";
 
+import {
+  getPayoutSettings,
+  updatePayoutSettings,
+  listMerchantPayouts
+} from "./payouts.js";
+
 export class ProController {
   // ─── Dashboard ─────────────────────────────────────────────────────────────
 
@@ -329,8 +335,13 @@ export class ProController {
           fail(reply, 402, "premium_required", "Les dépôts en ligne sont réservés aux salons Premium."); return;
         }
       }
-      if (body.depositMode === "fixed" && !body.depositAmountXof) {
-        fail(reply, 422, "invalid_deposit", "depositAmountXof requis pour depositMode=fixed."); return;
+      if (body.depositMode === "fixed") {
+        if (!body.depositAmountXof) {
+          fail(reply, 422, "invalid_deposit", "depositAmountXof requis pour depositMode=fixed."); return;
+        }
+        if (body.depositAmountXof > body.priceXof / 2) {
+          fail(reply, 422, "deposit_exceeds_limit", "L'acompte ne peut pas dépasser 50% du prix de la prestation."); return;
+        }
       }
       if (body.depositMode === "percent" && !body.depositPercent) {
         fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
@@ -370,8 +381,14 @@ export class ProController {
       const effectiveMode = body.depositMode ?? existing.depositMode;
       const effectiveAmount = body.depositAmountXof ?? existing.depositAmountXof;
       const effectivePercent = body.depositPercent ?? existing.depositPercent;
-      if (effectiveMode === "fixed" && !effectiveAmount) {
-        fail(reply, 422, "invalid_deposit", "depositAmountXof requis pour depositMode=fixed."); return;
+      if (effectiveMode === "fixed") {
+        if (!effectiveAmount) {
+          fail(reply, 422, "invalid_deposit", "depositAmountXof requis pour depositMode=fixed."); return;
+        }
+        const price = body.priceXof ?? existing.priceXof;
+        if (effectiveAmount > price / 2) {
+          fail(reply, 422, "deposit_exceeds_limit", "L'acompte ne peut pas dépasser 50% du prix de la prestation."); return;
+        }
       }
       if (effectiveMode === "percent" && !effectivePercent) {
         fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
@@ -1165,4 +1182,8 @@ export class ProController {
   listPayouts = listPayouts;
   listInvoices = listInvoices;
   downloadInvoicePdf = downloadInvoicePdf;
+
+  getPayoutSettings = getPayoutSettings;
+  updatePayoutSettings = updatePayoutSettings;
+  listMerchantPayouts = listMerchantPayouts;
 }

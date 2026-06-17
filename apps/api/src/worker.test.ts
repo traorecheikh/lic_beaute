@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => {
     user: { findMany: vi.fn() },
     pushToken: { findMany: vi.fn() },
     notification: { create: vi.fn() },
+    merchantPayout: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
     job: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]), create: vi.fn() }
   };
 
@@ -38,10 +39,6 @@ const mocks = vi.hoisted(() => {
     storageDriver: "local",
     storagePath: "/tmp",
     mediaPublicBaseUrl: "http://localhost:3000",
-    r2AccountId: "",
-    r2AccessKeyId: "",
-    r2SecretAccessKey: "",
-    r2Bucket: "",
     paydunyaMasterKey: "",
     paydunyaPrivateKey: "",
     paydunyaToken: "",
@@ -59,8 +56,10 @@ const mocks = vi.hoisted(() => {
   const sendEmail = vi.fn();
   const sendPushBatch = vi.fn();
   const loggerWarn = vi.fn();
+  const submitPayout = vi.fn();
+  const reconcilePayoutStatus = vi.fn();
 
-  return { adapter, prisma, config, enqueueJob, sendNotification, sendEmail, sendPushBatch, loggerWarn };
+  return { adapter, prisma, config, enqueueJob, sendNotification, sendEmail, sendPushBatch, loggerWarn, submitPayout, reconcilePayoutStatus };
 });
 
 vi.mock("./adapters/index.js", () => ({
@@ -79,6 +78,11 @@ vi.mock("./modules/notifications/index.js", () => ({ sendNotification: mocks.sen
 vi.mock("./lib/email.js", () => ({ sendEmail: mocks.sendEmail }));
 
 vi.mock("./lib/push.js", () => ({ sendPushBatch: mocks.sendPushBatch }));
+
+vi.mock("./lib/payout-service.js", () => ({
+  submitPayout: mocks.submitPayout,
+  reconcilePayoutStatus: mocks.reconcilePayoutStatus
+}));
 
 vi.mock("./lib/logger.js", () => ({
   logger: { warn: mocks.loggerWarn, error: vi.fn(), info: vi.fn() }
@@ -313,5 +317,118 @@ describe("handleJob — refund_reconciliation", () => {
 
     // phone should be undefined regardless — but the booking lookup should NOT have happened
     expect(mocks.prisma.booking.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleJob — process_merchant_payout", () => {
+  it("calls submitPayout with the payoutId", async () => {
+    await handleJob("process_merchant_payout", { payoutId: "payout_1" });
+    expect(mocks.submitPayout).toHaveBeenCalledWith("payout_1");
+  });
+
+  it("propagates error when submitPayout throws", async () => {
+    mocks.submitPayout.mockRejectedValue(new Error("PayDunya timeout"));
+    await expect(handleJob("process_merchant_payout", { payoutId: "payout_1" })).rejects.toThrow("PayDunya timeout");
+  });
+});
+
+describe("handleJob — payout_reconciliation", () => {
+  beforeEach(() => {
+    // Reset payout mock implementations to prevent mockResolvedValueOnce chain
+    // pollution across tests (clearAllMocks does NOT clear implementation chains).
+    mocks.prisma.merchantPayout.findMany.mockReset();
+    mocks.prisma.merchantPayout.updateMany.mockReset().mockResolvedValue({ count: 0 });
+    mocks.prisma.merchantPayout.update.mockReset();
+  });
+
+  it("reconciles all pending payouts", async () => {
+    mocks.prisma.merchantPayout.findMany
+      .mockResolvedValueOnce([{ id: "p_1" }, { id: "p_2" }]); // pending
+
+    await handleJob("payout_reconciliation", {});
+
+    expect(mocks.reconcilePayoutStatus).toHaveBeenCalledWith("p_1");
+    expect(mocks.reconcilePayoutStatus).toHaveBeenCalledWith("p_2");
+    expect(mocks.enqueueJob).not.toHaveBeenCalled();
+  });
+
+  it("handles empty pending payouts gracefully", async () => {
+    mocks.prisma.merchantPayout.findMany
+      .mockResolvedValueOnce([]); // pending
+
+    await handleJob("payout_reconciliation", {});
+
+    expect(mocks.reconcilePayoutStatus).not.toHaveBeenCalled();
+  });
+
+  it("reschedules retryable payouts with exponential backoff", async () => {
+    const now = Date.now();
+    vi.setSystemTime(now);
+
+    const retryablePayouts = [
+      { id: "p_r1", attemptCount: 1, bookingId: "b_1", status: "failed_retryable", nextRetryTime: null },
+      { id: "p_r2", attemptCount: 2, bookingId: "b_2", status: "failed_retryable", nextRetryTime: new Date(now - 1000) }
+    ];
+
+    mocks.prisma.merchantPayout.findMany
+      .mockResolvedValueOnce([]) // pending
+      .mockResolvedValueOnce(retryablePayouts); // claimed payouts (after atomic claim)
+
+    // Atomic claim returns 2 records
+    mocks.prisma.merchantPayout.updateMany.mockResolvedValue({ count: 2 });
+
+    await handleJob("payout_reconciliation", {});
+
+    expect(mocks.prisma.merchantPayout.update).toHaveBeenCalledWith({
+      where: { id: "p_r1" },
+      data: expect.objectContaining({
+        attemptCount: 2,
+        status: "scheduled",
+        nextRetryTime: expect.any(Date)
+      })
+    });
+
+    expect(mocks.prisma.merchantPayout.update).toHaveBeenCalledWith({
+      where: { id: "p_r2" },
+      data: expect.objectContaining({
+        attemptCount: 3,
+        status: "scheduled",
+        nextRetryTime: expect.any(Date)
+      })
+    });
+
+    expect(mocks.enqueueJob).toHaveBeenCalledTimes(2);
+    expect(mocks.enqueueJob).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      type: "process_merchant_payout",
+      payload: { payoutId: "p_r1" }
+    }));
+
+    vi.useRealTimers();
+  });
+
+  it("does not reschedule payouts that have reached max attempts (5)", async () => {
+    // lt: 5 filters out attemptCount >= 5, so updateMany claims nothing
+    mocks.prisma.merchantPayout.findMany
+      .mockResolvedValueOnce([]); // pending
+
+    // updateMany default returns { count: 0 } → exits early
+
+    await handleJob("payout_reconciliation", {});
+
+    expect(mocks.prisma.merchantPayout.update).not.toHaveBeenCalled();
+    expect(mocks.enqueueJob).not.toHaveBeenCalled();
+  });
+
+  it("respects nextRetryTime and does not retry before it", async () => {
+    // { lte: new Date() } filters out future nextRetryTime, so updateMany claims nothing
+    mocks.prisma.merchantPayout.findMany
+      .mockResolvedValueOnce([]); // pending
+
+    // updateMany default returns { count: 0 } → exits early
+
+    await handleJob("payout_reconciliation", {});
+
+    expect(mocks.prisma.merchantPayout.update).not.toHaveBeenCalled();
+    expect(mocks.enqueueJob).not.toHaveBeenCalled();
   });
 });

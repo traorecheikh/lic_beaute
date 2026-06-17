@@ -53,7 +53,7 @@ class AuthPageScaffold extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/logo.png',
-                        height: 72.h,
+                        height: 100.h,
                         fit: BoxFit.contain,
                       ),
                       SizedBox(height: 20.h),
@@ -80,7 +80,7 @@ class AuthPageScaffold extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(28.r),
+                      top: Radius.circular(AppRadius.xl.r),
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -243,32 +243,32 @@ class _EditorialFieldState extends State<EditorialField> {
                     vertical: 16.h,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: BorderSide(
                       color: AppColors.outline.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: const BorderSide(
                       color: AppColors.primary,
                       width: 1.5,
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: const BorderSide(
                       color: AppColors.error,
                       width: 1.2,
                     ),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: const BorderSide(
                       color: AppColors.error,
                       width: 1.8,
@@ -350,7 +350,7 @@ class AuthPrimaryButton extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       decoration: BoxDecoration(
         color: loading ? AppColors.outline : AppColors.primary,
-        borderRadius: BorderRadius.circular(14.r),
+        borderRadius: BorderRadius.circular(AppRadius.full.r),
         boxShadow: loading
             ? null
             : [

@@ -605,13 +605,13 @@ const salonId = computed(() => String(route.params.salonId));
 const action = ref<"approve" | "reject" | "request-info">("approve");
 const reason = ref("");
 const mutationError = ref("");
-const selectedDoc = ref<any>(null);
+const selectedDoc = ref<{ label: string; fileUrl?: string | null; status?: string; note?: string | null } | null>(null);
 
 // ── Service Management ──
 
 const serviceModalOpen = ref(false);
-const editingService = ref<any>(null);
-const deletingService = ref<any>(null);
+const editingService = ref<{ id: string; name: string; category: string; durationMinutes: number; priceXof: number; depositMode: string; depositAmountXof?: number | null; depositPercent?: number | null; isActive: boolean } | null>(null);
+const deletingService = ref<{ id: string; name: string } | null>(null);
 const serviceError = ref("");
 
 const depositModes = [
@@ -630,7 +630,7 @@ const serviceForm = ref({
   depositPercent: undefined as number | undefined
 });
 
-function openServiceModal(service?: any) {
+function openServiceModal(service?: { id: string; name: string; category: string; durationMinutes: number; priceXof: number; depositMode: string; depositAmountXof?: number | null; depositPercent?: number | null; isActive: boolean }) {
   editingService.value = service ?? null;
   serviceError.value = "";
   if (service) {
@@ -639,7 +639,7 @@ function openServiceModal(service?: any) {
       category: service.category,
       durationMinutes: service.durationMinutes,
       priceXof: service.priceXof,
-      depositMode: service.depositMode,
+      depositMode: service.depositMode as "none" | "fixed" | "percent",
       depositAmountXof: service.depositAmountXof ?? undefined,
       depositPercent: service.depositPercent ?? undefined
     };
@@ -657,7 +657,7 @@ function openServiceModal(service?: any) {
   serviceModalOpen.value = true;
 }
 
-function confirmDeleteService(service: any) {
+function confirmDeleteService(service: { id: string; name: string }) {
   deletingService.value = service;
 }
 
@@ -669,7 +669,7 @@ const servicesQuery = useQuery({
 
 const serviceMutation = useMutation({
   mutationFn: async () => {
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       name: serviceForm.value.name.trim(),
       category: serviceForm.value.category.trim() || "general",
       durationMinutes: serviceForm.value.durationMinutes,
@@ -683,9 +683,9 @@ const serviceMutation = useMutation({
       payload.depositPercent = serviceForm.value.depositPercent ?? 0;
     }
     if (editingService.value) {
-      return updateAdminSalonService(auth.accessToken ?? "", salonId.value, editingService.value.id, payload);
+      return updateAdminSalonService(auth.accessToken ?? "", salonId.value, editingService.value.id, payload as any);
     }
-    return createAdminSalonService(auth.accessToken ?? "", salonId.value, payload);
+    return createAdminSalonService(auth.accessToken ?? "", salonId.value, payload as any);
   },
   onSuccess: async () => {
     serviceModalOpen.value = false;

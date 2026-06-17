@@ -2,7 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hive_ce/hive_ce.dart';
+
+import '../constants/storage_keys.dart';
 
 enum LocationStatus { granted, denied, deniedForever, serviceDisabled }
 
@@ -59,6 +63,29 @@ final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
   }
 });
 
+/// Reverse-geocodes the current GPS position to a city/locality name.
+/// Returns null if location permission is not granted or geocoding fails.
+final cityFromLocationProvider = FutureProvider.autoDispose<String?>((ref) async {
+  final position = await ref.watch(locationProvider.future);
+  if (position == null) return null;
+  try {
+    final placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+    if (placemarks.isEmpty) return null;
+    final p = placemarks.first;
+    return p.locality?.isNotEmpty == true
+        ? p.locality
+        : p.subAdministrativeArea?.isNotEmpty == true
+        ? p.subAdministrativeArea
+        : p.administrativeArea;
+  } catch (e) {
+    debugPrint('[Location] → reverse-geocode failed: $e');
+    return null;
+  }
+});
+
 // Session-level: whether banner has been dismissed this session
 class LocationBannerDismissedNotifier extends Notifier<bool> {
   @override
@@ -82,3 +109,71 @@ Future<LocationStatus> requestLocationPermission() async {
 
 Future<void> openLocationSettings() => Geolocator.openLocationSettings();
 Future<void> openAppSettings() => Geolocator.openAppSettings();
+
+class LocationPromptManager {
+  static const String _keyCount = 'location_prompt_count';
+  static const String _keyLastTime = 'location_prompt_last_time';
+  static const String _keyJustRegistered = 'location_just_registered';
+
+  static Future<bool> shouldShowPrompt() async {
+    final status = await Geolocator.checkPermission();
+    if (status == LocationPermission.always || status == LocationPermission.whileInUse) {
+      return false;
+    }
+
+    final box = Hive.box<dynamic>(StorageKeys.settingsBox);
+    
+    // Override if user just completed registration/inscription
+    final justRegistered = box.get(_keyJustRegistered, defaultValue: false) as bool;
+    if (justRegistered) {
+      return true;
+    }
+
+    final count = box.get(_keyCount, defaultValue: 0) as int;
+    if (count >= 5) {
+      return false;
+    }
+
+    final lastTimeStr = box.get(_keyLastTime) as String?;
+    if (lastTimeStr == null) {
+      return true;
+    }
+
+    final lastTime = DateTime.tryParse(lastTimeStr);
+    if (lastTime == null) return true;
+
+    final now = DateTime.now();
+    final diff = now.difference(lastTime);
+    final Duration delay;
+    switch (count) {
+      case 1:
+        delay = const Duration(days: 1);
+        break;
+      case 2:
+        delay = const Duration(days: 3);
+        break;
+      case 3:
+        delay = const Duration(days: 7);
+        break;
+      case 4:
+        delay = const Duration(days: 15);
+        break;
+      default:
+        delay = const Duration(days: 0);
+    }
+    return diff >= delay;
+  }
+
+  static Future<void> recordPromptShown() async {
+    final box = Hive.box<dynamic>(StorageKeys.settingsBox);
+    final count = box.get(_keyCount, defaultValue: 0) as int;
+    await box.put(_keyCount, count + 1);
+    await box.put(_keyLastTime, DateTime.now().toIso8601String());
+    await box.put(_keyJustRegistered, false); // Clear the override flag
+  }
+
+  static Future<void> markJustRegistered() async {
+    final box = Hive.box<dynamic>(StorageKeys.settingsBox);
+    await box.put(_keyJustRegistered, true);
+  }
+}

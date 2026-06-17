@@ -67,11 +67,11 @@ extension _PE on _Period {
         _Period.nuit => 'Nuit',
       };
   String get icon => switch (this) {
-        _Period.matin => '☀️',
-        _Period.midi => '🍽️',
-        _Period.apresMidi => '⛅',
-        _Period.soiree => '🌆',
-        _Period.nuit => '🌙',
+        _Period.matin => 'sparkle',
+        _Period.midi => 'clock',
+        _Period.apresMidi => 'clock',
+        _Period.soiree => 'star',
+        _Period.nuit => 'star',
       };
   Color get color => switch (this) {
         _Period.matin => const Color(0xFFF59E0B),
@@ -317,7 +317,7 @@ class V2SlotPeriodSections extends StatelessWidget {
       children: [
         for (final entry in periods.entries) ...[
           Row(children: [
-            Text(entry.key.icon, style: const TextStyle(fontSize: 16)),
+            AppIcon(entry.key.icon, size: 16, color: entry.key.color),
             SizedBox(width: 6.w),
             Text(
               entry.key.label.toUpperCase(),
@@ -406,12 +406,23 @@ class _V3State extends State<V3SlotPillTabs> {
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Center(
-                        child: Text(
-                          '${p.icon} ${p.label}',
-                          style: AppTextStyles.labelMd.copyWith(
-                            color:
-                                active == p ? AppColors.surface : AppColors.onSurfaceVariant,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AppIcon(
+                              p.icon,
+                              size: 16,
+                              color: active == p ? AppColors.surface : p.color,
+                            ),
+                            SizedBox(width: 6.w),
+                            Text(
+                              p.label,
+                              style: AppTextStyles.labelMd.copyWith(
+                                color:
+                                    active == p ? AppColors.surface : AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -565,7 +576,7 @@ class _V5State extends State<V5SlotAccordion> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                       child: Row(children: [
-                        Text(entry.key.icon, style: const TextStyle(fontSize: 18)),
+                        AppIcon(entry.key.icon, size: 18, color: entry.key.color),
                         SizedBox(width: 10.w),
                         Expanded(
                           child: Text(entry.key.label,
@@ -685,11 +696,22 @@ class _V6State extends State<V6SlotPageCards> {
                       ),
                       boxShadow: _page == i ? null : AppShadows.sm,
                     ),
-                    child: Text(
-                      '${entries[i].key.icon} ${entries[i].key.label}',
-                      style: AppTextStyles.labelMd.copyWith(
-                        color: _page == i ? AppColors.white : AppColors.onSurfaceVariant,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppIcon(
+                          entries[i].key.icon,
+                          size: 16,
+                          color: _page == i ? AppColors.white : entries[i].key.color,
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          entries[i].key.label,
+                          style: AppTextStyles.labelMd.copyWith(
+                            color: _page == i ? AppColors.white : AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -928,7 +950,9 @@ class V9SlotColorChips extends StatelessWidget {
                     width: 8, height: 8,
                     decoration: BoxDecoration(color: p.color, shape: BoxShape.circle)),
                 SizedBox(width: 5.w),
-                Text('${p.icon} ${p.label}',
+                AppIcon(p.icon, size: 14, color: p.color),
+                SizedBox(width: 4.w),
+                Text(p.label,
                     style: AppTextStyles.bodySm
                         .copyWith(color: AppColors.onSurfaceVariant)),
               ]),

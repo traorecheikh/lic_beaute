@@ -61,6 +61,9 @@ describe("ProController owner-only guards", () => {
     await c.listPayouts({} as never, rep);
     await c.listInvoices({} as never, rep);
     await c.downloadInvoicePdf({ params: { invoiceId: "inv1" } } as never, rep);
+    await c.getPayoutSettings({} as never, rep);
+    await c.updatePayoutSettings({ body: { payoutMethod: "wave_senegal", payoutPhone: "771234567", payoutName: "Salon", password: "x" } } as never, rep);
+    await c.listMerchantPayouts({} as never, rep);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 403, "owner_only", expect.any(String));
   });
 });

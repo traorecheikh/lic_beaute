@@ -114,6 +114,12 @@ export interface ProSalonProfile {
     averageRating: number;
     /**
      * 
+     * @type {number}
+     * @memberof ProSalonProfile
+     */
+    reviewCount: number;
+    /**
+     * 
      * @type {ProSalonProfileSubscriptionTierEnum}
      * @memberof ProSalonProfile
      */
@@ -195,6 +201,7 @@ export function instanceOfProSalonProfile(value: object): value is ProSalonProfi
     if (!('phone' in value) || value['phone'] === undefined) return false;
     if (!('instagram' in value) || value['instagram'] === undefined) return false;
     if (!('averageRating' in value) || value['averageRating'] === undefined) return false;
+    if (!('reviewCount' in value) || value['reviewCount'] === undefined) return false;
     if (!('subscriptionTier' in value) || value['subscriptionTier'] === undefined) return false;
     if (!('isVisibleInMarketplace' in value) || value['isVisibleInMarketplace'] === undefined) return false;
     if (!('canReceiveBookings' in value) || value['canReceiveBookings'] === undefined) return false;
@@ -228,6 +235,7 @@ export function ProSalonProfileFromJSONTyped(json: any, ignoreDiscriminator: boo
         'phone': json['phone'],
         'instagram': json['instagram'],
         'averageRating': json['averageRating'],
+        'reviewCount': json['reviewCount'],
         'subscriptionTier': json['subscriptionTier'],
         'isVisibleInMarketplace': json['isVisibleInMarketplace'],
         'canReceiveBookings': json['canReceiveBookings'],
@@ -262,6 +270,7 @@ export function ProSalonProfileToJSONTyped(value?: ProSalonProfile | null, ignor
         'phone': value['phone'],
         'instagram': value['instagram'],
         'averageRating': value['averageRating'],
+        'reviewCount': value['reviewCount'],
         'subscriptionTier': value['subscriptionTier'],
         'isVisibleInMarketplace': value['isVisibleInMarketplace'],
         'canReceiveBookings': value['canReceiveBookings'],

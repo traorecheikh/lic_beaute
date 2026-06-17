@@ -19,6 +19,7 @@ part 'salon_summary.g.dart';
 /// * [city] 
 /// * [neighborhood] 
 /// * [averageRating] 
+/// * [reviewCount] 
 /// * [latitude] 
 /// * [longitude] 
 /// * [subscriptionTier] 
@@ -48,6 +49,9 @@ abstract class SalonSummary implements Built<SalonSummary, SalonSummaryBuilder> 
 
   @BuiltValueField(wireName: r'averageRating')
   num get averageRating;
+
+  @BuiltValueField(wireName: r'reviewCount')
+  int get reviewCount;
 
   @BuiltValueField(wireName: r'latitude')
   num? get latitude;
@@ -128,6 +132,11 @@ class _$SalonSummarySerializer implements PrimitiveSerializer<SalonSummary> {
     yield serializers.serialize(
       object.averageRating,
       specifiedType: const FullType(num),
+    );
+    yield r'reviewCount';
+    yield serializers.serialize(
+      object.reviewCount,
+      specifiedType: const FullType(int),
     );
     yield r'latitude';
     yield object.latitude == null ? null : serializers.serialize(
@@ -237,6 +246,13 @@ class _$SalonSummarySerializer implements PrimitiveSerializer<SalonSummary> {
             specifiedType: const FullType(num),
           ) as num;
           result.averageRating = valueDes;
+          break;
+        case r'reviewCount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.reviewCount = valueDes;
           break;
         case r'latitude':
           final valueDes = serializers.deserialize(

@@ -1,25 +1,39 @@
 @import "tailwindcss";
 
-@theme {
-  /* ── Brand Palette (Restored) ──────────────────────────────── */
-  --color-primary: #D96B8C;        /* Blush / Pink */
-  --color-secondary: #C9A26A;      /* Gold / Sand */
-  --color-tertiary: #8B4A2E;       /* Cocoa / Brown */
-  
+@theme inline {
+  /* ── Semantic tokens (light mode only) ───────────────────────── */
+  --color-canvas: #F6F6F6;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+  --color-text-primary: #2D1A12;
+  --color-text-secondary: #5C4A3A;
+  --color-text-muted: #8A7A6A;
+  --color-border-subtle: #E8E2DA;
+  --color-border-default: #D6CEC4;
+
+  /* ── Brand Palette ──────────────────────────────────────────── */
+  --color-primary: #D96B8C;
+  --color-primary-hover: #C45A7A;
+  --color-secondary: #C9A26A;
+  --color-secondary-hover: #B89250;
+  --color-tertiary: #8B4A2E;
+
   --color-espresso: #2D1A12;
-  --color-cocoa: #4A3728;
+  --color-cocoa: #5C4A3A;
   --color-sand: #F9F5F0;
   --color-blush: #FCEEF2;
 
   /* ── Neutral Surfaces ────────────────────────────────────────── */
   --color-neutral-bg: #F6F6F6;
-  --color-surface: #FFFFFF;
-  --color-on-surface: #2D1A12;     /* Using Espresso as default text */
-  --color-on-surface-variant: #4A3728;
+  --color-on-surface: #2D1A12;
+  --color-on-surface-variant: #5C4A3A;
   --color-outline-variant: #E8E2DA;
 
   /* ── Semantic ────────────────────────────────────────────────── */
+  --color-success: #2E7D32;
+  --color-warning: #B8860B;
   --color-error: #BA1A1A;
+  --color-info: #1565C0;
 
   /* ── Typography ──────────────────────────────────────────────── */
   --font-display: "Inter", "TT Commons Pro", sans-serif;
@@ -36,98 +50,130 @@
   --radius-3xl: 32px;
 }
 
+/* ── Base layer ──────────────────────────────────────────────────── */
 @layer base {
   body {
-    @apply min-h-screen bg-neutral-bg text-espresso font-sans antialiased selection:bg-primary/10;
+    @apply min-h-screen font-sans antialiased;
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 
   h1, h2, h3 {
-    @apply font-display font-bold leading-tight text-espresso;
+    @apply font-display font-bold leading-tight;
+    color: var(--color-text-primary);
   }
 }
 
 /* ── Admin Typography Scale ──────────────────────────────────── */
-/* One scale for all admin + pro pages. Never use ad-hoc text-* sizes. */
 
 @utility page-title {
-  /* "Pilotage", "Salons", "Abonnements" — every list page header */
-  @apply font-display text-[32px] font-medium-bold tracking-[-0.01em] text-espresso leading-[1.2];
+  @apply font-display text-[32px] font-medium-bold tracking-[-0.01em] leading-[1.2];
+  color: var(--color-text-primary);
 }
 
 @utility entity-title {
-  /* Salon name, subscription name on detail pages */
-  @apply font-display text-[32px] font-medium-bold tracking-[-0.01em] text-espresso leading-[1.2];
+  @apply font-display text-[32px] font-medium-bold tracking-[-0.01em] leading-[1.2];
+  color: var(--color-text-primary);
 }
 
 @utility section-label {
-  /* "Pièces Justificatives", "Top croissance" — section dividers */
-  @apply font-sans text-[11px] font-bold uppercase tracking-[0.3em] text-cocoa/50;
+  @apply font-sans text-[11px] font-bold uppercase tracking-[0.3em];
+  color: var(--color-text-muted);
 }
 
 @utility row-primary {
-  /* Primary text in list rows and table cells */
-  @apply font-sans text-[14px] font-medium-bold text-espresso;
+  @apply font-sans text-[14px] font-medium-bold;
+  color: var(--color-text-primary);
 }
 
 @utility row-meta {
-  /* Secondary metadata in list rows */
-  @apply font-sans text-[12px] text-cocoa/80;
+  @apply font-sans text-[12px];
+  color: var(--color-text-secondary);
 }
 
 @utility metric-value {
-  /* KPI numbers */
-  @apply font-sans text-2xl font-bold text-espresso tabular-nums;
+  @apply font-sans text-2xl font-bold tabular-nums;
+  color: var(--color-text-primary);
 }
 
 @utility metric-label {
-  /* KPI label underneath */
-  @apply font-sans text-[10px] font-semibold uppercase tracking-widest text-cocoa/80;
+  @apply font-sans text-[10px] font-semibold uppercase tracking-widest;
+  color: var(--color-text-muted);
 }
 
 /* ── Shared Layout ───────────────────────────────────────────── */
 
 @utility panel-clean {
-  @apply bg-surface rounded-2xl border border-outline-variant/50 shadow-[0_2px_8px_rgba(45,26,18,0.02)];
+  background-color: var(--color-surface-raised);
+  @apply rounded-2xl;
+  border-color: var(--color-border-subtle);
+  border-width: 1px;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
 
 @utility btn-primary {
   @apply inline-flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-[0.98] disabled:opacity-50;
-  @apply bg-primary text-white px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  @apply px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  background-color: var(--color-primary);
+  color: white;
   &:hover {
-    @apply shadow-lg shadow-primary/20 bg-[#C45A7A];
+    background-color: var(--color-primary-hover);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 25%, transparent);
   }
 }
 
 @utility btn-secondary {
   @apply inline-flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-[0.98] disabled:opacity-50;
-  @apply bg-white text-espresso px-8 py-2.5 text-[12px] ring-1 ring-outline-variant tracking-widest uppercase;
+  @apply px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
   &:hover {
-    @apply bg-sand;
+    background-color: var(--color-sand);
   }
 }
 
 @utility btn-gold {
   @apply inline-flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-[0.98] disabled:opacity-50;
-  @apply bg-secondary text-white px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  @apply px-8 py-2.5 text-[12px] tracking-widest uppercase;
+  background-color: var(--color-secondary);
+  color: white;
   &:hover {
-    @apply opacity-90 shadow-lg shadow-secondary/10;
+    opacity: 0.9;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--color-secondary) 20%, transparent);
   }
 }
 
 /* ── Form ────────────────────────────────────────────────────── */
 
 @utility input-shell {
-  @apply w-full bg-surface border border-outline-variant rounded-xl px-4 py-3 text-sm text-espresso placeholder:text-cocoa/60 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all;
+  @apply w-full rounded-xl px-4 py-3 text-sm transition-all;
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-primary);
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 15%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  }
 }
 
 @utility input-error {
-  @apply border-error/50 ring-1 ring-error/20 bg-error/[0.02];
+  border-color: color-mix(in srgb, var(--color-error) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-error) 20%, transparent);
 }
 
 @utility input-dirty {
-  @apply border-primary/40 ring-1 ring-primary/10;
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 @keyframes field-shake {

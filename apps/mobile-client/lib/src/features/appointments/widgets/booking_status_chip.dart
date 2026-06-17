@@ -51,7 +51,7 @@ class BookingStatusChip extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(AppRadius.sm.r),
       ),
       child: Text(
         label,

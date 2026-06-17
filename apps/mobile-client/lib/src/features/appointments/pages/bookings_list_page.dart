@@ -30,7 +30,7 @@ class BookingsListPage extends ConsumerWidget {
       overlayColor: WidgetStateProperty.all(Colors.transparent),
       indicator: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(11.r),
+        borderRadius: BorderRadius.circular(AppRadius.md.r),
         boxShadow: AppShadows.sm,
       ),
       indicatorPadding: EdgeInsets.all(4.r),
@@ -50,16 +50,18 @@ class BookingsListPage extends ConsumerWidget {
         backgroundColor: AppColors.neutral,
         body: NestedScrollView(
           headerSliverBuilder: (context, _) => [
-            SliverSafeArea(
-              bottom: false,
-              sliver: SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
-                  padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
-                  child: Text(
-                    'Mes Rendez-vous',
-                    style: AppTextStyles.headlineMd,
-                  ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: AppColors.surface,
+                padding: EdgeInsets.fromLTRB(
+                  24.w,
+                  MediaQuery.paddingOf(context).top + 20.h,
+                  24.w,
+                  0,
+                ),
+                child: Text(
+                  'Mes Rendez-vous',
+                  style: AppTextStyles.headlineMd,
                 ),
               ),
             ),
@@ -148,7 +150,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(14.r),
+          borderRadius: BorderRadius.circular(AppRadius.lg.r),
         ),
         child: _tabBar,
       ),
@@ -227,7 +229,7 @@ class _BookingTab extends StatelessWidget {
         ),
         padding: EdgeInsets.all(20.w),
         itemCount: items.length + (staleAt != null ? 1 : 0),
-        separatorBuilder: (_, _) => gapH12,
+        separatorBuilder: (_, _) => gapH16,
         itemBuilder: (_, i) {
           if (staleAt != null) {
             if (i == 0) {

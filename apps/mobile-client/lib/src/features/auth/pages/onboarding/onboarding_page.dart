@@ -97,7 +97,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(28.r),
+                    top: Radius.circular(AppRadius.xl.r),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -141,7 +141,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           children: [
                             Text(
                               _slides[_currentPage].title,
-                              style: AppTextStyles.headlineLg,
+                              style: AppTextStyles.displaySm,
                             ),
                             SizedBox(height: 10.h),
                             Text(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,6 +11,7 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
@@ -26,11 +29,37 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
   final _otpController = TextEditingController();
   bool _codeSent = false;
   bool _submitting = false;
+  Timer? _timer;
+  int _secondsRemaining = 30;
+  bool _canResend = false;
+
+  void _startTimer() {
+    setState(() {
+      _secondsRemaining = 30;
+      _canResend = false;
+    });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_secondsRemaining > 0) {
+          _secondsRemaining--;
+        } else {
+          _canResend = true;
+          timer.cancel();
+        }
+      });
+    });
+  }
 
   @override
   void dispose() {
     _phoneController.dispose();
     _otpController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -92,18 +121,18 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                   vertical: 16.h,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14.r),
+                  borderRadius: BorderRadius.circular(AppRadius.md.r),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14.r),
+                  borderRadius: BorderRadius.circular(AppRadius.md.r),
                   borderSide: BorderSide(
                     color: AppColors.outline.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14.r),
+                  borderRadius: BorderRadius.circular(AppRadius.md.r),
                   borderSide: const BorderSide(
                     color: AppColors.primary,
                     width: 1.5,
@@ -142,7 +171,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(AppRadius.md.r),
                         border: Border.all(
                           color: AppColors.outline.withValues(alpha: 0.5),
                         ),
@@ -156,7 +185,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(AppRadius.md.r),
                         border: Border.all(
                           color: AppColors.primary,
                           width: 1.5,
@@ -175,11 +204,47 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
               onTap: _verifyCode,
             ),
             gapH24,
+            if (!_canResend)
+              Center(
+                child: Text(
+                  'Renvoyer le code dans ${_secondsRemaining}s',
+                  style: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: _submitting ? null : _requestCode,
+                    child: Text(
+                      'Renvoyer le code',
+                      style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _timer?.cancel();
+                      context.push(AppRoutes.emailLogin);
+                    },
+                    child: Text(
+                      "Recourir à l'email",
+                      style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
+                    ),
+                  ),
+                ],
+              ),
+            gapH16,
             Center(
               child: GestureDetector(
-                onTap: () => setState(() => _codeSent = false),
+                onTap: () {
+                  _timer?.cancel();
+                  setState(() => _codeSent = false);
+                },
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                   child: Text(
                     'Modifier le numéro',
                     style: AppTextStyles.labelSm.copyWith(
@@ -214,6 +279,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         await ref.read(authActionsProvider).requestOtp(phone: phone);
         if (!mounted) return;
         setState(() => _codeSent = true);
+        _startTimer();
         AppSnackbar.success(context, 'Code OTP envoyé.');
       },
       fallback: 'Envoi OTP impossible.',

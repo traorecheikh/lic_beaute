@@ -13,6 +13,7 @@ Name | Type
 `city` | string
 `neighborhood` | string
 `averageRating` | number
+`reviewCount` | number
 `latitude` | number
 `longitude` | number
 `subscriptionTier` | string
@@ -41,6 +42,7 @@ const example = {
   "city": null,
   "neighborhood": null,
   "averageRating": null,
+  "reviewCount": null,
   "latitude": null,
   "longitude": null,
   "subscriptionTier": null,

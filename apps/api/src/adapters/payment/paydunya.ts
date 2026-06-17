@@ -55,15 +55,18 @@ type SoftPayExecuteResponse = {
 
 type DisburseGetInvoiceResponse = {
   response_code: string;
-  response_text: string;
-  invoice_token: string;
+  response_text?: string;
+  disburse_token: string;
 };
 
 type DisburseSubmitInvoiceResponse = {
   response_code: string;
-  response_text: string;
-  status: string;
+  response_text?: string;
+  status?: string;
+  description?: string;
+  transaction_id?: string;
 };
+
 
 // ─── IPN types ────────────────────────────────────────────────────────────────
 
@@ -298,6 +301,7 @@ const SENEGAL_TOGGLE_BY_CODE: Record<string, string> = {
 export class PayDunyaAdapter implements PaymentAdapter {
   private invoiceApiUrl: string;
   private softpayApiUrl: string;
+  private disburseApiUrl: string;
   private checkoutHost: string;
 
   constructor(
@@ -312,6 +316,9 @@ export class PayDunyaAdapter implements PaymentAdapter {
     this.invoiceApiUrl = this.env === "sandbox"
       ? "https://app.paydunya.com/sandbox-api/v1"
       : `${this.baseUrl}/api/v1`;
+    this.disburseApiUrl = this.env === "sandbox"
+      ? "https://app.paydunya.com/sandbox-api/v2"
+      : `${this.baseUrl}/api/v2`;
     // SoftPay method endpoints live under `/api/v1`, even for sandbox credentials.
     this.softpayApiUrl = `${this.baseUrl}/api/v1`;
     this.checkoutHost = this.env === "sandbox"
@@ -714,62 +721,225 @@ export class PayDunyaAdapter implements PaymentAdapter {
       throw new Error("PayDunya disbursement requires a recipient phone number");
     }
 
-    const storeName = this.env === "sandbox" ? "Beauté Avenue Dev" : "Beauté Avenue";
+    // Delegate invoice creation to the shared merchant payout method.
+    // This ensures consistent phone normalization, amount validation,
+    // callback handling, and error formatting across both flows.
+    const { disburseToken } = await this.createDisbursementInvoice({
+      phone: params.phone,
+      amountXof: params.amountXof,
+      withdrawMode: params.withdrawMode ?? "wave-senegal",
+      callbackUrl: `${this.baseOrigin}/api/v1/payments/webhooks/paydunya`
+    });
 
-    const getInvoiceBody: Record<string, unknown> = {
-      invoice: {
-        total_amount: String(params.amountXof),
-        description: params.reason
-      },
-      store: {
-        name: storeName,
-        website_url: this.baseOrigin
-      },
-      actions: {
-        callback_url: `${this.baseOrigin}/api/v1/payments/webhooks/paydunya`
-      },
-      custom_data: {
-        type: "disbursement",
-        originalProviderRef: params.providerRef,
-        reason: params.reason
-      },
-      account_alias: params.phone,
-      withdraw_mode: params.withdrawMode ?? "wave-senegal"
-    };
+    // Delegate invoice submission to the shared method.
+    // submitDisbursement catches network errors and returns pending status
+    // instead of throwing — we re-throw here to preserve the existing
+    // refund-contract behavior where any failure is an exception.
+    const result = await this.submitDisbursement({
+      disburseToken,
+      disburseId: params.providerRef
+    });
 
-    const getInvoiceResponse = await this._postJson<DisburseGetInvoiceResponse>(
-      this.invoiceApiUrl,
-      "/disburse/v2/get-invoice",
-      getInvoiceBody
-    );
-
-    if (getInvoiceResponse.response_code !== "00") {
+    if (!result.success) {
       throw new Error(
-        `PayDunya Disburse get-invoice failed: ${getInvoiceResponse.response_code} ${getInvoiceResponse.response_text}`
+        `PayDunya Disburse submit-invoice failed: ${result.responseText ?? result.description ?? "unknown error"}`
       );
     }
 
-    const invoiceToken = getInvoiceResponse.invoice_token;
+    return { refundRef: disburseToken };
+  }
 
-    const submitBody = {
-      invoice: {
-        token: invoiceToken
+  async createDisbursementInvoice(params: {
+    phone: string;
+    amountXof: number;
+    withdrawMode: string;
+    callbackUrl: string;
+  }): Promise<{ disburseToken: string }> {
+    let cleanedPhone = params.phone.replace(/[\s+\-()]/g, "");
+    if (cleanedPhone.startsWith("221")) {
+      cleanedPhone = cleanedPhone.substring(3);
+    }
+    if (cleanedPhone.startsWith("00221")) {
+      cleanedPhone = cleanedPhone.substring(5);
+    }
+    if (!/^\d{9}$/.test(cleanedPhone)) {
+      throw new Error(`Numéro de téléphone bénéficiaire invalide: ${params.phone}. Doit être un numéro sénégalais valide.`);
+    }
+
+    const amount = Math.floor(params.amountXof);
+    if (amount <= 0) {
+      throw new Error(`Le montant du transfert doit être supérieur à 0 XOF (reçu: ${amount})`);
+    }
+
+    const body = {
+      account_alias: cleanedPhone,
+      amount: amount,
+      withdraw_mode: params.withdrawMode,
+      callback_url: params.callbackUrl
+    };
+
+    let response = await this._postJson<DisburseGetInvoiceResponse>(
+      this.disburseApiUrl,
+      "/disburse/get-invoice",
+      body
+    );
+
+    if (response.response_code === "4002" && this.env === "sandbox") {
+      body.callback_url = "https://httpbin.org/post";
+      response = await this._postJson<DisburseGetInvoiceResponse>(
+        this.disburseApiUrl,
+        "/disburse/get-invoice",
+        body
+      );
+    }
+
+    if (response.response_code !== "00") {
+      throw new Error(
+        `PayDunya get-invoice failed with code ${response.response_code}: ${response.response_text ?? "unknown error"}`
+      );
+    }
+
+    return { disburseToken: response.disburse_token };
+  }
+
+  async submitDisbursement(params: {
+    disburseToken: string;
+    disburseId: string;
+  }): Promise<{
+    success: boolean;
+    status: "success" | "pending" | "failed";
+    responseText?: string;
+    description?: string;
+    transactionId?: string;
+    providerRef?: string;
+  }> {
+    const body = {
+      disburse_invoice: params.disburseToken,
+      disburse_id: params.disburseId
+    };
+
+    let response: DisburseSubmitInvoiceResponse;
+    try {
+      response = await this._postJson<DisburseSubmitInvoiceResponse>(
+        this.disburseApiUrl,
+        "/disburse/submit-invoice",
+        body
+      );
+    } catch (err: any) {
+      logger.error("[paydunya] submitDisbursement network exception", { error: String(err), disburseId: params.disburseId });
+      return {
+        success: false,
+        status: "pending",
+        description: "Submit timed out or encountered network error: " + err.message
+      };
+    }
+
+    const responseCode = response.response_code;
+    let statusMapped: "success" | "pending" | "failed" = "failed";
+    if (responseCode === "00") {
+      const rawStatus = (response.status ?? "success").toLowerCase();
+      if (rawStatus === "success" || rawStatus === "completed" || rawStatus === "succeeded") {
+        statusMapped = "success";
+      } else if (rawStatus === "pending" || rawStatus === "processing" || rawStatus === "created") {
+        statusMapped = "pending";
+      } else {
+        statusMapped = "failed";
       }
-    };
-
-    const submitResponse = await this._postJson<DisburseSubmitInvoiceResponse>(
-      this.invoiceApiUrl,
-      "/disburse/v2/submit-invoice",
-      submitBody
-    );
-
-    if (submitResponse.response_code !== "00") {
-      throw new Error(
-        `PayDunya Disburse submit-invoice failed: ${submitResponse.response_code} ${submitResponse.response_text}`
-      );
+    } else {
+      const rawStatus = (response.status ?? "").toLowerCase();
+      if (rawStatus === "pending" || rawStatus === "processing") {
+        statusMapped = "pending";
+      } else {
+        statusMapped = "failed";
+      }
     }
 
-    return { refundRef: invoiceToken };
+    return {
+      success: responseCode === "00" && statusMapped === "success",
+      status: statusMapped,
+      responseText: response.response_text,
+      description: response.description,
+      transactionId: response.transaction_id,
+      providerRef: response.transaction_id
+    };
+  }
+
+  async checkDisbursementStatus(params: {
+    disburseToken: string;
+  }): Promise<{
+    status: "success" | "pending" | "failed";
+    responseText?: string;
+    description?: string;
+    transactionId?: string;
+    providerDisburseTxId?: string;
+    amount?: number;
+  }> {
+    const body = {
+      disburse_invoice: params.disburseToken
+    };
+
+    const response = await this._postJson<any>(
+      this.disburseApiUrl,
+      "/disburse/check-status",
+      body
+    );
+
+    let statusMapped: "success" | "pending" | "failed" = "failed";
+    const rawStatus = (response.status ?? "").toLowerCase();
+    if (response.response_code === "00") {
+      if (rawStatus === "success" || rawStatus === "completed" || rawStatus === "succeeded") {
+        statusMapped = "success";
+      } else if (rawStatus === "pending" || rawStatus === "processing" || rawStatus === "created") {
+        statusMapped = "pending";
+      } else {
+        statusMapped = "failed";
+      }
+    } else {
+      if (rawStatus === "pending" || rawStatus === "processing") {
+        statusMapped = "pending";
+      } else {
+        statusMapped = "failed";
+      }
+    }
+
+    return {
+      status: statusMapped,
+      responseText: response.response_text,
+      description: response.description,
+      transactionId: response.transaction_id,
+      providerDisburseTxId: response.disburse_tx_id || response.transaction_id,
+      amount: response.amount ? Number(response.amount) : undefined
+    };
+  }
+
+  resolveWithdrawMode(payoutMethod: string): string {
+    switch (payoutMethod) {
+      case "wave_senegal": return "wave-senegal";
+      case "orange_money_senegal": return "orange-money-senegal";
+      case "free_senegal": return "free-money-senegal";
+      case "expresso_sn": return "expresso-senegal";
+      default: throw new Error(`Unsupported payout method: ${payoutMethod}`);
+    }
+  }
+
+  async getApproximateBalance(): Promise<{ balance: number; currency: string }> {
+    try {
+      const response = await this._postJson<any>(
+        this.disburseApiUrl,
+        "/disburse/get-balance",
+        {}
+      );
+      if (response.response_code === "00") {
+        return {
+          balance: Number(response.balance ?? 0),
+          currency: response.currency ?? "XOF"
+        };
+      }
+      return { balance: 0, currency: "XOF" };
+    } catch (err: any) {
+      logger.error("[paydunya] getApproximateBalance exception", { error: String(err) });
+      return { balance: 0, currency: "XOF" };
+    }
   }
 
   // ─── fetchPaymentStatus ──────────────────────────────────────────────────

@@ -226,7 +226,7 @@ class _CancellationCard extends StatelessWidget {
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(AppRadius.lg.r),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

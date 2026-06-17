@@ -437,8 +437,18 @@ export class BookingController {
             comment: body.comment ?? null
           }
         });
-        const agg = await tx.review.aggregate({ where: { salonId: booking.salonId }, _avg: { rating: true } });
-        await tx.salon.update({ where: { id: booking.salonId }, data: { averageRating: agg._avg.rating ?? 0 } });
+        const agg = await tx.review.aggregate({
+          where: { salonId: booking.salonId },
+          _avg: { rating: true },
+          _count: { rating: true }
+        });
+        await tx.salon.update({
+          where: { id: booking.salonId },
+          data: {
+            averageRating: agg._avg.rating ?? 0,
+            reviewCount: agg._count?.rating ?? 0
+          }
+        });
         return created;
       });
       await invalidateCacheTags([

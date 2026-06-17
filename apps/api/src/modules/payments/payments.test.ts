@@ -49,7 +49,10 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn()
     },
     job: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
-    $transaction: vi.fn(async (fn: (txArg: typeof tx) => Promise<void>) => fn(tx))
+    $transaction: vi.fn(async (fn: (txArg: typeof tx) => Promise<void>) => fn(tx)),
+    merchantPayout: {
+      findFirst: vi.fn()
+    }
   };
 
   const requireRole = vi.fn();
@@ -57,8 +60,9 @@ const mocks = vi.hoisted(() => {
   const fail = vi.fn();
   const loggerError = vi.fn();
   const loggerWarn = vi.fn();
+  const loggerInfo = vi.fn();
 
-  return { adapter, tx, prisma, requireRole, ok, fail, loggerError, loggerWarn };
+  return { adapter, tx, prisma, requireRole, ok, fail, loggerError, loggerWarn, loggerInfo };
 });
 
 vi.mock("../../adapters/index.js", () => ({
@@ -93,7 +97,8 @@ vi.mock("../../lib/http.js", () => ({
 vi.mock("../../lib/logger.js", () => ({
   logger: {
     error: mocks.loggerError,
-    warn: mocks.loggerWarn
+    warn: mocks.loggerWarn,
+    info: mocks.loggerInfo
   }
 }));
 
@@ -203,8 +208,8 @@ describe("PaymentController", () => {
     await controller.reconcile({ params: { paymentId: "pay_1" } } as never, {} as never);
 
     expect(mocks.adapter.fetchPaymentStatus).toHaveBeenCalledWith({ providerToken: "tok_123" });
-    expect(mocks.tx.platformSetting.upsert).toHaveBeenCalledTimes(1);
-    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.platformSetting.upsert).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.tx.payment.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "pay_1" },
       data: expect.objectContaining({ status: "succeeded" })
@@ -217,7 +222,7 @@ describe("PaymentController", () => {
 
   it("throttles reconcile calls within guard window", async () => {
     const lastTs = Date.now();
-    mocks.tx.platformSetting.findUnique.mockResolvedValue({ value: String(lastTs) });
+    mocks.prisma.platformSetting.findUnique.mockResolvedValue({ value: String(lastTs) });
     mocks.prisma.payment.findUnique.mockResolvedValue({
       id: "pay_1",
       bookingId: "book_1",
@@ -709,5 +714,137 @@ describe("PaymentController", () => {
     await controller.webhookPayDunya({ body: { any: "payload" } } as never, {} as never);
 
     expect(mocks.tx.salon.update).not.toHaveBeenCalled();
+  });
+
+  // ─── Payout Webhook (webhookPayDunyaPayout) Tests ───────────────────────
+
+  describe("webhookPayDunyaPayout", () => {
+
+    it("rejects unsupported content-type with 415", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "text/xml" }, body: {} } as never,
+        reply as never
+      );
+      expect(reply.status).toHaveBeenCalledWith(415);
+      expect(reply.send).toHaveBeenCalledWith({ error: "unsupported_media_type" });
+    });
+
+    it("rejects oversized payload with 413", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      const largeBody = { disburse_id: "x".repeat(102401) };
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: largeBody, rawBody: JSON.stringify(largeBody) } as never,
+        reply as never
+      );
+      expect(reply.status).toHaveBeenCalledWith(413);
+      expect(reply.send).toHaveBeenCalledWith({ error: "payload_too_large" });
+    });
+
+    it("rejects bad JSON body with 400", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: "not-json", rawBody: "not-json" } as never,
+        reply as never
+      );
+      expect(reply.status).toHaveBeenCalledWith(400);
+      expect(reply.send).toHaveBeenCalledWith({ error: "bad_json" });
+    });
+
+    it("rejects payload with missing identifiers with 400", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: { some: "data" }, rawBody: '{"some":"data"}' } as never,
+        reply as never
+      );
+      expect(reply.status).toHaveBeenCalledWith(400);
+      expect(reply.send).toHaveBeenCalledWith({ error: "missing_identifiers" });
+    });
+
+    it("returns payout_not_found when no matching payout exists", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      mocks.prisma.merchantPayout.findFirst.mockResolvedValue(null);
+
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: { disburse_id: "d1", token: "t1" }, rawBody: '{"disburse_id":"d1","token":"t1"}' } as never,
+        reply as never
+      );
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: false, message: "payout_not_found" });
+    });
+
+    it("reconciles payout status on valid callback with both identifiers", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      mocks.prisma.merchantPayout.findFirst.mockResolvedValue({
+        id: "payout_1", disburseId: "d1", disburseToken: "t1"
+      });
+
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: { disburse_id: "d1", token: "t1" }, rawBody: '{"disburse_id":"d1","token":"t1"}' } as never,
+        reply as never
+      );
+
+      expect(mocks.prisma.merchantPayout.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { disburseId: "d1", disburseToken: "t1" }
+        })
+      );
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: true });
+    });
+
+    it("reconciles payout on valid callback with token only", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      mocks.prisma.merchantPayout.findFirst.mockResolvedValue({
+        id: "payout_2", disburseToken: "tok_only"
+      });
+
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: { disburse_token: "tok_only" }, rawBody: '{"disburse_token":"tok_only"}' } as never,
+        reply as never
+      );
+
+      expect(mocks.prisma.merchantPayout.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ OR: expect.any(Array) }) })
+      );
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: true });
+    });
+
+    it("returns payout_not_found when both identifiers don't match (inconsistency check)", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      mocks.prisma.merchantPayout.findFirst.mockResolvedValue(null);
+
+      // Both identifiers provided but no single payout has both disburseId AND disburseToken
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: { disburse_id: "d1", token: "tok_mismatch" }, rawBody: '{"disburse_id":"d1","token":"tok_mismatch"}' } as never,
+        reply as never
+      );
+
+      // Must search by BOTH identifiers together (consistency check)
+      expect(mocks.prisma.merchantPayout.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { disburseId: "d1", disburseToken: "tok_mismatch" } })
+      );
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: false, message: "payout_not_found" });
+    });
+
+    it("queries by OR when only one identifier is present", async () => {
+      const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
+      mocks.prisma.merchantPayout.findFirst.mockResolvedValue({
+        id: "payout_4", disburseId: "d4_only"
+      });
+
+      await controller.webhookPayDunyaPayout(
+        { headers: { "content-type": "application/json" }, body: { disburse_id: "d4_only" }, rawBody: '{"disburse_id":"d4_only"}' } as never,
+        reply as never
+      );
+
+      expect(mocks.prisma.merchantPayout.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ OR: expect.any(Array) }) })
+      );
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: true });
+    });
   });
 });

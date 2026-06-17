@@ -76,14 +76,14 @@ const dayOfWeekByLabel: Record<string, number> = {
 };
 const auth = useProAuthStore();
 
-const hours = reactive(days.reduce((acc, day) => {
-  acc[day] = { 
-    open: day !== "Dimanche", 
-    start: "09:00", 
-    end: "19:00" 
-  };
-  return acc;
-}, {} as any));
+const hours = reactive<Record<string, { open: boolean; start: string; end: string }>>(
+  Object.fromEntries(
+    days.map((day) => [
+      day,
+      { open: day !== "Dimanche", start: "09:00", end: "19:00" }
+    ])
+  )
+);
 
 const hoursQuery = useQuery({
   queryKey: ["pro-hours"],

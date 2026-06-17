@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_share.dart';
@@ -23,9 +24,10 @@ import '../providers/salon_detail_provider.dart';
 import '../widgets/stale_data_notice.dart';
 
 class SalonDetailPage extends ConsumerStatefulWidget {
-  const SalonDetailPage({required this.salonId, super.key});
+  const SalonDetailPage({required this.salonId, this.heroTag, super.key});
 
   final String salonId;
+  final String? heroTag;
 
   @override
   ConsumerState<SalonDetailPage> createState() => _SalonDetailPageState();
@@ -57,7 +59,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
     if (!context.mounted) return;
     context.push('${AppRoutes.bookingService}?salonId=$salonId');
     // Fire-and-forget prefetch in background for faster subsequent loads
-    ref.read(salonDetailProvider(salonId).future).timeout(
+    ref.read(salonDetailResourceProvider(salonId).future).timeout(
       const Duration(seconds: 12),
     ).then((_) {
       debugPrint('[BOOKING_CTA] background_prefetch_ok salonId=$salonId');
@@ -191,11 +193,23 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                 onPageChanged: (i) =>
                                     setState(() => _heroPage = i),
                                 itemCount: images.length,
-                                itemBuilder: (_, i) => CachedNetworkImage(
-                                  imageUrl: images[i],
-                                  memCacheWidth: 800,
-                                  fit: BoxFit.cover,
-                                ),
+                                itemBuilder: (_, i) {
+                                  final imgWidget = CachedNetworkImage(
+                                    imageUrl: images[i],
+                                    memCacheWidth: 800,
+                                    fit: BoxFit.cover,
+                                  );
+                                  if (i == 0 && widget.heroTag != null) {
+                                    return Hero(
+                                      tag: widget.heroTag!,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: imgWidget,
+                                      ),
+                                    );
+                                  }
+                                  return imgWidget;
+                                },
                               ),
 
                             // Bottom gradient → bleeds into rounded card
@@ -267,7 +281,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.black54,
-                                      borderRadius: BorderRadius.circular(20.r),
+                                      borderRadius: BorderRadius.circular(AppRadius.full.r),
                                     ),
                                     child: Text(
                                       '${_heroPage + 1} / ${images.length}',
@@ -291,7 +305,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                           decoration: BoxDecoration(
                             color: AppColors.neutral,
                             borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(32.r),
+                              top: Radius.circular(AppRadius.xxl.r),
                             ),
                           ),
                           child: Column(
@@ -308,7 +322,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.outline,
-                                    borderRadius: BorderRadius.circular(2.r),
+                                    borderRadius: BorderRadius.circular(AppRadius.xs.r),
                                   ),
                                 ),
                               ),
@@ -349,21 +363,23 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     // Rating + location
                                     Row(
                                       children: [
-                                        AppIcon(
-                                          'star',
-                                          size: 14,
-                                          color: AppColors.secondary,
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          salon.averageRating.toStringAsFixed(
-                                            1,
+                                        if (salon.reviewCount >= 3) ...[
+                                          AppIcon(
+                                            'star',
+                                            size: 14,
+                                            color: AppColors.secondary,
                                           ),
-                                          style: AppTextStyles.labelMd.copyWith(
-                                            color: AppColors.onSurface,
+                                          SizedBox(width: 4.w),
+                                          Text(
+                                            salon.averageRating.toStringAsFixed(
+                                              1,
+                                            ),
+                                            style: AppTextStyles.labelMd.copyWith(
+                                              color: AppColors.onSurface,
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(width: 14.w),
+                                          SizedBox(width: 14.w),
+                                        ],
                                         AppIcon(
                                           'map-pin',
                                           size: 13,
@@ -520,7 +536,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                     category: salon.category,
                     location:
                         '${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
-                    rating: salon.averageRating.toDouble(),
+                    rating: salon.reviewCount >= 3 ? salon.averageRating.toDouble() : null,
                   ),
                 ),
               ),
@@ -635,7 +651,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                 ),
                 decoration: BoxDecoration(
                   color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.full.r),
                 ),
                 child: Text(
                   '${_current + 1} / ${widget.images.length}',
@@ -664,7 +680,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                       color: i == _current
                           ? Colors.white
                           : Colors.white.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppRadius.xs.r),
                     ),
                   ),
                 ),
@@ -813,7 +829,7 @@ class _BottomCta extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 16.h),
         decoration: BoxDecoration(
           color: AppColors.onSurface,
-          borderRadius: BorderRadius.circular(100.r),
+          borderRadius: BorderRadius.circular(AppRadius.full.r),
           boxShadow: [
             BoxShadow(
               color: AppColors.onSurface.withValues(alpha: 0.3),

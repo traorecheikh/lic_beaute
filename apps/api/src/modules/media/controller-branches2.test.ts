@@ -17,12 +17,8 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("../../config.js", () => ({
   config: {
-    storageDriver: "r2",
+    storageDriver: "local",
     storagePath: ".data",
-    r2AccountId: "a",
-    r2AccessKeyId: "k",
-    r2SecretAccessKey: "s",
-    r2Bucket: "b",
     mediaPublicBaseUrl: "https://media.example.com",
     maxUploadBytes: 10_000
   }
@@ -34,8 +30,7 @@ vi.mock("../../lib/auth/index.js", async (importOriginal) => {
 vi.mock("../../lib/http.js", () => ({ fail: mocks.fail, ok: mocks.ok }));
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../adapters/index.js", () => ({
-  getStorageAdapter: vi.fn(() => mocks.storage),
-  getR2Adapter: vi.fn(() => mocks.r2)
+  getStorageAdapter: vi.fn(() => mocks.storage)
 }));
 vi.mock("../../lib/jobs.js", () => ({ enqueueJob: mocks.enqueueJob }));
 vi.mock("../../lib/cache.js", () => ({ invalidateCacheTags: vi.fn() }));
@@ -104,9 +99,8 @@ describe("MediaController additional branches", () => {
 
     mocks.prisma.mediaAsset.findUnique.mockResolvedValueOnce({ id: "m1", deletedAt: null, reviewStatus: "approved", visibility: "public", finalObjectKey: "safe/x.jpg", objectKey: "safe/x.jpg", mimeType: "image/jpeg" });
     mocks.storage.retrieve.mockResolvedValue(null);
-    vi.doMock("../../config.js", () => ({ config: { storageDriver: "local", mediaPublicBaseUrl: "https://media.example.com" } }));
     await c.getPublicFile({ params: { mediaId: "m1" } } as never, reply);
 
-    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 400, "invalid_key", expect.any(String));
+    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 404, "media_not_found", expect.any(String));
   });
 });

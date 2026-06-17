@@ -1376,6 +1376,57 @@ export async function deleteRequiredDocument(id: string, actorName: string) {
   return doc;
 }
 
+export async function listServiceSuggestions() {
+  return prisma.platformServiceSuggestion.findMany({
+    orderBy: { name: "asc" }
+  });
+}
+
+export async function listServiceSuggestionsPublic() {
+  return prisma.platformServiceSuggestion.findMany({
+    where: { enabled: true },
+    orderBy: { name: "asc" }
+  });
+}
+
+export async function upsertServiceSuggestion(data: { name: string; category: string; enabled?: boolean }, actorName: string) {
+  const suggestion = await prisma.platformServiceSuggestion.upsert({
+    where: { name: data.name },
+    update: { category: data.category, enabled: data.enabled ?? true },
+    create: { name: data.name, category: data.category, enabled: data.enabled ?? true }
+  });
+
+  await writeAuditLog({
+    action: "config.service_suggestion_upserted",
+    summary: `Prestation standard ${data.name} enregistrée.`,
+    entityType: "config",
+    entityId: suggestion.id,
+    actorName,
+    severity: "info",
+    payloadJson: JSON.stringify(data),
+    relatedLinks: []
+  });
+
+  return suggestion;
+}
+
+export async function deleteServiceSuggestion(id: string, actorName: string) {
+  const suggestion = await prisma.platformServiceSuggestion.delete({ where: { id } });
+
+  await writeAuditLog({
+    action: "config.service_suggestion_deleted",
+    summary: `Prestation standard ${suggestion.name} supprimée.`,
+    entityType: "config",
+    entityId: suggestion.id,
+    actorName,
+    severity: "warning",
+    payloadJson: JSON.stringify(suggestion),
+    relatedLinks: []
+  });
+
+  return suggestion;
+}
+
 export async function sendMagicLink(salonId: string, actorName: string): Promise<void> {
   const salon = await prisma.salon.findUnique({
     where: { id: salonId },

@@ -121,7 +121,7 @@ class _OptionCard extends StatelessWidget {
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24.r),
+          borderRadius: BorderRadius.circular(AppRadius.xl.r),
           boxShadow: AppShadows.card,
         ),
         child: Row(
@@ -130,7 +130,7 @@ class _OptionCard extends StatelessWidget {
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
                 color: isDestructive ? AppColors.errorContainer : AppColors.neutral,
-                borderRadius: BorderRadius.circular(16.r),
+                borderRadius: BorderRadius.circular(AppRadius.lg.r),
               ),
               child: AppIcon(
                 icon,

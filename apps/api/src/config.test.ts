@@ -94,6 +94,8 @@ describe("config", () => {
       PAYDUNYA_PUBLIC_KEY: "public-key",
       PAYDUNYA_PRIVATE_KEY: "private-key",
       PAYDUNYA_TOKEN: "token",
+      BILLING_ACCOUNT_SECRET: "prod-billing-secret-32ch",
+      MERCHANT_PAYOUT_ENABLED: "false",
       STORAGE_DRIVER: "r2",
       OTP_DRIVER: "africastalking",
       EMAIL_DRIVER: "smtp",

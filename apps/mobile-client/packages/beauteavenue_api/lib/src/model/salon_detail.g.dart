@@ -82,6 +82,8 @@ class _$SalonDetail extends SalonDetail {
   @override
   final num averageRating;
   @override
+  final int reviewCount;
+  @override
   final num? latitude;
   @override
   final num? longitude;
@@ -119,6 +121,7 @@ class _$SalonDetail extends SalonDetail {
       required this.city,
       this.neighborhood,
       required this.averageRating,
+      required this.reviewCount,
       this.latitude,
       this.longitude,
       required this.subscriptionTier,
@@ -151,6 +154,7 @@ class _$SalonDetail extends SalonDetail {
         city == other.city &&
         neighborhood == other.neighborhood &&
         averageRating == other.averageRating &&
+        reviewCount == other.reviewCount &&
         latitude == other.latitude &&
         longitude == other.longitude &&
         subscriptionTier == other.subscriptionTier &&
@@ -176,6 +180,7 @@ class _$SalonDetail extends SalonDetail {
     _$hash = $jc(_$hash, city.hashCode);
     _$hash = $jc(_$hash, neighborhood.hashCode);
     _$hash = $jc(_$hash, averageRating.hashCode);
+    _$hash = $jc(_$hash, reviewCount.hashCode);
     _$hash = $jc(_$hash, latitude.hashCode);
     _$hash = $jc(_$hash, longitude.hashCode);
     _$hash = $jc(_$hash, subscriptionTier.hashCode);
@@ -203,6 +208,7 @@ class _$SalonDetail extends SalonDetail {
           ..add('city', city)
           ..add('neighborhood', neighborhood)
           ..add('averageRating', averageRating)
+          ..add('reviewCount', reviewCount)
           ..add('latitude', latitude)
           ..add('longitude', longitude)
           ..add('subscriptionTier', subscriptionTier)
@@ -251,6 +257,10 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
   num? get averageRating => _$this._averageRating;
   set averageRating(num? averageRating) =>
       _$this._averageRating = averageRating;
+
+  int? _reviewCount;
+  int? get reviewCount => _$this._reviewCount;
+  set reviewCount(int? reviewCount) => _$this._reviewCount = reviewCount;
 
   num? _latitude;
   num? get latitude => _$this._latitude;
@@ -326,6 +336,7 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
       _city = $v.city;
       _neighborhood = $v.neighborhood;
       _averageRating = $v.averageRating;
+      _reviewCount = $v.reviewCount;
       _latitude = $v.latitude;
       _longitude = $v.longitude;
       _subscriptionTier = $v.subscriptionTier;
@@ -373,6 +384,8 @@ class SalonDetailBuilder implements Builder<SalonDetail, SalonDetailBuilder> {
             neighborhood: neighborhood,
             averageRating: BuiltValueNullFieldError.checkNotNull(
                 averageRating, r'SalonDetail', 'averageRating'),
+            reviewCount: BuiltValueNullFieldError.checkNotNull(
+                reviewCount, r'SalonDetail', 'reviewCount'),
             latitude: latitude,
             longitude: longitude,
             subscriptionTier: BuiltValueNullFieldError.checkNotNull(

@@ -48,7 +48,6 @@ vi.mock("../../adapters/index.js", () => ({
     send: (phone: string, code: string) => mocks.otpSend(phone, code),
     verify: async () => true
   }),
-  getR2Adapter: () => null,
   getStorageAdapter: vi.fn()
 }));
 

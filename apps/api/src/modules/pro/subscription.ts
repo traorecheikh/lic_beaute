@@ -818,7 +818,7 @@ export async function downloadInvoicePdf(request: FastifyRequest, reply: Fastify
     const amountLabel = new Intl.NumberFormat("fr-FR").format(invoice.amountXof);
     const billingProvider = toPublicBillingProvider(providerSetting?.value ?? sub.billingProvider ?? "manual");
     const providerLabel =
-      billingProvider === "manual" ? "Manuel" : "Intech";
+      billingProvider === "manual" ? "Manuel" : "PayDunya";
     const pdf = await buildInvoicePdf({
       invoiceNumber: invoice.invoiceNumber,
       issuedAt,

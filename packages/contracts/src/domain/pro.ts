@@ -32,6 +32,7 @@ export const proSalonProfileSchema = z.object({
   phone: z.string().nullable(),
   instagram: z.string().nullable(),
   averageRating: z.number(),
+  reviewCount: z.number().int(),
   subscriptionTier: subscriptionTierSchema,
   isVisibleInMarketplace: z.boolean(),
   canReceiveBookings: z.boolean(),
@@ -63,10 +64,10 @@ export const proServiceSchema = z.object({
   name: z.string(),
   category: z.string(),
   durationMinutes: z.number().int().positive(),
-  priceXof: z.number().int().nonnegative(),
+  priceXof: z.number().int().nonnegative().max(5000000),
   depositMode: z.enum(["none", "fixed", "percent"]),
-  depositAmountXof: z.number().int().nonnegative().nullable(),
-  depositPercent: z.number().int().min(1).max(100).nullable(),
+  depositAmountXof: z.number().int().nonnegative().max(5000000).nullable(),
+  depositPercent: z.number().int().min(1).max(50).nullable(),
   isActive: z.boolean(),
   displayOrder: z.number().int()
 });
@@ -75,10 +76,10 @@ export const proServiceCreateInputSchema = z.object({
   name: z.string().min(1),
   category: z.string().trim().min(1).max(60).optional(),
   durationMinutes: z.number().int().positive(),
-  priceXof: z.number().int().nonnegative(),
+  priceXof: z.number().int().nonnegative().max(5000000),
   depositMode: z.enum(["none", "fixed", "percent"]),
-  depositAmountXof: z.number().int().nonnegative().optional(),
-  depositPercent: z.number().int().min(1).max(100).optional()
+  depositAmountXof: z.number().int().nonnegative().max(5000000).optional(),
+  depositPercent: z.number().int().min(1).max(50).optional()
 });
 
 export const proServiceUpdateInputSchema = proServiceCreateInputSchema.partial();

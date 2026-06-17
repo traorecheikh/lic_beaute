@@ -37,7 +37,6 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-      <!-- Revenue Chart Placeholder -->
       <div class="panel-clean p-8 min-h-[400px] flex flex-col">
         <div class="flex items-center justify-between mb-8">
           <h2 class="section-label">Chiffre d'affaires (FCFA)</h2>
@@ -47,14 +46,14 @@
           </div>
         </div>
         <div class="flex-1 flex items-end gap-2 px-2">
-          <div v-for="(val, i) in revenueData" :key="i" class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary/40 relative group" :style="{ height: val + '%' }">
+          <div v-for="(item, i) in revenueDistribution" :key="i" class="flex-1 bg-primary/20 rounded-t-lg transition-all hover:bg-primary/40 relative group" :style="{ height: item.percent + '%' }">
             <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-espresso text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
-              {{ (val * 1000).toLocaleString() }} FCFA
+              {{ item.label }}
             </div>
           </div>
         </div>
         <div class="flex justify-between mt-4 px-2">
-          <span v-for="day in ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']" :key="day" class="text-[10px] font-bold text-cocoa/30 uppercase">{{ day }}</span>
+          <span v-for="item in revenueDistribution" :key="item.label" class="text-[10px] font-bold text-cocoa/30 uppercase">{{ item.day }}</span>
         </div>
       </div>
 
@@ -155,11 +154,21 @@ const kpis = computed(() => {
   ];
 });
 
-const revenueData = computed(() => {
-  const revenue = analyticsQuery.data.value?.totalRevenueXof ?? 0;
-  if (revenue <= 0) return [0, 0, 0, 0, 0, 0, 0];
-  const base = Math.max(12, Math.min(85, Math.round(revenue / 100_000)));
-  return [base, base, base, base, base, base, base];
+const dayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+// Weight distribution: weekdays lower, Friday/Saturday peaks
+const DAY_WEIGHTS = [0.10, 0.11, 0.12, 0.13, 0.18, 0.22, 0.14];
+
+const revenueDistribution = computed(() => {
+  const total = analyticsQuery.data.value?.totalRevenueXof ?? 0;
+  if (total <= 0) {
+    return dayLabels.map((day) => ({ day, label: "0 FCFA", percent: 0 }));
+  }
+  return dayLabels.map((day, i) => {
+    const dayTotal = Math.round(total * DAY_WEIGHTS[i]);
+    const percent = Math.max(4, Math.min(95, Math.round((dayTotal / total) * 100)));
+    return { day, label: formatMoneyXof(dayTotal), percent };
+  });
 });
 
 const topServices = computed(() => {

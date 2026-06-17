@@ -19,8 +19,8 @@ Test timeout of 180000ms exceeded.
 Error: page.waitForURL: Test timeout of 180000ms exceeded.
 =========================== logs ===========================
 waiting for navigation until "load"
-  navigated to "https://h255qm4nj3i832xhkls5270z.178.105.224.117.sslip.io/pro/login"
-  navigated to "https://h255qm4nj3i832xhkls5270z.178.105.224.117.sslip.io/pro/approval-status"
+  navigated to "http://127.0.0.1:4174/pro/login"
+  navigated to "http://127.0.0.1:4174/pro/approval-status"
 ============================================================
 ```
 
@@ -33,61 +33,61 @@ waiting for navigation until "load"
   - generic [ref=e3]:
     - banner [ref=e4]:
       - generic [ref=e5]:
-        - link "Beauté Avenue Flow Salon 1780805755439" [ref=e7] [cursor=pointer]:
+        - link "Beauté Avenue Flow Salon 1781731093611" [ref=e7] [cursor=pointer]:
           - /url: /pro/calendar
           - img "Beauté Avenue" [ref=e8]
-          - paragraph [ref=e10]: Flow Salon 1780805755439
-        - navigation [ref=e11]:
-          - link "Agenda" [ref=e12] [cursor=pointer]:
+          - paragraph [ref=e11]: Flow Salon 1781731093611
+        - navigation [ref=e14]:
+          - link "Agenda" [ref=e15] [cursor=pointer]:
             - /url: /pro/calendar
-            - img [ref=e13]
-            - generic [ref=e15]: Agenda
-          - link "Clients" [ref=e16] [cursor=pointer]:
+            - img [ref=e16]
+            - generic [ref=e18]: Agenda
+          - link "Clients" [ref=e19] [cursor=pointer]:
             - /url: /pro/clients
-            - img [ref=e17]
-            - generic [ref=e19]: Clients
-          - link "Ventes" [ref=e20] [cursor=pointer]:
+            - img [ref=e20]
+            - generic [ref=e22]: Clients
+          - link "Ventes" [ref=e23] [cursor=pointer]:
             - /url: /pro/payouts
-            - img [ref=e21]
-            - generic [ref=e23]: Ventes
-          - link "Inbox" [ref=e24] [cursor=pointer]:
+            - img [ref=e24]
+            - generic [ref=e26]: Ventes
+          - link "Inbox" [ref=e27] [cursor=pointer]:
             - /url: /pro/bookings/inbox
-            - img [ref=e25]
-            - generic [ref=e27]: Inbox
-          - link "Rapports" [ref=e28] [cursor=pointer]:
+            - img [ref=e28]
+            - generic [ref=e30]: Inbox
+          - link "Rapports" [ref=e31] [cursor=pointer]:
             - /url: /pro/analytics
-            - img [ref=e29]
-            - generic [ref=e31]: Rapports
-          - link "Services" [ref=e32] [cursor=pointer]:
+            - img [ref=e32]
+            - generic [ref=e34]: Rapports
+          - link "Services" [ref=e35] [cursor=pointer]:
             - /url: /pro/salon/services
-            - img [ref=e33]
-            - generic [ref=e35]: Services
-        - generic [ref=e36]:
-          - link "Contacter le support via WhatsApp" [ref=e37] [cursor=pointer]:
+            - img [ref=e36]
+            - generic [ref=e38]: Services
+        - generic [ref=e39]:
+          - link "Contacter le support via WhatsApp" [ref=e40] [cursor=pointer]:
             - /url: https://wa.me/221338671010
-            - img [ref=e38]
-          - button "0 notifications non lues" [ref=e40]:
             - img [ref=e41]
-          - generic [ref=e44]:
-            - generic [ref=e45]:
-              - paragraph [ref=e46]: Flow Owner
-              - paragraph [ref=e47]: Propriétaire
-            - button "FO" [ref=e49]
-    - main [ref=e50]:
-      - generic [ref=e52]:
-        - generic [ref=e53]:
-          - img [ref=e55]
-          - generic [ref=e57]:
-            - paragraph [ref=e58]: État de votre dossier
-            - heading "Vérification en cours" [level=2] [ref=e59]
-            - paragraph [ref=e60]: Nous examinons vos documents. Cette étape prend généralement moins de 24h. Vous recevrez une notification par email.
-        - generic [ref=e63]:
-          - img [ref=e64]
-          - heading "Fonctionnalités verrouillées" [level=3] [ref=e66]
-          - paragraph [ref=e67]: Une fois votre salon approuvé, vous aurez accès à votre agenda, vos clients et vos outils de vente.
-        - generic [ref=e103]:
-          - heading "Partenaire de votre réussite" [level=3] [ref=e104]
-          - paragraph [ref=e106]: Beauté Avenue Pro
+          - button "0 notifications non lues" [ref=e43]:
+            - img [ref=e44]
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - paragraph [ref=e49]: Flow Owner
+              - paragraph [ref=e50]: Propriétaire
+            - button "FO" [ref=e52]
+    - main [ref=e53]:
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - img [ref=e58]
+          - generic [ref=e60]:
+            - paragraph [ref=e61]: État de votre dossier
+            - heading "Vérification en cours" [level=2] [ref=e62]
+            - paragraph [ref=e63]: Nous examinons vos documents. Cette étape prend généralement moins de 24h. Vous recevrez une notification par email.
+        - generic [ref=e66]:
+          - img [ref=e67]
+          - heading "Fonctionnalités verrouillées" [level=3] [ref=e69]
+          - paragraph [ref=e70]: Une fois votre salon approuvé, vous aurez accès à votre agenda, vos clients et vos outils de vente.
+        - generic [ref=e106]:
+          - heading "Partenaire de votre réussite" [level=3] [ref=e107]
+          - paragraph [ref=e109]: Beauté Avenue Pro
 ```
 
 # Test source

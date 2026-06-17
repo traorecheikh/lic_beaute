@@ -46,7 +46,7 @@ class PaymentTile extends StatelessWidget {
               AppIconBox(
                 size: 52.r,
                 color: AppColors.surfaceVariant,
-                radius: BorderRadius.circular(14.r),
+                radius: BorderRadius.circular(AppRadius.lg.r),
                 child: Padding(
                   padding: EdgeInsets.all(AppSpacing.sm.r),
                   child: logoAsset != null

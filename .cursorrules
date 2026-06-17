@@ -1,0 +1,9 @@
+Follow `AGENTS.md` and `docs/ai/STYLESEED-INTEGRATION.md`.
+
+For UI work in this repo:
+- Read `DESIGN.md` and `apps/web/src/styles.css` before making changes.
+- Use StyleSeed from `docs/ai/styleseed/` as a judgment layer only.
+- Keep the existing Beauté Avenue palette, typography, utilities, and Vue 3 + Tailwind 4 architecture.
+- Reuse existing utility classes such as `page-title`, `entity-title`, `section-label`, `row-primary`, `row-meta`, `metric-value`, `metric-label`, `panel-clean`, `btn-primary`, `btn-secondary`, `btn-gold`, and `input-shell`.
+- Use Heroicons only.
+- Prefer improving existing screens over introducing a parallel component system.

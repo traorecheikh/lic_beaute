@@ -290,7 +290,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                           AppColors.secondary.withValues(alpha: 0.08),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(20.r),
+                      borderRadius: BorderRadius.circular(AppRadius.xl.r),
                       border: Border.all(
                         color: AppColors.primaryLight,
                         width: 1.5,
@@ -344,7 +344,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16.r),
+                        borderRadius: BorderRadius.circular(AppRadius.lg.r),
                         border: Border.all(color: AppColors.outlineVariant),
                       ),
                       child: Row(
@@ -443,7 +443,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(AppRadius.lg.r),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(

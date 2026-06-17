@@ -126,7 +126,7 @@ class _SalonCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(AppRadius.xl.r),
           boxShadow: AppShadows.card,
         ),
         child: Row(
@@ -135,7 +135,7 @@ class _SalonCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.horizontal(
-                    left: Radius.circular(20.r),
+                    left: Radius.circular(AppRadius.xl.r),
                   ),
                   child: imageUrl.isNotEmpty
                       ? CachedNetworkImage(
@@ -170,7 +170,7 @@ class _SalonCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(6.r),
+                        borderRadius: BorderRadius.circular(AppRadius.sm.r),
                       ),
                       child: Text(
                         'Prestige',
@@ -214,6 +214,7 @@ class _SalonCard extends StatelessWidget {
                       ],
                     ),
                     gapH4,
+                    if (salon.reviewCount >= 3)
                     Row(
                       children: [
                         AppIcon('star', size: 13, color: AppColors.secondary),
@@ -257,7 +258,7 @@ class _DistanceBadge extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
       decoration: BoxDecoration(
         color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(AppRadius.sm.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -18,7 +18,7 @@ function mimeToExt(mimeType: string): string {
 
 import { mediaPurposeSchema, uploadCompleteInputSchema, uploadIntentInputSchema } from "@beauteavenue/contracts";
 
-import { getR2Adapter, getStorageAdapter } from "../../adapters/index.js";
+import { getStorageAdapter } from "../../adapters/index.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { invalidateCacheTags } from "../../lib/cache.js";
@@ -75,10 +75,6 @@ export class MediaController {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
       const storage = getStorageAdapter(config.storageDriver, {
         storagePath: config.storagePath,
-        r2AccountId: config.r2AccountId,
-        r2AccessKeyId: config.r2AccessKeyId,
-        r2SecretAccessKey: config.r2SecretAccessKey,
-        r2Bucket: config.r2Bucket,
         mediaPublicBaseUrl: config.mediaPublicBaseUrl
       });
 
@@ -156,7 +152,7 @@ export class MediaController {
           salonId: resolvedSalonId,
           uploadedBy: session.sub,
           objectKey,
-          publicUrl: config.storageDriver !== "r2" ? storage.publicUrl(objectKey) : null,
+          publicUrl: storage.publicUrl(objectKey),
           mimeType,
           sizeBytes,
           purpose,
@@ -186,20 +182,10 @@ export class MediaController {
       const session = requireRole(request, ["platform_admin", "client", "salon_owner", "salon_staff"]);
       const body = uploadIntentInputSchema.parse(request.body);
 
-      getStorageAdapter(config.storageDriver, {
+      const storage = getStorageAdapter(config.storageDriver, {
         storagePath: config.storagePath,
-        r2AccountId: config.r2AccountId,
-        r2AccessKeyId: config.r2AccessKeyId,
-        r2SecretAccessKey: config.r2SecretAccessKey,
-        r2Bucket: config.r2Bucket,
         mediaPublicBaseUrl: config.mediaPublicBaseUrl
       });
-
-      const r2 = getR2Adapter();
-      if (!r2) {
-        fail(reply, 503, "storage_unavailable", "Service de stockage non configuré.");
-        return;
-      }
 
       const fileExt = mimeToExt(body.mimeType);
       const objectKey = `incoming/${randomUUID()}${fileExt}`;
@@ -251,7 +237,8 @@ export class MediaController {
         }
       });
 
-      const uploadUrl = await r2.presignPut(objectKey, body.mimeType, 300);
+      // Presigned URL flow is only available with storage adapters that support it
+      const uploadUrl = storage.presignPut(objectKey, body.mimeType, 300);
 
       ok(reply, { assetId: asset.id, uploadUrl, expiresAt: expiresAt.toISOString() }, 201);
     } catch (error) {
@@ -278,20 +265,17 @@ export class MediaController {
         fail(reply, 409, "already_completed", "Upload déjà confirmé."); return;
       }
 
-      const r2 = getR2Adapter();
-      if (r2) {
-        const head = await r2.headObject(asset.objectKey);
-        if (!head) { fail(reply, 422, "upload_not_found", "Fichier non trouvé dans le stockage. Veuillez réessayer."); return; }
-        await prisma.mediaAsset.update({
-          where: { id: asset.id },
-          data: { sizeBytes: head.sizeBytes, uploadStatus: "review_pending" }
-        });
-      } else {
-        await prisma.mediaAsset.update({
-          where: { id: asset.id },
-          data: { uploadStatus: "review_pending" }
-        });
-      }
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
+
+      const head = await storage.headObject(asset.objectKey);
+      if (!head) { fail(reply, 422, "upload_not_found", "Fichier non trouvé dans le stockage. Veuillez réessayer."); return; }
+      await prisma.mediaAsset.update({
+        where: { id: asset.id },
+        data: { sizeBytes: head.sizeBytes, uploadStatus: "review_pending" }
+      });
 
       await enqueueJob({
         type: "media_review_notify",
@@ -340,23 +324,8 @@ export class MediaController {
       }
 
       const objectKey = asset.finalObjectKey ?? asset.objectKey;
-      if (config.storageDriver === "r2" && objectKey) {
-        // Allowlist: object keys are UUIDs + path segments, never contain protocol or domain chars.
-        if (!/^[\w\-.\/]+$/.test(objectKey) || objectKey.includes("..")) {
-          fail(reply, 400, "invalid_key", "Clé de ressource invalide.");
-          return;
-        }
-        const base = new URL(config.mediaPublicBaseUrl);
-        base.pathname = (base.pathname.replace(/\/$/, "") + "/" + objectKey.replace(/^\//, ""));
-        reply.redirect(base.toString());
-        return;
-      }
       const storage = getStorageAdapter(config.storageDriver, {
         storagePath: config.storagePath,
-        r2AccountId: config.r2AccountId,
-        r2AccessKeyId: config.r2AccessKeyId,
-        r2SecretAccessKey: config.r2SecretAccessKey,
-        r2Bucket: config.r2Bucket,
         mediaPublicBaseUrl: config.mediaPublicBaseUrl
       });
 
@@ -431,10 +400,6 @@ export class MediaController {
     try {
       const storage = getStorageAdapter(config.storageDriver, {
         storagePath: config.storagePath,
-        r2AccountId: config.r2AccountId,
-        r2AccessKeyId: config.r2AccessKeyId,
-        r2SecretAccessKey: config.r2SecretAccessKey,
-        r2Bucket: config.r2Bucket,
         mediaPublicBaseUrl: config.mediaPublicBaseUrl
       });
       const file = await request.file({ limits: { files: 1, fileSize: 5 * 1024 * 1024 } });

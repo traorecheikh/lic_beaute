@@ -53,24 +53,25 @@
         :message="emptyMessage"
       />
 
-      <div v-else class="bg-white rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
+      <div v-else class="bg-white rounded-2xl border border-outline-variant shadow-sm">
+        <div class="overflow-x-auto lg:overflow-visible">
           <table class="min-w-full text-left">
             <thead>
               <tr class="border-b border-outline-variant/40 bg-neutral-bg/40">
-                <th class="px-5 py-3 section-label">Salon</th>
+                <th class="px-5 py-3 section-label rounded-tl-2xl">Salon</th>
                 <th class="px-5 py-3 section-label">Tier</th>
                 <th class="px-5 py-3 section-label">Statut</th>
                 <th class="px-5 py-3 section-label">Fournisseur</th>
                 <th class="px-5 py-3 section-label">Expiration</th>
-                <th class="px-5 py-3"></th>
+                <th class="px-5 py-3 rounded-tr-2xl"></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/20">
               <tr
                 v-for="s in subscriptionsData.items"
                 :key="s.id"
-                class="hover:bg-neutral-bg/30 transition-colors"
+                class="hover:bg-neutral-bg/30 transition-colors cursor-pointer"
+                @click="router.push(`/admin/subscriptions/${s.id}`)"
               >
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-2">
@@ -91,7 +92,7 @@
                   <span class="row-meta tabular-nums">{{ s.expiresAt ? formatDate(s.expiresAt) : "Illimité" }}</span>
                 </td>
                 <td class="px-5 py-4 text-right">
-                  <div class="relative" @click.stop>
+                  <div class="relative" :class="openDropdown === s.id ? 'z-50' : 'z-10'" @click.stop>
                     <button @click="toggleDropdown(s.id)" class="btn-secondary px-2.5 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-tight inline-flex items-center gap-1">
                       <span>Détail</span>
                       <ChevronDownIcon class="w-3.5 h-3.5" :class="openDropdown === s.id ? 'rotate-180' : ''" />
@@ -179,6 +180,9 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import { ApiError, fetchSubscriptions, overrideSubscription } from "@/lib/api";
 import { formatDate } from "@/lib/date";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 import { toast } from "vue-sonner";
 
 const auth = useAdminAuthStore();

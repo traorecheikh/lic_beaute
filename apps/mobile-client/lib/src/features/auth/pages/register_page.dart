@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,11 +30,37 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _otpController = TextEditingController();
   bool _codeSent = false;
   bool _submitting = false;
+  Timer? _timer;
+  int _secondsRemaining = 30;
+  bool _canResend = false;
+
+  void _startTimer() {
+    setState(() {
+      _secondsRemaining = 30;
+      _canResend = false;
+    });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_secondsRemaining > 0) {
+          _secondsRemaining--;
+        } else {
+          _canResend = true;
+          timer.cancel();
+        }
+      });
+    });
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _otpController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -59,26 +87,26 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   fillColor: AppColors.surface,
                   contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: BorderSide(
                       color: AppColors.outline.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: const BorderSide(color: AppColors.error, width: 1.2),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.r),
+                    borderRadius: BorderRadius.circular(AppRadius.md.r),
                     borderSide: const BorderSide(color: AppColors.error, width: 1.8),
                   ),
                   hintStyle: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
@@ -134,11 +162,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         fillColor: AppColors.surface,
                         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
+                          borderRadius: BorderRadius.circular(AppRadius.md.r),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
+                          borderRadius: BorderRadius.circular(AppRadius.md.r),
                           borderSide: BorderSide(
                             color: AppColors.outline.withValues(alpha: 0.5),
                             width: 1,
@@ -169,7 +197,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(AppRadius.md.r),
                           border: Border.all(
                             color: AppColors.outline.withValues(alpha: 0.5),
                           ),
@@ -183,7 +211,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(AppRadius.md.r),
                           border: Border.all(
                             color: AppColors.primary,
                             width: 1.5,
@@ -201,15 +229,36 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 loading: _submitting,
                 onTap: _verifyCode,
               ),
+              gapH24,
+              if (!_canResend)
+                Center(
+                  child: Text(
+                    'Renvoyer le code dans ${_secondsRemaining}s',
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                Center(
+                  child: TextButton(
+                    onPressed: _submitting ? null : _requestCode,
+                    child: Text(
+                      'Renvoyer le code',
+                      style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
+                    ),
+                  ),
+                ),
               gapH16,
               Center(
                 child: GestureDetector(
                   onTap: () {
+                    _timer?.cancel();
                     if (_submitting) return;
                     setState(() => _codeSent = false);
                   },
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                     child: Text(
                       "Modifier l'email",
                       style: AppTextStyles.labelSm.copyWith(
@@ -240,6 +289,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         await ref.read(authActionsProvider).requestEmailOtp(email: email);
         if (!mounted) return;
         setState(() => _codeSent = true);
+        _startTimer();
         AppSnackbar.success(context, 'Code de vérification envoyé par email.');
       },
       fallback: 'Envoi du code impossible.',

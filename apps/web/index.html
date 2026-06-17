@@ -8,6 +8,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      // ════════════════════════════════════════════════════════════
+      // THEME: LIGHT MODE ONLY
+      // Dark mode is disabled during the current test phase.
+      // See src/lib/theme-config.ts and docs/ui/dark-mode-status.md
+      // ════════════════════════════════════════════════════════════
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+      localStorage.removeItem('beaute-avenue-theme');
+    </script>
   </head>
   <body>
     <div id="app"></div>

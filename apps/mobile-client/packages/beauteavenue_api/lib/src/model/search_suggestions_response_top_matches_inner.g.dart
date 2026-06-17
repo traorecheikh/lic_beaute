@@ -181,6 +181,8 @@ class _$SearchSuggestionsResponseTopMatchesInner
   @override
   final num averageRating;
   @override
+  final int reviewCount;
+  @override
   final num? latitude;
   @override
   final num? longitude;
@@ -218,6 +220,7 @@ class _$SearchSuggestionsResponseTopMatchesInner
       required this.city,
       this.neighborhood,
       required this.averageRating,
+      required this.reviewCount,
       this.latitude,
       this.longitude,
       required this.subscriptionTier,
@@ -251,6 +254,7 @@ class _$SearchSuggestionsResponseTopMatchesInner
         city == other.city &&
         neighborhood == other.neighborhood &&
         averageRating == other.averageRating &&
+        reviewCount == other.reviewCount &&
         latitude == other.latitude &&
         longitude == other.longitude &&
         subscriptionTier == other.subscriptionTier &&
@@ -274,6 +278,7 @@ class _$SearchSuggestionsResponseTopMatchesInner
     _$hash = $jc(_$hash, city.hashCode);
     _$hash = $jc(_$hash, neighborhood.hashCode);
     _$hash = $jc(_$hash, averageRating.hashCode);
+    _$hash = $jc(_$hash, reviewCount.hashCode);
     _$hash = $jc(_$hash, latitude.hashCode);
     _$hash = $jc(_$hash, longitude.hashCode);
     _$hash = $jc(_$hash, subscriptionTier.hashCode);
@@ -300,6 +305,7 @@ class _$SearchSuggestionsResponseTopMatchesInner
           ..add('city', city)
           ..add('neighborhood', neighborhood)
           ..add('averageRating', averageRating)
+          ..add('reviewCount', reviewCount)
           ..add('latitude', latitude)
           ..add('longitude', longitude)
           ..add('subscriptionTier', subscriptionTier)
@@ -349,6 +355,10 @@ class SearchSuggestionsResponseTopMatchesInnerBuilder
   num? get averageRating => _$this._averageRating;
   set averageRating(num? averageRating) =>
       _$this._averageRating = averageRating;
+
+  int? _reviewCount;
+  int? get reviewCount => _$this._reviewCount;
+  set reviewCount(int? reviewCount) => _$this._reviewCount = reviewCount;
 
   num? _latitude;
   num? get latitude => _$this._latitude;
@@ -418,6 +428,7 @@ class SearchSuggestionsResponseTopMatchesInnerBuilder
       _city = $v.city;
       _neighborhood = $v.neighborhood;
       _averageRating = $v.averageRating;
+      _reviewCount = $v.reviewCount;
       _latitude = $v.latitude;
       _longitude = $v.longitude;
       _subscriptionTier = $v.subscriptionTier;
@@ -463,6 +474,8 @@ class SearchSuggestionsResponseTopMatchesInnerBuilder
           neighborhood: neighborhood,
           averageRating: BuiltValueNullFieldError.checkNotNull(averageRating,
               r'SearchSuggestionsResponseTopMatchesInner', 'averageRating'),
+          reviewCount: BuiltValueNullFieldError.checkNotNull(reviewCount,
+              r'SearchSuggestionsResponseTopMatchesInner', 'reviewCount'),
           latitude: latitude,
           longitude: longitude,
           subscriptionTier: BuiltValueNullFieldError.checkNotNull(

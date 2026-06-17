@@ -13,16 +13,24 @@ import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provide
 import { prisma } from "../../lib/db/prisma.js";
 import { buildBookingConfirmationPdf } from "../../lib/pdf.js";
 import { sendNotification } from "../notifications/index.js";
+import { checkWebhookReplay } from "../../lib/webhook-replay.js";
 
 // ─── Fee helpers ────────────────────────────────────────────────────────────
-const COMMISSION_CACHE_TTL = 60;
+const COMMISSION_CACHE_TTL = 60_000;
+
+let _commissionCache: { value: number; expiresAt: number } | null = null;
 
 async function getCommissionPercent(): Promise<number> {
+  if (_commissionCache && _commissionCache.expiresAt > Date.now()) {
+    return _commissionCache.value;
+  }
   const setting = await prisma.platformSetting.findUnique({
     where: { key: "commission_rate_percent" },
     select: { value: true }
   });
-  return parseFloat(setting?.value ?? "5");
+  const value = parseFloat(setting?.value ?? "5");
+  _commissionCache = { value, expiresAt: Date.now() + COMMISSION_CACHE_TTL };
+  return value;
 }
 
 function calcFee(amountXof: number, commissionPercent: number) {
@@ -32,28 +40,6 @@ function calcFee(amountXof: number, commissionPercent: number) {
 
 function normalizePhoneNumber(phoneNumber: string) {
   return phoneNumber.replace(/\s+/g, "").trim();
-}
-
-// ─── Replay protection ──────────────────────────────────────────────────────
-// Deduplicates webhook deliveries by idempotencyKey within a sliding window.
-// The window exceeds PayDunya's delivery timeout (~30 s) so retries don't
-// register as replays; 5 min is well past any legitimate redelivery interval.
-const WEBHOOK_REPLAY_WINDOW_MS = 5 * 60 * 1_000;
-const processedNonces = new Map<string, number>();
-
-function checkReplay(nonce: string): boolean {
-  const now = Date.now();
-  const seenAt = processedNonces.get(nonce);
-  if (seenAt && now - seenAt < WEBHOOK_REPLAY_WINDOW_MS) return true; // replay
-  // Evict stale entries every 1 000 inserts (no background sweep needed)
-  if (processedNonces.size > 1_000) {
-    const cutoff = now - WEBHOOK_REPLAY_WINDOW_MS;
-    for (const [key, ts] of processedNonces) {
-      if (ts < cutoff) processedNonces.delete(key);
-    }
-  }
-  processedNonces.set(nonce, now);
-  return false;
 }
 
 const WITHDRAW_MODE_MAP: Record<string, string> = {
@@ -387,7 +373,7 @@ export class PaymentController {
       ? event.metadata.idempotencyKey
       : null;
 
-    if (nonce && checkReplay(nonce)) {
+    if (nonce && await checkWebhookReplay(nonce)) {
       logger.warn("Replay detected — webhook idempotencyKey already processed", { nonce });
       ok(reply, { received: true });
       return;
@@ -1017,11 +1003,92 @@ export class PaymentController {
         where: { id: paymentId },
         select: { provider: true }
       });
-      // If payment uses PayDunya, look for the method in metadata
-      // The method was stored in the webhook payload
-      return null; // Fallback to default method
+      return null;
     } catch {
       return null;
     }
+  }
+
+  async webhookPayDunyaPayout(request: FastifyRequest, reply: FastifyReply) {
+    logger.info("[PAYOUT-WEBHOOK] received callback", { headers: request.headers });
+
+    // Validate content type
+    const contentType = request.headers["content-type"] ?? "";
+    if (!contentType.includes("application/json") && !contentType.includes("text/plain")) {
+      logger.warn("[PAYOUT-WEBHOOK] unsupported content-type", { contentType });
+      reply.status(415).send({ error: "unsupported_media_type" });
+      return;
+    }
+
+    // Validate payload size (max 100KB)
+    const rawBody = (request as any).rawBody ?? JSON.stringify(request.body);
+    if (rawBody.length > 102400) {
+      logger.warn("[PAYOUT-WEBHOOK] oversized payload rejected", { size: rawBody.length });
+      reply.status(413).send({ error: "payload_too_large" });
+      return;
+    }
+
+    let payload: Record<string, any> = {};
+    try {
+      payload = typeof request.body === "string" ? JSON.parse(request.body) : (request.body as Record<string, any>) ?? {};
+    } catch (err) {
+      logger.warn("[PAYOUT-WEBHOOK] failed to parse body JSON", { body: request.body });
+      reply.status(400).send({ error: "bad_json" });
+      return;
+    }
+
+    // Validate payload keys - reject if neither disburse_id nor token present
+    if (typeof payload !== "object" || Array.isArray(payload)) {
+      logger.warn("[PAYOUT-WEBHOOK] invalid payload type");
+      reply.status(400).send({ error: "invalid_payload" });
+      return;
+    }
+
+    const disburseId = typeof payload.disburse_id === "string" ? payload.disburse_id : null;
+    const token = typeof payload.token === "string" ? payload.token : (typeof payload.disburse_token === "string" ? payload.disburse_token : null);
+
+    if (!disburseId && !token) {
+      logger.warn("[PAYOUT-WEBHOOK] callback missing identifiers", { keys: Object.keys(payload) });
+      reply.status(400).send({ error: "missing_identifiers" });
+      return;
+    }
+
+    // If both identifiers are present, verify they reference the same payout
+    // to prevent crafted callbacks from mutating a different payout via OR lookup.
+    let payout;
+    if (disburseId && token) {
+      payout = await prisma.merchantPayout.findFirst({
+        where: { disburseId, disburseToken: token }
+      });
+    } else {
+      payout = await prisma.merchantPayout.findFirst({
+        where: {
+          OR: [
+            disburseId ? { disburseId } : null,
+            token ? { disburseToken: token } : null
+          ].filter(Boolean) as any
+        }
+      });
+    }
+
+    if (!payout) {
+      logger.warn("[PAYOUT-WEBHOOK] payout not found for callback", { disburseId, token });
+      reply.status(200).send({ ok: false, message: "payout_not_found" });
+      return;
+    }
+
+    logger.info("[PAYOUT-WEBHOOK] found matching payout, triggering status reconciliation", {
+      payoutId: payout.id,
+      disburseId: payout.disburseId
+    });
+
+    try {
+      const { reconcilePayoutStatus } = await import("../../lib/payout-service.js");
+      await reconcilePayoutStatus(payout.id);
+    } catch (err) {
+      logger.error("[PAYOUT-WEBHOOK] reconciliation failed", { payoutId: payout.id, error: String(err) });
+    }
+
+    reply.status(200).send({ ok: true });
   }
 }

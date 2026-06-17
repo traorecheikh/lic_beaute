@@ -12,6 +12,7 @@ const searchSalonSummarySchema = z.object({
   city: z.string(),
   neighborhood: z.string().nullable(),
   averageRating: z.number(),
+  reviewCount: z.number().int(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   subscriptionTier: subscriptionTierSchema,

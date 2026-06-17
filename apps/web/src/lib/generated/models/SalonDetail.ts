@@ -88,6 +88,12 @@ export interface SalonDetail {
      * @type {number}
      * @memberof SalonDetail
      */
+    reviewCount: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof SalonDetail
+     */
     latitude: number | null;
     /**
      * 
@@ -185,6 +191,7 @@ export function instanceOfSalonDetail(value: object): value is SalonDetail {
     if (!('city' in value) || value['city'] === undefined) return false;
     if (!('neighborhood' in value) || value['neighborhood'] === undefined) return false;
     if (!('averageRating' in value) || value['averageRating'] === undefined) return false;
+    if (!('reviewCount' in value) || value['reviewCount'] === undefined) return false;
     if (!('latitude' in value) || value['latitude'] === undefined) return false;
     if (!('longitude' in value) || value['longitude'] === undefined) return false;
     if (!('subscriptionTier' in value) || value['subscriptionTier'] === undefined) return false;
@@ -218,6 +225,7 @@ export function SalonDetailFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'city': json['city'],
         'neighborhood': json['neighborhood'],
         'averageRating': json['averageRating'],
+        'reviewCount': json['reviewCount'],
         'latitude': json['latitude'],
         'longitude': json['longitude'],
         'subscriptionTier': json['subscriptionTier'],
@@ -252,6 +260,7 @@ export function SalonDetailToJSONTyped(value?: SalonDetail | null, ignoreDiscrim
         'city': value['city'],
         'neighborhood': value['neighborhood'],
         'averageRating': value['averageRating'],
+        'reviewCount': value['reviewCount'],
         'latitude': value['latitude'],
         'longitude': value['longitude'],
         'subscriptionTier': value['subscriptionTier'],

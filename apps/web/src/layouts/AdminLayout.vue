@@ -109,7 +109,8 @@ import {
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
   CreditCardIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  BanknotesIcon
 } from "@heroicons/vue/24/outline";
 
 import { useAdminAuthStore } from "@/stores/adminAuth";
@@ -163,6 +164,7 @@ const navItems = [
   { label: "Pilotage",       to: "/admin/dashboard",     icon: ChartBarIcon },
   { label: "Salons",         to: "/admin/salons",         icon: BuildingStorefrontIcon },
   { label: "Abonnements",    to: "/admin/subscriptions",  icon: CreditCardIcon },
+  { label: "Versements",     to: "/admin/payouts",        icon: BanknotesIcon },
   { label: "Audit log",      to: "/admin/audit",          icon: ClipboardDocumentListIcon },
   { label: "Configuration",  to: "/admin/config",         icon: Cog6ToothIcon },
   { label: "Compte",         to: "/admin/account",        icon: UserCircleIcon }

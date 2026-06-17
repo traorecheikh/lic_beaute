@@ -293,7 +293,7 @@ const filteredDropdownClients = computed(() => {
   return (clientsQuery.data.value?.items ?? []).slice(0, 10);
 });
 
-function selectClientDropdown(client: any) {
+function selectClientDropdown(client: { id: string; fullName: string; phone?: string | null }) {
   manualForm.clientId = client.id;
   manualForm.clientName = client.fullName;
   manualForm.clientPhone = client.phone ?? "";

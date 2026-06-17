@@ -5,12 +5,10 @@ import type { OtpAdapter } from "./otp/index.js";
 import { AfricasTalkingOtpAdapter, NoopOtpAdapter } from "./otp/index.js";
 import type { StorageAdapter } from "./storage/index.js";
 import { LocalStorageAdapter, NoopStorageAdapter } from "./storage/index.js";
-import { R2StorageAdapter } from "./storage/r2.js";
 
 export { type PaymentAdapter } from "./payment/index.js";
 export { type OtpAdapter, NoopOtpAdapter } from "./otp/index.js";
 export { type StorageAdapter, LocalStorageAdapter, NoopStorageAdapter } from "./storage/index.js";
-export { R2StorageAdapter } from "./storage/r2.js";
 
 export function createOtpAdapter(
   driver: string,
@@ -40,10 +38,6 @@ export function getStorageAdapter(
   driver: string,
   config: {
     storagePath?: string;
-    r2AccountId?: string;
-    r2AccessKeyId?: string;
-    r2SecretAccessKey?: string;
-    r2Bucket?: string;
     mediaPublicBaseUrl?: string;
   }
 ): StorageAdapter {
@@ -54,15 +48,6 @@ export function getStorageAdapter(
       _storageAdapter = new LocalStorageAdapter(
         config.storagePath ?? ".data/uploads",
         `${(config.mediaPublicBaseUrl ?? "").replace(/\/$/, "")}/static`
-      );
-      break;
-    case "r2":
-      _storageAdapter = new R2StorageAdapter(
-        config.r2AccountId ?? "",
-        config.r2AccessKeyId ?? "",
-        config.r2SecretAccessKey ?? "",
-        config.r2Bucket ?? "beauteavenu",
-        config.mediaPublicBaseUrl ?? "https://media.beauteavenu.com"
       );
       break;
     default:
@@ -77,19 +62,10 @@ export function createStorageAdapter(
   driver: string,
   config: {
     storagePath?: string;
-    r2AccountId?: string;
-    r2AccessKeyId?: string;
-    r2SecretAccessKey?: string;
-    r2Bucket?: string;
     mediaPublicBaseUrl?: string;
   }
 ): StorageAdapter {
   return getStorageAdapter(driver, config);
-}
-
-export function getR2Adapter(): R2StorageAdapter | null {
-  if (_storageAdapter instanceof R2StorageAdapter) return _storageAdapter;
-  return null;
 }
 
 // Singleton payment adapter instance — shared across controllers and worker.

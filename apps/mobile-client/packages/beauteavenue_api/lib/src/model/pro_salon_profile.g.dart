@@ -171,6 +171,8 @@ class _$ProSalonProfile extends ProSalonProfile {
   @override
   final num averageRating;
   @override
+  final int reviewCount;
+  @override
   final ProSalonProfileSubscriptionTierEnum subscriptionTier;
   @override
   final bool isVisibleInMarketplace;
@@ -202,6 +204,7 @@ class _$ProSalonProfile extends ProSalonProfile {
       this.phone,
       this.instagram,
       required this.averageRating,
+      required this.reviewCount,
       required this.subscriptionTier,
       required this.isVisibleInMarketplace,
       required this.canReceiveBookings,
@@ -234,6 +237,7 @@ class _$ProSalonProfile extends ProSalonProfile {
         phone == other.phone &&
         instagram == other.instagram &&
         averageRating == other.averageRating &&
+        reviewCount == other.reviewCount &&
         subscriptionTier == other.subscriptionTier &&
         isVisibleInMarketplace == other.isVisibleInMarketplace &&
         canReceiveBookings == other.canReceiveBookings &&
@@ -259,6 +263,7 @@ class _$ProSalonProfile extends ProSalonProfile {
     _$hash = $jc(_$hash, phone.hashCode);
     _$hash = $jc(_$hash, instagram.hashCode);
     _$hash = $jc(_$hash, averageRating.hashCode);
+    _$hash = $jc(_$hash, reviewCount.hashCode);
     _$hash = $jc(_$hash, subscriptionTier.hashCode);
     _$hash = $jc(_$hash, isVisibleInMarketplace.hashCode);
     _$hash = $jc(_$hash, canReceiveBookings.hashCode);
@@ -286,6 +291,7 @@ class _$ProSalonProfile extends ProSalonProfile {
           ..add('phone', phone)
           ..add('instagram', instagram)
           ..add('averageRating', averageRating)
+          ..add('reviewCount', reviewCount)
           ..add('subscriptionTier', subscriptionTier)
           ..add('isVisibleInMarketplace', isVisibleInMarketplace)
           ..add('canReceiveBookings', canReceiveBookings)
@@ -354,6 +360,10 @@ class ProSalonProfileBuilder
   set averageRating(num? averageRating) =>
       _$this._averageRating = averageRating;
 
+  int? _reviewCount;
+  int? get reviewCount => _$this._reviewCount;
+  set reviewCount(int? reviewCount) => _$this._reviewCount = reviewCount;
+
   ProSalonProfileSubscriptionTierEnum? _subscriptionTier;
   ProSalonProfileSubscriptionTierEnum? get subscriptionTier =>
       _$this._subscriptionTier;
@@ -412,6 +422,7 @@ class ProSalonProfileBuilder
       _phone = $v.phone;
       _instagram = $v.instagram;
       _averageRating = $v.averageRating;
+      _reviewCount = $v.reviewCount;
       _subscriptionTier = $v.subscriptionTier;
       _isVisibleInMarketplace = $v.isVisibleInMarketplace;
       _canReceiveBookings = $v.canReceiveBookings;
@@ -462,6 +473,8 @@ class ProSalonProfileBuilder
             instagram: instagram,
             averageRating: BuiltValueNullFieldError.checkNotNull(
                 averageRating, r'ProSalonProfile', 'averageRating'),
+            reviewCount: BuiltValueNullFieldError.checkNotNull(
+                reviewCount, r'ProSalonProfile', 'reviewCount'),
             subscriptionTier: BuiltValueNullFieldError.checkNotNull(
                 subscriptionTier, r'ProSalonProfile', 'subscriptionTier'),
             isVisibleInMarketplace: BuiltValueNullFieldError.checkNotNull(

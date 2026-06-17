@@ -6,6 +6,7 @@ import {
   updatePlatformSettingInputSchema,
   upsertSalonCategoryInputSchema,
   upsertRequiredDocumentInputSchema,
+  upsertPlatformServiceSuggestionInputSchema,
   adminSalonCreateInputSchema,
   proServiceCreateInputSchema,
   proServiceUpdateInputSchema
@@ -46,8 +47,22 @@ import {
   upsertRequiredDocument,
   upsertSalonCategory,
   sendPasswordReset,
-  sendMagicLink
+  sendMagicLink,
+  deleteServiceSuggestion,
+  listServiceSuggestions,
+  listServiceSuggestionsPublic,
+  upsertServiceSuggestion
 } from "./data.js";
+
+import {
+  listPayouts as listMerchantPayoutsAdmin,
+  payoutDetail,
+  reconcilePayout,
+  retryPayoutEndpoint,
+  approvePayoutEndpoint,
+  cancelPayoutEndpoint,
+  verifySalonPayoutSettings
+} from "./payouts.js";
 
 export class AdminController {
   private ensureAdmin(request: FastifyRequest, reply: FastifyReply) {
@@ -369,6 +384,27 @@ export class AdminController {
     ok(reply, await deleteSalonCategory(id, actorName));
   }
 
+  async listServiceSuggestions(request: FastifyRequest, reply: FastifyReply) {
+    if (!this.ensureAdmin(request, reply)) return;
+    ok(reply, await listServiceSuggestions());
+  }
+
+  async upsertServiceSuggestion(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    const data = upsertPlatformServiceSuggestionInputSchema.parse(request.body);
+    const actorName = await this.resolveActorName(token.sub);
+    ok(reply, await upsertServiceSuggestion(data, actorName));
+  }
+
+  async deleteServiceSuggestion(request: FastifyRequest, reply: FastifyReply) {
+    const token = this.ensureAdmin(request, reply);
+    if (!token) return;
+    const { id } = request.params as { id: string };
+    const actorName = await this.resolveActorName(token.sub);
+    ok(reply, await deleteServiceSuggestion(id, actorName));
+  }
+
   async listDocuments(request: FastifyRequest, reply: FastifyReply) {
     if (!this.ensureAdmin(request, reply)) return;
     ok(reply, await listRequiredDocuments());
@@ -380,6 +416,10 @@ export class AdminController {
 
   async listDocumentsPublic(_request: FastifyRequest, reply: FastifyReply) {
     ok(reply, await listRequiredDocuments());
+  }
+
+  async listServiceSuggestionsPublic(_request: FastifyRequest, reply: FastifyReply) {
+    ok(reply, await listServiceSuggestionsPublic());
   }
 
   async checkUniquenessPublic(request: FastifyRequest, reply: FastifyReply) {
@@ -619,4 +659,13 @@ export class AdminController {
     await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);
     ok(reply, { deleted: true });
   }
+
+  // Merchant Payouts
+  listMerchantPayoutsAdmin = listMerchantPayoutsAdmin;
+  payoutDetail = payoutDetail;
+  reconcilePayout = reconcilePayout;
+  retryPayoutEndpoint = retryPayoutEndpoint;
+  approvePayoutEndpoint = approvePayoutEndpoint;
+  cancelPayoutEndpoint = cancelPayoutEndpoint;
+  verifySalonPayoutSettings = verifySalonPayoutSettings;
 }

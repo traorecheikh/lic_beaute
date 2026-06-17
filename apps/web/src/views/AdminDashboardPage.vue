@@ -71,7 +71,8 @@
             <article
               v-for="salon in dashboardQuery.data.value.topGrowthSalons"
               :key="salon.salonId"
-              class="flex items-center justify-between p-6 hover:bg-sand/30 transition-all group"
+              class="flex items-center justify-between p-6 hover:bg-sand/30 transition-all group cursor-pointer"
+              @click="router.push(`/admin/salons/${salon.salonId}`)"
             >
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center font-bold text-cocoa/20 text-xs">
@@ -188,7 +189,9 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import PieChart from "@/components/PieChart.vue";
 import { ApiError, fetchAdminDashboard, fetchCancellationStats } from "@/lib/api";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const auth = useAdminAuthStore();
 const showExportModal = ref(false);
 

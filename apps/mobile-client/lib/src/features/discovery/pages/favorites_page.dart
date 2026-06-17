@@ -62,20 +62,26 @@ class FavoritesPage extends ConsumerWidget {
                   items: favorites,
                   isStale: resource.isStale,
                   cachedAt: resource.cachedAt,
-                  itemBuilder: (context, i, salon) => SalonListCard(
-                    salon: salon,
-                    onTap: () => context.push(AppRoutes.salon(salon.id)),
-                    trailing: AppPressable(
-                      onTap: () {
-                        AppHaptics.light();
-                        ref.read(favoritesProvider.notifier).toggle(salon.id);
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.all(8.r),
-                        child: AppIcon('heart-broken', size: 22, color: AppColors.error),
+                  itemBuilder: (context, i, salon) {
+                    final tag = 'favorites_salon_image_${salon.id}';
+                    return SalonListCard(
+                      salon: salon,
+                      heroTag: tag,
+                      onTap: () => context.push(
+                        '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent(tag)}',
                       ),
-                    ),
-                  ),
+                      trailing: AppPressable(
+                        onTap: () {
+                          AppHaptics.light();
+                          ref.read(favoritesProvider.notifier).toggle(salon.id);
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(8.r),
+                          child: AppIcon('heart-broken', size: 22, color: AppColors.error),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               SliverPadding(padding: EdgeInsets.only(bottom: 120.h)),
             ],

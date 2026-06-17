@@ -21,6 +21,7 @@ Name | Type | Description | Notes
 **phone** | **String** |  | 
 **instagram** | **String** |  | 
 **averageRating** | **num** |  | 
+**reviewCount** | **int** |  | 
 **subscriptionTier** | **String** |  | 
 **isVisibleInMarketplace** | **bool** |  | 
 **canReceiveBookings** | **bool** |  | 

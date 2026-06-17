@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:toastification/toastification.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../utils/app_haptics.dart';
@@ -11,28 +12,36 @@ abstract final class AppSnackbar {
   /// Green success toast
   static void success(BuildContext context, String message) {
     AppHaptics.medium();
-    _show(
+    _showCustom(
       context,
-      message,
-      AppColors.success,
-      'check-circle',
+      title: 'Succès',
+      message: message,
+      accentColor: AppColors.success,
+      icon: 'check-circle',
     );
   }
 
   /// Red error toast
   static void error(BuildContext context, String message) {
     AppHaptics.heavy();
-    _show(context, message, AppColors.error, 'alert-circle');
+    _showCustom(
+      context,
+      title: 'Erreur',
+      message: message,
+      accentColor: AppColors.error,
+      icon: 'alert-circle',
+    );
   }
 
   /// Neutral info toast
   static void info(BuildContext context, String message) {
     AppHaptics.light();
-    _show(
+    _showCustom(
       context,
-      message,
-      AppColors.onSurfaceVariant,
-      'info',
+      title: 'Information',
+      message: message,
+      accentColor: AppColors.primary,
+      icon: 'info',
     );
   }
 
@@ -61,36 +70,97 @@ abstract final class AppSnackbar {
     return result ?? false;
   }
 
-  static void _show(
-    BuildContext context,
-    String message,
-    Color color,
-    String icon,
-  ) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        backgroundColor: AppColors.onSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        duration: const Duration(seconds: 3),
-        content: Row(
-          children: [
-            AppIcon(icon, size: 20, color: color),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
-                message,
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.white),
+  static void _showCustom(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required Color accentColor,
+    required String icon,
+  }) {
+    toastification.showCustom(
+      context: context,
+      alignment: Alignment.topCenter,
+      autoCloseDuration: const Duration(seconds: 4),
+      animationDuration: const Duration(milliseconds: 300),
+      builder: (context, item) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final bgColor = isDark ? AppColors.darkSurface : AppColors.surface;
+        final textColor = isDark ? AppColors.darkOnSurface : AppColors.onSurface;
+        final subtextColor = isDark ? AppColors.darkOnSurfaceVariant : AppColors.onSurfaceVariant;
+
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(AppRadius.lg.r),
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.18),
+                width: 1.5,
               ),
+              boxShadow: AppShadows.card,
             ),
-          ],
-        ),
-      ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Icon with Tinted Circle Background
+                Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: AppIcon(
+                    icon,
+                    size: 20,
+                    color: accentColor,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                // Text Column
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.labelMd.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        message,
+                        style: AppTextStyles.bodySm.copyWith(
+                          color: subtextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                // Close button (manual dismiss)
+                GestureDetector(
+                  onTap: () => toastification.dismiss(item),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                    child: AppIcon(
+                      'close',
+                      size: 16,
+                      color: subtextColor.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

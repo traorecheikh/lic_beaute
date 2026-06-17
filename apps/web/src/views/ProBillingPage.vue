@@ -195,7 +195,7 @@
         <div>
           <label class="section-label mb-2 block">Fournisseur</label>
           <select v-model="paymentMethodForm.provider" class="input-shell">
-            <option v-if="features?.billingProviders?.paydunya" value="paydunya">PayDunya (Carte ou Mobile Money)</option>
+            <option v-if="features?.billingProviders?.paydunya" value="paydunya">Paiement mobile</option>
             <option v-if="features?.billingProviders?.manual" value="manual">Manuel (hors ligne)</option>
           </select>
         </div>
@@ -629,17 +629,17 @@ const paymentMethodForm = reactive({
 const features = computed(() => featuresQuery.data.value);
 
 const isStandardFree = computed(() => {
-  const tier = featuresQuery.data.value?.planTiers?.find((t: any) => t.tier === "standard");
+  const tier = featuresQuery.data.value?.planTiers?.find((t) => t.tier === "standard");
   return tier?.priceXof === 0;
 });
 
 const isPremiumFree = computed(() => {
-  const tier = featuresQuery.data.value?.planTiers?.find((t: any) => t.tier === "premium");
+  const tier = featuresQuery.data.value?.planTiers?.find((t) => t.tier === "premium");
   return tier?.priceXof === 0;
 });
 
 const providerLabelMap: Record<string, string> = {
-  paydunya: "PayDunya (Carte ou Mobile Money)",
+  paydunya: "Paiement mobile",
   manual: "Manuel (hors ligne)"
 };
 
@@ -709,7 +709,8 @@ const downgradeMutation = useMutation({
   mutationFn: () => checkoutProSubscription(auth.accessToken ?? "", { action: "downgrade", provider: "paydunya" } as unknown as ProSubscriptionCheckoutInput),
   onSuccess: async (result) => {
     await queryClient.invalidateQueries({ queryKey: ["pro-subscription"] });
-    if ((result as any).downgradeScheduled) {
+    const r = result as { downgradeScheduled?: boolean };
+    if (r.downgradeScheduled) {
       toast.success("Rétrogradation programmée. Elle prendra effet à la fin de votre période de grâce.");
     }
   },
@@ -757,9 +758,10 @@ const cancelPayload = ref<{ reason: string; additionalInfo: string }>({ reason: 
 const cancelReasonMutation = useMutation({
   mutationFn: (payload: { reason: string; additionalInfo: string }) =>
     cancelProSubscription(auth.accessToken ?? "", payload),
-  onSuccess: async (result: any) => {
-    if (result.retentionOffer) {
-      cancelRetentionOffer.value = result.retentionOffer;
+  onSuccess: async (result) => {
+    const r = result as { retentionOffer?: { title: string; description: string } | null };
+    if (r.retentionOffer) {
+      cancelRetentionOffer.value = r.retentionOffer;
       cancelStep.value = "retention";
     } else {
       cancelStep.value = "confirm";
@@ -1387,8 +1389,8 @@ async function handleCheckoutSubmit() {
       tier: checkoutTier.value,
       provider: "paydunya",
       billingCycle: billingCycle.value,
-      channel: selectedMethod.value
-    } as any);
+      channel: selectedMethod.value as "carte_bancaire" | "paydunya_wallet" | "wave_senegal" | "orange_senegal" | "om_ci" | "om_bf" | "djamo" | "wizall_senegal" | undefined
+    }) as { chargeId?: string; redirectUrl?: string };
 
     // Free tier: subscription already activated server-side, skip payment
     if (!initResult.redirectUrl && initResult.chargeId) {
@@ -1403,7 +1405,7 @@ async function handleCheckoutSubmit() {
 
     chargeId.value = nextChargeId;
 
-    const details: Record<string, any> = {};
+    const details: Record<string, unknown> = {};
     if (selectedMethod.value === 'carte_bancaire') {
       details.fullName = cardForm.fullName.trim();
       details.email = cardForm.email.trim();
@@ -1429,11 +1431,11 @@ async function handleCheckoutSubmit() {
     const execResult = await executeProSubscription(auth.accessToken ?? "", nextChargeId, {
       method: selectedMethod.value,
       details
-    });
+    }) as { success: boolean; message?: string; data?: Record<string, unknown>; status?: string; url?: string; pendingProviderConfirmation?: boolean; chargeId?: string; redirectUrl?: string };
 
     if (execResult.success) {
-      const detailsData = (execResult.data as any)?.details;
-      const cid = (execResult.data as any)?.cid || detailsData?.cid;
+      const detailsData = execResult.data?.details as { cid?: string } | undefined;
+      const cid = (execResult.data?.cid as string | undefined) || detailsData?.cid;
       if (cid) {
         wizallCid.value = cid;
         checkoutStep.value = "wizall_otp";
@@ -1482,7 +1484,7 @@ async function handleWizallOtpSubmit() {
         authorization_code: wizallOtpCode.value.trim(),
         transaction_id: wizallCid.value
       }
-    });
+    }) as { success: boolean; message?: string; data?: Record<string, unknown>; status?: string; url?: string; pendingProviderConfirmation?: boolean };
 
     if (execResult.success) {
       if (requiresAsyncConfirmation(execResult)) {

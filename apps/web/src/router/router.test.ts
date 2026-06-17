@@ -62,6 +62,11 @@ describe("router", () => {
     expect(router.resolve("/admin/audit/audit-wave-1").name).toBe("admin-audit-detail");
   });
 
+  it("registers public privacy and terms routes", () => {
+    expect(router.resolve("/privacy").name).toBe("privacy");
+    expect(router.resolve("/terms").name).toBe("terms");
+  });
+
   it("redirects unauthenticated admin access to login", async () => {
     await router.push("/admin/dashboard");
 

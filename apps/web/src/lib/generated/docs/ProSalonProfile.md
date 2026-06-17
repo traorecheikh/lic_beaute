@@ -19,6 +19,7 @@ Name | Type
 `phone` | string
 `instagram` | string
 `averageRating` | number
+`reviewCount` | number
 `subscriptionTier` | string
 `isVisibleInMarketplace` | boolean
 `canReceiveBookings` | boolean
@@ -47,6 +48,7 @@ const example = {
   "phone": null,
   "instagram": null,
   "averageRating": null,
+  "reviewCount": null,
   "subscriptionTier": null,
   "isVisibleInMarketplace": null,
   "canReceiveBookings": null,

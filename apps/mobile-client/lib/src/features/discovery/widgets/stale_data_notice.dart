@@ -34,7 +34,7 @@ class StaleDataNotice extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8ED),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(AppRadius.lg.r),
         border: Border.all(color: const Color(0xFFFFD89B)),
       ),
       child: Row(

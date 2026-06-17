@@ -3,7 +3,6 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { adminMediaApproveInputSchema, adminMediaRejectInputSchema } from "@beauteavenue/contracts";
 
 import { getStorageAdapter } from "../../adapters/index.js";
-import { R2StorageAdapter } from "../../adapters/storage/r2.js";
 import { config } from "../../config.js";
 import { HttpAuthError, requireRole } from "../../lib/auth/index.js";
 import { invalidateCacheTags } from "../../lib/cache.js";
@@ -11,17 +10,6 @@ import { fail, ok } from "../../lib/http.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
 import { sendPushBatch } from "../../lib/push.js";
-
-function getR2Adapter(): R2StorageAdapter | null {
-  if (config.storageDriver !== "r2") return null;
-  return new R2StorageAdapter(
-    config.r2AccountId,
-    config.r2AccessKeyId,
-    config.r2SecretAccessKey,
-    config.r2Bucket,
-    config.mediaPublicBaseUrl
-  );
-}
 
 async function getSalonOwnerTokens(salonId: string): Promise<string[]> {
   const owners = await prisma.user.findMany({
@@ -80,10 +68,12 @@ export class AdminMediaController {
       const asset = await prisma.mediaAsset.findUnique({ where: { id: params.mediaId } });
       if (!asset || asset.deletedAt) { fail(reply, 404, "media_not_found", "Fichier introuvable."); return; }
 
-      const r2 = getR2Adapter();
-      if (!r2) { fail(reply, 503, "storage_unavailable", "Stockage non configuré."); return; }
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
 
-      const signedUrl = await r2.presignGet(asset.objectKey, 300);
+      const signedUrl = await storage.presignGet(asset.objectKey, 300);
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
       ok(reply, { signedUrl, expiresAt: expiresAt.toISOString() });
@@ -112,23 +102,15 @@ export class AdminMediaController {
       const finalObjectKey = `${prefix}/${salonPrefix}/${purposeDir}/${asset.id}${fileExt}`;
       const publicUrl = isPrivate
         ? null
-        : config.storageDriver === "r2"
-          ? `${config.mediaPublicBaseUrl}/${finalObjectKey}`
-          : `${config.mediaPublicBaseUrl}/api/v1/salons/media/${asset.id}/public`;
+        : `${config.mediaPublicBaseUrl}/${finalObjectKey}`;
       const visibility = isPrivate ? "private_kyc" : "public";
 
-      const r2 = getR2Adapter();
-      if (r2) {
-        await r2.copyObject(asset.objectKey, finalObjectKey);
-      } else if (asset.objectKey !== finalObjectKey) {
-        const storage = getStorageAdapter(config.storageDriver, {
-          storagePath: config.storagePath,
-          r2AccountId: config.r2AccountId,
-          r2AccessKeyId: config.r2AccessKeyId,
-          r2SecretAccessKey: config.r2SecretAccessKey,
-          r2Bucket: config.r2Bucket,
-          mediaPublicBaseUrl: config.mediaPublicBaseUrl
-        });
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
+
+      if (asset.objectKey !== finalObjectKey) {
         const source = await storage.retrieve(asset.objectKey);
         if (source) {
           await storage.store(finalObjectKey, source, asset.mimeType);
@@ -182,12 +164,17 @@ export class AdminMediaController {
       if (!asset || asset.deletedAt) { fail(reply, 404, "media_not_found", "Fichier introuvable."); return; }
       if (asset.reviewStatus === "rejected") { fail(reply, 409, "already_rejected", "Déjà rejeté."); return; }
 
-      const r2 = getR2Adapter();
-      if (r2) {
-        const fileExt = asset.fileExt ?? ".bin";
-        const rejectedKey = `rejected/${asset.salonId ?? asset.ownerId}/${asset.id}${fileExt}`;
-        await r2.copyObject(asset.objectKey, rejectedKey).catch(() => {});
-        await r2.deleteObject(asset.objectKey).catch(() => {});
+      const storage = getStorageAdapter(config.storageDriver, {
+        storagePath: config.storagePath,
+        mediaPublicBaseUrl: config.mediaPublicBaseUrl
+      });
+
+      const fileExt = asset.fileExt ?? ".bin";
+      const rejectedKey = `rejected/${asset.salonId ?? asset.ownerId}/${asset.id}${fileExt}`;
+      const source = await storage.retrieve(asset.objectKey);
+      if (source) {
+        await storage.store(rejectedKey, source, asset.mimeType).catch(() => {});
+        await storage.delete(asset.objectKey).catch(() => {});
       }
 
       await prisma.mediaAsset.update({

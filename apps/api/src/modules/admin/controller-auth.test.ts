@@ -12,7 +12,7 @@ vi.mock("../../lib/auth/index.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../lib/auth/index.js")>();
   return { ...actual, requireRole: mocks.requireRole };
 });
-vi.mock("../../lib/http.js", () => ({ fail: mocks.fail, ok: mocks.ok }));
+vi.mock("../../lib/http.js", () => ({ fail: mocks.fail, ok: mocks.ok, handleError: vi.fn() }));
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../lib/cache.js", () => ({ getOrSetCachedJson: vi.fn(), invalidateCacheTags: vi.fn() }));
 vi.mock("./data.js", () => ({
@@ -75,6 +75,14 @@ describe("AdminController auth failures", () => {
     await c.listDocuments({} as never, rep);
     await c.upsertDocument({ body: {} } as never, rep);
     await c.deleteDocument({ params: { id: "d1" } } as never, rep);
+    // Merchant payout endpoints
+    await c.listMerchantPayoutsAdmin({ query: {} } as never, rep);
+    await c.payoutDetail({ params: { payoutId: "p1" } } as never, rep);
+    await c.reconcilePayout({ params: { payoutId: "p1" } } as never, rep);
+    await c.retryPayoutEndpoint({ params: { payoutId: "p1" }, body: { reason: "test retry" } } as never, rep);
+    await c.approvePayoutEndpoint({ params: { payoutId: "p1" }, body: { reason: "test approve" } } as never, rep);
+    await c.cancelPayoutEndpoint({ params: { payoutId: "p1" }, body: { reason: "test cancel" } } as never, rep);
+    await c.verifySalonPayoutSettings({ params: { salonId: "s1" }, body: { status: "verified" } } as never, rep);
     expect(mocks.fail).toHaveBeenCalled();
   });
 

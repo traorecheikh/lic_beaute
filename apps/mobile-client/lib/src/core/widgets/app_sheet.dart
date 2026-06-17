@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../theme/app_theme.dart';
+
 abstract final class AppSheet {
   /// Shows a modal bottom sheet with the app-standard shape, drag handle, and
   /// root navigator. [builder] receives the sheet's own [BuildContext].
@@ -14,7 +16,7 @@ abstract final class AppSheet {
       useRootNavigator: useRootNavigator,
       showDragHandle: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl.r)),
       ),
       builder: builder,
     );

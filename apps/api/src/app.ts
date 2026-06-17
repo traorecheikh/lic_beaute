@@ -98,11 +98,29 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   await app.register(cookie);
   await app.register(sensible);
   const httpsOrigin = config.webOrigin.startsWith("https://");
+  const connectSrc = ["'self'", "https://nominatim.openstreetmap.org", "https://*.tile.openstreetmap.org"];
+  const imgSrc = ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org"];
+
+  if (config.mediaPublicBaseUrl) {
+    try {
+      const url = new URL(config.mediaPublicBaseUrl);
+      const origin = url.origin;
+      if (!connectSrc.includes(origin)) connectSrc.push(origin);
+      if (!imgSrc.includes(origin)) imgSrc.push(origin);
+    } catch {
+      if (config.mediaPublicBaseUrl.startsWith("http://") || config.mediaPublicBaseUrl.startsWith("https://")) {
+        if (!connectSrc.includes(config.mediaPublicBaseUrl)) connectSrc.push(config.mediaPublicBaseUrl);
+        if (!imgSrc.includes(config.mediaPublicBaseUrl)) imgSrc.push(config.mediaPublicBaseUrl);
+      }
+    }
+  }
+
   await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
-        connectSrc: ["'self'"],
+        connectSrc,
+        imgSrc,
         frameAncestors: ["'none'"],
         // upgrade-insecure-requests forces the browser to load all assets over HTTPS.
         // On HTTP-only deployments this silently breaks every JS/CSS asset → white page.

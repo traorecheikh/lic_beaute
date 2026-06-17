@@ -77,6 +77,9 @@ describe("ProController auth failures", () => {
     await c.listPayouts({} as never, reply);
     await c.listInvoices({} as never, reply);
     await c.downloadInvoicePdf({ params: { invoiceId: "i1" } } as never, reply);
+    await c.getPayoutSettings({} as never, reply);
+    await c.updatePayoutSettings({ body: { payoutMethod: "wave_senegal", payoutPhone: "771234567", payoutName: "Salon", password: "x" } } as never, reply);
+    await c.listMerchantPayouts({} as never, reply);
 
     expect(mocks.fail.mock.calls.length + mocks.handleError.mock.calls.length).toBeGreaterThan(0);
   });

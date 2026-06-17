@@ -351,8 +351,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Salon detail (outside shell so it can be reached from booking funnel)
       GoRoute(
         path: '/salons/:salonId',
-        builder: (_, state) =>
-            SalonDetailPage(salonId: state.pathParameters['salonId']!),
+        builder: (_, state) {
+          final salonId = state.pathParameters['salonId']!;
+          final heroTag = state.uri.queryParameters['heroTag'];
+          return SalonDetailPage(salonId: salonId, heroTag: heroTag);
+        },
       ),
 
       // ── Booking funnel (full-screen, no shell) ────────────────────────────

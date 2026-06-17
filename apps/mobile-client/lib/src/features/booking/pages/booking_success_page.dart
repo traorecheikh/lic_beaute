@@ -107,6 +107,7 @@ class _SuccessBody extends StatelessWidget {
         Positioned(
           left: -9999,
           top: 0,
+          width: 380,
           child: RepaintBoundary(
             key: shareKey,
             child: BookingShareCard(
@@ -171,7 +172,7 @@ class _SuccessBody extends StatelessWidget {
                   padding: EdgeInsets.all(20.r),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(20.r),
+                    borderRadius: BorderRadius.circular(AppRadius.xl.r),
                     boxShadow: AppShadows.card,
                   ),
                   child: Column(
@@ -244,7 +245,7 @@ class _SummaryRow extends StatelessWidget {
           height: 32.r,
           decoration: BoxDecoration(
             color: AppColors.primaryLight,
-            borderRadius: BorderRadius.circular(8.r),
+            borderRadius: BorderRadius.circular(AppRadius.sm.r),
           ),
           child: Center(
             child: AppIcon(icon, size: 14, color: AppColors.primary),

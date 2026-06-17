@@ -151,7 +151,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                         onChanged: (val) => setState(() => _channel = val),
                       ),
                       gapH16,
-                      _buildPhoneField(_phoneController),
+                      _buildPhoneField(_phoneController, _channel),
                       SizedBox(height: 24.h),
                       AppButton.primary(
                         label: 'Ajouter',
@@ -187,6 +187,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -220,11 +221,30 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                       itemLabel: (value) => channelItems
                           .firstWhere((item) => item.code == value)
                           .label,
-                      onChanged: (val) =>
-                          setSheetState(() => selectedChannel = val),
+                      onChanged: (val) {
+                        if (val == null) return;
+                        setSheetState(() {
+                          final prevChannel = selectedChannel;
+                          selectedChannel = val;
+
+                          booking_payment_methods.PaydunyaMethodRecord? prevMethod;
+                          booking_payment_methods.PaydunyaMethodRecord? newMethod;
+                          for (final item in channelItems) {
+                            if (item.code == prevChannel) prevMethod = item;
+                            if (item.code == val) newMethod = item;
+                          }
+
+                          final currentLabel = labelController.text.trim();
+                          if (prevMethod != null && newMethod != null) {
+                            if (currentLabel.isEmpty || currentLabel == prevMethod.label) {
+                              labelController.text = newMethod.label;
+                            }
+                          }
+                        });
+                      },
                     ),
                     gapH16,
-                    _buildPhoneField(phoneController),
+                    _buildPhoneField(phoneController, selectedChannel),
                     gapH16,
                     TextField(
                       controller: labelController,
@@ -232,7 +252,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                         labelText: 'Libellé (optionnel)',
                         hintText: 'ex : Mon Wave principal',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(AppRadius.md.r),
                         ),
                       ),
                       maxLength: 60,
@@ -350,17 +370,26 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     }
   }
 
-  Widget _buildPhoneField(TextEditingController controller) {
+  Widget _buildPhoneField(TextEditingController controller, String channelCode) {
     final countriesAsync = ref.watch(supportedCountriesProvider);
     final countries = countriesAsync.asData?.value ?? kPhoneCountries;
+
+    final liveMethods = ref
+        .read(booking_payment_methods.availablePaydunyaMethodsProvider)
+        .asData
+        ?.value;
+    final channelItems = liveMethods ?? const <booking_payment_methods.PaydunyaMethodRecord>[];
+    final countryStr = _resolveChannelCountryForCode(channelCode, channelItems);
+
     final selectedCountry = countries.firstWhere(
-      (c) => _resolveChannelCountry()?.toUpperCase() == c.code,
+      (c) => countryStr?.toUpperCase() == c.code,
       orElse: () => countries[0],
     );
 
     return Semantics(
       label: 'Numéro de téléphone pour le moyen de paiement',
       child: AppPhoneField(
+        key: ValueKey(channelCode),
         controller: controller,
         labelText: 'Numéro de téléphone',
         initialCountry: selectedCountry,

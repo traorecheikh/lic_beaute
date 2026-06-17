@@ -135,7 +135,7 @@ export class CatalogController {
     if (sort === "nearby" && lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
       type NearbyRow = {
         id: string; name: string; category: string; logoUrl: string | null;
-        city: string; neighborhood: string | null; averageRating: number;
+        city: string; neighborhood: string | null; averageRating: number; reviewCount: number;
         latitude: number; longitude: number; subscriptionTier: string;
         isPrestige: boolean; prestigeScore: number | null;
         distance_km: number; total_count: bigint;
@@ -147,7 +147,7 @@ export class CatalogController {
 
       const rows = await prisma.$queryRaw<NearbyRow[]>(Prisma.sql`
         SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-               s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+               s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore",
                6371 * acos(LEAST(1.0,
                  cos(radians(${lat})) * cos(radians(s.latitude)) *
@@ -186,6 +186,7 @@ export class CatalogController {
         items: rows.map((r) => ({
           id: r.id, name: r.name, category: r.category, logoUrl: r.logoUrl,
           city: r.city, neighborhood: r.neighborhood, averageRating: Number(r.averageRating),
+          reviewCount: Number(r.reviewCount),
           latitude: r.latitude, longitude: r.longitude,
           subscriptionTier: r.subscriptionTier,
           featured: r.subscriptionTier === "premium",
@@ -204,7 +205,7 @@ export class CatalogController {
     if (sort === "trending") {
       type TrendingRow = {
         id: string; name: string; category: string; logoUrl: string | null;
-        city: string; neighborhood: string | null; averageRating: number;
+        city: string; neighborhood: string | null; averageRating: number; reviewCount: number;
         latitude: number | null; longitude: number | null; subscriptionTier: string;
         isPrestige: boolean; prestigeScore: number | null;
         trending_score: number; total_count: bigint;
@@ -216,7 +217,7 @@ export class CatalogController {
 
       const rows = await prisma.$queryRaw<TrendingRow[]>(Prisma.sql`
         SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-               s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+               s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore",
                COALESCE(t.score, 0)::float AS trending_score,
                COUNT(*) OVER() AS total_count
@@ -251,6 +252,7 @@ export class CatalogController {
         items: rows.map((r) => ({
           id: r.id, name: r.name, category: r.category, logoUrl: r.logoUrl,
           city: r.city, neighborhood: r.neighborhood, averageRating: Number(r.averageRating),
+          reviewCount: Number(r.reviewCount),
           latitude: r.latitude, longitude: r.longitude,
           subscriptionTier: r.subscriptionTier,
           featured: r.subscriptionTier === "premium",
@@ -281,7 +283,7 @@ export class CatalogController {
           },
           select: {
             id: true, name: true, category: true, logoUrl: true, city: true,
-            neighborhood: true, averageRating: true, latitude: true, longitude: true,
+            neighborhood: true, averageRating: true, reviewCount: true, latitude: true, longitude: true,
             subscriptionTier: true, isPrestige: true, prestigeScore: true
           },
           orderBy: [{ prestigeScore: "desc" }, { averageRating: "desc" }],
@@ -308,14 +310,14 @@ export class CatalogController {
 
     type RatingRow = {
       id: string; name: string; category: string; logoUrl: string | null;
-      city: string; neighborhood: string | null; averageRating: number;
+      city: string; neighborhood: string | null; averageRating: number; reviewCount: number;
       latitude: number | null; longitude: number | null; subscriptionTier: string;
       isPrestige: boolean; prestigeScore: number | null; total_count: bigint;
     };
 
     const rows = await prisma.$queryRaw<RatingRow[]>(Prisma.sql`
       SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-             s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+             s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
              s."isPrestige", s."prestigeScore",
              CASE s."subscriptionTier" WHEN 'premium' THEN 0 ELSE 1 END AS tier_rank,
              COUNT(*) OVER() AS total_count
@@ -344,6 +346,7 @@ export class CatalogController {
       items: rows.map((r) => ({
         id: r.id, name: r.name, category: r.category, logoUrl: r.logoUrl,
         city: r.city, neighborhood: r.neighborhood, averageRating: Number(r.averageRating),
+        reviewCount: Number(r.reviewCount),
         latitude: r.latitude, longitude: r.longitude,
         subscriptionTier: r.subscriptionTier,
         featured: r.subscriptionTier === "premium",
@@ -402,6 +405,7 @@ export class CatalogController {
       city: salon.city,
       neighborhood: salon.neighborhood,
       averageRating: salon.averageRating,
+      reviewCount: salon.reviewCount,
       latitude: salon.latitude,
       longitude: salon.longitude,
       subscriptionTier: salon.subscriptionTier,
@@ -603,7 +607,7 @@ export class CatalogController {
           salon: {
             select: {
               id: true, name: true, category: true, logoUrl: true, city: true,
-              neighborhood: true, averageRating: true, latitude: true,
+              neighborhood: true, averageRating: true, reviewCount: true, latitude: true,
               longitude: true, subscriptionTier: true, isPrestige: true, prestigeScore: true
             }
           }

@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => {
     platformSetting: { create: vi.fn(), findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn() },
     platformSalonCategory: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
     platformRequiredDocument: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
+    platformServiceSuggestion: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
     subscriptionCharge: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn() },
     subscriptionEvent: { create: vi.fn() },
     billingInvoice: { create: vi.fn() },
@@ -53,7 +54,11 @@ import {
   requestSalonInfo,
   updatePlatformSetting,
   upsertRequiredDocument,
-  upsertSalonCategory
+  upsertSalonCategory,
+  deleteServiceSuggestion,
+  listServiceSuggestions,
+  listServiceSuggestionsPublic,
+  upsertServiceSuggestion
 } from "./data.js";
 
 describe("admin data module", () => {
@@ -656,6 +661,14 @@ describe("admin data module", () => {
     await upsertRequiredDocument({ label: "ID", slug: "id", type: "pdf", isRequired: true }, "Admin");
     mocks.prisma.platformRequiredDocument.delete.mockResolvedValue({ id: "d1", label: "ID" });
     await deleteRequiredDocument("d1", "Admin");
+
+    mocks.prisma.platformServiceSuggestion.findMany.mockResolvedValue([{ id: "s1" }]);
+    await expect(listServiceSuggestions()).resolves.toEqual([{ id: "s1" }]);
+    await expect(listServiceSuggestionsPublic()).resolves.toEqual([{ id: "s1" }]);
+    mocks.prisma.platformServiceSuggestion.upsert.mockResolvedValue({ id: "s1", name: "Brushing", category: "Coiffure" });
+    await upsertServiceSuggestion({ name: "Brushing", category: "Coiffure" }, "Admin");
+    mocks.prisma.platformServiceSuggestion.delete.mockResolvedValue({ id: "s1", name: "Brushing", category: "Coiffure" });
+    await deleteServiceSuggestion("s1", "Admin");
   });
 
   it("listEmailAuditEvents maps rows and applies filters", async () => {

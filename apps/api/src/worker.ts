@@ -11,13 +11,10 @@ import { prisma } from "./lib/db/prisma.js";
 import { sendEmail } from "./lib/email.js";
 import { sendPushBatch } from "./lib/push.js";
 import { sendNotification } from "./modules/notifications/index.js";
+import { createPayoutForBooking, submitPayout, reconcilePayoutStatus } from "./lib/payout-service.js";
 
 const storageAdapter = getStorageAdapter(config.storageDriver, {
   storagePath: config.storagePath,
-  r2AccountId: config.r2AccountId,
-  r2AccessKeyId: config.r2AccessKeyId,
-  r2SecretAccessKey: config.r2SecretAccessKey,
-  r2Bucket: config.r2Bucket,
   mediaPublicBaseUrl: config.mediaPublicBaseUrl
 });
 
@@ -73,6 +70,74 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
           providerReference: payment.providerTxId ?? undefined
         }
       });
+
+      if (config.merchantPayoutEnabled) {
+        try {
+          await createPayoutForBooking(booking.id);
+        } catch (err) {
+          logger.error("[worker] failed to create payout on deposit_settlement", { bookingId: booking.id, error: String(err) });
+        }
+      }
+      return;
+    }
+
+    case "process_merchant_payout": {
+      const payoutId = payload.payoutId as string;
+      await submitPayout(payoutId);
+      return;
+    }
+
+    case "payout_reconciliation": {
+      const pendingPayouts = await prisma.merchantPayout.findMany({
+        where: { status: "pending" }
+      });
+      for (const p of pendingPayouts) {
+        await reconcilePayoutStatus(p.id);
+      }
+
+      // Atomically claim all retryable payouts to prevent duplicate processing
+      // from overlapping reconciliation cycles. `updateMany` ensures that only
+      // records still in "failed_retryable" are updated — a second concurrent
+      // cycle will find zero records to update and exit early.
+      const claimResult = await prisma.merchantPayout.updateMany({
+        where: {
+          status: "failed_retryable",
+          attemptCount: { lt: 5 },
+          OR: [
+            { nextRetryTime: null },
+            { nextRetryTime: { lte: new Date() } }
+          ]
+        },
+        data: { status: "scheduled" }
+      });
+
+      if (claimResult.count === 0) return;
+
+      // Find the just-claimed payouts and set per-payout retry metadata
+      const claimedPayouts = await prisma.merchantPayout.findMany({
+        where: { status: "scheduled", attemptCount: { lt: 5 } }
+      });
+
+      for (const p of claimedPayouts) {
+        const nextAttempt = p.attemptCount + 1;
+        const backoffMinutes = Math.pow(2, nextAttempt) * 5;
+        const nextRetryTime = new Date(Date.now() + backoffMinutes * 60 * 1000);
+
+        await prisma.merchantPayout.update({
+          where: { id: p.id },
+          data: {
+            attemptCount: nextAttempt,
+            nextRetryTime,
+            status: "scheduled"
+          }
+        });
+
+        await enqueueJob({
+          type: "process_merchant_payout",
+          payload: { payoutId: p.id },
+          bookingId: p.bookingId ?? undefined
+        });
+      }
       return;
     }
 
@@ -313,8 +378,12 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
     }
 
     case "subscription_expiry_check": {
+      if (!config.subscriptionExpiryEnabled) {
+        logger.info("[WORKER] subscription expiry check disabled via config");
+        return;
+      }
       const now = new Date();
-      const graceDurationMs = 3 * 24 * 60 * 60 * 1000;
+      const graceDurationMs = config.subscriptionGracePeriodDays * 24 * 60 * 60 * 1000;
       const { buildEmailHtml } = await import("./lib/email-html.js");
 
       // Step 1: active → past_due (grace starts)
@@ -356,7 +425,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
       // Step 2: past_due → expired (grace over) — also apply any pending downgrade
       const toExpire = await prisma.subscription.findMany({
         where: { status: "past_due", gracePeriodEndsAt: { lt: now } },
-        include: { salon: { select: { id: true, staffMembers: { where: { role: "salon_owner" }, select: { email: true }, take: 1 } } } }
+        include: { salon: { select: { id: true, name: true, staffMembers: { where: { role: "salon_owner" }, select: { email: true }, take: 1 } } } }
       });
       for (const sub of toExpire) {
         const downgradedTier = sub.pendingTier ?? undefined;
@@ -550,7 +619,7 @@ async function pollJobs() {
 async function ensureRecurringSeedJobs() {
   const pending = await prisma.job.findMany({
     where: {
-      type: { in: ["prestige_score_refresh", "subscription_expiry_check", "platform_settings_cleanup"] },
+      type: { in: ["prestige_score_refresh", "subscription_expiry_check", "platform_settings_cleanup", "payout_reconciliation"] },
       status: { in: ["pending", "running"] }
     },
     select: { type: true }
@@ -563,7 +632,7 @@ async function ensureRecurringSeedJobs() {
     await enqueueJob({ type: "prestige_score_refresh", payload: {}, runAfter: nextMidnight });
   }
 
-  if (!existing.has("subscription_expiry_check")) {
+  if (config.subscriptionExpiryEnabled && !existing.has("subscription_expiry_check")) {
     const nextMidnight = new Date();
     nextMidnight.setUTCHours(24, 0, 0, 0);
     await enqueueJob({ type: "subscription_expiry_check", payload: {}, runAfter: nextMidnight });
@@ -573,6 +642,12 @@ async function ensureRecurringSeedJobs() {
     const nextHour = new Date();
     nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
     await enqueueJob({ type: "platform_settings_cleanup", payload: {}, runAfter: nextHour });
+  }
+
+  if (!existing.has("payout_reconciliation")) {
+    const nextHour = new Date();
+    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+    await enqueueJob({ type: "payout_reconciliation", payload: {}, runAfter: nextHour });
   }
 }
 

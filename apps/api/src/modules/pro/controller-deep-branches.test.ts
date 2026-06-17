@@ -13,12 +13,12 @@ const mocks = vi.hoisted(() => {
   const enqueueJob = vi.fn();
   const paymentAdapter = { initiateDeposit: vi.fn() };
   const prisma = {
-    user: { findUnique: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
-    booking: { findFirst: vi.fn(), findMany: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
+    user: { findUnique: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn(), count: vi.fn().mockResolvedValue(0) },
+    booking: { findFirst: vi.fn(), findMany: vi.fn(), updateMany: vi.fn(), create: vi.fn(), count: vi.fn().mockResolvedValue(0), groupBy: vi.fn().mockResolvedValue([]) },
     bookingEvent: { create: vi.fn() },
     service: { findFirst: vi.fn() },
     employee: { findFirst: vi.fn() },
-    review: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    review: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     subscription: { findUnique: vi.fn(), update: vi.fn() },
     subscriptionCharge: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
     billingInvoice: { findMany: vi.fn(), findFirst: vi.fn() },
@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => {
     payment: { findFirst: vi.fn() },
     blockedSlot: { findMany: vi.fn(), create: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
     auditLog: { create: vi.fn() },
+    $queryRaw: vi.fn().mockResolvedValue([]),
     $transaction: vi.fn()
   };
   return { requireRole, fail, ok, handleError, invalidateCacheTags, fetchSlots, getOrSetCachedJson, getProAnalytics, enqueueJob, paymentAdapter, prisma };
@@ -577,7 +578,7 @@ describe("ProController deep branches", () => {
         clientId: "c2"
       }
     ]);
-    await c.listReviews({} as never, reply);
+    await c.listReviews({ query: {} } as never, reply);
     expect(mocks.ok).toHaveBeenCalled();
   });
 

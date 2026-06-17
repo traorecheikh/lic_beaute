@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:toastification/toastification.dart';
 
 import 'core/reactivity/app_reactivity.dart';
 import 'core/services/foreground_notification_service.dart';
@@ -36,35 +37,37 @@ class ClientApp extends ConsumerWidget {
       }
     };
 
-    return ScreenUtilInit(
-      designSize: const Size(390, 844),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) => MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'Beauté Avenue',
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
-        routerConfig: router,
-        builder: (context, routedChild) {
-          return _AppLifecycleRefresh(
-            child: AppConnectivityRecovery(
-              child: Stack(
-                children: [
-                  routedChild ?? const SizedBox.shrink(),
-                  const AppConnectivityBanner(),
-                ],
+    return ToastificationWrapper(
+      child: ScreenUtilInit(
+        designSize: const Size(390, 844),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) => MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: 'Beauté Avenue',
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.system,
+          routerConfig: router,
+          builder: (context, routedChild) {
+            return _AppLifecycleRefresh(
+              child: AppConnectivityRecovery(
+                child: Stack(
+                  children: [
+                    routedChild ?? const SizedBox.shrink(),
+                    const AppConnectivityBanner(),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('fr', 'SN')],
+            );
+          },
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('fr', 'SN')],
+        ),
       ),
     );
   }

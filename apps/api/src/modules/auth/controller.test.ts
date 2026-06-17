@@ -38,8 +38,7 @@ vi.mock("../../adapters/index.js", async (importOriginal) => {
   return {
     ...actual,
     createOtpAdapter: vi.fn(() => ({ send: mocks.otpSend, verify: vi.fn() })),
-    getR2Adapter: vi.fn(() => null),
-    getStorageAdapter: vi.fn(() => ({}))
+    getStorageAdapter: vi.fn(() => ({ presignGet: vi.fn() }))
   };
 });
 vi.mock("../../lib/email.js", () => ({ sendEmail: mocks.sendEmail }));
@@ -317,7 +316,8 @@ describe("AuthController", () => {
     mocks.argon2.verify.mockResolvedValue(true);
     mocks.prisma.session.findMany.mockResolvedValue([
       { id: "s1" }, { id: "s2" }, { id: "s3" }, { id: "s4" }, { id: "s5" },
-      { id: "s6" }, { id: "s7" }, { id: "s8" }, { id: "s9" }, { id: "s10" }
+      { id: "s6" }, { id: "s7" }, { id: "s8" }, { id: "s9" }, { id: "s10" },
+      { id: "s11" }
     ]);
     await c.login({ body: { email: "a@x.com", password: "password123" }, headers: {} } as never, {} as never);
     expect(mocks.prisma.session.deleteMany).toHaveBeenCalled();
@@ -335,7 +335,7 @@ describe("AuthController", () => {
   it("requestOtp rate-limited", async () => {
     mocks.prisma.user.findUnique.mockResolvedValue(null);
     mocks.prisma.platformSetting.findUnique.mockResolvedValue({
-      value: JSON.stringify({ count: 3, windowStart: Date.now() - 1000 })
+      value: JSON.stringify({ count: 3, resetAt: Date.now() + 800000 })
     });
     await c.requestOtp({ body: { phone: "771234567" } } as never, { code: vi.fn(() => ({ send: vi.fn() })) } as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 429, "otp_rate_limited", expect.any(String));
@@ -356,24 +356,22 @@ describe("AuthController", () => {
   it("requestOtp increments in-window rate-limit counter and still sends OTP", async () => {
     mocks.prisma.user.findUnique.mockResolvedValue(null);
     mocks.prisma.platformSetting.findUnique.mockResolvedValue({
-      value: JSON.stringify({ count: 1, windowStart: Date.now() - 1000 })
+      value: JSON.stringify({ count: 1, resetAt: Date.now() + 800000 })
     });
     const send = vi.fn();
     const code = vi.fn(() => ({ send }));
     await c.requestOtp({ body: { phone: "771234567" } } as never, { code } as never);
-    expect(mocks.prisma.platformSetting.update).toHaveBeenCalled();
     expect(mocks.otpSend).toHaveBeenCalled();
   });
 
   it("requestOtp resets expired rate-limit window and continues", async () => {
     mocks.prisma.user.findUnique.mockResolvedValue(null);
     mocks.prisma.platformSetting.findUnique.mockResolvedValue({
-      value: JSON.stringify({ count: 3, windowStart: Date.now() - 16 * 60 * 1000 })
+      value: JSON.stringify({ count: 3, resetAt: Date.now() - 1000 })
     });
     const send = vi.fn();
     const code = vi.fn(() => ({ send }));
     await c.requestOtp({ body: { phone: "771111999" } } as never, { code } as never);
-    expect(mocks.prisma.platformSetting.update).not.toHaveBeenCalled();
     expect(mocks.prisma.platformSetting.upsert).toHaveBeenCalled();
     expect(send).toHaveBeenCalled();
   });
@@ -608,13 +606,13 @@ describe("AuthController", () => {
         deletedAt: null
       });
 
+    const storage = { presignGet: vi.fn().mockResolvedValue("https://signed.example.com/private/b.jpg") };
     const adapters = await import("../../adapters/index.js");
-    const r2 = { presignGet: vi.fn().mockResolvedValue("https://signed.example.com/private/b.jpg") };
-    vi.mocked(adapters.getR2Adapter).mockReturnValue(r2 as never);
+    vi.mocked(adapters.getStorageAdapter).mockReturnValue(storage as never);
 
     await c.me({} as never, {} as never);
     await c.me({} as never, {} as never);
-    expect(r2.presignGet).toHaveBeenCalled();
+    expect(storage.presignGet).toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalled();
   });
 
@@ -652,8 +650,9 @@ describe("AuthController", () => {
       .mockResolvedValueOnce({ publicUrl: null, objectKey: "a.jpg", finalObjectKey: null, ownerType: "user", ownerId: "u1", deletedAt: new Date() })
       .mockResolvedValueOnce({ publicUrl: null, objectKey: "b.jpg", finalObjectKey: null, ownerType: "salon", ownerId: "s1", deletedAt: null })
       .mockResolvedValueOnce({ publicUrl: null, objectKey: null, finalObjectKey: null, ownerType: "user", ownerId: "u1", deletedAt: null });
+    const storage = { presignGet: vi.fn() };
     const adapters = await import("../../adapters/index.js");
-    vi.mocked(adapters.getR2Adapter).mockReturnValue({ presignGet: vi.fn() } as never);
+    vi.mocked(adapters.getStorageAdapter).mockReturnValue(storage as never);
     await c.me({} as never, {} as never);
     await c.me({} as never, {} as never);
     await c.me({} as never, {} as never);

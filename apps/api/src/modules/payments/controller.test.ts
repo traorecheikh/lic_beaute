@@ -502,18 +502,12 @@ describe("PaymentController", () => {
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 404, "payment_not_found", expect.any(String));
   });
 
-  it("claimReconcileWindow returns blocked result when interval not elapsed", async () => {
+  it("_checkReconcileWindow returns blocked result when interval not elapsed", async () => {
     const now = Date.now();
-    const tx = {
-      platformSetting: {
-        findUnique: vi.fn().mockResolvedValue({ value: String(now - 1000) }),
-        upsert: vi.fn()
-      }
-    };
-    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
-    const result = await (c as any)._claimReconcileWindow("pay_1");
+    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: String(now - 1000) });
+    const result = await (c as any)._checkReconcileWindow("pay_1");
     expect(result.allowed).toBe(false);
-    expect(tx.platformSetting.upsert).not.toHaveBeenCalled();
+    expect(result.retryAfterMs).toBeGreaterThan(0);
   });
 
   it("reconcile returns 429 when claim window is throttled", async () => {
@@ -527,41 +521,21 @@ describe("PaymentController", () => {
       webhookSignature: "tok-throttle",
       booking: { clientId: "u1", salonId: "s1" }
     });
-    const tx = {
-      platformSetting: {
-        findUnique: vi.fn().mockResolvedValue({ value: String(Date.now() - 1000) }),
-        upsert: vi.fn()
-      }
-    };
-    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
+    mocks.prisma.platformSetting.findUnique.mockResolvedValue({ value: String(Date.now() - 1000) });
     await c.reconcile({ params: { paymentId: "p-throttle" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 429, "reconcile_throttled", expect.any(String));
   });
 
-  it("claimReconcileWindow proceeds when prior timestamp is non-finite", async () => {
-    const tx = {
-      platformSetting: {
-        findUnique: vi.fn().mockResolvedValue({ value: "NaN" }),
-        upsert: vi.fn()
-      }
-    };
-    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
-    const result = await (c as any)._claimReconcileWindow("pay_nan");
+  it("_checkReconcileWindow proceeds when prior timestamp is non-finite", async () => {
+    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: "NaN" });
+    const result = await (c as any)._checkReconcileWindow("pay_nan");
     expect(result.allowed).toBe(true);
-    expect(tx.platformSetting.upsert).toHaveBeenCalled();
   });
 
-  it("claimReconcileWindow allows when elapsed is above min interval", async () => {
-    const tx = {
-      platformSetting: {
-        findUnique: vi.fn().mockResolvedValue({ value: String(Date.now() - 120_000) }),
-        upsert: vi.fn()
-      }
-    };
-    mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
-    const result = await (c as any)._claimReconcileWindow("pay_old");
+  it("_checkReconcileWindow allows when elapsed is above min interval", async () => {
+    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: String(Date.now() - 120_000) });
+    const result = await (c as any)._checkReconcileWindow("pay_old");
     expect(result.allowed).toBe(true);
-    expect(tx.platformSetting.upsert).toHaveBeenCalled();
   });
 
   it("payment status update sets refunded deposit status branch", async () => {
@@ -585,11 +559,11 @@ describe("PaymentController", () => {
     expect(tx.booking.update).toHaveBeenCalledWith({ where: { id: "b_refund_branch" }, data: { depositPaymentStatus: "refunded" } });
   });
 
-  it("payment status update for authorized updates deposit and auto-confirms pending booking", async () => {
+  it("payment status update for succeeded updates deposit and auto-confirms pending booking", async () => {
     const tx = {
       payment: { update: vi.fn() },
       booking: { update: vi.fn(), findUnique: vi.fn().mockResolvedValue({ status: "pending", startsAt: new Date(Date.now() + 48 * 60 * 60 * 1000), clientId: "c1", client: { email: "c@test.com" }, service: { name: "Coupe" } }) },
-      settlementEvent: { findFirst: vi.fn(), create: vi.fn() },
+      settlementEvent: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
       bookingEvent: { create: vi.fn() },
       auditLog: { create: vi.fn() },
       subscriptionCharge: { update: vi.fn() },
@@ -599,23 +573,23 @@ describe("PaymentController", () => {
     };
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
     await (c as any)._applyPaymentStatus(
-      { id: "p_authorized", bookingId: "b_authorized", amountXof: 1000, status: "pending" },
-      "authorized",
+      { id: "p_succeeded", bookingId: "b_succeeded", amountXof: 1000, status: "pending" },
+      "succeeded",
       "{}",
       undefined
     );
     expect(tx.booking.update).toHaveBeenCalledWith({
-      where: { id: "b_authorized" },
-      data: { depositPaymentStatus: "authorized", status: "confirmed" }
+      where: { id: "b_succeeded" },
+      data: { depositPaymentStatus: "succeeded", status: "confirmed" }
     });
     expect(tx.bookingEvent.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        bookingId: "b_authorized",
+        bookingId: "b_succeeded",
         eventType: "auto_confirmed_after_payment",
         fromStatus: "pending",
         toStatus: "confirmed"
       })
     });
-    expect(tx.settlementEvent.create).not.toHaveBeenCalled();
+    expect(tx.settlementEvent.create).toHaveBeenCalledTimes(1);
   });
 });

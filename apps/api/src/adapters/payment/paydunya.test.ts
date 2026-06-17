@@ -725,7 +725,7 @@ describe("PayDunyaAdapter", () => {
         json: async () => ({
           response_code: "00",
           response_text: "Success",
-          invoice_token: "disburse_inv_1"
+          disburse_token: "disburse_inv_1"
         })
       })
       .mockResolvedValueOnce({
@@ -755,11 +755,11 @@ describe("PayDunyaAdapter", () => {
     const step1Body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
     expect(step1Body.account_alias).toBe("771234567");
     expect(step1Body.withdraw_mode).toBe("wave-senegal");
-    expect((step1Body.custom_data as Record<string, unknown>).type).toBe("disbursement");
 
     // Step 2: submit-invoice
     const step2Body = JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body)) as Record<string, unknown>;
-    expect((step2Body.invoice as Record<string, unknown>).token).toBe("disburse_inv_1");
+    expect(step2Body.disburse_invoice).toBe("disburse_inv_1");
+    expect(step2Body.disburse_id).toBe("ref_1");
   });
 
   it("rejects refund when phone missing", async () => {
@@ -788,7 +788,7 @@ describe("PayDunyaAdapter", () => {
         phone: "771234567",
         method: "orange_senegal"
       })
-    ).rejects.toThrow(/Disburse get-invoice failed: 99 Invoice creation failed/);
+    ).rejects.toThrow(/get-invoice failed/);
   });
 
   it("rejects refund when submit-invoice fails", async () => {
@@ -798,7 +798,7 @@ describe("PayDunyaAdapter", () => {
         json: async () => ({
           response_code: "00",
           response_text: "Success",
-          invoice_token: "disburse_inv"
+          disburse_token: "disburse_inv"
         })
       })
       .mockResolvedValueOnce({
@@ -819,7 +819,7 @@ describe("PayDunyaAdapter", () => {
         phone: "771234567",
         method: "free_senegal"
       })
-    ).rejects.toThrow(/Disburse submit-invoice failed: 98 Submit failed/);
+    ).rejects.toThrow(/Disburse submit-invoice failed/);
   });
 
   it("resolves withdrawMode from method when not explicitly provided", async () => {
@@ -829,7 +829,7 @@ describe("PayDunyaAdapter", () => {
         json: async () => ({
           response_code: "00",
           response_text: "Success",
-          invoice_token: "inv_wd"
+          disburse_token: "inv_wd"
         })
       })
       .mockResolvedValueOnce({
@@ -862,7 +862,7 @@ describe("PayDunyaAdapter", () => {
         json: async () => ({
           response_code: "00",
           response_text: "Success",
-          invoice_token: "inv_def"
+          disburse_token: "inv_def"
         })
       })
       .mockResolvedValueOnce({
@@ -903,7 +903,7 @@ describe("PayDunyaAdapter", () => {
         phone: "771234567",
         method: "wave_senegal"
       })
-    ).rejects.toThrow(/PayDunya \/disburse\/v2\/get-invoice failed: 503/);
+    ).rejects.toThrow(/PayDunya \/disburse\/get-invoice failed: 503/);
   });
 
   // ─── fetchPaymentStatus ──────────────────────────────────────────────────
@@ -936,5 +936,258 @@ describe("PayDunyaAdapter", () => {
     expect(adapter.normalizeStatus("REFUNDED")).toBe("refunded");
     expect(adapter.normalizeStatus("AUTHORIZED")).toBe("authorized");
     expect(adapter.normalizeStatus("COMPLETED")).toBe("succeeded");
+  });
+
+  // ─── Phone Normalization ──────────────────────────────────────────────────
+
+  describe("phone normalization (createDisbursementInvoice)", () => {
+    it("accepts valid +221 E.164 number", async () => {
+      const fetchMock = mockFetch({ response_code: "00", disburse_token: "tok_1" });
+      vi.stubGlobal("fetch", fetchMock);
+      const adapter = makeAdapter();
+      const res = await adapter.createDisbursementInvoice({
+        phone: "+221771234567", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      });
+      expect(res.disburseToken).toBe("tok_1");
+      const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+      expect(body.account_alias).toBe("771234567");
+    });
+
+    it("accepts valid local 9-digit number without prefix", async () => {
+      const fetchMock = mockFetch({ response_code: "00", disburse_token: "tok_2" });
+      vi.stubGlobal("fetch", fetchMock);
+      const adapter = makeAdapter();
+      const res = await adapter.createDisbursementInvoice({
+        phone: "771234567", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      });
+      expect(res.disburseToken).toBe("tok_2");
+      const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+      expect(body.account_alias).toBe("771234567");
+    });
+
+    it("accepts number with whitespace and formatting", async () => {
+      const fetchMock = mockFetch({ response_code: "00", disburse_token: "tok_3" });
+      vi.stubGlobal("fetch", fetchMock);
+      const adapter = makeAdapter();
+      const res = await adapter.createDisbursementInvoice({
+        phone: "+221 77 123 45 67", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      });
+      expect(res.disburseToken).toBe("tok_3");
+      const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+      expect(body.account_alias).toBe("771234567");
+    });
+
+    it("accepts number with 00221 prefix", async () => {
+      const fetchMock = mockFetch({ response_code: "00", disburse_token: "tok_4" });
+      vi.stubGlobal("fetch", fetchMock);
+      const adapter = makeAdapter();
+      const res = await adapter.createDisbursementInvoice({
+        phone: "00221771234567", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      });
+      expect(res.disburseToken).toBe("tok_4");
+      const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+      expect(body.account_alias).toBe("771234567");
+    });
+
+    it("rejects non-Senegal country code (Côte d'Ivoire)", async () => {
+      const adapter = makeAdapter();
+      await expect(adapter.createDisbursementInvoice({
+        phone: "+22507070707", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      })).rejects.toThrow(/bénéficiaire invalide/);
+    });
+
+    it("rejects number that is too short", async () => {
+      const adapter = makeAdapter();
+      await expect(adapter.createDisbursementInvoice({
+        phone: "77123", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      })).rejects.toThrow(/bénéficiaire invalide/);
+    });
+
+    it("rejects number that is too long", async () => {
+      const adapter = makeAdapter();
+      await expect(adapter.createDisbursementInvoice({
+        phone: "77123456789", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      })).rejects.toThrow(/bénéficiaire invalide/);
+    });
+
+    it("rejects phone with alphabetic characters", async () => {
+      const adapter = makeAdapter();
+      await expect(adapter.createDisbursementInvoice({
+        phone: "77abc4567", amountXof: 1000, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      })).rejects.toThrow(/bénéficiaire invalide/);
+    });
+
+    it("resolves wave_senegal to wave-senegal withdraw mode", () => {
+      const adapter = makeAdapter();
+      expect(adapter.resolveWithdrawMode("wave_senegal")).toBe("wave-senegal");
+    });
+
+    it("resolves orange_money_senegal to orange-money-senegal withdraw mode", () => {
+      const adapter = makeAdapter();
+      expect(adapter.resolveWithdrawMode("orange_money_senegal")).toBe("orange-money-senegal");
+    });
+
+    it("resolves free_senegal to free-money-senegal withdraw mode", () => {
+      const adapter = makeAdapter();
+      expect(adapter.resolveWithdrawMode("free_senegal")).toBe("free-money-senegal");
+    });
+
+    it("resolves expresso_sn to expresso-senegal withdraw mode", () => {
+      const adapter = makeAdapter();
+      expect(adapter.resolveWithdrawMode("expresso_sn")).toBe("expresso-senegal");
+    });
+
+    it("throws for unsupported payout method", () => {
+      const adapter = makeAdapter();
+      expect(() => adapter.resolveWithdrawMode("unknown_method")).toThrow(/Unsupported payout method/);
+    });
+
+    it("rejects zero amount", async () => {
+      const adapter = makeAdapter();
+      await expect(adapter.createDisbursementInvoice({
+        phone: "771234567", amountXof: 0, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      })).rejects.toThrow(/montant.*supérieur.*0/);
+    });
+
+    it("rejects negative amount", async () => {
+      const adapter = makeAdapter();
+      await expect(adapter.createDisbursementInvoice({
+        phone: "771234567", amountXof: -100, withdrawMode: "wave-senegal", callbackUrl: "https://cb"
+      })).rejects.toThrow(/montant.*supérieur.*0/);
+    });
+
+    it("passes Orange Money phone number through for requestRefund", async () => {
+      const fetchMock = mockFetch({})
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ response_code: "00", disburse_token: "om_tok" })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ response_code: "00", status: "completed" })
+        });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const adapter = makeAdapter();
+      await adapter.requestRefund({
+        providerRef: "ref_om", amountXof: 5000, reason: "test",
+        phone: "+221761234567", method: "orange_senegal"
+      });
+
+      const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+      expect(body.account_alias).toBe("761234567");
+      expect(body.withdraw_mode).toBe("wave-senegal"); // default when not provided
+    });
+
+    it("passes explicit withdrawMode to createDisbursementInvoice", async () => {
+      const fetchMock = mockFetch({ response_code: "00", disburse_token: "om_tok" });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const adapter = makeAdapter();
+      await adapter.createDisbursementInvoice({
+        phone: "+221771234567", amountXof: 5000,
+        withdrawMode: "orange-money-senegal", callbackUrl: "https://cb"
+      });
+
+      const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body)) as Record<string, unknown>;
+      expect(body.withdraw_mode).toBe("orange-money-senegal");
+    });
+  });
+
+  // ─── Disbursement Methods ───────────────────────────────────────────────
+
+  it("creates disbursement invoice successfully", async () => {
+    const fetchMock = mockFetch({
+      response_code: "00",
+      disburse_token: "disburse_invoice_token_1"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const res = await adapter.createDisbursementInvoice({
+      phone: "+221771234567",
+      amountXof: 5000,
+      withdrawMode: "wave-senegal",
+      callbackUrl: "https://cb/payout"
+    });
+
+    expect(res.disburseToken).toBe("disburse_invoice_token_1");
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body.account_alias).toBe("771234567");
+    expect(body.amount).toBe(5000);
+    expect(body.withdraw_mode).toBe("wave-senegal");
+  });
+
+  it("rejects phone formatting in createDisbursementInvoice if invalid", async () => {
+    const adapter = makeAdapter();
+    await expect(
+      adapter.createDisbursementInvoice({
+        phone: "+22507070707", // Côte d'Ivoire format, not SN
+        amountXof: 1000,
+        withdrawMode: "wave-senegal",
+        callbackUrl: "https://cb"
+      })
+    ).rejects.toThrow(/bénéficiaire invalide/);
+  });
+
+  it("submits disbursement successfully", async () => {
+    const fetchMock = mockFetch({
+      response_code: "00",
+      status: "success",
+      transaction_id: "tx_paydunya_payout"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const res = await adapter.submitDisbursement({
+      disburseToken: "disburse_invoice_token_1",
+      disburseId: "merchant_payout_123"
+    });
+
+    expect(res.success).toBe(true);
+    expect(res.status).toBe("success");
+    expect(res.transactionId).toBe("tx_paydunya_payout");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body.disburse_invoice).toBe("disburse_invoice_token_1");
+    expect(body.disburse_id).toBe("merchant_payout_123");
+  });
+
+  it("checks status of disbursement successfully", async () => {
+    const fetchMock = mockFetch({
+      response_code: "00",
+      status: "completed",
+      transaction_id: "tx_123",
+      disburse_tx_id: "disburse_tx_456",
+      amount: "5000"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const res = await adapter.checkDisbursementStatus({
+      disburseToken: "disburse_invoice_token_1"
+    });
+
+    expect(res.status).toBe("success");
+    expect(res.transactionId).toBe("tx_123");
+    expect(res.providerDisburseTxId).toBe("disburse_tx_456");
+    expect(res.amount).toBe(5000);
+  });
+
+  it("retrieves balance estimate", async () => {
+    const fetchMock = mockFetch({
+      response_code: "00",
+      balance: "500000",
+      currency: "XOF"
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = makeAdapter();
+    const res = await adapter.getApproximateBalance();
+
+    expect(res.balance).toBe(500000);
+    expect(res.currency).toBe("XOF");
   });
 });

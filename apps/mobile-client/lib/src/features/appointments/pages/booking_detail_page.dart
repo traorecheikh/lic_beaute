@@ -1,5 +1,5 @@
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,6 +20,7 @@ import '../../discovery/providers/cached_resource.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
 import '../providers/booking_actions_provider.dart';
 import '../providers/bookings_list_provider.dart';
+import '../widgets/review_sheet.dart';
 
 class BookingDetailPage extends ConsumerWidget {
   const BookingDetailPage({
@@ -106,68 +107,65 @@ class BookingDetailPage extends ConsumerWidget {
                   _InfoSection(
                     title: 'Prestation',
                     children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 12.h,
-                        ),
-                        child: Row(
-                          children: [
-                            AppIcon(
-                              'sparkle',
-                              size: 18,
-                              color: AppColors.onSurface,
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Text(
-                                resource.serviceName,
-                                style: AppTextStyles.labelLg,
-                              ),
-                            ),
-                            if (totalAmountXof != null)
-                              Text(
+                      _DetailRow(
+                        icon: 'sparkle',
+                        title: resource.serviceName,
+                        subtitle: 'Prestation',
+                        trailing: totalAmountXof != null
+                            ? Text(
                                 xof(totalAmountXof),
                                 style: AppTextStyles.labelLg,
-                              ),
-                          ],
-                        ),
+                              )
+                            : null,
                       ),
                       if (totalAmountXof != null || depositAmountXof > 0) ...[
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: AppDivider(),
                         ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
-                          child: Column(
-                            children: [
-                              _PriceRow(
-                                label: depositLabel,
-                                value: xof(
-                                  isDepositPaid ? depositPaidXof : depositAmountXof,
-                                ),
-                                isDeposit: hasDeposit && isDepositPaid,
-                              ),
-                              if (remainingXof != null) ...[
-                                SizedBox(height: 12.h),
-                                _PriceRow(
-                                  label: resource.status == 'completed'
-                                      ? 'Payé sur place'
-                                      : 'Reste à payer sur place',
-                                  value: xof(remainingXof),
-                                ),
-                              ],
-                            ],
+                        _DetailRow(
+                          icon: 'wallet',
+                          title: 'Acompte',
+                          subtitle: isDepositPaid ? 'Payé' : 'Requis',
+                          trailing: Text(
+                            xof(isDepositPaid ? depositPaidXof : depositAmountXof),
+                            style: AppTextStyles.bodyMd.copyWith(
+                              color: hasDeposit && isDepositPaid ? AppColors.success : AppColors.onSurface,
+                              fontWeight: hasDeposit && isDepositPaid ? FontWeight.w600 : null,
+                            ),
                           ),
                         ),
+                        if (remainingXof != null) ...[
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: AppDivider(),
+                          ),
+                          _DetailRow(
+                            icon: 'info',
+                            title: resource.status == 'completed'
+                                ? 'Payé sur place'
+                                : 'Reste à payer sur place',
+                            subtitle: resource.status == 'completed'
+                                ? 'Règlement effectué'
+                                : 'À régler au salon',
+                            trailing: Text(
+                              xof(remainingXof),
+                              style: AppTextStyles.bodyMd,
+                            ),
+                          ),
+                        ],
                       ],
                     ],
                   ),
-                  SizedBox(height: 24.h),
-                  if (isPastNotClosed) ...[
-                    _RatingPromptCard(bookingId: bookingId),
-                    SizedBox(height: 16.h),
+                  gapH24,
+                  if (resource.status == 'completed') ...[
+                    _RatingPromptCard(
+                      bookingId: bookingId,
+                      salonName: resource.salonName,
+                      serviceName: resource.serviceName,
+                      logoUrl: resource.data?['salonLogoUrl'] as String?,
+                    ),
+                    gapH16,
                   ],
                   if (isPast || resource.status == 'completed' || isPastNotClosed) ...[
                     Row(
@@ -192,8 +190,13 @@ class BookingDetailPage extends ConsumerWidget {
                         SizedBox(width: 12.w),
                         Expanded(
                           child: AppButton.primary(
-                            onPressed: () =>
-                                context.push(AppRoutes.review(bookingId)),
+                            onPressed: () => showReviewSheet(
+                              context,
+                              bookingId: bookingId,
+                              salonName: resource.salonName,
+                              serviceName: resource.serviceName,
+                              logoUrl: resource.data?['salonLogoUrl'] as String?,
+                            ),
                             label: 'Laisser un avis',
                           ),
                         ),
@@ -235,7 +238,7 @@ class BookingDetailPage extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 32.h),
+                    gapH32,
                     Center(
                       child: AppPressable(
                         onTap: () async {
@@ -322,7 +325,7 @@ class _StatusHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 24.h),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -333,9 +336,9 @@ class _StatusHeader extends StatelessWidget {
             decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
             child: AppIcon(icon, size: 28, color: iconColor),
           ),
-          SizedBox(height: 16.h),
+          gapH16,
           Text(title, style: AppTextStyles.headlineSm),
-          SizedBox(height: 4.h),
+          gapH4,
           Text(
             'Réf. #${bookingId.split('-').first}',
             style: AppTextStyles.bodySm.copyWith(
@@ -367,7 +370,7 @@ class _InfoSection extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(24.r),
+            borderRadius: BorderRadius.circular(AppRadius.xl.r),
             boxShadow: AppShadows.card,
           ),
           child: Column(children: children),
@@ -382,11 +385,13 @@ class _DetailRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.trailing,
   });
 
   final String icon;
   final String title;
   final String subtitle;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -423,16 +428,35 @@ class _DetailRow extends StatelessWidget {
               ],
             ),
           ),
+          if (trailing != null) ...[
+            SizedBox(width: 12.w),
+            trailing!,
+          ],
         ],
       ),
     );
   }
 }
 
-class _RatingPromptCard extends StatelessWidget {
-  const _RatingPromptCard({required this.bookingId});
+class _RatingPromptCard extends StatefulWidget {
+  const _RatingPromptCard({
+    required this.bookingId,
+    required this.salonName,
+    required this.serviceName,
+    this.logoUrl,
+  });
 
   final String bookingId;
+  final String salonName;
+  final String serviceName;
+  final String? logoUrl;
+
+  @override
+  State<_RatingPromptCard> createState() => _RatingPromptCardState();
+}
+
+class _RatingPromptCardState extends State<_RatingPromptCard> {
+  int _hovered = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -441,37 +465,66 @@ class _RatingPromptCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
         boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
           Text(
-            'Comment s\'était ce rendez-vous ?',
+            'Donnez votre avis',
             style: AppTextStyles.labelLg,
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 16.h),
+          gapH4,
+          Text(
+            'Comment s\'était ce rendez-vous ?',
+            style: AppTextStyles.bodySm.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          gapH16,
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (i) {
+              final star = i + 1;
+              final active = star <= _hovered;
               return AppPressable(
                 onTap: () {
                   AppHaptics.medium();
-                  context.push(AppRoutes.review(bookingId));
+                  showReviewSheet(
+                    context,
+                    bookingId: widget.bookingId,
+                    salonName: widget.salonName,
+                    serviceName: widget.serviceName,
+                    logoUrl: widget.logoUrl,
+                  );
                 },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6.w),
-                  child: AppIcon(
-                    'star',
-                    size: 30,
-                    color: AppColors.onSurfaceVariant,
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _hovered = star),
+                  onExit: (_) => setState(() => _hovered = 0),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w),
+                    child: AnimatedScale(
+                      scale: active ? 1.12 : 1.0,
+                      duration: const Duration(milliseconds: 140),
+                      curve: Curves.easeOutBack,
+                      child: Icon(
+                        active
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        size: 32.r,
+                        color: active
+                            ? AppColors.secondary
+                            : AppColors.outlineVariant,
+                      ),
+                    ),
                   ),
                 ),
               );
             }),
           ),
-          SizedBox(height: 10.h),
+          gapH8,
           Text(
             'Touchez une étoile pour laisser un avis',
             style: AppTextStyles.bodySm.copyWith(
@@ -485,36 +538,3 @@ class _RatingPromptCard extends StatelessWidget {
   }
 }
 
-class _PriceRow extends StatelessWidget {
-  const _PriceRow({
-    required this.label,
-    required this.value,
-    this.isDeposit = false,
-  });
-
-  final String label;
-  final String value;
-  final bool isDeposit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.bodyMd.copyWith(
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-        Text(
-          value,
-          style: AppTextStyles.bodyMd.copyWith(
-            color: isDeposit ? AppColors.success : AppColors.onSurface,
-            fontWeight: isDeposit ? FontWeight.w600 : null,
-          ),
-        ),
-      ],
-    );
-  }
-}

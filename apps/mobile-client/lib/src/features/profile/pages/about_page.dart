@@ -85,7 +85,7 @@ class _InfoCard extends StatelessWidget {
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
         border: Border.all(color: AppColors.outlineVariant),
       ),
       child: Column(

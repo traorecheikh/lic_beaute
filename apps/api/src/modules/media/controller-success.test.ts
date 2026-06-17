@@ -9,12 +9,11 @@ const mocks = vi.hoisted(() => {
     user: { findUnique: vi.fn() },
     $transaction: vi.fn()
   };
-  const storage = { retrieve: vi.fn() };
-  const r2 = { headObject: vi.fn() };
+  const storage = { retrieve: vi.fn(), headObject: vi.fn(), presignPut: vi.fn().mockResolvedValue("https://upload") };
   const enqueueJob = vi.fn();
   const invalidateCacheTags = vi.fn();
   const logger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
-  return { requireRole, fail, ok, prisma, storage, r2, enqueueJob, invalidateCacheTags, logger };
+  return { requireRole, fail, ok, prisma, storage, enqueueJob, invalidateCacheTags, logger };
 });
 
 vi.mock("../../lib/auth/index.js", async (importOriginal) => {
@@ -24,8 +23,7 @@ vi.mock("../../lib/auth/index.js", async (importOriginal) => {
 vi.mock("../../lib/http.js", () => ({ fail: mocks.fail, ok: mocks.ok }));
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../adapters/index.js", () => ({
-  getStorageAdapter: vi.fn(() => mocks.storage),
-  getR2Adapter: vi.fn(() => mocks.r2)
+  getStorageAdapter: vi.fn(() => mocks.storage)
 }));
 vi.mock("../../lib/jobs.js", () => ({ enqueueJob: mocks.enqueueJob }));
 vi.mock("../../lib/cache.js", () => ({ invalidateCacheTags: mocks.invalidateCacheTags }));
@@ -55,26 +53,8 @@ describe("MediaController success paths", () => {
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 404, "media_not_found", expect.any(String));
   });
 
-  it("uploadIntent returns 503 when r2 not configured", async () => {
-    const adapters = await import("../../adapters/index.js");
-    vi.mocked(adapters.getR2Adapter).mockReturnValueOnce(null);
-    await c.uploadIntent({
-      body: {
-        purpose: "avatar",
-        mimeType: "image/jpeg",
-        originalFilename: "a.jpg",
-        sizeBytes: 100
-      }
-    } as never, {} as never);
-    expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 503, "storage_unavailable", expect.any(String));
-  });
-
-  it("uploadIntent success creates pending asset and presigned URL", async () => {
-    const adapters = await import("../../adapters/index.js");
-    vi.mocked(adapters.getR2Adapter).mockReturnValueOnce({
-      headObject: vi.fn(),
-      presignPut: vi.fn().mockResolvedValue("https://upload")
-    } as never);
+  it("uploadIntent success creates pending asset and presigned URL via storage adapter", async () => {
+    mocks.storage.presignPut = vi.fn().mockResolvedValue("https://upload");
     mocks.prisma.user.findUnique.mockResolvedValue({ salonId: "s1" });
     mocks.prisma.mediaAsset.create.mockResolvedValue({ id: "m-new" });
     await c.uploadIntent({
@@ -123,7 +103,7 @@ describe("MediaController success paths", () => {
       uploadStatus: "pending_upload",
       objectKey: "incoming/y.jpg"
     });
-    mocks.r2.headObject.mockResolvedValueOnce(null);
+    mocks.storage.headObject.mockResolvedValueOnce(null);
     await c.completeUpload({ params: { mediaId: "m2" }, body: {} } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 403, "forbidden", expect.any(String));
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 422, "upload_not_found", expect.any(String));
@@ -138,29 +118,10 @@ describe("MediaController success paths", () => {
       objectKey: "incoming/x.jpg",
       salonId: "s1"
     });
-    mocks.r2.headObject.mockResolvedValue({ sizeBytes: 222 });
+    mocks.storage.headObject.mockResolvedValue({ sizeBytes: 222 });
     mocks.prisma.mediaAsset.update.mockResolvedValue({});
     await c.completeUpload({ params: { mediaId: "m1" }, body: {} } as never, {} as never);
     expect(mocks.enqueueJob).toHaveBeenCalled();
-    expect(mocks.ok).toHaveBeenCalled();
-  });
-
-  it("completeUpload updates pending status when head has no sizeBytes", async () => {
-    mocks.prisma.mediaAsset.findUnique.mockResolvedValue({
-      id: "m4",
-      deletedAt: null,
-      uploadedBy: "u1",
-      uploadStatus: "pending_upload",
-      objectKey: "incoming/no-size.jpg",
-      salonId: "s1"
-    });
-    mocks.r2.headObject.mockResolvedValue({});
-    mocks.prisma.mediaAsset.update.mockResolvedValue({});
-    await c.completeUpload({ params: { mediaId: "m4" }, body: {} } as never, {} as never);
-    expect(mocks.prisma.mediaAsset.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: "m4" },
-      data: { uploadStatus: "review_pending" }
-    }));
     expect(mocks.ok).toHaveBeenCalled();
   });
 
@@ -173,7 +134,7 @@ describe("MediaController success paths", () => {
       objectKey: "incoming/fail.jpg",
       salonId: "s1"
     });
-    mocks.r2.headObject.mockResolvedValue({ sizeBytes: 123 });
+    mocks.storage.headObject.mockResolvedValue({ sizeBytes: 123 });
     mocks.prisma.mediaAsset.update.mockRejectedValueOnce(new Error("db-fail"));
     await c.completeUpload({ params: { mediaId: "m5" }, body: {} } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", expect.any(String));

@@ -37,7 +37,11 @@ export const config = {
   paydunyaToken: process.env.PAYDUNYA_TOKEN ?? "",
   paydunyaEnv: (process.env.PAYDUNYA_ENV as "sandbox" | "production") ?? "sandbox",
   paydunyaBaseUrl: process.env.PAYDUNYA_BASE_URL ?? "https://app.paydunya.com",
-  prorationEnabled: process.env.PRORATION_ENABLED === "true",
+  merchantPayoutEnabled: process.env.MERCHANT_PAYOUT_ENABLED !== "false",
+  merchantPayoutHoldHours: Number(process.env.MERCHANT_PAYOUT_HOLD_HOURS ?? 24),
+  merchantPayoutLowBalanceAlertLimit: Number(process.env.MERCHANT_PAYOUT_LOW_BALANCE_ALERT_LIMIT ?? 10000),
+  paydunyaCallbackUrl: process.env.PAYDUNYA_DISBURSEMENT_CALLBACK_URL ?? "",
+  prorationEnabled: process.env.PRORATION_ENABLED !== "false",
   atApiKey: process.env.AT_API_KEY ?? "",
   atUsername: process.env.AT_USERNAME ?? "",
   atSenderId: process.env.AT_SENDER_ID,
@@ -47,6 +51,7 @@ export const config = {
       ? process.env.STORAGE_PATH
       : resolve(fileURLToPath(new URL("..", import.meta.url)), process.env.STORAGE_PATH)
     : fileURLToPath(new URL("../.data/uploads", import.meta.url)),
+  subscriptionGracePeriodDays: Number(process.env.SUBSCRIPTION_GRACE_PERIOD_DAYS ?? 3),
   workerPollIntervalMs: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 5000),
   workerBatchSize: Number(process.env.WORKER_BATCH_SIZE ?? 25),
   workerDriver: (process.env.WORKER_DRIVER as "db" | "bull" | "hybrid" | undefined) ?? "bull",
@@ -62,11 +67,8 @@ export const config = {
   maxUploadBytes: Number(process.env.MAX_UPLOAD_BYTES ?? 15 * 1024 * 1024),
   paymentReconcileMinIntervalMs: Number(process.env.PAYMENT_RECONCILE_MIN_INTERVAL_MS ?? 15_000),
   billingAccountSecret: process.env.BILLING_ACCOUNT_SECRET ?? "",
-  r2AccountId: process.env.R2_ACCOUNT_ID ?? "",
-  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
-  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
-  r2Bucket: process.env.R2_BUCKET ?? "beauteavenu",
-  mediaPublicBaseUrl: process.env.MEDIA_PUBLIC_BASE_URL ?? "https://media.beauteavenu.com"
+  mediaPublicBaseUrl: process.env.MEDIA_PUBLIC_BASE_URL ?? "https://media.beauteavenu.com",
+  subscriptionExpiryEnabled: process.env.SUBSCRIPTION_EXPIRY_ENABLED !== "false"
 };
 
 const isStagingOrigin =
@@ -132,19 +134,25 @@ export function validateConfig() {
     if (!isStagingOrigin && !config.webOrigin.startsWith("https://")) {
       issues.push(`WEB_ORIGIN must start with https:// in production, got: ${config.webOrigin}`);
     }
-    if (config.paymentDriver === "paydunya") {
+    if (config.paymentDriver === "paydunya" || config.merchantPayoutEnabled) {
       if (!config.paydunyaMasterKey) {
-        issues.push("PAYDUNYA_MASTER_KEY is required when PAYMENT_DRIVER=paydunya");
+        issues.push("PAYDUNYA_MASTER_KEY is required when PAYMENT_DRIVER=paydunya or merchant payouts are enabled");
       }
       if (!config.paydunyaPublicKey) {
-        issues.push("PAYDUNYA_PUBLIC_KEY is required when PAYMENT_DRIVER=paydunya");
+        issues.push("PAYDUNYA_PUBLIC_KEY is required when PAYMENT_DRIVER=paydunya or merchant payouts are enabled");
       }
       if (!config.paydunyaPrivateKey) {
-        issues.push("PAYDUNYA_PRIVATE_KEY is required when PAYMENT_DRIVER=paydunya");
+        issues.push("PAYDUNYA_PRIVATE_KEY is required when PAYMENT_DRIVER=paydunya or merchant payouts are enabled");
       }
       if (!config.paydunyaToken) {
-        issues.push("PAYDUNYA_TOKEN is required when PAYMENT_DRIVER=paydunya");
+        issues.push("PAYDUNYA_TOKEN is required when PAYMENT_DRIVER=paydunya or merchant payouts are enabled");
       }
+    }
+    if (config.merchantPayoutEnabled && !config.paydunyaCallbackUrl) {
+      issues.push("PAYDUNYA_DISBURSEMENT_CALLBACK_URL is required when merchant payouts are enabled");
+    }
+    if (config.billingAccountSecret.length < 16 && (config.merchantPayoutEnabled || config.paymentDriver === "paydunya")) {
+      issues.push("BILLING_ACCOUNT_SECRET must be at least 16 characters when merchant payouts or paydunya are enabled");
     }
     if (issues.length > 0) {
       throw new Error(

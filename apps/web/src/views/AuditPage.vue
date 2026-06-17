@@ -103,7 +103,8 @@
         <div
           v-for="event in auditQuery.data.value?.items"
           :key="event.id"
-          class="bg-white hover:bg-neutral-bg/30 p-5 rounded-2xl border border-outline-variant/40 shadow-sm transition-all"
+          class="bg-white hover:bg-neutral-bg/30 p-5 rounded-2xl border border-outline-variant/40 shadow-sm transition-all cursor-pointer"
+          @click="router.push(`/admin/audit/${event.id}`)"
         >
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="space-y-2 flex-1">
@@ -204,7 +205,9 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import { ApiError, fetchAuditEvents, fetchEmailAuditEvents } from "@/lib/api";
 import { formatDateTime } from "@/lib/date";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const auth = useAdminAuthStore();
 const auditMode = ref<"system" | "email">("system");
 const actor = ref("");

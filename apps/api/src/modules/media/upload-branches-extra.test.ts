@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => {
     salon: { findUnique: vi.fn().mockResolvedValue({ subscription: { status: "active" } }) },
     $transaction: vi.fn()
   };
-  const storage = { store: vi.fn(), delete: vi.fn(), publicUrl: vi.fn((k: string) => `https://local/${k}`) };
+  const storage = { store: vi.fn(), delete: vi.fn(), publicUrl: vi.fn((k: string) => `https://local/${k}`), headObject: vi.fn() };
   const r2 = { presignPut: vi.fn(), headObject: vi.fn() };
   const enqueueJob = vi.fn();
   const logger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
@@ -22,10 +22,6 @@ vi.mock("../../config.js", () => ({
   config: {
     storageDriver: "local",
     storagePath: ".data",
-    r2AccountId: "a",
-    r2AccessKeyId: "k",
-    r2SecretAccessKey: "s",
-    r2Bucket: "b",
     mediaPublicBaseUrl: "https://media.example.com",
     maxUploadBytes: 10_000
   }
@@ -37,8 +33,7 @@ vi.mock("../../lib/auth/index.js", async (importOriginal) => {
 vi.mock("../../lib/http.js", () => ({ fail: mocks.fail, ok: mocks.ok }));
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../adapters/index.js", () => ({
-  getStorageAdapter: vi.fn(() => mocks.storage),
-  getR2Adapter: vi.fn(() => mocks.r2)
+  getStorageAdapter: vi.fn(() => mocks.storage)
 }));
 vi.mock("../../lib/jobs.js", () => ({ enqueueJob: mocks.enqueueJob }));
 vi.mock("../../lib/cache.js", () => ({ invalidateCacheTags: vi.fn() }));
@@ -283,9 +278,7 @@ describe("MediaController extra upload branches", () => {
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 500, "internal_error", expect.any(String));
   });
 
-  it("completeUpload uses non-r2 update path when adapter is unavailable", async () => {
-    const adapters = await import("../../adapters/index.js");
-    vi.mocked(adapters.getR2Adapter).mockReturnValueOnce(null);
+  it("completeUpload updates pending status when adapter has no headObject or file not found", async () => {
     mocks.prisma.mediaAsset.findUnique.mockResolvedValueOnce({
       id: "m-local",
       deletedAt: null,
@@ -294,10 +287,11 @@ describe("MediaController extra upload branches", () => {
       objectKey: "incoming/x.jpg",
       salonId: null
     });
+    mocks.storage.headObject = vi.fn().mockResolvedValueOnce({ sizeBytes: 123 });
     await c.completeUpload({ params: { mediaId: "m-local" }, body: {} } as never, {} as never);
     expect(mocks.prisma.mediaAsset.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "m-local" },
-      data: { uploadStatus: "review_pending" }
+      data: expect.objectContaining({ uploadStatus: "review_pending" })
     }));
   });
 

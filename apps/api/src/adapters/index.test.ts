@@ -14,18 +14,13 @@ describe("adapters index", () => {
     expect(at.constructor.name).toBe("AfricasTalkingOtpAdapter");
   });
 
-  it("creates and caches storage adapters by first call", async () => {
+  it("creates and caches local storage adapter by first call", async () => {
     const mod = await import("./index.js");
     const local = mod.getStorageAdapter("local", { storagePath: "/tmp/uploads" });
     expect(local.constructor.name).toBe("LocalStorageAdapter");
-    const stillLocal = mod.getStorageAdapter("r2", {
-      r2AccountId: "a",
-      r2AccessKeyId: "k",
-      r2SecretAccessKey: "s",
-      r2Bucket: "b"
-    });
+    const stillLocal = mod.getStorageAdapter("unknown", {});
     expect(stillLocal).toBe(local);
-    expect(mod.getR2Adapter()).toBeNull();
+    expect(mod.createStorageAdapter("local", { storagePath: "/tmp/x" })).toBe(local);
   });
 
   it("creates local storage with default path when storagePath is omitted", async () => {
@@ -34,31 +29,10 @@ describe("adapters index", () => {
     expect(local.constructor.name).toBe("LocalStorageAdapter");
   });
 
-  it("creates R2 storage and exposes getR2Adapter", async () => {
-    const mod = await import("./index.js");
-    const r2 = mod.getStorageAdapter("r2", {
-      r2AccountId: "a",
-      r2AccessKeyId: "k",
-      r2SecretAccessKey: "s",
-      r2Bucket: "b",
-      mediaPublicBaseUrl: "https://media.example.com"
-    });
-    expect(r2.constructor.name).toBe("R2StorageAdapter");
-    expect(mod.getR2Adapter()).toBe(r2);
-    expect(mod.createStorageAdapter("local", { storagePath: "/tmp/x" })).toBe(r2);
-  });
-
   it("falls back to noop storage adapter for unknown driver", async () => {
     const mod = await import("./index.js");
     const storage = mod.getStorageAdapter("unknown", {});
     expect(storage.constructor.name).toBe("NoopStorageAdapter");
-    expect(mod.getR2Adapter()).toBeNull();
-  });
-
-  it("creates R2 storage with default fallback values", async () => {
-    const mod = await import("./index.js");
-    const r2 = mod.getStorageAdapter("r2", {});
-    expect(r2.constructor.name).toBe("R2StorageAdapter");
   });
 
   it("creates payment adapters and validates PayDunya master key", async () => {

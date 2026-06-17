@@ -112,6 +112,7 @@ function mapSalonRow(r: any) {
     city: r.city,
     neighborhood: r.neighborhood,
     averageRating: Number(r.averageRating),
+    reviewCount: Number(r.reviewCount),
     latitude: r.latitude,
     longitude: r.longitude,
     subscriptionTier: r.subscriptionTier,
@@ -297,6 +298,7 @@ export class SearchController {
       city: s.city,
       neighborhood: s.neighborhood,
       averageRating: 0,
+      reviewCount: 0,
       latitude: null,
       longitude: null,
       subscriptionTier: "standard" as const,
@@ -492,7 +494,7 @@ export class SearchController {
 
     type SearchResultRow = {
       id: string; name: string; category: string; logoUrl: string | null;
-      city: string; neighborhood: string | null; averageRating: number;
+      city: string; neighborhood: string | null; averageRating: number; reviewCount: number;
       latitude: number | null; longitude: number | null; subscriptionTier: string;
       isPrestige: boolean; prestigeScore: number | null;
       distance_km: number | null; match_type: string; matched_service: string | null;
@@ -515,7 +517,7 @@ export class SearchController {
 
     const rows = await prisma.$queryRaw<SearchResultRow[]>(Prisma.sql`
       SELECT DISTINCT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-             s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+             s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
              s."isPrestige", s."prestigeScore",
              ${distExpr} AS distance_km,
              ${matchTypeExpr} AS match_type,
@@ -607,7 +609,7 @@ export class SearchController {
       try {
         const nearRows = await prisma.$queryRaw<any[]>(Prisma.sql`
           SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-                 s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+                 s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
                  s."isPrestige", s."prestigeScore",
                  6371 * acos(LEAST(1.0,
                    cos(radians(${q.lat})) * cos(radians(s.latitude)) *
@@ -635,7 +637,7 @@ export class SearchController {
     try {
       const trendRows = await prisma.$queryRaw<any[]>(Prisma.sql`
         SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-               s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+               s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore",
                COALESCE(t.score, 0)::float AS trending_score
         FROM "Salon" s
@@ -667,7 +669,7 @@ export class SearchController {
     try {
       const prestigeRows = await prisma.$queryRaw<any[]>(Prisma.sql`
         SELECT s.id, s.name, s.category, s."logoUrl", s.city, s.neighborhood,
-               s."averageRating", s.latitude, s.longitude, s."subscriptionTier",
+               s."averageRating", s."reviewCount", s.latitude, s.longitude, s."subscriptionTier",
                s."isPrestige", s."prestigeScore"
         FROM "Salon" s
         WHERE ${BASE_SALON_WHERE}

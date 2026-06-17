@@ -18,7 +18,9 @@ export type AppJobType =
   | "notification_retry"
   | "subscription_expiry_check"
   | "platform_settings_cleanup"
-  | "prestige_score_refresh";
+  | "prestige_score_refresh"
+  | "process_merchant_payout"
+  | "payout_reconciliation";
 
 export type AppQueueName = "payments" | "notifications" | "maintenance";
 
@@ -33,7 +35,9 @@ const JOB_QUEUE: Record<AppJobType, AppQueueName> = {
   notification_retry: "notifications",
   subscription_expiry_check: "maintenance",
   platform_settings_cleanup: "maintenance",
-  prestige_score_refresh: "maintenance"
+  prestige_score_refresh: "maintenance",
+  process_merchant_payout: "payments",
+  payout_reconciliation: "payments"
 };
 
 type JobDbClient = {

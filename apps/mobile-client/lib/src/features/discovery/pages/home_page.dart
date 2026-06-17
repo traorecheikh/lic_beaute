@@ -17,6 +17,9 @@ import '../../../core/widgets/app_scaffold.dart';
 import '../../../router/app_router.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../auth/widgets/auth_required_sheet.dart';
+import '../../appointments/providers/pending_review_provider.dart';
+import '../../appointments/utils/review_prompt_manager.dart';
+import '../../appointments/widgets/review_sheet.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/salon_list_provider.dart';
 
@@ -37,6 +40,40 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _scrollCtrl.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _checkLocationAutoPrompt();
+      await _checkPendingReview();
+    });
+  }
+
+  Future<void> _checkLocationAutoPrompt() async {
+    final shouldPrompt = await LocationPromptManager.shouldShowPrompt();
+    if (shouldPrompt && mounted) {
+      await LocationPromptManager.recordPromptShown();
+      if (mounted) {
+        await context.push(AppRoutes.locationPermission);
+        ref.invalidate(locationStatusProvider);
+        ref.invalidate(nearbyProvider);
+      }
+    }
+  }
+
+  /// Shows a proactive review bottom-sheet for the first eligible past booking.
+  /// Runs after the location prompt so the two never overlap.
+  Future<void> _checkPendingReview() async {
+    if (!mounted) return;
+    final pending = await ref.read(pendingReviewProvider.future);
+    if (pending == null || !mounted) return;
+    await ReviewPromptManager.recordShown(pending.bookingId);
+    if (!mounted) return;
+    await showReviewSheet(
+      context,
+      bookingId: pending.bookingId,
+      salonName: pending.salonName,
+      serviceName: pending.serviceName,
+      logoUrl: pending.logoUrl,
+      proactive: true,
+    );
   }
 
   void _onScroll() {
@@ -129,10 +166,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           slivers: [
             _buildAppBar(),
             SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 10.h),
-                child: const _SearchBarContent(),
-              ),
+              child: const _SearchBarContent(),
             ),
 
                     // Location permission banner
@@ -214,6 +248,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 take: 3,
                 showDistance: true,
                 onRetry: refreshAll,
+                heroPrefix: 'nearby_list',
               ),
             ],
 
@@ -241,6 +276,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 take: 3,
                 showDistance: false,
                 onRetry: refreshAll,
+                heroPrefix: 'top_rated_list',
               ),
             ],
 
@@ -300,17 +336,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         padding: EdgeInsets.only(left: 14.w, top: 8.h, bottom: 8.h),
         child: Row(
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              width: 44.r,
-              height: 44.r,
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(
-                  alpha: (1 - _collapseRatio) * 0.18,
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            Image.asset(
+              'assets/logo.png',
+              width: 52.r,
+              height: 52.r,
+              fit: BoxFit.contain,
             ),
             SizedBox(width: 10.w),
             Expanded(
@@ -367,10 +397,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                   end: Alignment.bottomCenter,
                   stops: const [0.0, 0.35, 0.65, 1.0],
                   colors: [
-                    AppColors.black.withValues(alpha: 0.42),
-                    AppColors.transparent,
-                    AppColors.black.withValues(alpha: 0.50),
-                    AppColors.black.withValues(alpha: 0.80),
+                    AppColors.black.withValues(alpha: 0.45),
+                    AppColors.black.withValues(alpha: 0.15),
+                    AppColors.black.withValues(alpha: 0.55),
+                    AppColors.black.withValues(alpha: 0.85),
                   ],
                 ),
               ),
@@ -383,7 +413,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ref.watch(profileProvider).asData?.value?.city ?? 'Dakar',
+                    ref.watch(cityFromLocationProvider).asData?.value ??
+                        ref.watch(profileProvider).asData?.value?.city ??
+                        'Dakar',
                     style: AppTextStyles.overline.copyWith(
                       color: AppColors.primaryLight,
                       letterSpacing: 2,
@@ -397,8 +429,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       height: 1.1,
                       shadows: [
                         Shadow(
-                          color: AppColors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
+                          color: AppColors.black.withValues(alpha: 0.45),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -416,6 +449,16 @@ class _HomePageState extends ConsumerState<HomePage> {
                   color: AppColors.neutral,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(28.r),
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 48.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.outline.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(AppRadius.full.r),
+                    ),
                   ),
                 ),
               ),
@@ -439,53 +482,88 @@ class _LocationBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 4.h),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            AppIcon('map-pin', size: 18, color: AppColors.primary),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
-                'Activez la localisation pour voir les salons près de vous',
-                style: AppTextStyles.bodySm.copyWith(color: AppColors.primary),
-              ),
+      child: GestureDetector(
+        onTap: onEnable,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurfaceVariant : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.xl.r),
+            border: Border.all(
+              color: isDark 
+                  ? AppColors.darkOutline.withValues(alpha: 0.15) 
+                  : AppColors.outline.withValues(alpha: 0.12),
+              width: 1.2,
             ),
-            gapW8,
-            AppPressable(
-              onTap: onEnable,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+            boxShadow: AppShadows.card,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42.r,
+                height: 42.r,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10.r),
+                  color: isDark ? Colors.white10 : AppColors.primaryLight,
+                  shape: BoxShape.circle,
                 ),
-                child: Text(
-                  'Activer',
-                  style: AppTextStyles.labelSm.copyWith(
-                    color: AppColors.white,
-                    fontSize: 11.sp,
+                child: Center(
+                  child: AppIcon(
+                    'map-pin',
+                    size: 20,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
-            ),
-            SizedBox(width: 6.w),
-            AppPressable(
-              onTap: onDismiss,
-              child: AppIcon(
-                'close',
-                size: 16,
-                color: AppColors.primary.withValues(alpha: 0.6),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Salons proches de vous',
+                      style: AppTextStyles.labelLg.copyWith(
+                        color: isDark ? AppColors.darkOnSurface : AppColors.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      'Affichez la distance sur chaque fiche salon.',
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              SizedBox(width: 8.w),
+              AppIcon(
+                'chevron-right',
+                size: 16,
+                color: isDark ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.4) : AppColors.outline,
+              ),
+              SizedBox(width: 12.w),
+              GestureDetector(
+                onTap: onDismiss,
+                child: Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: AppIcon(
+                    'close',
+                    size: 14,
+                    color: isDark ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.6) : AppColors.outline,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -548,13 +626,13 @@ class _SearchBarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 4.h),
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 4.h),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: AppShadows.card,
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
+          boxShadow: AppShadows.sm,
         ),
         child: Row(
           children: [
@@ -564,78 +642,79 @@ class _SearchBarContent extends StatelessWidget {
                 child: Material(
                   color: Colors.transparent,
                   child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => context.push(AppRoutes.search),
-                      child: Row(
-                        children: [
-                          AppIcon(
-                            'search',
-                            size: 20,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                          gapW12,
-                          Expanded(
-                            child: Text(
-                              'Salon, prestation, quartier...',
-                              style: AppTextStyles.bodyMd.copyWith(
-                                color: AppColors.onSurfaceVariant,
-                              ),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.push(AppRoutes.search),
+                    child: Row(
+                      children: [
+                        AppIcon(
+                          'search',
+                          size: 20,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        gapW12,
+                        Expanded(
+                          child: Text(
+                            'Salon, prestation, quartier...',
+                            style: AppTextStyles.bodyMd.copyWith(
+                              color: AppColors.onSurfaceVariant,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 8.w),
-              GestureDetector(
-                onTap: () => context.push('${AppRoutes.search}?openFilters=1'),
-                child: Hero(
-                  tag: _filterHeroTag,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final showLabel = constraints.maxWidth >= 84.w;
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              AppIcon(
-                                'filter',
-                                size: 14,
-                                color: AppColors.primary,
-                              ),
-                              if (showLabel) ...[
-                                gapW4,
-                                Text(
-                                  'Filtrer',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.labelSm.copyWith(
-                                    color: AppColors.primary,
-                                    fontSize: 11.sp,
-                                  ),
+            ),
+            SizedBox(width: 8.w),
+            GestureDetector(
+              onTap: () => context.push('${AppRoutes.search}?openFilters=1'),
+              child: Hero(
+                tag: _filterHeroTag,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(AppRadius.md.r),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final showLabel = constraints.maxWidth >= 84.w;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppIcon(
+                              'filter',
+                              size: 14,
+                              color: AppColors.onPrimaryContainer,
+                            ),
+                            if (showLabel) ...[
+                              gapW4,
+                              Text(
+                                'Filtrer',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.labelSm.copyWith(
+                                  color: AppColors.onPrimaryContainer,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ],
+                              ),
                             ],
-                          );
-                        },
-                      ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
+          ],
         ),
       ),
     );
@@ -688,12 +767,14 @@ class _SalonListSliver extends StatelessWidget {
     required this.take,
     required this.showDistance,
     required this.onRetry,
+    required this.heroPrefix,
   });
 
   final AsyncValue<List<SalonSummaryListResponseItemsInner>?> salonsAsync;
   final int take;
   final bool showDistance;
   final Future<void> Function() onRetry;
+  final String heroPrefix;
 
   @override
   Widget build(BuildContext context) {
@@ -743,11 +824,15 @@ class _SalonListSliver extends StatelessWidget {
             separatorBuilder: (_, _) => gapH12,
             itemBuilder: (context, i) {
               final salon = items[i];
+              final tag = '${heroPrefix}_${salon.id}';
               return RepaintBoundary(
                 child: _SalonListCard(
                   salon: salon,
                   showDistance: showDistance,
-                  onTap: () => context.push(AppRoutes.salon(salon.id)),
+                  heroTag: tag,
+                  onTap: () => context.push(
+                    '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent(tag)}',
+                  ),
                 ),
               );
             },
@@ -763,11 +848,13 @@ class _SalonListCard extends StatelessWidget {
     required this.salon,
     required this.showDistance,
     required this.onTap,
+    this.heroTag,
   });
 
   final SalonSummaryListResponseItemsInner salon;
   final bool showDistance;
   final VoidCallback onTap;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -778,29 +865,50 @@ class _SalonListCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(AppRadius.xl.r),
           boxShadow: AppShadows.card,
         ),
         child: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.horizontal(
-                left: Radius.circular(20.r),
+                left: Radius.circular(AppRadius.xl.r),
               ),
-              child: salon.logoUrl != null && salon.logoUrl!.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: salon.logoUrl!,
-                      width: 96.w,
-                      height: 96.w,
-                      memCacheWidth: 192,
-                      memCacheHeight: 192,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => _SalonPlaceholderBox(
-                        width: 96.w,
-                        height: 96.w,
+              child: heroTag != null
+                  ? Hero(
+                      tag: heroTag!,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: salon.logoUrl != null && salon.logoUrl!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: salon.logoUrl!,
+                                width: 96.w,
+                                height: 96.w,
+                                memCacheWidth: 192,
+                                memCacheHeight: 192,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, _, _) => _SalonPlaceholderBox(
+                                  width: 96.w,
+                                  height: 96.w,
+                                ),
+                              )
+                            : _SalonPlaceholderBox(width: 96.w, height: 96.w),
                       ),
                     )
-                  : _SalonPlaceholderBox(width: 96.w, height: 96.w),
+                  : (salon.logoUrl != null && salon.logoUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: salon.logoUrl!,
+                          width: 96.w,
+                          height: 96.w,
+                          memCacheWidth: 192,
+                          memCacheHeight: 192,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, _, _) => _SalonPlaceholderBox(
+                            width: 96.w,
+                            height: 96.w,
+                          ),
+                        )
+                      : _SalonPlaceholderBox(width: 96.w, height: 96.w)),
             ),
             SizedBox(width: 14.w),
             Expanded(
@@ -834,6 +942,7 @@ class _SalonListCard extends StatelessWidget {
                       ],
                     ),
                     gapH4,
+                    if (salon.reviewCount >= 3)
                     Row(
                       children: [
                         AppIcon('star', size: 13, color: AppColors.secondary),
@@ -877,7 +986,7 @@ class _DistancePill extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
       decoration: BoxDecoration(
         color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(AppRadius.sm.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -965,13 +1074,16 @@ class _FeaturedSalonSliver extends StatelessWidget {
                 final salon = withPhoto[i];
                 return RepaintBoundary(
                   child: _FeaturedCard(
+                    id: salon.id,
                     name: salon.name,
                     imageUrl: salon.logoUrl!,
-                    rating: salon.averageRating.toStringAsFixed(1),
+                    rating: salon.reviewCount >= 3 ? salon.averageRating.toStringAsFixed(1) : null,
                     isFavorite: favoriteIds.contains(salon.id),
                     isAuthenticated: isAuthenticated,
                     onFavoriteTap: () => onFavoriteTap(salon),
-                    onTap: () => context.push(AppRoutes.salon(salon.id)),
+                    onTap: () => context.push(
+                      '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent('prestige_salon_image_${salon.id}')}',
+                    ),
                   ),
                 );
               },
@@ -985,6 +1097,7 @@ class _FeaturedSalonSliver extends StatelessWidget {
 
 class _FeaturedCard extends StatelessWidget {
   const _FeaturedCard({
+    required this.id,
     required this.name,
     required this.imageUrl,
     required this.rating,
@@ -994,7 +1107,9 @@ class _FeaturedCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final String name, imageUrl, rating;
+  final String id;
+  final String name, imageUrl;
+  final String? rating;
   final bool isFavorite;
   final bool isAuthenticated;
   final Future<void> Function() onFavoriteTap;
@@ -1014,10 +1129,16 @@ class _FeaturedCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
+                    borderRadius: BorderRadius.circular(AppRadius.xl.r),
+                    child: Hero(
+                      tag: 'prestige_salon_image_$id',
+                      child: Material(
+                        color: Colors.transparent,
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
                   Positioned(
@@ -1030,7 +1151,7 @@ class _FeaturedCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(AppRadius.sm.r),
                       ),
                       child: Text(
                         'Prestige',
@@ -1041,11 +1162,12 @@ class _FeaturedCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (rating != null)
                   Positioned(
                     top: 12.h,
                     right: 12.w,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.r),
+                      borderRadius: BorderRadius.circular(AppRadius.sm.r),
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                         child: Container(
@@ -1055,7 +1177,7 @@ class _FeaturedCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.black.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(10.r),
+                            borderRadius: BorderRadius.circular(AppRadius.sm.r),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1067,7 +1189,7 @@ class _FeaturedCard extends StatelessWidget {
                               ),
                               SizedBox(width: 3.w),
                               Text(
-                                rating,
+                                rating!,
                                 style: AppTextStyles.labelSm.copyWith(
                                   color: AppColors.white,
                                   fontSize: 11.sp,
@@ -1109,9 +1231,9 @@ class _FeaturedCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 10.h),
+            gapH8,
             Text(name, style: AppTextStyles.headlineSm),
-            SizedBox(height: 3.h),
+            gapH4,
             Text('Prestige', style: AppTextStyles.bodySm),
           ],
         ),
@@ -1180,7 +1302,9 @@ class _TrendingSalonSliver extends StatelessWidget {
                   child: _TrendingCard(
                     salon: salon,
                     rank: i + 1,
-                    onTap: () => context.push(AppRoutes.salon(salon.id)),
+                    onTap: () => context.push(
+                      '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent('trending_salon_image_${salon.id}')}',
+                    ),
                   ),
                 );
               },
@@ -1212,7 +1336,7 @@ class _TrendingCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(18.r),
+            borderRadius: BorderRadius.circular(AppRadius.xl.r),
             boxShadow: AppShadows.card,
           ),
           child: Row(
@@ -1220,18 +1344,24 @@ class _TrendingCard extends StatelessWidget {
               // Image — square left panel
               ClipRRect(
                 borderRadius: BorderRadius.horizontal(
-                  left: Radius.circular(18.r),
+                  left: Radius.circular(AppRadius.xl.r),
                 ),
                 child: Stack(
                   children: [
-                    CachedNetworkImage(
-                      imageUrl: salon.logoUrl!,
-                      width: 110.w,
-                      height: 170.h,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => _SalonPlaceholderBox(
-                        width: 110.w,
-                        height: 170.h,
+                    Hero(
+                      tag: 'trending_salon_image_${salon.id}',
+                      child: Material(
+                        color: Colors.transparent,
+                        child: CachedNetworkImage(
+                          imageUrl: salon.logoUrl!,
+                          width: 110.w,
+                          height: 170.h,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, _, _) => _SalonPlaceholderBox(
+                            width: 110.w,
+                            height: 170.h,
+                          ),
+                        ),
                       ),
                     ),
                     // Rank badge
@@ -1302,6 +1432,7 @@ class _TrendingCard extends StatelessWidget {
                         ],
                       ),
                       gapH8,
+                      if (salon.reviewCount >= 3)
                       Row(
                         children: [
                           AppIcon('star', size: 12, color: AppColors.secondary),
@@ -1355,12 +1486,12 @@ class _SalonListCardSkeleton extends StatelessWidget {
         height: 96.w,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(AppRadius.xl.r),
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(AppRadius.xl.r)),
               child: Container(
                 width: 96.w,
                 height: 96.w,
@@ -1400,7 +1531,7 @@ class _TrendingCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return _shimmerWrap(
       ClipRRect(
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
         child: Container(
           width: 110.w,
           height: 170.h,
@@ -1422,7 +1553,7 @@ class _FeaturedCardSkeleton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(AppRadius.xl.r),
             child: Container(
               width: 160.w,
               height: 220.h,

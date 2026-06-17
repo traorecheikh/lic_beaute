@@ -1,12 +1,18 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/location/location_service.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_resource_view.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
@@ -30,8 +36,10 @@ class ProfileBootstrapPage extends ConsumerStatefulWidget {
 class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
-  String? _selectedCity;
+
   bool _saving = false;
+  bool _uploadingAvatar = false;
+  String? _localAvatarPath;
 
   @override
   void dispose() {
@@ -39,9 +47,33 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     super.dispose();
   }
 
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 88,
+    );
+    if (image == null || !mounted) return;
+    setState(() => _localAvatarPath = image.path);
+    setState(() => _uploadingAvatar = true);
+    try {
+      await ref.read(profileProvider.notifier).uploadAvatar(File(image.path));
+      if (!mounted) return;
+      AppSnackbar.success(context, 'Photo de profil mise à jour.');
+    } catch (_) {
+      AppSnackbar.error(context, 'Upload impossible.');
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingAvatar = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final optionsAsync = ref.watch(profileOptionsProvider);
+    final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
       backgroundColor: AppColors.neutral,
@@ -55,7 +87,11 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
           value: optionsAsync,
           onRetry: () => ref.refresh(profileOptionsProvider.future),
           errorTitle: 'Impossible de charger le formulaire',
-          builder: (options) => SingleChildScrollView(
+          builder: (options) {
+            final profile = profileAsync.value;
+            final avatarUrl = profile?.avatarUrl;
+            final hasRemoteAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+            return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 28.w),
             child: Form(
               key: _formKey,
@@ -79,65 +115,101 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                   ),
                   gapH12,
                   Text(
-                    'Votre ville et votre nom serviront à personnaliser vos réservations.',
+                    'Votre nom sera utilisé pour personnaliser vos réservations.',
                     style: AppTextStyles.bodyLg.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  SizedBox(height: 40.h),
-                  TextFormField(
-                    controller: _fullNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nom complet',
+                  SizedBox(height: 30.h),
+                  Center(
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50.r,
+                          backgroundImage: _localAvatarPath != null
+                              ? FileImage(File(_localAvatarPath!))
+                              : (hasRemoteAvatar
+                                    ? CachedNetworkImageProvider(avatarUrl)
+                                    : null),
+                          child:
+                              (_localAvatarPath == null && !hasRemoteAvatar)
+                              ? AppIcon(
+                                  'user',
+                                  size: 44,
+                                  color: AppColors.primary,
+                                )
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: AppPressable(
+                            onTap: _uploadingAvatar ? null : _pickAvatar,
+                            child: Container(
+                              padding: EdgeInsets.all(10.r),
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
+                              ),
+                              child: _uploadingAvatar
+                                  ? SizedBox(
+                                      width: 16.r,
+                                      height: 16.r,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : AppIcon(
+                                      'camera',
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().length < 2) {
-                        return 'Nom complet requis (2 caractères minimum)';
-                      }
-                      return null;
-                    },
                   ),
-                  gapH16,
-                  DropdownButtonFormField<String>(
-                    value: _selectedCity,
-                    decoration: const InputDecoration(
-                      labelText: 'Ville',
+                  SizedBox(height: 30.h),
+                    TextFormField(
+                      controller: _fullNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nom complet',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().length < 2) {
+                          return 'Nom complet requis (2 caractères minimum)';
+                        }
+                        return null;
+                      },
                     ),
-                    items: options.cities
-                        .map((city) => DropdownMenuItem(value: city, child: Text(city)))
-                        .toList(growable: false),
-                    onChanged: (value) => setState(() => _selectedCity = value),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez choisir votre ville';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 48.h),
-                  AppButton.primary(
-                    onPressed: _saving ? null : _submit,
-                    label: "Commencer l'aventure",
-                    isLoading: _saving,
-                  ),
-                  if (!widget.requiredSetup) ...[
-                    gapH16,
-                    Center(
-                      child: TextButton(
-                        onPressed: () => context.go(AppRoutes.home),
-                        child: Text(
-                          "Passer pour l'instant",
-                          style: AppTextStyles.bodySm.copyWith(
-                            color: AppColors.onSurfaceVariant,
+
+                    SizedBox(height: 48.h),
+                    AppButton.primary(
+                      onPressed: _saving ? null : _submit,
+                      label: "Commencer l'aventure",
+                      isLoading: _saving,
+                    ),
+                    if (!widget.requiredSetup) ...[
+                      gapH16,
+                      Center(
+                        child: TextButton(
+                          onPressed: () => context.go(AppRoutes.home),
+                          child: Text(
+                            "Passer pour l'instant",
+                            style: AppTextStyles.bodySm.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -149,7 +221,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
       useRootNavigator: true,
       showDragHandle: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl.r)),
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 32.h),
@@ -212,8 +284,9 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     try {
       await ref.read(profileProvider.notifier).updateProfile(
             fullName: _fullNameController.text.trim(),
-            city: _selectedCity,
           );
+      if (!mounted) return;
+      await LocationPromptManager.markJustRegistered();
       if (!mounted) return;
       if (widget.requiredSetup) {
         context.go(AppRoutes.profilePaymentsSetup(next: widget.nextRoute));

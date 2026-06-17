@@ -35,35 +35,41 @@
         <form class="space-y-6" @submit.prevent="handleSubmit">
           <div class="space-y-4">
             <div class="space-y-1.5">
-              <label class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest block ml-0.5">Email professionnel</label>
+              <label for="admin-email" class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest block ml-0.5">Email professionnel</label>
               <div class="relative">
                 <EnvelopeIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-cocoa/30 pointer-events-none" />
                 <input
+                  id="admin-email"
+                  name="email"
                   v-model="email"
                   class="input-shell bg-neutral-bg/30 border border-outline-variant/60 focus:ring-primary/20 h-11 text-[13px] rounded-md transition-all pl-10"
                   :class="{ 'border-error/50 ring-1 ring-error/20': errors.email }"
                   type="email"
                   autocomplete="username"
                   placeholder="nom@beauteavenue.com"
+                  aria-describedby="email-error"
                 />
               </div>
-              <p v-if="errors.email" class="text-[10px] font-bold text-error mt-1 uppercase tracking-wider">{{ errors.email }}</p>
+              <p v-if="errors.email" id="email-error" class="text-[10px] font-bold text-error mt-1 uppercase tracking-wider">{{ errors.email }}</p>
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest block ml-0.5">Mot de passe</label>
+              <label for="admin-password" class="text-[10px] font-bold text-cocoa/70 uppercase tracking-widest block ml-0.5">Mot de passe</label>
               <div class="relative">
                 <LockClosedIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-cocoa/30 pointer-events-none" />
                 <input
+                  id="admin-password"
+                  name="password"
                   v-model="password"
                   class="input-shell bg-neutral-bg/30 border border-outline-variant/60 focus:ring-primary/20 h-11 text-[13px] rounded-md transition-all pl-10"
                   :class="{ 'border-error/50 ring-1 ring-error/20': errors.password }"
                   type="password"
                   autocomplete="current-password"
                   placeholder="••••••••"
+                  aria-describedby="password-error"
                 />
               </div>
-              <p v-if="errors.password" class="text-[10px] font-bold text-error mt-1 uppercase tracking-wider">{{ errors.password }}</p>
+              <p v-if="errors.password" id="password-error" class="text-[10px] font-bold text-error mt-1 uppercase tracking-wider">{{ errors.password }}</p>
             </div>
           </div>
 

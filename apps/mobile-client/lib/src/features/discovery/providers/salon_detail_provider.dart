@@ -56,12 +56,13 @@ final salonDetailResourceProvider =
 
 /// Convenience accessor that extracts just the SalonDetail data.
 /// Delegates to [salonDetailResourceProvider] so both share the same cache.
-final salonDetailProvider = FutureProvider.autoDispose.family<SalonDetail?, String>((
+final salonDetailProvider = Provider.autoDispose.family<AsyncValue<SalonDetail?>, String>((
   ref,
   salonId,
-) async {
-  final resource = await ref.watch(salonDetailResourceProvider(salonId).future);
-  return resource.data;
+) {
+  return ref
+      .watch(salonDetailResourceProvider(salonId))
+      .whenData((resource) => resource.data);
 });
 
 final salonAvailabilityProvider =

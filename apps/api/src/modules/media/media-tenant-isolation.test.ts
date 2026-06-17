@@ -26,8 +26,7 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("../../adapters/index.js", () => ({
-  getStorageAdapter: () => mocks.storage,
-  getR2Adapter: () => mocks.r2
+  getStorageAdapter: () => mocks.storage
 }));
 vi.mock("../../lib/db/prisma.js", () => ({ prisma: mocks.prisma }));
 vi.mock("../../lib/jobs.js", () => ({ enqueueJob: mocks.enqueueJob }));

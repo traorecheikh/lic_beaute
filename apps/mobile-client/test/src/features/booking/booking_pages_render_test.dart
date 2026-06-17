@@ -133,8 +133,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text('Salon Test'), findsOneWidget);
-      expect(find.text('Coupe Homme'), findsOneWidget);
+      expect(find.text('Salon Test'), findsNWidgets(2));
+      expect(find.text('Coupe Homme'), findsNWidgets(2));
     });
 
     testWidgets('renders action buttons', (tester) async {

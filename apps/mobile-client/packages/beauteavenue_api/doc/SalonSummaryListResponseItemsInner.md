@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **city** | **String** |  | 
 **neighborhood** | **String** |  | 
 **averageRating** | **num** |  | 
+**reviewCount** | **int** |  | 
 **latitude** | **num** |  | 
 **longitude** | **num** |  | 
 **subscriptionTier** | **String** |  | 

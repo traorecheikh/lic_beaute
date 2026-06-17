@@ -150,8 +150,8 @@ class _LogoMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.asset(
       'assets/logo.png',
-      width: 110.r,
-      height: 110.r,
+      width: 160.r,
+      height: 160.r,
       fit: BoxFit.contain,
     );
   }

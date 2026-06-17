@@ -25,10 +25,7 @@ export interface PaymentAdapter {
     phone?: string;
   }): Promise<{ redirectUrl: string; providerRef: string; providerToken?: string; expiresAt: Date }>;
 
-  /**
-   * Step 2 of PayDunya's two-step flow: execute a payment after the invoice is created.
-   * For single-step providers (Intech), this is a no-op.
-   */
+  /** Step 2 of PayDunya's two-step flow: execute a payment after the invoice is created. */
   executePayment?(params: {
     paymentId: string;
     method: string;
@@ -41,10 +38,7 @@ export interface PaymentAdapter {
    */
   getAvailableMethods?(): Promise<AvailableMethod[]>;
 
-  /**
-   * Lookup a payment invoice / transaction status raw from the provider.
-   * For providers with a read-status endpoint (unlike Intech which uses webhook-only).
-   */
+  /** Lookup a payment invoice / transaction status raw from the provider. */
   lookupTransaction?(params: {
     providerRef: string;
   }): Promise<{ status: PaymentStatus; providerTxId?: string }>;
@@ -60,7 +54,6 @@ export interface PaymentAdapter {
   /**
    * Request a refund / payout.
    * For PayDunya, this triggers a Disburse flow (two-step: get invoice → submit invoice).
-   * For Intech, this calls the refund endpoint directly.
    */
   requestRefund(params: {
     providerRef: string;
@@ -76,4 +69,39 @@ export interface PaymentAdapter {
   }): Promise<PaymentStatus>;
 
   normalizeStatus(providerStatus: string): PaymentStatus;
+
+  createDisbursementInvoice?(params: {
+    phone: string;
+    amountXof: number;
+    withdrawMode: string;
+    callbackUrl: string;
+  }): Promise<{ disburseToken: string }>;
+
+  resolveWithdrawMode?(payoutMethod: string): string;
+
+  submitDisbursement?(params: {
+    disburseToken: string;
+    disburseId: string;
+  }): Promise<{
+    success: boolean;
+    status: "success" | "pending" | "failed";
+    responseText?: string;
+    description?: string;
+    transactionId?: string;
+    providerRef?: string;
+  }>;
+
+  checkDisbursementStatus?(params: {
+    disburseToken: string;
+  }): Promise<{
+    status: "success" | "pending" | "failed";
+    responseText?: string;
+    description?: string;
+    transactionId?: string;
+    providerDisburseTxId?: string;
+    amount?: number;
+  }>;
+
+  getApproximateBalance?(): Promise<{ balance: number; currency: string }>;
 }
+

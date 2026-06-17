@@ -165,6 +165,47 @@
           </div>
         </article>
 
+        <!-- ── Services Standards ───────────────────────── -->
+        <article v-if="activeTab === 'service_suggestions'" class="panel-clean p-8 space-y-6">
+          <div class="flex items-start justify-between pb-4 border-b border-outline-variant/50">
+            <div>
+              <h3 class="text-base font-bold text-espresso">Prestations Standards</h3>
+              <p class="row-meta mt-0.5">Prestations standards suggérées aux salons partenaires pour faciliter la création de leur catalogue.</p>
+            </div>
+            <button class="btn-secondary text-[11px] px-4 py-2 gap-1.5 inline-flex items-center" @click="showAddSvcSuggestionModal = true">
+              <PlusIcon class="w-3.5 h-3.5" /> Ajouter
+            </button>
+          </div>
+
+          <div v-if="serviceSuggestionsQuery.isLoading.value" class="py-8 text-center row-meta">Chargement…</div>
+          <div v-else-if="serviceSuggestionsQuery.isError.value" class="py-8 text-center text-error text-sm">Erreur de chargement.</div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto max-h-[500px] pr-2">
+            <div
+              v-for="svc in serviceSuggestionsQuery.data.value"
+              :key="svc.id"
+              class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/50 bg-neutral-bg/40"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <SparklesIcon class="w-4 h-4 text-cocoa/40 shrink-0" />
+                <div class="min-w-0">
+                  <p class="row-primary truncate">{{ svc.name }}</p>
+                  <p class="row-meta">{{ svc.category }}</p>
+                </div>
+              </div>
+              <button
+                class="p-2 text-cocoa/30 hover:text-error transition-colors rounded-lg hover:bg-error/5 ml-3 shrink-0"
+                :disabled="deleteSvcSuggestionMutation.isPending.value"
+                @click="deleteSvcSuggestionMutation.mutate(svc.id)"
+              >
+                <TrashIcon class="w-4 h-4" />
+              </button>
+            </div>
+            <p v-if="!serviceSuggestionsQuery.data.value?.length" class="col-span-2 py-6 text-center row-meta italic">
+              Aucune prestation standard configurée.
+            </p>
+          </div>
+        </article>
+
         <!-- ── Settings panels ────────────────────────── -->
         <article v-if="isSettingsTab" class="panel-clean p-8 space-y-6">
           <div class="pb-4 border-b border-outline-variant/50 flex items-start gap-3">
@@ -293,7 +334,7 @@
               <p class="row-primary">Modes de facturation</p>
               <div class="flex-1 space-y-2">
                 <div class="flex items-center justify-between min-h-[32px]">
-                  <span class="text-[12px] font-semibold text-cocoa/70">PayDunya</span>
+                  <span class="text-[12px] font-semibold text-cocoa/70">Paiement mobile</span>
                   <div
                     role="switch"
                     :aria-checked="boolVal('feature_billing_paydunya')"
@@ -320,21 +361,6 @@
                     @keydown.space.prevent="toggleBool('feature_billing_manual')"
                   >
                     <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_billing_manual') ? 'translate-x-5' : 'translate-x-0'"></span>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between min-h-[32px]">
-                  <span class="text-[12px] font-semibold text-cocoa/70">Carte bancaire</span>
-                  <div
-                    role="switch"
-                    :aria-checked="boolVal('feature_card_payments')"
-                    tabindex="0"
-                    class="relative w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0"
-                    :class="boolVal('feature_card_payments') ? 'bg-primary' : 'bg-outline-variant'"
-                    @click="toggleBool('feature_card_payments')"
-                    @keydown.enter="toggleBool('feature_card_payments')"
-                    @keydown.space.prevent="toggleBool('feature_card_payments')"
-                  >
-                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="boolVal('feature_card_payments') ? 'translate-x-5' : 'translate-x-0'"></span>
                   </div>
                 </div>
               </div>
@@ -619,6 +645,46 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Add Service Suggestion Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showAddSvcSuggestionModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-espresso/40 backdrop-blur-sm"
+        @click.self="showAddSvcSuggestionModal = false"
+      >
+        <div class="panel-clean p-8 w-full max-w-md space-y-6 mx-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-espresso">Nouvelle prestation standard</h3>
+            <button class="text-cocoa/30 hover:text-cocoa transition-colors" @click="showAddSvcSuggestionModal = false">
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="section-label">Nom de la prestation</label>
+              <input v-model="newSvcSuggestion.name" class="input-shell" placeholder="ex: Brushing" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="section-label">Catégorie</label>
+              <select v-model="newSvcSuggestion.category" class="input-shell">
+                <option value="" disabled selected>Choisir une catégorie</option>
+                <option v-for="cat in categoriesQuery.data.value" :key="cat.id" :value="cat.name">
+                  {{ cat.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button class="btn-secondary px-5 py-2.5" @click="showAddSvcSuggestionModal = false">Annuler</button>
+            <button class="btn-primary px-5 py-2.5" :disabled="addSvcSuggestionMutation.isPending.value" @click="submitNewSvcSuggestion">
+              Ajouter
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -654,11 +720,15 @@ import {
   fetchPlatformCategories as fetchSalonCategories,
   updatePlatformSetting,
   upsertPlatformCategory,
-  upsertPlatformRequiredDocument
+  upsertPlatformRequiredDocument,
+  deletePlatformServiceSuggestion as deleteServiceSuggestion,
+  fetchPlatformServiceSuggestions as fetchServiceSuggestions,
+  upsertPlatformServiceSuggestion as upsertServiceSuggestion
 } from '@/lib/api';
 import type { PlatformSetting } from '@beauteavenue/contracts';
-import { upsertSalonCategoryInputSchema, upsertRequiredDocumentInputSchema } from '@beauteavenue/contracts';
+import { upsertSalonCategoryInputSchema, upsertRequiredDocumentInputSchema, upsertPlatformServiceSuggestionInputSchema } from '@beauteavenue/contracts';
 import { validateForm } from '@beauteavenue/shared-ts';
+import { getErrorMessage } from '@/lib/errors';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -778,8 +848,8 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     ]
   },
   feature_billing_paydunya: {
-    label: 'PayDunya',
-    description: 'Afficher PayDunya comme option de mode de paiement pour la facturation.',
+    label: 'Paiement mobile',
+    description: 'Afficher le paiement mobile PayDunya comme option de mode de paiement pour la facturation.',
     type: 'select',
     options: [
       { value: 'true', label: 'Afficher' },
@@ -793,15 +863,6 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     options: [
       { value: 'true', label: 'Afficher' },
       { value: 'false', label: 'Masquer' }
-    ]
-  },
-  feature_card_payments: {
-    label: 'Carte bancaire',
-    description: 'Activer l\'option carte bancaire dans PayDunya (nécessaire pour le renouvellement automatique).',
-    type: 'select',
-    options: [
-      { value: 'true', label: 'Activé' },
-      { value: 'false', label: 'Désactivé' }
     ]
   },
   support_email: {
@@ -895,6 +956,7 @@ const token = computed(() => auth.accessToken ?? '');
 const tabs = [
   { id: 'documents',        label: 'Pièces Justificatives',  description: "Documents demandés lors de l'inscription d'un partenaire.",     icon: DocumentTextIcon },
   { id: 'categories',       label: 'Catégories Salons',       description: "Catégories disponibles lors de l'inscription d'un partenaire.", icon: TagIcon },
+  { id: 'service_suggestions', label: 'Prestations Standards', description: 'Gérer la liste des suggestions de prestations pour les salons.', icon: SparklesIcon },
   { id: 'pricing',          label: 'Tarification & Frais',    description: 'Règles financières appliquées aux réservations et abonnements.', icon: CurrencyDollarIcon },
   { id: 'payment_methods',  label: 'Moyens de Paiement',      description: 'Activer/désactiver les méthodes de paiement PayDunya.',         icon: CreditCardIcon },
   { id: 'subscription_features', label: 'Fonctionnalités',    description: 'Activer/désactiver les fonctionnalités par niveau d\'abonnement.', icon: SparklesIcon },
@@ -920,6 +982,12 @@ const categoriesQuery = useQuery({
   enabled: computed(() => !!token.value)
 });
 
+const serviceSuggestionsQuery = useQuery({
+  queryKey: ['config-service-suggestions'],
+  queryFn: () => fetchServiceSuggestions(token.value),
+  enabled: computed(() => !!token.value)
+});
+
 const settingsQuery = useQuery({
   queryKey: ['config-settings'],
   queryFn: () => fetchPlatformSettings(token.value),
@@ -927,7 +995,14 @@ const settingsQuery = useQuery({
 });
 
 function settingsByGroup(group: string): PlatformSetting[] {
-  return settingsQuery.data.value?.filter(s => s.group === group) ?? [];
+  const all = settingsQuery.data.value?.filter(s => s.group === group) ?? [];
+  if (group === 'payment_methods') {
+    return all.filter(s => [
+      'paydunya_enabled_wave_senegal',
+      'paydunya_enabled_orange_senegal'
+    ].includes(s.key));
+  }
+  return all;
 }
 
 // ── Settings state ─────────────────────────────────────────────────────────
@@ -1096,13 +1171,13 @@ async function saveSettings() {
 const deleteDocMutation = useMutation({
   mutationFn: (id: string) => deleteRequiredDocument(token.value, id),
   onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['config-documents'] }); toast.success('Document supprimé.'); },
-  onError: () => toast.error('Erreur lors de la suppression.')
+  onError: (error) => toast.error(getErrorMessage(error, 'Erreur lors de la suppression.'))
 });
 
 const deleteCatMutation = useMutation({
   mutationFn: (id: string) => deleteSalonCategory(token.value, id),
   onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['config-categories'] }); toast.success('Catégorie supprimée.'); },
-  onError: () => toast.error('Erreur lors de la suppression.')
+  onError: (error) => toast.error(getErrorMessage(error, 'Erreur lors de la suppression.'))
 });
 
 const addDocMutation = useMutation({
@@ -1122,7 +1197,7 @@ const addDocMutation = useMutation({
     newDoc.isRequired = true;
     toast.success('Document ajouté.');
   },
-  onError: () => toast.error("Erreur lors de l'ajout.")
+  onError: (error) => toast.error(getErrorMessage(error, "Erreur lors de l'ajout."))
 });
 
 const addCatMutation = useMutation({
@@ -1135,7 +1210,29 @@ const addCatMutation = useMutation({
     newCat.slug = '';
     toast.success('Catégorie ajoutée.');
   },
-  onError: () => toast.error("Erreur lors de l'ajout.")
+  onError: (error) => toast.error(getErrorMessage(error, "Erreur lors de l'ajout."))
+});
+
+const addSvcSuggestionMutation = useMutation({
+  mutationFn: (data: { name: string; category: string }) =>
+    upsertServiceSuggestion(token.value, { name: data.name, category: data.category }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['config-service-suggestions'] });
+    showAddSvcSuggestionModal.value = false;
+    newSvcSuggestion.name = '';
+    newSvcSuggestion.category = '';
+    toast.success('Prestation standard ajoutée.');
+  },
+  onError: (error) => toast.error(getErrorMessage(error, "Erreur lors de l'ajout."))
+});
+
+const deleteSvcSuggestionMutation = useMutation({
+  mutationFn: (id: string) => deleteServiceSuggestion(token.value, id),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['config-service-suggestions'] });
+    toast.success('Prestation standard supprimée.');
+  },
+  onError: (error) => toast.error(getErrorMessage(error, 'Erreur lors de la suppression.'))
 });
 
 // ── Presets ─────────────────────────────────────────────────────────────────
@@ -1181,6 +1278,14 @@ const docDuplicate = computed(() => {
   return match ? match.label : null;
 });
 
+const svcSuggestionDuplicate = computed(() => {
+  if (!newSvcSuggestion.name.trim()) return null;
+  const match = (serviceSuggestionsQuery.data.value ?? []).find(
+    (s) => s.name.trim().toLowerCase() === newSvcSuggestion.name.trim().toLowerCase()
+  );
+  return match ? match.name : null;
+});
+
 function autoSlugCat() {
   if (!newCat.slug || newCat.slug === CATEGORY_PRESETS.find(p => p.label === newCat.name)?.slug || !newCat.slug.trim()) {
     newCat.slug = newCat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -1194,6 +1299,9 @@ const newDoc = reactive({ label: '', slug: '', type: 'any', isRequired: true });
 
 const showAddCatModal = ref(false);
 const newCat = reactive({ name: '', slug: '' });
+
+const showAddSvcSuggestionModal = ref(false);
+const newSvcSuggestion = reactive({ name: '', category: '' });
 
 function submitNewDoc() {
   const result = validateForm(upsertRequiredDocumentInputSchema, {
@@ -1225,5 +1333,20 @@ function submitNewCat() {
   }
   if (catDuplicate.value) { toast.error(`La catégorie "${catDuplicate.value}" existe déjà.`); return; }
   addCatMutation.mutate(result.data as { name: string; slug: string; });
+}
+
+function submitNewSvcSuggestion() {
+  const result = validateForm(upsertPlatformServiceSuggestionInputSchema, {
+    name: newSvcSuggestion.name.trim(),
+    category: newSvcSuggestion.category.trim(),
+    enabled: true
+  });
+  if (!result.success) {
+    const firstError = Object.values(result.errors)[0];
+    toast.error(firstError ?? "Vérifiez les champs.");
+    return;
+  }
+  if (svcSuggestionDuplicate.value) { toast.error(`La prestation standard "${svcSuggestionDuplicate.value}" existe déjà.`); return; }
+  addSvcSuggestionMutation.mutate(result.data as { name: string; category: string; });
 }
 </script>

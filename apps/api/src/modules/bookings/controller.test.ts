@@ -652,7 +652,7 @@ describe("BookingController", () => {
     mocks.prisma.booking.findFirst.mockResolvedValue({ id: "b1", salonId: "s1", status: "completed" });
     mocks.prisma.review.findUnique.mockResolvedValue(null);
     mocks.prisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb({
-      review: { create: vi.fn().mockResolvedValue({ id: "r2", rating: 5, comment: "Great", createdAt: new Date() }), aggregate: vi.fn().mockResolvedValue({ _avg: { rating: 4.8 } }) },
+      review: { create: vi.fn().mockResolvedValue({ id: "r2", rating: 5, comment: "Great", createdAt: new Date() }), aggregate: vi.fn().mockResolvedValue({ _avg: { rating: 4.8 }, _count: { rating: 1 } }) },
       salon: { update: vi.fn() }
     }));
     await c.submitReview({ params: { bookingId: "b1" }, body: { rating: 5, comment: "Great" } } as never, {} as never);
@@ -666,7 +666,7 @@ describe("BookingController", () => {
     mocks.prisma.booking.findFirst.mockResolvedValueOnce({ id: "b3", salonId: "s1", status: "completed" });
     mocks.prisma.review.findUnique.mockResolvedValueOnce(null);
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (tx: any) => Promise<any>) => cb({
-      review: { create: reviewCreate, aggregate: vi.fn().mockResolvedValue({ _avg: { rating: null } }) },
+      review: { create: reviewCreate, aggregate: vi.fn().mockResolvedValue({ _avg: { rating: null }, _count: { rating: 0 } }) },
       salon: { update: salonUpdate }
     }));
     await c.submitReview({ params: { bookingId: "b3" }, body: { rating: 4 } } as never, {} as never);
@@ -674,7 +674,7 @@ describe("BookingController", () => {
       data: expect.objectContaining({ comment: null })
     }));
     expect(salonUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      data: { averageRating: 0 }
+      data: { averageRating: 0, reviewCount: 0 }
     }));
   });
 

@@ -543,14 +543,11 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
         booking: { clientId: "client_1", salonId: "s1" }
       });
 
-    // First tx — claimReconcileWindow succeeds
-    const successTx = {
-      platformSetting: {
-        findUnique: vi.fn().mockResolvedValue(null),
-        upsert: vi.fn()
-      }
-    } as const;
-    // Second tx — _applyPaymentStatus
+    // _checkReconcileWindow succeeds (no prior timestamp)
+    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce(null);
+    // _claimReconcileWindow succeeds
+    mocks.prisma.platformSetting.upsert.mockResolvedValueOnce(undefined);
+    // _applyPaymentStatus
     const appTx = {
       payment: { update: vi.fn() },
       booking: { update: vi.fn(), findUnique: vi.fn().mockResolvedValue({
@@ -563,7 +560,6 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
     } as const;
 
     mocks.prisma.$transaction
-      .mockImplementationOnce(async (fn: any) => fn(successTx))
       .mockImplementationOnce(async (fn: any) => fn(appTx));
 
     mocks.adapter.fetchPaymentStatus.mockResolvedValue("succeeded");
@@ -572,17 +568,8 @@ describe("PaymentController - Hardcore webhook security", { timeout: 10000 }, ()
     await controller.reconcile({ params: { paymentId: "pay_double" } } as never, {} as never);
     expect(mocks.ok).toHaveBeenCalled();
 
-    // Second call — claimReconcileWindow sees the upserted timestamp from first call
-    // The upsert mock already resolved, so second findUnique returns the now value
-    const throttledTx = {
-      platformSetting: {
-        findUnique: vi.fn().mockResolvedValue({ value: String(Date.now()) }),
-        upsert: vi.fn()
-      }
-    } as const;
-    mocks.prisma.$transaction
-      .mockReset()
-      .mockImplementationOnce(async (fn: any) => fn(throttledTx));
+    // Second call — _checkReconcileWindow sees previous timestamp from first call
+    mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: String(Date.now()) });
 
     await controller.reconcile({ params: { paymentId: "pay_double" } } as never, {} as never);
     expect(mocks.fail).toHaveBeenCalledWith(expect.anything(), 429, "reconcile_throttled", expect.any(String));

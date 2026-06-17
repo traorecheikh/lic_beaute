@@ -93,23 +93,23 @@ abstract final class AppTheme {
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
           borderSide: const BorderSide(color: AppColors.outlineVariant),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
           borderSide: const BorderSide(color: AppColors.outlineVariant),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
           borderSide: const BorderSide(color: AppColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
@@ -130,7 +130,7 @@ abstract final class AppTheme {
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl.r)),
         ),
         elevation: 0,
         modalElevation: 0,
@@ -229,7 +229,7 @@ abstract final class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.darkSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl.r)),
         ),
         elevation: 0,
       ),

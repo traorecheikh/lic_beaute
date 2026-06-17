@@ -111,7 +111,7 @@ const salonQuery = useQuery({
   refetchInterval: 30_000
 });
 
-const salon = computed(() => salonQuery.data.value as any);
+const salon = computed(() => salonQuery.data.value as (typeof salonQuery.data.value) & { latestAdminNote?: string });
 
 const statusTheme = computed(() => {
   const status = salon.value?.approvalStatus;

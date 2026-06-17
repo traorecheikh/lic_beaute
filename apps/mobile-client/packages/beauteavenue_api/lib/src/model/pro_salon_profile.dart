@@ -27,6 +27,7 @@ part 'pro_salon_profile.g.dart';
 /// * [phone] 
 /// * [instagram] 
 /// * [averageRating] 
+/// * [reviewCount] 
 /// * [subscriptionTier] 
 /// * [isVisibleInMarketplace] 
 /// * [canReceiveBookings] 
@@ -74,6 +75,9 @@ abstract class ProSalonProfile implements Built<ProSalonProfile, ProSalonProfile
 
   @BuiltValueField(wireName: r'averageRating')
   num get averageRating;
+
+  @BuiltValueField(wireName: r'reviewCount')
+  int get reviewCount;
 
   @BuiltValueField(wireName: r'subscriptionTier')
   ProSalonProfileSubscriptionTierEnum get subscriptionTier;
@@ -185,6 +189,11 @@ class _$ProSalonProfileSerializer implements PrimitiveSerializer<ProSalonProfile
     yield serializers.serialize(
       object.averageRating,
       specifiedType: const FullType(num),
+    );
+    yield r'reviewCount';
+    yield serializers.serialize(
+      object.reviewCount,
+      specifiedType: const FullType(int),
     );
     yield r'subscriptionTier';
     yield serializers.serialize(
@@ -340,6 +349,13 @@ class _$ProSalonProfileSerializer implements PrimitiveSerializer<ProSalonProfile
             specifiedType: const FullType(num),
           ) as num;
           result.averageRating = valueDes;
+          break;
+        case r'reviewCount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.reviewCount = valueDes;
           break;
         case r'subscriptionTier':
           final valueDes = serializers.deserialize(

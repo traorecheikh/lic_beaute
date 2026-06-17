@@ -238,6 +238,7 @@ model Salon {
   latitude               Float?
   longitude              Float?
   averageRating          Float               @default(0)
+  reviewCount            Int                 @default(0)
   subscriptionTier       SubscriptionTier    @default(standard)
   subscriptionIntentTier SubscriptionTier    @default(standard)
   approvalStatus         SalonApprovalStatus @default(pending_review)
@@ -248,6 +249,7 @@ model Salon {
   canReceiveBookings     Boolean             @default(false)
   prestigeScore          Float?
   isPrestige             Boolean             @default(false)
+  isSuspended            Boolean             @default(false)
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
   staffMembers           User[]
@@ -264,6 +266,14 @@ model Salon {
   clientBenefits         ClientBenefit[]
   vouchers               VoucherDefinition[]
   mediaAssets            MediaAsset[]
+  payoutMethod           PayoutMethod?
+  payoutPhone            String?
+  payoutName             String?
+  payoutVerificationStatus String            @default("unverified")
+  payoutVerifiedAt       DateTime?
+  payoutVerifiedBy       String?
+  payouts                MerchantPayout[]
+  ledgerEntries          LedgerEntry[]
 
   @@index([approvalStatus, isVisibleInMarketplace, subscriptionTier, averageRating])
   @@index([city, approvalStatus, isVisibleInMarketplace])
@@ -303,6 +313,9 @@ model Booking {
   source               String            @default("marketplace")
   depositAmountXof     Int               @default(0)
   depositPaymentStatus PaymentStatus     @default(pending)
+  isUnderFraudReview   Boolean             @default(false)
+  refundRequested      Boolean             @default(false)
+  disputeOpen          Boolean             @default(false)
   paymentProvider      PaymentProvider?
   paymentReference     String?
   clientNote           String?
@@ -316,6 +329,7 @@ model Booking {
   bookingEvents        BookingEvent[]
   settlementEvents     SettlementEvent[]
   review               Review?
+  payout               MerchantPayout?
 
   @@index([salonId, createdAt])
   @@index([salonId, status, createdAt])
@@ -337,6 +351,7 @@ model Payment {
   updatedAt        DateTime          @updatedAt
   booking          Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   settlementEvents SettlementEvent[]
+  payouts          MerchantPayout[]
 
   @@index([bookingId])
   @@index([status, createdAt])
@@ -480,6 +495,16 @@ model PlatformSalonCategory {
   slug      String   @unique
   enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model PlatformServiceSuggestion {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([enabled])
 }
 
 model PlatformRequiredDocument {
@@ -821,4 +846,99 @@ model SearchProfile {
   createdAt           DateTime @default(now())
 
   @@index([userId])
+}
+
+enum PayoutMethod {
+  wave_senegal
+  orange_money_senegal
+}
+
+enum MerchantPayoutStatus {
+  blocked
+  scheduled
+  creating
+  created
+  submitting
+  pending
+  succeeded
+  failed_retryable
+  failed_terminal
+  cancelled
+  manual_review
+}
+
+model MerchantPayout {
+  id                        String               @id @default(cuid())
+  salonId                   String
+  bookingId                 String?              @unique
+  paymentId                 String?
+  payoutMethod              PayoutMethod
+  beneficiaryPhoneSnapshot  String
+  beneficiaryNameSnapshot   String
+  currency                  String               @default("XOF")
+  grossAmount               Int
+  platformCommissionAmount  Int
+  merchantPayoutAmount      Int
+  collectionFeeAmount       Int                  @default(0)
+  payoutFeeAmount           Int                  @default(0)
+  disburseToken             String?              @unique
+  disburseId                String               @unique
+  transactionId             String?
+  providerRef               String?
+  providerDisburseTxId      String?
+  status                    MerchantPayoutStatus @default(blocked)
+  failureCategory           String?
+  failureCode               String?
+  safeFailureMessage        String?
+  attemptCount              Int                  @default(0)
+  nextRetryTime             DateTime?
+  eligibleAt                DateTime?
+  initiatedAt               DateTime?
+  submittedAt               DateTime?
+  completedAt               DateTime?
+  failedAt                  DateTime?
+  cancelledAt               DateTime?
+  lastReconciledAt          DateTime?
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+  version                   Int                  @default(1)
+
+  // Commission Snapshot
+  commissionType            String               @default("percentage")
+  commissionConfiguredValue Float                @default(5.0)
+  commissionBaseAmount      Int
+  commissionCalculatedAmount Int
+  commissionRoundingMethod   String               @default("round")
+  policyVersion             String               @default("v1")
+  feeResponsibilityPolicy   String               @default("platform_absorbs_fees")
+
+  salon                     Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  booking                   Booking?             @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  payment                   Payment?             @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([nextRetryTime])
+  @@index([salonId])
+  @@index([bookingId])
+}
+
+model LedgerEntry {
+  id             String      @id @default(cuid())
+  salonId        String
+  bookingId      String?
+  paymentId      String?
+  payoutId       String?
+  eventType      String
+  amountXof      Int
+  currency       String      @default("XOF")
+  actorUserId    String?
+  reason         String?
+  metadataJson   String?
+  createdAt      DateTime    @default(now())
+
+  salon          Salon       @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@index([salonId])
+  @@index([bookingId])
+  @@index([createdAt])
 }

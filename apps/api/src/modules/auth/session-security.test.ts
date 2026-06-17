@@ -38,7 +38,6 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("../../adapters/index.js", () => ({
   createOtpAdapter: () => ({ send: vi.fn(), verify: vi.fn() }),
-  getR2Adapter: () => null,
   getStorageAdapter: vi.fn()
 }));
 

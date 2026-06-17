@@ -72,6 +72,20 @@ export const supportConfigSchema = z.object({
   email: z.string(),
 });
 
+export const platformServiceSuggestionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  enabled: z.boolean(),
+  createdAt: z.string().datetime()
+});
+
+export const upsertPlatformServiceSuggestionInputSchema = z.object({
+  name: z.string().min(1),
+  category: z.string().min(1),
+  enabled: z.boolean().optional()
+});
+
 export type PlatformSetting = z.infer<typeof platformSettingSchema>;
 export type PlatformSalonCategory = z.infer<typeof platformSalonCategorySchema>;
 export type PlatformRequiredDocument = z.infer<typeof platformRequiredDocumentSchema>;
@@ -80,3 +94,5 @@ export type UpsertSalonCategoryInput = z.infer<typeof upsertSalonCategoryInputSc
 export type UpsertRequiredDocumentInput = z.infer<typeof upsertRequiredDocumentInputSchema>;
 export type SubscriptionFeatures = z.infer<typeof subscriptionFeaturesSchema>;
 export type SupportConfig = z.infer<typeof supportConfigSchema>;
+export type PlatformServiceSuggestion = z.infer<typeof platformServiceSuggestionSchema>;
+export type UpsertPlatformServiceSuggestionInput = z.infer<typeof upsertPlatformServiceSuggestionInputSchema>;

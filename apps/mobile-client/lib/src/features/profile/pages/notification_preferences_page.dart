@@ -112,7 +112,7 @@ class _PreferenceGroup extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20.r),
+            borderRadius: BorderRadius.circular(AppRadius.xl.r),
           ),
           child: Column(
             children: children

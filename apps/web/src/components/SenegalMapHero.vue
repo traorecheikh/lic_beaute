@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-end w-full">
+  <div class="flex justify-center lg:justify-end w-full">
     <svg
       viewBox="0 0 1000 736"
       xmlns="http://www.w3.org/2000/svg"
@@ -8,9 +8,9 @@
     >
       <defs>
         <linearGradient id="senegal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stop-color="var(--color-primary, #D96B8C)" stop-opacity="0.25" />
-          <stop offset="50%"  stop-color="var(--color-secondary, #C9A26A)" stop-opacity="0.20" />
-          <stop offset="100%" stop-color="var(--color-espresso, #2D1A12)" stop-opacity="0.15" />
+          <stop offset="0%"   stop-color="#D96B8C" stop-opacity="0.25" />
+          <stop offset="50%"  stop-color="#C9A26A" stop-opacity="0.20" />
+          <stop offset="100%" stop-color="#2D1A12" stop-opacity="0.10" />
         </linearGradient>
 
         <radialGradient id="senegal-shine" cx="25%" cy="25%" r="45%">

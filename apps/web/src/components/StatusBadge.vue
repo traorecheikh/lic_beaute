@@ -43,11 +43,22 @@ const label = computed(() => {
     missing: "Manquant",
     received: "Reçu",
     verified: "Vérifié",
+    unverified: "Non vérifié",
 
     // Deposit Mode
     none: "Aucun",
     fixed: "Fixe",
-    percentage: "Pourcentage"
+    percentage: "Pourcentage",
+
+    // Payout Status
+    blocked: "Bloqué",
+    scheduled: "Planifié",
+    creating: "Création",
+    created: "Créé",
+    submitting: "Soumission",
+    failed_retryable: "Échec Temporaire",
+    failed_terminal: "Échec Définitif",
+    manual_review: "Revue Manuelle"
   };
 
   return map[props.value] ?? props.value;
@@ -56,7 +67,7 @@ const label = computed(() => {
 const styles = computed(() => {
   const val = props.value.toLowerCase();
   
-  if (['pending', 'pending_review', 'missing', 'none'].includes(val)) {
+  if (['pending', 'pending_review', 'missing', 'none', 'scheduled', 'creating', 'created', 'submitting'].includes(val)) {
     return "bg-neutral-bg text-cocoa/60 ring-outline-variant/50";
   }
   
@@ -64,11 +75,11 @@ const styles = computed(() => {
     return "bg-primary/5 text-primary ring-primary/20";
   }
 
-  if (['failed', 'cancelled', 'rejected', 'needs_info'].includes(val)) {
+  if (['failed', 'cancelled', 'rejected', 'needs_info', 'failed_retryable', 'failed_terminal'].includes(val)) {
     return "bg-error/5 text-error ring-error/20";
   }
 
-  if (['premium'].includes(val)) {
+  if (['premium', 'blocked', 'manual_review', 'unverified'].includes(val)) {
     return "bg-secondary/10 text-secondary ring-secondary/30";
   }
 

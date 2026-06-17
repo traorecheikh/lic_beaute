@@ -65,12 +65,12 @@ class LegalPage extends ConsumerWidget {
                   ),
                   gapH16,
                   Text(
-                    'Beauté Avenue SARL',
+                    'Beauté Avenue',
                     style: AppTextStyles.bodyMd.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text('Dakar, Sénégal', style: AppTextStyles.bodySm),
+                  Text('Plateforme exploitée par NumuConnect', style: AppTextStyles.bodySm),
                   gapH8,
                   Text(
                     '© 2026 Tous droits réservés',

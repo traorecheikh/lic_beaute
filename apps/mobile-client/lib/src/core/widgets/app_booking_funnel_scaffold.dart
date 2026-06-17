@@ -42,7 +42,7 @@ class _AppBookingFunnelScaffoldState
     );
 
     Future<void> refresh() =>
-        ref.refresh(salonDetailProvider(widget.salonId).future);
+        ref.refresh(salonDetailResourceProvider(widget.salonId).future);
 
     return AppScaffold(
       appBar: AppTopBar(

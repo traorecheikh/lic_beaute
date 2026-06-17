@@ -238,8 +238,8 @@
                 </div>
                 <div>
                   <label class="section-label mb-2 block">Prix de vente (XOF)</label>
-                  <input v-model.number="createForm.priceXof" type="number" min="0" step="500" class="input-shell font-bold text-base" />
-                  <p class="text-[11px] text-cocoa/40 mt-2">Prix affiché à vos clients lors de la réservation.</p>
+                  <input v-model.number="createForm.priceXof" type="number" min="0" max="5000000" step="500" class="input-shell font-bold text-base" />
+                  <p class="text-[11px] text-cocoa/40 mt-2">Prix affiché à vos clients lors de la réservation. Maximum 5 000 000 XOF.</p>
                 </div>
               </div>
 
@@ -307,17 +307,26 @@
               <!-- Deposit amount config -->
               <div v-if="createForm.depositMode === 'fixed'" class="bg-primary/5 border border-primary/20 rounded-2xl p-5 animate-in slide-in-from-top-2 duration-200">
                 <label class="section-label mb-3 block">Montant de l'acompte (XOF)</label>
-                <input v-model.number="createForm.depositAmountXof" type="number" min="0" step="500" class="input-shell bg-white font-bold" />
-                <div v-if="createForm.depositAmountXof > 0 && createForm.priceXof > 0" class="mt-3 flex items-center gap-2 text-[11px] text-primary font-semibold">
+                <input
+                  :value="createForm.depositAmountXof > 0 ? createForm.depositAmountXof : ''"
+                  @input="onDepositAmountInput($event)"
+                  type="number"
+                  min="0"
+                  max="5000000"
+                  step="500"
+                  class="input-shell bg-white font-bold"
+                />
+                <div v-if="safeDepositPercent(createForm.depositAmountXof, createForm.priceXof) > 0" class="mt-3 flex items-center gap-2 text-[11px] font-semibold" :class="safeDepositPercent(createForm.depositAmountXof, createForm.priceXof) > 50 ? 'text-error' : 'text-primary'">
                   <InformationCircleIcon class="w-4 h-4 shrink-0" />
-                  <span>Soit {{ Math.round((createForm.depositAmountXof / createForm.priceXof) * 100) }}% du prix de la prestation</span>
+                  <span v-if="safeDepositPercent(createForm.depositAmountXof, createForm.priceXof) > 50">⚠ L'acompte ({{ safeDepositPercent(createForm.depositAmountXof, createForm.priceXof) }}%) dépasse la limite de 50% du prix</span>
+                  <span v-else>Soit {{ safeDepositPercent(createForm.depositAmountXof, createForm.priceXof) }}% du prix de la prestation</span>
                 </div>
               </div>
 
               <div v-if="createForm.depositMode === 'percent'" class="bg-primary/5 border border-primary/20 rounded-2xl p-5 animate-in slide-in-from-top-2 duration-200">
                 <label class="section-label mb-3 block">Pourcentage de l'acompte</label>
                 <div class="flex items-center gap-4 mb-3">
-                  <input v-model.number="createForm.depositPercent" type="range" min="5" max="100" step="5" class="flex-1 accent-primary" />
+                  <input v-model.number="createForm.depositPercent" type="range" min="5" max="50" step="5" class="flex-1 accent-primary" />
                   <span class="text-2xl font-bold text-espresso tabular-nums w-14 text-right">{{ createForm.depositPercent }}%</span>
                 </div>
                 <div class="flex gap-2 flex-wrap">
@@ -360,7 +369,7 @@
 import { computed, reactive, ref } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { proServiceCreateInputSchema } from "@beauteavenue/contracts";
-import { formatMoneyXof, validateForm, SERVICE_CATEGORY_MAP } from "@beauteavenue/shared-ts";
+import { formatMoneyXof, validateForm } from "@beauteavenue/shared-ts";
 import { toast } from "vue-sonner";
 import {
   PlusIcon,
@@ -375,7 +384,7 @@ import {
   InformationCircleIcon
 } from "@heroicons/vue/24/outline";
 import { createProService, deleteProService, fetchProServices, fetchProSubscriptionFeatures, updateProService } from "@/lib/pro-api";
-import { fetchPublicCategories } from "@/lib/api";
+import { fetchPublicCategories, fetchPublicServiceSuggestions } from "@/lib/api";
 import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -425,11 +434,25 @@ const categoriesQuery = useQuery({
 
 const platformCategories = computed(() => categoriesQuery.data.value ?? []);
 
-const serviceNameMap = SERVICE_CATEGORY_MAP as Record<string, string>;
+const serviceSuggestionsQuery = useQuery({
+  queryKey: ["platform-service-suggestions"],
+  queryFn: () => fetchPublicServiceSuggestions(),
+  staleTime: 10 * 60 * 1000
+});
+
+const serviceNameMap = computed(() => {
+  const map: Record<string, string> = {};
+  const list = serviceSuggestionsQuery.data.value ?? [];
+  for (const s of list) {
+    map[s.name] = s.category;
+  }
+  return map;
+});
+
 const filteredServices = computed(() => {
   const q = createForm.name.toLowerCase().trim();
   if (!q) return [];
-  return Object.entries(serviceNameMap)
+  return Object.entries(serviceNameMap.value)
     .filter(([name]) => name.toLowerCase().includes(q))
     .slice(0, 20)
     .map(([name, category]) => ({ name, category }));
@@ -438,7 +461,7 @@ const filteredServices = computed(() => {
 function onServiceNameInput() {
   showServiceSuggestions.value = true;
   selectedValidService.value = false;
-  const matched = serviceNameMap[createForm.name.trim()];
+  const matched = serviceNameMap.value[createForm.name.trim()];
   if (matched) {
     autoCategory.value = matched;
     createForm.category = matched;
@@ -451,6 +474,24 @@ function onServiceNameInput() {
 function onServiceNameBlur() {
   // Delay to allow click on suggestion
   setTimeout(() => { showServiceSuggestions.value = false; }, 200);
+}
+
+function onDepositAmountInput(event: Event) {
+  const raw = (event.target as HTMLInputElement).value;
+  if (raw === '') {
+    createForm.depositAmountXof = 0;
+    return;
+  }
+  const num = parseInt(raw, 10);
+  if (!isNaN(num) && num >= 0 && num <= 9999999) {
+    createForm.depositAmountXof = num;
+  }
+}
+
+function safeDepositPercent(amount: number, price: number): number {
+  if (!amount || !price) return 0;
+  const pct = Math.round((amount / price) * 100);
+  return isFinite(pct) && pct < 10000 ? pct : 0;
 }
 
 function selectServiceSuggestion(svc: { name: string; category: string }) {
@@ -597,6 +638,13 @@ function nextStep() {
 }
 
 function submitService() {
+  if (createForm.depositMode === "fixed" && createForm.depositAmountXof > 0 && createForm.priceXof > 0) {
+    const pct = Math.round((createForm.depositAmountXof / createForm.priceXof) * 100);
+    if (pct > 50) {
+      toast.error("L'acompte ne peut pas dépasser 50% du prix de la prestation.");
+      return;
+    }
+  }
   const result = validateForm(proServiceCreateInputSchema, {
     name: createForm.name,
     category: createForm.category || undefined,

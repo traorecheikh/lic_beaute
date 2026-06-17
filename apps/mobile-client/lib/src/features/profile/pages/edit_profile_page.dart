@@ -11,7 +11,6 @@ import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_city_dropdown.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_phone_field.dart';
@@ -35,7 +34,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   bool _saving = false;
   bool _uploadingAvatar = false;
   String? _localAvatarPath;
-  String? _selectedCity;
   PhoneCountry _phoneCountry = kPhoneCountries.first;
   String _contactChannel = 'phone';
   String _language = 'fr';
@@ -69,7 +67,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             _didSeedControllers = true;
             _fullNameController.text = profile.fullName;
             _seedPhone(profile.phone);
-            _selectedCity = profile.city;
             _contactChannel = profile.preferredContactChannel;
             _language = profile.preferredLanguage;
             _pushOptIn = profile.pushOptIn;
@@ -168,13 +165,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         }
                         return null;
                       },
-                    ),
-                    gapH16,
-                    AppCityDropdown(
-                      value: _selectedCity,
-                      cities: options.cities,
-                      onChanged: (value) =>
-                          setState(() => _selectedCity = value),
                     ),
                     gapH16,
 
@@ -287,7 +277,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           .updateProfile(
             fullName: _fullNameController.text.trim(),
             phone: _resolvedPhoneValue(),
-            city: _selectedCity,
             preferredContactChannel: _contactChannel,
             pushOptIn: _pushOptIn,
             marketingOptIn: _marketingOptIn,

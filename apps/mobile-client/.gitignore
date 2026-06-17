@@ -36,6 +36,11 @@ migrate_working_dir/
 # E2E test credentials (real secrets, never commit)
 patrol_test/.e2e.env
 
+# Firebase & env secrets — must be injected by CI, never committed
+.env
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
 # Symbolication related
 app.*.symbols
 

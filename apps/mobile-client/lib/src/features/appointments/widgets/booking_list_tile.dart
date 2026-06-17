@@ -29,16 +29,16 @@ class BookingListTile extends StatelessWidget {
     final hasImage = salonImageUrl != null && salonImageUrl.isNotEmpty;
 
     return Container(
-      padding: EdgeInsets.all(18.r),
+      padding: EdgeInsets.all(AppSpacing.md.r),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
         boxShadow: AppShadows.card,
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(AppRadius.md.r),
             child: hasImage
                 ? CachedNetworkImage(
                     imageUrl: salonImageUrl,
@@ -50,7 +50,7 @@ class BookingListTile extends StatelessWidget {
                     errorWidget: (context, url, error) => AppIconBox(
                       size: 48.r,
                       color: AppColors.primaryLight,
-                      radius: BorderRadius.circular(12.r),
+                      radius: BorderRadius.circular(AppRadius.md.r),
                       child: AppIcon(
                         'calendar',
                         size: 20,
@@ -61,7 +61,7 @@ class BookingListTile extends StatelessWidget {
                 : AppIconBox(
                     size: 48.r,
                     color: AppColors.primaryLight,
-                    radius: BorderRadius.circular(12.r),
+                    radius: BorderRadius.circular(AppRadius.md.r),
                     child: AppIcon(
                       'calendar',
                       size: 20,
@@ -77,7 +77,7 @@ class BookingListTile extends StatelessWidget {
                 Text(booking.salonName, style: AppTextStyles.labelLg),
                 SizedBox(height: 2.h),
                 Text(booking.serviceName, style: AppTextStyles.bodySm),
-                SizedBox(height: 6.h),
+                gapH8,
                 Text('$dateLabel · $timeLabel', style: AppTextStyles.labelSm),
               ],
             ),

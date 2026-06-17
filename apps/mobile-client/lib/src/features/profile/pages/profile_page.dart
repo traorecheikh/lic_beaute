@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/sync/app_outbox.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/location/location_service.dart';
 import '../providers/profile_provider.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -72,7 +74,9 @@ class ProfilePage extends ConsumerWidget {
                                 ),
                                 SizedBox(height: 6.h),
                                 Text(
-                                  profile.city ?? 'Ville non renseignée',
+                                  ref.watch(cityFromLocationProvider).asData?.value ??
+                                      profile.city ??
+                                      'Ville détectée automatiquement',
                                   style: AppTextStyles.bodySm.copyWith(
                                     color: AppColors.onSurfaceVariant,
                                   ),
@@ -111,7 +115,7 @@ class ProfilePage extends ConsumerWidget {
                           ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF8E8),
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(AppRadius.lg.r),
                             border: Border.all(color: const Color(0xFFE8D6A6)),
                           ),
                           child: Row(
@@ -230,7 +234,7 @@ class _MenuTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18.r),
+          borderRadius: BorderRadius.circular(AppRadius.lg.r),
           border: Border.all(
             color: AppColors.outlineVariant.withValues(alpha: 0.5),
           ),
@@ -256,7 +260,7 @@ class _MenuTile extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(20.r),
+                  borderRadius: BorderRadius.circular(AppRadius.full.r),
                 ),
                 child: Text(
                   trailingText!,

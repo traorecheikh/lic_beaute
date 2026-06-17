@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 class AppScaffold extends StatelessWidget {
@@ -25,15 +26,20 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor ?? AppColors.neutral,
-      appBar: appBar,
-      body: body,
-      bottomNavigationBar: bottomNavigationBar,
-      floatingActionButton: floatingActionButton,
-      extendBody: extendBody,
-      extendBodyBehindAppBar: extendBodyBehindAppBar,
-      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
+        backgroundColor: backgroundColor ?? AppColors.neutral,
+        appBar: appBar,
+        body: body,
+        bottomNavigationBar: bottomNavigationBar,
+        floatingActionButton: floatingActionButton,
+        extendBody: extendBody,
+        extendBodyBehindAppBar: extendBodyBehindAppBar,
+        resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      ),
     );
   }
 }

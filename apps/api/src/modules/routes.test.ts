@@ -17,9 +17,18 @@ function makeApp() {
         if (typeof optsOrHandler === "function") routes.push({ method: "POST", path, handler: optsOrHandler as Route["handler"] });
         else routes.push({ method: "POST", path, opts: optsOrHandler, handler: maybeHandler });
       },
-      patch: (path: string, handler: Route["handler"]) => routes.push({ method: "PATCH", path, handler }),
-      delete: (path: string, handler: Route["handler"]) => routes.push({ method: "DELETE", path, handler }),
-      put: (path: string, handler: Route["handler"]) => routes.push({ method: "PUT", path, handler })
+      patch: (path: string, optsOrHandler: unknown, maybeHandler?: Route["handler"]) => {
+        if (typeof optsOrHandler === "function") routes.push({ method: "PATCH", path, handler: optsOrHandler as Route["handler"] });
+        else routes.push({ method: "PATCH", path, opts: optsOrHandler, handler: maybeHandler });
+      },
+      delete: (path: string, optsOrHandler: unknown, maybeHandler?: Route["handler"]) => {
+        if (typeof optsOrHandler === "function") routes.push({ method: "DELETE", path, handler: optsOrHandler as Route["handler"] });
+        else routes.push({ method: "DELETE", path, opts: optsOrHandler, handler: maybeHandler });
+      },
+      put: (path: string, optsOrHandler: unknown, maybeHandler?: Route["handler"]) => {
+        if (typeof optsOrHandler === "function") routes.push({ method: "PUT", path, handler: optsOrHandler as Route["handler"] });
+        else routes.push({ method: "PUT", path, opts: optsOrHandler, handler: maybeHandler });
+      }
     },
     routes
   };

@@ -466,8 +466,8 @@ describe("CatalogController", () => {
     }));
     await controller.pricing({} as never, { header } as never);
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
-      standard: expect.objectContaining({ priceXof: 15000 }),
-      premium: expect.objectContaining({ priceXof: 25000 }),
+      standard: expect.objectContaining({ priceXof: 200 }),
+      premium: expect.objectContaining({ priceXof: 300 }),
       commissionPercent: 5
     }));
   });

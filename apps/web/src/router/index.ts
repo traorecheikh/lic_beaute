@@ -12,6 +12,16 @@ const router = createRouter({
       path: "/",
       component: () => import("@/views/LandingPage.vue")
     },
+    {
+      path: "/privacy",
+      name: "privacy",
+      component: () => import("@/views/PrivacyPolicyPage.vue")
+    },
+    {
+      path: "/terms",
+      name: "terms",
+      component: () => import("@/views/TermsOfServicePage.vue")
+    },
     // --- Public Pro Routes ---
     {
       path: "/pro",
@@ -197,6 +207,11 @@ const router = createRouter({
           component: () => import("@/views/SubscriptionDetailPage.vue")
         },
         {
+          path: "payouts",
+          name: "admin-payouts",
+          component: () => import("@/views/AdminPayoutsPage.vue")
+        },
+        {
           path: "audit",
           name: "admin-audit",
           component: () => import("@/views/AuditPage.vue")
@@ -218,6 +233,12 @@ const router = createRouter({
         }
       ]
     },
+    // ── 404 Catch-All ───────────────────────────────────────────────────────
+    {
+      path: "/:pathMatch(.*)*",
+      name: "not-found",
+      component: () => import("@/views/NotFoundPage.vue")
+    }
   ]
 });
 

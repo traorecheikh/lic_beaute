@@ -2,6 +2,63 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { createApp } from "./app.js";
 
+// ─── Smoke test: runs WITHOUT a database ────────────────────────────────────
+// This test verifies the API can be imported, modules load, and config
+// validates correctly. It runs as part of the default test suite to catch
+// startup-blocking errors (e.g., duplicate route registration) early.
+
+describe("API startup smoke test", () => {
+  it("config exports without error", async () => {
+    // Re-importing config validates env defaults and runs validateConfig()
+    // This catches misconfiguration before deployment.
+    const { config } = await import("./config.js");
+    expect(config).toBeDefined();
+    expect(config.nodeEnv).toBeDefined();
+  });
+
+  it("createApp can be imported without errors", async () => {
+    const { createApp } = await import("./app.js");
+    expect(typeof createApp).toBe("function");
+  });
+
+  it("all controller modules can be imported without errors", async () => {
+    // Verify all route controllers load without import errors
+    const { AuthController } = await import("./modules/auth/index.js");
+    const { BookingController } = await import("./modules/bookings/index.js");
+    const { CatalogController } = await import("./modules/catalog/index.js");
+    const { PaymentController } = await import("./modules/payments/index.js");
+    const { ProController } = await import("./modules/pro/index.js");
+    const { AdminController } = await import("./modules/admin/index.js");
+    const { SearchController } = await import("./modules/search/index.js");
+    const { MediaController } = await import("./modules/media/index.js");
+    const { NotificationController } = await import("./modules/notifications/index.js");
+
+    expect(typeof AuthController.prototype.register).toBe("function");
+    expect(typeof BookingController.prototype.list).toBe("function");
+    expect(typeof CatalogController.prototype.list).toBe("function");
+    expect(typeof PaymentController.prototype.initiate).toBe("function");
+    expect(typeof ProController.prototype.dashboard).toBe("function");
+    expect(typeof AdminController.prototype.dashboard).toBe("function");
+    expect(typeof SearchController.prototype.search).toBe("function");
+    expect(typeof MediaController.prototype.upload).toBe("function");
+    expect(typeof NotificationController.prototype.list).toBe("function");
+  });
+
+  it("payout-service module loads without errors", async () => {
+    const { checkPayoutEligibility, createPayoutForBooking, submitPayout } = await import("./lib/payout-service.js");
+    expect(typeof checkPayoutEligibility).toBe("function");
+    expect(typeof createPayoutForBooking).toBe("function");
+    expect(typeof submitPayout).toBe("function");
+  });
+
+  it("worker module loads without errors", async () => {
+    const { handleJob } = await import("./worker.js");
+    expect(typeof handleJob).toBe("function");
+  });
+});
+
+// ─── DB-backed integration tests: require RUN_DB_INTEGRATION=1 ──────────────
+
 const RUN_DB_INTEGRATION = process.env.RUN_DB_INTEGRATION === "1";
 
 describe.runIf(RUN_DB_INTEGRATION)("createApp", () => {

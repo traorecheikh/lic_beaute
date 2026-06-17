@@ -78,7 +78,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                             padding: EdgeInsets.all(20.r),
                             decoration: BoxDecoration(
                               color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(20.r),
+                              borderRadius: BorderRadius.circular(AppRadius.xl.r),
                               border: Border.all(
                                 color: AppColors.outlineVariant,
                               ),
@@ -141,7 +141,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(20.r),
+                        borderRadius: BorderRadius.circular(AppRadius.xl.r),
                         boxShadow: AppShadows.card,
                       ),
                       child: Row(
@@ -232,7 +232,7 @@ class _VoucherCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
         boxShadow: [
           BoxShadow(
             color: background.withValues(alpha: 0.28),
@@ -322,7 +322,7 @@ class _StatusBadge extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: AppColors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(AppRadius.full.r),
       ),
       child: Text(
         label,

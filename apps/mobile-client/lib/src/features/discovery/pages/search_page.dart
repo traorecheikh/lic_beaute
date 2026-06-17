@@ -344,7 +344,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           height: 46.h,
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(14.r),
+                            borderRadius: BorderRadius.circular(AppRadius.md.r),
                             boxShadow: AppShadows.sm,
                           ),
                           child: Row(
@@ -404,7 +404,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         color: _sort != 'relevance'
                             ? AppColors.primary
                             : AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(AppRadius.md.r),
                         boxShadow: AppShadows.sm,
                       ),
                       child: AppIcon(
@@ -643,8 +643,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               separatorBuilder: (_, _) => gapH12,
               itemBuilder: (context, i) {
                 final salon = _results[i];
+                final tag = 'search_salon_image_${salon.id}';
                 return SalonListCard(
                   salon: salon,
+                  heroTag: tag,
                   onTap: () {
                     ref.read(searchEventTrackerProvider).track(
                       eventType:
@@ -654,10 +656,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       salonId: salon.id,
                       position: i,
                     );
-                    context.push(AppRoutes.salon(salon.id));
+                    context.push(
+                      '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent(tag)}',
+                    );
                   },
                   height: 88.h,
-                  radius: 18.r,
+                  radius: AppRadius.xl.r,
                   trailing: Padding(
                     padding: EdgeInsets.only(right: 14.w),
                     child: AppIcon('chevron-right',
@@ -701,8 +705,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   separatorBuilder: (_, _) => SizedBox(width: 12.w),
                   itemBuilder: (context, i) {
                     final salon = module.items.elementAt(i);
+                    final mTag = 'module_salon_image_${salon.id}';
                     return _ModuleSalonCard(
                       salon: salon,
+                      heroTag: mTag,
                       onTap: () {
                         ref.read(searchEventTrackerProvider).track(
                           eventType:
@@ -711,7 +717,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           query: _debouncedQuery,
                           salonId: salon.id,
                         );
-                        context.push(AppRoutes.salon(salon.id));
+                        context.push(
+                          '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent(mTag)}',
+                        );
                       },
                     );
                   },
@@ -779,7 +787,7 @@ class _IdleState extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(AppRadius.md.r),
                         boxShadow: AppShadows.sm,
                         border: Border.all(
                             color: AppColors.outlineVariant, width: 1),
@@ -856,7 +864,7 @@ class _IdleState extends StatelessWidget {
                           horizontal: 16.w, vertical: 10.h),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(AppRadius.md.r),
                         boxShadow: AppShadows.sm,
                         border: Border.all(
                             color: AppColors.outlineVariant, width: 1),
@@ -906,7 +914,7 @@ class _ErrorState extends StatelessWidget {
                     horizontal: 24.w, vertical: 12.h),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(AppRadius.full.r),
                 ),
                 child: Text('Réessayer',
                     style: AppTextStyles.labelLg
@@ -999,7 +1007,7 @@ class _FilterChip extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: active ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(AppRadius.md.r),
           boxShadow: active ? null : AppShadows.sm,
         ),
         child: Row(
@@ -1072,10 +1080,11 @@ class _SortOption extends StatelessWidget {
 // ── Module salon card (horizontal scroll) ───────────────────────────────────
 
 class _ModuleSalonCard extends StatelessWidget {
-  const _ModuleSalonCard({required this.salon, required this.onTap});
+  const _ModuleSalonCard({required this.salon, required this.onTap, this.heroTag});
 
   final dynamic salon;
   final VoidCallback onTap;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -1083,13 +1092,35 @@ class _ModuleSalonCard extends StatelessWidget {
     final category = salon.category as String? ?? '';
     final logoUrl = salon.logoUrl as String?;
 
+    final imgWidget = logoUrl != null && logoUrl.isNotEmpty
+        ? Image.network(
+            logoUrl,
+            height: 80.h,
+            width: 140.w,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(
+              height: 80.h,
+              width: 140.w,
+              color: AppColors.surfaceVariant,
+              child: AppIcon('image',
+                  size: 24, color: AppColors.outline),
+            ),
+          )
+        : Container(
+            height: 80.h,
+            width: 140.w,
+            color: AppColors.surfaceVariant,
+            child: AppIcon('image',
+                size: 24, color: AppColors.outline),
+          );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 140.w,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(AppRadius.xl.r),
           boxShadow: AppShadows.card,
         ),
         child: Column(
@@ -1097,28 +1128,16 @@ class _ModuleSalonCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(16.r)),
-              child: logoUrl != null && logoUrl.isNotEmpty
-                  ? Image.network(
-                      logoUrl,
-                      height: 100.h,
-                      width: 140.w,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
-                        height: 100.h,
-                        width: 140.w,
-                        color: AppColors.surfaceVariant,
-                        child: AppIcon('image',
-                            size: 24, color: AppColors.outline),
+                  BorderRadius.vertical(top: Radius.circular(AppRadius.xl.r)),
+              child: heroTag != null
+                  ? Hero(
+                      tag: heroTag!,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: imgWidget,
                       ),
                     )
-                  : Container(
-                      height: 100.h,
-                      width: 140.w,
-                      color: AppColors.surfaceVariant,
-                      child: AppIcon('image',
-                          size: 24, color: AppColors.outline),
-                    ),
+                  : imgWidget,
             ),
             Padding(
               padding: EdgeInsets.all(8.r),

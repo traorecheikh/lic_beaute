@@ -63,11 +63,13 @@
           message="Tous les dossiers ont été traités ou aucun salon ne correspond aux filtres."
         />
 
-        <div v-else class="bg-white rounded-2xl border border-outline-variant/40 divide-y divide-outline-variant/20 overflow-hidden shadow-sm">
+        <div v-else class="bg-white rounded-2xl border border-outline-variant/40 divide-y divide-outline-variant/20 shadow-sm">
           <article
             v-for="salon in salonsQuery.data.value.items"
             :key="salon.id"
-            class="p-5 hover:bg-neutral-bg/30 transition-all group flex items-center justify-between gap-8"
+            class="p-5 hover:bg-neutral-bg/30 transition-all group flex items-center justify-between gap-8 first:rounded-t-2xl last:rounded-b-2xl relative cursor-pointer"
+            :class="openDropdown === salon.id ? 'z-40' : 'z-10'"
+            @click="router.push(`/admin/salons/${salon.id}`)"
           >
             <div class="flex-1 space-y-3">
               <div class="flex items-center gap-3">
@@ -160,7 +162,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { refDebounced } from "@vueuse/core";
+import { refDebounced, useEventListener } from "@vueuse/core";
 import {
   ArrowRightIcon,
   CheckCircleIcon,
@@ -179,6 +181,9 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import { ApiError, approveSalonRequest, fetchSalons, rejectSalonRequest } from "@/lib/api";
 import { toast } from "vue-sonner";
 import { useAdminAuthStore } from "@/stores/adminAuth";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const auth = useAdminAuthStore();
 const queryClient = useQueryClient();
@@ -227,7 +232,7 @@ function quickAction(id: string, action: string) {
   }
 }
 
-document.addEventListener("click", () => { openDropdown.value = null; });
+useEventListener(document, "click", () => { openDropdown.value = null; });
 
 const salonsQuery = useQuery({
   queryKey: computed(() => ["admin-salons", debouncedSearch.value, status.value, debouncedCity.value, page.value]),

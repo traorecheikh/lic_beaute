@@ -732,3 +732,61 @@ export async function magicLoginPro(token: string, email: string): Promise<{ acc
     return response.json() as Promise<{ accessToken: string; refreshToken: string; expiresInSeconds: number }>;
   });
 }
+
+export async function fetchProPayoutSettings(token: string): Promise<{
+  payoutMethod: "wave_senegal" | "orange_money_senegal" | null;
+  payoutPhone: string | null;
+  payoutName: string | null;
+  payoutVerificationStatus: string;
+  payoutVerifiedAt: string | null;
+}> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/pro/payout-settings`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Erreur lors de la récupération des coordonnées." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Erreur lors de la récupération des coordonnées.");
+    }
+    return response.json();
+  });
+}
+
+export async function updateProPayoutSettings(token: string, payload: any): Promise<any> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/pro/payout-settings`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const p = await response.json().catch(() => ({ message: "Erreur lors de la mise à jour des coordonnées." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, p.code ?? "error", p.message ?? "Erreur lors de la mise à jour des coordonnées.");
+    }
+    return response.json();
+  });
+}
+
+export async function fetchProMerchantPayouts(token: string): Promise<any[]> {
+  return withApiError(async () => {
+    const response = await fetch(`${apiBaseUrl}/api/v1/pro/merchant-payouts`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ message: "Erreur lors de la récupération de l'historique des règlements." })) as { code?: string; message?: string };
+      throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Erreur lors de la récupération de l'historique des règlements.");
+    }
+    return response.json();
+  });
+}
