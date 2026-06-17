@@ -49,7 +49,7 @@ export const config = {
     : fileURLToPath(new URL("../.data/uploads", import.meta.url)),
   workerPollIntervalMs: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 5000),
   workerBatchSize: Number(process.env.WORKER_BATCH_SIZE ?? 25),
-  workerDriver: (process.env.WORKER_DRIVER as "db" | "bull" | "hybrid" | undefined) ?? "hybrid",
+  workerDriver: (process.env.WORKER_DRIVER as "db" | "bull" | "hybrid" | undefined) ?? "bull",
   redisUrl: process.env.REDIS_URL ?? "",
   restrictedFeatureEnabled: (process.env.RESTRICTED_FEATURE ?? "") === "on",
   cacheEnabled: (process.env.CACHE_ENABLED ?? "true") === "true",
@@ -83,20 +83,36 @@ export function validateConfig() {
     if (config.jwtRefreshSecret === "dev-refresh-secret") {
       issues.push("JWT_REFRESH_SECRET is the development default");
     }
-    if (config.paymentDriver === "mock" && isRealProd) {
-      issues.push("PAYMENT_DRIVER=mock in production — all payments will silently succeed without real money");
+    if (config.paymentDriver === "mock") {
+      if (isRealProd) {
+        issues.push("PAYMENT_DRIVER=mock in production — all payments will silently succeed without real money");
+      } else {
+        issues.push("PAYMENT_DRIVER=mock in staging — payments are simulated. Set PAYMENT_DRIVER=paydunya for real payments.");
+      }
     }
-    if (config.storageDriver === "noop" && isRealProd) {
-      issues.push("STORAGE_DRIVER=noop in production — all uploaded files will be silently discarded");
+    if (config.storageDriver === "noop") {
+      if (isRealProd) {
+        issues.push("STORAGE_DRIVER=noop in production — all uploaded files will be silently discarded");
+      } else {
+        issues.push("STORAGE_DRIVER=noop in staging — uploads are discarded. Set STORAGE_DRIVER=local or r2.");
+      }
     }
-    if (config.otpDriver === "noop" && isRealProd) {
-      issues.push("OTP_DRIVER=noop in production — any OTP code will authenticate any phone number");
+    if (config.otpDriver === "noop") {
+      if (isRealProd) {
+        issues.push("OTP_DRIVER=noop in production — any OTP code will authenticate any phone number");
+      } else {
+        issues.push("OTP_DRIVER=noop in staging — OTP is bypassed, any code authenticates. Set OTP_DRIVER=africastalking.");
+      }
     }
-    if (config.emailDriver === "noop" && isRealProd) {
-      issues.push("EMAIL_DRIVER=noop in production — no emails will be sent (invites, confirmations, alerts)");
+    if (config.emailDriver === "noop") {
+      if (isRealProd) {
+        issues.push("EMAIL_DRIVER=noop in production — no emails will be sent (invites, confirmations, alerts)");
+      } else {
+        issues.push("EMAIL_DRIVER=noop in staging — no emails sent. Set EMAIL_DRIVER=brevo, resend, or smtp.");
+      }
     }
-    if (config.pushDriver === "fcm" && isRealProd && !config.fcmServiceAccountJsonB64) {
-      issues.push("FCM_SERVICE_ACCOUNT_JSON_B64 must be set when PUSH_DRIVER=fcm in production");
+    if (config.pushDriver === "fcm" && !config.fcmServiceAccountJsonB64) {
+      issues.push("FCM_SERVICE_ACCOUNT_JSON_B64 is required when PUSH_DRIVER=fcm");
     }
     if (isRealProd && !config.redisUrl) {
       console.warn("[config] WARNING: REDIS_URL not set — rate limiting will use in-memory store (not distributed)");
