@@ -60,6 +60,12 @@ enum PaymentProvider {
   manual
 }
 
+enum DepositMode {
+  none
+  fixed
+  percent
+}
+
 enum BlockedSlotScope {
   salon
   employee
@@ -271,7 +277,7 @@ model Service {
   category            String              @default("general")
   durationMinutes     Int
   priceXof            Int
-  depositMode         String              @default("none")
+  depositMode         DepositMode         @default(none)
   depositAmountXof    Int?
   depositPercent      Int?
   isActive            Boolean             @default(true)
@@ -606,7 +612,7 @@ model PushToken {
   platform   PushPlatform
   deviceId   String
   token      String       @unique
-  role       String?
+  role       Role?
   appVersion String?
   lastSeenAt DateTime?
   revokedAt  DateTime?
