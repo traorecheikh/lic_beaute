@@ -22,8 +22,8 @@
   --color-error: #BA1A1A;
 
   /* ── Typography ──────────────────────────────────────────────── */
-  --font-display: "TT Commons Pro", "Inter", sans-serif;
-  --font-sans: "TT Commons Pro", "Inter", sans-serif;
+  --font-display: "Inter", "TT Commons Pro", sans-serif;
+  --font-sans: "Inter", "TT Commons Pro", sans-serif;
   --font-weight-medium-bold: 620;
 
   /* ── Rounded ─────────────────────────────────────────────────── */
