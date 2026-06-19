@@ -52,9 +52,9 @@ class _AppConnectivityRecoveryState
               constraints: BoxConstraints(maxWidth: 340.w),
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFF4FAF7),
+                color: AppColors.successContainer.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(18.r),
-                border: Border.all(color: const Color(0xFFBFE4D0)),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.black.withValues(alpha: 0.08),

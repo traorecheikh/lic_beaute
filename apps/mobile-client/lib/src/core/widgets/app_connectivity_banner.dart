@@ -23,9 +23,9 @@ class AppConnectivityBanner extends ConsumerWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF7EB),
+          color: AppColors.warningContainer.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: const Color(0xFFF1D49C)),
+          border: Border.all(color: AppColors.warningOutline.withValues(alpha: 0.8)),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.08),
@@ -39,11 +39,11 @@ class AppConnectivityBanner extends ConsumerWidget {
             Container(
               width: 34.r,
               height: 34.r,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFE7BF),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const AppIcon('wifi-off', size: 18, color: Color(0xFF9B6A10)),
+              child: AppIcon('wifi-off', size: 18, color: AppColors.statusPendingText),
             ),
             gapW12,
             Expanded(

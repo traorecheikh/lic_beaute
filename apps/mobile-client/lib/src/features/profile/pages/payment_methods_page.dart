@@ -42,22 +42,35 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   final _phoneController = TextEditingController();
   String _channel = 'wave_senegal';
   bool _saving = false;
-  bool _didSeedPhone = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _didSeedPhone) return;
-      final profile = ref.read(profileProvider).asData?.value;
-      final phone = profile?.phone?.trim();
-      if (phone != null && phone.isNotEmpty) {
-        _didSeedPhone = true;
-        setState(() {
-          _phoneController.text = phone;
-        });
-      }
+      _seedPhoneFromProfile();
     });
+  }
+
+  void _seedPhoneFromProfile() {
+    if (!mounted) return;
+    final profile = ref.read(profileProvider).asData?.value;
+    final rawPhone = profile?.phone?.trim();
+    if (rawPhone == null || rawPhone.isEmpty) return;
+
+    final cleaned = rawPhone.replaceAll(RegExp(r'\s+'), '');
+    for (final country in kPhoneCountries) {
+      final dialDigits = country.dialCode.replaceAll(RegExp(r'\D'), '');
+      if (cleaned.startsWith(country.dialCode) ||
+          cleaned.startsWith(dialDigits)) {
+        final withoutDialCode = cleaned
+            .replaceFirst(country.dialCode, '')
+            .replaceFirst(dialDigits, '');
+        _phoneController.text = withoutDialCode;
+        return;
+      }
+    }
+
+    _phoneController.text = cleaned.replaceAll(RegExp(r'\D'), '');
   }
 
   @override
