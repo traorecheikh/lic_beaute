@@ -112,8 +112,6 @@ dev_dependencies:
   custom_lint: ^0.8.1
   hive_ce_generator: ^1.8.0
 
-  # WCAG live scanner — open Flutter DevTools → accessibility_radar tab
-  accessibility_radar: ^0.3.0
   patrol: ^4.6.0
 
 patrol:
