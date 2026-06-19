@@ -8,6 +8,16 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class ForegroundNotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
+  static bool _firebaseBound = false;
+  static const AndroidNotificationChannel _androidChannel =
+      AndroidNotificationChannel(
+        'high_importance_channel',
+        'Beauté Avenue',
+        description: 'Réservations et actualités salon',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
 
   /// Provides access to the initialized plugin for local notifications
   /// outside of the FCM message flow (e.g., payment confirmation polling).
@@ -21,7 +31,9 @@ class ForegroundNotificationService {
     if (_initialized) return;
     _initialized = true;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -40,61 +52,80 @@ class ForegroundNotificationService {
       },
     );
 
-    const androidChannel = AndroidNotificationChannel(
-      'high_importance_channel',
-      'Beauté Avenue',
-      description: 'Réservations et actualités salon',
-      importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
-    );
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(androidChannel);
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(_androidChannel);
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
 
-    // Background tap
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+    await bindFirebase();
+  }
 
-    // Terminated → app launch
-    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      _handleMessage(initialMessage);
-    }
+  static Future<void> bindFirebase() async {
+    if (_firebaseBound) return;
 
-    // Foreground → show local notification
-    FirebaseMessaging.onMessage.listen((message) {
-      final notification = message.notification;
-      if (notification == null) return;
+    try {
+      // Background tap
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
 
-      final data = message.data;
-      String? payload;
-      if (data.isNotEmpty) {
-        payload = data.entries.map((e) => '${e.key}=${e.value}').join('&');
+      // Terminated → app launch
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
+      if (initialMessage != null) {
+        _handleMessage(initialMessage);
       }
 
-      _plugin.show(
-        id: notification.hashCode,
-        title: notification.title,
-        body: notification.body,
-        notificationDetails: NotificationDetails(
-          android: AndroidNotificationDetails(
-            androidChannel.id,
-            androidChannel.name,
-            channelDescription: androidChannel.description,
-            importance: Importance.high,
-            priority: Priority.high,
-            playSound: true,
+      // Foreground → show local notification
+      FirebaseMessaging.onMessage.listen((message) {
+        final notification = message.notification;
+        if (notification == null) return;
+
+        final data = message.data;
+        String? payload;
+        if (data.isNotEmpty) {
+          payload = data.entries.map((e) => '${e.key}=${e.value}').join('&');
+        }
+
+        _plugin.show(
+          id: notification.hashCode,
+          title: notification.title,
+          body: notification.body,
+          notificationDetails: NotificationDetails(
+            android: AndroidNotificationDetails(
+              _androidChannel.id,
+              _androidChannel.name,
+              channelDescription: _androidChannel.description,
+              importance: Importance.high,
+              priority: Priority.high,
+              playSound: true,
+            ),
+            iOS: const DarwinNotificationDetails(
+              presentAlert: true,
+              presentBadge: true,
+              presentSound: true,
+            ),
           ),
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
-        ),
-        payload: payload,
+          payload: payload,
+        );
+      });
+
+      _firebaseBound = true;
+    } catch (error) {
+      developer.log(
+        '[NOTIFICATION] Firebase hooks unavailable: $error',
+        name: 'push',
       );
-    });
+    }
   }
 
   static void _handleMessage(RemoteMessage message) {

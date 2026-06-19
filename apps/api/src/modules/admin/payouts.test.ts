@@ -62,7 +62,7 @@ describe("admin payout verification workflows", () => {
         payoutVerifiedAt: null,
         updatedAt: new Date("2026-06-19T10:00:00.000Z"),
         staffMembers: [{ id: "owner_1", fullName: "Cheikh", email: "owner@test.sn" }],
-        merchantPayouts: [
+        payouts: [
           { id: "p1", status: "blocked", safeFailureMessage: "salon_payout_details_unverified" },
           { id: "p2", status: "blocked", safeFailureMessage: "Coordonnées de paiement modifiées" },
           { id: "p3", status: "scheduled", safeFailureMessage: null }

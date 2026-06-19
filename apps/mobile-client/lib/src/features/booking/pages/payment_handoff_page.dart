@@ -1,9 +1,9 @@
 import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,7 +11,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_contacts.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/services/foreground_notification_service.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
@@ -90,10 +89,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   bool _resumedCallbackFlow = false;
 
   // ── Background polling state ──────────────────────────────────────────
-  static const _maxBackgroundPollAttempts = 3;
-  static const _backgroundPollInterval = Duration(minutes: 15);
-  Timer? _backgroundPollTimer;
-  int _backgroundPollAttempts = 0;
   String? _backgroundPollPaymentId;
   bool _backgroundPollActive = false;
   bool _backgroundPollExhausted = false;
@@ -284,6 +279,40 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     }
 
     final paydunyaMethodsAsync = ref.watch(availablePaydunyaMethodsProvider);
+
+    // Listen for background polling state changes while widget is mounted.
+    // If widget is disposed (user navigated away), the provider still runs
+    // independently and shows notifications via the notification service.
+    ref.listen(backgroundPollingProvider, (prev, curr) {
+      if (!mounted) return;
+      if (prev == BackgroundPollingStatus.active &&
+          curr == BackgroundPollingStatus.idle) {
+        // Polling completed successfully — navigate to success
+        setState(() => _backgroundPollActive = false);
+        context.pushReplacement(AppRoutes.success(widget.bookingId));
+      } else if (curr == BackgroundPollingStatus.exhausted &&
+          prev != BackgroundPollingStatus.exhausted) {
+        // Polling exhausted — show error UI
+        setState(() {
+          _backgroundPollActive = false;
+          _backgroundPollExhausted = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.paymentCheckFailedTitle),
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: AppStrings.retry,
+              onPressed: () {
+                if (_backgroundPollPaymentId != null) {
+                  _startBackgroundPolling(_backgroundPollPaymentId!);
+                }
+              },
+            ),
+          ),
+        );
+      }
+    });
 
     return AppBookingAsyncScaffold<BookingDetail>(
       bookingId: widget.bookingId,
@@ -1190,9 +1219,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
     if (!mounted) return;
 
-    if (didPay == true) {
-      _startBackgroundPolling(paymentId);
-    } else {
+    // Start background polling in both cases — reconcile is idempotent,
+    // so if the payment went through on the provider side, we'll detect
+    // it silently and notify the user.
+    _startBackgroundPolling(paymentId);
+
+    // Only navigate back if the user said they didn't pay
+    if (didPay != true) {
       if (context.canPop()) {
         context.pop();
       }
@@ -1201,7 +1234,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
   void _startBackgroundPolling(String paymentId) {
     _backgroundPollPaymentId = paymentId;
-    _backgroundPollAttempts = 0;
     _backgroundPollExhausted = false;
     setState(() => _backgroundPollActive = true);
 
@@ -1210,144 +1242,21 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       AppStrings.paymentBackgroundSubtitle,
     );
 
-    _scheduleNextBackgroundPoll();
-  }
-
-  void _scheduleNextBackgroundPoll() {
-    _backgroundPollTimer?.cancel();
-    _backgroundPollTimer = Timer(_backgroundPollInterval, () {
-      _runBackgroundPollCheck();
-    });
-  }
-
-  Future<void> _runBackgroundPollCheck() async {
-    final paymentId = _backgroundPollPaymentId;
-    if (paymentId == null || !mounted) return;
-
-    _backgroundPollAttempts++;
-    try {
-      final status = await ref
-          .read(paymentInitiateProvider.notifier)
-          .reconcile(paymentId);
-
-      if (!mounted) return;
-
-      if (status == 'succeeded') {
-        _onBackgroundPollSuccess();
-        return;
-      }
-
-      if (status == 'failed' || status == 'refunded') {
-        if (_backgroundPollAttempts >= _maxBackgroundPollAttempts) {
-          _onBackgroundPollExhausted();
-          return;
-        }
-        _scheduleNextBackgroundPoll();
-        return;
-      }
-
-      if (_backgroundPollAttempts >= _maxBackgroundPollAttempts) {
-        _onBackgroundPollExhausted();
-        return;
-      }
-
-      _scheduleNextBackgroundPoll();
-    } catch (_) {
-      if (!mounted) return;
-      if (_backgroundPollAttempts >= _maxBackgroundPollAttempts) {
-        _onBackgroundPollExhausted();
-      } else {
-        _scheduleNextBackgroundPoll();
-      }
-    }
-  }
-
-  void _onBackgroundPollSuccess() {
-    _cancelBackgroundPolling();
-    if (mounted) {
-      // Show local notification (payment confirmed while in background)
-      _showPaymentConfirmedNotification();
-      // Navigate immediately
-      context.pushReplacement(AppRoutes.success(widget.bookingId));
-    }
-  }
-
-  void _onBackgroundPollExhausted() {
-    _cancelBackgroundPolling();
-    if (!mounted) return;
-    setState(() => _backgroundPollExhausted = true);
-
-    // Show notification that payment could not be confirmed
-    _showPaymentFailedNotification();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppStrings.paymentCheckFailedTitle),
-          duration: const Duration(seconds: 6),
-          action: SnackBarAction(
-            label: AppStrings.retry,
-            onPressed: () =>
-                _startBackgroundPolling(_backgroundPollPaymentId!),
-          ),
-        ),
-      );
-    }
+    ref.read(backgroundPollingProvider.notifier).start(
+      paymentId: paymentId,
+      bookingId: widget.bookingId,
+    );
   }
 
   void _cancelBackgroundPolling() {
-    _backgroundPollTimer?.cancel();
-    _backgroundPollTimer = null;
+    // Don't cancel the provider — it manages its own timer and survives
+    // widget disposal (e.g. user taps "Non" and pops back). The provider's
+    // start() method cancels any previous timer when a new session begins.
     if (mounted) {
       setState(() {
         _backgroundPollActive = false;
       });
     }
-  }
-
-  void _showPaymentConfirmedNotification() {
-    final plugin = ForegroundNotificationService.plugin;
-    plugin.show(
-      id: 0,
-      title: AppStrings.paymentConfirmedNotifTitle,
-      body: AppStrings.paymentConfirmedNotifBody,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'high_importance_channel',
-          'Beauté Avenue',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentSound: true,
-        ),
-      ),
-      payload: 'type=payment_confirmed&bookingId=${widget.bookingId}',
-    );
-  }
-
-  void _showPaymentFailedNotification() {
-    final bookingId = widget.bookingId;
-    final plugin = ForegroundNotificationService.plugin;
-    plugin.show(
-      id: 1,
-      title: AppStrings.paymentCheckFailedTitle,
-      body: AppStrings.paymentCheckFailedSubtitle,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'high_importance_channel',
-          'Beauté Avenue',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentSound: true,
-        ),
-      ),
-      payload: 'type=payment_failed&bookingId=$bookingId',
-    );
   }
 
   // ── OTP Dialog ──────────────────────────────────────────────────────────

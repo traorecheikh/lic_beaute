@@ -208,7 +208,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             if (!_canResend)
               Center(
                 child: Text(
-                  '${AppStrings.authResendCodePrefix}${_secondsRemaining}${AppStrings.authResendCodeSuffix}',
+                  '${AppStrings.authResendCodePrefix}$_secondsRemaining${AppStrings.authResendCodeSuffix}',
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),

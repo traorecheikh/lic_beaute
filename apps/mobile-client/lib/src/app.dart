@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toastification/toastification.dart';
 
 import 'core/reactivity/app_reactivity.dart';
+import 'core/services/engagement_notification_service.dart';
 import 'core/services/foreground_notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_connectivity_banner.dart';
@@ -22,7 +23,10 @@ class ClientApp extends ConsumerWidget {
 
     // Wire notification tap handler — runs once
     ForegroundNotificationService.onNotificationTap = (data) {
-      developer.log('[NOTIFICATION] tapped with type=${data['type']}', name: 'push');
+      developer.log(
+        '[NOTIFICATION] tapped with type=${data['type']}',
+        name: 'push',
+      );
       final type = data['type'];
       if (type == null) {
         router.go(AppRoutes.bookingsList);
@@ -32,6 +36,7 @@ class ClientApp extends ConsumerWidget {
         case 'booking_reminder':
         case 'new_booking_salon':
           router.go(AppRoutes.bookingsList);
+          return;
         case 'payment_confirmed':
           final bookingId = data['bookingId'];
           if (bookingId != null && bookingId.isNotEmpty) {
@@ -39,6 +44,7 @@ class ClientApp extends ConsumerWidget {
           } else {
             router.go(AppRoutes.bookingsList);
           }
+          return;
         case 'payment_failed':
           final bookingId = data['bookingId'];
           if (bookingId != null && bookingId.isNotEmpty) {
@@ -46,8 +52,22 @@ class ClientApp extends ConsumerWidget {
           } else {
             router.go(AppRoutes.bookingsList);
           }
+          return;
+        case 'engagement_welcome':
+        case 'engagement_reengagement':
+          router.go(AppRoutes.home);
+          return;
+        case 'engagement_prestige_salon':
+          final salonId = data['salonId'];
+          if (salonId != null && salonId.isNotEmpty) {
+            router.go(AppRoutes.salon(salonId));
+          } else {
+            router.go(AppRoutes.salonsPrestige);
+          }
+          return;
         default:
           router.go(AppRoutes.notifications);
+          return;
       }
     };
 
@@ -108,10 +128,16 @@ class _AppLifecycleRefresh extends ConsumerStatefulWidget {
 
 class _AppLifecycleRefreshState extends ConsumerState<_AppLifecycleRefresh>
     with WidgetsBindingObserver {
+  bool _backgroundHandled = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      EngagementNotificationService.handleAppResumed();
+      EngagementNotificationService.syncPrestigeCandidate(ref);
+    });
   }
 
   @override
@@ -123,7 +149,16 @@ class _AppLifecycleRefreshState extends ConsumerState<_AppLifecycleRefresh>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _backgroundHandled = false;
+      EngagementNotificationService.handleAppResumed();
+      EngagementNotificationService.syncPrestigeCandidate(ref);
       ref.read(appReactivityProvider).refreshAll();
+      return;
+    }
+
+    if (state == AppLifecycleState.paused && !_backgroundHandled) {
+      _backgroundHandled = true;
+      EngagementNotificationService.handleAppBackgrounded();
     }
   }
 

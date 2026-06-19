@@ -13,6 +13,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_phone_field.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_resource_view.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -37,6 +38,7 @@ class ProfileBootstrapPage extends ConsumerStatefulWidget {
 class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   bool _saving = false;
   bool _uploadingAvatar = false;
@@ -45,6 +47,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
   @override
   void dispose() {
     _fullNameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -185,6 +188,11 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                         return null;
                       },
                     ),
+                    SizedBox(height: 20.h),
+                    AppPhoneField(
+                      controller: _phoneController,
+                      labelText: AppStrings.phoneLabel,
+                    ),
 
                     SizedBox(height: 48.h),
                     AppButton.primary(
@@ -282,8 +290,10 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     setState(() => _saving = true);
 
     try {
+      final phoneText = _phoneController.text.trim();
       await ref.read(profileProvider.notifier).updateProfile(
             fullName: _fullNameController.text.trim(),
+            phone: phoneText.isNotEmpty ? phoneText : null,
           );
       if (!mounted) return;
       await LocationPromptManager.markJustRegistered();

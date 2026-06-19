@@ -17,6 +17,7 @@ import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../models/account_models.dart';
 import '../providers/payment_methods_provider.dart';
+import '../providers/profile_provider.dart';
 import '../../booking/providers/payment_methods_provider.dart'
     as booking_payment_methods;
 import '../widgets/payment_tile.dart';
@@ -41,6 +42,23 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
   final _phoneController = TextEditingController();
   String _channel = 'wave_senegal';
   bool _saving = false;
+  bool _didSeedPhone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _didSeedPhone) return;
+      final profile = ref.read(profileProvider).asData?.value;
+      final phone = profile?.phone?.trim();
+      if (phone != null && phone.isNotEmpty) {
+        _didSeedPhone = true;
+        setState(() {
+          _phoneController.text = phone;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {

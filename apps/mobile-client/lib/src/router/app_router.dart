@@ -42,7 +42,6 @@ import '../features/profile/pages/about_page.dart';
 import '../features/profile/pages/faq_page.dart';
 import 'guards.dart';
 import 'listenable.dart';
-import 'observers.dart';
 import 'shell_scaffold.dart';
 import 'splash_page.dart';
 
@@ -121,7 +120,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: sessionListenable,
-    observers: [AppRouteRefreshObserver(ref)],
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final location = state.matchedLocation;

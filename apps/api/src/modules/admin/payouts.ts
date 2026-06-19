@@ -80,7 +80,7 @@ export async function listPayoutVerificationQueue(request: FastifyRequest, reply
           select: { id: true, fullName: true, email: true },
           take: 1
         },
-        merchantPayouts: {
+        payouts: {
           select: { id: true, status: true, safeFailureMessage: true },
           orderBy: { createdAt: "desc" }
         }
@@ -91,8 +91,8 @@ export async function listPayoutVerificationQueue(request: FastifyRequest, reply
     ok(
       reply,
       salons.map((salon) => {
-        const merchantPayouts = salon.merchantPayouts as VerificationQueuePayout[];
-        const blockedPayouts = merchantPayouts.filter((payout) => payout.status === "blocked");
+        const payouts = salon.payouts as VerificationQueuePayout[];
+        const blockedPayouts = payouts.filter((payout) => payout.status === "blocked");
         const payoutsBlockedForVerification = blockedPayouts.filter(
           (payout) =>
             payout.safeFailureMessage === "salon_payout_details_unverified" ||
@@ -114,7 +114,7 @@ export async function listPayoutVerificationQueue(request: FastifyRequest, reply
           updatedAt: salon.updatedAt.toISOString(),
           blockedPayoutCount: blockedPayouts.length,
           blockedForVerificationCount: payoutsBlockedForVerification.length,
-          totalPayoutCount: merchantPayouts.length
+          totalPayoutCount: payouts.length
         };
       })
     );

@@ -65,14 +65,13 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     String? preferredLanguage,
   }) async {
     final payload = <String, dynamic>{
-      if (fullName != null) 'fullName': fullName,
-      if (phone != null) 'phone': phone,
-      if (city != null) 'city': city,
-      if (preferredContactChannel != null)
-        'preferredContactChannel': preferredContactChannel,
-      if (pushOptIn != null) 'pushOptIn': pushOptIn,
-      if (marketingOptIn != null) 'marketingOptIn': marketingOptIn,
-      if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
+      'fullName': ?fullName,
+      'phone': ?phone,
+      'city': ?city,
+      'preferredContactChannel': ?preferredContactChannel,
+      'pushOptIn': ?pushOptIn,
+      'marketingOptIn': ?marketingOptIn,
+      'preferredLanguage': ?preferredLanguage,
     };
     final previous = state.asData?.value;
     if (previous != null) {
@@ -124,13 +123,31 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
           ClientAccountProfile.fromJson(data, pendingSync: false),
         );
       }
-    } on DioException {
-      await ref
-          .read(outboxProvider.notifier)
-          .enqueue(type: 'profile_patch', payload: payload);
-      if (previous != null) {
-        state = AsyncData(previous.copyWith(pendingSync: true));
+    } on DioException catch (error) {
+      // Only fall back to pending sync for transient network errors.
+      // Server errors (4xx) should surface immediately — retrying won't help.
+      final isTransient = switch (error.type) {
+        DioExceptionType.connectionError ||
+        DioExceptionType.connectionTimeout ||
+        DioExceptionType.sendTimeout ||
+        DioExceptionType.receiveTimeout =>
+          true,
+        DioExceptionType.badResponse => false,
+        DioExceptionType.cancel ||
+        DioExceptionType.badCertificate ||
+        DioExceptionType.unknown =>
+          false,
+      };
+      if (isTransient) {
+        await ref
+            .read(outboxProvider.notifier)
+            .enqueue(type: 'profile_patch', payload: payload);
+        if (previous != null) {
+          state = AsyncData(previous.copyWith(pendingSync: true));
+        }
+        return;
       }
+      rethrow;
     }
   }
 
