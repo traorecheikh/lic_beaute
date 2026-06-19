@@ -17,9 +17,9 @@ abstract final class AppRadius {
   static const double lg = 16;
   static const double xl = 24;
   static const double xxl = 32;
-  /// Use [double.infinity] for fully rounded capsule/stadium shapes.
-  /// BorderRadius.circular(double.infinity) renders as a stadium.
-  static const double full = double.infinity;
+  /// Use a large finite value for fully rounded capsule/stadium shapes.
+  /// This effectively creates pill/stadium-shaped corners.
+  static const double full = 9999;
 }
 
 extension AppSpacingExtension on double {

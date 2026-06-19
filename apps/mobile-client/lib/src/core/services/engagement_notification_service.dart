@@ -288,7 +288,7 @@ class EngagementNotificationService {
     return EngagementCopy(
       title: useName ? 'Salut $firstName' : 'Salut',
       body: _pick(now, const [
-        'On est la si tu veux reserver.',
+        'On est là si tu veux réserver.',
         'On peut te trouver un bon salon.',
         'Ton prochain rendez-vous peut se faire ici.',
       ]),
@@ -305,8 +305,8 @@ class EngagementNotificationService {
       title: useName ? 'Coucou $firstName' : 'Un petit coucou',
       body: _pick(now, const [
         'Tu veux tester un nouveau salon ?',
-        'Tu cherches une idee pour ton prochain rendez-vous ?',
-        'Passe voir ce qu il y a de nouveau.',
+        'Tu cherches une idée pour ton prochain rendez-vous ?',
+        'Passe voir ce qu\'il y a de nouveau.',
       ]),
     );
   }
@@ -360,7 +360,7 @@ class EngagementNotificationService {
       title: 'Nouveau salon prestige',
       body: city != null && city.trim().isNotEmpty
           ? '$salonName est maintenant dispo vers $city.'
-          : '$salonName est maintenant pres de vous.',
+          : '$salonName est maintenant près de vous.',
     );
   }
 

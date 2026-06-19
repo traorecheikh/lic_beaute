@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_contacts.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -129,7 +132,45 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 loading: _submitting,
                 onTap: _requestCode,
               ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 16.h),
+              // Legal acceptance
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: AppTextStyles.bodyXs.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  children: [
+                    TextSpan(text: '${AppStrings.legalAcceptance} '),
+                    TextSpan(
+                      text: AppStrings.termsLabel,
+                      style: AppTextStyles.bodyXs.copyWith(
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => launchUrl(
+                              Uri.parse(AppContacts.termsUrl),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                    ),
+                    TextSpan(text: ' ${AppStrings.legalAcceptanceAnd} '),
+                    TextSpan(
+                      text: AppStrings.privacyLabel,
+                      style: AppTextStyles.bodyXs.copyWith(
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => launchUrl(
+                              Uri.parse(AppContacts.privacyUrl),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
               Center(
                 child: GestureDetector(
                   onTap: () {
@@ -190,6 +231,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       controller: _otpController,
                       keyboardType: TextInputType.number,
                       autofocus: true,
+                      autofillHints: const [AutofillHints.oneTimeCode],
                       defaultPinTheme: PinTheme(
                         width: 48.w,
                         height: 56.h,

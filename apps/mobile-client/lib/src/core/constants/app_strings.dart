@@ -333,6 +333,10 @@ abstract final class AppStrings {
   static const dueDate = 'Échéance ';
   static const platformBy = 'Plateforme exploitée par NumuConnect';
   static const legalTitle = 'Mentions Légales';
+  static const legalAcceptance = "En créant un compte, vous acceptez nos";
+  static const termsLabel = "Conditions Générales d'Utilisation";
+  static const privacyLabel = 'Politique de Confidentialité';
+  static const legalAcceptanceAnd = 'et notre';
   static const supportTitle = 'Support & Assistance';
   static const loadContactsError = 'Impossible de charger les contacts.';
   static const menuNotificationPreferences = 'Préférences de notifications';

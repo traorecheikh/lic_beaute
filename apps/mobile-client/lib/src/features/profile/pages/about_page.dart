@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/app_contacts.dart';
 import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/providers/support_config_provider.dart';
+import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_top_bar.dart';
 
@@ -60,6 +64,29 @@ class AboutPage extends ConsumerWidget {
                 title: AppStrings.contactUs,
                 body: '${config.email}\n${config.phone}\nDakar, Sénégal',
               ),
+              gapH12,
+              // Legal links
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.xl.r),
+                  border: Border.all(color: AppColors.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    _LegalLinkTile(
+                      label: AppStrings.termsLabel,
+                      url: AppContacts.termsUrl,
+                    ),
+                    Divider(height: 1, color: AppColors.outlineVariant, indent: 20.w, endIndent: 20.w),
+                    _LegalLinkTile(
+                      label: AppStrings.privacyLabel,
+                      url: AppContacts.privacyUrl,
+                    ),
+                  ],
+                ),
+              ),
               gapH32,
               Text(
                 '© 2025 Beauté Avenue. Tous droits réservés.',
@@ -102,6 +129,30 @@ class _InfoCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LegalLinkTile extends StatelessWidget {
+  const _LegalLinkTile({required this.label, required this.url});
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppPressable(
+      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label, style: AppTextStyles.bodyMd),
+            ),
+            AppIcon('external-link', size: 18, color: AppColors.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }

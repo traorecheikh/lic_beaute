@@ -1,7 +1,7 @@
 name: beauteavenue_mobile_client
 description: Client mobile app for Beauté Avenue.
 publish_to: none
-version: 0.5.2
+version: 0.5.3
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -117,9 +117,9 @@ dev_dependencies:
 patrol:
   app_name: Beauté Avenue
   android:
-    package_name: sn.lic.beauteavenu
+    package_name: sn.numuconnect.beauteavenue
   ios:
-    bundle_id: sn.lic.beauteavenu
+    bundle_id: sn.numuconnect.beauteavenue
 
 flutter_launcher_icons:
   image_path: "assets/logo_foreground.png"

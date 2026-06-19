@@ -164,6 +164,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                     controller: _otpController,
                     keyboardType: TextInputType.number,
                     autofocus: true,
+                    autofillHints: const [AutofillHints.oneTimeCode],
                     defaultPinTheme: PinTheme(
                       width: 48.w,
                       height: 56.h,
