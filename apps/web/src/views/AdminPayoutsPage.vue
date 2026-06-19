@@ -32,6 +32,146 @@
       </div>
     </header>
 
+    <section class="panel-clean p-6 md:p-8 space-y-6 border border-outline-variant/30">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div class="space-y-2 max-w-3xl">
+          <h3 class="section-label">Validation des Coordonnées de Versement</h3>
+          <p class="row-primary">File de contrôle propriétaire</p>
+          <p class="row-meta">
+            Cette file regroupe tous les salons dont le portefeuille de versement doit être approuvé ou revu.
+            L'approbation ou le rejet envoie maintenant une notification in-app et un email au propriétaire.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 xl:min-w-[420px]">
+          <input
+            v-model="verificationSearch"
+            class="input-shell bg-white h-10 border-outline-variant/60 rounded-full text-[12px] px-4"
+            placeholder="Salon, gérant ou téléphone..."
+          />
+          <select v-model="verificationStatusFilter" class="input-shell bg-white h-10 border-outline-variant/60 rounded-full text-[12px] px-4 sm:w-[180px]">
+            <option value="all">Tous les statuts</option>
+            <option value="unverified">À approuver</option>
+            <option value="rejected">Rejetés</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="panel-clean p-5 bg-surface border-l-4 border-l-secondary">
+          <p class="metric-label mb-2">À approuver</p>
+          <p class="metric-value">{{ verificationPendingCount }}</p>
+          <p class="row-meta mt-2">Salons configurés mais non validés.</p>
+        </div>
+        <div class="panel-clean p-5 bg-surface border-l-4 border-l-error">
+          <p class="metric-label mb-2">Rejetés</p>
+          <p class="metric-value">{{ verificationRejectedCount }}</p>
+          <p class="row-meta mt-2">Coordonnées renvoyées au propriétaire.</p>
+        </div>
+        <div class="panel-clean p-5 bg-surface border-l-4 border-l-primary">
+          <p class="metric-label mb-2">Versements impactés</p>
+          <p class="metric-value">{{ verificationBlockedPayoutCount }}</p>
+          <p class="row-meta mt-2">Règlements bloqués par absence de validation.</p>
+        </div>
+      </div>
+
+      <div v-if="verificationQueueQuery.isLoading.value" class="py-8 text-center text-sm text-cocoa/60">
+        Chargement des portefeuilles à valider...
+      </div>
+
+      <StatePanel
+        v-else-if="verificationQueueQuery.isError.value"
+        eyebrow="Validation indisponible"
+        title="Impossible de charger la file de contrôle"
+        message="La file de validation des coordonnées n'a pas pu être récupérée."
+        action-label="Réessayer"
+        @action="verificationQueueQuery.refetch"
+      />
+
+      <StatePanel
+        v-else-if="filteredVerificationQueue.length === 0"
+        eyebrow="Aucune attente"
+        title="Aucune coordonnée à vérifier"
+        message="Aucun salon ne correspond aux filtres de validation sélectionnés."
+      />
+
+      <div v-else class="space-y-3">
+        <article
+          v-for="item in filteredVerificationQueue"
+          :key="item.salonId"
+          class="panel-clean p-5 hover:bg-neutral-bg/20 transition-colors"
+        >
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div class="space-y-4">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="row-primary">{{ item.salonName }}</p>
+                <StatusBadge :value="item.payoutVerificationStatus" />
+                <span class="row-meta">{{ item.city }}</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-xs">
+                <div>
+                  <p class="section-label mb-1">Propriétaire</p>
+                  <p class="row-primary">{{ item.ownerName }}</p>
+                  <p class="row-meta">{{ item.ownerEmail || "Email non renseigné" }}</p>
+                </div>
+                <div>
+                  <p class="section-label mb-1">Portefeuille</p>
+                  <p class="row-primary">{{ payoutMethodLabel(item.payoutMethod) }}</p>
+                  <p class="row-meta">{{ item.payoutPhoneMasked || "—" }}</p>
+                </div>
+                <div>
+                  <p class="section-label mb-1">Bénéficiaire</p>
+                  <p class="row-primary">{{ item.payoutName || "—" }}</p>
+                  <p class="row-meta">Mis à jour le {{ formatDate(item.updatedAt) }}</p>
+                </div>
+                <div>
+                  <p class="section-label mb-1">Impact</p>
+                  <p class="row-primary">{{ item.blockedForVerificationCount }} bloqué(s) pour validation</p>
+                  <p class="row-meta">{{ item.blockedPayoutCount }} blocage(s) total, {{ item.totalPayoutCount }} versement(s) liés</p>
+                </div>
+              </div>
+
+              <p class="text-xs text-cocoa/60 leading-relaxed max-w-3xl">
+                <span v-if="item.payoutVerificationStatus === 'rejected'">
+                  Le propriétaire doit corriger ses coordonnées avant reprise des versements.
+                </span>
+                <span v-else>
+                  Une approbation débloque automatiquement les règlements gelés pour absence de validation.
+                </span>
+                <span v-if="item.payoutVerifiedAt">
+                  Dernière validation le {{ formatDate(item.payoutVerifiedAt) }}.
+                </span>
+              </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row xl:flex-col gap-2 xl:min-w-[210px]">
+              <button
+                class="btn-primary px-4 py-2 text-[11px]"
+                :disabled="actionExecuting"
+                @click="verifyWallet(item.salonId, 'verified')"
+              >
+                Approuver et notifier
+              </button>
+              <button
+                class="btn-secondary px-4 py-2 text-[11px] border-rose-200 hover:bg-rose-50 text-rose-700"
+                :disabled="actionExecuting"
+                @click="verifyWallet(item.salonId, 'rejected')"
+              >
+                Rejeter et notifier
+              </button>
+              <button
+                class="btn-secondary px-4 py-2 text-[11px]"
+                @click="openSalon(item.salonId)"
+              >
+                Ouvrir le dossier salon
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <div v-if="payoutsQuery.isLoading.value" class="py-10 text-center text-sm text-cocoa/60">
       Chargement des règlements...
     </div>
@@ -345,18 +485,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 import dayjs from "dayjs";
 import { formatMoneyXof } from "@beauteavenue/shared-ts";
 import { toast } from "vue-sonner";
 import { XMarkIcon } from "@heroicons/vue/24/outline";
+import { useRouter } from "vue-router";
 
 import { useAdminAuthStore } from "@/stores/adminAuth";
 import StatusBadge from "@/components/StatusBadge.vue";
 import Modal from "@/components/Modal.vue";
 import StatePanel from "@/components/StatePanel.vue";
 import {
+  fetchAdminPayoutVerificationQueue,
   fetchAdminMerchantPayouts,
   fetchAdminMerchantPayoutDetail,
   reconcileAdminPayout,
@@ -366,11 +508,50 @@ import {
   verifySalonPayoutSettings
 } from "@/lib/api";
 
+const router = useRouter();
 const auth = useAdminAuthStore();
 
 // Filters state
 const statusFilter = ref<string>("");
 const salonSearch = ref<string>("");
+const verificationSearch = ref("");
+const verificationStatusFilter = ref<"all" | "unverified" | "rejected">("all");
+
+const verificationQueueQuery = useQuery({
+  queryKey: ["admin-payout-verification-queue"],
+  queryFn: () => fetchAdminPayoutVerificationQueue(auth.accessToken ?? "", { status: "all" }),
+  enabled: computed(() => Boolean(auth.accessToken))
+});
+
+const filteredVerificationQueue = computed(() => {
+  let list = verificationQueueQuery.data.value ?? [];
+  if (verificationStatusFilter.value !== "all") {
+    list = list.filter((item) => item.payoutVerificationStatus === verificationStatusFilter.value);
+  }
+  if (verificationSearch.value.trim()) {
+    const search = verificationSearch.value.trim().toLowerCase();
+    list = list.filter((item) =>
+      [
+        item.salonName,
+        item.ownerName,
+        item.ownerEmail ?? "",
+        item.payoutPhoneMasked ?? "",
+        item.payoutName ?? ""
+      ].some((value) => value.toLowerCase().includes(search))
+    );
+  }
+  return list;
+});
+
+const verificationPendingCount = computed(
+  () => (verificationQueueQuery.data.value ?? []).filter((item) => item.payoutVerificationStatus === "unverified").length
+);
+const verificationRejectedCount = computed(
+  () => (verificationQueueQuery.data.value ?? []).filter((item) => item.payoutVerificationStatus === "rejected").length
+);
+const verificationBlockedPayoutCount = computed(() =>
+  (verificationQueueQuery.data.value ?? []).reduce((sum, item) => sum + item.blockedForVerificationCount, 0)
+);
 
 // Main payouts query
 const payoutsQuery = useQuery({
@@ -449,6 +630,7 @@ async function confirmAction() {
     // Refresh queries
     detailQuery.refetch();
     payoutsQuery.refetch();
+    verificationQueueQuery.refetch();
     actionPrompt.value = null;
   } catch (error) {
     toast.error(error instanceof Error ? error.message : "Échec de l'action administrative.");
@@ -476,9 +658,14 @@ async function verifyWallet(salonId: string, status: "verified" | "rejected") {
   actionExecuting.value = true;
   try {
     await verifySalonPayoutSettings(auth.accessToken ?? "", salonId, status);
-    toast.success(status === "verified" ? "Coordonnées de virement approuvées." : "Coordonnées de virement rejetées.");
+    toast.success(
+      status === "verified"
+        ? "Coordonnées approuvées. Le propriétaire a été notifié."
+        : "Coordonnées rejetées. Le propriétaire a été notifié."
+    );
     detailQuery.refetch();
     payoutsQuery.refetch();
+    verificationQueueQuery.refetch();
   } catch (error) {
     toast.error(error instanceof Error ? error.message : "Échec de validation des coordonnées.");
   } finally {
@@ -487,6 +674,16 @@ async function verifyWallet(salonId: string, status: "verified" | "rejected") {
 }
 
 // Helpers
+function payoutMethodLabel(method: "wave_senegal" | "orange_money_senegal" | null | undefined): string {
+  if (method === "wave_senegal") return "Wave Sénégal";
+  if (method === "orange_money_senegal") return "Orange Money Sénégal";
+  return "Méthode non configurée";
+}
+
+function openSalon(salonId: string) {
+  void router.push(`/admin/salons/${salonId}`);
+}
+
 function formatDate(d: string | null | undefined): string {
   if (!d) return "—";
   return dayjs(d).format("DD/MM/YYYY [à] HH:mm");

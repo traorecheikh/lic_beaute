@@ -76,6 +76,7 @@ describe("AdminController auth failures", () => {
     await c.upsertDocument({ body: {} } as never, rep);
     await c.deleteDocument({ params: { id: "d1" } } as never, rep);
     // Merchant payout endpoints
+    await c.listPayoutVerificationQueue({ query: {} } as never, rep);
     await c.listMerchantPayoutsAdmin({ query: {} } as never, rep);
     await c.payoutDetail({ params: { payoutId: "p1" } } as never, rep);
     await c.reconcilePayout({ params: { payoutId: "p1" } } as never, rep);

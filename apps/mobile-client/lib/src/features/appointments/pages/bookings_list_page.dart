@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_empty_state.dart';
@@ -38,9 +39,9 @@ class BookingsListPage extends ConsumerWidget {
       unselectedLabelColor: AppColors.onSurfaceVariant,
       labelStyle: AppTextStyles.labelMd,
       unselectedLabelStyle: AppTextStyles.labelMd,
-      tabs: const [
-        Tab(text: 'À VENIR'),
-        Tab(text: 'PASSÉS'),
+      tabs: [
+        Tab(text: AppStrings.bookingsTabUpcoming),
+        Tab(text: AppStrings.bookingsTabPast),
       ],
     );
 
@@ -60,7 +61,7 @@ class BookingsListPage extends ConsumerWidget {
                   0,
                 ),
                 child: Text(
-                  'Mes Rendez-vous',
+                  AppStrings.bookingsPageHeading,
                   style: AppTextStyles.headlineMd,
                 ),
               ),
@@ -76,8 +77,8 @@ class BookingsListPage extends ConsumerWidget {
           body: AppAsyncView(
             value: bookingsAsync,
             keepDataOnReload: true,
-            errorTitle: 'Impossible de charger les rendez-vous',
-            serverTitle: 'Le suivi des rendez-vous est indisponible',
+            errorTitle: AppStrings.loadBookingsError,
+            serverTitle: AppStrings.bookingsServerTitle,
             onRetry: refreshBookings,
             builder: (resource) {
               final all =
@@ -185,6 +186,9 @@ class _BookingTab extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 120.h,
+          ),
           children: [
             if (staleAt != null)
               Padding(
@@ -199,14 +203,13 @@ class _BookingTab extends StatelessWidget {
                   children: [
                     AppEmptyState(
                       icon: 'calendar',
-                      title: 'Aucun rendez-vous',
-                      subtitle:
-                          'Vos réservations à venir et passées apparaîtront ici.',
+                      title: AppStrings.bookingsEmptyTitle,
+                      subtitle: AppStrings.bookingsEmptySubtitle,
                       compact: false,
                     ),
                     gapH16,
                     AppButton.primary(
-                      label: 'Découvrir des salons',
+                      label: AppStrings.discoverSalonsCta,
                       onPressed: () => context.go(AppRoutes.home),
                       isFullWidth: false,
                       width: 220.w,
@@ -227,7 +230,7 @@ class _BookingTab extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.fromLTRB(20.w, 20.w, 20.w, MediaQuery.of(context).padding.bottom + 120.h),
         itemCount: items.length + (staleAt != null ? 1 : 0),
         separatorBuilder: (_, _) => gapH16,
         itemBuilder: (_, i) {

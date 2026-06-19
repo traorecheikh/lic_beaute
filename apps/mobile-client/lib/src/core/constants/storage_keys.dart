@@ -27,4 +27,6 @@ abstract final class StorageKeys {
   static const outboxItems = 'outbox_items';
   static const onboardingCompleted = 'onboarding_completed';
   static const recentSearches = 'recent_searches';
+  static const favoritesList = 'favorites_list';
+  static const favoriteIds = 'favorite_ids';
 }

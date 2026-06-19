@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_badge.dart';
 import '../../../core/widgets/app_empty_state.dart';
@@ -21,7 +22,7 @@ class MembershipsPage extends ConsumerWidget {
     final benefitsAsync = ref.watch(benefitsProvider);
     return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: const AppTopBar(title: 'Mes abonnements', showBackButton: true),
+      appBar: AppTopBar(title: AppStrings.membershipsTitle, showBackButton: true),
       body: RefreshIndicator.adaptive(
         color: AppColors.primary,
         onRefresh: () => ref.refresh(benefitsProvider.future),
@@ -32,7 +33,7 @@ class MembershipsPage extends ConsumerWidget {
           child: Padding(
             padding: EdgeInsets.all(20.r),
             child: AppErrorState(
-              title: 'Impossible de charger vos avantages',
+              title: AppStrings.loadBenefitsError,
               message: error.toString(),
               onRetry: () => ref.refresh(benefitsProvider.future),
             ),
@@ -46,9 +47,9 @@ class MembershipsPage extends ConsumerWidget {
                 padding: EdgeInsets.all(20.r),
                 child: AppEmptyState(
               icon: 'sparkle',
-              title: 'Aucun abonnement',
+              title: AppStrings.noSubscriptionTitle,
               subtitle:
-                  'Vos abonnements et packages attribués par les salons apparaîtront ici.',
+              AppStrings.noSubscriptionSubtitle,
             ),
               ),
             );

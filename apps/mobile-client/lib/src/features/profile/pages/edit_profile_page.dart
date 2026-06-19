@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_async_view.dart';
@@ -54,11 +55,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final optionsAsync = ref.watch(profileOptionsProvider);
 
     return AppScaffold(
-      appBar: const AppTopBar(title: 'Modifier mon profil'),
+      appBar: AppTopBar(title: AppStrings.editProfileTitle),
       body: AppAsyncView(
         value: profileAsync,
         onRetry: () => ref.refresh(profileProvider.future),
-        errorTitle: 'Impossible de charger le profil',
+        errorTitle: AppStrings.loadProfileError,
         builder: (profile) {
           if (profile == null) return const SizedBox.shrink();
           final avatarUrl = profile.avatarUrl;
@@ -75,12 +76,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           return optionsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => AppErrorState(
-              title: 'Impossible de charger les options',
+              title: AppStrings.loadOptionsError,
               message: error.toString(),
               onRetry: () => ref.refresh(profileOptionsProvider.future),
             ),
             data: (options) => SingleChildScrollView(
-              padding: EdgeInsets.all(24.w),
+              padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, MediaQuery.of(context).padding.bottom + 120.h),
               child: Form(
                 key: _formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -138,11 +139,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     SizedBox(height: 28.h),
                     _buildTextField(
-                      label: 'Nom complet',
+                      label: AppStrings.fullNameLabel,
                       controller: _fullNameController,
                       validator: (value) {
                         if (value == null || value.trim().length < 2) {
-                          return 'Nom complet requis';
+                          return AppStrings.fullNameRequired;
                         }
                         return null;
                       },
@@ -150,7 +151,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     gapH16,
                     AppPhoneField(
                       controller: _phoneController,
-                      labelText: 'Numéro de téléphone',
+                      labelText: AppStrings.phoneLabel,
                       initialCountry: _phoneCountry,
                       onCountryChanged: (country) =>
                           setState(() => _phoneCountry = country),
@@ -172,7 +173,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     DropdownButtonFormField<String>(
                       initialValue: _contactChannel,
                       decoration: const InputDecoration(
-                        labelText: 'Canal de contact préféré',
+                        labelText: AppStrings.contactChannelLabel,
                       ),
                       items: options.contactChannels
                           .map(
@@ -191,15 +192,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     SizedBox(height: 16.h),
                     DropdownButtonFormField<String>(
                       initialValue: _language,
-                      decoration: const InputDecoration(
-                        labelText: 'Langue préférée',
+                      decoration: InputDecoration(
+                        labelText: AppStrings.languageLabel,
                       ),
                       items: options.languages
                           .map(
                             (language) => DropdownMenuItem(
-                              value: language,
-                              child: Text(
-                                language == 'fr' ? 'Français' : 'English',
+                              value: language,                                              child: Text(
+                                                language == 'fr' ? AppStrings.french : AppStrings.english,
                               ),
                             ),
                           )
@@ -212,9 +212,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     SizedBox(height: 24.h),
                     SwitchListTile.adaptive(
-                      title: const Text('Notifications push'),
-                      subtitle: const Text(
-                        'Rappels et mises à jour de rendez-vous',
+                      title: Text(AppStrings.pushNotifications),
+                      subtitle: Text(
+                        AppStrings.editPushNotificationsSubtitle,
                       ),
                       value: _pushOptIn,
                       onChanged: (value) => setState(() => _pushOptIn = value),
@@ -231,7 +231,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     // ),
                     SizedBox(height: 36.h),
                     AppButton.primary(
-                      label: 'Enregistrer',
+                      label: AppStrings.profileSaveCta,
                       onPressed: _saving ? null : _save,
                       isLoading: _saving,
                     ),
@@ -258,9 +258,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     try {
       await ref.read(profileProvider.notifier).uploadAvatar(File(image.path));
       if (!mounted) return;
-      AppSnackbar.success(context, 'Photo de profil mise à jour.');
+      AppSnackbar.success(context, AppStrings.photoUpdated);
     } catch (error) {
-      await context.handleHttpError(error, 'Upload impossible.');
+      await context.handleHttpError(error, AppStrings.uploadFailed);
     } finally {
       if (mounted) {
         setState(() => _uploadingAvatar = false);
@@ -283,10 +283,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             preferredLanguage: _language,
           );
       if (!mounted) return;
-      AppSnackbar.success(context, 'Profil enregistré.');
+      AppSnackbar.success(context, AppStrings.profileSaved);
       context.pop();
     } catch (error) {
-      await context.handleHttpError(error, 'Enregistrement impossible.');
+      await context.handleHttpError(error, AppStrings.saveFailed);
     } finally {
       if (mounted) {
         setState(() => _saving = false);

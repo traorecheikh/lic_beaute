@@ -136,12 +136,14 @@ export class PaymentController {
         return;
       }
 
-      const callbackUrl = `${config.webOrigin}/payment/callback`;
+      const callbackUrl = new URL("/payment/callback", config.webOrigin);
+      callbackUrl.searchParams.set("paymentId", payment.id);
+      callbackUrl.searchParams.set("bookingId", body.bookingId);
       const result = await paymentAdapter.initiateDeposit({
         paymentId: payment.id,
         amountXof: payment.amountXof,
         description: `Acompte réservation ${body.bookingId}`,
-        callbackUrl,
+        callbackUrl: callbackUrl.toString(),
         idempotencyKey: payment.idempotencyKey,
         channel: body.channel,
         phone: resolvedPhone
@@ -316,8 +318,12 @@ export class PaymentController {
         }
       }
 
+      const effectiveStatus = payment.status === "authorized" && remoteStatus === "pending"
+        ? "authorized"
+        : remoteStatus;
+
       await this._claimReconcileWindow(payment.id);
-      await this._applyPaymentStatus(payment, remoteStatus, JSON.stringify({
+      await this._applyPaymentStatus(payment, effectiveStatus, JSON.stringify({
         source: "reconcile",
         paymentId: payment.id,
         providerToken: payment.webhookSignature

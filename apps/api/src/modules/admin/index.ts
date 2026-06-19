@@ -55,6 +55,7 @@ import {
 } from "./data.js";
 
 import {
+  listPayoutVerificationQueue,
   listPayouts as listMerchantPayoutsAdmin,
   payoutDetail,
   reconcilePayout,
@@ -661,6 +662,7 @@ export class AdminController {
   }
 
   // Merchant Payouts
+  listPayoutVerificationQueue = listPayoutVerificationQueue;
   listMerchantPayoutsAdmin = listMerchantPayoutsAdmin;
   payoutDetail = payoutDetail;
   reconcilePayout = reconcilePayout;

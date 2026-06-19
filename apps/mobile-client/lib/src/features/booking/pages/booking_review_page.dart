@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 
+import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../profile/widgets/profile_card_shell.dart';
 import '../../../core/widgets/app_back_button.dart';
@@ -36,7 +37,7 @@ class BookingReviewPage extends ConsumerWidget {
         titleWidget: const FunnelStepTitle(
           step: 4,
           total: 4,
-          title: 'Confirmation',
+          title: AppStrings.bookingReviewTitle,
           separator: 'sur',
         ),
       ),
@@ -92,22 +93,22 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final slotText = funnel.slotDate != null && funnel.slotTime != null
         ? '${funnel.slotDate} · ${funnel.slotTime}'
-        : 'Créneau non défini';
+        : AppStrings.slotNotSet;
 
     return ProfileCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Résumé', style: AppTextStyles.labelLg),
+          Text(AppStrings.reviewSummary, style: AppTextStyles.labelLg),
           gapH16,
           _SummaryRow(
             icon: 'sparkle',
-            label: funnel.serviceName ?? 'Prestation',
+            label: funnel.serviceName ?? AppStrings.serviceLabel,
           ),
           _SummaryRow(icon: 'calendar', label: slotText),
           _SummaryRow(
             icon: 'user',
-            label: funnel.employeeName ?? 'Premier disponible',
+            label: funnel.employeeName ?? AppStrings.funnelFirstAvailable,
           ),
           _SummaryRow(
             icon: 'clock',
@@ -154,20 +155,20 @@ class _PriceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Détails du paiement', style: AppTextStyles.labelMd),
+          Text(AppStrings.paymentDetails, style: AppTextStyles.labelMd),
           gapH16,
-          _PriceRow('Prestation', xof(total)),
+          _PriceRow(AppStrings.serviceLabel, xof(total)),
           SizedBox(height: 12.h),
           const AppDivider(),
           SizedBox(height: 12.h),
           _PriceRow(
-            'Acompte à payer maintenant',
+            AppStrings.depositToPayNow,
             xof(deposit),
             highlight: true,
           ),
           SizedBox(height: 6.h),
           _PriceRow(
-            'Reste à payer sur place',
+            AppStrings.remainingToPayOnSite,
             xof(remaining < 0 ? 0 : remaining),
             muted: true,
           ),
@@ -235,7 +236,7 @@ class _CancellationCard extends StatelessWidget {
           SizedBox(width: 10.w),
           Expanded(
             child: Text(
-              "Annulation gratuite jusqu'à 24h avant le rendez-vous.",
+              AppStrings.cancellationFree,
               style: AppTextStyles.bodySm.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -291,7 +292,7 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                           context.go(AppRoutes.auth);
                           AppSnackbar.info(
                             context,
-                            'Session expirée. Reconnectez-vous pour confirmer la réservation.',
+                            AppStrings.sessionExpiredMsg,
                           );
                           return;
                         }
@@ -299,7 +300,7 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                         if (statusCode != null && statusCode >= 500) {
                           AppSnackbar.error(
                             context,
-                            "Erreur serveur lors de la confirmation. Vérifiez 'Mes rendez-vous' avant de réessayer.",
+                            AppStrings.serverErrorMsg,
                           );
                           return;
                         }
@@ -329,8 +330,8 @@ class _ConfirmBarState extends ConsumerState<_ConfirmBar> {
                   },
             isLoading: loading,
             label: !requiresDepositPayment
-                ? 'Confirmer la réservation'
-                : "Payer l'acompte",
+                ? AppStrings.confirmBookingCta
+                : AppStrings.payDepositCta,
           ),
         ],
       ),

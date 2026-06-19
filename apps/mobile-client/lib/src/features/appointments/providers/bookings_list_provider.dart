@@ -9,6 +9,7 @@ import '../../../core/network/api_client_provider.dart';
 import '../../../core/session/session_store.dart';
 import '../../../core/storage/app_model_cache.dart';
 import '../../discovery/providers/cached_resource.dart';
+import '../models/booking_detail.dart';
 
 final bookingsListProvider =
     FutureProvider<CachedResource<BookingSummaryListResponse>>((ref) async {
@@ -63,7 +64,7 @@ final bookingsListProvider =
       }
     });
 
-Future<({Map<String, dynamic>? data, DateTime? cachedAt, bool isStale})>
+Future<({BookingDetail? data, DateTime? cachedAt, bool isStale})>
 _fetchBookingDetail(Ref ref, String bookingId) async {
   final session = ref.watch(sessionProvider);
   final cacheKey =
@@ -73,10 +74,12 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
     final response = await dio.get<Map<String, dynamic>>(
       '/api/v1/bookings/$bookingId',
     );
-    final data = response.data;
+    final raw = response.data;
+    BookingDetail? data;
     DateTime? cachedAt;
-    if (data != null) {
-      await AppModelCache.putMap(StorageKeys.bookingCacheBox, cacheKey, data);
+    if (raw != null) {
+      data = BookingDetail.fromJson(raw);
+      await AppModelCache.putMap(StorageKeys.bookingCacheBox, cacheKey, raw);
       cachedAt = AppModelCache.getCachedAt(
         StorageKeys.bookingCacheBox,
         cacheKey,
@@ -87,7 +90,7 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
     final cached = AppModelCache.getMap(StorageKeys.bookingCacheBox, cacheKey);
     if (cached != null) {
       return (
-        data: cached,
+        data: BookingDetail.fromJson(cached),
         cachedAt: AppModelCache.getCachedAt(
           StorageKeys.bookingCacheBox,
           cacheKey,
@@ -101,7 +104,7 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
 
 /// Single source of truth for booking detail. Returns the full CachedResource.
 final bookingDetailResourceProvider =
-    FutureProvider.autoDispose.family<CachedResource<Map<String, dynamic>>, String>((
+    FutureProvider.autoDispose.family<CachedResource<BookingDetail>, String>((
       ref,
       bookingId,
     ) async {
@@ -113,9 +116,9 @@ final bookingDetailResourceProvider =
       );
     });
 
-/// Convenience accessor that extracts just the Map data.
+/// Convenience accessor that extracts just the booking detail.
 /// Delegates to [bookingDetailResourceProvider] so both share the same cache.
-final bookingDetailProvider = FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((
+final bookingDetailProvider = FutureProvider.autoDispose.family<BookingDetail?, String>((
   ref,
   bookingId,
 ) async {

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_share.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../router/app_router.dart';
+import '../../appointments/models/booking_detail.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
@@ -56,11 +58,11 @@ class _BookingSuccessPageState extends ConsumerState<BookingSuccessPage>
 
   @override
   Widget build(BuildContext context) {
-    return AppBookingAsyncScaffold<Map<String, dynamic>>(
+    return AppBookingAsyncScaffold<BookingDetail>(
       bookingId: widget.bookingId,
       provider: bookingDetailResourceProvider,
-      errorTitle: 'Impossible de charger la confirmation',
-      serverTitle: 'La confirmation est indisponible',
+      errorTitle: AppStrings.loadConfirmationError,
+      serverTitle: AppStrings.confirmationServerTitle,
       sliverBuilder: (resource) {
         return [
           SliverFillRemaining(
@@ -149,13 +151,13 @@ class _SuccessBody extends StatelessWidget {
                       SizedBox(height: 20.h),
                     ],
                     Text(
-                      "Réservation confirmée !",
+                      AppStrings.bookingSuccessTitle,
                       style: AppTextStyles.displaySm,
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      "Votre acompte a bien été reçu. À très vite au salon !",
+                      AppStrings.depositReceived,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -200,7 +202,7 @@ class _SuccessBody extends StatelessWidget {
                     AppButton.primary(
                       onPressed: () =>
                           context.go(AppRoutes.bookingDetailPath(bookingId)),
-                      label: "Voir mon rendez-vous",
+                      label: AppStrings.viewBookingCta,
                     ),
                     SizedBox(height: 12.h),
                     AppButton.outline(
@@ -212,12 +214,12 @@ class _SuccessBody extends StatelessWidget {
                           text: "Je viens de réserver chez $salonName !",
                         );
                       },
-                      label: "Partager ma réservation",
+                      label: AppStrings.shareBookingCta,
                     ),
                     SizedBox(height: 12.h),
                     AppButton.text(
                       onPressed: () => context.go(AppRoutes.home),
-                      label: "Retour à l'accueil",
+                      label: AppStrings.backToHomeCta,
                     ),
                   ],
                 ),

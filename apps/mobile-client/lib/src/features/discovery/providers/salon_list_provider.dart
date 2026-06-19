@@ -12,20 +12,22 @@ import '../../../core/storage/app_model_cache.dart';
 import 'cached_resource.dart';
 
 final salonListProvider =
-    FutureProvider<CachedResource<SalonSummaryListResponse>>(
+    FutureProvider<CachedResource<SearchSalonsResponse>>(
       retry: (retryCount, error) => null,
       (ref) async {
-  final api = ref.read(apiClientProvider).getSalonsApi();
+  final api = ref.read(apiClientProvider).getSearchApi();
   try {
-    final response = await retryWithBackoff(() => api.apiV1SalonsGet());
+    final response = await retryWithBackoff(
+      () => api.apiV1SearchSalonsGet(q: '*'),
+    );
         final data = response.data;
         DateTime? cachedAt;
         if (data != null) {
-          await AppModelCache.putModel<SalonSummaryListResponse>(
+          await AppModelCache.putModel<SearchSalonsResponse>(
             StorageKeys.salonCacheBox,
             StorageKeys.salonListKey,
             data,
-            const FullType(SalonSummaryListResponse),
+            const FullType(SearchSalonsResponse),
           );
           cachedAt = AppModelCache.getCachedAt(
             StorageKeys.salonCacheBox,
@@ -34,10 +36,10 @@ final salonListProvider =
         }
         return CachedResource(data: data, isStale: false, cachedAt: cachedAt);
       } catch (_) {
-        final cached = AppModelCache.getModel<SalonSummaryListResponse>(
+        final cached = AppModelCache.getModel<SearchSalonsResponse>(
           StorageKeys.salonCacheBox,
           StorageKeys.salonListKey,
-          const FullType(SalonSummaryListResponse),
+          const FullType(SearchSalonsResponse),
         );
         if (cached != null) {
           return CachedResource(
@@ -57,7 +59,7 @@ final salonListProvider =
 // Returns salons within 5 km of the current position, sorted by distance.
 // Returns null if location is unavailable.
 final nearbyProvider =
-    FutureProvider<List<SalonSummaryListResponseItemsInner>?>(
+    FutureProvider<List<SearchSuggestionsResponseTopMatchesInner>?>(
       retry: (retryCount, error) => null,
       (ref) async {
       debugPrint('[Nearby] waiting for position…');
@@ -68,63 +70,61 @@ final nearbyProvider =
         return null;
       }
 
-      debugPrint('[Nearby] → calling API lat=${position.latitude} lng=${position.longitude}');
-      final api = ref.read(apiClientProvider).getSalonsApi();
+      debugPrint('[Nearby] → calling search API lat=${position.latitude} lng=${position.longitude}');
+      final api = ref.read(apiClientProvider).getSearchApi();
       final response = await retryWithBackoff(
-        () => api.apiV1SalonsGet(
+        () => api.apiV1SearchSalonsGet(
+          q: '*',
           lat: position.latitude,
           lng: position.longitude,
           sort: 'nearby',
-          pageSize: '50',
+          limit: 50,
         ),
       );
-      final items = response.data?.items.toList() ?? [];
+      final items = response.data?.results.toList() ?? [];
       debugPrint('[Nearby] → got ${items.length} results');
       return items;
     },
     );
 
 final topRatedProvider =
-    FutureProvider<List<SalonSummaryListResponseItemsInner>>(
+    FutureProvider<List<SearchSuggestionsResponseTopMatchesInner>>(
       retry: (retryCount, error) => null,
       (ref) async {
-  final api = ref.read(apiClientProvider).getSalonsApi();
+  final api = ref.read(apiClientProvider).getSearchApi();
   final response = await retryWithBackoff(
-    () => api.apiV1SalonsGet(sort: 'rating', pageSize: '6'),
+    () => api.apiV1SearchSalonsGet(q: '*', sort: 'rating', limit: 6),
   );
-  return response.data?.items.toList() ?? [];
+  return response.data?.results.toList() ?? [];
 },
     );
 
 final trendingProvider =
-    FutureProvider<List<SalonSummaryListResponseItemsInner>>(
+    FutureProvider<List<SearchSuggestionsResponseTopMatchesInner>>(
       retry: (retryCount, error) => null,
       (ref) async {
-  final api = ref.read(apiClientProvider).getSalonsApi();
+  final api = ref.read(apiClientProvider).getSearchApi();
   final response = await retryWithBackoff(
-    () => api.apiV1SalonsGet(
-      sort: 'trending',
-      pageSize: '6',
-    ),
+    () => api.apiV1SearchSalonsGet(q: '*', sort: 'trending', limit: 6),
   );
-  return response.data?.items.toList() ?? [];
+  return response.data?.results.toList() ?? [];
 },
     );
 
 final prestigeProvider =
-    FutureProvider<List<SalonSummaryListResponseItemsInner>>(
+    FutureProvider<List<SearchSuggestionsResponseTopMatchesInner>>(
       retry: (retryCount, error) => null,
       (ref) async {
-        final api = ref.read(apiClientProvider).getSalonsApi();
+        final api = ref.read(apiClientProvider).getSearchApi();
         final response = await retryWithBackoff(
-          () => api.apiV1SalonsGet(sort: 'prestige', pageSize: '8'),
+          () => api.apiV1SearchSalonsGet(q: '*', sort: 'prestige', limit: 8),
         );
-        return response.data?.items.toList() ?? [];
+        return response.data?.results.toList() ?? [];
       },
     );
 
 // Convenience: wraps a Position into a distance badge string
-String? distanceBadge(SalonSummaryListResponseItemsInner salon) {
+String? distanceBadge(SearchSuggestionsResponseTopMatchesInner salon) {
   final d = salon.distanceKm;
   if (d == null) return null;
   if (d < 1) return '${(d * 1000).round()} m';

@@ -32,6 +32,20 @@ class ClientApp extends ConsumerWidget {
         case 'booking_reminder':
         case 'new_booking_salon':
           router.go(AppRoutes.bookingsList);
+        case 'payment_confirmed':
+          final bookingId = data['bookingId'];
+          if (bookingId != null && bookingId.isNotEmpty) {
+            router.go(AppRoutes.success(bookingId));
+          } else {
+            router.go(AppRoutes.bookingsList);
+          }
+        case 'payment_failed':
+          final bookingId = data['bookingId'];
+          if (bookingId != null && bookingId.isNotEmpty) {
+            router.go(AppRoutes.bookingDetailPath(bookingId));
+          } else {
+            router.go(AppRoutes.bookingsList);
+          }
         default:
           router.go(AppRoutes.notifications);
       }
@@ -45,9 +59,18 @@ class ClientApp extends ConsumerWidget {
         builder: (context, child) => MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'Beauté Avenue',
+          // ── Dark mode placeholder ───────────────────────────────────
+          // Dark mode is not ready yet. Colours and text styles have been
+          // defined in AppTheme.dark (app_theme.dart) with contrasting
+          // pairs against images and surfaces, but the full implementation
+          // is incomplete. A contributor picking this up must:
+          //   1. Audit every screen for dark background + text legibility.
+          //   2. Verify that images over dark surfaces have adequate contrast.
+          //   3. Remove this hardcoded .light and restore ThemeMode.system
+          //      (or add a manual toggle) once verified.
+          // Until then the app stays in light mode only.
           theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
-          themeMode: ThemeMode.system,
+          themeMode: ThemeMode.light,
           routerConfig: router,
           builder: (context, routedChild) {
             return _AppLifecycleRefresh(

@@ -1,3 +1,5 @@
+import '../../appointments/models/booking_detail.dart';
+
 class CachedResource<T> {
   const CachedResource({
     required this.data,
@@ -10,25 +12,19 @@ class CachedResource<T> {
   final DateTime? cachedAt;
 }
 
-extension BookingMapExtension on CachedResource<Map<String, dynamic>> {
-  String get salonId => (data?['salonId'] as String?) ?? '';
-  String get serviceId => (data?['serviceId'] as String?) ?? '';
-  String get salonName => (data?['salonName'] as String?) ?? 'Salon';
-  String get serviceName => (data?['serviceName'] as String?) ?? 'Prestation';
-  String get employeeName =>
-      (data?['employeeName'] as String?) ?? 'Peu importe';
-  String get status => (data?['status'] as String?) ?? 'pending';
-  String get depositPaymentStatus =>
-      (data?['depositPaymentStatus'] as String?) ?? 'pending';
-  int? get priceXof => (data?['totalAmountXof'] as num?)?.toInt();
-  int? get depositXof => (data?['depositAmountXof'] as num?)?.toInt();
-  int? get depositPaidXof => (data?['depositPaidXof'] as num?)?.toInt();
-  DateTime? get startsAt => data?['startsAt'] == null
-      ? null
-      : DateTime.tryParse(data?['startsAt'] as String)?.toLocal();
-  DateTime? get endsAt => data?['endsAt'] == null
-      ? null
-      : DateTime.tryParse(data?['endsAt'] as String)?.toLocal();
+extension BookingMapExtension on CachedResource<BookingDetail> {
+  String get salonId => data?.salonId ?? '';
+  String get serviceId => data?.serviceId ?? '';
+  String get salonName => data?.salonName ?? 'Salon';
+  String get serviceName => data?.serviceName ?? 'Prestation';
+  String get employeeName => data?.employeeName ?? 'Peu importe';
+  String get status => data?.status ?? 'pending';
+  String get depositPaymentStatus => data?.depositPaymentStatus ?? 'pending';
+  int? get priceXof => data?.totalAmountXof;
+  int? get depositXof => data?.depositAmountXof;
+  int? get depositPaidXof => data?.depositPaidXof;
+  DateTime? get startsAt => data?.startsAt;
+  DateTime? get endsAt => data?.endsAt;
 
   List<String> get _months => const [
     'jan',

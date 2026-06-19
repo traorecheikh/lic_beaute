@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:built_value/serializer.dart';
 
 import '../../../core/session/session_store.dart';
+import '../../../core/storage/app_cache.dart';
+import '../../../core/constants/storage_keys.dart';
 import 'cached_resource.dart';
 
 final favoritesListProvider =
@@ -18,6 +20,9 @@ final favoritesListProvider =
             )
             as SalonSummary;
       }).toList();
+      // Persist favorite IDs in Hive for offline resilience
+      final ids = items.map((s) => s.id).whereType<String>().toList();
+      await AppCache.favorites.put(StorageKeys.favoriteIds, ids);
       return CachedResource(data: items, isStale: false);
     });
 
@@ -41,6 +46,10 @@ class FavoritesState {
 class FavoritesNotifier extends Notifier<FavoritesState> {
   @override
   FavoritesState build() {
+    // Restore cached IDs immediately so heart icons show before API response
+    final cachedIds = _restoreCachedIds();
+    state = FavoritesState(salonIds: cachedIds, loading: true);
+
     ref.listen(favoritesListProvider, (_, next) {
       final items = next.asData?.value.data;
       if (items != null) {
@@ -48,7 +57,15 @@ class FavoritesNotifier extends Notifier<FavoritesState> {
         Future.microtask(() => state = FavoritesState(salonIds: ids));
       }
     });
-    return const FavoritesState();
+    return state;
+  }
+
+  Set<String> _restoreCachedIds() {
+    final cached = AppCache.favorites.get(StorageKeys.favoriteIds);
+    if (cached is List) {
+      return cached.whereType<String>().toSet();
+    }
+    return {};
   }
 
   Future<void> toggle(String salonId) async {

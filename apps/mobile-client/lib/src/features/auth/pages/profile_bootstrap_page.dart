@@ -148,7 +148,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                             child: Container(
                               padding: EdgeInsets.all(10.r),
                               decoration: const BoxDecoration(
-                                color: Colors.black,
+                                color: AppColors.black,
                                 shape: BoxShape.circle,
                               ),
                               child: _uploadingAvatar
@@ -157,13 +157,13 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                                       height: 16.r,
                                       child: const CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: AppColors.white,
                                       ),
                                     )
                                   : AppIcon(
                                       'camera',
                                       size: 16,
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                     ),
                             ),
                           ),

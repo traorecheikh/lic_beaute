@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/sync/app_outbox.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -32,8 +33,8 @@ class ProfilePage extends ConsumerWidget {
       body: AppResourceView(
         value: profileAsync,
         onRetry: () => ref.refresh(profileProvider.future),
-        errorTitle: 'Impossible de charger le profil',
-        emptyMessage: 'Connectez-vous pour accéder à votre compte.',
+        errorTitle: AppStrings.loadProfileError,
+        emptyMessage: AppStrings.profileEmptyMessage,
         builder: (profile) {
           final avatarUrl = profile!.avatarUrl;
           final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
@@ -76,7 +77,7 @@ class ProfilePage extends ConsumerWidget {
                                 Text(
                                   ref.watch(cityFromLocationProvider).asData?.value ??
                                       profile.city ??
-                                      'Ville détectée automatiquement',
+                                      AppStrings.cityAutoDetected,
                                   style: AppTextStyles.bodySm.copyWith(
                                     color: AppColors.onSurfaceVariant,
                                   ),
@@ -127,7 +128,7 @@ class ProfilePage extends ConsumerWidget {
                               ),
                               SizedBox(width: 10.w),
                               Expanded(                                  child: Text(
-                                  'Modifications en attente de synchronisation.',
+                                  AppStrings.pendingSyncMessage,
                                   style: AppTextStyles.bodySm.copyWith(
                                     color: AppColors.onWarningContainer,
                                   ),
@@ -147,18 +148,18 @@ class ProfilePage extends ConsumerWidget {
                   delegate: SliverChildListDelegate([
                     _MenuTile(
                       icon: 'heart',
-                      label: 'Mes favoris',
+                      label: AppStrings.favoritesTitle,
                       onTap: () => context.push(AppRoutes.favorites),
                     ),
                     _MenuTile(
                       icon: 'bell',
-                      label: 'Préférences de notifications',
+                      label: AppStrings.menuNotificationPreferences,
                       onTap: () =>
                           context.push(AppRoutes.notificationPreferences),
                     ),
                     _MenuTile(
                       icon: 'credit-card',
-                      label: 'Moyens de paiement',
+                      label: AppStrings.menuPaymentMethods,
                       onTap: () => context.push(AppRoutes.profilePayments),
                     ),
                     // Promos hidden — _MenuTile(
@@ -169,17 +170,17 @@ class ProfilePage extends ConsumerWidget {
                     SizedBox(height: 30.h),
                     _MenuTile(
                       icon: 'help-circle',
-                      label: 'Support & assistance',
+                      label: AppStrings.menuSupport,
                       onTap: () => context.push(AppRoutes.profileSupport),
                     ),
                     _MenuTile(
                       icon: 'message-circle',
-                      label: 'FAQ',
+                      label: AppStrings.menuFaq,
                       onTap: () => context.push(AppRoutes.profileFaq),
                     ),
                     _MenuTile(
                       icon: 'info',
-                      label: 'À propos',
+                      label: AppStrings.menuAbout,
                       onTap: () => context.push(AppRoutes.profileAbout),
                     ),
                     SizedBox(height: 12.h),
@@ -190,7 +191,7 @@ class ProfilePage extends ConsumerWidget {
                       onTap: () async {
                         await ref.read(authActionsProvider).logout();
                         if (!context.mounted) return;
-                        AppSnackbar.success(context, 'Session fermée.');
+                        AppSnackbar.success(context, AppStrings.sessionClosed);
                         context.go(AppRoutes.auth);
                       },
                     ),

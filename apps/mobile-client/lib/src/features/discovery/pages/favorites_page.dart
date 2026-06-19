@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:beauteavenue_mobile_client/src/core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../../core/utils/app_haptics.dart';
@@ -28,11 +29,11 @@ class FavoritesPage extends ConsumerWidget {
     );
 
     return AppScaffold(
-      appBar: AppTopBar(title: 'Mes Favoris', centerTitle: true, showBackButton: false),
+      appBar: AppTopBar(title: AppStrings.favoritesTitle, centerTitle: true),
       body: AppAsyncView(
         value: favoritesAsync,
-        errorTitle: 'Impossible de charger vos favoris',
-        serverTitle: 'Les favoris sont indisponibles',
+        errorTitle: AppStrings.loadFavoritesError,
+        serverTitle: AppStrings.loadFavoritesServer,
         onRetry: () => ref.refresh(favoritesListProvider.future),
         builder: (resource) {
           final favorites = (resource.data ?? const <SalonSummary>[])
@@ -49,10 +50,9 @@ class FavoritesPage extends ConsumerWidget {
                   child: Center(
                     child: AppEmptyState(
                       icon: 'heart',
-                      title: 'Aucun favori',
-                      subtitle:
-                          'Enregistrez vos salons préférés pour les retrouver ici facilement.',
-                      actionLabel: 'Découvrir des salons',
+                      title: AppStrings.noFavoritesTitle,
+                      subtitle: AppStrings.noFavoritesSubtitle,
+                      actionLabel: AppStrings.discoverSalonsCta,
                       action: () => context.go(AppRoutes.home),
                     ),
                   ),

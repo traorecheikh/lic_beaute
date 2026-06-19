@@ -41,7 +41,7 @@ abstract final class AppTheme {
         outlineVariant: AppColors.outlineVariant,
       ),
       scaffoldBackgroundColor: AppColors.neutral,
-      textTheme: GoogleFonts.dmSansTextTheme().copyWith(
+      textTheme: GoogleFonts.interTextTheme().copyWith(
         displayLarge: AppTextStyles.displayLg,
         displayMedium: AppTextStyles.displayMd,
         headlineLarge: AppTextStyles.headlineLg,
@@ -177,7 +177,7 @@ abstract final class AppTheme {
   static ButtonStyle stateButtonStyle(BuildContext context) {
     return FilledButton.styleFrom(
       backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
+      foregroundColor: AppColors.white,
       padding: EdgeInsets.symmetric(vertical: 14.h),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
@@ -194,8 +194,16 @@ abstract final class AppTheme {
         onPrimaryContainer: AppColors.onPrimaryContainer,
         secondary: AppColors.secondary,
         onSecondary: AppColors.onSecondary,
+        secondaryContainer: AppColors.secondaryContainer,
+        onSecondaryContainer: AppColors.onSecondaryContainer,
+        tertiary: AppColors.tertiary,
+        onTertiary: AppColors.onTertiary,
+        tertiaryContainer: AppColors.tertiaryContainer,
+        onTertiaryContainer: AppColors.onTertiaryContainer,
         error: AppColors.error,
         onError: AppColors.onError,
+        errorContainer: AppColors.errorContainer,
+        onErrorContainer: AppColors.onErrorContainer,
         surface: AppColors.darkSurface,
         onSurface: AppColors.darkOnSurface,
         surfaceContainerHighest: AppColors.darkSurfaceVariant,

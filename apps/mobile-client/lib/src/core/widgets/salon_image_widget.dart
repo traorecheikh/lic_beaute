@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../theme/app_theme.dart';
 import 'app_icon.dart';
 
 class SalonImageWidget extends StatelessWidget {
@@ -48,7 +49,7 @@ class SalonImageWidget extends StatelessWidget {
   Widget _shimmer() => Shimmer.fromColors(
         baseColor: const Color(0xFFE0E0E0),
         highlightColor: const Color(0xFFF5F5F5),
-        child: Container(color: Colors.white, width: width, height: height),
+        child: Container(color: AppColors.white, width: width, height: height),
       );
 
   Widget _placeholder() => Container(

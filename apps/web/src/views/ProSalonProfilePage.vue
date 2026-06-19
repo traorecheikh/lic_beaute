@@ -140,6 +140,22 @@
             <input type="text" v-model="profile.address" class="input-shell" placeholder="Rue..., Quartier..." />
           </div>
 
+          <!-- Missing coordinates soft warning -->
+          <div
+            v-if="hasNoCoordinates"
+            class="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 flex items-start gap-3"
+          >
+            <div class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-amber-400 text-white flex items-center justify-center text-[11px] font-bold">i</div>
+            <div>
+              <p class="text-sm font-medium text-amber-800">Position manquante</p>
+              <p class="text-xs text-amber-700/80 mt-0.5">
+                Ajoutez la position de votre salon pour être visible dans les résultats
+                <strong>« Près de vous »</strong> sur l'application mobile.
+                Utilisez la carte ci-dessous pour positionner votre établissement.
+              </p>
+            </div>
+          </div>
+
           <div class="md:col-span-2">
             <label class="section-label mb-2 block">Position sur la carte</label>
             <div ref="mapContainer" class="h-80 w-full rounded-2xl border border-outline-variant"></div>
@@ -355,6 +371,12 @@ const galleryLimitTooltip = computed(() => {
   if (salonTier.value === "premium") return "Limite de 50 photos atteinte.";
   return "Plan Standard limité à 3 photos. Passez en Premium pour en ajouter plus.";
 });
+
+const hasNoCoordinates = computed(() => {
+  return !profile.latitude.trim() && !profile.longitude.trim();
+});
+
+let hadCoordinatesBefore = false;
 
 const saveMutation = useMutation({
   mutationFn: (payload: ProSalonUpdateInput) => updateProSalon(auth.accessToken ?? "", payload),
@@ -813,7 +835,19 @@ watch(
   ([latRaw, lngRaw]) => {
     const lat = parseCoordinateLenient(latRaw, -90, 90);
     const lng = parseCoordinateLenient(lngRaw, -180, 180);
-    if (lat === null || lng === null) return;
+
+    // Detect when user clears coordinates after they were previously set
+    if (hadCoordinatesBefore && !latRaw.trim() && !lngRaw.trim()) {
+      toast.info("Sans position, votre salon n'apparaîtra pas dans les résultats « Près de vous ».", {
+        duration: 5000,
+      });
+    }
+
+    if (lat === null || lng === null) {
+      hadCoordinatesBefore = false;
+      return;
+    }
+    hadCoordinatesBefore = true;
     syncMapMarker(lat, lng, false);
   }
 );
@@ -833,6 +867,10 @@ watch(
     profile.longitude = salon.longitude === null ? "" : String(salon.longitude);
     locationAccuracyMeters.value = null;
     locationCapturedAt.value = null;
+    // Track initial coordinate state for clearance detection
+    const hasInitialCoords = salon.latitude !== null && salon.longitude !== null;
+    hadCoordinatesBefore = hasInitialCoords;
+
     profile.description = salon.description;
     profile.phone = salon.phone ?? "";
     profile.instagram = salon.instagram ?? "";

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../core/session/session_store.dart';
 
@@ -25,6 +26,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   @override
   void initState() {
     super.initState();
+    _preloadFonts();
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -69,6 +71,14 @@ class _SplashPageState extends ConsumerState<SplashPage>
     await Future.delayed(const Duration(milliseconds: 1600));
     if (!mounted) return;
     context.go(session.isAuthenticated ? AppRoutes.home : AppRoutes.auth);
+  }
+
+  void _preloadFonts() {
+    // Preload all Inter font weights used in the app so they're cached
+    // before the main UI renders — ensures offline resilience after first load.
+    GoogleFonts.inter(fontWeight: FontWeight.w400);
+    GoogleFonts.inter(fontWeight: FontWeight.w600);
+    GoogleFonts.inter(fontWeight: FontWeight.w700);
   }
 
   @override

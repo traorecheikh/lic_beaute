@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract final class AppColors {
   // ── Brand (10%) ───────────────────────────────────────────────────────────
-  static const primary = Color(0xFFD96B8C); // Rose Pétale
+  static const primary = Color(0xFFBC4D6A); // Rose Pétale (assombri pour ratio 4.5:1 WCAG AA ✅ 4.76:1 sur fond blanc)
   static const primaryLight = Color(0xFFFFECF2); // Rose ultra-light for tints
   static const primaryMid = Color(0xFFF2A8BE); // Rose mid for pressed/hover
   static const onPrimary = Color(0xFFFFFFFF);
@@ -25,7 +25,7 @@ abstract final class AppColors {
   static const surfaceElevated = Color(0xFFF7F5F2); // cards on warm bg
   static const surfaceVariant = Color(0xFFF0EDE8); // inputs, chips
   static const onSurface = Color(0xFF1A1614); // warm near-black
-  static const onSurfaceVariant = Color(0xFF6E6460); // warm mid-gray
+  static const onSurfaceVariant = Color(0xFF5C524E); // warm mid-gray (assombri pour 4.5:1 WCAG AA ✅ 5.52:1 sur surfaceVariant)
   static const outline = Color(0xFFD4CFC8);
   static const outlineVariant = Color(0xFFEBE6E0);
 

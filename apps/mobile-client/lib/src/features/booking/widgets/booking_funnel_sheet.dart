@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:beauteavenue_mobile_client/src/core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
@@ -16,7 +17,12 @@ import '../../discovery/providers/salon_detail_provider.dart';
 import '../providers/booking_create_provider.dart';
 import '../providers/booking_funnel_provider.dart';
 
-const _kStepTitles = ['Prestation', 'Prestataire', 'Créneau', 'Confirmation'];
+const _kStepTitles = [
+  AppStrings.funnelStepService,
+  AppStrings.funnelStepStaff,
+  AppStrings.funnelStepSlot,
+  AppStrings.funnelStepConfirmation,
+];
 const _kWeekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 class BookingFunnelSheet extends ConsumerStatefulWidget {
@@ -82,7 +88,7 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
           .read(bookingFunnelProvider.notifier)
           .selectEmployee(
             employeeId: staffId,
-            employeeName: staff?.displayName ?? 'Sans préférence',
+            employeeName: staff?.displayName ?? AppStrings.noPreference,
           );
     } else if (_step == 2) {
       ref
@@ -339,8 +345,8 @@ class _BookingFunnelSheetState extends ConsumerState<BookingFunnelSheet> {
                 ),
               _Cta(
                 label: isResolvingStaff
-                    ? 'Recherche du meilleur prestataire...'
-                    : (_step == 3 ? 'Confirmer la réservation' : 'Continuer'),
+                    ? AppStrings.funnelResolvingBestStaff
+                    : (_step == 3 ? AppStrings.confirmBookingCta : AppStrings.funnelContinue),
                 enabled: _canAdvance && !isBusy,
                 loading: isBusy,
                 onTap: () {
@@ -497,13 +503,13 @@ class _ServiceStep extends ConsumerWidget {
     return salonAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) =>
-          const Center(child: Text('Impossible de charger les services.')),
+          Center(child: Text(AppStrings.loadServicesError)),
       data: (salon) {
         final services = salon?.services.toList() ?? [];
         if (services.isEmpty) {
           return Center(
             child: Text(
-              'Aucune prestation disponible.',
+              AppStrings.noServicesAvailable,
               style: AppTextStyles.bodyMd,
             ),
           );
@@ -554,7 +560,7 @@ class _StaffStep extends ConsumerWidget {
     return salonAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) =>
-          const Center(child: Text("Impossible de charger l'équipe.")),
+          Center(child: Text(AppStrings.loadStaffError)),
       data: (salon) {
         final staff = (salon?.staff.toList() ?? [])
             .where(
@@ -564,12 +570,12 @@ class _StaffStep extends ConsumerWidget {
 
         final items =
             <(String id, String name, String role, String? image, bool isAny)>[
-              ('any', 'Peu importe', 'Premier disponible', null, true),
+              ('any', AppStrings.funnelAnyStaff, AppStrings.funnelFirstAvailable, null, true),
               ...staff.map(
                 (e) => (
                   e.id,
                   e.displayName,
-                  e.description ?? 'Spécialiste',
+                  e.description ?? AppStrings.funnelSpecialist,
                   e.avatarUrl,
                   false,
                 ),
@@ -663,7 +669,7 @@ class _SlotStep extends ConsumerWidget {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Text(
-            'Choisissez d’abord une prestation.',
+            AppStrings.slotChooseServiceFirst,
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMd.copyWith(
               color: AppColors.onSurfaceVariant,
@@ -745,7 +751,7 @@ class _SlotStep extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => Center(
               child: Text(
-                'Impossible de charger les disponibilités.',
+                AppStrings.loadAvailabilityError,
                 style: AppTextStyles.bodyMd.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -760,12 +766,12 @@ class _SlotStep extends ConsumerWidget {
                       AppIcon('calendar', size: 32, color: AppColors.outline),
                       gapH12,
                       Text(
-                        'Aucun créneau ce jour',
+                        AppStrings.noSlotsDate,
                         style: AppTextStyles.headlineSm,
                       ),
                       gapH4,
                       Text(
-                        'Essayez une autre date.',
+                        AppStrings.tryAnotherDate,
                         style: AppTextStyles.bodyMd.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -791,7 +797,7 @@ class _SlotStep extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Plage horaire',
+                      AppStrings.timeRangeLabel,
                       style: AppTextStyles.labelSm.copyWith(
                         color: AppColors.onSurfaceVariant,
                         letterSpacing: 1.2,
@@ -867,7 +873,7 @@ class _SlotStep extends ConsumerWidget {
                               padding: EdgeInsets.only(top: 40.h),
                               child: Center(
                                 child: Text(
-                                  'Sélectionnez une plage horaire',
+                                  AppStrings.selectTimeRange,
                                   style: AppTextStyles.bodyMd.copyWith(
                                     color: AppColors.onSurfaceVariant,
                                   ),
@@ -881,7 +887,7 @@ class _SlotStep extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Créneau',
+                                    AppStrings.slotLabel,
                                     style: AppTextStyles.labelSm.copyWith(
                                       color: AppColors.onSurfaceVariant,
                                       letterSpacing: 1.2,
@@ -1009,13 +1015,13 @@ class _ReviewStep extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Résumé', style: AppTextStyles.labelLg),
+              Text(AppStrings.reviewSummary, style: AppTextStyles.labelLg),
               gapH16,
               _ReviewRow(icon: 'sparkle', label: funnel.serviceName ?? '-'),
               _ReviewRow(icon: 'calendar', label: slotText),
               _ReviewRow(
                 icon: 'user',
-                label: funnel.employeeName ?? 'Premier disponible',
+                label: funnel.employeeName ?? AppStrings.funnelFirstAvailable,
               ),
               _ReviewRow(
                 icon: 'clock',
@@ -1036,15 +1042,15 @@ class _ReviewStep extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Paiement', style: AppTextStyles.labelMd),
+              Text(AppStrings.paymentTitle, style: AppTextStyles.labelMd),
               SizedBox(height: 14.h),
-              _PriceLine('Total prestation', '$total XOF'),
+              _PriceLine(AppStrings.totalService, '$total XOF'),
               SizedBox(height: 10.h),
               const AppDivider(),
               SizedBox(height: 10.h),
-              _PriceLine('Acompte maintenant', '$deposit XOF', highlight: true),
+              _PriceLine(AppStrings.depositNow, '$deposit XOF', highlight: true),
               gapH4,
-              _PriceLine('Reste sur place', '$remaining XOF', muted: true),
+              _PriceLine(AppStrings.remainingOnSite, '$remaining XOF', muted: true),
             ],
           ),
         ),
@@ -1063,7 +1069,7 @@ class _ReviewStep extends ConsumerWidget {
               gapW8,
               Expanded(
                 child: Text(
-                  "Annulation gratuite jusqu'à 24h avant le rendez-vous.",
+                  AppStrings.cancellationFree,
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),

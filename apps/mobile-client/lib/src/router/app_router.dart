@@ -3,12 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:hive_ce/hive_ce.dart';
-
-import '../core/constants/storage_keys.dart';
-import '../core/reactivity/app_reactivity.dart';
 import '../core/session/session_store.dart';
-import '../core/storage/app_model_cache.dart';
 import '../core/theme/app_theme.dart';
 import '../core/widgets/app_icon.dart';
 import '../core/widgets/app_scaffold.dart';
@@ -23,6 +18,7 @@ import '../features/auth/pages/onboarding/onboarding_page.dart';
 import '../features/auth/pages/profile_bootstrap_page.dart';
 import '../features/auth/pages/register_page.dart';
 import '../features/booking/pages/booking_review_page.dart';
+import '../features/booking/pages/payment_callback_redirect_page.dart';
 import '../features/booking/pages/booking_success_page.dart';
 import '../features/booking/pages/payment_handoff_page.dart';
 import '../features/booking/pages/service_selection_page.dart';
@@ -39,13 +35,14 @@ import '../features/profile/pages/notification_preferences_page.dart';
 import '../features/profile/pages/profile_page.dart';
 import '../features/profile/pages/edit_profile_page.dart';
 import '../features/profile/pages/payment_methods_page.dart';
-// Promos hidden — import '../features/profile/pages/vouchers_page.dart';
 import '../features/profile/pages/memberships_page.dart';
 import '../features/profile/pages/support_page.dart';
 import '../features/profile/pages/legal_page.dart';
 import '../features/profile/pages/about_page.dart';
 import '../features/profile/pages/faq_page.dart';
-import '../features/profile/models/account_models.dart';
+import 'guards.dart';
+import 'listenable.dart';
+import 'observers.dart';
 import 'shell_scaffold.dart';
 import 'splash_page.dart';
 
@@ -73,6 +70,7 @@ abstract final class AppRoutes {
   static const bookingReview = '/booking/review';
   static const bookingPayment = '/booking/payment-handoff/:bookingId';
   static const bookingSuccess = '/booking/success/:bookingId';
+  static const paymentCallback = '/payment/callback';
   static const bookingsList = '/bookings';
   static const bookingDetail = '/bookings/:bookingId';
   static const bookingManage = '/bookings/:bookingId/manage';
@@ -81,7 +79,6 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const profileEdit = '/profile/edit';
   static const profilePayments = '/profile/payment-methods';
-  // Promos hidden — static const profileVouchers = '/profile/vouchers';
   static const profileMemberships = '/profile/memberships';
   static const profileSupport = '/profile/support';
   static const profileLegal = '/profile/legal';
@@ -93,6 +90,19 @@ abstract final class AppRoutes {
   static String salon(String id) => '/salons/$id';
   static String paymentHandoff(String bookingId) =>
       '/booking/payment-handoff/$bookingId';
+  static String paymentCallbackPath({
+    String? bookingId,
+    String? paymentId,
+    String? token,
+  }) {
+    final query = <String, String>{
+      if (bookingId != null && bookingId.isNotEmpty) 'bookingId': bookingId,
+      if (paymentId != null && paymentId.isNotEmpty) 'paymentId': paymentId,
+      if (token != null && token.isNotEmpty) 'token': token,
+    };
+    return Uri(path: paymentCallback, queryParameters: query).toString();
+  }
+
   static String success(String bookingId) => '/booking/success/$bookingId';
   static String bookingDetailPath(String id) => '/bookings/$id';
   static String bookingManagePath(String id) => '/bookings/$id/manage';
@@ -103,127 +113,29 @@ abstract final class AppRoutes {
       '$profilePayments?required=1&next=${Uri.encodeComponent(next)}';
 }
 
-// ── Routes protected from unauthenticated access ──────────────────────────
-
-const _publicRoutesWithoutAuth = {
-  AppRoutes.splash,
-  AppRoutes.onboarding,
-  AppRoutes.auth,
-  AppRoutes.emailLogin,
-  AppRoutes.register,
-  AppRoutes.home,
-  AppRoutes.search,
-};
-
-const _publicRoutePrefixesWithoutAuth = {'/salons/'};
-
-const _authEntryRoutes = {
-  AppRoutes.auth,
-  AppRoutes.emailLogin,
-  AppRoutes.register,
-};
-
-bool _isPublicRouteWithoutAuth(String location) {
-  if (_publicRoutesWithoutAuth.contains(location)) return true;
-  for (final prefix in _publicRoutePrefixesWithoutAuth) {
-    if (location.startsWith(prefix)) return true;
-  }
-  return false;
-}
-
-bool _isSetupRoute(String location) {
-  return location == AppRoutes.profileBootstrap ||
-      location == AppRoutes.profilePayments;
-}
-
-String? resolveRequiredSetupRedirect({
-  required String location,
-  Map<String, dynamic>? cachedProfile,
-  Map<String, dynamic>? cachedPaymentMethods,
-}) {
-  if (cachedProfile != null) {
-    final profile = ClientAccountProfile.fromJson(cachedProfile);
-    if (profile.fullName.trim().isEmpty) {
-      if (_isSetupRoute(location)) return null;
-      return AppRoutes.profileBootstrapSetup(next: location);
-    }
-  }
-
-  if (cachedPaymentMethods != null) {
-    final items = AppModelCache.normalizeMapList(
-      (cachedPaymentMethods['items'] as List<dynamic>? ?? const []),
-    ).map(PaymentMethodRecord.fromJson).toList();
-    if (items.isEmpty) {
-      if (location == AppRoutes.profilePayments) return null;
-      return AppRoutes.profilePaymentsSetup(next: location);
-    }
-  }
-
-  return null;
-}
-
-String? _requiredSetupRedirect(String location) {
-  return resolveRequiredSetupRedirect(
-    location: location,
-    cachedProfile: AppModelCache.getMap(
-      StorageKeys.profileBox,
-      StorageKeys.currentUser,
-    ),
-    cachedPaymentMethods: AppModelCache.getMap(
-      StorageKeys.profileBox,
-      StorageKeys.paymentMethods,
-    ),
-  );
-}
-
 // ── Provider ──────────────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final sessionListenable = _SessionListenable(ref);
+  final sessionListenable = SessionListenable(ref);
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: sessionListenable,
-    observers: [_AppRouteRefreshObserver(ref)],
+    observers: [AppRouteRefreshObserver(ref)],
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final location = state.matchedLocation;
 
-      if (session.isRestoring) return null;
-
-      // Check for first-time onboarding
-      final settingsBox = Hive.box<dynamic>(StorageKeys.settingsBox);
-      final onboardingCompleted =
-          settingsBox.get(StorageKeys.onboardingCompleted, defaultValue: false)
-              as bool;
-
-      if (!onboardingCompleted &&
-          location != AppRoutes.onboarding &&
-          location != AppRoutes.splash) {
-        return AppRoutes.onboarding;
-      }
-
-      final isAllowedWithoutAuth = _isPublicRouteWithoutAuth(location);
-
-      if (!session.isAuthenticated && !isAllowedWithoutAuth) {
-        final current = Uri.encodeComponent(state.uri.toString());
-        return '${AppRoutes.auth}?redirectTo=$current';
-      }
-
+      // Consume redirectTo before authGuardRedirect so authenticated users
+      // on /auth?redirectTo=/bookings land at /bookings, not /home
       if (session.isAuthenticated) {
-        final setupRedirect = _requiredSetupRedirect(location);
-        if (setupRedirect != null) {
-          return setupRedirect;
-        }
+        final redirectTo = state.uri.queryParameters['redirectTo'];
+        if (redirectTo != null && redirectTo.isNotEmpty) return redirectTo;
       }
 
-      // If onboarding just completed and user is redirected to /auth,
-      // or if they are authenticated and try to go to auth pages, redirect to home.
-      if (session.isAuthenticated && _authEntryRoutes.contains(location)) {
-        final redirect = state.uri.queryParameters['redirectTo'];
-        if (redirect != null && redirect.isNotEmpty) return redirect;
-        return AppRoutes.home;
-      }
+      final redirect = authGuardRedirect(session: session, location: location);
+      if (redirect != null) return redirect;
+
       return null;
     },
     routes: [
@@ -249,6 +161,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ProfileBootstrapPage(
           requiredSetup: state.uri.queryParameters['required'] == '1',
           nextRoute: state.uri.queryParameters['next'] ?? AppRoutes.home,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.paymentCallback,
+        builder: (_, state) => PaymentCallbackRedirectPage(
+          bookingId: state.uri.queryParameters['bookingId'],
+          paymentId: state.uri.queryParameters['paymentId'],
+          token: state.uri.queryParameters['token'],
         ),
       ),
 
@@ -305,11 +225,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                       state.uri.queryParameters['next'] ?? AppRoutes.home,
                 ),
               ),
-              // Promos hidden —
-              // GoRoute(
-              //   path: 'vouchers',
-              //   builder: (_, __) => const VouchersPage(),
-              // ),
               GoRoute(
                 path: 'memberships',
                 builder: (_, _) => const MembershipsPage(),
@@ -323,7 +238,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // ── Salon list pages ──────────────────────────────────────────────────────
+      // ── Salon list pages ──────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.salonsNearby,
         builder: (_, _) => const SalonsListPage(filter: SalonListFilter.nearby),
@@ -364,7 +279,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final salonId = state.uri.queryParameters['salonId'];
           if (salonId == null || salonId.isEmpty) {
-            return const _BookingRouteErrorPage(
+            return const BookingRouteErrorPage(
               title: 'Réservation indisponible',
               message:
                   'Le salon est manquant. Revenez à la fiche salon puis relancez la réservation.',
@@ -382,7 +297,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               salonId.isEmpty ||
               serviceId == null ||
               serviceId.isEmpty) {
-            return const _BookingRouteErrorPage(
+            return const BookingRouteErrorPage(
               title: 'Réservation incomplète',
               message:
                   'La prestation ou le salon est manquant. Reprenez la réservation depuis la fiche salon.',
@@ -400,7 +315,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               salonId.isEmpty ||
               serviceId == null ||
               serviceId.isEmpty) {
-            return const _BookingRouteErrorPage(
+            return const BookingRouteErrorPage(
               title: 'Créneau indisponible',
               message:
                   'Le créneau ne peut pas être chargé sans salon et prestation. Reprenez la réservation.',
@@ -421,8 +336,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/booking/payment-handoff/:bookingId',
-        builder: (_, state) =>
-            PaymentHandoffPage(bookingId: state.pathParameters['bookingId']!),
+        builder: (_, state) => PaymentHandoffPage(
+          bookingId: state.pathParameters['bookingId']!,
+          resumePaymentId: state.uri.queryParameters['paymentId'],
+          openedFromCallback: state.uri.queryParameters['fromCallback'] == '1',
+        ),
       ),
       GoRoute(
         path: '/booking/success/:bookingId',
@@ -446,45 +364,12 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// ── Listenable that bridges Riverpod state to GoRouter ───────────────────
-
-class _SessionListenable extends ChangeNotifier {
-  _SessionListenable(this._ref) {
-    _ref.listen<SessionState>(sessionProvider, (_, _) => notifyListeners());
-  }
-  final Ref _ref;
-}
-
-class _AppRouteRefreshObserver extends NavigatorObserver {
-  _AppRouteRefreshObserver(this._ref);
-
-  final Ref _ref;
-  DateTime _lastRefresh = DateTime.fromMillisecondsSinceEpoch(0);
-
-  void _refresh() {
-    final now = DateTime.now();
-    if (now.difference(_lastRefresh) < const Duration(milliseconds: 350)) {
-      return;
-    }
-    _lastRefresh = now;
-    _ref.read(appReactivityProvider).refreshAll();
-  }
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _refresh();
-    super.didPush(route, previousRoute);
-  }
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _refresh();
-    super.didPop(route, previousRoute);
-  }
-}
-
-class _BookingRouteErrorPage extends StatelessWidget {
-  const _BookingRouteErrorPage({required this.title, required this.message});
+class BookingRouteErrorPage extends StatelessWidget {
+  const BookingRouteErrorPage({
+    required this.title,
+    required this.message,
+    super.key,
+  });
 
   final String title;
   final String message;
@@ -496,51 +381,50 @@ class _BookingRouteErrorPage extends StatelessWidget {
         showBackButton: true,
         onBack: () => GoRouter.of(context).go(AppRoutes.home),
       ),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppIcon('alert-circle', size: 48, color: AppColors.error),
-                SizedBox(height: 20.h),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.displaySm,
+      // no extra SafeArea top — AppScaffold/AppBar already handle the status bar inset
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppIcon('alert-circle', size: 48, color: AppColors.error),
+              SizedBox(height: 20.h),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.displaySm,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
                 ),
-                SizedBox(height: 12.h),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+              ),
+              SizedBox(height: 24.h),
+              FilledButton(
+                onPressed: () => GoRouter.of(context).go(AppRoutes.home),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 32.w,
+                    vertical: 14.h,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
                 ),
-                SizedBox(height: 24.h),
-                FilledButton(
-                  onPressed: () => GoRouter.of(context).go(AppRoutes.home),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 32.w,
-                      vertical: 14.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                  ),
-                  child: Text(
-                    "Retour à l'accueil",
-                    style: AppTextStyles.labelLg.copyWith(
-                      color: AppColors.onPrimary,
-                    ),
+                child: Text(
+                  "Retour à l'accueil",
+                  style: AppTextStyles.labelLg.copyWith(
+                    color: AppColors.onPrimary,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

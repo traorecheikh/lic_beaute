@@ -220,6 +220,42 @@ describe("PaymentController", () => {
     }));
   });
 
+  it("keeps an authorized payment authorized when provider confirmation is still pending", async () => {
+    mocks.adapter.fetchPaymentStatus.mockResolvedValue("pending");
+    mocks.prisma.payment.findUnique
+      .mockResolvedValueOnce({
+        id: "pay_1",
+        bookingId: "book_1",
+        amountXof: 12000,
+        status: "authorized",
+        provider: "paydunya",
+        providerTxId: "REF_123",
+        webhookSignature: "tok_123",
+        updatedAt: new Date(Date.now() - 61_000),
+        createdAt: new Date("2026-05-05T10:00:00.000Z"),
+        booking: { id: "book_1", clientId: "client_1" }
+      })
+      .mockResolvedValueOnce({
+        id: "pay_1",
+        bookingId: "book_1",
+        amountXof: 12000,
+        status: "authorized",
+        provider: "paydunya",
+        providerTxId: "REF_123",
+        createdAt: new Date("2026-05-05T10:00:00.000Z")
+      });
+
+    await controller.reconcile({ params: { paymentId: "pay_1" } } as never, {} as never);
+
+    expect(mocks.adapter.fetchPaymentStatus).toHaveBeenCalledWith({ providerToken: "tok_123" });
+    expect(mocks.prisma.platformSetting.upsert).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      id: "pay_1",
+      status: "authorized"
+    }));
+  });
+
   it("throttles reconcile calls within guard window", async () => {
     const lastTs = Date.now();
     mocks.prisma.platformSetting.findUnique.mockResolvedValue({ value: String(lastTs) });

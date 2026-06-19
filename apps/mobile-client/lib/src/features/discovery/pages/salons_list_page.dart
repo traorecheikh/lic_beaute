@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_empty_state.dart';
@@ -24,15 +25,15 @@ class SalonsListPage extends ConsumerWidget {
   final SalonListFilter filter;
 
   String get _title => switch (filter) {
-    SalonListFilter.nearby => 'Près de vous',
-    SalonListFilter.prestige => 'Adresses prestige',
-    SalonListFilter.topRated => 'Les mieux notés',
-    SalonListFilter.trending => 'Tendance',
+    SalonListFilter.nearby => AppStrings.nearbySection,
+    SalonListFilter.prestige => AppStrings.prestigeSection,
+    SalonListFilter.topRated => AppStrings.topRatedSection,
+    SalonListFilter.trending => AppStrings.trendingSection,
   };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<SalonSummaryListResponseItemsInner>> salonsAsync =
+    final AsyncValue<List<SearchSuggestionsResponseTopMatchesInner>> salonsAsync =
         switch (filter) {
           SalonListFilter.nearby =>
             ref.watch(nearbyProvider).whenData((v) => v ?? []),
@@ -74,8 +75,8 @@ class SalonsListPage extends ConsumerWidget {
       ),
       body: AppAsyncView(
         value: salonsAsync,
-        errorTitle: 'Impossible de charger les salons',
-        serverTitle: 'Le catalogue est indisponible',
+        errorTitle: AppStrings.loadSalonsError,
+        serverTitle: AppStrings.catalogUnavailableServer,
         onRetry: refresh,
         builder: (items) {
           return RefreshIndicator.adaptive(
@@ -94,8 +95,8 @@ class SalonsListPage extends ConsumerWidget {
                     height: MediaQuery.of(context).size.height * 0.55,
                     child: AppEmptyState(
                       icon: 'store',
-                      title: 'Aucun salon disponible',
-                      subtitle: 'Les salons de cette catégorie apparaîtront ici.',
+                      title: AppStrings.noSalonTitle,
+                      subtitle: AppStrings.noSalonCategorySubtitle,
                     ),
                   );
                 }
@@ -111,7 +112,7 @@ class SalonsListPage extends ConsumerWidget {
 
 class _SalonCard extends StatelessWidget {
   const _SalonCard({required this.salon});
-  final SalonSummaryListResponseItemsInner salon;
+  final SearchSuggestionsResponseTopMatchesInner salon;
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +174,7 @@ class _SalonCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppRadius.sm.r),
                       ),
                       child: Text(
-                        'Prestige',
+                        AppStrings.sortPrestige,
                         style: AppTextStyles.labelSm.copyWith(
                           color: AppColors.white,
                           fontSize: 9.sp,

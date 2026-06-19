@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -102,11 +103,11 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet>
       ref.invalidate(bookingsListProvider);
       await ReviewPromptManager.permanentlySuppress(widget.bookingId);
       if (!mounted) return;
-      AppSnackbar.success(context, 'Merci pour votre avis ✨');
+      AppSnackbar.success(context, AppStrings.reviewSuccessMsg);
       Navigator.of(context, rootNavigator: true).pop(true);
     } catch (_) {
       if (!mounted) return;
-      AppSnackbar.error(context, "Impossible de publier l'avis.");
+      AppSnackbar.error(context, AppStrings.reviewSubmitError);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -143,7 +144,7 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet>
 
           // ── Question ──────────────────────────────────────────────────────
           Text(
-            "Comment s'est passée votre expérience ?",
+            AppStrings.howWasExperienceInline,
             style: AppTextStyles.headlineMd,
             textAlign: TextAlign.center,
           ),
@@ -169,7 +170,7 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet>
             duration: const Duration(milliseconds: 200),
             child: _rating == 0
                 ? Text(
-                    'Touchez une étoile pour noter',
+                    AppStrings.tapStarToRate,
                     key: const ValueKey('hint'),
                     style: AppTextStyles.bodySm.copyWith(
                       color: AppColors.onSurfaceVariant,
@@ -202,7 +203,7 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet>
           // ── Primary CTA ───────────────────────────────────────────────────
           AppButton.primary(
             onPressed: _rating == 0 ? null : _submit,
-            label: 'Publier mon avis',
+            label: AppStrings.reviewCta,
             isLoading: _submitting,
           ),
           gapH12,
@@ -212,17 +213,17 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _TextLink(label: 'Plus tard', onTap: _dismiss),
+                _TextLink(label: AppStrings.later, onTap: _dismiss),
                 SizedBox(width: 24.w),
                 _TextLink(
-                  label: 'Ne plus afficher',
+                  label: AppStrings.neverShowAgain,
                   onTap: _neverAgain,
                   faint: true,
                 ),
               ],
             ),
           ] else ...[
-            _TextLink(label: 'Annuler', onTap: _dismiss),
+            _TextLink(label: AppStrings.cancel, onTap: _dismiss),
           ],
         ],
       ),
@@ -230,11 +231,11 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet>
   }
 
   String _ratingLabel(int r) => switch (r) {
-        1 => 'Très décevant 😕',
-        2 => 'Passable 😐',
-        3 => 'Bien 🙂',
-        4 => 'Très bien 😊',
-        _ => 'Excellent ! ✨',
+        1 => AppStrings.rating1,
+        2 => AppStrings.rating2,
+        3 => AppStrings.rating3,
+        4 => AppStrings.rating4,
+        _ => AppStrings.rating5,
       };
 }
 
@@ -369,7 +370,7 @@ class _CommentField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Votre commentaire (optionnel)', style: AppTextStyles.labelMd),
+        Text(AppStrings.commentOptional, style: AppTextStyles.labelMd),
         gapH8,
         TextField(
           controller: controller,
@@ -377,7 +378,7 @@ class _CommentField extends StatelessWidget {
           maxLength: 500,
           textInputAction: TextInputAction.done,
           decoration: InputDecoration(
-            hintText: 'Partagez votre expérience en quelques mots...',
+            hintText: AppStrings.commentShareHint,
             hintStyle: AppTextStyles.bodySm.copyWith(
               color: AppColors.onSurfaceVariant,
             ),

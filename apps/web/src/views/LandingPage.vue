@@ -347,14 +347,27 @@
               </div>
             </div>
 
-            <!-- Right Column: Visual smartphone mockup -->
+            <!-- Right Column: Phone frame mockup -->
             <div class="lg:col-span-5 hidden lg:flex items-center justify-center">
-              <div class="relative w-full max-w-[280px] animate-float select-none">
-                <img 
-                  src="/phone_app_mockup-2.jpg" 
-                  alt="Beauté Avenue App Interface" 
-                  class="w-full h-auto object-contain"
-                />
+              <div class="phone-frame-wrapper animate-float select-none">
+                <!-- Phone shell -->
+                <div class="phone-shell">
+                  <!-- Side buttons -->
+                  <div class="phone-btn-vol-up"></div>
+                  <div class="phone-btn-vol-down"></div>
+                  <div class="phone-btn-power"></div>
+                  <!-- Screen bezel -->
+                  <div class="phone-screen-bezel">
+                    <!-- App screenshot inside screen -->
+                    <div class="phone-screen-inner">
+                      <img
+                        src="/phone_app_mockup-2.jpg"
+                        alt="Beauté Avenue App Interface"
+                        class="w-full h-full object-cover object-top"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -497,4 +510,83 @@ const proFeatures = [
 .pro-nav-link:hover {
   color: var(--color-text-primary) !important;
 }
+
+/* ── Phone frame mockup ──────────────────────────────────────────────────── */
+.phone-frame-wrapper {
+  width: 240px;
+  position: relative;
+}
+
+.phone-shell {
+  position: relative;
+  width: 100%;
+  /* iPhone-like proportions */
+  aspect-ratio: 9 / 19.5;
+  border-radius: 44px;
+  background: linear-gradient(160deg, #2a2a2a 0%, #111 50%, #1e1e1e 100%);
+  box-shadow:
+    0 0 0 1.5px #444,
+    0 0 0 3px #222,
+    0 35px 60px -10px rgba(0,0,0,0.55),
+    0 10px 25px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  padding: 10px;
+}
+
+/* Volume buttons — left side */
+.phone-btn-vol-up,
+.phone-btn-vol-down {
+  position: absolute;
+  left: -3.5px;
+  width: 3.5px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(to right, #333, #444);
+  box-shadow: -1px 0 2px rgba(0,0,0,0.5);
+}
+.phone-btn-vol-up {
+  top: 22%;
+  height: 9%;
+}
+.phone-btn-vol-down {
+  top: 33%;
+  height: 9%;
+}
+
+/* Power button — right side */
+.phone-btn-power {
+  position: absolute;
+  right: -3.5px;
+  top: 26%;
+  width: 3.5px;
+  height: 14%;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(to left, #333, #444);
+  box-shadow: 1px 0 2px rgba(0,0,0,0.5);
+}
+
+/* Screen bezel — inner black area */
+.phone-screen-bezel {
+  width: 100%;
+  height: 100%;
+  border-radius: 36px;
+  background: #000;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+/* The app screenshot fills the screen */
+.phone-screen-inner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.phone-screen-inner img {
+  display: block;
+}
+
 </style>

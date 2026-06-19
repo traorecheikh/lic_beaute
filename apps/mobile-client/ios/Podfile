@@ -1,3 +1,5 @@
+$flutter_swift_package_manager_enabled = false
+
 # Define a global platform for your project
 platform :ios, '15.0'
 

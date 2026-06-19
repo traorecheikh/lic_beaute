@@ -130,32 +130,10 @@ class AuthActions {
   }
 
   Future<void> _hydrateSession(AuthSession authSession) async {
-    // Store tokens first so apiV1MeGet gets a valid Authorization header
-    final notifier = _ref.read(sessionProvider.notifier);
-    await notifier.login(
+    await _hydrateSessionFromRaw(
       accessToken: authSession.accessToken,
       refreshToken: authSession.refreshToken,
-      userId: '',
     );
-    // Fetch userId + role from /me
-    final api = _ref.read(apiClientProvider).getAuthApi();
-    final meResponse = await api.apiV1MeGet();
-    final user = meResponse.data!;
-    if (user.role.name != 'client') {
-      await notifier.logout();
-      throw const ClientOnlyAuthException(
-        'Ce compte professionnel ne peut pas utiliser l’application cliente.',
-      );
-    }
-    await _primeSetupCache();
-    await notifier.login(
-      accessToken: authSession.accessToken,
-      refreshToken: authSession.refreshToken,
-      userId: user.id,
-      role: user.role.name,
-    );
-
-    _ref.read(fcmRegistrationServiceProvider).register();
   }
 
   Future<void> _hydrateSessionFromRaw({
@@ -163,6 +141,7 @@ class AuthActions {
     required String refreshToken,
   }) async {
     final notifier = _ref.read(sessionProvider.notifier);
+    // Store tokens first so apiV1MeGet gets a valid Authorization header
     await notifier.login(
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -174,7 +153,7 @@ class AuthActions {
     if (user.role.name != 'client') {
       await notifier.logout();
       throw const ClientOnlyAuthException(
-        'Ce compte professionnel ne peut pas utiliser l’application cliente.',
+        'Ce compte professionnel ne peut pas utiliser l\'application cliente.',
       );
     }
     await _primeSetupCache();
@@ -190,8 +169,12 @@ class AuthActions {
   Future<void> _primeSetupCache() async {
     final dio = _ref.read(dioProvider);
 
-    final profileResponse = await dio.get<Map<String, dynamic>>('/api/v1/me');
-    final profileData = profileResponse.data;
+    final results = await Future.wait([
+      dio.get<Map<String, dynamic>>('/api/v1/me'),
+      dio.get<Map<String, dynamic>>('/api/v1/me/payment-methods'),
+    ]);
+
+    final profileData = results[0].data;
     if (profileData != null) {
       await AppModelCache.putMap(
         StorageKeys.profileBox,
@@ -200,11 +183,8 @@ class AuthActions {
       );
     }
 
-    final paymentMethodsResponse = await dio.get<Map<String, dynamic>>(
-      '/api/v1/me/payment-methods',
-    );
     final paymentMethodsData =
-        paymentMethodsResponse.data ?? const <String, dynamic>{'items': []};
+        results[1].data ?? const <String, dynamic>{'items': []};
     await AppModelCache.putMap(
       StorageKeys.profileBox,
       StorageKeys.paymentMethods,

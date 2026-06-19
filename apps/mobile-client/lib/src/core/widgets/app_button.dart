@@ -179,7 +179,7 @@ class _AppButtonState extends State<AppButton> {
       padding: padding,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(100.r),
+        borderRadius: BorderRadius.circular(AppRadius.full.r),
         border: border,
       ),
       child: DefaultTextStyle(

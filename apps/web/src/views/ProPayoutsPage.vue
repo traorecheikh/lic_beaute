@@ -55,13 +55,21 @@
           </div>
           <div>
             <p class="section-label text-[10px] mb-1">Statut du compte</p>
-            <span :class="['px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest', verificationStatusClass]">
-              {{ verificationStatusLabel }}
-            </span>
+            <div class="space-y-2">
+              <span :class="['inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest', verificationStatusClass]">
+                {{ verificationStatusLabel }}
+              </span>
+              <p class="text-xs text-cocoa/60 leading-relaxed">
+                {{ verificationStatusHelp }}
+              </p>
+              <p v-if="settings?.payoutVerifiedAt" class="text-[11px] text-cocoa/50">
+                Validé le {{ dayjs(settings.payoutVerifiedAt).format("DD/MM/YYYY [à] HH:mm") }}.
+              </p>
+            </div>
           </div>
           <div class="md:col-span-4 flex justify-between items-center mt-4 pt-4 border-t border-outline-variant/30">
             <p class="text-xs text-cocoa/60 max-w-xl">
-              Les fonds sont versés automatiquement sur votre portefeuille mobile après réalisation des prestations et expiration du délai de retenue réglementaire.
+              Les fonds sont versés automatiquement sur votre portefeuille mobile après réalisation des prestations, expiration du délai de retenue réglementaire et validation manuelle de vos coordonnées par l'équipe Beauté Avenue.
             </p>
             <button @click="startEditingSettings" class="btn-secondary px-4 py-2 text-xs">
               Modifier
@@ -92,6 +100,7 @@
           <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-xs text-amber-800 space-y-1">
             <p class="font-bold">⚠️ Attention</p>
             <p>La modification de vos coordonnées bancaires gèle immédiatement vos versements en attente. Les paiements ne reprendront qu'après validation de vos nouveaux détails par l'équipe administrative de Beauté Avenue.</p>
+            <p>Cette validation est manuelle. Un administrateur Beauté Avenue vérifie le nom, le numéro et la méthode de versement avant de débloquer les règlements.</p>
           </div>
 
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-outline-variant/30">
@@ -267,6 +276,17 @@ const verificationStatusClass = computed(() => {
   if (stat === "verified") return "bg-primary/10 text-primary";
   if (stat === "rejected") return "bg-error/10 text-error";
   return "bg-secondary/10 text-secondary";
+});
+
+const verificationStatusHelp = computed(() => {
+  const stat = settings.value?.payoutVerificationStatus;
+  if (stat === "verified") {
+    return "Vos coordonnées ont été validées manuellement par l'équipe Beauté Avenue. Les versements peuvent partir automatiquement quand les autres conditions sont remplies.";
+  }
+  if (stat === "rejected") {
+    return "L'équipe Beauté Avenue a rejeté ces coordonnées. Les versements restent gelés jusqu'à mise à jour puis nouvelle validation.";
+  }
+  return "Vos coordonnées n'ont pas encore été validées par l'équipe Beauté Avenue. Les versements restent gelés tant qu'un administrateur ne les approuve pas.";
 });
 
 // Edit mode state

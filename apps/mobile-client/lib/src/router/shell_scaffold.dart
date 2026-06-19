@@ -124,42 +124,48 @@ class _NavItem extends StatelessWidget {
     final activeColor = AppColors.primary;
     final inactiveColor = AppColors.onSurfaceVariant.withValues(alpha: 0.5);
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppIcon(
-            item.icon,
-            size: 22,
-            color: isActive ? activeColor : inactiveColor,
-          ),
-          SizedBox(height: 3.h),
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 150),
-            style: TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 10.sp,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+    return Semantics(
+      label: item.label,
+      button: true,
+      selected: isActive,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+            children: [
+            AppIcon(
+              item.icon,
+              size: 22,
               color: isActive ? activeColor : inactiveColor,
-              letterSpacing: 0.2,
+              excludeFromSemantics: true,
             ),
-            child: Text(item.label),
-          ),
-          SizedBox(height: 4.h),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            width: isActive ? 4.r : 0,
-            height: isActive ? 4.r : 0,
-            decoration: BoxDecoration(
-              color: activeColor,
-              shape: BoxShape.circle,
+            SizedBox(height: 3.h),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 150),
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10.sp,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? activeColor : inactiveColor,
+                letterSpacing: 0.2,
+              ),
+              child: Text(item.label),
             ),
-          ),
-        ],
+            SizedBox(height: 4.h),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              width: isActive ? 4.r : 0,
+              height: isActive ? 4.r : 0,
+              decoration: BoxDecoration(
+                color: activeColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

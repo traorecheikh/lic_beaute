@@ -377,6 +377,9 @@ export class SearchController {
     const cityFilter = q.city ? Prisma.sql`AND s.city = ${q.city}` : Prisma.empty;
     const neighborhoodFilter = q.neighborhood ? Prisma.sql`AND s.neighborhood = ${q.neighborhood}` : Prisma.empty;
     const categoryFilter = q.category ? Prisma.sql`AND s.category = ${q.category}` : Prisma.empty;
+    const nearbyCoordFilter = q.sort === "nearby"
+      ? Prisma.sql`AND s.latitude IS NOT NULL AND s.longitude IS NOT NULL`
+      : Prisma.empty;
     const priceJoin = q.minPrice != null || q.maxPrice != null
       ? Prisma.sql`JOIN "Service" price_svc ON price_svc."salonId" = s.id AND price_svc."isActive" = true`
       : Prisma.empty;
@@ -555,6 +558,7 @@ export class SearchController {
         ${cityFilter}
         ${neighborhoodFilter}
         ${categoryFilter}
+        ${nearbyCoordFilter}
         ${priceWhere[0]}
         ${priceWhere[1]}
       ORDER BY ${orderBy}

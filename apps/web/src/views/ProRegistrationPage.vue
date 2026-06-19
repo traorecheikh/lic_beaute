@@ -78,7 +78,7 @@
                   <div>
                     <h3 class="row-primary text-base">Où se situe votre salon ?</h3>
                     <p class="row-meta mt-1 text-cocoa/60 max-w-sm">
-                      Utilisez la géolocalisation pour remplir automatiquement votre adresse, quartier et ville en un clic.
+                      Utilisez la géolocalisation pour remplir automatiquement votre adresse, quartier et ville en un clic. La position GPS permet à votre salon d'apparaître dans les résultats <strong>« Près de vous »</strong> sur l'application mobile.
                     </p>
                   </div>
                   <div class="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md justify-center mt-2">
@@ -130,6 +130,9 @@
 
                 <!-- State: Manual Address Inputs OR Editing Mode -->
                 <div v-else class="space-y-4 border border-outline-variant/60 p-5 rounded-2xl bg-neutral-bg/20">
+                  <p class="text-[11px] text-amber-700/70 bg-amber-50/70 -mx-5 -mt-5 px-5 py-2.5 border-b border-amber-100/60">
+                    <span class="font-medium">Astuce :</span> Pour être visible dans les résultats <strong>« Près de vous »</strong> sur l'application mobile, pensez à ajouter la position GPS de votre salon depuis votre profil après l'inscription.
+                  </p>
                   <div class="flex items-center justify-between">
                     <span class="section-label">Adresse de l'établissement</span>
                     <button
@@ -682,6 +685,8 @@ const form = reactive({
   city: "Dakar",
   address: "",
   neighborhood: "",
+  latitude: "",
+  longitude: "",
   description: "",
   teamSize: "Juste moi"
 });
@@ -909,6 +914,10 @@ async function geolocateUser() {
             }
           }
           
+          // Store GPS coordinates from geolocation
+          form.latitude = latitude.toFixed(6);
+          form.longitude = longitude.toFixed(6);
+
           // Set Geolocated states
           isGeolocated.value = true;
           showManualAddress.value = false;
@@ -1023,6 +1032,8 @@ async function submitRegistration() {
         address: form.address.trim(),
         neighborhood: form.neighborhood.trim() || undefined,
         description: form.description.trim() || `${form.category} à ${form.city}`,
+        latitude: form.latitude ? Number(form.latitude.replace(",", ".")) : undefined,
+        longitude: form.longitude ? Number(form.longitude.replace(",", ".")) : undefined,
       },
       hours: [0, 1, 2, 3, 4, 5, 6].map(d => ({
         dayOfWeek: d,

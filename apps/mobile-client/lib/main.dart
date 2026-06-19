@@ -1,4 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +14,9 @@ Future<void> main() async {
   await AppEnv.load();
   await AppCache.init();
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     await ForegroundNotificationService.init();
   } catch (error) {
     debugPrint('Firebase init skipped: $error');

@@ -256,6 +256,7 @@ app.post("/api/v1/pro/subscription/retain", (req, rep) => pro.retainSubscription
 
   // Admin Payouts
   app.get("/api/v1/admin/payouts", (req, rep) => admin.listMerchantPayoutsAdmin(req, rep));
+  app.get("/api/v1/admin/payouts/verification-queue", (req, rep) => admin.listPayoutVerificationQueue(req, rep));
   app.get("/api/v1/admin/payouts/:payoutId", (req, rep) => admin.payoutDetail(req, rep));
   app.post("/api/v1/admin/payouts/:payoutId/reconcile", paymentLimit, (req, rep) => admin.reconcilePayout(req, rep));
   app.post("/api/v1/admin/payouts/:payoutId/retry", paymentLimit, (req, rep) => admin.retryPayoutEndpoint(req, rep));

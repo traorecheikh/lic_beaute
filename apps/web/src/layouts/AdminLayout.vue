@@ -4,7 +4,7 @@
       <div class="mx-auto flex max-w-[1480px] items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <RouterLink
           to="/admin/dashboard"
-          class="flex min-w-0 items-center gap-5 transition hover:opacity-80"
+          class="flex min-w-0 shrink items-center gap-3 transition hover:opacity-80 sm:gap-5"
         >
           <img src="/logo.png" alt="Beauté Avenue" class="h-10 w-auto object-contain" />
           <div class="min-w-0">
@@ -12,7 +12,7 @@
           </div>
         </RouterLink>
 
-        <nav class="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
+        <nav class="hidden min-w-0 flex-1 items-center justify-center gap-1 2xl:flex">
           <RouterLink
             v-for="item in navItems"
             :key="item.to"
@@ -29,7 +29,7 @@
           </RouterLink>
         </nav>
 
-        <div class="ml-auto flex items-center gap-3">
+        <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <button @click="goToNotifications" class="relative p-2 text-white/40 hover:text-white transition" :title="`${adminUnreadCount} notification${adminUnreadCount !== 1 ? 's' : ''} non lue${adminUnreadCount !== 1 ? 's' : ''}`">
             <BellIcon class="w-5 h-5" :class="{ 'text-primary': adminUnreadCount > 0 }" />
             <span v-if="adminUnreadCount > 0" class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
@@ -37,7 +37,7 @@
             </span>
           </button>
 
-          <div class="hidden items-center gap-3 rounded-full border border-white/5 bg-white/5 pl-1 pr-4 py-1 md:flex">
+          <div class="hidden max-w-[220px] items-center gap-3 rounded-full border border-white/5 bg-white/5 pl-1 pr-3 py-1 xl:flex 2xl:pr-4">
             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary ring-1 ring-primary/20">
               {{ userInitials }}
             </div>
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <div class="border-t border-white/10 lg:hidden">
+      <div class="border-t border-white/10 2xl:hidden">
         <div class="mx-auto flex max-w-[1480px] gap-2 overflow-x-auto px-4 py-3 sm:px-6">
           <RouterLink
             v-for="item in navItems"

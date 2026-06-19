@@ -1,7 +1,7 @@
 name: beauteavenue_mobile_client
 description: Client mobile app for Beauté Avenue.
 publish_to: none
-version: 0.1.0+2
+version: 0.5.2
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -74,7 +74,7 @@ dependencies:
   freezed_annotation: ^3.0.0
   built_value: ^8.12.5
 
-  # Typography — Google Fonts (DM Sans + Cormorant Garamond)
+  # Typography — Google Fonts (Inter)
   google_fonts: ^8.1.0
 
   # SVG icon rendering
@@ -82,8 +82,6 @@ dependencies:
 
   # Native share sheet (iOS + Android)
   share_plus: ^12.0.2
-
-
 
   # Widget → PNG for share cards
   screenshot: ^3.0.0
@@ -100,7 +98,6 @@ dependencies:
   phone_form_field: ^10.0.17
   one_of: ^1.5.0
   flutter_dotenv: ^6.0.1
-
 
 dev_dependencies:
   flutter_test:

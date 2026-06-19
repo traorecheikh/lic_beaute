@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/providers/support_config_provider.dart';
 import '../../../core/utils/app_haptics.dart';
@@ -20,18 +21,18 @@ class SupportPage extends ConsumerWidget {
 
     return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: const AppTopBar(
-        title: 'Support & Assistance',
+      appBar: AppTopBar(
+        title: AppStrings.supportTitle,
         backgroundColor: AppColors.surface,
       ),
       body: configAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(child: Text('Impossible de charger les contacts.')),
+        error: (_, _) => Center(child: Text(AppStrings.loadContactsError)),
         data: (config) => ListView(
           padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),
           children: [
             Text(
-              'Contactez-nous',
+              AppStrings.contactUs,
               style: AppTextStyles.labelSm.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -39,8 +40,8 @@ class SupportPage extends ConsumerWidget {
             gapH12,
             SupportTile(
               icon: 'chat',
-              title: 'Chat en direct',
-              subtitle: 'Réponse en moins de 5 minutes',
+              title: AppStrings.liveChat,
+              subtitle: AppStrings.liveChatSubtitle,
               onTap: () {
                 AppHaptics.select();
                 _launchUrl(config.whatsApp);
@@ -49,8 +50,8 @@ class SupportPage extends ConsumerWidget {
             gapH12,
             SupportTile(
               icon: 'phone',
-              title: 'Appel téléphonique',
-              subtitle: 'Lun-Sam, 9h à 19h',
+              title: AppStrings.phoneCall,
+              subtitle: AppStrings.phoneCallSubtitle,
               onTap: () {
                 AppHaptics.select();
                 _launchUrl(config.telUri);
@@ -59,7 +60,7 @@ class SupportPage extends ConsumerWidget {
             gapH12,
             SupportTile(
               icon: 'mail',
-              title: 'Email',
+              title: AppStrings.email,
               subtitle: config.email,
               onTap: () {
                 AppHaptics.select();
@@ -68,7 +69,7 @@ class SupportPage extends ConsumerWidget {
             ),
             SizedBox(height: 32.h),
             Text(
-              'Questions fréquentes',
+              AppStrings.frequentlyAskedQuestions,
               style: AppTextStyles.labelSm.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),

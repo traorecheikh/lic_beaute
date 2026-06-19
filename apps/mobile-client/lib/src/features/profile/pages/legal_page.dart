@@ -10,6 +10,7 @@ import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
+import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
 class LegalPage extends ConsumerWidget {
@@ -39,12 +40,12 @@ class LegalPage extends ConsumerWidget {
     final configAsync = ref.watch(supportConfigProvider);
 
     return AppScaffold(
-      appBar: const AppTopBar(title: 'Mentions Légales', showBackButton: true),
+      appBar: AppTopBar(title: AppStrings.legalTitle, showBackButton: true),
       body: configAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text('Erreur')),
         data: (config) => ListView(
-          padding: EdgeInsets.all(24.w),
+          padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, MediaQuery.of(context).padding.bottom + 120.h),
           children: [
             ..._documents.map(
               (doc) => _buildLegalTile(context, doc.title, doc.subject, config.email),

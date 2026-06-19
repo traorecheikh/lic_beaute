@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_button.dart';
@@ -18,6 +19,7 @@ import '../../booking/utils/booking_format.dart';
 import '../../../core/utils/status_labels.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../../discovery/widgets/stale_data_notice.dart';
+import '../models/booking_detail.dart';
 import '../providers/booking_actions_provider.dart';
 import '../providers/bookings_list_provider.dart';
 import '../widgets/review_sheet.dart';
@@ -34,11 +36,11 @@ class BookingDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AppBookingAsyncScaffold<Map<String, dynamic>>(
+    return AppBookingAsyncScaffold<BookingDetail>(
       bookingId: bookingId,
       provider: bookingDetailResourceProvider,
-      errorTitle: 'Impossible de charger le rendez-vous',
-      serverTitle: 'Le détail du rendez-vous est indisponible',
+      errorTitle: AppStrings.bookingDetailError,
+      serverTitle: AppStrings.bookingDetailServer,
       sliverBuilder: (resource) {
         final salonId = resource.salonId;
         final totalAmountXof = resource.priceXof;
@@ -69,7 +71,7 @@ class BookingDetailPage extends ConsumerWidget {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 40.h),
+              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, MediaQuery.of(context).padding.bottom + 120.h),
               child: Column(
                 children: [
                   _StatusHeader(
@@ -79,35 +81,34 @@ class BookingDetailPage extends ConsumerWidget {
                   ),
                   gapH20,
                   _InfoSection(
-                    title: 'Où et quand',
+                    title: AppStrings.whereAndWhen,
                     children: [
                       _DetailRow(
                         icon: 'map-pin',
                         title: resource.salonName,
-                        subtitle:
-                            resource.data?['salonAddress'] as String? ?? '',
+                        subtitle: resource.data?.salonAddress ?? '',
                       ),
                       _DetailRow(
                         icon: 'calendar',
                         title: resource.fullFormattedDate,
                         subtitle:
-                            '${resource.formattedTime} (${resource.data?['durationMinutes'] ?? 45} min)',
+                            '${resource.formattedTime} (${resource.data?.durationMinutes ?? 45} min)',
                       ),
                       _DetailRow(
                         icon: 'user',
                         title: resource.employeeName,
-                        subtitle: 'Spécialiste',
+                        subtitle: AppStrings.funnelSpecialist,
                       ),
                     ],
                   ),
                   gapH20,
                   _InfoSection(
-                    title: 'Prestation',
+                    title: AppStrings.serviceLabel,
                     children: [
                       _DetailRow(
                         icon: 'sparkle',
                         title: resource.serviceName,
-                        subtitle: 'Prestation',
+                        subtitle: AppStrings.serviceLabel,
                         trailing: totalAmountXof != null
                             ? Text(
                                 xof(totalAmountXof),
@@ -122,8 +123,8 @@ class BookingDetailPage extends ConsumerWidget {
                         ),
                         _DetailRow(
                           icon: 'wallet',
-                          title: 'Acompte',
-                          subtitle: isDepositPaid ? 'Payé' : 'Requis',
+                          title: AppStrings.depositLabel,
+                          subtitle: isDepositPaid ? AppStrings.paid : AppStrings.required,
                           trailing: Text(
                             xof(isDepositPaid ? depositPaidXof : depositAmountXof),
                             style: AppTextStyles.bodyMd.copyWith(
@@ -140,11 +141,11 @@ class BookingDetailPage extends ConsumerWidget {
                           _DetailRow(
                             icon: 'info',
                             title: resource.status == 'completed'
-                                ? 'Payé sur place'
-                                : 'Reste à payer sur place',
+                                ? AppStrings.paidOnSite
+                                : AppStrings.remainingPayOnSite,
                             subtitle: resource.status == 'completed'
-                                ? 'Règlement effectué'
-                                : 'À régler au salon',
+                                ? AppStrings.settled
+                                : AppStrings.toPayOnSite,
                             trailing: Text(
                               xof(remainingXof),
                               style: AppTextStyles.bodyMd,
@@ -160,7 +161,7 @@ class BookingDetailPage extends ConsumerWidget {
                       bookingId: bookingId,
                       salonName: resource.salonName,
                       serviceName: resource.serviceName,
-                      logoUrl: resource.data?['salonLogoUrl'] as String?,
+                      logoUrl: resource.data?.salonLogoUrl,
                     ),
                     gapH16,
                   ],
@@ -173,7 +174,7 @@ class BookingDetailPage extends ConsumerWidget {
                               if (salonId.isEmpty) {
                                 AppSnackbar.error(
                                   context,
-                                  'Salon introuvable. Ouvrez la fiche salon pour réserver.',
+                                  AppStrings.salonNotFoundOnBooking,
                                 );
                                 return;
                               }
@@ -181,7 +182,7 @@ class BookingDetailPage extends ConsumerWidget {
                                 '${AppRoutes.bookingService}?salonId=$salonId',
                               );
                             },
-                            label: 'Réserver à nouveau',
+                            label: AppStrings.bookAgain,
                           ),
                         ),
                         SizedBox(width: 12.w),
@@ -192,9 +193,9 @@ class BookingDetailPage extends ConsumerWidget {
                               bookingId: bookingId,
                               salonName: resource.salonName,
                               serviceName: resource.serviceName,
-                              logoUrl: resource.data?['salonLogoUrl'] as String?,
+                              logoUrl: resource.data?.salonLogoUrl,
                             ),
-                            label: 'Laisser un avis',
+                            label: AppStrings.leaveReview,
                           ),
                         ),
                       ],
@@ -207,7 +208,7 @@ class BookingDetailPage extends ConsumerWidget {
                             onPressed: () => context.push(
                               AppRoutes.bookingManagePath(bookingId),
                             ),
-                            label: 'Modifier',
+                            label: AppStrings.modifyAction,
                           ),
                         ),
                         SizedBox(width: 12.w),
@@ -215,7 +216,7 @@ class BookingDetailPage extends ConsumerWidget {
                           child: AppButton.primary(
                             onPressed: () async {
                               final addr = Uri.encodeComponent(
-                                resource.data?['salonAddress'] as String? ?? '',
+                                resource.data?.salonAddress ?? '',
                               );
                               final appleUrl = Uri.parse('maps://?q=$addr');
                               final googleUrl = Uri.parse(
@@ -230,7 +231,7 @@ class BookingDetailPage extends ConsumerWidget {
                                 );
                               }
                             },
-                            label: 'Itinéraire',
+                            label: AppStrings.directions,
                           ),
                         ),
                       ],
@@ -243,17 +244,17 @@ class BookingDetailPage extends ConsumerWidget {
                           bool? confirm;
                           await AppDialog.show<void>(
                             context,
-                            title: 'Annuler le RDV ?',
-                            body: 'Cette action est irréversible.',
+                            title: AppStrings.cancelRdvQuestion,
+                            body: AppStrings.cancelIrreversible,
                             actions: [
                               AppDialogAction(
-                                label: 'Non',
+                                label: AppStrings.no,
                                 onPressed: () {
                                   confirm = false;
                                 },
                               ),
                               AppDialogAction(
-                                label: 'Annuler',
+                                label: AppStrings.cancelRdvAction,
                                 onPressed: () {
                                   confirm = true;
                                 },
@@ -266,11 +267,11 @@ class BookingDetailPage extends ConsumerWidget {
                               .read(bookingActionsProvider)
                               .cancel(bookingId);
                           if (!context.mounted) return;
-                          AppSnackbar.success(context, 'Rendez-vous annulé.');
+                          AppSnackbar.success(context, AppStrings.bookingCancelled);
                           context.pop();
                         },
                         child: Text(
-                          'Annuler le rendez-vous',
+                          AppStrings.cancelRdvAction,
                           style: AppTextStyles.labelLg.copyWith(
                             color: AppColors.error,
                           ),
@@ -337,7 +338,7 @@ class _StatusHeader extends StatelessWidget {
           Text(title, style: AppTextStyles.headlineSm),
           gapH4,
           Text(
-            'Réf. #${bookingId.split('-').first}',
+            '${AppStrings.refPrefix}${bookingId.split('-').first}',
             style: AppTextStyles.bodySm.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -466,15 +467,14 @@ class _RatingPromptCardState extends State<_RatingPromptCard> {
         boxShadow: AppShadows.card,
       ),
       child: Column(
-        children: [
-          Text(
-            'Donnez votre avis',
+        children: [            Text(
+            AppStrings.giveReview,
             style: AppTextStyles.labelLg,
             textAlign: TextAlign.center,
           ),
           gapH4,
           Text(
-            'Comment s\'était ce rendez-vous ?',
+            AppStrings.howWasRdv,
             style: AppTextStyles.bodySm.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -523,7 +523,7 @@ class _RatingPromptCardState extends State<_RatingPromptCard> {
           ),
           gapH8,
           Text(
-            'Touchez une étoile pour laisser un avis',
+            AppStrings.tapStarToReview,
             style: AppTextStyles.bodySm.copyWith(
               color: AppColors.onSurfaceVariant,
             ),

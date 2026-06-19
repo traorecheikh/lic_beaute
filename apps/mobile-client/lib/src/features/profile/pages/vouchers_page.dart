@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_button.dart';
@@ -40,7 +41,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
 
     return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: const AppTopBar(title: 'Mes bons et codes', showBackButton: true),
+      appBar: AppTopBar(title: AppStrings.vouchersTitle, showBackButton: true),
       body: Column(
         children: [
           Expanded(
@@ -54,7 +55,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                 padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 24.h),
                 children: [
                   Text(
-                    'Codes enregistrés',
+                    AppStrings.savedCodesLabel,
                     style: AppTextStyles.labelSm.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -66,7 +67,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                     ],
                     error: (error, _) => [
                       AppErrorState(
-                        title: 'Impossible de charger vos codes',
+                        title: AppStrings.loadVouchersError,
                         message: error.toString(),
                         onRetry: () => ref.refresh(vouchersProvider.future),
                       ),

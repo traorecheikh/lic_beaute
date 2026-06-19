@@ -31,7 +31,8 @@ class LocationPermissionPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
+      // top: false because AppScaffold/AppBar already handle the status bar inset
+      body: SafeArea(top: false,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 32.w),
           child: Column(

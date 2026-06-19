@@ -118,7 +118,9 @@ export const salonOwnerRegisterInputSchema = z.object({
     city: z.string(),
     address: z.string(),
     neighborhood: z.string().optional(),
-    description: z.string().optional()
+    description: z.string().optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional()
   }),
   services: z.array(serviceCreateInputSchema),
   hours: z.array(hourInputSchema).length(7),

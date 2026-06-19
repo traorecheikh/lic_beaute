@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_scaffold.dart';
@@ -19,15 +20,15 @@ class NotificationPreferencesPage extends ConsumerWidget {
 
     return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: const AppTopBar(title: 'Notifications', showBackButton: true),
+      appBar: AppTopBar(title: AppStrings.notificationsTitle, showBackButton: true),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Padding(
           padding: EdgeInsets.all(24.r),
           child: AppErrorState(
             error: error,
-            fallbackTitle: 'Impossible de charger les préférences',
-            serverTitle: 'Service momentanément indisponible',
+            fallbackTitle: AppStrings.loadPrefsError,
+            serverTitle: AppStrings.serviceUnavailable,
             onRetry: () => ref.refresh(profileProvider.future),
           ),
         ),
@@ -37,13 +38,12 @@ class NotificationPreferencesPage extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 60.h),
             children: [
               _PreferenceGroup(
-                label: 'Alertes',
+                label: AppStrings.alertsSection,
                 children: [
                   _PrefTile(
                     icon: 'bell',
-                    title: 'Notifications push',
-                    subtitle:
-                        'Rappels de rendez-vous, confirmations et alertes salon.',
+                    title: AppStrings.pushNotifications,
+                    subtitle: AppStrings.pushNotificationsSubtitle,
                     value: profile.pushOptIn,
                     onChanged: (value) => _update(
                       context,
@@ -86,7 +86,7 @@ class NotificationPreferencesPage extends ConsumerWidget {
           );
     } catch (_) {
       if (!context.mounted) return;
-      AppSnackbar.error(context, 'Impossible de sauvegarder la préférence.');
+      AppSnackbar.error(context, AppStrings.savePrefError);
     }
   }
 }

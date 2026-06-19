@@ -257,6 +257,8 @@ export class AuthController {
             city: body.salon.city,
             address: body.salon.address,
             description: body.salon.description ?? "",
+            latitude: body.salon.latitude ?? null,
+            longitude: body.salon.longitude ?? null,
             subscriptionIntentTier: body.subscriptionIntentTier ?? "standard",
             approvalStatus: "pending_review"
           }

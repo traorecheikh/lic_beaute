@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -25,31 +26,31 @@ class BookingManagePage extends ConsumerWidget {
 
     return AppScaffold(
       backgroundColor: AppColors.neutral,
-      appBar: const AppTopBar(title: 'Modifier le RDV', showBackButton: true),
+      appBar: AppTopBar(title: AppStrings.manageBookingTitle, showBackButton: true),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => Center(
           child: Text(
-            'Impossible de charger les informations.',
+            AppStrings.loadBookingInfoError,
             style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
           ),
         ),
         data: (detail) {
-          final salonId = detail?['salonId'] as String? ?? '';
-          final serviceId = detail?['serviceId'] as String? ?? '';
+          final salonId = detail?.salonId ?? '';
+          final serviceId = detail?.serviceId ?? '';
 
           return Padding(
-            padding: EdgeInsets.all(24.w),
+            padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, MediaQuery.of(context).padding.bottom + 120.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _OptionCard(
                   icon: 'calendar',
-                  title: 'Déplacer le rendez-vous',
-                  subtitle: 'Changer la date ou l\'heure de votre prestation.',
+                  title: AppStrings.moveRdv,
+                  subtitle: AppStrings.moveRdvSubtitle,
                   onTap: () {
                     if (salonId.isEmpty || serviceId.isEmpty) {
-                      AppSnackbar.error(context, 'Informations manquantes.');
+                      AppSnackbar.error(context, AppStrings.missingInfo);
                       return;
                     }
                     context.push(
@@ -62,8 +63,8 @@ class BookingManagePage extends ConsumerWidget {
                 gapH16,
                 _OptionCard(
                   icon: 'close',
-                  title: 'Annuler le rendez-vous',
-                  subtitle: 'Si vous ne pouvez plus venir.',
+                  title: AppStrings.cancelRdvAction,
+                  subtitle: AppStrings.cancelRdvSubtitle,
                   isDestructive: true,
                   onTap: () => _confirmCancel(context, ref),
                 ),
@@ -79,21 +80,21 @@ class BookingManagePage extends ConsumerWidget {
     AppHaptics.medium();
     final confirmed = await AppSnackbar.confirmDestructive(
       context,
-      title: 'Annuler le rendez-vous ?',
-      body: 'Cette action est irréversible. Confirmez-vous l\'annulation ?',
-      confirmLabel: 'Annuler le RDV',
+      title: AppStrings.cancelRdvConfirmTitle,
+      body: AppStrings.cancelRdvConfirmBody,
+      confirmLabel: AppStrings.cancelRdvConfirmLabel,
     );
     if (!confirmed || !context.mounted) return;
 
     try {
       await ref.read(bookingActionsProvider).cancel(bookingId);
       if (!context.mounted) return;
-      AppSnackbar.success(context, 'Rendez-vous annulé.');
+      AppSnackbar.success(context, AppStrings.bookingCancelled);
       context.pop();
       context.pop();
     } catch (_) {
       if (!context.mounted) return;
-      AppSnackbar.error(context, 'Impossible d\'annuler le rendez-vous.');
+      AppSnackbar.error(context, AppStrings.cancelBookingError);
     }
   }
 }

@@ -9,6 +9,10 @@ class ForegroundNotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
+  /// Provides access to the initialized plugin for local notifications
+  /// outside of the FCM message flow (e.g., payment confirmation polling).
+  static FlutterLocalNotificationsPlugin get plugin => _plugin;
+
   /// Called when the user taps a notification.
   /// Receives the FCM data payload as `Map<String, String>`.
   static void Function(Map<String, String> data)? onNotificationTap;

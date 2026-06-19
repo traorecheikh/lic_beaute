@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:beauteavenue_mobile_client/src/features/appointments/models/booking_detail.dart';
 import 'package:beauteavenue_mobile_client/src/features/appointments/providers/bookings_list_provider.dart'
     show bookingDetailResourceProvider;
 import 'package:beauteavenue_mobile_client/src/features/booking/pages/booking_review_page.dart';
@@ -50,8 +51,8 @@ Widget _wrapBookingSuccessPage({String bookingId = 'booking-1'}) {
   return ProviderScope(
     overrides: [
       bookingDetailResourceProvider.overrideWith(
-        (ref, String id) async => CachedResource<Map<String, dynamic>>(
-          data: {
+        (ref, String id) async => CachedResource<BookingDetail>(
+          data: BookingDetail.fromJson({
             'salonName': 'Salon Test',
             'serviceName': 'Coupe Homme',
             'startsAt': '2026-06-10T14:30:00.000',
@@ -62,7 +63,7 @@ Widget _wrapBookingSuccessPage({String bookingId = 'booking-1'}) {
             'salonId': 'salon-1',
             'serviceId': 'service-1',
             'employeeName': 'Fatou',
-          },
+          }),
           isStale: false,
         ),
       ),

@@ -3,11 +3,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_contacts.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/services/foreground_notification_service.dart';
 import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
@@ -19,6 +23,7 @@ import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
+import '../../appointments/models/booking_detail.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../payment_handoff_navigation.dart';
@@ -28,10 +33,21 @@ import '../../profile/providers/payment_methods_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/booking_create_provider.dart';
 import '../providers/payment_methods_provider.dart';
+import '../widgets/method_tile.dart';
+import '../widgets/payment_form_fields.dart';
+import '../widgets/payment_waiting_sheet.dart';
 
 class PaymentHandoffPage extends ConsumerStatefulWidget {
   final String bookingId;
-  const PaymentHandoffPage({required this.bookingId, super.key});
+  final String? resumePaymentId;
+  final bool openedFromCallback;
+
+  const PaymentHandoffPage({
+    required this.bookingId,
+    this.resumePaymentId,
+    this.openedFromCallback = false,
+    super.key,
+  });
 
   @override
   ConsumerState<PaymentHandoffPage> createState() => _PaymentHandoffPageState();
@@ -54,7 +70,6 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       digits: 10,
     ),
   ];
-  // Use kPhoneCountries for other mobile money methods (wave, orange, etc.)
 
   String? _selectedMethod;
   String _selectedDjamoCountryCode = 'SN';
@@ -72,6 +87,18 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   bool _hasInitializedContactFields = false;
   bool _hasAppliedDefaultPaymentMethod = false;
   bool _initScheduled = false;
+  bool _resumedCallbackFlow = false;
+
+  // ── Background polling state ──────────────────────────────────────────
+  static const _maxBackgroundPollAttempts = 3;
+  static const _backgroundPollInterval = Duration(minutes: 15);
+  Timer? _backgroundPollTimer;
+  int _backgroundPollAttempts = 0;
+  String? _backgroundPollPaymentId;
+  bool _backgroundPollActive = false;
+  bool _backgroundPollExhausted = false;
+
+  // ── URL Launching ──────────────────────────────────────────────────────
 
   Future<bool> _launchExternalPaymentUri(
     Uri uri, {
@@ -83,17 +110,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           uri,
           mode: LaunchMode.externalNonBrowserApplication,
         );
-        if (launchedNonBrowser) {
-          return true;
-        }
+        if (launchedNonBrowser) return true;
       }
-
       final launched = await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );
       if (launched) return true;
-
       return launchUrl(uri, mode: LaunchMode.platformDefault);
     } catch (_) {
       try {
@@ -110,20 +133,17 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   }) async {
     for (final candidate in candidates) {
       final uri = Uri.tryParse(candidate?.trim() ?? '');
-      if (uri == null) {
-        continue;
-      }
+      if (uri == null) continue;
       final launched = await _launchExternalPaymentUri(
         uri,
         preferNonBrowser: preferNonBrowser,
       );
-      if (launched) {
-        return true;
-      }
+      if (launched) return true;
     }
-
     return false;
   }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -136,10 +156,15 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     _cardExpiryMonthController = TextEditingController();
     _cardExpiryYearController = TextEditingController();
     _walletPasswordController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _resumePaymentFromCallbackIfNeeded();
+    });
   }
 
   @override
   void dispose() {
+    _cancelBackgroundPolling();
     _phoneController.dispose();
     _nameController.dispose();
     _emailController.dispose();
@@ -223,6 +248,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     }
   }
 
+  // ── Build ──────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(
@@ -252,14 +279,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         !_hasInitializedContactFields) {
       _schedulePendingInit();
     }
-
     if (defaultMethod != null && !_hasAppliedDefaultPaymentMethod) {
       _schedulePendingInit();
     }
 
     final paydunyaMethodsAsync = ref.watch(availablePaydunyaMethodsProvider);
 
-    return AppBookingAsyncScaffold<Map<String, dynamic>>(
+    return AppBookingAsyncScaffold<BookingDetail>(
       bookingId: widget.bookingId,
       provider: bookingDetailResourceProvider,
       errorTitle: 'Paiement indisponible pour le moment',
@@ -269,172 +295,189 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       pageSubtitle: 'Sécurisez votre réservation avec un acompte.',
       bottomNavigationBar: _buildBottomBar(),
       sliverBuilder: (resource) {
-        final deposit =
-            (resource.data?['depositAmountXof'] as num?)?.toInt() ?? 0;
-
+        final deposit = resource.depositXof ?? 0;
         return [
+          if (_backgroundPollActive || _backgroundPollExhausted)
+            SliverToBoxAdapter(
+              child: _buildBackgroundPollBanner(),
+            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(20.r),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.12),
-                          AppColors.secondary.withValues(alpha: 0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.xl.r),
-                      border: Border.all(
-                        color: AppColors.primaryLight,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Acompte à régler',
-                                style: AppTextStyles.bodySm.copyWith(
-                                  color: AppColors.onSurfaceVariant,
-                                ),
-                              ),
-                              gapH4,
-                              Text(
-                                '$deposit XOF',
-                                style: AppTextStyles.headlineLg.copyWith(
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              resource.salonName,
-                              style: AppTextStyles.labelMd,
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              resource.serviceName,
-                              style: AppTextStyles.bodySm,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildDepositSummary(deposit, resource),
                   SizedBox(height: 28.h),
-                  if (defaultMethod != null) ...[
-                    // User has stored payment method — show summary, no form needed
-                    Text('Moyen de paiement', style: AppTextStyles.headlineSm),
-                    SizedBox(height: 12.h),
-                    Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.lg.r),
-                        border: Border.all(color: AppColors.outlineVariant),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  defaultMethod.label ?? 'Moyen de paiement',
-                                  style: AppTextStyles.labelLg,
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  profile != null && profile.fullName.isNotEmpty
-                                      ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
-                                      : defaultMethod.phoneNumber,
-                                  style: AppTextStyles.bodySm.copyWith(
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          AppIcon(
-                            'check-circle',
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ],
-                      ),
+                  if (_backgroundPollActive || _backgroundPollExhausted)
+                    const SizedBox.shrink()
+                  else if (defaultMethod != null)
+                    _buildStoredMethodSection(defaultMethod, profile)
+                  else if (profile != null && profile.fullName.isEmpty)
+                    _buildIncompleteProfileBanner(context)
+                  else
+                    _buildMethodSelector(
+                      paydunyaMethodsAsync,
+                      profile,
+                      defaultMethod,
                     ),
-                    if (_selectedMethod == 'djamo') ...[
-                      SizedBox(height: 12.h),
-                      _buildDjamoCountrySelector(),
-                    ],
-                  ] else if (profile != null && profile.fullName.isEmpty) ...[
-                    // No payment method + no profile name — redirect to complete profile
-                    _buildIncompleteProfileBanner(context),
-                  ] else ...[
-                    // No stored method — show selector + form
-                    Text('Moyen de paiement', style: AppTextStyles.headlineSm),
-                    SizedBox(height: 14.h),
-                    paydunyaMethodsAsync.when(
-                      loading: () => const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: CircularProgressIndicator.adaptive(),
-                        ),
-                      ),
-                      error: (error, _) => Text(
-                        'Impossible de charger les moyens de paiement',
-                        style: AppTextStyles.bodySm.copyWith(
-                          color: AppColors.error,
-                        ),
-                      ),
-                      data: (methods) => Column(
-                        children: methods.where((m) => m.enabled).map((method) {
-                          final isSelected = _selectedMethod == method.code;
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 10.h),
-                            child: Column(
-                              children: [
-                                _MethodTile(
-                                  id: method.code,
-                                  label: method.label,
-                                  selected: isSelected,
-                                  onTap: () => setState(
-                                    () => _selectedMethod = method.code,
-                                  ),
-                                ),
-                                if (isSelected)
-                                  _buildFormForMethod(
-                                    method.code,
-                                    profile: profile,
-                                    defaultMethod: defaultMethod,
-                                  ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
           ),
         ];
       },
+    );
+  }
+
+  Widget _buildDepositSummary(
+    int deposit,
+    CachedResource<BookingDetail> resource,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.secondary.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
+        border: Border.all(color: AppColors.primaryLight, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Acompte à régler',
+                  style: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                gapH4,
+                Text(
+                  '$deposit XOF',
+                  style: AppTextStyles.headlineLg.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(resource.salonName, style: AppTextStyles.labelMd),
+              SizedBox(height: 2.h),
+              Text(resource.serviceName, style: AppTextStyles.bodySm),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStoredMethodSection(dynamic defaultMethod, dynamic profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Moyen de paiement', style: AppTextStyles.headlineSm),
+        SizedBox(height: 12.h),
+        Container(
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.lg.r),
+            border: Border.all(color: AppColors.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      defaultMethod.label ?? 'Moyen de paiement',
+                      style: AppTextStyles.labelLg,
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      profile != null && profile.fullName.isNotEmpty
+                          ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
+                          : defaultMethod.phoneNumber,
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppIcon('check-circle', color: AppColors.primary, size: 24),
+            ],
+          ),
+        ),
+        if (_selectedMethod == 'djamo') ...[
+          SizedBox(height: 12.h),
+          _buildDjamoCountrySelector(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMethodSelector(
+    AsyncValue<List<PaydunyaMethodRecord>> paydunyaMethodsAsync,
+    dynamic profile,
+    dynamic defaultMethod,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Moyen de paiement', style: AppTextStyles.headlineSm),
+        SizedBox(height: 14.h),
+        paydunyaMethodsAsync.when(
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: CircularProgressIndicator.adaptive(),
+            ),
+          ),
+          error: (error, _) => Text(
+            'Impossible de charger les moyens de paiement',
+            style: AppTextStyles.bodySm.copyWith(color: AppColors.error),
+          ),
+          data: (methods) => Column(
+            children: methods.where((m) => m.enabled).map((method) {
+              final isSelected = _selectedMethod == method.code;
+              return Padding(
+                padding: EdgeInsets.only(bottom: 10.h),
+                child: Column(
+                  children: [
+                    MethodTile(
+                      id: method.code,
+                      label: method.label,
+                      selected: isSelected,
+                      onTap: () =>
+                          setState(() => _selectedMethod = method.code),
+                    ),
+                    if (isSelected)
+                      _buildFormForMethod(
+                        method.code,
+                        profile: profile,
+                        defaultMethod: defaultMethod,
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -505,337 +548,298 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     context.go(paymentHandoffBackFallbackRoute(widget.bookingId));
   }
 
+  // ── Form Builders ──────────────────────────────────────────────────────
+
   Widget _buildFormForMethod(
     String methodCode, {
     required dynamic profile,
     required dynamic defaultMethod,
   }) {
-    if (methodCode == 'carte_bancaire') {
-      return Container(
-        margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Security info banner
-            Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: AppColors.successContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: AppColors.success.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppIcon('shield-check', color: AppColors.success, size: 20),
-                  gapW8,
-                  Expanded(
-                    child: Text(
-                      'Les données de votre carte sont transmises de manière sécurisée via PayDunya (prestataire de paiement agréé). Elles ne sont pas stockées sur nos serveurs.',
-                      style: AppTextStyles.bodyXs.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
+    if (methodCode == 'carte_bancaire') return _buildCardForm();
+    if (methodCode == 'paydunya_wallet') return _buildWalletForm();
+    return _buildMobileMoneyForm(
+      methodCode,
+      profile: profile,
+      defaultMethod: defaultMethod,
+    );
+  }
+
+  Widget _buildCardForm() {
+    return Container(
+      margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.successContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.3),
               ),
             ),
-            Text('Informations de la carte', style: AppTextStyles.labelLg),
-            gapH12,
-            _buildTextField(
-              controller: _nameController,
-              label: 'Nom sur la carte',
-              hint: 'John Doe',
-            ),
-            gapH12,
-            _buildTextField(
-              controller: _emailController,
-              label: 'Email',
-              hint: 'john.doe@example.com',
-              keyboardType: TextInputType.emailAddress,
-            ),
-            gapH12,
-            _buildTextField(
-              controller: _cardNumberController,
-              label: 'Numéro de carte',
-              hint: '4111 1111 1111 1111',
-              keyboardType: TextInputType.number,
-              onChanged: _formatCardNumber,
-            ),
-            gapH12,
-            Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                AppIcon('shield-check', color: AppColors.success, size: 20),
+                gapW8,
                 Expanded(
-                  child: _buildTextField(
-                    controller: _cardExpiryMonthController,
-                    label: 'Mois exp. (MM)',
-                    hint: '12',
-                    keyboardType: TextInputType.number,
-                    maxLength: 2,
-                  ),
-                ),
-                gapW12,
-                Expanded(
-                  child: _buildTextField(
-                    controller: _cardExpiryYearController,
-                    label: 'Année exp. (YY)',
-                    hint: '28',
-                    keyboardType: TextInputType.number,
-                    maxLength: 2,
-                  ),
-                ),
-                gapW12,
-                Expanded(
-                  child: _buildTextField(
-                    controller: _cardCvvController,
-                    label: 'CVC / CVV',
-                    hint: '123',
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    maxLength: 4,
+                  child: Text(
+                    'Les données de votre carte sont transmises de manière sécurisée via PayDunya. Elles ne sont pas stockées sur nos serveurs.',
+                    style: AppTextStyles.bodyXs.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
             ),
-            gapH12,
-            Container(
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: AppColors.successContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: AppColors.success.withValues(alpha: 0.2),
+          ),
+          Text('Informations de la carte', style: AppTextStyles.labelLg),
+          gapH12,
+          buildPaymentTextField(
+            controller: _nameController,
+            label: 'Nom sur la carte',
+            hint: 'John Doe',
+          ),
+          gapH12,
+          buildPaymentTextField(
+            controller: _emailController,
+            label: 'Email',
+            hint: 'john.doe@example.com',
+            keyboardType: TextInputType.emailAddress,
+          ),
+          gapH12,
+          buildPaymentTextField(
+            controller: _cardNumberController,
+            label: 'Numéro de carte',
+            hint: '4111 1111 1111 1111',
+            keyboardType: TextInputType.number,
+            onChanged: _formatCardNumber,
+          ),
+          gapH12,
+          Row(
+            children: [
+              Expanded(
+                child: buildPaymentTextField(
+                  controller: _cardExpiryMonthController,
+                  label: 'Mois exp. (MM)',
+                  hint: '12',
+                  keyboardType: TextInputType.number,
+                  maxLength: 2,
                 ),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Checkbox(
-                    value: _pciDssAccepted,
-                    onChanged: (val) =>
-                        setState(() => _pciDssAccepted = val ?? false),
-                    activeColor: AppColors.primary,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 8.h),
-                      child: Text(
-                        "J'accepte de soumettre mes informations bancaires via PayDunya. Mes données sont chiffrées en transit (TLS) et non stockées sur Beauté Avenue.",
-                        style: AppTextStyles.bodySm.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
+              gapW12,
+              Expanded(
+                child: buildPaymentTextField(
+                  controller: _cardExpiryYearController,
+                  label: 'Année exp. (YY)',
+                  hint: '28',
+                  keyboardType: TextInputType.number,
+                  maxLength: 2,
+                ),
+              ),
+              gapW12,
+              Expanded(
+                child: buildPaymentTextField(
+                  controller: _cardCvvController,
+                  label: 'CVC / CVV',
+                  hint: '123',
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  maxLength: 4,
+                ),
+              ),
+            ],
+          ),
+          gapH12,
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.successContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: _pciDssAccepted,
+                  onChanged: (val) =>
+                      setState(() => _pciDssAccepted = val ?? false),
+                  activeColor: AppColors.primary,
+                  visualDensity: VisualDensity.compact,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 8.h),
+                    child: Text(
+                      "J'accepte de soumettre mes informations bancaires via PayDunya. Mes données sont chiffrées en transit (TLS) et non stockées sur Beauté Avenue.",
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
                       ),
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWalletForm() {
+    return Container(
+      margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Portefeuille PayDunya', style: AppTextStyles.labelLg),
+          gapH12,
+          buildPaymentTextField(
+            controller: _phoneController,
+            label: 'Numéro de téléphone / Email',
+            hint: 'john.doe@example.com ou 77XXXXXXX',
+          ),
+          gapH12,
+          buildPaymentTextField(
+            controller: _walletPasswordController,
+            label: 'Mot de passe PayDunya',
+            hint: '••••••••',
+            obscureText: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileMoneyForm(
+    String methodCode, {
+    required dynamic profile,
+    required dynamic defaultMethod,
+  }) {
+    final showOtpTip = methodCode == 'om_ci' || methodCode == 'om_bf';
+    String otpTip = '';
+    if (methodCode == 'om_ci') {
+      otpTip =
+          'Composez le #144*82# pour obtenir un code d\'autorisation Orange Money.';
+    } else if (methodCode == 'om_bf') {
+      otpTip =
+          'Générez un code OTP Orange Money en composant le *144*4*6*montant#.';
+    }
+
+    return Container(
+      margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Informations de paiement', style: AppTextStyles.labelLg),
+          if (methodCode == 'djamo') ...[gapH12, _buildDjamoCountrySelector()],
+          if (defaultMethod != null) ...[
+            gapH8,
+            Semantics(
+              label:
+                  'Moyen de paiement par défaut: ${defaultMethod.phoneNumber}',
+              child: Text(
+                profile != null && profile.fullName.isNotEmpty
+                    ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
+                    : defaultMethod.phoneNumber,
+                style: AppTextStyles.bodySm.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ),
-          ],
-        ),
-      );
-    } else if (methodCode == 'paydunya_wallet') {
-      return Container(
-        margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Portefeuille PayDunya', style: AppTextStyles.labelLg),
-            gapH12,
-            _buildTextField(
-              controller: _phoneController,
-              label: 'Numéro de téléphone / Email',
-              hint: 'john.doe@example.com ou 77XXXXXXX',
-            ),
-            gapH12,
-            _buildTextField(
-              controller: _walletPasswordController,
-              label: 'Mot de passe PayDunya',
-              hint: '••••••••',
-              obscureText: true,
-            ),
-          ],
-        ),
-      );
-    } else {
-      final showOtpTip = methodCode == 'om_ci' || methodCode == 'om_bf';
-      String otpTip = '';
-      if (methodCode == 'om_ci') {
-        otpTip =
-            'Composez le #144*82# pour obtenir un code d\'autorisation Orange Money.';
-      } else if (methodCode == 'om_bf') {
-        otpTip =
-            'Générez un code OTP Orange Money en composant le *144*4*6*montant#.';
-      }
-
-      return Container(
-        margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Informations de paiement', style: AppTextStyles.labelLg),
-            if (methodCode == 'djamo') ...[
-              gapH12,
-              _buildDjamoCountrySelector(),
-            ],
-            if (defaultMethod != null) ...[
-              gapH8,
+            if (profile?.email != null && profile!.email!.isNotEmpty)
               Semantics(
-                label:
-                    'Moyen de paiement par défaut: ${defaultMethod.phoneNumber}',
+                label: 'Email: ${profile.email}',
                 child: Text(
-                  profile != null && profile.fullName.isNotEmpty
-                      ? '${profile.fullName} · ${defaultMethod.phoneNumber}'
-                      : defaultMethod.phoneNumber,
+                  profile.email!,
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),
-              if (profile?.email != null && profile!.email!.isNotEmpty)
-                Semantics(
-                  label: 'Email: ${profile.email}',
-                  child: Text(
-                    profile.email!,
-                    style: AppTextStyles.bodySm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-            ] else ...[
-              gapH12,
-              AppPhoneField(
-                controller: _phoneController,
-                labelText: 'Numéro de téléphone',
-                initialCountry: _selectedDjamoCountryCode == 'CI'
-                    ? kPhoneCountries[1]
-                    : kPhoneCountries[0],
+          ] else ...[
+            gapH12,
+            AppPhoneField(
+              controller: _phoneController,
+              labelText: 'Numéro de téléphone',
+              initialCountry: _selectedDjamoCountryCode == 'CI'
+                  ? kPhoneCountries[1]
+                  : kPhoneCountries[0],
+            ),
+            gapH12,
+            buildPaymentTextField(
+              controller: _nameController,
+              label: 'Nom complet',
+              hint: 'John Doe',
+            ),
+            gapH12,
+            buildPaymentTextField(
+              controller: _emailController,
+              label: 'Email',
+              hint: 'john.doe@example.com',
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+          if (showOtpTip) ...[
+            gapH12,
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8.r),
               ),
-              gapH12,
-              _buildTextField(
-                controller: _nameController,
-                label: 'Nom complet',
-                hint: 'John Doe',
-              ),
-              gapH12,
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email',
-                hint: 'john.doe@example.com',
-                keyboardType: TextInputType.emailAddress,
-              ),
-            ],
-            if (showOtpTip) ...[
-              gapH12,
-              Container(
-                padding: EdgeInsets.all(12.r),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppIcon('info', color: AppColors.primary, size: 18),
-                    gapW8,
-                    Expanded(
-                      child: Text(
-                        otpTip,
-                        style: AppTextStyles.bodySm.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppIcon('info', color: AppColors.primary, size: 18),
+                  gapW8,
+                  Expanded(
+                    child: Text(
+                      otpTip,
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              gapH12,
-              _buildTextField(
-                controller: _walletPasswordController,
-                label: 'Code d\'autorisation OTP',
-                hint: '1234',
-                keyboardType: TextInputType.number,
-              ),
-            ],
+            ),
+            gapH12,
+            buildPaymentTextField(
+              controller: _walletPasswordController,
+              label: 'Code d\'autorisation OTP',
+              hint: '1234',
+              keyboardType: TextInputType.number,
+            ),
           ],
-        ),
-      );
-    }
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-    int? maxLength,
-    void Function(String)? onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.bodySm.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-        gapH4,
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          maxLength: maxLength,
-          onChanged: onChanged,
-          buildCounter:
-              (
-                context, {
-                required currentLength,
-                required isFocused,
-                maxLength,
-              }) => null,
-          style: AppTextStyles.bodySm.copyWith(color: AppColors.onSurface),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.bodySm.copyWith(color: AppColors.outline),
-            filled: true,
-            fillColor: AppColors.surfaceVariant,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 12.h,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -856,9 +860,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             child: Text(country.flag, style: TextStyle(fontSize: 20.sp)),
           );
         },
-        onChanged: (value) {
-          setState(() => _selectedDjamoCountryCode = value);
-        },
+        onChanged: (value) => setState(() => _selectedDjamoCountryCode = value),
       ),
     );
   }
@@ -867,9 +869,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     final digits = value.replaceAll(RegExp(r'\s+'), '');
     final formatted = StringBuffer();
     for (int i = 0; i < digits.length; i++) {
-      if (i > 0 && i % 4 == 0) {
-        formatted.write(' ');
-      }
+      if (i > 0 && i % 4 == 0) formatted.write(' ');
       formatted.write(digits[i]);
     }
     final text = formatted.toString();
@@ -880,6 +880,57 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   }
 
   Widget _buildBottomBar() {
+    if (_backgroundPollActive) {
+      return AppBottomBar(
+        child: SizedBox(
+          width: double.infinity,
+          child: AppButton.outline(
+            onPressed: () => AppSnackbar.info(
+              context,
+              AppStrings.paymentBackgroundSubtitle,
+            ),
+            label: AppStrings.paymentBackgroundTitle,
+            isLoading: true,
+          ),
+        ),
+      );
+    }
+
+    if (_backgroundPollExhausted) {
+      return AppBottomBar(
+        child: Row(
+          children: [
+            Expanded(
+              child: AppButton.outline(
+                onPressed: () =>
+                    _startBackgroundPolling(_backgroundPollPaymentId!),
+                label: AppStrings.paymentRetry,
+              ),
+            ),
+            gapW8,
+            Expanded(
+              child: AppButton.primary(
+                onPressed: () {
+                  final uri = Uri(
+                    scheme: 'mailto',
+                    path: AppContacts.supportEmail,
+                    queryParameters: {
+                      'subject':
+                          '${AppStrings.paymentSupportSubject} #${widget.bookingId}',
+                      'body':
+                          '${AppStrings.paymentSupportBody}${widget.bookingId}',
+                    },
+                  );
+                  unawaited(launchUrl(uri));
+                },
+                label: AppStrings.paymentContactSupport,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return AppBottomBar(
       child: AppButton.primary(
         onPressed: _selectedMethod == null ? null : _pay,
@@ -888,6 +939,111 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       ),
     );
   }
+
+  Widget _buildBackgroundPollBanner() {
+    if (_backgroundPollExhausted) {
+      return Container(
+        margin: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 0),
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: AppColors.error.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            AppIcon('alert-circle', color: AppColors.error, size: 24),
+            gapW12,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.paymentCheckFailedTitle,
+                    style: AppTextStyles.labelLg.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    AppStrings.paymentCheckFailedAction,
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 0),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppColors.primaryLight.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 20.r,
+            height: 20.r,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary,
+            ),
+          ),
+          gapW12,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.paymentBackgroundBanner,
+                  style: AppTextStyles.labelLg.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  AppStrings.paymentBackgroundBannerSub,
+                  style: AppTextStyles.bodyXs.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resumePaymentFromCallbackIfNeeded() async {
+    final paymentId = widget.resumePaymentId?.trim();
+    if (!widget.openedFromCallback ||
+        _resumedCallbackFlow ||
+        paymentId == null ||
+        paymentId.isEmpty ||
+        !mounted) {
+      return;
+    }
+    _resumedCallbackFlow = true;
+    await _pollPaymentConfirmationWithLaunchTargets(
+      paymentId: paymentId,
+      pendingProviderConfirmation: true,
+    );
+  }
+
+  // ── Payment Polling ────────────────────────────────────────────────────
 
   Future<void> _pollPaymentConfirmation(String paymentId) async {
     await _pollPaymentConfirmationWithLaunchTargets(paymentId: paymentId);
@@ -911,7 +1067,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       enableDrag: false,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return _PaymentWaitingSheet(
+        return PaymentWaitingSheet(
           paymentId: paymentId,
           onConfirmed: () {
             confirmed = true;
@@ -919,7 +1075,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           },
           onFailed: (msg) {
             Navigator.of(sheetContext).pop();
-            if (mounted) AppSnackbar.error(context, msg);
+            if (mounted) {
+              AppSnackbar.error(context, msg);
+            }
+          },
+          onCloseRequested: () {
+            Navigator.of(sheetContext).pop();
+            _handleWaitingSheetClose(paymentId);
           },
           onReopenPreferred: preferredLaunchUrl == null
               ? null
@@ -980,6 +1142,216 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       context.pushReplacement(AppRoutes.success(widget.bookingId));
     }
   }
+
+  // ── Background Polling (post-sheet dismiss) ─────────────────────────
+
+  Future<void> _handleWaitingSheetClose(String paymentId) async {
+    final didPay = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        title: Text(
+          AppStrings.paymentCloseConfirmTitle,
+          style: AppTextStyles.headlineSm,
+        ),
+        content: Text(
+          AppStrings.paymentCloseConfirmBody,
+          style: AppTextStyles.bodyMd,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              AppStrings.paymentCloseConfirmNo,
+              style: AppTextStyles.labelLg.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: Text(
+              AppStrings.paymentCloseConfirmYes,
+              style: AppTextStyles.labelLg,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (didPay == true) {
+      _startBackgroundPolling(paymentId);
+    } else {
+      if (context.canPop()) {
+        context.pop();
+      }
+    }
+  }
+
+  void _startBackgroundPolling(String paymentId) {
+    _backgroundPollPaymentId = paymentId;
+    _backgroundPollAttempts = 0;
+    _backgroundPollExhausted = false;
+    setState(() => _backgroundPollActive = true);
+
+    AppSnackbar.info(
+      context,
+      AppStrings.paymentBackgroundSubtitle,
+    );
+
+    _scheduleNextBackgroundPoll();
+  }
+
+  void _scheduleNextBackgroundPoll() {
+    _backgroundPollTimer?.cancel();
+    _backgroundPollTimer = Timer(_backgroundPollInterval, () {
+      _runBackgroundPollCheck();
+    });
+  }
+
+  Future<void> _runBackgroundPollCheck() async {
+    final paymentId = _backgroundPollPaymentId;
+    if (paymentId == null || !mounted) return;
+
+    _backgroundPollAttempts++;
+    try {
+      final status = await ref
+          .read(paymentInitiateProvider.notifier)
+          .reconcile(paymentId);
+
+      if (!mounted) return;
+
+      if (status == 'succeeded') {
+        _onBackgroundPollSuccess();
+        return;
+      }
+
+      if (status == 'failed' || status == 'refunded') {
+        if (_backgroundPollAttempts >= _maxBackgroundPollAttempts) {
+          _onBackgroundPollExhausted();
+          return;
+        }
+        _scheduleNextBackgroundPoll();
+        return;
+      }
+
+      if (_backgroundPollAttempts >= _maxBackgroundPollAttempts) {
+        _onBackgroundPollExhausted();
+        return;
+      }
+
+      _scheduleNextBackgroundPoll();
+    } catch (_) {
+      if (!mounted) return;
+      if (_backgroundPollAttempts >= _maxBackgroundPollAttempts) {
+        _onBackgroundPollExhausted();
+      } else {
+        _scheduleNextBackgroundPoll();
+      }
+    }
+  }
+
+  void _onBackgroundPollSuccess() {
+    _cancelBackgroundPolling();
+    if (mounted) {
+      // Show local notification (payment confirmed while in background)
+      _showPaymentConfirmedNotification();
+      // Navigate immediately
+      context.pushReplacement(AppRoutes.success(widget.bookingId));
+    }
+  }
+
+  void _onBackgroundPollExhausted() {
+    _cancelBackgroundPolling();
+    if (!mounted) return;
+    setState(() => _backgroundPollExhausted = true);
+
+    // Show notification that payment could not be confirmed
+    _showPaymentFailedNotification();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.paymentCheckFailedTitle),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: AppStrings.retry,
+            onPressed: () =>
+                _startBackgroundPolling(_backgroundPollPaymentId!),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _cancelBackgroundPolling() {
+    _backgroundPollTimer?.cancel();
+    _backgroundPollTimer = null;
+    if (mounted) {
+      setState(() {
+        _backgroundPollActive = false;
+      });
+    }
+  }
+
+  void _showPaymentConfirmedNotification() {
+    final plugin = ForegroundNotificationService.plugin;
+    plugin.show(
+      id: 0,
+      title: AppStrings.paymentConfirmedNotifTitle,
+      body: AppStrings.paymentConfirmedNotifBody,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'high_importance_channel',
+          'Beauté Avenue',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+        ),
+      ),
+      payload: 'type=payment_confirmed&bookingId=${widget.bookingId}',
+    );
+  }
+
+  void _showPaymentFailedNotification() {
+    final bookingId = widget.bookingId;
+    final plugin = ForegroundNotificationService.plugin;
+    plugin.show(
+      id: 1,
+      title: AppStrings.paymentCheckFailedTitle,
+      body: AppStrings.paymentCheckFailedSubtitle,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'high_importance_channel',
+          'Beauté Avenue',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+        ),
+      ),
+      payload: 'type=payment_failed&bookingId=$bookingId',
+    );
+  }
+
+  // ── OTP Dialog ──────────────────────────────────────────────────────────
 
   Future<String?> _showOtpDialog(String label) async {
     final codeController = TextEditingController();
@@ -1076,6 +1448,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     );
   }
 
+  // ── Main Pay Method ────────────────────────────────────────────────────
+
   Future<void> _pay() async {
     if (_selectedMethod == null) return;
 
@@ -1145,9 +1519,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           return;
         }
         if (mounted) {
-          await _pollPaymentConfirmationWithLaunchTargets(
-            paymentId: paymentId,
-          );
+          await _pollPaymentConfirmationWithLaunchTargets(paymentId: paymentId);
         }
         return;
       }
@@ -1194,12 +1566,10 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             method: _selectedMethod!,
             details: details,
           );
-
       if (!context.mounted) return;
 
       if (executeResult?['success'] == true) {
         final url = executeResult?['url'] as String?;
-        // OM deep links take priority over QR on mobile (per PayDunya docs)
         final omUrl =
             executeResult?['other_url']?['om_url'] as String? ??
             executeResult?['data']?['om_url'] as String?;
@@ -1223,17 +1593,17 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             }
           }
           if (mounted) {
-            final effectiveSecondary = (omUrl != null && maxitUrl != null && omUrl != maxitUrl)
-                ? maxitUrl
-                : null;
-            final effectiveHosted = _selectedMethod == 'orange_senegal'
-                ? null
-                : url;
             await _pollPaymentConfirmationWithLaunchTargets(
               paymentId: paymentId,
-              preferredLaunchUrl: omUrl ?? maxitUrl,
-              secondaryLaunchUrl: effectiveSecondary,
-              hostedLaunchUrl: effectiveHosted,
+              preferredLaunchUrl: launched ? null : omUrl ?? maxitUrl,
+              secondaryLaunchUrl: launched
+                  ? null
+                  : (omUrl != null && maxitUrl != null && omUrl != maxitUrl
+                        ? maxitUrl
+                        : null),
+              hostedLaunchUrl: launched || _selectedMethod == 'orange_senegal'
+                  ? null
+                  : url,
               channel: _selectedMethod,
               pendingProviderConfirmation:
                   executeResult?['pendingProviderConfirmation'] == true,
@@ -1271,7 +1641,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               final msg =
                   confirmResult?['message'] as String? ??
                   'Échec de la validation Wizall.';
-              if (mounted) AppSnackbar.error(context, msg);
+              if (mounted) {
+                AppSnackbar.error(context, msg);
+              }
             }
           }
           return;
@@ -1279,23 +1651,26 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
         if (url != null && url.isNotEmpty) {
           final uri = Uri.parse(url);
-          await _launchExternalPaymentUri(uri);
+          final launched = await _launchExternalPaymentUri(uri);
           if (mounted) {
             await _pollPaymentConfirmationWithLaunchTargets(
               paymentId: paymentId,
-              preferredLaunchUrl: url,
+              preferredLaunchUrl: launched ? null : url,
               channel: _selectedMethod,
             );
           }
           return;
         }
 
-        // Direct success (no redirect needed) — verify with PayDunya and navigate
-        if (mounted) await _pollPaymentConfirmation(paymentId);
+        if (mounted) {
+          await _pollPaymentConfirmation(paymentId);
+        }
       } else {
         final msg =
             executeResult?['message'] as String? ?? 'Échec du paiement.';
-        if (mounted) AppSnackbar.error(context, msg);
+        if (mounted) {
+          AppSnackbar.error(context, msg);
+        }
       }
     } catch (e) {
       if (!context.mounted) return;
@@ -1304,6 +1679,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
+
+  // ── Error Handling ────────────────────────────────────────────────────
 
   Future<void> _handlePaymentError(Object error) async {
     if (error is DioException) {
@@ -1320,7 +1697,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             'Ajoutez un numéro de téléphone à votre profil pour payer.',
           );
           await Future.delayed(const Duration(milliseconds: 600));
-          if (mounted) context.push(AppRoutes.profileEdit);
+          if (mounted) {
+            context.push(AppRoutes.profileEdit);
+          }
           return;
         case 'reconcile_throttled':
           AppSnackbar.info(
@@ -1332,13 +1711,13 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
         case 'invalid_status':
           AppSnackbar.error(
             context,
-            'Cette tentative de paiement n’est plus valide. Relancez le paiement.',
+            'Cette tentative de paiement n\'est plus valide. Relancez le paiement.',
           );
           return;
         case 'missing_invoice_token':
           AppSnackbar.error(
             context,
-            'Le paiement n’a pas pu être préparé correctement. Réessayez.',
+            'Le paiement n\'a pas pu être préparé correctement. Réessayez.',
           );
           return;
         case 'payment_not_found':
@@ -1349,7 +1728,9 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           return;
       }
     }
-    if (mounted) context.handleHttpError(error, 'Échec du paiement.');
+    if (mounted) {
+      context.handleHttpError(error, 'Échec du paiement.');
+    }
   }
 
   String? _channelFromMethod(dynamic method) {
@@ -1357,9 +1738,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     final provider = method.provider as String? ?? '';
     if (provider != 'paydunya') return null;
     final savedMethod = (method.method as String?)?.trim();
-    if (savedMethod != null && savedMethod.isNotEmpty) {
-      return savedMethod;
-    }
+    if (savedMethod != null && savedMethod.isNotEmpty) return savedMethod;
     final label = (method.label as String? ?? '');
     final code = channelFromMethodLabel(label);
     return code.isEmpty ? null : code;
@@ -1369,329 +1748,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
   String _inferDjamoCountryCodeFromMethod(dynamic method) {
     final savedCountry = (method?.country as String?)?.trim().toUpperCase();
-    if (savedCountry == 'CI' || savedCountry == 'SN') {
-      return savedCountry!;
-    }
+    if (savedCountry == 'CI' || savedCountry == 'SN') return savedCountry!;
     final phone = method?.phoneNumber as String? ?? '';
     return _inferDjamoCountryCode(phone);
-  }
-}
-
-class _MethodTile extends StatelessWidget {
-  const _MethodTile({
-    required this.id,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String id, label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.05)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.outlineVariant,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44.r,
-              height: 44.r,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: AppIcon(
-                  'smartphone',
-                  size: 20,
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-            ),
-            SizedBox(width: 14.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: AppTextStyles.labelLg),
-                  SizedBox(height: 2.h),
-                  Text(
-                    id.replaceAll('_', ' ').toUpperCase(),
-                    style: AppTextStyles.bodySm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (selected)
-              AppIcon('check-circle', color: AppColors.primary, size: 22)
-            else
-              AppIcon('circle', color: AppColors.outline, size: 22),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PaymentWaitingSheet extends StatefulWidget {
-  const _PaymentWaitingSheet({
-    required this.paymentId,
-    required this.onConfirmed,
-    required this.onFailed,
-    this.onReopenPreferred,
-    this.preferredLaunchLabel,
-    this.onReopenSecondary,
-    this.secondaryLaunchLabel,
-    this.onOpenHosted,
-    this.hostedLaunchLabel,
-    required this.reconcile,
-    this.pendingProviderConfirmation = false,
-  });
-
-  final String paymentId;
-  final VoidCallback onConfirmed;
-  final void Function(String message) onFailed;
-  final Future<void> Function()? onReopenPreferred;
-  final String? preferredLaunchLabel;
-  final Future<void> Function()? onReopenSecondary;
-  final String? secondaryLaunchLabel;
-  final Future<void> Function()? onOpenHosted;
-  final String? hostedLaunchLabel;
-  final Future<String?> Function(String paymentId) reconcile;
-  final bool pendingProviderConfirmation;
-
-  @override
-  State<_PaymentWaitingSheet> createState() => _PaymentWaitingSheetState();
-}
-
-class _PaymentWaitingSheetState extends State<_PaymentWaitingSheet>
-    with WidgetsBindingObserver {
-  static const _pollInterval = Duration(seconds: 6);
-  static const _timeout = Duration(minutes: 5);
-  static const _confirmPaidDelay = Duration(seconds: 30);
-  static const _maxConsecutiveFailures = 3;
-  bool _manualChecking = false;
-  bool _backgroundChecking = false;
-  int _elapsed = 0;
-  int _consecutiveFailures = 0;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _startPolling();
-    unawaited(_runCheck(showLoading: false));
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _consecutiveFailures = 0;
-      if (_timer == null && _elapsed < _timeout.inSeconds) {
-        _startPolling();
-      }
-      unawaited(_runCheck(showLoading: false));
-    }
-  }
-
-  void _startPolling() {
-    _timer = Timer.periodic(_pollInterval, (_) async {
-      _elapsed += _pollInterval.inSeconds;
-      if (_elapsed >= _timeout.inSeconds) {
-        _timer?.cancel();
-        return;
-      }
-      await _runCheck(showLoading: false);
-    });
-  }
-
-  Future<void> _check() async {
-    _consecutiveFailures = 0;
-    await _runCheck(showLoading: true);
-  }
-
-  Future<void> _runCheck({required bool showLoading}) async {
-    if ((_backgroundChecking || _manualChecking) || !mounted) return;
-    if (showLoading) {
-      setState(() => _manualChecking = true);
-    } else {
-      _backgroundChecking = true;
-    }
-    try {
-      final status = await widget.reconcile(widget.paymentId);
-      if (!mounted) return;
-      _consecutiveFailures = 0;
-      if (status == 'succeeded') {
-        _timer?.cancel();
-        widget.onConfirmed();
-      } else if (status == 'failed' || status == 'refunded') {
-        _timer?.cancel();
-        widget.onFailed('Le paiement a échoué. Veuillez réessayer.');
-      }
-    } catch (_) {
-      _consecutiveFailures++;
-      if (_consecutiveFailures >= _maxConsecutiveFailures) {
-        _timer?.cancel();
-        _timer = null;
-      }
-    } finally {
-      _backgroundChecking = false;
-      if (mounted) setState(() => _manualChecking = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final timedOut = _elapsed >= _timeout.inSeconds;
-    final networkLost = _consecutiveFailures >= _maxConsecutiveFailures;
-    final showConfirmPaid = widget.pendingProviderConfirmation &&
-        _elapsed >= _confirmPaidDelay.inSeconds;
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.outlineVariant,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            SizedBox(height: 28.h),
-          if (networkLost) ...[
-            AppIcon('wifi-off', color: AppColors.onSurfaceVariant, size: 48),
-            SizedBox(height: 20.h),
-            Text(
-              'Connexion perdue',
-              style: AppTextStyles.labelLg,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Vérifiez votre connexion internet et réessayez.',
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ] else if (!timedOut) ...[
-            SizedBox(
-              width: 48.r,
-              height: 48.r,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: AppColors.primary,
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'Vérification en cours…',
-              style: AppTextStyles.labelLg,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Complétez le paiement dans votre application, puis revenez ici.',
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ] else ...[
-            AppIcon('clock', color: AppColors.onSurfaceVariant, size: 48),
-            SizedBox(height: 20.h),
-            Text(
-              'En attente de confirmation',
-              style: AppTextStyles.labelLg,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Le paiement sera confirmé automatiquement dès que votre opérateur nous notifie. Vous pouvez fermer cette fenêtre.',
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          SizedBox(height: 24.h),
-          AppButton.outline(
-            label: _manualChecking ? 'Vérification…' : 'Vérifier maintenant',
-            onPressed: _manualChecking ? null : _check,
-            isLoading: _manualChecking,
-          ),
-          if (showConfirmPaid) ...[
-            SizedBox(height: 12.h),
-            AppButton.primary(
-              label: "J'ai effectué le paiement",
-              onPressed: _manualChecking ? null : _check,
-            ),
-          ],
-          if (widget.onReopenPreferred != null) ...[
-            SizedBox(height: 12.h),
-            AppButton.outline(
-              label:
-                  'Ouvrir ${widget.preferredLaunchLabel ?? 'le moyen de paiement'}',
-              onPressed: () => widget.onReopenPreferred!(),
-            ),
-          ],
-          if (widget.onReopenSecondary != null) ...[
-            SizedBox(height: 12.h),
-            AppButton.outline(
-              label:
-                  'Ouvrir ${widget.secondaryLaunchLabel ?? 'l’autre application'}',
-              onPressed: () => widget.onReopenSecondary!(),
-            ),
-          ],
-          if (widget.onOpenHosted != null) ...[
-            SizedBox(height: 12.h),
-            AppButton.outline(
-              label: 'Ouvrir ${widget.hostedLaunchLabel ?? 'la page PayDunya'}',
-              onPressed: () => widget.onOpenHosted!(),
-            ),
-          ],
-          if (timedOut) ...[
-            SizedBox(height: 12.h),
-            AppButton.primary(
-              label: 'Fermer',
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ],
-        ),
-      ),
-    );
   }
 }

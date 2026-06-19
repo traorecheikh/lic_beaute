@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -7,16 +8,17 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 const _storage = FlutterSecureStorage();
 const _deviceIdKey = 'fcm_device_id';
+const _maxRetries = 3;
 
 class FcmRegistrationService {
   final Dio _dio;
   bool _registered = false;
+  StreamSubscription<String>? _tokenRefreshSub;
 
   FcmRegistrationService(this._dio);
 
   Future<void> register() async {
     if (_registered) return;
-    _registered = true;
 
     final messaging = FirebaseMessaging.instance;
 
@@ -25,33 +27,60 @@ class FcmRegistrationService {
       badge: true,
       sound: true,
     );
-    if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      // Permission denied — not an error, just nothing to do
+      return;
+    }
 
-    final token = await messaging.getToken();
-    if (token == null) return;
+    var token = await messaging.getToken();
+    if (token == null) {
+      // Token not yet available — try again after a short delay
+      await Future.delayed(const Duration(seconds: 3));
+      token = await messaging.getToken();
+      if (token == null) return;
+    }
 
-    await _sendToken(token);
+    final ok = await _sendTokenWithRetry(token);
+    if (!ok) return; // all retries exhausted, will retry on next app start
 
-    messaging.onTokenRefresh.listen(_sendToken);
+    _registered = true;
+
+    // Listen for token refresh — re-register automatically
+    _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = messaging.onTokenRefresh.listen((newToken) {
+      _sendTokenWithRetry(newToken);
+    });
   }
 
   void reset() {
     _registered = false;
+    _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
   }
 
-  Future<void> _sendToken(String token) async {
-    try {
-      await _dio.post<void>(
-        '/api/v1/push-tokens',
-        data: {
-          'token': token,
-          'platform': Platform.isIOS ? 'ios' : 'android',
-          'deviceId': await _getDeviceId(),
-        },
-      );
-    } on DioException {
-      // best-effort — do not propagate
+  /// Sends the push token to the server with up to [_maxRetries] retries
+  /// and exponential backoff. Returns `true` if at least one attempt succeeded.
+  Future<bool> _sendTokenWithRetry(String token) async {
+    for (var attempt = 0; attempt < _maxRetries; attempt++) {
+      if (attempt > 0) {
+        // Exponential backoff: 1s, 3s, 7s
+        await Future.delayed(Duration(seconds: (pow(2, attempt) - 1).toInt()));
+      }
+      try {
+        await _dio.post<void>(
+          '/api/v1/push-tokens',
+          data: {
+            'token': token,
+            'platform': Platform.isIOS ? 'ios' : 'android',
+            'deviceId': await _getDeviceId(),
+          },
+        );
+        return true;
+      } on DioException {
+        // Will retry unless it's the last attempt
+      }
     }
+    return false;
   }
 
   static Future<String> _getDeviceId() async {

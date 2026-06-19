@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../constants/app_strings.dart';
 import '../network/app_network_error.dart';
 import '../network/connectivity_provider.dart';
 import '../theme/app_theme.dart';
@@ -46,13 +47,13 @@ class _AppErrorStateState extends ConsumerState<AppErrorState> {
         : resolveAppNetworkError(
             widget.error!,
             isOnline: isOnline,
-            offlineTitle: widget.offlineTitle ?? 'Connexion indisponible',
+            offlineTitle: widget.offlineTitle ?? AppStrings.connectionUnavailable,
             serverTitle:
-                widget.serverTitle ?? 'Service momentanément indisponible',
-            fallbackTitle: widget.fallbackTitle ?? 'Une erreur est survenue',
+                widget.serverTitle ?? AppStrings.serviceUnavailable,
+            fallbackTitle: widget.fallbackTitle ?? AppStrings.errorGeneric,
           );
-    final title = widget.title ?? resolved?.title ?? 'Une erreur est survenue';
-    final message = widget.message ?? resolved?.message ?? 'Réessayez.';
+    final title = widget.title ?? resolved?.title ?? AppStrings.errorGeneric;
+    final message = widget.message ?? resolved?.message ?? AppStrings.retryAction;
     final type = resolved?.type ?? AppNetworkErrorType.unknown;
 
     return AppStateCard(
@@ -98,7 +99,7 @@ class _AppErrorStateState extends ConsumerState<AppErrorState> {
                           ),
                         ),
                       )
-                    : const Text('Réessayer'),
+                    : const Text(AppStrings.retry),
               ),
             ),
           ],

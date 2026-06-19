@@ -1,8 +1,13 @@
 import 'package:beauteavenue_mobile_client/src/router/app_router.dart';
+import 'package:beauteavenue_mobile_client/src/router/guards.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('resolveRequiredSetupRedirect', () {
+    test('treats payment callback as public without auth', () {
+      expect(isPublicRouteWithoutAuth(AppRoutes.paymentCallback), isTrue);
+    });
+
     test('forces profile bootstrap when cached profile has no full name', () {
       expect(
         resolveRequiredSetupRedirect(

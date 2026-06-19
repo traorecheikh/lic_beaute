@@ -3,6 +3,7 @@ See [paydunya/taste.md](paydunya/taste.md)
 # workflow
 - Validate fixes by running the Docker build locally before committing and pushing. Confidence: 0.85
 - When a user asks how to access/verify something on a server they have SSH to, execute the command and show the result instead of just explaining the command. Confidence: 0.75
+- When fixing a systemic UI issue (e.g., navbar overlap affecting all ShellRoute pages), audit and fix ALL affected screens comprehensively instead of fixing just one occurrence. Confidence: 0.75
 
 # ui
 - Display form validation errors as field-level inline messages with red borders on the specific input fields, not as a generic message below the form. Confidence: 0.65

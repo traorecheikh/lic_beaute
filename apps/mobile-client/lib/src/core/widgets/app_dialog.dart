@@ -54,7 +54,7 @@ class _AppDialogWidget extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(AppRadius.lg.r),
           boxShadow: AppShadows.card,
         ),
         padding: EdgeInsets.all(24.w),

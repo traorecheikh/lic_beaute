@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -47,9 +48,9 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
   void _showBookingSheet(BuildContext context) {
     final salonId = widget.salonId.trim();
     if (salonId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Salon introuvable.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AppStrings.salonNotFound)));
       return;
     }
 
@@ -59,20 +60,24 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
     if (!context.mounted) return;
     context.push('${AppRoutes.bookingService}?salonId=$salonId');
     // Fire-and-forget prefetch in background for faster subsequent loads
-    ref.read(salonDetailResourceProvider(salonId).future).timeout(
-      const Duration(seconds: 12),
-    ).then((_) {
-      debugPrint('[BOOKING_CTA] background_prefetch_ok salonId=$salonId');
-    }).catchError((_) {
-      debugPrint('[BOOKING_CTA] background_prefetch_failed salonId=$salonId');
-    });
+    ref
+        .read(salonDetailResourceProvider(salonId).future)
+        .timeout(const Duration(seconds: 12))
+        .then((_) {
+          debugPrint('[BOOKING_CTA] background_prefetch_ok salonId=$salonId');
+        })
+        .catchError((_) {
+          debugPrint(
+            '[BOOKING_CTA] background_prefetch_failed salonId=$salonId',
+          );
+        });
   }
 
   void _openGallery(BuildContext context, List<String> images, int index) {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        barrierColor: Colors.black,
+        barrierColor: AppColors.black,
         pageBuilder: (_, _, _) =>
             _GalleryViewer(images: images, initialIndex: index),
         transitionsBuilder: (_, anim, _, child) =>
@@ -100,15 +105,15 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
           padding: EdgeInsets.all(24.r),
           child: AppErrorState(
             error: error,
-            fallbackTitle: 'Impossible de charger le salon',
-            serverTitle: 'La fiche salon est indisponible',
+            fallbackTitle: AppStrings.loadSalonDetailError,
+            serverTitle: AppStrings.salonDetailServer,
             onRetry: refreshSalon,
           ),
         ),
         data: (resource) {
           final salon = resource.data;
           if (salon == null) {
-            return const Center(child: Text('Salon introuvable.'));
+            return Center(child: Text(AppStrings.salonNotFound));
           }
 
           final galleryList = salon.gallery.toList();
@@ -203,7 +208,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     return Hero(
                                       tag: widget.heroTag!,
                                       child: Material(
-                                        color: Colors.transparent,
+                                        color: AppColors.transparent,
                                         child: imgWidget,
                                       ),
                                     );
@@ -224,7 +229,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      Colors.transparent,
+                                      AppColors.transparent,
                                       AppColors.neutral.withValues(alpha: 0.85),
                                     ],
                                   ),
@@ -253,8 +258,8 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: i == _heroPage
-                                            ? Colors.white
-                                            : Colors.white.withValues(
+                                            ? AppColors.white
+                                            : AppColors.white.withValues(
                                                 alpha: 0.45,
                                               ),
                                         borderRadius: BorderRadius.circular(
@@ -280,13 +285,15 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                       vertical: 5.h,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.black54,
-                                      borderRadius: BorderRadius.circular(AppRadius.full.r),
+                                      color: AppColors.black54,
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.full.r,
+                                      ),
                                     ),
                                     child: Text(
                                       '${_heroPage + 1} / ${images.length}',
                                       style: AppTextStyles.bodyXs.copyWith(
-                                        color: Colors.white,
+                                        color: AppColors.white,
                                       ),
                                     ),
                                   ),
@@ -322,7 +329,9 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.outline,
-                                    borderRadius: BorderRadius.circular(AppRadius.xs.r),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.xs.r,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -374,9 +383,10 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                             salon.averageRating.toStringAsFixed(
                                               1,
                                             ),
-                                            style: AppTextStyles.labelMd.copyWith(
-                                              color: AppColors.onSurface,
-                                            ),
+                                            style: AppTextStyles.labelMd
+                                                .copyWith(
+                                                  color: AppColors.onSurface,
+                                                ),
                                           ),
                                           SizedBox(width: 14.w),
                                         ],
@@ -406,7 +416,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     SizedBox(height: 24.h),
 
                                     // About
-                                    _SectionLabel('À propos'),
+                                    _SectionLabel(AppStrings.aboutSection),
                                     SizedBox(height: 10.h),
                                     Text(
                                       salon.description,
@@ -428,13 +438,13 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                   ),
                                   child: Row(
                                     children: [
-                                      _SectionLabel('Photos'),
+                                      _SectionLabel(AppStrings.photosSection),
                                       const Spacer(),
                                       AppPressable(
                                         onTap: () =>
                                             _openGallery(context, images, 0),
                                         child: Text(
-                                          'Voir tout',
+                                          AppStrings.viewAllCtaShort,
                                           style: AppTextStyles.bodySm.copyWith(
                                             color: AppColors.primary,
                                           ),
@@ -486,7 +496,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Services
-                                    _SectionLabel('Prestations populaires'),
+                                    _SectionLabel(AppStrings.popularServices),
                                     SizedBox(height: 12.h),
                                     ...salon.services
                                         .take(5)
@@ -501,7 +511,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     SizedBox(height: 28.h),
 
                                     // Map
-                                    _SectionLabel('Localisation'),
+                                    _SectionLabel(AppStrings.locationSection),
                                     SizedBox(height: 12.h),
                                     SalonMapCard(
                                       latitude:
@@ -536,7 +546,9 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                     category: salon.category,
                     location:
                         '${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
-                    rating: salon.reviewCount >= 3 ? salon.averageRating.toDouble() : null,
+                    rating: salon.reviewCount >= 3
+                        ? salon.averageRating.toDouble()
+                        : null,
                   ),
                 ),
               ),
@@ -548,10 +560,10 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                 bottom: 32.h,
                 child: Semantics(
                   button: true,
-                  label: 'Réserver',
+                  label: AppStrings.bookCta,
                   child: _BottomCta(
                     price: salon.services.isNotEmpty
-                        ? 'À partir de ${salon.services.first.priceXof.toInt()} XOF'
+                        ? '${AppStrings.fromPrice}${salon.services.first.priceXof.toInt()} XOF'
                         : null,
                     onBook: () => _showBookingSheet(context),
                   ),
@@ -599,7 +611,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
     final botPad = MediaQuery.of(context).padding.bottom;
 
     return AppScaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.black,
       body: Stack(
         children: [
           PageView.builder(
@@ -612,7 +624,7 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                 fit: BoxFit.contain,
                 placeholder: (_, _) => const Center(
                   child: CircularProgressIndicator(
-                    color: Colors.white38,
+                    color: AppColors.white38,
                     strokeWidth: 2,
                   ),
                 ),
@@ -630,10 +642,10 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                 width: 36,
                 height: 36,
                 decoration: const BoxDecoration(
-                  color: Colors.black54,
+                  color: AppColors.black54,
                   shape: BoxShape.circle,
                 ),
-                child: const AppIcon('close', color: Colors.white, size: 18),
+                child: const AppIcon('close', color: AppColors.white, size: 18),
               ),
             ),
           ),
@@ -650,12 +662,12 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: AppColors.black54,
                   borderRadius: BorderRadius.circular(AppRadius.full.r),
                 ),
                 child: Text(
                   '${_current + 1} / ${widget.images.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: AppColors.white, fontSize: 13),
                 ),
               ),
             ),
@@ -678,8 +690,8 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
                       color: i == _current
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.4),
+                          ? AppColors.white
+                          : AppColors.white.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(AppRadius.xs.r),
                     ),
                   ),
@@ -797,7 +809,7 @@ class _CircleBtn extends StatelessWidget {
           width: 36.r,
           height: 36.r,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.88),
+            color: AppColors.white.withValues(alpha: 0.88),
             shape: BoxShape.circle,
             boxShadow: AppShadows.sm,
           ),
@@ -826,7 +838,7 @@ class _BottomCta extends StatelessWidget {
       onTap: onBook,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 16.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: AppColors.onSurface,
           borderRadius: BorderRadius.circular(AppRadius.full.r),
@@ -843,9 +855,16 @@ class _BottomCta extends StatelessWidget {
           children: [
             AppIcon('calendar', color: AppColors.surface, size: 18),
             SizedBox(width: 8.w),
-            Text(
-              price != null ? 'Réserver · $price' : 'Choisir une prestation',
-              style: AppTextStyles.labelLg.copyWith(color: AppColors.surface),
+            Flexible(
+              child: Text(
+                price != null
+                    ? '${AppStrings.bookCta} · $price'
+                    : AppStrings.salonDetailCta,
+                style: AppTextStyles.labelLg.copyWith(color: AppColors.surface),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

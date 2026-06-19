@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDIZmDZwxVkLKYXow2l4ibkM5PfwhtApHs',
-    appId: '1:199272356684:android:7ecfe326fddc9bb9930de9',
+    appId: '1:199272356684:android:b95f24920d38d44a930de9',
     messagingSenderId: '199272356684',
     projectId: 'beauteavenue-915fa',
     storageBucket: 'beauteavenue-915fa.firebasestorage.app',
@@ -59,11 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAkvLzFU6ybceKOIKTyuHCI7eUsHQ9ZTAA',
-    appId: '1:199272356684:ios:188ada19ae3d1972930de9',
+    appId: '1:199272356684:ios:0e7aef6fff41db71930de9',
     messagingSenderId: '199272356684',
     projectId: 'beauteavenue-915fa',
     storageBucket: 'beauteavenue-915fa.firebasestorage.app',
-    iosBundleId: 'sn.lic.beauteavenu',
+    iosBundleId: 'sn.numuconnect.beauteavenue',
   );
 
 }

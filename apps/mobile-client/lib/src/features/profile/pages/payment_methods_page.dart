@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/providers/supported_countries_provider.dart';
 import '../../../core/utils/app_http_error_handler.dart';
@@ -67,17 +68,17 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
 
     return AppScaffold(
       appBar: AppTopBar(
-        title: 'Moyens de paiement',
+        title: AppStrings.paymentMethodsTitle,
         showBackButton: !widget.requiredSetup,
       ),
       body: methodsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => AppEmptyState(
           icon: 'star',
-          title: 'Impossible de charger vos moyens de paiement',
+          title: AppStrings.loadPaymentMethodsError,
           subtitle: error.toString(),
           action: () => ref.refresh(paymentMethodsProvider),
-          actionLabel: 'Réessayer',
+          actionLabel: AppStrings.retry,
         ),
         data: (methods) {
           if (widget.requiredSetup && methods.isNotEmpty) {
@@ -95,10 +96,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Dernière étape', style: AppTextStyles.labelLg),
+                      Text(AppStrings.lastStep, style: AppTextStyles.labelLg),
                       SizedBox(height: 8.h),
                       Text(
-                        'Ajoutez un moyen de paiement par défaut pour terminer la configuration de votre compte.',
+                        AppStrings.lastStepSubtitle,
                         style: AppTextStyles.bodySm.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -109,11 +110,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                 SizedBox(height: 12.h),
               ],
               if (methods.isEmpty)
-                const AppEmptyState(
+                AppEmptyState(
                   icon: 'star',
-                  title: 'Aucun moyen de paiement',
-                  subtitle:
-                      'Enregistrez un compte mobile money pour simplifier vos réservations.',
+                  title: AppStrings.noPaymentMethod,
+                  subtitle: AppStrings.noPaymentMethodSubtitle,
                 )
               else
                 ...methods.take(2).map(
@@ -139,10 +139,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ajouter un numéro', style: AppTextStyles.labelLg),
+                      Text(AppStrings.addPhoneNumber, style: AppTextStyles.labelLg),
                       SizedBox(height: 16.h),
                       AppDropdown<String>(
-                        label: 'Opérateur',
+                        label: AppStrings.operatorLabel,
                         value: _channel,
                         items: channelItems.map((item) => item.code).toList(),
                         itemLabel: (value) => channelItems
@@ -154,7 +154,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                       _buildPhoneField(_phoneController, _channel),
                       SizedBox(height: 24.h),
                       AppButton.primary(
-                        label: 'Ajouter',
+                        label: AppStrings.add,
                         onPressed: _saving ? null : _addMethod,
                         isLoading: _saving,
                       ),
@@ -210,7 +210,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Modifier le moyen de paiement',
+                      AppStrings.editPaymentMethod,
                       style: AppTextStyles.labelLg,
                     ),
                     SizedBox(height: 20.h),
@@ -248,8 +248,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                     TextField(
                       controller: labelController,
                       decoration: InputDecoration(
-                        labelText: 'Libellé (optionnel)',
-                        hintText: 'ex : Mon Wave principal',
+                        labelText: AppStrings.labelOptional,
+                        hintText: AppStrings.labelHint,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md.r),
                         ),
@@ -258,7 +258,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                     ),
                     SizedBox(height: 8.h),
                     AppButton.primary(
-                      label: 'Enregistrer',
+                      label: AppStrings.save,
                       isLoading: saving,
                       onPressed: saving
                           ? null

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_booking_async_scaffold.dart';
 import '../../../core/widgets/app_booking_header_badge.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../appointments/models/booking_detail.dart';
 import '../../appointments/providers/bookings_list_provider.dart';
 import '../../discovery/providers/cached_resource.dart';
 import '../providers/booking_actions_provider.dart';
@@ -37,11 +39,11 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
   @override
   Widget build(BuildContext context) {
     // Review form scaffold driven by the booking detail resource
-    return AppBookingAsyncScaffold<Map<String, dynamic>>(
+    return AppBookingAsyncScaffold<BookingDetail>(
       bookingId: widget.bookingId,
       provider: bookingDetailResourceProvider,
-      errorTitle: "Impossible de charger le formulaire d’avis",
-      serverTitle: "L’avis est indisponible",
+      errorTitle: AppStrings.loadReviewFormError,
+      serverTitle: AppStrings.reviewUnavailable,
       bottomNavigationBar: _buildBottomBar(),
       sliverBuilder: (bookingResource) {
         return [
@@ -57,13 +59,13 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                   ),
                   gapH24,
                   Text(
-                    "Comment s'est passée\nvotre expérience ?",
+                    AppStrings.howWasExperience,
                     style: AppTextStyles.headlineMd,
                     textAlign: TextAlign.center,
                   ),
                   gapH8,
                   Text(
-                    "Partagez votre avis sur ce rendez-vous.",
+                    AppStrings.shareReviewPrompt,
                     style: AppTextStyles.bodyMd.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -103,7 +105,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                   gapH32,
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Votre commentaire', style: AppTextStyles.labelLg),
+                    child: Text(AppStrings.yourComment, style: AppTextStyles.labelLg),
                   ),
                   gapH12,
                   TextField(
@@ -111,7 +113,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
                     maxLines: 5,
                     maxLength: 500,
                     decoration: InputDecoration(
-                      hintText: 'Écrivez votre message ici...',
+                      hintText: AppStrings.commentHint,
                       filled: true,
                       fillColor: AppColors.surface,
                       border: OutlineInputBorder(
@@ -133,7 +135,7 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
     return AppBottomBar(
       child: AppButton.primary(
         onPressed: _rating == 0 ? null : _submit,
-        label: 'Publier mon avis',
+        label: AppStrings.reviewCta,
         isLoading: _submitting,
       ),
     );
@@ -148,11 +150,11 @@ class _ReviewNewPageState extends ConsumerState<ReviewNewPage> {
             comment: _comment.text.trim(),
           );
       if (!mounted) return;
-      AppSnackbar.success(context, 'Merci pour votre avis !');
+      AppSnackbar.success(context, AppStrings.reviewSuccessMsg);
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      AppSnackbar.error(context, "Impossible de publier l’avis.");
+      AppSnackbar.error(context, AppStrings.reviewSubmitError);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
