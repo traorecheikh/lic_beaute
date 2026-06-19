@@ -423,7 +423,7 @@ export class SearchController {
 
     // Build ranking expression (skip text search for wildcard queries)
     const textRank = isWildcard ? Prisma.sql`0` : searchRankExpr(searchParam);
-    const searchWhere = isWildcard ? Prisma.empty : searchFilterWhere(searchParam);
+    const searchWhere = isWildcard ? Prisma.sql`1=1` : searchFilterWhere(searchParam);
 
     // Service match detection subquery for match_type
     const matchTypeExpr = Prisma.sql`
