@@ -8,6 +8,7 @@ import 'package:phone_form_field/phone_form_field.dart';
 import 'package:pinput/pinput.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -68,10 +69,10 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     final phoneText = _phoneController.value.international;
 
     return AuthPageScaffold(
-      title: _codeSent ? 'Vérification' : 'Inscription',
+      title: _codeSent ? AppStrings.authVerificationTitle : AppStrings.authTitle,
       subtitle: _codeSent
-          ? 'Code envoyé au $phoneText'
-          : 'Nous vous enverrons un code par SMS.',
+          ? '${AppStrings.authCodeSentTo}$phoneText'
+          : AppStrings.authSmsCode,
       leading: AppBackButton(
         onPressed: () {
           if (_codeSent) {
@@ -86,7 +87,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         children: [
           if (!_codeSent) ...[
             Text(
-              'NUMÉRO DE TÉLÉPHONE',
+              AppStrings.authPhoneLabel,
               style: AppTextStyles.labelSm.copyWith(
                 color: AppColors.onSurfaceVariant,
                 letterSpacing: 1.5,
@@ -142,7 +143,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             ),
             SizedBox(height: 48.h),
             AuthPrimaryButton(
-              label: 'RECEVOIR LE CODE',
+              label: AppStrings.authReceiveCode,
               loading: _submitting,
               onTap: _requestCode,
             ),
@@ -151,7 +152,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
               child: Column(
                 children: [
                   Text(
-                    'CODE À 6 CHIFFRES',
+                    AppStrings.authOtpCodeLabel,
                     style: AppTextStyles.labelSm.copyWith(
                       color: AppColors.onSurfaceVariant,
                       letterSpacing: 1.5,
@@ -199,7 +200,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             ),
             SizedBox(height: 48.h),
             AuthPrimaryButton(
-              label: 'VÉRIFIER LE CODE',
+              label: AppStrings.authVerifyCode,
               loading: _submitting,
               onTap: _verifyCode,
             ),
@@ -207,7 +208,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
             if (!_canResend)
               Center(
                 child: Text(
-                  'Renvoyer le code dans ${_secondsRemaining}s',
+                  '${AppStrings.authResendCodePrefix}${_secondsRemaining}${AppStrings.authResendCodeSuffix}',
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -220,7 +221,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                   TextButton(
                     onPressed: _submitting ? null : _requestCode,
                     child: Text(
-                      'Renvoyer le code',
+                      AppStrings.otpResend,
                       style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
                     ),
                   ),
@@ -230,7 +231,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                       context.push(AppRoutes.emailLogin);
                     },
                     child: Text(
-                      "Recourir à l'email",
+                      AppStrings.authUseEmail,
                       style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
                     ),
                   ),
@@ -246,7 +247,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                   child: Text(
-                    'Modifier le numéro',
+                    AppStrings.authModifyPhone,
                     style: AppTextStyles.labelSm.copyWith(
                       color: AppColors.onSurfaceVariant,
                       decoration: TextDecoration.underline,
@@ -267,7 +268,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     if (!_phoneController.value.isValid()) {
       AppSnackbar.info(
         context,
-        'Numéro invalide. Veuillez vérifier votre saisie.',
+        AppStrings.authInvalidPhone,
       );
       return;
     }
@@ -293,7 +294,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
     final code = _otpController.text.trim();
     
     if (code.length != 6) {
-      AppSnackbar.info(context, 'Le code doit contenir 6 chiffres.');
+      AppSnackbar.info(context, AppStrings.authCodeMustBe6);
       return;
     }
     AppHaptics.light();

@@ -18,6 +18,45 @@ abstract final class AppStrings {
   static const profileBootstrapTitle = 'Mon profil';
   static const profileBootstrapCta = 'Enregistrer mon profil';
   static const fullNameLabel = 'Nom complet';
+  static const signUpCta = "S'inscrire";
+  static const alreadyHaveAccount = 'Déjà un compte ?';
+  static const continueWithoutAccount = 'Continuer sans compte';
+  static const authTagline = 'Réservez les meilleurs salons\nde beauté autour de vous.';
+  static const authVerificationTitle = 'Vérification';
+  static const authCreateAccount = 'Créer un compte';
+  static const authEmailUppercase = 'EMAIL';
+  static const authReceiveCode = 'RECEVOIR LE CODE';
+  static const authVerifyCode = 'VÉRIFIER LE CODE';
+  static const authConnectCta = 'SE CONNECTER';
+  static const authCode6Digits = 'Un code à 6 chiffres vous a été envoyé par email.';
+  static const authCodeSentTo = 'Code envoyé au ';
+  static const authSmsCode = 'Nous vous enverrons un code par SMS.';
+  static const authCodeSentSuccess = 'Code OTP envoyé.';
+  static const authPhoneLabel = 'NUMÉRO DE TÉLÉPHONE';
+  static const authOtpCodeLabel = 'CODE À 6 CHIFFRES';
+  static const authModifyEmail = "Modifier l'email";
+  static const authModifyPhone = 'Modifier le numéro';
+  static const authUseEmail = "Recourir à l'email";
+  static const authNeedAccount = 'Pas encore de compte ? Inscrivez-vous';
+  static const authAlreadyAccount = 'Déjà un compte ? Connectez-vous';
+  static const authEmailRequired = 'Email requis';
+  static const authInvalidEmail = "Format d'email invalide";
+  static const authCodeMustBe6 = 'Le code doit contenir 6 chiffres.';
+  static const authInvalidOtp = 'Code incorrect. Vérifiez et réessayez.';
+  static const authOtpLocked = 'Trop de tentatives. Veuillez redemander un code.';
+  static const authOtpExpired = 'Code expiré. Demandez un nouveau code.';
+  static const authOtpRateLimited = 'Trop de tentatives. Réessayez dans quelques minutes.';
+  static const authSendCodeFailed = 'Envoi du code impossible.';
+  static const authVerifyFailed = 'Vérification impossible.';
+  static const authLoginFailed = 'Connexion impossible.';
+  static const authEmailAlreadyUsed = 'Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.';
+  static const authCodeSentEmail = 'Code de vérification envoyé par email.';
+  static const authInvalidPhone = 'Numéro invalide. Veuillez vérifier votre saisie.';
+  static const authResendCodePrefix = 'Renvoyer le code dans ';
+  static const authResendCodeSuffix = 's';
+  static const authEnterEmailCode = 'Saisissez votre email pour recevoir un code de vérification.';
+  static const authEnterEmailLogin = 'Saisissez votre email pour recevoir un code de connexion.';
+  static const authCodeSentLogin = 'Code de connexion envoyé par email.';
 
   // ── Navigation ────────────────────────────────────────────────────────────
   static const discoverTab = 'Découvrir';
@@ -206,6 +245,17 @@ abstract final class AppStrings {
   static const rating5 = 'Excellent ! \u{2728}';
   static const howWasExperienceInline = "Comment s'est passée votre expérience ?";
 
+  // ── Onboarding ────────────────────────────────────────────────────────────
+  static const onboardingSlide1Title = 'Découvrez les meilleurs salons';
+  static const onboardingSlide1Subtitle = 'Une sélection exclusive de salons de beauté et de bien-être, triés pour vous.';
+  static const onboardingSlide2Title = 'Réservez en quelques secondes';
+  static const onboardingSlide2Subtitle = 'Choisissez votre prestation, votre professionnel et votre créneau sans friction.';
+  static const onboardingSlide3Title = "Vivez l'expérience Beauté Avenue";
+  static const onboardingSlide3Subtitle = 'Gérez vos rendez-vous, laissez des avis et fidélisez-vous à vos adresses préférées.';
+  static const onboardingStartCta = 'COMMENCER';
+  static const onboardingNextCta = 'SUIVANT';
+  static const onboardingSkip = 'Passer';
+
   // ── Reviews ───────────────────────────────────────────────────────────────
   static const reviewTitle = 'Votre avis';
   static const reviewCta = 'Publier mon avis';
@@ -308,6 +358,88 @@ abstract final class AppStrings {
   static const loadPrefsError = 'Impossible de charger les préférences';
   static const serviceUnavailable = 'Service momentanément indisponible';
   static const connectionUnavailable = 'Connexion indisponible';
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+  static const notificationsPageTitle = 'Notifications';
+  static const markAllReadCompact = 'Tout marquer lu';
+  static const notificationsEmptyTitle = 'Aucune notification';
+  static const notificationsEmptySubtitle = 'Vos rappels et confirmations apparaîtront ici.';
+  static const notificationsLoadError = 'Impossible de charger les notifications';
+  static const notificationsMarkedRead = 'Toutes les notifications sont marquées comme lues.';
+  static const notificationsUpdateFailed = 'Mise à jour impossible.';
+
+  // ── Connectivity ──────────────────────────────────────────────────────────
+  static const offlineTitle = 'Connexion indisponible';
+  static const offlineSubtitle = 'Certaines informations peuvent être obsolètes.';
+  static const recoveryTitle = 'Connexion rétablie';
+  static const recoverySubtitle = 'Actualisation des données…';
+
+  // ── Profile bootstrap ─────────────────────────────────────────────────────
+  static const bootstrapAvatarUpdated = 'Photo de profil mise à jour.';
+  static const bootstrapUploadFailed = 'Upload impossible.';
+  static const bootstrapTitle = 'Complétez votre profil';
+  static const bootstrapSubtitle = 'Votre nom sera utilisé pour personnaliser vos réservations.';
+  static const bootstrapSubmitCta = "Commencer l'aventure";
+  static const bootstrapSkip = "Passer pour l'instant";
+  static const bootstrapNameRequired = 'Nom complet requis (2 caractères minimum)';
+  static const bootstrapFormError = 'Impossible de charger le formulaire';
+  static const bootstrapSaveFailed = 'Mise à jour impossible.';
+  static const bootstrapPaymentNudgeTitle = 'Réservez en un tap';
+  static const bootstrapPaymentNudgeBody = 'Ajoutez un moyen de paiement maintenant pour réserver sans friction.';
+  static const bootstrapPaymentNudgeCta = 'Ajouter un moyen de paiement';
+  static const bootstrapLater = 'Plus tard';
+
+  // ── Payment (handoff) ─────────────────────────────────────────────────────
+  static const paymentHandoffTitle = 'Paiement';
+  static const paymentHandoffSubtitle = 'Sécurisez votre réservation avec un acompte.';
+  static const paymentDepositSummary = 'Acompte à régler';
+  static const paymentMethodLabel = 'Moyen de paiement';
+  static const paymentMethodDefault = 'Moyen de paiement';
+  static const paymentMethodsLoadError = 'Impossible de charger les moyens de paiement';
+  static const paymentCardInfo = 'Informations de la carte';
+  static const paymentCardName = 'Nom sur la carte';
+  static const paymentCardNumber = 'Numéro de carte';
+  static const paymentCardExpiryMonth = 'Mois exp. (MM)';
+  static const paymentCardExpiryYear = 'Année exp. (YY)';
+  static const paymentCardCvc = 'CVC / CVV';
+  static const paymentWallet = 'Portefeuille PayDunya';
+  static const paymentWalletIdentifier = 'Numéro de téléphone / Email';
+  static const paymentWalletPassword = 'Mot de passe PayDunya';
+  static const paymentInfoTitle = 'Informations de paiement';
+  static const paymentPhoneNumber = 'Numéro de téléphone';
+  static const paymentFullName = 'Nom complet';
+  static const paymentOtpCode = "Code d'autorisation OTP";
+  static const paymentPciDssAccepted = "J'accepte de soumettre mes informations bancaires via PayDunya. Mes données sont chiffrées en transit (TLS) et non stockées sur Beauté Avenue.";
+  static const paymentCardSecureMsg = 'Les données de votre carte sont transmises de manière sécurisée via PayDunya. Elles ne sont pas stockées sur nos serveurs.';
+  static const paymentPayCta = 'Payer';
+  static const paymentContinueCta = 'Continuer';
+  static const paymentPciRequired = 'Vous devez accepter les conditions PCI-DSS.';
+  static const paymentCardFieldsRequired = 'Veuillez remplir tous les champs de la carte.';
+  static const paymentWalletFieldsRequired = 'Veuillez remplir vos identifiants PayDunya.';
+  static const paymentPhoneRequired = 'Veuillez saisir votre numéro de téléphone.';
+  static const paymentProfileRequired = 'Ajoutez un numéro de téléphone à votre profil pour payer.';
+  static const paymentReconcileThrottled = 'Réconciliation trop fréquente. Réessayez dans quelques secondes.';
+  static const paymentInvalidStatus = "Cette tentative de paiement n'est plus valide. Relancez le paiement.";
+  static const paymentMissingToken = "Le paiement n'a pas pu être préparé correctement. Réessayez.";
+  static const paymentNotFound = 'Paiement introuvable. Recommencez la réservation ou relancez le paiement.';
+  static const paymentFailed = 'Échec du paiement.';
+  static const paymentInitFailed = 'Échec de la création du paiement.';
+  static const paymentHandoffUnavailable = 'Paiement indisponible pour le moment';
+  static const paymentHandoffServer = 'Le récapitulatif de paiement est indisponible';
+  static const paymentIncompleteProfileTitle = 'Complétez votre profil pour payer';
+  static const paymentIncompleteProfileBody = 'Ajoutez votre nom complet et un moyen de paiement pour finaliser votre réservation.';
+  static const paymentProfileCta = 'Mon profil';
+  static const paymentDjamoCountryLabel = 'Pays du compte Djamo';
+  static const paymentWizallCid = 'Échec de la validation Wizall.';
+  static const paymentWizallTitle = 'Wizall Sénégal';
+  static const paymentUnavailableError = 'Paiement indisponible pour le moment';
+  static const paymentServerError = 'Le récapitulatif de paiement est indisponible';
+  static const paymentOtpValidationTitle = 'Validation OTP';
+  static const paymentOtpValidationBody = 'Saisissez le code de validation reçu par SMS pour valider votre paiement via ';
+  static const paymentOtpConfirm = 'Confirmer';
+  static const paymentOtpCancel = 'Annuler';
+  static const paymentReopenFailed = 'Impossible de rouvrir ';
+  static const paymentOpenFailed = "Impossible d'ouvrir ";
 
   // ── General ───────────────────────────────────────────────────────────────
   static const appTitle = 'Beauté Avenue';

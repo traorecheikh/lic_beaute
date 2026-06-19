@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
+import '../constants/app_strings.dart';
 import '../network/connectivity_provider.dart';
 import 'app_connectivity_wrapper.dart';
 import 'app_icon.dart';
@@ -47,8 +48,8 @@ class AppConnectivityBanner extends ConsumerWidget {
             gapW12,
             Expanded(
               child: ConnectivityMessage(
-                title: 'Connexion indisponible',
-                subtitle: 'Certaines informations peuvent être obsolètes.',
+                title: AppStrings.offlineTitle,
+                subtitle: AppStrings.offlineSubtitle,
               ),
             ),
           ],

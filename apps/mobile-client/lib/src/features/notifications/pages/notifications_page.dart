@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
@@ -26,7 +27,7 @@ class NotificationsPage extends ConsumerWidget {
     return AppScaffold(
       backgroundColor: AppColors.neutral,
       appBar: AppTopBar(
-        title: 'Notifications',
+        title: AppStrings.notificationsPageTitle,
         actions: [
           AppPressable(
             onTap: () async {
@@ -36,7 +37,7 @@ class NotificationsPage extends ConsumerWidget {
                 if (!context.mounted) return;
                 AppSnackbar.success(
                   context,
-                  'Toutes les notifications sont marquées comme lues.',
+                  AppStrings.notificationsMarkedRead,
                 );
               } catch (error) {
                 await context.handleHttpError(
@@ -48,7 +49,7 @@ class NotificationsPage extends ConsumerWidget {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               child: Text(
-                'Tout marquer lu',
+                AppStrings.markAllReadCompact,
                 style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
               ),
             ),
@@ -57,17 +58,16 @@ class NotificationsPage extends ConsumerWidget {
       ),
       body: AppAsyncView(
         value: notificationsAsync,
-        errorTitle: 'Impossible de charger les notifications',
+        errorTitle: AppStrings.notificationsLoadError,
         onRetry: () => ref.refresh(notificationsProvider.future),
         builder: (items) {
           if (items.isEmpty) {
             return const Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
-                child: AppEmptyState(
+                padding: EdgeInsets.all(24),                    child: AppEmptyState(
                   icon: 'bell',
-                  title: 'Aucune notification',
-                  subtitle: 'Vos rappels et confirmations apparaîtront ici.',
+                  title: AppStrings.notificationsEmptyTitle,
+                  subtitle: AppStrings.notificationsEmptySubtitle,
                 ),
               ),
             );
@@ -91,7 +91,7 @@ class NotificationsPage extends ConsumerWidget {
                             if (!context.mounted) return;
                             await context.handleHttpError(
                               error,
-                              'Mise à jour impossible.',
+                              AppStrings.notificationsUpdateFailed,
                             );
                           }
                         },

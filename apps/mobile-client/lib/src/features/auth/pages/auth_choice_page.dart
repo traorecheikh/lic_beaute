@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -41,14 +42,14 @@ class AuthChoicePage extends StatelessWidget {
 
                   // Brand name
                   Text(
-                    'Beauté Avenue',
+                    AppStrings.appTitle,
                     style: AppTextStyles.displaySm.copyWith(letterSpacing: 0.5),
                   ),
                   SizedBox(height: 10.h),
 
                   // Tagline
                   Text(
-                    'Réservez les meilleurs salons\nde beauté autour de vous.',
+                    AppStrings.authTagline,
                     style: AppTextStyles.bodyMd.copyWith(
                       color: AppColors.onSurfaceVariant,
                       height: 1.55,
@@ -60,7 +61,7 @@ class AuthChoicePage extends StatelessWidget {
 
                   // PRIMARY ACTION: S'inscrire (Merged Entry)
                   AppButton.primary(
-                    label: 'S\'inscrire',
+                    label: AppStrings.signUpCta,
                     onPressed: () => _showSignUpOptions(context, query),
                   ),
 
@@ -73,7 +74,7 @@ class AuthChoicePage extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: Text(
-                          'Déjà un compte ?',
+                          AppStrings.alreadyHaveAccount,
                           style: AppTextStyles.bodySm.copyWith(
                             color: AppColors.onSurfaceVariant,
                           ),
@@ -85,7 +86,7 @@ class AuthChoicePage extends StatelessWidget {
                   SizedBox(height: 16.h),
 
                   AppButton.outline(
-                    label: 'Se connecter',
+                    label: AppStrings.loginCta,
                     onPressed: () => context.push('${AppRoutes.emailLogin}$query'),
                   ),
 
@@ -96,7 +97,7 @@ class AuthChoicePage extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                       child: Text(
-                        'Continuer sans compte',
+                        AppStrings.continueWithoutAccount,
                         style: AppTextStyles.labelMd.copyWith(
                           color: AppColors.onSurfaceVariant,
                           decoration: TextDecoration.underline,

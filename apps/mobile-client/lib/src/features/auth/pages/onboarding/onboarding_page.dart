@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_ce/hive_ce.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_pressable.dart';
@@ -22,23 +23,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  static const _slides = [
+  static final _slides = [
     _SlideData(
-      title: 'Découvrez les meilleurs salons',
-      subtitle:
-          'Une sélection exclusive de salons de beauté et de bien-être, triés pour vous.',
+      title: AppStrings.onboardingSlide1Title,
+      subtitle: AppStrings.onboardingSlide1Subtitle,
       imagePath: 'assets/onboarding/onboarding_1.svg',
     ),
     _SlideData(
-      title: 'Réservez en quelques secondes',
-      subtitle:
-          'Choisissez votre prestation, votre professionnel et votre créneau sans friction.',
+      title: AppStrings.onboardingSlide2Title,
+      subtitle: AppStrings.onboardingSlide2Subtitle,
       imagePath: 'assets/onboarding/onboarding_2.svg',
     ),
     _SlideData(
-      title: 'Vivez l\'expérience Beauté Avenue',
-      subtitle:
-          'Gérez vos rendez-vous, laissez des avis et fidélisez-vous à vos adresses préférées.',
+      title: AppStrings.onboardingSlide3Title,
+      subtitle: AppStrings.onboardingSlide3Subtitle,
       imagePath: 'assets/onboarding/onboarding_3.svg',
     ),
   ];
@@ -161,7 +159,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             Expanded(
                               flex: 1,
                               child: AuthPrimaryButton(
-                                label: 'COMMENCER',
+                                label: AppStrings.onboardingStartCta,
                                 loading: false,
                                 onTap: _next,
                               ),
@@ -175,7 +173,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                   vertical: 8.h,
                                 ),
                                 child: Text(
-                                  'Passer',
+                                  AppStrings.onboardingSkip,
                                   style: AppTextStyles.labelMd.copyWith(
                                     color: AppColors.onSurfaceVariant,
                                   ),
@@ -184,7 +182,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             ),
                             const Spacer(),
                             AuthPrimaryButton(
-                              label: 'SUIVANT',
+                              label: AppStrings.onboardingNextCta,
                               loading: false,
                               onTap: _next,
                               expand: false,

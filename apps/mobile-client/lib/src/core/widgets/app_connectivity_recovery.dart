@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../constants/app_strings.dart';
 import '../reactivity/app_reactivity.dart';
 import '../network/connectivity_provider.dart';
 import '../sync/app_outbox.dart';
@@ -77,8 +78,8 @@ class _AppConnectivityRecoveryState
                   gapW12,
                   Expanded(
                     child: ConnectivityMessage(
-                      title: 'Connexion rétablie',
-                      subtitle: 'Actualisation des données…',
+                      title: AppStrings.recoveryTitle,
+                      subtitle: AppStrings.recoverySubtitle,
                     ),
                   ),
                 ],

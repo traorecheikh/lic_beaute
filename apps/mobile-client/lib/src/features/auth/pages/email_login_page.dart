@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pinput/pinput.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -65,10 +66,10 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
   @override
   Widget build(BuildContext context) {
     return AuthPageScaffold(
-      title: _codeSent ? 'Vérification' : 'Connexion',
+      title: _codeSent ? AppStrings.authVerificationTitle : AppStrings.loginTitle,
       subtitle: _codeSent
-          ? 'Un code à 6 chiffres vous a été envoyé par email.'
-          : 'Saisissez votre email pour recevoir un code de connexion.',
+          ? AppStrings.authCode6Digits
+          : AppStrings.authEnterEmailLogin,
       body: Form(
         key: _codeSent ? null : _formKey,
         autovalidateMode: _codeSent ? null : AutovalidateMode.onUserInteraction,
@@ -80,7 +81,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: 'EMAIL',
+                  labelText: AppStrings.authEmailUppercase,
                   filled: true,
                   fillColor: AppColors.surface,
                   contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
@@ -112,17 +113,17 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                 style: AppTextStyles.bodyLg.copyWith(color: AppColors.onSurface),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Email requis';
+                    return AppStrings.authEmailRequired;
                   }
                   if (!_emailRegex.hasMatch(value.trim())) {
-                    return "Format d'email invalide";
+                    return AppStrings.authInvalidEmail;
                   }
                   return null;
                 },
               ),
               SizedBox(height: 48.h),
               AuthPrimaryButton(
-                label: 'RECEVOIR LE CODE',
+                label: AppStrings.authReceiveCode,
                 loading: _submitting,
                 onTap: _requestCode,
               ),
@@ -136,7 +137,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.h),
                     child: Text(
-                      'Pas encore de compte ? Inscrivez-vous',
+                      AppStrings.authNeedAccount,
                       style: AppTextStyles.labelSm.copyWith(
                         color: AppColors.onSurfaceVariant,
                         decoration: TextDecoration.underline,
@@ -155,7 +156,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                       keyboardType: TextInputType.emailAddress,
                       enabled: false,
                       decoration: InputDecoration(
-                        labelText: 'EMAIL',
+                        labelText: AppStrings.authEmailUppercase,
                         filled: true,
                         fillColor: AppColors.surface,
                         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
@@ -175,7 +176,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                     ),
                     SizedBox(height: 32.h),
                     Text(
-                      'CODE À 6 CHIFFRES',
+                      AppStrings.authOtpCodeLabel,
                       style: AppTextStyles.labelSm.copyWith(
                         color: AppColors.onSurfaceVariant,
                         letterSpacing: 1.5,
@@ -223,7 +224,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
               ),
               SizedBox(height: 32.h),
               AuthPrimaryButton(
-                label: 'SE CONNECTER',
+                label: AppStrings.authConnectCta,
                 loading: _submitting,
                 onTap: _verifyCode,
               ),
@@ -231,7 +232,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
               if (!_canResend)
                 Center(
                   child: Text(
-                    'Renvoyer le code dans ${_secondsRemaining}s',
+                    '${AppStrings.authResendCodePrefix}${_secondsRemaining}${AppStrings.authResendCodeSuffix}',
                     style: AppTextStyles.bodySm.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -242,7 +243,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                   child: TextButton(
                     onPressed: _submitting ? null : _requestCode,
                     child: Text(
-                      'Renvoyer le code',
+                      AppStrings.otpResend,
                       style: AppTextStyles.labelMd.copyWith(color: AppColors.primary),
                     ),
                   ),
@@ -258,7 +259,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                     child: Text(
-                      "Modifier l'email",
+                      AppStrings.authModifyEmail,
                       style: AppTextStyles.labelSm.copyWith(
                         color: AppColors.onSurfaceVariant,
                         decoration: TextDecoration.underline,
@@ -288,15 +289,15 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
         if (!mounted) return;
         setState(() => _codeSent = true);
         _startTimer();
-        AppSnackbar.success(context, 'Code de connexion envoyé par email.');
+        AppSnackbar.success(context, AppStrings.authCodeSentLogin);
       },
-      fallback: 'Envoi du code impossible.',
+      fallback: AppStrings.authSendCodeFailed,
       errorMapper: (error, fallback) {
         final data = error.response?.data;
         if (data is Map<String, dynamic>) {
           final code = data['code'] as String?;
           if (code == 'otp_rate_limited') {
-            return 'Trop de tentatives. Réessayez dans quelques minutes.';
+            return AppStrings.authOtpRateLimited;
           }
         }
         return fallback;
@@ -310,7 +311,7 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
     final code = _otpController.text.trim();
 
     if (code.length != 6) {
-      AppSnackbar.info(context, 'Le code doit contenir 6 chiffres.');
+      AppSnackbar.info(context, AppStrings.authCodeMustBe6);
       return;
     }
 
@@ -326,19 +327,19 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
         // ignore: use_build_context_synchronously
         await navigateAfterAuth(context, ref);
       },
-      fallback: 'Connexion impossible.',
+      fallback: AppStrings.authLoginFailed,
       errorMapper: (error, fallback) {
         final data = error.response?.data;
         if (data is Map<String, dynamic>) {
           final code = data['code'] as String?;
           if (code == 'invalid_otp') {
-            return 'Code incorrect. Vérifiez et réessayez.';
+            return AppStrings.authInvalidOtp;
           }
           if (code == 'otp_locked') {
-            return 'Trop de tentatives. Veuillez redemander un code.';
+            return AppStrings.authOtpLocked;
           }
           if (code == 'otp_expired') {
-            return 'Code expiré. Demandez un nouveau code.';
+            return AppStrings.authOtpExpired;
           }
         }
         return fallback;

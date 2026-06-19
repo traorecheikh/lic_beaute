@@ -21,6 +21,12 @@ function maskPhone(phone: string): string {
   return `${normalized.slice(0, 3)}*****${normalized.slice(-4)}`;
 }
 
+type VerificationQueuePayout = {
+  id: string;
+  status: string;
+  safeFailureMessage: string | null;
+};
+
 const payoutVerificationQueueQuerySchema = z.object({
   search: z.string().trim().optional(),
   status: z.enum(["unverified", "rejected", "all"]).optional()
@@ -85,7 +91,8 @@ export async function listPayoutVerificationQueue(request: FastifyRequest, reply
     ok(
       reply,
       salons.map((salon) => {
-        const blockedPayouts = salon.merchantPayouts.filter((payout) => payout.status === "blocked");
+        const merchantPayouts = salon.merchantPayouts as VerificationQueuePayout[];
+        const blockedPayouts = merchantPayouts.filter((payout) => payout.status === "blocked");
         const payoutsBlockedForVerification = blockedPayouts.filter(
           (payout) =>
             payout.safeFailureMessage === "salon_payout_details_unverified" ||
@@ -107,7 +114,7 @@ export async function listPayoutVerificationQueue(request: FastifyRequest, reply
           updatedAt: salon.updatedAt.toISOString(),
           blockedPayoutCount: blockedPayouts.length,
           blockedForVerificationCount: payoutsBlockedForVerification.length,
-          totalPayoutCount: salon.merchantPayouts.length
+          totalPayoutCount: merchantPayouts.length
         };
       })
     );

@@ -288,11 +288,11 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     return AppBookingAsyncScaffold<BookingDetail>(
       bookingId: widget.bookingId,
       provider: bookingDetailResourceProvider,
-      errorTitle: 'Paiement indisponible pour le moment',
-      serverTitle: 'Le récapitulatif de paiement est indisponible',
+      errorTitle: AppStrings.paymentHandoffUnavailable,
+      serverTitle: AppStrings.paymentHandoffServer,
       appBar: AppTopBar(showBackButton: true, onBack: _handleBackNavigation),
-      pageTitle: 'Paiement',
-      pageSubtitle: 'Sécurisez votre réservation avec un acompte.',
+      pageTitle: AppStrings.paymentHandoffTitle,
+      pageSubtitle: AppStrings.paymentHandoffSubtitle,
       bottomNavigationBar: _buildBottomBar(),
       sliverBuilder: (resource) {
         final deposit = resource.depositXof ?? 0;
@@ -355,7 +355,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Acompte à régler',
+                  AppStrings.paymentDepositSummary,
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -387,7 +387,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Moyen de paiement', style: AppTextStyles.headlineSm),
+        Text(AppStrings.paymentMethodLabel, style: AppTextStyles.headlineSm),
         SizedBox(height: 12.h),
         Container(
           padding: EdgeInsets.all(16.r),
@@ -403,7 +403,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      defaultMethod.label ?? 'Moyen de paiement',
+                      defaultMethod.label ?? AppStrings.paymentMethodDefault,
                       style: AppTextStyles.labelLg,
                     ),
                     SizedBox(height: 4.h),
@@ -438,7 +438,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Moyen de paiement', style: AppTextStyles.headlineSm),
+        Text(AppStrings.paymentMethodLabel, style: AppTextStyles.headlineSm),
         SizedBox(height: 14.h),
         paydunyaMethodsAsync.when(
           loading: () => const Center(
@@ -448,7 +448,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             ),
           ),
           error: (error, _) => Text(
-            'Impossible de charger les moyens de paiement',
+            AppStrings.paymentMethodsLoadError,
             style: AppTextStyles.bodySm.copyWith(color: AppColors.error),
           ),
           data: (methods) => Column(
@@ -498,7 +498,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
               gapW8,
               Expanded(
                 child: Text(
-                  'Complétez votre profil pour payer',
+                  AppStrings.paymentIncompleteProfileTitle,
                   style: AppTextStyles.labelLg.copyWith(
                     color: AppColors.primary,
                   ),
@@ -508,7 +508,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           ),
           gapH8,
           Text(
-            'Ajoutez votre nom complet et un moyen de paiement pour finaliser votre réservation.',
+            AppStrings.paymentIncompleteProfileBody,
             style: AppTextStyles.bodySm.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -518,7 +518,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             children: [
               Expanded(
                 child: AppButton.outline(
-                  label: 'Mon profil',
+                  label: AppStrings.paymentProfileCta,
                   onPressed: () => context.go(
                     paymentHandoffProfileSetupRoute(widget.bookingId),
                   ),
@@ -933,8 +933,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
 
     return AppBottomBar(
       child: AppButton.primary(
-        onPressed: _selectedMethod == null ? null : _pay,
-        label: _selectedMethod != null ? 'Payer' : 'Continuer',
+        onPressed: _selectedMethod == null ? null : _pay,          label: _selectedMethod != null ? AppStrings.paymentPayCta : AppStrings.paymentContinueCta,
         isLoading: _isProcessing,
       ),
     );

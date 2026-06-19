@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/location/location_service.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -60,9 +61,9 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     try {
       await ref.read(profileProvider.notifier).uploadAvatar(File(image.path));
       if (!mounted) return;
-      AppSnackbar.success(context, 'Photo de profil mise à jour.');
+      AppSnackbar.success(context, AppStrings.bootstrapAvatarUpdated);
     } catch (_) {
-      AppSnackbar.error(context, 'Upload impossible.');
+      AppSnackbar.error(context, AppStrings.bootstrapUploadFailed);
     } finally {
       if (mounted) {
         setState(() => _uploadingAvatar = false);
@@ -78,7 +79,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     return Scaffold(
       backgroundColor: AppColors.neutral,
       appBar: AppTopBar(
-        title: 'Mon profil',
+        title: AppStrings.profileBootstrapTitle,
         showBackButton: !widget.requiredSetup,
       ),
       body: SafeArea(
@@ -86,7 +87,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
         child: AppResourceView(
           value: optionsAsync,
           onRetry: () => ref.refresh(profileOptionsProvider.future),
-          errorTitle: 'Impossible de charger le formulaire',
+          errorTitle: AppStrings.bootstrapFormError,
           builder: (options) {
             final profile = profileAsync.value;
             final avatarUrl = profile?.avatarUrl;
@@ -110,12 +111,12 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                     ),
                   ),
                   Text(
-                    'Complétez votre profil',
+                    AppStrings.bootstrapTitle,
                     style: AppTextStyles.displayMd,
                   ),
                   gapH12,
                   Text(
-                    'Votre nom sera utilisé pour personnaliser vos réservations.',
+                    AppStrings.bootstrapSubtitle,
                     style: AppTextStyles.bodyLg.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -175,11 +176,11 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                     TextFormField(
                       controller: _fullNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Nom complet',
+                        labelText: AppStrings.fullNameLabel,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().length < 2) {
-                          return 'Nom complet requis (2 caractères minimum)';
+                          return AppStrings.bootstrapNameRequired;
                         }
                         return null;
                       },
@@ -187,17 +188,16 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
 
                     SizedBox(height: 48.h),
                     AppButton.primary(
-                      onPressed: _saving ? null : _submit,
-                      label: "Commencer l'aventure",
-                      isLoading: _saving,
-                    ),
+                      onPressed: _saving ? null : _submit,                    label: AppStrings.bootstrapSubmitCta,
+                    isLoading: _saving,
+                  ),
                     if (!widget.requiredSetup) ...[
                       gapH16,
                       Center(
                         child: TextButton(
                           onPressed: () => context.go(AppRoutes.home),
                           child: Text(
-                            "Passer pour l'instant",
+                            AppStrings.bootstrapSkip,
                             style: AppTextStyles.bodySm.copyWith(
                               color: AppColors.onSurfaceVariant,
                             ),
@@ -241,13 +241,13 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
             ),
             SizedBox(height: 16.h),
             Text(
-              'Réservez en un tap',
+              AppStrings.bootstrapPaymentNudgeTitle,
               style: AppTextStyles.headlineMd,
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 8.h),
             Text(
-              'Ajoutez un moyen de paiement maintenant pour réserver sans friction.',
+              AppStrings.bootstrapPaymentNudgeBody,
               style: AppTextStyles.bodyMd.copyWith(
                 color: AppColors.onSurfaceVariant,
                 height: 1.5,
@@ -256,7 +256,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
             ),
             SizedBox(height: 28.h),
             AppButton.primary(
-              label: 'Ajouter un moyen de paiement',
+              label: AppStrings.bootstrapPaymentNudgeCta,
               onPressed: () {
                 Navigator.of(ctx).pop();
                 context.go(
@@ -266,7 +266,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
             ),
             SizedBox(height: 12.h),
             AppButton.text(
-              label: 'Plus tard',
+              label: AppStrings.bootstrapLater,
               onPressed: () => Navigator.of(ctx).pop(),
             ),
           ],
@@ -296,7 +296,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
       if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       if (!mounted) return;
-      AppSnackbar.error(context, 'Mise à jour impossible.');
+      AppSnackbar.error(context, AppStrings.bootstrapSaveFailed);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
