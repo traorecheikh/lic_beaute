@@ -74,7 +74,7 @@ export const searchSalonsQuerySchema = z.object({
   maxPrice: z.coerce.number().int().min(0).optional(),
   openNow: z.coerce.boolean().optional(),
   bookableSoon: z.coerce.boolean().optional(),
-  sort: z.enum(["relevance", "nearby", "trending", "prestige", "price_asc", "price_desc"]).default("relevance"),
+  sort: z.enum(["relevance", "nearby", "trending", "prestige", "price_asc", "price_desc", "rating"]).default("relevance"),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });

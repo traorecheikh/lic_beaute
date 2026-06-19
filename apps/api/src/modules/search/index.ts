@@ -342,8 +342,9 @@ export class SearchController {
       return ok(reply, cached);
     }
 
-    const searchParam = raw;
-    const like = `%${searchParam}%`;
+    const searchParam = raw === "*" ? "" : raw;
+    const isWildcard = searchParam === "";
+    const like = isWildcard ? "%%" : `%${searchParam}%`;
 
     // ── Personalization boost (if session profile exists) ────────────────
     const sessionKey = (request.query as any).sessionKey as string | undefined;
@@ -420,9 +421,9 @@ export class SearchController {
       personalizationBoost = Prisma.sql`(${catBoosts} + ${cityBoosts} + ${prestigeBoost})`;
     }
 
-    // Build ranking expression
-    const textRank = searchRankExpr(searchParam);
-    const searchWhere = searchFilterWhere(searchParam);
+    // Build ranking expression (skip text search for wildcard queries)
+    const textRank = isWildcard ? Prisma.sql`0` : searchRankExpr(searchParam);
+    const searchWhere = isWildcard ? Prisma.empty : searchFilterWhere(searchParam);
 
     // Service match detection subquery for match_type
     const matchTypeExpr = Prisma.sql`
@@ -481,6 +482,12 @@ export class SearchController {
         break;
       case "price_desc":
         orderBy = Prisma.sql`min_price DESC NULLS LAST`;
+        break;
+      case "rating":
+        orderBy = Prisma.sql`
+          CASE s."subscriptionTier" WHEN 'premium' THEN 0 ELSE 1 END ASC,
+          s."averageRating" DESC
+        `;
         break;
       default: // relevance
         orderBy = Prisma.sql`

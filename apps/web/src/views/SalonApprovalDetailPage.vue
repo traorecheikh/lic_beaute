@@ -169,8 +169,14 @@
                   class="aspect-[4/3] rounded-2xl bg-neutral-bg overflow-hidden relative mb-4 cursor-pointer"
                   @click="selectedDoc = document"
                 >
+                  <img
+                    v-if="isImageFile(document.fileUrl) && resolveFileUrl(document.fileUrl)"
+                    :src="resolveFileUrl(document.fileUrl)!"
+                    alt=""
+                    class="w-full h-full object-contain"
+                  />
                   <embed
-                    v-if="resolveFileUrl(document.fileUrl)"
+                    v-else-if="!isImageFile(document.fileUrl) && resolveFileUrl(document.fileUrl)"
                     :src="resolveFileUrl(document.fileUrl)!"
                     type="application/pdf"
                     class="w-full h-full"
@@ -206,8 +212,14 @@
           >
             <div class="flex flex-col items-center gap-6">
               <div class="w-full bg-neutral-bg/50 rounded-2xl overflow-hidden border border-outline-variant flex items-center justify-center min-h-[400px]">
+                <img
+                  v-if="isImageFile(selectedDoc?.fileUrl) && resolveFileUrl(selectedDoc?.fileUrl)"
+                  :src="resolveFileUrl(selectedDoc?.fileUrl)!"
+                  alt=""
+                  class="max-w-full max-h-[600px] object-contain"
+                />
                 <embed
-                  v-if="resolveFileUrl(selectedDoc?.fileUrl)"
+                  v-else-if="!isImageFile(selectedDoc?.fileUrl) && resolveFileUrl(selectedDoc?.fileUrl)"
                   :src="resolveFileUrl(selectedDoc?.fileUrl)!"
                   type="application/pdf"
                   class="w-full h-[600px]"
@@ -594,6 +606,12 @@ function resolveFileUrl(fileUrl: string | null | undefined): string | null {
   } catch {
     return fileUrl;
   }
+}
+
+function isImageFile(fileUrl: string | null | undefined): boolean {
+  if (!fileUrl) return false;
+  const ext = fileUrl.split(".").pop()?.toLowerCase();
+  return !!(ext && ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext));
 }
 
 const auth = useAdminAuthStore();
