@@ -62,6 +62,7 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   // Payment actions: per-IP limit for sensitive financial operations
   const paymentLimit = { config: { rateLimit: { max: isDevOrTest ? 200000 : 30, timeWindow: "1 minute" } } };
   app.post("/api/v1/auth/register", authLimit, (req, rep) => auth.register(req, rep));
+  app.get("/api/v1/auth/check-availability", authLimit, (req, rep) => auth.checkAvailability(req, rep));
   app.post("/api/v1/auth/login", authLimit, (req, rep) => auth.login(req, rep));
   app.post("/api/v1/auth/upload-registration-doc", uploadDocLimit, (req, rep) => media.uploadRegistrationDoc(req, rep));
   app.get("/api/v1/platform/registration-docs", (req, rep) => admin.listDocumentsPublic(req, rep));
@@ -79,6 +80,8 @@ export async function registerRoutes(app: FastifyInstance, databaseRuntime: Data
   app.post("/api/v1/auth/forgot-password", passwordLimit, (req, rep) => auth.forgotPassword(req, rep));
   app.post("/api/v1/auth/reset-password", passwordLimit, (req, rep) => auth.resetPassword(req, rep));
   app.post("/api/v1/auth/magic-login", passwordLimit, (req, rep) => auth.magicLogin(req, rep));
+app.post("/api/v1/auth/request-deletion", passwordLimit, (req, rep) => auth.requestAccountDeletion(req, rep));
+app.post("/api/v1/auth/confirm-deletion", passwordLimit, (req, rep) => auth.confirmAccountDeletion(req, rep));
   app.get("/api/v1/me", (req, rep) => auth.me(req, rep));
   app.patch("/api/v1/me", (req, rep) => auth.updateMe(req, rep));
   app.get("/api/v1/metadata/profile-options", (req, rep) => clientAccounts.profileOptions(req, rep));

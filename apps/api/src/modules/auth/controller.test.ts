@@ -746,8 +746,34 @@ describe("AuthController", () => {
 
     expect(tx.user.update).toHaveBeenCalledWith({
       where: { id: "u1" },
-      data: { phone: "771234567" }
+      data: { phone: "+221771234567" }
     });
+  });
+
+  it("updateMe maps phone unique constraint to a readable conflict", async () => {
+    mocks.requireRole.mockReturnValue({ sub: "u1" });
+    mocks.prisma.$transaction.mockRejectedValue({
+      code: "P2002",
+      meta: { target: ["User_phone_key"] }
+    });
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: "u1",
+      fullName: "Updated",
+      email: "u@example.com",
+      phone: "771234567",
+      role: "client",
+      salonId: null,
+      clientProfile: null
+    });
+
+    await c.updateMe({ body: { phone: "771234567" } } as never, {} as never);
+
+    expect(mocks.fail).toHaveBeenCalledWith(
+      expect.anything(),
+      409,
+      "phone_already_used",
+      expect.stringContaining("déjà utilisé")
+    );
   });
 
   it("updateMe with fullName only skips clientProfile upsert branch", async () => {

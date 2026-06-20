@@ -42,7 +42,16 @@ function hashRefreshToken(token: string): string {
 }
 
 function normalizePhoneNumber(phoneNumber: string) {
-  return phoneNumber.replace(/\s+/g, "").trim();
+  let cleaned = phoneNumber.replace(/\s+/g, "").trim();
+  // If it's a local number without country code, assume Senegal (+221)
+  if (cleaned.startsWith("0")) {
+    cleaned = "+221" + cleaned.slice(1);
+  } else if (/^\d{7,12}$/.test(cleaned) && !cleaned.startsWith("+")) {
+    cleaned = "+221" + cleaned;
+  } else if (!cleaned.startsWith("+")) {
+    cleaned = "+" + cleaned;
+  }
+  return cleaned;
 }
 
 async function pruneExcessSessions(userId: string): Promise<void> {
@@ -108,6 +117,18 @@ async function checkOtpRateLimit(phone: string): Promise<{ allowed: false; retry
   );
   if (result.allowed) return { allowed: true };
   return { allowed: false, retryAfterSeconds: result.retryAfterSeconds };
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isPlayReviewEnabled(): boolean {
+  return (
+    config.playReviewEnabled &&
+    config.playReviewEmail.length > 0 &&
+    config.playReviewOtp.length > 0
+  );
 }
 
 function constantTimeEquals(a: string, b: string): boolean {
@@ -176,6 +197,21 @@ async function serializeCurrentUser(userId: string) {
 }
 
 export class AuthController {
+  async checkAvailability(request: FastifyRequest, reply: FastifyReply) {
+    const { email, phone, excludeUserId } = request.query as { email?: string; phone?: string; excludeUserId?: string };
+    const result: Record<string, "available" | "taken"> = {};
+    if (email) {
+      const existing = await prisma.user.findUnique({ where: { email: normalizeEmail(email) }, select: { id: true } });
+      result.email = existing && existing.id !== excludeUserId ? "taken" : "available";
+    }
+    if (phone) {
+      const normalized = normalizePhoneNumber(phone);
+      const existing = await prisma.user.findFirst({ where: { phone: normalized }, select: { id: true } });
+      result.phone = existing && existing.id !== excludeUserId ? "taken" : "available";
+    }
+    ok(reply, result);
+  }
+
   async register(request: FastifyRequest, reply: FastifyReply) {
     let body: ReturnType<typeof registerInputSchema.parse>;
     try {
@@ -211,7 +247,7 @@ export class AuthController {
         data: {
           fullName: body.fullName,
           email: body.email ?? null,
-          phone: body.phone ?? null,
+          phone: body.phone ? normalizePhoneNumber(body.phone) : null,
           passwordHash,
           role: "client"
         }
@@ -244,7 +280,7 @@ export class AuthController {
           data: {
             fullName: body.fullName,
             email: body.email,
-            phone: body.phone,
+            phone: body.phone ? normalizePhoneNumber(body.phone) : body.phone,
             passwordHash,
             role: "salon_owner"
           }
@@ -709,6 +745,18 @@ export class AuthController {
     } catch (error) {
       if (error instanceof HttpAuthError) {
         fail(reply, error.statusCode, error.code, error.message);
+      } else if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code?: string }).code === "P2002"
+      ) {
+        fail(
+          reply,
+          409,
+          "phone_already_used",
+          "Ce numéro de téléphone est déjà utilisé par un autre compte."
+        );
       } else {
         fail(reply, 500, "internal_error", "Erreur interne.");
       }
@@ -1035,6 +1083,12 @@ export class AuthController {
   async requestEmailOtp(request: FastifyRequest, reply: FastifyReply) {
     const body = emailOtpRequestSchema.parse(request.body);
 
+    // Play reviewer bypass — skip rate limit, skip email send, skip challenge persistence
+    if (isPlayReviewEnabled() && normalizeEmail(body.email) === normalizeEmail(config.playReviewEmail)) {
+      reply.code(202).send({ accepted: true, destination: body.email });
+      return;
+    }
+
     const rateLimit = await checkOtpRateLimit(`email:${body.email}`);
     if (!rateLimit.allowed) {
       fail(reply, 429, "otp_rate_limited", `Trop de tentatives. Réessayez dans ${rateLimit.retryAfterSeconds}s.`);
@@ -1076,6 +1130,40 @@ export class AuthController {
 
   async verifyEmailOtp(request: FastifyRequest, reply: FastifyReply) {
     const body = emailOtpVerifySchema.parse(request.body);
+
+    // Play reviewer bypass — checked first, before normal OTP flow
+    if (
+      isPlayReviewEnabled() &&
+      normalizeEmail(body.email) === normalizeEmail(config.playReviewEmail)
+    ) {
+      const matches = constantTimeEquals(body.code, config.playReviewOtp);
+      if (!matches) {
+        fail(reply, 401, "invalid_otp", "Code OTP invalide ou expiré.");
+        return;
+      }
+      // Reviewer OTP accepted — find or create user, sign tokens
+      let user = await prisma.user.findUnique({ where: { email: body.email } });
+      if (!user) {
+        user = await prisma.user.create({
+          data: { fullName: "", email: body.email, role: "client" }
+        });
+      }
+      const tokens = signSession(user.id, user.role, user.tokenVersion);
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          refreshToken: hashRefreshToken(tokens.refreshToken),
+          clientType: "app",
+          userAgentHash: uaHash(request),
+          expiresAt: new Date(Date.now() + config.jwtRefreshTtlSeconds * 1000)
+        }
+      });
+      await pruneExcessSessions(user.id);
+      ok(reply, tokens);
+      return;
+    }
+
+    // Normal OTP flow (unchanged)
     const entry = await prisma.emailOtpChallenge.findUnique({ where: { email: body.email } });
     const codeHash = otpCodeHash(body.email, body.code);
     const notExpired = !!entry && entry.expiresAt.getTime() > Date.now();
@@ -1122,5 +1210,182 @@ export class AuthController {
     });
     await pruneExcessSessions(user.id);
     ok(reply, tokens);
+  }
+
+  async requestAccountDeletion(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { email } = request.body as { email?: string };
+      if (!email || typeof email !== "string") {
+        fail(reply, 400, "missing_fields", "L'adresse e-mail est requise.");
+        return;
+      }
+
+      const rl = await checkAccountRateLimit("request-deletion", email, request, 3, 30, 900);
+      if (!rl.allowed) {
+        fail(reply, 429, "rate_limited", `Trop de tentatives. Réessayez dans ${rl.retryAfterSeconds}s.`);
+        return;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, role: true, email: true }
+      });
+
+      if (!user) {
+        fail(reply, 404, "user_not_found", "Aucun compte trouvé avec cette adresse e-mail.");
+        return;
+      }
+
+      const userName = user.email ?? "";
+
+      if (user.role !== "client") {
+        fail(reply, 403, "forbidden", "Seuls les comptes clients peuvent être supprimés via cette page. Contactez le support.");
+        return;
+      }
+
+      const rawToken = randomBytes(32).toString("hex");
+      const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+
+      await prisma.platformSetting.upsert({
+        where: { key: `auth:delete:${user.id}` },
+        create: {
+          group: "security",
+          key: `auth:delete:${user.id}`,
+          value: JSON.stringify({ tokenHash, expiresAt }),
+          description: "Account deletion token (single-use)"
+        },
+        update: { value: JSON.stringify({ tokenHash, expiresAt }) }
+      });
+
+      const confirmLink = `${config.webOrigin}/suppression-compte/confirm?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
+      const { buildEmailHtml } = await import("../../lib/email-html.js");
+      await sendEmail({
+        to: email,
+        subject: "Confirmez la suppression de votre compte Beauté Avenue",
+        text: `Bonjour,\n\nVous avez demandé la suppression de votre compte Beauté Avenue.\n\nCliquez sur le lien ci-dessous pour confirmer la suppression définitive (valable 24h) :\n${confirmLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`,
+        html: buildEmailHtml({
+          preheader: "Confirmation de suppression de compte",
+          greeting: "Bonjour,",
+          bodyLines: [
+            "Vous avez demandé la suppression de votre compte Beauté Avenue.",
+            "Cliquez sur le bouton ci-dessous pour confirmer la suppression définitive de votre compte et de vos données personnelles."
+          ],
+          cta: { url: confirmLink, label: "Confirmer la suppression" },
+          expiryNote: "Ce lien expire dans 24 heures.",
+          ignoreNote: true
+        })
+      });
+
+      ok(reply, { sent: true });
+    } catch (e) {
+      logger.error("requestAccountDeletion error", { err: String(e) });
+      fail(reply, 500, "internal_error", "Erreur lors de l'envoi de l'email de confirmation.");
+    }
+  }
+
+  async confirmAccountDeletion(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { token, email, reasons, feedback } = request.body as {
+        token?: string; email?: string; reasons?: string[]; feedback?: string;
+      };
+      if (!token || !email || typeof token !== "string" || typeof email !== "string") {
+        fail(reply, 400, "missing_fields", "token et email sont requis.");
+        return;
+      }
+
+      const rl = await checkAccountRateLimit("confirm-deletion", email, request, 5, 30, 900);
+      if (!rl.allowed) {
+        fail(reply, 429, "rate_limited", `Trop de tentatives. Réessayez dans ${rl.retryAfterSeconds}s.`);
+        return;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, role: true, fullName: true }
+      });
+      if (!user) {
+        fail(reply, 404, "user_not_found", "Compte introuvable.");
+        return;
+      }
+
+      const settingKey = `auth:delete:${user.id}`;
+      const setting = await prisma.platformSetting.findUnique({ where: { key: settingKey } });
+      if (!setting) {
+        fail(reply, 401, "invalid_token", "Lien de confirmation invalide ou déjà utilisé.");
+        return;
+      }
+
+      let entry: { tokenHash: string; expiresAt: number };
+      try {
+        entry = JSON.parse(setting.value) as { tokenHash: string; expiresAt: number };
+      } catch {
+        fail(reply, 401, "invalid_token", "Lien de confirmation corrompu.");
+        return;
+      }
+
+      if (entry.expiresAt < Date.now()) {
+        await prisma.platformSetting.delete({ where: { key: settingKey } }).catch(() => {});
+        fail(reply, 401, "token_expired", "Ce lien a expiré (24h). Faites une nouvelle demande.");
+        return;
+      }
+
+      const expectedHash = createHash("sha256").update(token).digest("hex");
+      const tokenBuf = Buffer.from(expectedHash, "hex");
+      const actualBuf = Buffer.from(entry.tokenHash, "hex");
+      const valid = tokenBuf.length === actualBuf.length && timingSafeEqual(tokenBuf, actualBuf);
+      if (!valid) {
+        fail(reply, 401, "invalid_token", "Lien de confirmation invalide.");
+        return;
+      }
+
+      // Consume token and delete account atomically
+      const validReasons = Array.isArray(reasons) ? reasons.filter(r => typeof r === "string") : [];
+      const metadata = {
+        ...(validReasons.length ? { reasons: validReasons } : {}),
+        ...(feedback && typeof feedback === "string" && feedback.trim() ? { feedback: feedback.trim() } : {})
+      };
+
+      await prisma.$transaction([
+        prisma.platformSetting.delete({ where: { key: settingKey } }),
+        prisma.user.update({
+          where: { id: user.id },
+          data: { fullName: "Deleted User", email: `deleted+${user.id}@beauteavenue.local`, phone: null }
+        }),
+        prisma.clientProfile.deleteMany({ where: { userId: user.id } }),
+        prisma.session.deleteMany({ where: { userId: user.id } }),
+        prisma.pushToken.deleteMany({ where: { userId: user.id } }),
+        prisma.clientAddress.deleteMany({ where: { userId: user.id } }),
+        prisma.clientBenefit.deleteMany({ where: { userId: user.id } }),
+        prisma.booking.updateMany({
+          where: { clientId: user.id },
+          data: { clientNote: null }
+        }),
+        ...(Object.keys(metadata).length ? [
+          prisma.auditLog.create({
+            data: {
+              action: "account_deleted",
+              summary: "Compte client supprimé",
+              entityType: "user",
+              entityId: user.id,
+              actorUserId: user.id,
+              actorName: "Deleted User",
+              severity: "info",
+              payloadJson: JSON.stringify(metadata)
+            }
+          })
+        ] : [])
+      ]);
+
+      ok(reply, { deleted: true });
+    } catch (e) {
+      if (e instanceof HttpAuthError) {
+        fail(reply, e.statusCode, e.code, e.message);
+      } else {
+        logger.error("confirmAccountDeletion error", { err: String(e) });
+        fail(reply, 500, "internal_error", "Erreur lors de la suppression du compte.");
+      }
+    }
   }
 }
