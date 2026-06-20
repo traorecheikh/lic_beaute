@@ -22,6 +22,24 @@ const router = createRouter({
       name: "terms",
       component: () => import("@/views/TermsOfServicePage.vue")
     },
+    {
+      path: "/cgu",
+      redirect: "/terms"
+    },
+    {
+      path: "/confidentialite",
+      redirect: "/privacy"
+    },
+    {
+      path: "/legal-notice",
+      name: "legal-notice",
+      component: () => import("@/views/LegalNoticePage.vue")
+    },
+    {
+      path: "/cookies",
+      name: "cookies",
+      component: () => import("@/views/CookiesPolicyPage.vue")
+    },
     // --- Public Pro Routes ---
     {
       path: "/pro",

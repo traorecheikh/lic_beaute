@@ -14,6 +14,7 @@ import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/app_top_bar.dart';
 import '../../../router/app_router.dart';
 import '../../booking/utils/booking_format.dart';
 import '../../../core/utils/status_labels.dart';
@@ -41,6 +42,9 @@ class BookingDetailPage extends ConsumerWidget {
       provider: bookingDetailResourceProvider,
       errorTitle: AppStrings.bookingDetailError,
       serverTitle: AppStrings.bookingDetailServer,
+      appBar: AppTopBar(
+        showBackButton: true,
+      ),
       sliverBuilder: (resource) {
         final salonId = resource.salonId;
         final totalAmountXof = resource.priceXof;

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -71,7 +70,21 @@ class OutboxEntry {
 
 class OutboxNotifier extends Notifier<List<OutboxEntry>> {
   @override
-  List<OutboxEntry> build() => _restoreEntries();
+  List<OutboxEntry> build() {
+    final entries = _restoreEntries();
+    // Clean up entries that have been in error for more than 24 hours
+    // so a permanently failed entry doesn't block the UI forever.
+    final cutoff = DateTime.now().subtract(const Duration(hours: 24));
+    final cleaned = [
+      for (final entry in entries)
+        if (entry.error == null || entry.createdAt.isAfter(cutoff)) entry,
+    ];
+    if (cleaned.length < entries.length) {
+      // Persist the cleaned list asynchronously
+      Future(() => _persistList(cleaned));
+    }
+    return cleaned;
+  }
 
   bool _isFlushing = false;
 
@@ -82,6 +95,14 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
         .whereType<Map>()
         .map((item) => OutboxEntry.fromJson(Map<String, dynamic>.from(item)))
         .toList(growable: false);
+  }
+
+  Future<void> _persistList(List<OutboxEntry> entries) async {
+    await AppCache.outbox.put(
+      StorageKeys.outboxItems,
+      entries.map((entry) => entry.toJson()).toList(growable: false),
+    );
+    state = entries;
   }
 
   Future<void> enqueue({
@@ -138,15 +159,9 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
 
           if (isClientError && !isTransient) {
             // Non-retryable client error (400, 404, 409, 422, etc.) —
-            // mark and skip, continue with the rest of the queue.
-            state = [
-              for (final item in state)
-                if (item.id == entry.id)
-                  item.copyWith(error: _extractErrorMessage(error))
-                else
-                  item,
-            ];
-            await _persist();
+            // the server will never accept this payload.
+            // Remove the entry entirely instead of keeping it stuck forever.
+            await remove(entry.id);
             continue;
           }
           // Transient network/server error — keep the entry for retry but
@@ -238,26 +253,6 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
     return '${DateTime.now().microsecondsSinceEpoch}-${random.nextInt(1 << 32)}';
   }
 
-  String? _extractErrorMessage(DioException error) {
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      return data['message'] as String?;
-    }
-    if (data is Map) {
-      return data['message']?.toString();
-    }
-    if (data is String && data.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(data);
-        if (decoded is Map<String, dynamic>) {
-          return decoded['message'] as String?;
-        }
-      } catch (_) {
-        return data;
-      }
-    }
-    return error.message;
-  }
 }
 
 final outboxProvider = NotifierProvider<OutboxNotifier, List<OutboxEntry>>(

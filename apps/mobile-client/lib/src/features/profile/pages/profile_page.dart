@@ -200,11 +200,20 @@ class ProfilePage extends ConsumerWidget {
                         context.go(AppRoutes.auth);
                       },
                     ),
-                    _MenuTile(
-                      icon: 'alert-circle',
-                      label: 'Supprimer mon compte',
-                      destructive: true,
-                      onTap: () => _showDeleteAccountDialog(context, ref),
+                    SizedBox(height: 24.h),
+                    Center(
+                      child: AppPressable(
+                        onTap: () => _showDeleteAccountDialog(context, ref),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
+                          child: Text(
+                            'Supprimer mon compte',
+                            style: AppTextStyles.bodySm.copyWith(
+                              color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                     SizedBox(height: 100.h),
                   ]),
@@ -236,6 +245,9 @@ class ProfilePage extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+              ),
               child: const Text('Supprimer'),
             ),
           ],
@@ -250,6 +262,7 @@ class ProfilePage extends ConsumerWidget {
       await dio.delete<void>('/api/v1/me');
       await ref.read(sessionProvider.notifier).logout();
       if (!context.mounted) return;
+      AppSnackbar.success(context, 'Compte supprimé.');
       context.go(AppRoutes.auth);
     } catch (error) {
       if (!context.mounted) return;

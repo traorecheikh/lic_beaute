@@ -10,8 +10,9 @@ abstract final class AppContacts {
 
   // Legal
   static const websiteUrl = 'https://beauteavenue.sn';
-  static const termsUrl = 'https://beauteavenue.sn/cgu';
-  static const privacyUrl = 'https://beauteavenue.sn/confidentialite';
+  static const termsUrl = 'https://beauteavenue.sn/terms';
+  static const privacyUrl = 'https://beauteavenue.sn/privacy';
+  static const legalNoticeUrl = 'https://beauteavenue.sn/legal-notice';
   static const cookiesUrl = 'https://beauteavenue.sn/cookies';
 
   /// Safely launch [url] in the external browser.

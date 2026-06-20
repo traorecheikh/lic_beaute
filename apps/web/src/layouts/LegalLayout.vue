@@ -72,8 +72,10 @@ defineProps<{
         </div>
         <nav class="flex flex-wrap justify-center gap-6 text-[12px] font-medium text-cocoa/70" aria-label="Liens légaux secondaires">
           <RouterLink to="/" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Accueil</RouterLink>
-          <RouterLink to="/privacy" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Politique de Confidentialité</RouterLink>
+          <RouterLink to="/privacy" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Confidentialité</RouterLink>
           <RouterLink to="/terms" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Conditions d'Utilisation</RouterLink>
+          <RouterLink to="/legal-notice" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Mentions Légales</RouterLink>
+          <RouterLink to="/cookies" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Cookies</RouterLink>
           <a href="mailto:support@beauteavenue.sn" class="hover:text-primary focus:text-primary focus:outline-none transition-colors">Contact</a>
         </nav>
         <p class="text-[10px] font-bold text-cocoa/20 uppercase tracking-[0.2em] pt-4">
