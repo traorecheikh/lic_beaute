@@ -1166,6 +1166,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
     );
 
     if (confirmed && mounted) {
+      ref.invalidate(bookingDetailResourceProvider(widget.bookingId));
       context.pushReplacement(AppRoutes.success(widget.bookingId));
     }
   }
@@ -1423,6 +1424,7 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
             .reconcile(paymentId);
         if (!context.mounted) return;
         if (reconciled == 'succeeded') {
+          ref.invalidate(bookingDetailResourceProvider(widget.bookingId));
           Navigator.of(context).pop(true);
           return;
         }

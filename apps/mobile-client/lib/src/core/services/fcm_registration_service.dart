@@ -4,18 +4,19 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const _storage = FlutterSecureStorage();
+import '../storage/secure_storage.dart';
+
 const _deviceIdKey = 'fcm_device_id';
 const _maxRetries = 3;
 
 class FcmRegistrationService {
   final Dio _dio;
+  final SecureStorage _secureStorage;
   bool _registered = false;
   StreamSubscription<String>? _tokenRefreshSub;
 
-  FcmRegistrationService(this._dio);
+  FcmRegistrationService(this._dio, this._secureStorage);
 
   Future<void> register() async {
     if (_registered) return;
@@ -83,12 +84,12 @@ class FcmRegistrationService {
     return false;
   }
 
-  static Future<String> _getDeviceId() async {
-    final existing = await _storage.read(key: _deviceIdKey);
+  Future<String> _getDeviceId() async {
+    final existing = await _secureStorage.read(_deviceIdKey);
     if (existing != null) return existing;
     final id =
         '${Platform.operatingSystem}-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(999999)}';
-    await _storage.write(key: _deviceIdKey, value: id);
+    await _secureStorage.write(_deviceIdKey, id);
     return id;
   }
 }

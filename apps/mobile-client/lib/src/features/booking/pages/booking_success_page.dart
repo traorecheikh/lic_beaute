@@ -76,6 +76,7 @@ class _BookingSuccessPageState extends ConsumerState<BookingSuccessPage>
               scale: _scale,
               fade: _fade,
               staleAt: resource.isStale ? resource.cachedAt : null,
+              hasDeposit: (resource.depositXof ?? 0) > 0,
             ),
           ),
         ];
@@ -94,12 +95,14 @@ class _SuccessBody extends StatelessWidget {
     required this.scale,
     required this.fade,
     required this.staleAt,
+    required this.hasDeposit,
   });
 
   final GlobalKey shareKey;
   final String salonName, serviceName, dateLabel, bookingId;
   final Animation<double> scale, fade;
   final DateTime? staleAt;
+  final bool hasDeposit;
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +160,9 @@ class _SuccessBody extends StatelessWidget {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      AppStrings.depositReceived,
+                      hasDeposit
+                          ? AppStrings.depositReceived
+                          : AppStrings.bookingConfirmed,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),

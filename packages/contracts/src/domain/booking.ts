@@ -29,9 +29,11 @@ export const bookingSummarySchema = z.object({
   status: bookingStatusSchema,
   source: z.string(),
   depositAmountXof: z.number().nonnegative(),
+  depositPaidXof: z.number().nonnegative().nullable(),
   depositPaymentStatus: paymentStatusSchema,
   paymentProvider: paymentProviderSchema.nullable(),
-  paymentId: z.string().nullable()
+  paymentId: z.string().nullable(),
+  reviewId: z.string().nullable()
 });
 
 export type BookingCreateInput = z.infer<typeof bookingCreateSchema>;

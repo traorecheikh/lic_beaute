@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,6 +14,7 @@ import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
+import '../utils/otp_timer_mixin.dart';
 import '../widgets/auth_form_widgets.dart';
 
 class OtpLoginPage extends ConsumerStatefulWidget {
@@ -25,42 +24,23 @@ class OtpLoginPage extends ConsumerStatefulWidget {
   ConsumerState<OtpLoginPage> createState() => _OtpLoginPageState();
 }
 
-class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
+class _OtpLoginPageState extends ConsumerState<OtpLoginPage> with OtpTimerMixin {
   final _phoneController = PhoneController(initialValue: PhoneNumber.parse('+221'));
   final _otpController = TextEditingController();
   bool _codeSent = false;
   bool _submitting = false;
-  Timer? _timer;
-  int _secondsRemaining = 30;
-  bool _canResend = false;
 
-  void _startTimer() {
-    setState(() {
-      _secondsRemaining = 30;
-      _canResend = false;
-    });
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        if (_secondsRemaining > 0) {
-          _secondsRemaining--;
-        } else {
-          _canResend = true;
-          timer.cancel();
-        }
-      });
-    });
+  @override
+  void initState() {
+    super.initState();
+    attachOtpTimer(setState);
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
     _otpController.dispose();
-    _timer?.cancel();
+    disposeOtpTimer();
     super.dispose();
   }
 
@@ -206,10 +186,10 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
               onTap: _verifyCode,
             ),
             gapH24,
-            if (!_canResend)
+            if (!canResend)
               Center(
                 child: Text(
-                  '${AppStrings.authResendCodePrefix}$_secondsRemaining${AppStrings.authResendCodeSuffix}',
+                  '${AppStrings.authResendCodePrefix}$secondsRemaining${AppStrings.authResendCodeSuffix}',
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -228,7 +208,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      _timer?.cancel();
+                      disposeOtpTimer();
                       context.push(AppRoutes.emailLogin);
                     },
                     child: Text(
@@ -238,13 +218,12 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
                   ),
                 ],
               ),
-            gapH16,
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  _timer?.cancel();
-                  setState(() => _codeSent = false);
-                },
+            gapH16,              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    disposeOtpTimer();
+                    setState(() => _codeSent = false);
+                  },
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
                   child: Text(
@@ -281,7 +260,7 @@ class _OtpLoginPageState extends ConsumerState<OtpLoginPage> {
         await ref.read(authActionsProvider).requestOtp(phone: phone);
         if (!mounted) return;
         setState(() => _codeSent = true);
-        _startTimer();
+        startOtpTimer();
         AppSnackbar.success(context, 'Code OTP envoyé.');
       },
       fallback: 'Envoi OTP impossible.',

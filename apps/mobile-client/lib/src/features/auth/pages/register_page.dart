@@ -1,22 +1,21 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_contacts.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/utils/app_launcher.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_router_helper.dart';
 import '../utils/auth_errors.dart';
+import '../utils/otp_timer_mixin.dart';
 import '../widgets/auth_form_widgets.dart';
 
 final _emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
@@ -28,43 +27,24 @@ class RegisterPage extends ConsumerStatefulWidget {
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends ConsumerState<RegisterPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> with OtpTimerMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
   bool _codeSent = false;
   bool _submitting = false;
-  Timer? _timer;
-  int _secondsRemaining = 30;
-  bool _canResend = false;
 
-  void _startTimer() {
-    setState(() {
-      _secondsRemaining = 30;
-      _canResend = false;
-    });
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        if (_secondsRemaining > 0) {
-          _secondsRemaining--;
-        } else {
-          _canResend = true;
-          timer.cancel();
-        }
-      });
-    });
+  @override
+  void initState() {
+    super.initState();
+    attachOtpTimer(setState);
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     _otpController.dispose();
-    _timer?.cancel();
+    disposeOtpTimer();
     super.dispose();
   }
 
@@ -149,10 +129,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         decoration: TextDecoration.underline,
                       ),
                       recognizer: TapGestureRecognizer()
-                        ..onTap = () => launchUrl(
-                              Uri.parse(AppContacts.termsUrl),
-                              mode: LaunchMode.externalApplication,
-                            ),
+                        ..onTap = () => openExternalUrl(context, AppContacts.termsUrl),
                     ),
                     TextSpan(text: ' ${AppStrings.legalAcceptanceAnd} '),
                     TextSpan(
@@ -162,10 +139,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         decoration: TextDecoration.underline,
                       ),
                       recognizer: TapGestureRecognizer()
-                        ..onTap = () => launchUrl(
-                              Uri.parse(AppContacts.privacyUrl),
-                              mode: LaunchMode.externalApplication,
-                            ),
+                        ..onTap = () => openExternalUrl(context, AppContacts.privacyUrl),
                     ),
                   ],
                 ),
@@ -273,10 +247,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 onTap: _verifyCode,
               ),
               gapH24,
-              if (!_canResend)
+              if (!canResend)
                 Center(
                   child: Text(
-                    '${AppStrings.authResendCodePrefix}$_secondsRemaining${AppStrings.authResendCodeSuffix}',
+                    '${AppStrings.authResendCodePrefix}$secondsRemaining${AppStrings.authResendCodeSuffix}',
                     style: AppTextStyles.bodySm.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -296,7 +270,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               Center(
                 child: GestureDetector(
                   onTap: () {
-                    _timer?.cancel();
+                    disposeOtpTimer();
                     if (_submitting) return;
                     setState(() => _codeSent = false);
                   },
@@ -332,7 +306,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         await ref.read(authActionsProvider).requestEmailOtp(email: email);
         if (!mounted) return;
         setState(() => _codeSent = true);
-        _startTimer();
+        startOtpTimer();
         AppSnackbar.success(context, AppStrings.authCodeSentEmail);
       },
       fallback: AppStrings.authSendCodeFailed,

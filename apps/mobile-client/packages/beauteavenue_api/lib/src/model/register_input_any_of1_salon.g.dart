@@ -19,6 +19,10 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
   final String? neighborhood;
   @override
   final String? description;
+  @override
+  final num? latitude;
+  @override
+  final num? longitude;
 
   factory _$RegisterInputAnyOf1Salon(
           [void Function(RegisterInputAnyOf1SalonBuilder)? updates]) =>
@@ -30,7 +34,9 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
       required this.city,
       required this.address,
       this.neighborhood,
-      this.description})
+      this.description,
+      this.latitude,
+      this.longitude})
       : super._();
   @override
   RegisterInputAnyOf1Salon rebuild(
@@ -50,7 +56,9 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
         city == other.city &&
         address == other.address &&
         neighborhood == other.neighborhood &&
-        description == other.description;
+        description == other.description &&
+        latitude == other.latitude &&
+        longitude == other.longitude;
   }
 
   @override
@@ -62,6 +70,8 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
     _$hash = $jc(_$hash, address.hashCode);
     _$hash = $jc(_$hash, neighborhood.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
+    _$hash = $jc(_$hash, latitude.hashCode);
+    _$hash = $jc(_$hash, longitude.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -74,7 +84,9 @@ class _$RegisterInputAnyOf1Salon extends RegisterInputAnyOf1Salon {
           ..add('city', city)
           ..add('address', address)
           ..add('neighborhood', neighborhood)
-          ..add('description', description))
+          ..add('description', description)
+          ..add('latitude', latitude)
+          ..add('longitude', longitude))
         .toString();
   }
 }
@@ -108,6 +120,14 @@ class RegisterInputAnyOf1SalonBuilder
   String? get description => _$this._description;
   set description(String? description) => _$this._description = description;
 
+  num? _latitude;
+  num? get latitude => _$this._latitude;
+  set latitude(num? latitude) => _$this._latitude = latitude;
+
+  num? _longitude;
+  num? get longitude => _$this._longitude;
+  set longitude(num? longitude) => _$this._longitude = longitude;
+
   RegisterInputAnyOf1SalonBuilder() {
     RegisterInputAnyOf1Salon._defaults(this);
   }
@@ -121,6 +141,8 @@ class RegisterInputAnyOf1SalonBuilder
       _address = $v.address;
       _neighborhood = $v.neighborhood;
       _description = $v.description;
+      _latitude = $v.latitude;
+      _longitude = $v.longitude;
       _$v = null;
     }
     return this;
@@ -152,6 +174,8 @@ class RegisterInputAnyOf1SalonBuilder
               address, r'RegisterInputAnyOf1Salon', 'address'),
           neighborhood: neighborhood,
           description: description,
+          latitude: latitude,
+          longitude: longitude,
         );
     replace(_$result);
     return _$result;

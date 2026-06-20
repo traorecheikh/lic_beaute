@@ -2,6 +2,7 @@ import '../widgets/booking_funnel_shared.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../utils/funnel_staff_scorer.dart';
 
 class StaffSelectionPage extends ConsumerStatefulWidget {
   final String salonId;
@@ -222,9 +223,11 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
       if (salon != null) {
         setState(() => _isResolvingAny = true);
         try {
-          selectedStaffId = await _resolveBestStaffId(
-            salon: salon,
+          selectedStaffId = await resolveBestStaffId(
+            ref: ref,
+            salonId: widget.salonId,
             serviceId: serviceId,
+            salon: salon,
           );
           final picked = salon.staff
               .where((e) => e.id == selectedStaffId)
@@ -257,106 +260,6 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
       '${AppRoutes.bookingSlot}?salonId=${widget.salonId}&serviceId=$serviceId$employeeParam',
     );
   }
-
-  Future<String?> _resolveBestStaffId({
-    required SalonDetail salon,
-    required String serviceId,
-  }) async {
-    final candidates = salon.staff
-        .where((s) => s.serviceIds.contains(serviceId))
-        .toList();
-    if (candidates.isEmpty) return null;
-
-    final scores = <String, _StaffLoadScore>{
-      for (final s in candidates) s.id: _StaffLoadScore(staffId: s.id),
-    };
-
-    const horizonDays = 2;
-    for (var dayOffset = 1; dayOffset <= horizonDays; dayOffset++) {
-      final probeDate = DateTime.now().add(Duration(days: dayOffset));
-      final date = _ymd(probeDate);
-
-      final daySamples = await Future.wait(
-        candidates.map((staff) async {
-          final params = (
-            salonId: widget.salonId,
-            date: date,
-            serviceId: serviceId,
-            employeeId: staff.id,
-          );
-          try {
-            final slots = await ref.read(
-              salonAvailabilityProvider(params).future,
-            );
-            return (staffId: staff.id, slots: slots);
-          } catch (_) {
-            return (staffId: staff.id, slots: const <dynamic>[]);
-          }
-        }),
-      );
-
-      for (final sample in daySamples) {
-        final slotMaps = sample.slots
-            .whereType<Map<String, dynamic>>()
-            .toList();
-        final score = scores[sample.staffId];
-        if (score == null || slotMaps.isEmpty) continue;
-
-        score.totalSlots += slotMaps.length;
-        score.availableDays += 1;
-        final dayEarliest = slotMaps
-            .map((slot) => slot['startsAt'] as String?)
-            .whereType<String>()
-            .fold<DateTime?>(null, (earliest, startsAt) {
-              final parsed = DateTime.tryParse(startsAt);
-              if (parsed == null) return earliest;
-              if (earliest == null || parsed.isBefore(earliest)) return parsed;
-              return earliest;
-            });
-        if (dayEarliest != null &&
-            (score.earliest == null || dayEarliest.isBefore(score.earliest!))) {
-          score.earliest = dayEarliest;
-        }
-      }
-    }
-
-    final ranked = scores.values.toList()
-      ..sort((a, b) {
-        final byDays = b.availableDays.compareTo(a.availableDays);
-        if (byDays != 0) return byDays;
-        final bySlots = b.totalSlots.compareTo(a.totalSlots);
-        if (bySlots != 0) return bySlots;
-        final aEarliest = a.earliest;
-        final bEarliest = b.earliest;
-        if (aEarliest != null && bEarliest != null) {
-          final byEarliest = aEarliest.compareTo(bEarliest);
-          if (byEarliest != 0) return byEarliest;
-        } else if (aEarliest != null) {
-          return -1;
-        } else if (bEarliest != null) {
-          return 1;
-        }
-        return a.staffId.compareTo(b.staffId);
-      });
-
-    return ranked.firstOrNull?.staffId;
-  }
-
-  String _ymd(DateTime date) {
-    final y = date.year.toString().padLeft(4, '0');
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
-  }
-}
-
-class _StaffLoadScore {
-  _StaffLoadScore({required this.staffId});
-
-  final String staffId;
-  int totalSlots = 0;
-  int availableDays = 0;
-  DateTime? earliest;
 }
 
 // ─── Avatar cell widget ───────────────────────────────────────────────────────

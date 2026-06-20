@@ -58,6 +58,16 @@ const router = createRouter({
       name: "payment-callback",
       component: () => import("@/views/PaymentCallbackPage.vue")
     },
+    {
+      path: "/suppression-compte",
+      name: "account-deletion",
+      component: () => import("@/views/AccountDeletionPage.vue")
+    },
+    {
+      path: "/suppression-compte/confirm",
+      name: "account-deletion-confirm",
+      component: () => import("@/views/AccountDeletionConfirmPage.vue")
+    },
     // --- Protected Pro Routes ---
     {
       path: "/pro",

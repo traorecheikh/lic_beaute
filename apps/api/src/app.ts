@@ -66,8 +66,17 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
       reply.status(400).send({ statusCode: 400, code: "validation_error", error: "Bad Request", message: msg });
       return;
     }
-    // Re-raise to let Fastify handle everything else (rate limit 429, etc.)
-    reply.send(error);
+    // Normalize non-validation errors — never leak raw error details to the client.
+    const statusCode = error.statusCode ?? 500;
+    const code = statusCode === 429 ? "rate_limited"
+      : statusCode === 413 ? "payload_too_large"
+      : statusCode === 404 ? "not_found"
+      : "internal_error";
+    const message = statusCode === 429 ? "Trop de requêtes. Réessayez dans quelques instants."
+      : statusCode === 413 ? "Fichier trop volumineux."
+      : statusCode === 404 ? "Ressource non trouvée."
+      : "Erreur interne du serveur.";
+    reply.status(statusCode).send({ statusCode, code, error: error.message ?? "Internal Server Error", message });
   });
 
   const allowedOrigins = new Set([config.webOrigin]);
@@ -98,8 +107,8 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   await app.register(cookie);
   await app.register(sensible);
   const httpsOrigin = config.webOrigin.startsWith("https://");
-  const connectSrc = ["'self'", "https://nominatim.openstreetmap.org", "https://*.tile.openstreetmap.org"];
-  const imgSrc = ["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org"];
+  const connectSrc = ["'self'", "https://nominatim.openstreetmap.org"];
+  const imgSrc = ["'self'", "data:", "blob:"];
 
   if (config.mediaPublicBaseUrl) {
     try {

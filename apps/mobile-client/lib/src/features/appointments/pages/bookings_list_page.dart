@@ -100,7 +100,10 @@ class BookingsListPage extends ConsumerWidget {
                         b.startsAt.isBefore(now) ||
                         b.status ==
                             BookingSummaryListResponseItemsInnerStatusEnum
-                                .completed,
+                                .completed ||
+                        b.status ==
+                            BookingSummaryListResponseItemsInnerStatusEnum
+                                .cancelled,
                   )
                   .toList();
 

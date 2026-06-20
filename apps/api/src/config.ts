@@ -68,7 +68,10 @@ export const config = {
   paymentReconcileMinIntervalMs: Number(process.env.PAYMENT_RECONCILE_MIN_INTERVAL_MS ?? 15_000),
   billingAccountSecret: process.env.BILLING_ACCOUNT_SECRET ?? "",
   mediaPublicBaseUrl: process.env.MEDIA_PUBLIC_BASE_URL ?? "https://media.beauteavenu.com",
-  subscriptionExpiryEnabled: process.env.SUBSCRIPTION_EXPIRY_ENABLED !== "false"
+  subscriptionExpiryEnabled: process.env.SUBSCRIPTION_EXPIRY_ENABLED !== "false",
+  playReviewEnabled: (process.env.PLAY_REVIEW_ENABLED ?? "false") === "true",
+  playReviewEmail: process.env.PLAY_REVIEW_EMAIL ?? "",
+  playReviewOtp: process.env.PLAY_REVIEW_OTP ?? ""
 };
 
 const isStagingOrigin =

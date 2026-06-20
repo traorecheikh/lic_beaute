@@ -6,6 +6,14 @@ import 'app_async_view.dart';
 import 'app_scaffold.dart';
 import '../../features/discovery/providers/cached_resource.dart';
 
+/// A family provider that takes a [String] argument (e.g. booking ID) and
+/// returns a [CachedResource]<T>. This is the typed contract for the
+/// [AppBookingAsyncScaffold.provider] parameter.
+/// Uses a function type because [FutureProviderFamily] is not part of the
+/// public Riverpod API (not exported via `show` list).
+typedef BookingDetailResourceProvider<T>
+    = FutureProvider<CachedResource<T>> Function(String bookingId);
+
 class AppBookingAsyncScaffold<T> extends ConsumerWidget {
   final String bookingId;
   final String errorTitle;
@@ -15,7 +23,7 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
   final List<Widget> Function(CachedResource<T> resource) sliverBuilder;
   final Widget? bottomNavigationBar;
   final PreferredSizeWidget? appBar;
-  final dynamic provider;
+  final BookingDetailResourceProvider<T> provider;
 
   const AppBookingAsyncScaffold({
     required this.bookingId,
@@ -32,7 +40,7 @@ class AppBookingAsyncScaffold<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailAsync = ref.watch(provider(bookingId)) as AsyncValue<CachedResource<T>>;
+    final detailAsync = ref.watch(provider(bookingId));
     Future<void> refresh() => ref.refresh(provider(bookingId).future);
 
     return AppScaffold(

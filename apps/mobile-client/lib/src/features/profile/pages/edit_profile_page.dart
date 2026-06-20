@@ -21,6 +21,7 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../../../core/session/session_store.dart';
 import '../providers/profile_provider.dart';
+import '../utils/phone_utils.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -264,7 +265,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     setState(() => _uploadingAvatar = true);
     try {
       await ref.read(profileProvider.notifier).uploadAvatar(File(image.path));
-      if (!mounted) return;
+      if (!context.mounted) return;
       AppSnackbar.success(context, AppStrings.photoUpdated);
     } catch (error) {
       await context.handleHttpError(error, AppStrings.uploadFailed);
@@ -317,7 +318,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             marketingOptIn: _marketingOptIn,
             preferredLanguage: _language,
           );
-      if (!mounted) return;
+      if (!context.mounted) return;
       AppSnackbar.success(context, AppStrings.profileSaved);
       context.pop();
     } catch (error) {
@@ -339,35 +340,18 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   void _seedPhone(String? rawPhone) {
-    final cleaned = (rawPhone ?? '').replaceAll(RegExp(r'\s+'), '');
-    if (cleaned.isEmpty) {
+    final result = seedPhone(rawPhone);
+    if (result == null) {
       _phoneController.text = '';
       _phoneCountry = kPhoneCountries.first;
       return;
     }
-
-    for (final country in kPhoneCountries) {
-      final dialDigits = country.dialCode.replaceAll(RegExp(r'\D'), '');
-      if (cleaned.startsWith(country.dialCode) ||
-          cleaned.startsWith(dialDigits)) {
-        final withoutDialCode = cleaned
-            .replaceFirst(country.dialCode, '')
-            .replaceFirst(dialDigits, '');
-        _phoneCountry = country;
-        _phoneController.text = withoutDialCode;
-        return;
-      }
-    }
-
-    _phoneController.text = cleaned.replaceAll(RegExp(r'\D'), '');
-    _phoneCountry = kPhoneCountries.first;
+    _phoneCountry = result.country;
+    _phoneController.text = result.nationalDigits;
   }
 
-  String? _resolvedPhoneValue() {
-    final nationalDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
-    if (nationalDigits.isEmpty) return null;
-    return '${_phoneCountry.dialCode}$nationalDigits';
-  }
+  String? _resolvedPhoneValue() =>
+      buildFullPhone(_phoneController.text, _phoneCountry);
 
   Widget _buildTextField({
     required String label,

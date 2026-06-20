@@ -164,7 +164,9 @@ final searchResultsProvider = FutureProvider.family<
 // ── Search event tracker ────────────────────────────────────────────────────
 
 final searchEventTrackerProvider = Provider<SearchEventTracker>((ref) {
-  return SearchEventTracker(ref);
+  final tracker = SearchEventTracker(ref);
+  ref.onDispose(() => tracker.dispose());
+  return tracker;
 });
 
 class SearchEventTracker {

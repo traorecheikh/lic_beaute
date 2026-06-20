@@ -12,6 +12,7 @@ abstract final class StorageKeys {
   static const profileBox = 'ba_profile';
   static const settingsBox = 'ba_settings';
   static const outboxBox = 'ba_outbox';
+  static const favoritesBox = 'ba_favorites';
 
   // ── Hive keys (within boxes) ─────────────────────────────────────────────
   static const salonListKey = 'salon_list';

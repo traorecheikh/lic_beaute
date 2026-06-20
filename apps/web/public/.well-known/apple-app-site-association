@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["MJ59869224.sn.numuconnect.beauteavenue"],
+        "components": [
+          { "/": "/payment/callback/*" },
+          { "/": "/auth/magic-login*" }
+        ]
+      }
+    ]
+  }
+}

@@ -510,6 +510,7 @@ import {
   DocumentCheckIcon,
   MapPinIcon
 } from "@heroicons/vue/24/outline";
+import type { RegisterInputAnyOf1Salon } from "@/lib/generated";
 import { registerProOwner } from "@/lib/pro-api";
 import { fetchPublicRegistrationDocs, uploadRegistrationDoc, fetchPublicCategories, fetchPublicPricing, checkPublicUniqueness } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
@@ -1019,22 +1020,26 @@ async function submitRegistration() {
 
   loading.value = true;
   try {
+    const salon: RegisterInputAnyOf1Salon & {
+      latitude?: number;
+      longitude?: number;
+    } = {
+      name: form.salonName.trim(),
+      category: form.category,
+      city: form.city,
+      address: form.address.trim(),
+      neighborhood: form.neighborhood.trim() || undefined,
+      description: form.description.trim() || `${form.category} à ${form.city}`,
+      latitude: form.latitude ? Number(form.latitude.replace(",", ".")) : undefined,
+      longitude: form.longitude ? Number(form.longitude.replace(",", ".")) : undefined,
+    };
     await registerProOwner({
       type: "salon_owner",
       fullName: form.fullName.trim(),
       email,
       phone,
       password: form.password,
-      salon: {
-        name: form.salonName.trim(),
-        category: form.category,
-        city: form.city,
-        address: form.address.trim(),
-        neighborhood: form.neighborhood.trim() || undefined,
-        description: form.description.trim() || `${form.category} à ${form.city}`,
-        latitude: form.latitude ? Number(form.latitude.replace(",", ".")) : undefined,
-        longitude: form.longitude ? Number(form.longitude.replace(",", ".")) : undefined,
-      },
+      salon,
       hours: [0, 1, 2, 3, 4, 5, 6].map(d => ({
         dayOfWeek: d,
         isOpen: d !== 0,

@@ -28,6 +28,44 @@ class BookingReviewPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final funnel = ref.watch(bookingFunnelProvider);
 
+    if (!funnel.canReview) {
+      // Funnel state is missing — user likely navigated directly or state
+      // was cleared. Show a meaningful error rather than a broken summary.
+      return AppScaffold(
+        appBar: AppTopBar(showBackButton: true),
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppIcon('alert-circle', size: 48, color: AppColors.error),
+                SizedBox(height: 20.h),
+                Text(
+                  'Réservation incomplète',
+                  style: AppTextStyles.displaySm,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  'Les informations de réservation sont manquantes. Reprenez la réservation depuis la fiche salon.',
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+                AppButton.primary(
+                  label: "Retour à l'accueil",
+                  onPressed: () => context.go(AppRoutes.home),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return AppScaffold(
       appBar: AppTopBar(
         backgroundColor: AppColors.surface,

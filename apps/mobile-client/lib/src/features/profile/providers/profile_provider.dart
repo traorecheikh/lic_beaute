@@ -179,9 +179,7 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     final dio = ref.read(dioProvider);
     try {
       final xFile = XFile(file.path);
-      final mediaId = await MediaUploadService(
-        dio,
-      ).uploadSalonImage(salonId: '', file: xFile, purpose: 'avatar');
+      final mediaId = await MediaUploadService(dio).uploadAvatar(file: xFile);
       await _updateAndSync({'avatarMediaId': mediaId});
       await refresh();
     } on DioException catch (error) {

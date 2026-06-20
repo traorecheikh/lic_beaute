@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
@@ -22,6 +21,9 @@ import '../../auth/widgets/auth_required_sheet.dart';
 import '../../booking/providers/booking_funnel_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/salon_detail_provider.dart';
+import '../widgets/salon_detail_buttons.dart';
+import '../widgets/salon_detail_sections.dart';
+import '../widgets/salon_gallery_viewer.dart';
 import '../widgets/stale_data_notice.dart';
 
 class SalonDetailPage extends ConsumerStatefulWidget {
@@ -79,7 +81,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
         opaque: false,
         barrierColor: AppColors.black,
         pageBuilder: (_, _, _) =>
-            _GalleryViewer(images: images, initialIndex: index),
+            SalonGalleryViewer(images: images, initialIndex: index),
         transitionsBuilder: (_, anim, _, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 220),
@@ -147,12 +149,12 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                       pinned: true,
                       backgroundColor: AppColors.neutral,
                       elevation: 0,
-                      leading: _CircleBtn(
+                      leading: SalonCircleBtn(
                         icon: 'arrow-left',
                         onTap: () => Navigator.of(context).pop(),
                       ),
                       actions: [
-                        _CircleBtn(
+                        SalonCircleBtn(
                           icon: 'share',
                           onTap: () {
                             AppHaptics.light();
@@ -165,7 +167,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                           },
                         ),
                         SizedBox(width: 6.w),
-                        _CircleBtn(
+                        SalonCircleBtn(
                           icon: isFavorite ? 'heart-filled' : 'heart',
                           iconColor: isFavorite ? AppColors.primary : null,
                           onTap: () async {
@@ -337,9 +339,11 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                               ),
 
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 24.w),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     // Category chip
                                     Container(
@@ -356,7 +360,8 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                       child: Text(
                                         salon.category.toUpperCase(),
                                         style: AppTextStyles.overline.copyWith(
-                                          color: AppColors.onSecondaryContainer,
+                                          color:
+                                              AppColors.onSecondaryContainer,
                                         ),
                                       ),
                                     ),
@@ -380,9 +385,8 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                           ),
                                           SizedBox(width: 4.w),
                                           Text(
-                                            salon.averageRating.toStringAsFixed(
-                                              1,
-                                            ),
+                                            salon.averageRating
+                                                .toStringAsFixed(1),
                                             style: AppTextStyles.labelMd
                                                 .copyWith(
                                                   color: AppColors.onSurface,
@@ -408,15 +412,17 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                     ),
                                     SizedBox(height: 18.h),
 
-                                    // Inline stats — no Material cards
-                                    _InlineStats(
+                                    // Inline stats
+                                    SalonInlineStats(
                                       staffCount: salon.staff.length,
                                       servicesCount: salon.services.length,
                                     ),
                                     SizedBox(height: 24.h),
 
                                     // About
-                                    _SectionLabel(AppStrings.aboutSection),
+                                    SalonSectionLabel(
+                                      AppStrings.aboutSection,
+                                    ),
                                     SizedBox(height: 10.h),
                                     Text(
                                       salon.description,
@@ -438,11 +444,13 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                   ),
                                   child: Row(
                                     children: [
-                                      _SectionLabel(AppStrings.photosSection),
+                                      SalonSectionLabel(
+                                        AppStrings.photosSection,
+                                      ),
                                       const Spacer(),
                                       AppPressable(
-                                        onTap: () =>
-                                            _openGallery(context, images, 0),
+                                        onTap: () => _openGallery(
+                                            context, images, 0),
                                         child: Text(
                                           AppStrings.viewAllCtaShort,
                                           style: AppTextStyles.bodySm.copyWith(
@@ -473,7 +481,8 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                           18.r,
                                         ),
                                         child: Hero(
-                                          tag: 'salon_image_strip_${images[i]}',
+                                          tag:
+                                              'salon_image_strip_${images[i]}',
                                           child: CachedNetworkImage(
                                             imageUrl: images[i],
                                             width: 160.w,
@@ -491,33 +500,39 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                               ],
 
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 24.w),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     // Services
-                                    _SectionLabel(AppStrings.popularServices),
+                                    SalonSectionLabel(
+                                      AppStrings.popularServices,
+                                    ),
                                     SizedBox(height: 12.h),
                                     ...salon.services
                                         .take(5)
                                         .map(
-                                          (s) => _ServiceRow(
+                                          (s) => SalonServiceRow(
                                             name: s.name,
                                             duration:
                                                 '${s.durationMinutes} min',
-                                            price: '${s.priceXof.toInt()} XOF',
+                                            price:
+                                                '${s.priceXof.toInt()} XOF',
                                           ),
                                         ),
                                     SizedBox(height: 28.h),
 
                                     // Map
-                                    _SectionLabel(AppStrings.locationSection),
+                                    SalonSectionLabel(
+                                      AppStrings.locationSection,
+                                    ),
                                     SizedBox(height: 12.h),
                                     SalonMapCard(
-                                      latitude:
-                                          salon.latitude?.toDouble() ?? 14.7167,
-                                      longitude:
-                                          salon.longitude?.toDouble() ??
+                                      latitude: salon.latitude?.toDouble() ??
+                                          14.7167,
+                                      longitude: salon.longitude?.toDouble() ??
                                           -17.4677,
                                       salonName: salon.name,
                                       address: salon.address,
@@ -561,7 +576,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                 child: Semantics(
                   button: true,
                   label: AppStrings.bookCta,
-                  child: _BottomCta(
+                  child: SalonBottomCta(
                     price: salon.services.isNotEmpty
                         ? '${AppStrings.fromPrice}${salon.services.first.priceXof.toInt()} XOF'
                         : null,
@@ -572,302 +587,6 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-// ─── Gallery viewer ───────────────────────────────────────────────────────────
-
-class _GalleryViewer extends StatefulWidget {
-  const _GalleryViewer({required this.images, required this.initialIndex});
-  final List<String> images;
-  final int initialIndex;
-
-  @override
-  State<_GalleryViewer> createState() => _GalleryViewerState();
-}
-
-class _GalleryViewerState extends State<_GalleryViewer> {
-  late final PageController _ctrl;
-  late int _current;
-
-  @override
-  void initState() {
-    super.initState();
-    _current = widget.initialIndex;
-    _ctrl = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
-    final botPad = MediaQuery.of(context).padding.bottom;
-
-    return AppScaffold(
-      backgroundColor: AppColors.black,
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _ctrl,
-            onPageChanged: (i) => setState(() => _current = i),
-            itemCount: widget.images.length,
-            itemBuilder: (_, i) => InteractiveViewer(
-              child: CachedNetworkImage(
-                imageUrl: widget.images[i],
-                fit: BoxFit.contain,
-                placeholder: (_, _) => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.white38,
-                    strokeWidth: 2,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Close button
-          Positioned(
-            top: topPad + 10,
-            right: 16,
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: AppColors.black54,
-                  shape: BoxShape.circle,
-                ),
-                child: const AppIcon('close', color: AppColors.white, size: 18),
-              ),
-            ),
-          ),
-
-          // Counter
-          Positioned(
-            top: topPad + 16,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.black54,
-                  borderRadius: BorderRadius.circular(AppRadius.full.r),
-                ),
-                child: Text(
-                  '${_current + 1} / ${widget.images.length}',
-                  style: const TextStyle(color: AppColors.white, fontSize: 13),
-                ),
-              ),
-            ),
-          ),
-
-          // Bottom dots
-          if (widget.images.length > 1)
-            Positioned(
-              bottom: botPad + 24,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  widget.images.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: i == _current ? 18 : 5,
-                    height: 4,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: i == _current
-                          ? AppColors.white
-                          : AppColors.white.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(AppRadius.xs.r),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Shared helpers ───────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) =>
-      Text(text, style: AppTextStyles.headlineSm);
-}
-
-class _InlineStats extends StatelessWidget {
-  const _InlineStats({required this.staffCount, required this.servicesCount});
-
-  final int staffCount;
-  final int servicesCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        AppIcon('sparkle', size: 13, color: AppColors.primary),
-        SizedBox(width: 5.w),
-        Text(
-          '$servicesCount prestation${servicesCount > 1 ? 's' : ''}',
-          style: AppTextStyles.bodyMd,
-        ),
-        SizedBox(width: 12.w),
-        Container(
-          width: 3.r,
-          height: 3.r,
-          decoration: BoxDecoration(
-            color: AppColors.outline,
-            shape: BoxShape.circle,
-          ),
-        ),
-        SizedBox(width: 12.w),
-        AppIcon('user', size: 13, color: AppColors.primary),
-        SizedBox(width: 5.w),
-        Text(
-          '$staffCount spécialiste${staffCount > 1 ? 's' : ''}',
-          style: AppTextStyles.bodyMd,
-        ),
-      ],
-    );
-  }
-}
-
-class _ServiceRow extends StatelessWidget {
-  const _ServiceRow({
-    required this.name,
-    required this.duration,
-    required this.price,
-  });
-
-  final String name, duration, price;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 1.h),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: AppTextStyles.labelLg),
-                SizedBox(height: 2.h),
-                Text(
-                  duration,
-                  style: AppTextStyles.bodySm.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            price,
-            style: AppTextStyles.priceMd.copyWith(color: AppColors.primary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CircleBtn extends StatelessWidget {
-  const _CircleBtn({required this.icon, required this.onTap, this.iconColor});
-
-  final String icon;
-  final VoidCallback onTap;
-  final Color? iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8.r),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 36.r,
-          height: 36.r,
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.88),
-            shape: BoxShape.circle,
-            boxShadow: AppShadows.sm,
-          ),
-          child: Center(
-            child: AppIcon(
-              icon,
-              size: 18,
-              color: iconColor ?? AppColors.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomCta extends StatelessWidget {
-  const _BottomCta({required this.onBook, this.price});
-
-  final VoidCallback onBook;
-  final String? price;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppPressable(
-      onTap: onBook,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
-        decoration: BoxDecoration(
-          color: AppColors.onSurface,
-          borderRadius: BorderRadius.circular(AppRadius.full.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.onSurface.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppIcon('calendar', color: AppColors.surface, size: 18),
-            SizedBox(width: 8.w),
-            Flexible(
-              child: Text(
-                price != null
-                    ? '${AppStrings.bookCta} · $price'
-                    : AppStrings.salonDetailCta,
-                style: AppTextStyles.labelLg.copyWith(color: AppColors.surface),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

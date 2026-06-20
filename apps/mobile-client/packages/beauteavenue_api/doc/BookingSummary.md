@@ -19,9 +19,11 @@ Name | Type | Description | Notes
 **status** | **String** |  | 
 **source_** | **String** |  | 
 **depositAmountXof** | **num** |  | 
+**depositPaidXof** | **num** |  | 
 **depositPaymentStatus** | **String** |  | 
 **paymentProvider** | **String** |  | 
 **paymentId** | **String** |  | 
+**reviewId** | **String** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

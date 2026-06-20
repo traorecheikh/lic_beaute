@@ -125,6 +125,16 @@
                   },
                   "description": {
                     "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
                   }
                 },
                 "required": [
@@ -2486,6 +2496,11 @@
             "type": "number",
             "minimum": 0
           },
+          "depositPaidXof": {
+            "type": "number",
+            "minimum": 0,
+            "nullable": true
+          },
           "depositPaymentStatus": {
             "type": "string",
             "enum": [
@@ -2507,6 +2522,10 @@
           "paymentId": {
             "type": "string",
             "nullable": true
+          },
+          "reviewId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -2521,9 +2540,11 @@
           "status",
           "source",
           "depositAmountXof",
+          "depositPaidXof",
           "depositPaymentStatus",
           "paymentProvider",
-          "paymentId"
+          "paymentId",
+          "reviewId"
         ],
         "additionalProperties": false
       },
@@ -2579,6 +2600,11 @@
                   "type": "number",
                   "minimum": 0
                 },
+                "depositPaidXof": {
+                  "type": "number",
+                  "minimum": 0,
+                  "nullable": true
+                },
                 "depositPaymentStatus": {
                   "type": "string",
                   "enum": [
@@ -2600,6 +2626,10 @@
                 "paymentId": {
                   "type": "string",
                   "nullable": true
+                },
+                "reviewId": {
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
@@ -2614,9 +2644,11 @@
                 "status",
                 "source",
                 "depositAmountXof",
+                "depositPaidXof",
                 "depositPaymentStatus",
                 "paymentProvider",
-                "paymentId"
+                "paymentId",
+                "reviewId"
               ],
               "additionalProperties": false
             }
@@ -4074,7 +4106,8 @@
           },
           "priceXof": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 5000000
           },
           "depositMode": {
             "type": "string",
@@ -4087,12 +4120,13 @@
           "depositAmountXof": {
             "type": "integer",
             "minimum": 0,
+            "maximum": 5000000,
             "nullable": true
           },
           "depositPercent": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 100,
+            "maximum": 50,
             "nullable": true
           },
           "isActive": {
@@ -4135,7 +4169,8 @@
           },
           "priceXof": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 5000000
           },
           "depositMode": {
             "type": "string",
@@ -4147,12 +4182,13 @@
           },
           "depositAmountXof": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 5000000
           },
           "depositPercent": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 100
+            "maximum": 50
           }
         },
         "required": [
@@ -4182,7 +4218,8 @@
           },
           "priceXof": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 5000000
           },
           "depositMode": {
             "type": "string",
@@ -4194,12 +4231,13 @@
           },
           "depositAmountXof": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 5000000
           },
           "depositPercent": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 100
+            "maximum": 50
           }
         },
         "additionalProperties": false

@@ -173,6 +173,7 @@ abstract final class AppStrings {
   static const loadConfirmationError = 'Impossible de charger la confirmation';
   static const confirmationServerTitle = 'La confirmation est indisponible';
   static const depositReceived = 'Votre acompte a bien été reçu. À très vite au salon !';
+  static const bookingConfirmed = 'Votre réservation est confirmée. À très vite au salon !';
   static const shareBookingCta = 'Partager ma réservation';
   static const backToHomeCta = "Retour à l'accueil";
   static const sessionExpiredMsg = 'Session expirée. Reconnectez-vous pour confirmer la réservation.';

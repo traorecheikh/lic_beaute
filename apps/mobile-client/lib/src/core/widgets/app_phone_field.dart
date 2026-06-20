@@ -87,7 +87,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
 
   String? _defaultValidator(String? value) {
     final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
-    if (digits.length < _country.digits - 1) {
+    if (digits.length < _country.digits) {
       return 'Numéro invalide (${_country.digits} chiffres attendus)';
     }
     return null;

@@ -249,11 +249,15 @@ class _$BookingSummary extends BookingSummary {
   @override
   final num depositAmountXof;
   @override
+  final num? depositPaidXof;
+  @override
   final BookingSummaryDepositPaymentStatusEnum depositPaymentStatus;
   @override
   final BookingSummaryPaymentProviderEnum? paymentProvider;
   @override
   final String? paymentId;
+  @override
+  final String? reviewId;
 
   factory _$BookingSummary([void Function(BookingSummaryBuilder)? updates]) =>
       (BookingSummaryBuilder()..update(updates))._build();
@@ -270,9 +274,11 @@ class _$BookingSummary extends BookingSummary {
       required this.status,
       required this.source_,
       required this.depositAmountXof,
+      this.depositPaidXof,
       required this.depositPaymentStatus,
       this.paymentProvider,
-      this.paymentId})
+      this.paymentId,
+      this.reviewId})
       : super._();
   @override
   BookingSummary rebuild(void Function(BookingSummaryBuilder) updates) =>
@@ -296,9 +302,11 @@ class _$BookingSummary extends BookingSummary {
         status == other.status &&
         source_ == other.source_ &&
         depositAmountXof == other.depositAmountXof &&
+        depositPaidXof == other.depositPaidXof &&
         depositPaymentStatus == other.depositPaymentStatus &&
         paymentProvider == other.paymentProvider &&
-        paymentId == other.paymentId;
+        paymentId == other.paymentId &&
+        reviewId == other.reviewId;
   }
 
   @override
@@ -315,9 +323,11 @@ class _$BookingSummary extends BookingSummary {
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, source_.hashCode);
     _$hash = $jc(_$hash, depositAmountXof.hashCode);
+    _$hash = $jc(_$hash, depositPaidXof.hashCode);
     _$hash = $jc(_$hash, depositPaymentStatus.hashCode);
     _$hash = $jc(_$hash, paymentProvider.hashCode);
     _$hash = $jc(_$hash, paymentId.hashCode);
+    _$hash = $jc(_$hash, reviewId.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -336,9 +346,11 @@ class _$BookingSummary extends BookingSummary {
           ..add('status', status)
           ..add('source_', source_)
           ..add('depositAmountXof', depositAmountXof)
+          ..add('depositPaidXof', depositPaidXof)
           ..add('depositPaymentStatus', depositPaymentStatus)
           ..add('paymentProvider', paymentProvider)
-          ..add('paymentId', paymentId))
+          ..add('paymentId', paymentId)
+          ..add('reviewId', reviewId))
         .toString();
   }
 }
@@ -392,6 +404,11 @@ class BookingSummaryBuilder
   set depositAmountXof(num? depositAmountXof) =>
       _$this._depositAmountXof = depositAmountXof;
 
+  num? _depositPaidXof;
+  num? get depositPaidXof => _$this._depositPaidXof;
+  set depositPaidXof(num? depositPaidXof) =>
+      _$this._depositPaidXof = depositPaidXof;
+
   BookingSummaryDepositPaymentStatusEnum? _depositPaymentStatus;
   BookingSummaryDepositPaymentStatusEnum? get depositPaymentStatus =>
       _$this._depositPaymentStatus;
@@ -408,6 +425,10 @@ class BookingSummaryBuilder
   String? _paymentId;
   String? get paymentId => _$this._paymentId;
   set paymentId(String? paymentId) => _$this._paymentId = paymentId;
+
+  String? _reviewId;
+  String? get reviewId => _$this._reviewId;
+  set reviewId(String? reviewId) => _$this._reviewId = reviewId;
 
   BookingSummaryBuilder() {
     BookingSummary._defaults(this);
@@ -427,9 +448,11 @@ class BookingSummaryBuilder
       _status = $v.status;
       _source_ = $v.source_;
       _depositAmountXof = $v.depositAmountXof;
+      _depositPaidXof = $v.depositPaidXof;
       _depositPaymentStatus = $v.depositPaymentStatus;
       _paymentProvider = $v.paymentProvider;
       _paymentId = $v.paymentId;
+      _reviewId = $v.reviewId;
       _$v = null;
     }
     return this;
@@ -472,10 +495,12 @@ class BookingSummaryBuilder
               source_, r'BookingSummary', 'source_'),
           depositAmountXof: BuiltValueNullFieldError.checkNotNull(
               depositAmountXof, r'BookingSummary', 'depositAmountXof'),
+          depositPaidXof: depositPaidXof,
           depositPaymentStatus: BuiltValueNullFieldError.checkNotNull(
               depositPaymentStatus, r'BookingSummary', 'depositPaymentStatus'),
           paymentProvider: paymentProvider,
           paymentId: paymentId,
+          reviewId: reviewId,
         );
     replace(_$result);
     return _$result;

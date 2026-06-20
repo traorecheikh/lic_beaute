@@ -69,6 +69,7 @@ function bookingSummary(booking: {
   depositPaymentStatus: string;
   paymentProvider: string | null;
   payments: Array<{ id: string; status?: string; amountXof?: number; provider?: string }>;
+  review?: { id: string } | null;
 }) {
   const latestPayment = booking.payments[0];
   const depositPaidXof = booking.payments
@@ -92,7 +93,8 @@ function bookingSummary(booking: {
     paymentProvider: booking.paymentProvider
       ? toPublicGatewayProvider(booking.paymentProvider)
       : (latestPayment?.provider ? toPublicGatewayProvider(latestPayment.provider) : null),
-    paymentId: latestPayment?.id ?? null
+    paymentId: latestPayment?.id ?? null,
+    reviewId: booking.review?.id ?? null
   };
 }
 
@@ -248,7 +250,7 @@ export class BookingController {
       const session = requireRole(request, ["client"]);
       const bookings = await prisma.booking.findMany({
         where: { clientId: session.sub },
-        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } } },
+        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } }, review: true },
         orderBy: { startsAt: "desc" }
       });
       ok(reply, { items: bookings.map(bookingSummary), total: bookings.length });
@@ -264,7 +266,7 @@ export class BookingController {
       const params = request.params as { bookingId: string };
       const booking = await prisma.booking.findFirst({
         where: { id: params.bookingId, clientId: session.sub },
-        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } } }
+        include: { salon: true, service: true, payments: { orderBy: { createdAt: "desc" } }, review: true }
       });
       if (!booking) { fail(reply, 404, "booking_not_found", "Réservation introuvable."); return; }
       ok(reply, bookingSummary(booking));

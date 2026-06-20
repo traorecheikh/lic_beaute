@@ -18,7 +18,20 @@ class AppReactivity {
 
   final Ref _ref;
 
-  void refreshAll() {
+  static const _staleThreshold = Duration(seconds: 30);
+  DateTime _lastRefreshAll = DateTime(2000);
+
+  /// Invalidates all cached providers so they re-fetch on next watch.
+  ///
+  /// Skips invalidation if called more than once within [_staleThreshold]
+  /// to avoid hammering the API on rapid tab switches / app resumes.
+  void refreshAll({bool force = false}) {
+    final now = DateTime.now();
+    if (!force && now.difference(_lastRefreshAll) < _staleThreshold) {
+      return;
+    }
+    _lastRefreshAll = now;
+
     _ref.invalidate(salonListProvider);
     _ref.invalidate(nearbyProvider);
     _ref.invalidate(topRatedProvider);

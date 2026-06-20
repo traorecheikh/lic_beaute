@@ -26,10 +26,19 @@ String resolvePostAuthRoute({
 Future<void> navigateAfterAuth(BuildContext context, WidgetRef ref) async {
   final user = await ref.read(currentUserProvider.future);
   List<dynamic> paymentMethods;
+  bool paymentFetchFailed = false;
   try {
     paymentMethods = await ref.read(paymentMethodsProvider.future);
   } catch (_) {
     paymentMethods = const [];
+    paymentFetchFailed = true;
+  }
+
+  // If the payment-method fetch failed (network error), skip the
+  // payment-setup redirect — the user likely has methods, we just
+  // can't reach the server right now.
+  if (paymentFetchFailed) {
+    paymentMethods = [Object()]; // non-empty to bypass needsPaymentMethodSetup
   }
   if (!context.mounted) return;
   context.go(

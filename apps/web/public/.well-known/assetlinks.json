@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "sn.numuconnect.beauteavenue",
+      "sha256_cert_fingerprints": ["0C:D1:80:94:49:D3:DD:E6:82:54:FB:1B:F5:64:0C:FC:C9:F1:AA:5C:0D:9F:E5:D5:64:CF:99:E6:1F:E0:60:98"]
+    }
+  }
+]

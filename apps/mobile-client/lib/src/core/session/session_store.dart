@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/storage_keys.dart';
 import '../network/connectivity_provider.dart';
 import '../network/dio_client.dart';
+import '../services/engagement_notification_service.dart';
 import '../services/fcm_registration_service.dart';
 import '../storage/secure_storage.dart';
+import '../storage/app_cache.dart';
 import '../storage/app_model_cache.dart';
+import '../sync/app_outbox.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────
 
@@ -72,7 +75,8 @@ final sessionProvider = NotifierProvider<SessionNotifier, SessionState>(
 
 final fcmRegistrationServiceProvider = Provider<FcmRegistrationService>((ref) {
   final dio = ref.watch(dioProvider);
-  return FcmRegistrationService(dio);
+  final secureStorage = ref.watch(secureStorageProvider);
+  return FcmRegistrationService(dio, secureStorage);
 });
 
 // ── Notifier ──────────────────────────────────────────────────────────────
@@ -129,11 +133,30 @@ class SessionNotifier extends Notifier<SessionState> {
     final storage = ref.read(secureStorageProvider);
     await storage.deleteAll();
     ref.read(fcmRegistrationServiceProvider).reset();
-    await AppModelCache.remove(StorageKeys.profileBox, StorageKeys.currentUser);
-    await AppModelCache.remove(
-      StorageKeys.profileBox,
-      StorageKeys.paymentMethods,
-    );
+
+    // Clear all authenticated caches
+    await Future.wait([
+      AppModelCache.remove(StorageKeys.profileBox, StorageKeys.currentUser),
+      AppModelCache.remove(StorageKeys.profileBox, StorageKeys.paymentMethods),
+      AppModelCache.remove(
+        StorageKeys.notificationBox,
+        StorageKeys.notificationsList,
+      ),
+      AppModelCache.remove(StorageKeys.profileBox, StorageKeys.benefitsList),
+      AppModelCache.remove(StorageKeys.profileBox, StorageKeys.vouchersList),
+      AppModelCache.remove(StorageKeys.settingsBox, StorageKeys.favoriteIds),
+      AppModelCache.remove(StorageKeys.settingsBox, StorageKeys.favoritesList),
+      AppCache.favorites.delete(StorageKeys.favoriteIds),
+      AppCache.favorites.delete(StorageKeys.favoritesList),
+    ]);
+
+    // Clear outbox so queued mutations from this user never execute on another account
+    final outboxNotifier = ref.read(outboxProvider.notifier);
+    await outboxNotifier.clearAll();
+
+    // Cancel engagement reminders so they don't fire for the wrong user
+    await EngagementNotificationService.cancelAll();
+
     state = const SessionState();
   }
 }

@@ -17,6 +17,8 @@ part 'register_input_any_of1_salon.g.dart';
 /// * [address] 
 /// * [neighborhood] 
 /// * [description] 
+/// * [latitude] 
+/// * [longitude] 
 @BuiltValue()
 abstract class RegisterInputAnyOf1Salon implements Built<RegisterInputAnyOf1Salon, RegisterInputAnyOf1SalonBuilder> {
   @BuiltValueField(wireName: r'name')
@@ -36,6 +38,12 @@ abstract class RegisterInputAnyOf1Salon implements Built<RegisterInputAnyOf1Salo
 
   @BuiltValueField(wireName: r'description')
   String? get description;
+
+  @BuiltValueField(wireName: r'latitude')
+  num? get latitude;
+
+  @BuiltValueField(wireName: r'longitude')
+  num? get longitude;
 
   RegisterInputAnyOf1Salon._();
 
@@ -92,6 +100,20 @@ class _$RegisterInputAnyOf1SalonSerializer implements PrimitiveSerializer<Regist
       yield serializers.serialize(
         object.description,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.latitude != null) {
+      yield r'latitude';
+      yield serializers.serialize(
+        object.latitude,
+        specifiedType: const FullType(num),
+      );
+    }
+    if (object.longitude != null) {
+      yield r'longitude';
+      yield serializers.serialize(
+        object.longitude,
+        specifiedType: const FullType(num),
       );
     }
   }
@@ -158,6 +180,20 @@ class _$RegisterInputAnyOf1SalonSerializer implements PrimitiveSerializer<Regist
             specifiedType: const FullType(String),
           ) as String;
           result.description = valueDes;
+          break;
+        case r'latitude':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(num),
+          ) as num;
+          result.latitude = valueDes;
+          break;
+        case r'longitude':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(num),
+          ) as num;
+          result.longitude = valueDes;
           break;
         default:
           unhandled.add(key);

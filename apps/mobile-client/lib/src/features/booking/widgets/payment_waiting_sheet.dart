@@ -50,6 +50,7 @@ class _PaymentWaitingSheetState extends State<PaymentWaitingSheet>
   static const _maxConsecutiveFailures = 3;
   bool _manualChecking = false;
   bool _backgroundChecking = false;
+  bool _closeRequested = false;
   int _elapsed = 0;
   int _consecutiveFailures = 0;
   Timer? _timer;
@@ -85,6 +86,7 @@ class _PaymentWaitingSheetState extends State<PaymentWaitingSheet>
       _elapsed += _pollInterval.inSeconds;
       if (_elapsed >= _timeout.inSeconds) {
         _timer?.cancel();
+        if (mounted) setState(() {}); // trigger rebuild to show timed-out UI
         return;
       }
       await _runCheck(showLoading: false);
@@ -96,8 +98,13 @@ class _PaymentWaitingSheetState extends State<PaymentWaitingSheet>
     await _runCheck(showLoading: true);
   }
 
+  void _handleClose() {
+    _closeRequested = true;
+    widget.onCloseRequested?.call();
+  }
+
   Future<void> _runCheck({required bool showLoading}) async {
-    if ((_backgroundChecking || _manualChecking) || !mounted) return;
+    if ((_backgroundChecking || _manualChecking) || !mounted || _closeRequested) return;
     if (showLoading) {
       setState(() => _manualChecking = true);
     } else {
@@ -239,7 +246,7 @@ class _PaymentWaitingSheetState extends State<PaymentWaitingSheet>
               SizedBox(height: 12.h),
               AppButton.primary(
                 label: AppStrings.closeDialog,
-                onPressed: () => widget.onCloseRequested?.call(),
+                onPressed: _handleClose,
               ),
             ],
             SizedBox(height: 8.h),
@@ -248,7 +255,7 @@ class _PaymentWaitingSheetState extends State<PaymentWaitingSheet>
               Padding(
                 padding: EdgeInsets.only(bottom: 8.h),
                 child: TextButton.icon(
-                  onPressed: () => widget.onCloseRequested?.call(),
+                  onPressed: _handleClose,
                   icon: AppIcon('x', color: AppColors.onSurfaceVariant, size: 18),
                   label: Text(
                     AppStrings.closeDialog,

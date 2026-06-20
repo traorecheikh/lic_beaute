@@ -68,4 +68,6 @@ export {
   uploadRegistrationDoc
 } from "./admin-api/index";
 
+export { requestAccountDeletion, confirmAccountDeletion } from "./account-deletion";
+
 export type { EmailAuditItem } from "./admin-api/audit";

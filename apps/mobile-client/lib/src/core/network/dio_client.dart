@@ -90,7 +90,9 @@ class _AuthInterceptor extends Interceptor {
     }
 
     _isRefreshing = true;
+    // Ensure queue is always resolved before exit
     String? attemptedRefreshToken;
+    bool _queueAlreadyCleared = false;
     try {
       attemptedRefreshToken = await secureStorage.read(
         StorageKeys.refreshToken,
@@ -133,9 +135,20 @@ class _AuthInterceptor extends Interceptor {
       _queue.clear();
     } catch (_) {
       await _clearSessionIfRefreshTokenMatches(attemptedRefreshToken);
+      _queueAlreadyCleared = true;
+      for (final queued in _queue) {
+        queued.handler.next(err);
+      }
       _queue.clear();
       handler.next(err);
     } finally {
+      // Always drain any remaining queued handlers so they never hang
+      if (!_queueAlreadyCleared && _queue.isNotEmpty) {
+        for (final queued in _queue) {
+          queued.handler.next(err);
+        }
+        _queue.clear();
+      }
       _isRefreshing = false;
     }
   }

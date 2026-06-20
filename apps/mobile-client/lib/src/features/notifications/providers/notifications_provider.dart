@@ -56,13 +56,30 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
 
   Future<void> markRead(String notificationId) async {
     if (!ref.read(isOnlineProvider)) {
+      // Optimistically update local state so the UI reflects the read
+      // immediately. The server sync happens later via the outbox.
+      final current = [...(state.asData?.value ?? [])];
+      state = AsyncData(
+        current
+            .map((n) => n.id == notificationId
+                ? NotificationItem(
+                    id: n.id,
+                    title: n.title,
+                    body: n.body,
+                    isRead: true,
+                    createdAt: n.createdAt,
+                  )
+                : n)
+            .cast<NotificationItem>()
+            .toList(),
+      );
+
       await ref
           .read(outboxProvider.notifier)
           .enqueue(
             type: 'notification_read',
             payload: {'notificationId': notificationId},
           );
-      ref.invalidateSelf();
       return;
     }
     final dio = ref.read(dioProvider);
@@ -72,10 +89,24 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationItem>> {
 
   Future<void> markAllRead() async {
     if (!ref.read(isOnlineProvider)) {
+      // Optimistically mark all as read in local state.
+      final current = [...(state.asData?.value ?? [])];
+      state = AsyncData(
+        current
+            .map((n) => NotificationItem(
+                  id: n.id,
+                  title: n.title,
+                  body: n.body,
+                  isRead: true,
+                  createdAt: n.createdAt,
+                ))
+            .cast<NotificationItem>()
+            .toList(),
+      );
+
       await ref
           .read(outboxProvider.notifier)
           .enqueue(type: 'notifications_read_all', payload: const {});
-      ref.invalidateSelf();
       return;
     }
     final dio = ref.read(dioProvider);

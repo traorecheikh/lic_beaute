@@ -23,9 +23,11 @@ part 'booking_summary.g.dart';
 /// * [status] 
 /// * [source_] 
 /// * [depositAmountXof] 
+/// * [depositPaidXof] 
 /// * [depositPaymentStatus] 
 /// * [paymentProvider] 
 /// * [paymentId] 
+/// * [reviewId] 
 @BuiltValue()
 abstract class BookingSummary implements Built<BookingSummary, BookingSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -62,6 +64,9 @@ abstract class BookingSummary implements Built<BookingSummary, BookingSummaryBui
   @BuiltValueField(wireName: r'depositAmountXof')
   num get depositAmountXof;
 
+  @BuiltValueField(wireName: r'depositPaidXof')
+  num? get depositPaidXof;
+
   @BuiltValueField(wireName: r'depositPaymentStatus')
   BookingSummaryDepositPaymentStatusEnum get depositPaymentStatus;
   // enum depositPaymentStatusEnum {  pending,  authorized,  succeeded,  failed,  refunded,  };
@@ -72,6 +77,9 @@ abstract class BookingSummary implements Built<BookingSummary, BookingSummaryBui
 
   @BuiltValueField(wireName: r'paymentId')
   String? get paymentId;
+
+  @BuiltValueField(wireName: r'reviewId')
+  String? get reviewId;
 
   BookingSummary._();
 
@@ -151,6 +159,11 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
       object.depositAmountXof,
       specifiedType: const FullType(num),
     );
+    yield r'depositPaidXof';
+    yield object.depositPaidXof == null ? null : serializers.serialize(
+      object.depositPaidXof,
+      specifiedType: const FullType.nullable(num),
+    );
     yield r'depositPaymentStatus';
     yield serializers.serialize(
       object.depositPaymentStatus,
@@ -164,6 +177,11 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
     yield r'paymentId';
     yield object.paymentId == null ? null : serializers.serialize(
       object.paymentId,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'reviewId';
+    yield object.reviewId == null ? null : serializers.serialize(
+      object.reviewId,
       specifiedType: const FullType.nullable(String),
     );
   }
@@ -267,6 +285,14 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
           ) as num;
           result.depositAmountXof = valueDes;
           break;
+        case r'depositPaidXof':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
+          if (valueDes == null) continue;
+          result.depositPaidXof = valueDes;
+          break;
         case r'depositPaymentStatus':
           final valueDes = serializers.deserialize(
             value,
@@ -289,6 +315,14 @@ class _$BookingSummarySerializer implements PrimitiveSerializer<BookingSummary> 
           ) as String?;
           if (valueDes == null) continue;
           result.paymentId = valueDes;
+          break;
+        case r'reviewId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.reviewId = valueDes;
           break;
         default:
           unhandled.add(key);

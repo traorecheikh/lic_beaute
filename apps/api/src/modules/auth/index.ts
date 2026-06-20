@@ -590,7 +590,14 @@ export class AuthController {
 
     await prisma.session.delete({ where: { id: session.id } });
 
-    const tokens = signSession(user.id, user.role, user.tokenVersion);
+    // Increment tokenVersion so previously-issued access tokens stop working.
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { tokenVersion: { increment: 1 } },
+      select: { tokenVersion: true }
+    });
+
+    const tokens = signSession(user.id, user.role, updatedUser.tokenVersion);
     await prisma.session.create({
       data: {
         userId: user.id,
@@ -615,6 +622,12 @@ export class AuthController {
       }
       // If no valid refresh token is provided, do not delete all sessions —
       // a compromised access token should not be able to evict all other devices.
+
+      // Revoke all push tokens on logout so the device stops receiving notifications.
+      await prisma.pushToken.updateMany({
+        where: { userId: session.sub, revokedAt: null },
+        data: { revokedAt: new Date() }
+      });
     } catch {
       // logout is best-effort — always succeed
     }

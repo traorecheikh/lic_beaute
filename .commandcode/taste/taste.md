@@ -18,6 +18,7 @@ See [paydunya/taste.md](paydunya/taste.md)
 See [ui/taste.md](ui/taste.md)
 # architecture
 - When implementing uniqueness validation for pro registration, include salon name (nom de salon) alongside email and phone. Confidence: 0.65
+- When introducing new alternative functionality (e.g., Universal/App Links alongside a custom scheme), keep the existing proven approach working as a fallback — only make the new approach primary after thorough testing. Confidence: 0.70
 
 # deployment
 - Gate new or experimental features behind environment variable flags (e.g., `RESTRICTED_FEATURE=on`). When the flag is unset or has any other value, the feature should be hidden entirely with a graceful fallback. Confidence: 0.70
@@ -26,8 +27,4 @@ See [ui/taste.md](ui/taste.md)
 - Let Coolify handle Docker pulls and restarts automatically after a git push instead of manually SSH-ing to run docker pull/restart. Confidence: 0.70
 
 # mobile
-- For mobile client authentication, use email-only login — disable phone number login entirely and send OTP via email for account creation. Confidence: 0.65
-- Service categories should be fixed enum values (not free-text input) since they impact search/filtering and marketplace discoverability. Confidence: 0.70
-- Include email masking/validation and password visibility toggle with validation in the mobile client login form. Confidence: 0.60
-- Use a `.env` file (loaded at runtime) for mobile client configuration values like API base URL instead of hardcoding them in Dart source code. Confidence: 0.80
-- Apply salon marketplace filtering criteria (logo uploaded, approvalStatus=approved, canReceiveBookings=true, isVisibleInMarketplace=true, at least 1 active service, at least 1 active employee) at the API query level, not just client-side filtering. Confidence: 0.75
+See [mobile/taste.md](mobile/taste.md)

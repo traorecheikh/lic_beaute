@@ -69,16 +69,29 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
   final session = ref.watch(sessionProvider);
   final cacheKey =
       '${StorageKeys.bookingDetailKeyPrefix}${session.userId ?? 'anon'}:$bookingId';
-  final dio = ref.read(dioProvider);
+  final api = ref.read(apiClientProvider).getBookingsApi();
   try {
-    final response = await dio.get<Map<String, dynamic>>(
-      '/api/v1/bookings/$bookingId',
+    final response = await api.apiV1BookingsBookingIdGet(
+      bookingId: bookingId,
     );
-    final raw = response.data;
+    final summary = response.data;
     BookingDetail? data;
     DateTime? cachedAt;
-    if (raw != null) {
-      data = BookingDetail.fromJson(raw);
+    if (summary != null) {
+      data = BookingDetail.fromSummary(summary);
+      final raw = <String, dynamic>{
+        'salonId': summary.salonId,
+        'serviceId': summary.serviceId,
+        'salonName': summary.salonName,
+        'status': summary.status.name,
+        'depositPaymentStatus': summary.depositPaymentStatus.name,
+        'depositAmountXof': summary.depositAmountXof,
+        'depositPaidXof': summary.depositPaidXof,
+        'startsAt': summary.startsAt,
+        'endsAt': summary.endsAt,
+        'salonLogoUrl': summary.salonLogoUrl,
+        'reviewId': summary.reviewId,
+      };
       await AppModelCache.putMap(StorageKeys.bookingCacheBox, cacheKey, raw);
       cachedAt = AppModelCache.getCachedAt(
         StorageKeys.bookingCacheBox,

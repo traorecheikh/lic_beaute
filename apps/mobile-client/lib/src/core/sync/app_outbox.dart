@@ -100,6 +100,11 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
     await _persist();
   }
 
+  Future<void> clearAll() async {
+    state = const [];
+    await _persist();
+  }
+
   Future<void> clearByTypePrefix(String typePrefix) async {
     state = [
       for (final entry in state)
@@ -128,7 +133,12 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
           await remove(entry.id);
         } on DioException catch (error) {
           final status = error.response?.statusCode ?? 0;
-          if (status >= 400 && status < 500 && status != 408 && status != 429) {
+          final isClientError = status >= 400 && status < 500;
+          final isTransient = status == 408 || status == 429;
+
+          if (isClientError && !isTransient) {
+            // Non-retryable client error (400, 404, 409, 422, etc.) —
+            // mark and skip, continue with the rest of the queue.
             state = [
               for (final item in state)
                 if (item.id == entry.id)
@@ -139,8 +149,11 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
             await _persist();
             continue;
           }
-          break;
+          // Transient network/server error — keep the entry for retry but
+          // continue processing the rest of the queue instead of blocking.
+          continue;
         } catch (error) {
+          // Non-DioException (StateError, etc.) — mark and skip.
           state = [
             for (final item in state)
               if (item.id == entry.id)
@@ -149,7 +162,7 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
                 item,
           ];
           await _persist();
-          break;
+          continue;
         }
       }
     } finally {
@@ -203,10 +216,8 @@ class OutboxNotifier extends Notifier<List<OutboxEntry>> {
         if (path == null || !File(path).existsSync()) {
           throw StateError('Avatar file unavailable');
         }
-        final mediaId = await MediaUploadService(dio).uploadSalonImage(
-          salonId: '',
+        final mediaId = await MediaUploadService(dio).uploadAvatar(
           file: XFile(path),
-          purpose: 'avatar',
         );
         await dio.patch('/api/v1/me', data: {'avatarMediaId': mediaId});
         return;

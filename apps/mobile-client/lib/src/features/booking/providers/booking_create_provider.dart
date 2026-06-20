@@ -10,6 +10,7 @@ import '../../../core/network/api_client_provider.dart';
 import '../../../core/network/app_network_error.dart';
 import '../../../core/services/foreground_notification_service.dart';
 import '../../../core/session/session_store.dart';
+import '../../appointments/providers/bookings_list_provider.dart';
 import 'booking_funnel_provider.dart';
 
 // ── Create booking ────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ class PaymentInitiateNotifier extends AsyncNotifier<Map<String, dynamic>?> {
         data: {
           'paymentId': paymentId,
           'method': method,
-          'details': ?details,
+          if (details != null) 'details': details,
         },
       );
       return response.data;
@@ -121,7 +122,10 @@ class BackgroundPollingService extends Notifier<BackgroundPollingStatus> {
   static const _interval = Duration(minutes: 15);
 
   @override
-  BackgroundPollingStatus build() => BackgroundPollingStatus.idle;
+  BackgroundPollingStatus build() {
+    ref.onDispose(() => _timer?.cancel());
+    return BackgroundPollingStatus.idle;
+  }
 
   /// Starts background polling. Shows local notifications on
   /// success/exhaustion independently of any widget lifecycle.
@@ -163,6 +167,7 @@ class BackgroundPollingService extends Notifier<BackgroundPollingStatus> {
           .reconcile(paymentId);
 
       if (status == 'succeeded') {
+        ref.invalidate(bookingDetailResourceProvider(bookingId));
         _showNotification(
           id: 0,
           title: AppStrings.paymentConfirmedNotifTitle,

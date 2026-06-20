@@ -102,40 +102,6 @@
           </div>
 
           <div class="md:col-span-2">
-            <label class="section-label mb-2 block">Rechercher une adresse</label>
-            <div class="relative">
-              <input
-                type="text"
-                v-model="locationQuery"
-                class="input-shell"
-                placeholder="Ex: Route des Almadies, Dakar"
-                @input="queueAddressLookup"
-                @focus="openAddressSuggestions"
-                @blur="closeAddressSuggestions"
-              />
-              <div v-if="searchingAddress" class="absolute right-3 top-1/2 -translate-y-1/2 row-meta">
-                Recherche...
-              </div>
-              <ul
-                v-if="showAddressSuggestions"
-                class="absolute z-20 mt-2 w-full rounded-2xl border border-outline-variant bg-white shadow-sm max-h-56 overflow-auto"
-              >
-                <li
-                  v-for="suggestion in addressSuggestions"
-                  :key="suggestion.place_id"
-                  class="px-4 py-3 cursor-pointer hover:bg-neutral-bg"
-                  @mousedown.prevent="selectAddressSuggestion(suggestion)"
-                >
-                  <p class="row-primary">{{ suggestion.display_name }}</p>
-                </li>
-              </ul>
-            </div>
-            <p class="row-meta mt-2">
-              Sélectionnez une suggestion pour remplir automatiquement l'adresse, la ville et la position.
-            </p>
-          </div>
-
-          <div class="md:col-span-2">
             <label class="section-label mb-2 block">Adresse complète</label>
             <input type="text" v-model="profile.address" class="input-shell" placeholder="Rue..., Quartier..." />
           </div>
@@ -151,15 +117,9 @@
               <p class="text-xs text-amber-700/80 mt-0.5">
                 Ajoutez la position de votre salon pour être visible dans les résultats
                 <strong>« Près de vous »</strong> sur l'application mobile.
-                Utilisez la carte ci-dessous pour positionner votre établissement.
+                Utilisez le bouton « Utiliser ma position actuelle » ci-dessous pour ajouter votre position GPS.
               </p>
             </div>
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="section-label mb-2 block">Position sur la carte</label>
-            <div ref="mapContainer" class="h-80 w-full rounded-2xl border border-outline-variant"></div>
-            <p class="row-meta mt-2">Cliquez sur la carte ou déplacez l'épingle pour ajuster la localisation exacte.</p>
           </div>
 
           <div class="md:col-span-2">
@@ -181,17 +141,10 @@
             <button type="button" class="btn-secondary px-4 py-2" :disabled="locating" @click="useCurrentLocation">
               {{ locating ? "Localisation..." : "Utiliser ma position actuelle" }}
             </button>
-            <button type="button" class="btn-secondary px-4 py-2" :disabled="reverseGeocoding" @click="reverseGeocodeFromFields">
-              {{ reverseGeocoding ? "Mise à jour..." : "Actualiser adresse depuis la carte" }}
-            </button>
             <p v-if="locationCapturedAt" class="row-meta">
               Position capturée{{ locationAccuracyMeters === null ? "" : ` (±${locationAccuracyMeters}m)` }} · {{ locationCapturedAt }}
             </p>
           </div>
-
-          <p class="row-meta md:col-span-2">
-            Astuce: après déplacement du pin, cliquez sur "Actualiser adresse depuis la carte" pour recalculer l'adresse texte.
-          </p>
 
           <div class="md:col-span-2">
             <label class="section-label mb-2 block">Description</label>
@@ -243,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
@@ -252,12 +205,6 @@ import {
   TrashIcon,
   PencilIcon
 } from "@heroicons/vue/24/outline";
-import L from "leaflet";
-import type { LeafletMouseEvent, Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
-import markerIconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
-import markerIconUrl from "leaflet/dist/images/marker-icon.png";
-import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
-import "leaflet/dist/leaflet.css";
 
 import type { ProSalonUpdateInput } from "@/lib/generated";
 import { proSalonUpdateInputSchema } from "@beauteavenue/contracts";
@@ -267,52 +214,12 @@ import { useProAuthStore } from "@/stores/proAuth";
 import { getErrorMessage } from "@/lib/errors";
 import Modal from "@/components/Modal.vue";
 
-interface NominatimAddress {
-  house_number?: string;
-  road?: string;
-  neighbourhood?: string;
-  suburb?: string;
-  quarter?: string;
-  city_district?: string;
-  city?: string;
-  town?: string;
-  village?: string;
-  municipality?: string;
-  county?: string;
-}
-
-interface NominatimResult {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
-  address?: NominatimAddress;
-}
-
-const DAKAR_COORDS = { lat: 14.7167, lng: -17.4677 };
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIconRetinaUrl,
-  iconUrl: markerIconUrl,
-  shadowUrl: markerShadowUrl
-});
-
 const saving = ref(false);
 const locating = ref(false);
-const searchingAddress = ref(false);
-const reverseGeocoding = ref(false);
 const locationAccuracyMeters = ref<number | null>(null);
 const locationCapturedAt = ref<string | null>(null);
-const locationQuery = ref("");
-const addressSuggestions = ref<NominatimResult[]>([]);
-const showAddressSuggestions = ref(false);
-const mapContainer = ref<HTMLElement | null>(null);
 const photoUploadInput = ref<HTMLInputElement | null>(null);
 const logoUploadInput = ref<HTMLInputElement | null>(null);
-
-let mapInstance: LeafletMap | null = null;
-let markerInstance: LeafletMarker | null = null;
-let addressSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
 const categories = ["Coiffure", "Barbershop", "Esthétique", "Ongles", "Spa", "Maquillage"];
 const cities = ["Dakar", "Saint-Louis", "Thiès", "Saly", "Ziguinchor"];
@@ -559,194 +466,6 @@ function parseCoordinateLenient(raw: string, min: number, max: number): number |
   return value;
 }
 
-function updateCoordinates(lat: number, lng: number) {
-  profile.latitude = lat.toFixed(6);
-  profile.longitude = lng.toFixed(6);
-}
-
-function extractCity(address?: NominatimAddress) {
-  return address?.city ?? address?.town ?? address?.village ?? address?.municipality ?? address?.county ?? "";
-}
-
-function extractNeighborhood(address?: NominatimAddress) {
-  return address?.neighbourhood ?? address?.suburb ?? address?.quarter ?? address?.city_district ?? "";
-}
-
-function extractStreetAddress(result: NominatimResult) {
-  const house = result.address?.house_number;
-  const road = result.address?.road;
-  const compact = [house, road].filter((part): part is string => Boolean(part && part.trim().length > 0));
-  if (compact.length > 0) return compact.join(" ");
-  return result.display_name.split(",").slice(0, 2).join(",").trim();
-}
-
-function syncMapMarker(lat: number, lng: number, pan = true) {
-  if (!markerInstance || !mapInstance) return;
-  markerInstance.setLatLng([lat, lng]);
-  if (pan) mapInstance.setView([lat, lng], Math.max(mapInstance.getZoom(), 15));
-}
-
-function buildNominatimUrl(path: string, params: Record<string, string>) {
-  const url = new URL(`https://nominatim.openstreetmap.org/${path}`);
-  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-  return url.toString();
-}
-
-async function reverseGeocode(lat: number, lng: number, silent = false) {
-  reverseGeocoding.value = true;
-  try {
-    const url = buildNominatimUrl("reverse", {
-      format: "jsonv2",
-      lat: String(lat),
-      lon: String(lng),
-      zoom: "18",
-      addressdetails: "1",
-      "accept-language": "fr"
-    });
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("reverse_failed");
-    const result = (await response.json()) as NominatimResult;
-
-    profile.address = extractStreetAddress(result);
-    const city = extractCity(result.address);
-    if (city) profile.city = city;
-    const neighborhood = extractNeighborhood(result.address);
-    if (neighborhood) profile.neighborhood = neighborhood;
-    locationQuery.value = result.display_name;
-  } catch {
-    if (!silent) {
-      toast.error("Impossible de recalculer l'adresse à partir des coordonnées.");
-    }
-  } finally {
-    reverseGeocoding.value = false;
-  }
-}
-
-function applySuggestion(result: NominatimResult, pan = true) {
-  const lat = Number(result.lat);
-  const lng = Number(result.lon);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-
-  updateCoordinates(lat, lng);
-  syncMapMarker(lat, lng, pan);
-  profile.address = extractStreetAddress(result);
-
-  const city = extractCity(result.address);
-  if (city) profile.city = city;
-
-  const neighborhood = extractNeighborhood(result.address);
-  profile.neighborhood = neighborhood;
-
-  locationQuery.value = result.display_name;
-}
-
-function openAddressSuggestions() {
-  showAddressSuggestions.value = addressSuggestions.value.length > 0;
-}
-
-function closeAddressSuggestions() {
-  window.setTimeout(() => {
-    showAddressSuggestions.value = false;
-  }, 120);
-}
-
-async function fetchAddressSuggestions(query: string) {
-  searchingAddress.value = true;
-  try {
-    const url = buildNominatimUrl("search", {
-      format: "jsonv2",
-      q: query,
-      addressdetails: "1",
-      limit: "6",
-      countrycodes: "sn",
-      "accept-language": "fr"
-    });
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("search_failed");
-    const results = (await response.json()) as NominatimResult[];
-    addressSuggestions.value = results;
-    showAddressSuggestions.value = results.length > 0;
-  } catch {
-    addressSuggestions.value = [];
-    showAddressSuggestions.value = false;
-    toast.error("La recherche d'adresse est indisponible pour le moment.");
-  } finally {
-    searchingAddress.value = false;
-  }
-}
-
-function queueAddressLookup() {
-  const query = locationQuery.value.trim();
-  if (addressSearchTimer) clearTimeout(addressSearchTimer);
-  if (query.length < 3) {
-    addressSuggestions.value = [];
-    showAddressSuggestions.value = false;
-    return;
-  }
-
-  addressSearchTimer = setTimeout(() => {
-    void fetchAddressSuggestions(query);
-  }, 600);
-}
-
-function selectAddressSuggestion(result: NominatimResult) {
-  applySuggestion(result);
-  addressSuggestions.value = [];
-  showAddressSuggestions.value = false;
-}
-
-function initializeMap() {
-  if (!mapContainer.value || mapInstance) return;
-
-  const initialLat = parseCoordinateLenient(profile.latitude, -90, 90) ?? DAKAR_COORDS.lat;
-  const initialLng = parseCoordinateLenient(profile.longitude, -180, 180) ?? DAKAR_COORDS.lng;
-
-  mapInstance = L.map(mapContainer.value, {
-    center: [initialLat, initialLng],
-    zoom: 14
-  });
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors"
-  }).addTo(mapInstance);
-
-  markerInstance = L.marker([initialLat, initialLng], { draggable: true }).addTo(mapInstance);
-
-  markerInstance.on("dragend", () => {
-    if (!markerInstance) return;
-    const point = markerInstance.getLatLng();
-    updateCoordinates(point.lat, point.lng);
-    void reverseGeocode(point.lat, point.lng, true);
-  });
-
-  mapInstance.on("click", (event: LeafletMouseEvent) => {
-    const { lat, lng } = event.latlng;
-    updateCoordinates(lat, lng);
-    syncMapMarker(lat, lng, false);
-    void reverseGeocode(lat, lng, true);
-  });
-
-  window.setTimeout(() => {
-    mapInstance?.invalidateSize();
-  }, 0);
-}
-
-function reverseGeocodeFromFields() {
-  try {
-    const lat = parseCoordinate(profile.latitude, "Latitude", -90, 90);
-    const lng = parseCoordinate(profile.longitude, "Longitude", -180, 180);
-    if (lat === null || lng === null) {
-      toast.error("Latitude et longitude requises pour recalculer l'adresse.");
-      return;
-    }
-    syncMapMarker(lat, lng, true);
-    void reverseGeocode(lat, lng);
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : "Coordonnées invalides.");
-  }
-}
-
 function useCurrentLocation() {
   if (typeof window === "undefined" || !("geolocation" in navigator)) {
     toast.error("La géolocalisation n'est pas disponible sur cet appareil.");
@@ -755,18 +474,54 @@ function useCurrentLocation() {
 
   locating.value = true;
   navigator.geolocation.getCurrentPosition(
-    (position) => {
+    async (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
-      updateCoordinates(lat, lng);
-      syncMapMarker(lat, lng);
+
+      profile.latitude = lat.toFixed(6);
+      profile.longitude = lng.toFixed(6);
+
       locationAccuracyMeters.value = Math.round(position.coords.accuracy);
       locationCapturedAt.value = new Date().toLocaleTimeString("fr-FR", {
         hour: "2-digit",
         minute: "2-digit"
       });
+
+      // Reverse geocode to fill in address fields
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=fr`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.address) {
+            const addr = data.address;
+            const house = addr.house_number ?? "";
+            const road = addr.road ?? "";
+            const streetParts = [house, road].filter(Boolean);
+            profile.address = streetParts.length > 0
+              ? streetParts.join(" ")
+              : (data.display_name ?? "").split(",").slice(0, 2).join(",").trim();
+
+            const city = addr.city ?? addr.town ?? addr.village ?? addr.municipality ?? addr.county ?? "";
+            if (city) {
+              const matchedCity = cities.find(c => c.toLowerCase() === city.toLowerCase());
+              if (matchedCity) {
+                profile.city = matchedCity;
+              } else {
+                profile.city = city.charAt(0).toUpperCase() + city.slice(1);
+              }
+            }
+
+            const neighborhood = addr.neighbourhood ?? addr.suburb ?? addr.quarter ?? addr.city_district ?? "";
+            if (neighborhood) profile.neighborhood = neighborhood;
+          }
+        }
+      } catch {
+        // Reverse geocode failed silently — coordinates are still saved
+      }
+
       locating.value = false;
-      void reverseGeocode(lat, lng, true);
       toast.success("Position détectée. Enregistrez le profil pour la sauvegarder.");
     },
     (error) => {
@@ -833,9 +588,6 @@ async function saveProfile() {
 watch(
   () => [profile.latitude, profile.longitude],
   ([latRaw, lngRaw]) => {
-    const lat = parseCoordinateLenient(latRaw, -90, 90);
-    const lng = parseCoordinateLenient(lngRaw, -180, 180);
-
     // Detect when user clears coordinates after they were previously set
     if (hadCoordinatesBefore && !latRaw.trim() && !lngRaw.trim()) {
       toast.info("Sans position, votre salon n'apparaîtra pas dans les résultats « Près de vous ».", {
@@ -843,12 +595,14 @@ watch(
       });
     }
 
+    const lat = parseCoordinateLenient(latRaw, -90, 90);
+    const lng = parseCoordinateLenient(lngRaw, -180, 180);
+
     if (lat === null || lng === null) {
       hadCoordinatesBefore = false;
       return;
     }
     hadCoordinatesBefore = true;
-    syncMapMarker(lat, lng, false);
   }
 );
 
@@ -875,30 +629,8 @@ watch(
     profile.phone = salon.phone ?? "";
     profile.instagram = salon.instagram ?? "";
     photos.value = salon.gallery.map((url: string) => ({ url }));
-    locationQuery.value = [salon.address, salon.city].filter(Boolean).join(", ");
-
-    const lat = parseCoordinateLenient(profile.latitude, -90, 90);
-    const lng = parseCoordinateLenient(profile.longitude, -180, 180);
-    if (lat !== null && lng !== null) {
-      syncMapMarker(lat, lng, true);
-    }
   },
   { immediate: true }
 );
 
-onMounted(() => {
-  initializeMap();
-});
-
-onBeforeUnmount(() => {
-  if (addressSearchTimer) {
-    clearTimeout(addressSearchTimer);
-    addressSearchTimer = null;
-  }
-  markerInstance?.off();
-  markerInstance = null;
-  mapInstance?.off();
-  mapInstance?.remove();
-  mapInstance = null;
-});
 </script>

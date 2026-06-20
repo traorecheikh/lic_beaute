@@ -14,7 +14,7 @@ class MediaUploadService {
     : _dio = dio,
       _api = MediaApi(dio, standardSerializers);
 
-  /// Upload a file to R2 via presigned PUT and return the assetId.
+  /// Upload a salon-related image and return the assetId.
   ///
   /// The three-step flow:
   ///   1. POST /api/v1/media/upload-intent → get presigned PUT URL + assetId
@@ -36,6 +36,25 @@ class MediaUploadService {
       salonId: salonId,
       file: file,
       purpose: purpose,
+    );
+  }
+
+  /// Upload a profile avatar and return the assetId.
+  /// Does not require a salonId — only `purpose: 'avatar'` is sent.
+  Future<String> uploadAvatar({
+    required XFile file,
+  }) async {
+    if (AppEnv.mediaUploadStrategy == MediaUploadStrategy.apiMultipart) {
+      return _uploadViaApiMultipart(
+        salonId: '',
+        file: file,
+        purpose: 'avatar',
+      );
+    }
+    return _uploadViaPresignedR2(
+      salonId: '',
+      file: file,
+      purpose: 'avatar',
     );
   }
 
