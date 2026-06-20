@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +41,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   double _collapseRatio = 0.0;
   static const _heroHeight = 320.0;
   static const _appBarCollapsedHeight = 56.0;
+
+  Timer? _locationLoadTimer;
+  bool _showLocationLoading = false;
 
   @override
   void initState() {
@@ -90,14 +95,51 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void dispose() {
     _scrollCtrl.dispose();
+    _locationLoadTimer?.cancel();
     super.dispose();
   }
 
   Color _iconColor(Color onExpanded, Color onCollapsed) =>
       Color.lerp(onExpanded, onCollapsed, _collapseRatio)!;
 
+  String _greetingPrefix() {
+    final hour = DateTime.now().hour;
+    // "Bonjour" de 5h à 16h59, "Bonsoir" à partir de 17h
+    return hour >= 5 && hour < 17
+        ? AppStrings.greetingPrefixDay
+        : AppStrings.greetingPrefixEvening;
+  }
+
+  String _greetingText() {
+    final prefix = _greetingPrefix();
+    final session = ref.watch(sessionProvider);
+    if (session.isAuthenticated) {
+      final profile = ref.watch(profileProvider).asData?.value;
+      final name = profile?.fullName.trim();
+      if (name != null && name.isNotEmpty) {
+        final firstName = name.split(' ').first;
+        return '$prefix, $firstName,\n${AppStrings.greetingSuffix}';
+      }
+    }
+    return '$prefix,\n${AppStrings.greetingSuffix}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Debounce le spinner de localisation : ne l'affiche qu'après 300ms
+    // pour éviter un flash loading quand le GPS résout rapidement.
+    ref.listen<AsyncValue<String?>>(cityFromLocationProvider, (_, next) {
+      if (next.isLoading && !_showLocationLoading) {
+        _locationLoadTimer?.cancel();
+        _locationLoadTimer = Timer(const Duration(milliseconds: 300), () {
+          if (mounted) setState(() => _showLocationLoading = true);
+        });
+      } else if (!next.isLoading && _showLocationLoading) {
+        _locationLoadTimer?.cancel();
+        setState(() => _showLocationLoading = false);
+      }
+    });
+
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final bottomNavClearance = bottomInset + 92.h;
     final nearbyAsync = ref.watch(nearbyProvider);
@@ -465,18 +507,37 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      ref.watch(cityFromLocationProvider).asData?.value ??
-                          ref.watch(profileProvider).asData?.value?.city ??
-                          'Dakar',
-                      style: AppTextStyles.overline.copyWith(
-                        color: AppColors.primaryLight,
-                        letterSpacing: 2,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_showLocationLoading)
+                          Padding(
+                            padding: EdgeInsets.only(right: 6.w),
+                            child: SizedBox(
+                              width: 10.r,
+                              height: 10.r,
+                              child: CircularProgressIndicator.adaptive(
+                                strokeWidth: 1.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primaryLight,
+                                ),
+                              ),
+                            ),
+                          ),
+                        Text(
+                          ref.watch(cityFromLocationProvider).asData?.value ??
+                              ref.watch(profileProvider).asData?.value?.city ??
+                              'Dakar',
+                          style: AppTextStyles.overline.copyWith(
+                            color: AppColors.primaryLight,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
                     ),
                     gapH4,
                     Text(
-                      AppStrings.homeGreeting,
+                      _greetingText(),
                       style: AppTextStyles.displaySm.copyWith(
                         color: AppColors.white,
                         height: 1.1,

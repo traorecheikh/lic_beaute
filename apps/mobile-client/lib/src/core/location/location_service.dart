@@ -63,7 +63,8 @@ final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
   }
 });
 
-/// Reverse-geocodes the current GPS position to a city/locality name.
+/// Reverse-geocodes the current GPS position to a location label
+/// including quartier/sub-locality when available (e.g. "Médina, Dakar").
 /// Returns null if location permission is not granted or geocoding fails.
 final cityFromLocationProvider = FutureProvider.autoDispose<String?>((ref) async {
   final position = await ref.watch(locationProvider.future);
@@ -75,11 +76,17 @@ final cityFromLocationProvider = FutureProvider.autoDispose<String?>((ref) async
     );
     if (placemarks.isEmpty) return null;
     final p = placemarks.first;
-    return p.locality?.isNotEmpty == true
-        ? p.locality
-        : p.subAdministrativeArea?.isNotEmpty == true
-        ? p.subAdministrativeArea
-        : p.administrativeArea;
+    final subLocality = p.subLocality?.trim();
+    final locality =
+        p.locality?.trim() ??
+        p.subAdministrativeArea?.trim() ??
+        p.administrativeArea?.trim();
+    if (subLocality != null && subLocality.isNotEmpty &&
+        locality != null && locality.isNotEmpty &&
+        subLocality != locality) {
+      return '$subLocality, $locality';
+    }
+    return locality ?? subLocality;
   } catch (e) {
     debugPrint('[Location] → reverse-geocode failed: $e');
     return null;

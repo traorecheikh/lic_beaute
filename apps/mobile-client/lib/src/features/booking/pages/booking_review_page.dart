@@ -12,6 +12,7 @@ import '../../../core/widgets/app_bottom_bar.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_divider.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../../core/widgets/app_booking_funnel_scaffold.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_top_bar.dart';
 import '../../../core/widgets/app_snackbar.dart';
@@ -21,12 +22,16 @@ import '../providers/booking_create_provider.dart';
 import '../providers/booking_funnel_provider.dart';
 import '../utils/booking_format.dart';
 import '../widgets/funnel_step_bar.dart';
+import '../../discovery/providers/salon_detail_provider.dart';
 class BookingReviewPage extends ConsumerWidget {
   const BookingReviewPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final funnel = ref.watch(bookingFunnelProvider);
+    final salonAsync = funnel.salonId != null
+        ? ref.watch(salonDetailProvider(funnel.salonId!))
+        : const AsyncValue<Never>.loading();
 
     if (!funnel.canReview) {
       // Funnel state is missing — user likely navigated directly or state
@@ -78,14 +83,20 @@ class BookingReviewPage extends ConsumerWidget {
           title: AppStrings.bookingReviewTitle,
           separator: 'sur',
         ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(68.h),
+          child: BookingFunnelProgressMeta(
+            step: 4,
+            total: 4,
+            salon: salonAsync.asData?.value,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 120.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _StepBar(current: 4),
-            gapH24,
             _SummaryCard(funnel: funnel),
             gapH16,
             _PriceCard(funnel: funnel),
@@ -95,29 +106,6 @@ class BookingReviewPage extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: _ConfirmBar(),
-    );
-  }
-}
-
-class _StepBar extends StatelessWidget {
-  const _StepBar({required this.current});
-  final int current;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(4, (i) {
-        return Expanded(
-          child: Container(
-            height: 3.h,
-            margin: EdgeInsets.only(right: i < 3 ? 4.w : 0),
-            decoration: BoxDecoration(
-              color: i < current ? AppColors.primary : AppColors.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        );
-      }),
     );
   }
 }

@@ -16,6 +16,7 @@ import '../../../features/discovery/providers/salon_detail_provider.dart';
 import '../../../router/app_router.dart';
 import '../providers/booking_funnel_provider.dart';
 import '../widgets/funnel_step_bar.dart';
+import '../../../core/widgets/app_booking_funnel_scaffold.dart';
 
 class SlotSelectionPage extends ConsumerStatefulWidget {
   const SlotSelectionPage({
@@ -87,6 +88,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
     final availabilityAsync = ref.watch(
       salonAvailabilityProvider(_availabilityParams),
     );
+    final salonAsync = ref.watch(salonDetailProvider(widget.salonId));
 
     return AppScaffold(
       appBar: AppTopBar(
@@ -97,6 +99,14 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
           total: 4,
           title: 'Choisir un créneau',
           separator: 'sur',
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(68.h),
+          child: BookingFunnelProgressMeta(
+            step: 3,
+            total: 4,
+            salon: salonAsync.value,
+          ),
         ),
       ),
       body: Column(

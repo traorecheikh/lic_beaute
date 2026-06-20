@@ -8,7 +8,7 @@ class FunnelStepTitle extends StatelessWidget {
     required this.step,
     required this.total,
     required this.title,
-    this.separator = '/',
+    this.separator = 'sur',
     super.key,
   });
 

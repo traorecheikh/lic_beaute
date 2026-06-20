@@ -4,9 +4,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:beauteavenue_mobile_client/src/core/constants/app_contacts.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../widgets/app_icon.dart';
 
@@ -109,26 +111,225 @@ class SalonShareCard extends StatelessWidget {
     required this.salonName,
     required this.category,
     required this.location,
+    this.photoUrl,
+    this.logoUrl,
     this.rating,
+    this.reviewCount,
   });
 
   final String salonName;
   final String category;
   final String location;
+  final String? photoUrl;
+  final String? logoUrl;
   final double? rating;
+  final int? reviewCount;
 
   @override
   Widget build(BuildContext context) {
-    return _BaseShareCard(
-      title: salonName,
-      subtitle: category,
-      children: [
-        _Row(icon: 'map-pin', label: location),
-        if (rating != null) ...[
-          const SizedBox(height: 14),
-          _Row(icon: 'star', label: '$rating / 5.0'),
-        ],
-      ],
+    final hasReviews = rating != null && (reviewCount ?? 0) > 0;
+    return SizedBox(
+      width: 380,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: AspectRatio(
+          aspectRatio: 1.91,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (photoUrl != null && photoUrl!.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: photoUrl!,
+                  fit: BoxFit.cover,
+                )
+              else
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF40202E), Color(0xFF1D1616)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.35, 0.7, 1.0],
+                    colors: [
+                      AppColors.black.withValues(alpha: 0.18),
+                      AppColors.black.withValues(alpha: 0.08),
+                      AppColors.black.withValues(alpha: 0.48),
+                      AppColors.black.withValues(alpha: 0.78),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (logoUrl != null && logoUrl!.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CachedNetworkImage(
+                              imageUrl: logoUrl!,
+                              width: 30,
+                              height: 30,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        else
+                          Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: AppColors.white.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/logo.png',
+                                width: 18,
+                                height: 18,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Beauté Avenue',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.labelLg.copyWith(
+                              fontSize: 14,
+                              color: AppColors.white,
+                              letterSpacing: 0.25,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: AppColors.white.withValues(alpha: 0.14),
+                            ),
+                          ),
+                          child: Text(
+                            'beauteavenue.sn',
+                            style: AppTextStyles.labelMd.copyWith(
+                              fontSize: 11,
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      salonName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.displaySm.copyWith(
+                        color: AppColors.white,
+                        fontSize: 24,
+                        height: 1.0,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            category,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyLg.copyWith(
+                              fontSize: 14,
+                              color: AppColors.white.withValues(alpha: 0.86),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (hasReviews) ...[
+                          const SizedBox(width: 10),
+                          AppIcon(
+                            'star',
+                            size: 14,
+                            color: const Color(0xFFFFD36B),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${rating!.toStringAsFixed(1)} · ${reviewCount!} avis',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyMd.copyWith(
+                              fontSize: 13,
+                              color: AppColors.white.withValues(alpha: 0.92),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppIcon(
+                          'map-pin',
+                          size: 16,
+                          color: AppColors.white.withValues(alpha: 0.9),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            location,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyMd.copyWith(
+                              fontSize: 13,
+                              height: 1.3,
+                              color: AppColors.white.withValues(alpha: 0.92),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Partage via Beauté Avenue · ${AppContacts.websiteUrl}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.labelMd.copyWith(
+                        fontSize: 11,
+                        color: AppColors.white.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

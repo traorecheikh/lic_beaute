@@ -101,7 +101,9 @@ abstract final class AppStrings {
   static const refreshAction = 'Actualiser';
   static const activatePositionTitle = 'Activez votre position';
   static const activatePositionSubtitle = 'Activez la localisation pour voir les salons près de chez vous.';
-  static const homeGreeting = 'Bonne journée,\nque désirez-vous ?';
+  static const greetingPrefixDay = 'Bonjour';
+  static const greetingPrefixEvening = 'Bonsoir';
+  static const greetingSuffix = 'que désirez-vous ?';
 
   // ── Search ────────────────────────────────────────────────────────────────
   static const noResultsFor = 'Aucun résultat pour ';

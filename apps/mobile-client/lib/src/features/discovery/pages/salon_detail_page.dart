@@ -124,6 +124,13 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
               : (salon.logoUrl != null && salon.logoUrl!.isNotEmpty
                     ? [salon.logoUrl!]
                     : <String>[]);
+          final shareAddress = salon.address.trim();
+          final shareNeighborhood = salon.neighborhood?.trim() ?? '';
+          final preciseShareLocation = [
+            if (shareAddress.isNotEmpty) shareAddress,
+            if (shareNeighborhood.isNotEmpty) shareNeighborhood,
+            salon.city.trim(),
+          ].join(', ');
 
           return Stack(
             children: [
@@ -162,7 +169,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                               context: context,
                               repaintKey: _shareKey,
                               text:
-                                  'Découvrez ${salon.name} sur Beauté Avenue.',
+                                  'Découvrez ${salon.name} sur Beauté Avenue.\n$preciseShareLocation\nhttps://beauteavenue.sn',
                             );
                           },
                         ),
@@ -559,11 +566,13 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                   child: SalonShareCard(
                     salonName: salon.name,
                     category: salon.category,
-                    location:
-                        '${salon.city}${salon.neighborhood != null ? ', ${salon.neighborhood}' : ''}',
+                    location: preciseShareLocation,
+                    photoUrl: images.isNotEmpty ? images.first : null,
+                    logoUrl: salon.logoUrl,
                     rating: salon.reviewCount >= 3
                         ? salon.averageRating.toDouble()
                         : null,
+                    reviewCount: salon.reviewCount >= 3 ? salon.reviewCount : null,
                   ),
                 ),
               ),
