@@ -38,7 +38,6 @@ class PaymentMethodsPage extends ConsumerStatefulWidget {
 }
 
 class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
-  final _addFormKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   String _channel = 'wave_senegal';
   bool _saving = false;
@@ -85,7 +84,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     final paydunyaMethodsAsync = ref.watch(
       booking_payment_methods.availablePaydunyaMethodsProvider,
     );
-    final channelItems = paydunyaMethodsAsync.asData?.value
+    final channelItems =
+        paydunyaMethodsAsync.asData?.value
             .where((method) => method.enabled)
             .toList() ??
         const <booking_payment_methods.PaydunyaMethodRecord>[];
@@ -140,6 +140,33 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                 ),
                 SizedBox(height: 12.h),
               ],
+              ProfileCardShell(
+                padding: EdgeInsets.all(20.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Moyens de paiement', style: AppTextStyles.labelLg),
+                    SizedBox(height: 6.h),
+                    Text(
+                      '${methods.length.clamp(0, 2)}/2 enregistrés',
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    if (methods.length < 2) ...[
+                      SizedBox(height: 16.h),
+                      AppButton.outline(
+                        label: AppStrings.addPhoneNumber,
+                        isFullWidth: true,
+                        onPressed: _saving || channelItems.isEmpty
+                            ? null
+                            : () => _showAddSheet(context, channelItems),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              SizedBox(height: 12.h),
               if (methods.isEmpty)
                 AppEmptyState(
                   icon: 'star',
@@ -147,52 +174,21 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
                   subtitle: AppStrings.noPaymentMethodSubtitle,
                 )
               else
-                ...methods.take(2).map(
-                  (method) => Padding(
-                    padding: EdgeInsets.only(bottom: 12.h),
-                    child: PaymentTile(
-                      method: method,
-                      onTap: () => _showEditSheet(context, method),
-                      onDelete: () => _deleteMethod(method.id),
-                      onDefault: method.isDefault
-                          ? null
-                          : () => _setDefault(method.id),
+                ...methods
+                    .take(2)
+                    .map(
+                      (method) => Padding(
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child: PaymentTile(
+                          method: method,
+                          onTap: () => _showEditSheet(context, method),
+                          onDelete: () => _deleteMethod(method.id),
+                          onDefault: method.isDefault
+                              ? null
+                              : () => _setDefault(method.id),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              SizedBox(height: 12.h),
-              if (methods.length < 2)
-              Form(
-                key: _addFormKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: ProfileCardShell(
-                  padding: EdgeInsets.all(20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(AppStrings.addPhoneNumber, style: AppTextStyles.labelLg),
-                      SizedBox(height: 16.h),
-                      AppDropdown<String>(
-                        label: AppStrings.operatorLabel,
-                        value: _channel,
-                        items: channelItems.map((item) => item.code).toList(),
-                        itemLabel: (value) => channelItems
-                            .firstWhere((item) => item.code == value)
-                            .label,
-                        onChanged: (val) => setState(() => _channel = val),
-                      ),
-                      gapH16,
-                      _buildPhoneField(_phoneController, _channel),
-                      SizedBox(height: 24.h),
-                      AppButton.primary(
-                        label: AppStrings.add,
-                        onPressed: _saving ? null : _addMethod,
-                        isLoading: _saving,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           );
         },
@@ -200,22 +196,16 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     );
   }
 
-  void _showEditSheet(BuildContext context, PaymentMethodRecord method) {
-    final phoneController = TextEditingController(text: method.phoneNumber);
-    final labelController = TextEditingController(text: method.label ?? '');
-    final paydunyaMethods = ref
-        .read(booking_payment_methods.availablePaydunyaMethodsProvider)
-        .asData
-        ?.value;
-    final channelItems =
-        paydunyaMethods?.where((item) => item.enabled).toList() ??
-            const <booking_payment_methods.PaydunyaMethodRecord>[];
-    var selectedChannel = _resolveExistingChannel(method, channelItems);
-    bool saving = false;
+  Future<void> _showAddSheet(
+    BuildContext context,
+    List<booking_payment_methods.PaydunyaMethodRecord> channelItems,
+  ) async {
+    final addFormKey = GlobalKey<FormState>();
+    final phoneController = TextEditingController(text: _phoneController.text);
+    var selectedChannel = _channel;
+    var saving = false;
 
-    final editFormKey = GlobalKey<FormState>();
-
-    showModalBottomSheet<void>(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
@@ -226,143 +216,266 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                20.w,
-                24.h,
-                20.w,
-                MediaQuery.viewInsetsOf(ctx).bottom + 32.h,
-              ),
-              child: Form(
-                key: editFormKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.editPaymentMethod,
-                      style: AppTextStyles.labelLg,
-                    ),
-                    SizedBox(height: 20.h),
-                    AppDropdown<String>(
-                      label: 'Opérateur',
-                      value: selectedChannel,
-                      items: channelItems.map((item) => item.code).toList(),
-                      itemLabel: (value) => channelItems
-                          .firstWhere((item) => item.code == value)
-                          .label,
-                      onChanged: (val) {
-                        setSheetState(() {
-                          final prevChannel = selectedChannel;
-                          selectedChannel = val;
-
-                          booking_payment_methods.PaydunyaMethodRecord? prevMethod;
-                          booking_payment_methods.PaydunyaMethodRecord? newMethod;
-                          for (final item in channelItems) {
-                            if (item.code == prevChannel) prevMethod = item;
-                            if (item.code == val) newMethod = item;
-                          }
-
-                          final currentLabel = labelController.text.trim();
-                          if (prevMethod != null && newMethod != null) {
-                            if (currentLabel.isEmpty || currentLabel == prevMethod.label) {
-                              labelController.text = newMethod.label;
-                            }
-                          }
-                        });
-                      },
-                    ),
-                    gapH16,
-                    _buildPhoneField(phoneController, selectedChannel),
-                    gapH16,
-                    TextField(
-                      controller: labelController,
-                      decoration: InputDecoration(
-                        labelText: AppStrings.labelOptional,
-                        hintText: AppStrings.labelHint,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md.r),
+            return SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  20.w,
+                  24.h,
+                  20.w,
+                  MediaQuery.viewInsetsOf(ctx).bottom + 32.h,
+                ),
+                child: Form(
+                  key: addFormKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.addPhoneNumber,
+                        style: AppTextStyles.labelLg,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Ajoutez jusqu à 2 numéros pour payer plus vite.',
+                        style: AppTextStyles.bodySm.copyWith(
+                          color: AppColors.onSurfaceVariant,
                         ),
                       ),
-                      maxLength: 60,
-                    ),
-                    SizedBox(height: 8.h),
-                    AppButton.primary(
-                      label: AppStrings.save,
-                      isLoading: saving,
-                      onPressed: saving
-                          ? null
-                          : () async {
-                              if (!editFormKey.currentState!.validate()) {
-                                setSheetState(() => saving = false);
-                                return;
-                              }
-                              setSheetState(() => saving = true);
-                              try {
-                                await ref
-                                    .read(paymentMethodsProvider.notifier)
-                                    .updateMethod(
-                                      method.id,
-                                      phoneNumber: phoneController.text.trim(),
-                                      label: labelController.text.trim().isEmpty
-                                          ? null
-                                          : labelController.text.trim(),
-                                      method: selectedChannel,
-                                      country: _resolveChannelCountryForCode(
-                                        selectedChannel,
-                                        channelItems,
-                                      ),
-                                    );
-                                if (context.mounted) {
+                      SizedBox(height: 20.h),
+                      AppDropdown<String>(
+                        label: AppStrings.operatorLabel,
+                        value: selectedChannel,
+                        items: channelItems.map((item) => item.code).toList(),
+                        itemLabel: (value) => channelItems
+                            .firstWhere((item) => item.code == value)
+                            .label,
+                        onChanged: (val) =>
+                            setSheetState(() => selectedChannel = val),
+                      ),
+                      gapH16,
+                      _buildPhoneField(phoneController, selectedChannel),
+                      SizedBox(height: 24.h),
+                      AppButton.primary(
+                        label: AppStrings.add,
+                        onPressed: saving
+                            ? null
+                            : () => _addMethod(
+                                formKey: addFormKey,
+                                phoneController: phoneController,
+                                channelCode: selectedChannel,
+                                onSavingChanged: (value) =>
+                                    setSheetState(() => saving = value),
+                                onSuccess: () {
+                                  if (mounted) {
+                                    setState(() {
+                                      _channel = selectedChannel;
+                                      _phoneController.clear();
+                                    });
+                                  }
                                   Navigator.of(sheetContext).pop();
-                                  AppSnackbar.success(
-                                    context,
-                                    'Moyen de paiement mis à jour.',
-                                  );
-                                }
-                              } catch (error) {
-                                setSheetState(() => saving = false);
-                                if (context.mounted) {
-                                  await context.handleHttpError(
-                                    error,
-                                    'Mise à jour impossible.',
-                                  );
-                                }
-                              }
-                            },
-                    ),
-                  ],
+                                },
+                              ),
+                        isLoading: saving,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           },
         );
       },
-    ).whenComplete(() {
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      phoneController.dispose();
+    });
+  }
+
+  Future<void> _showEditSheet(
+    BuildContext context,
+    PaymentMethodRecord method,
+  ) async {
+    final phoneController = TextEditingController(text: method.phoneNumber);
+    final labelController = TextEditingController(text: method.label ?? '');
+    final paydunyaMethods = ref
+        .read(booking_payment_methods.availablePaydunyaMethodsProvider)
+        .asData
+        ?.value;
+    final channelItems =
+        paydunyaMethods?.where((item) => item.enabled).toList() ??
+        const <booking_payment_methods.PaydunyaMethodRecord>[];
+    var selectedChannel = _resolveExistingChannel(method, channelItems);
+    bool saving = false;
+
+    final editFormKey = GlobalKey<FormState>();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  20.w,
+                  24.h,
+                  20.w,
+                  MediaQuery.viewInsetsOf(ctx).bottom + 32.h,
+                ),
+                child: Form(
+                  key: editFormKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.editPaymentMethod,
+                        style: AppTextStyles.labelLg,
+                      ),
+                      SizedBox(height: 20.h),
+                      AppDropdown<String>(
+                        label: 'Opérateur',
+                        value: selectedChannel,
+                        items: channelItems.map((item) => item.code).toList(),
+                        itemLabel: (value) => channelItems
+                            .firstWhere((item) => item.code == value)
+                            .label,
+                        onChanged: (val) {
+                          setSheetState(() {
+                            final prevChannel = selectedChannel;
+                            selectedChannel = val;
+
+                            booking_payment_methods.PaydunyaMethodRecord?
+                            prevMethod;
+                            booking_payment_methods.PaydunyaMethodRecord?
+                            newMethod;
+                            for (final item in channelItems) {
+                              if (item.code == prevChannel) prevMethod = item;
+                              if (item.code == val) newMethod = item;
+                            }
+
+                            final currentLabel = labelController.text.trim();
+                            if (prevMethod != null && newMethod != null) {
+                              if (currentLabel.isEmpty ||
+                                  currentLabel == prevMethod.label) {
+                                labelController.text = newMethod.label;
+                              }
+                            }
+                          });
+                        },
+                      ),
+                      gapH16,
+                      _buildPhoneField(phoneController, selectedChannel),
+                      gapH16,
+                      TextField(
+                        controller: labelController,
+                        decoration: InputDecoration(
+                          labelText: AppStrings.labelOptional,
+                          hintText: AppStrings.labelHint,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md.r),
+                          ),
+                        ),
+                        maxLength: 60,
+                      ),
+                      SizedBox(height: 8.h),
+                      AppButton.primary(
+                        label: AppStrings.save,
+                        isLoading: saving,
+                        onPressed: saving
+                            ? null
+                            : () async {
+                                if (!editFormKey.currentState!.validate()) {
+                                  setSheetState(() => saving = false);
+                                  return;
+                                }
+                                setSheetState(() => saving = true);
+                                try {
+                                  await ref
+                                      .read(paymentMethodsProvider.notifier)
+                                      .updateMethod(
+                                        method.id,
+                                        phoneNumber: phoneController.text
+                                            .trim(),
+                                        label:
+                                            labelController.text.trim().isEmpty
+                                            ? null
+                                            : labelController.text.trim(),
+                                        method: selectedChannel,
+                                        country: _resolveChannelCountryForCode(
+                                          selectedChannel,
+                                          channelItems,
+                                        ),
+                                      );
+                                  if (context.mounted) {
+                                    Navigator.of(sheetContext).pop();
+                                    AppSnackbar.success(
+                                      context,
+                                      'Moyen de paiement mis à jour.',
+                                    );
+                                  }
+                                } catch (error) {
+                                  setSheetState(() => saving = false);
+                                  if (context.mounted) {
+                                    await context.handleHttpError(
+                                      error,
+                                      'Mise à jour impossible.',
+                                    );
+                                  }
+                                }
+                              },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       phoneController.dispose();
       labelController.dispose();
     });
   }
 
-  Future<void> _addMethod() async {
-    if (!_addFormKey.currentState!.validate()) return;
-    final phone = _phoneController.text.trim();
+  Future<void> _addMethod({
+    required GlobalKey<FormState> formKey,
+    required TextEditingController phoneController,
+    required String channelCode,
+    required ValueChanged<bool> onSavingChanged,
+    required VoidCallback onSuccess,
+  }) async {
+    if (!formKey.currentState!.validate()) return;
+    final phone = phoneController.text.trim();
 
     setState(() => _saving = true);
+    onSavingChanged(true);
     try {
       await ref
           .read(paymentMethodsProvider.notifier)
           .add(
             provider: 'paydunya',
             phoneNumber: phone,
-            label: _resolveChannelLabel(),
-            method: _channel,
-            country: _resolveChannelCountry(),
+            label: _resolveChannelLabel(channelCode),
+            method: channelCode,
+            country: _resolveChannelCountry(channelCode),
           );
-      _phoneController.clear();
+      phoneController.clear();
       if (!mounted) return;
       AppSnackbar.success(context, 'Moyen de paiement ajouté.');
+      onSuccess();
       if (widget.requiredSetup) {
         context.go(widget.nextRoute);
         return;
@@ -376,7 +489,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     } catch (error) {
       await context.handleHttpError(error, 'Ajout impossible.');
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+      onSavingChanged(false);
     }
   }
 
@@ -400,7 +516,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     }
   }
 
-  Widget _buildPhoneField(TextEditingController controller, String channelCode) {
+  Widget _buildPhoneField(
+    TextEditingController controller,
+    String channelCode,
+  ) {
     final countriesAsync = ref.watch(supportedCountriesProvider);
     final countries = countriesAsync.asData?.value ?? kPhoneCountries;
 
@@ -408,7 +527,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         .read(booking_payment_methods.availablePaydunyaMethodsProvider)
         .asData
         ?.value;
-    final channelItems = liveMethods ?? const <booking_payment_methods.PaydunyaMethodRecord>[];
+    final channelItems =
+        liveMethods ?? const <booking_payment_methods.PaydunyaMethodRecord>[];
     final countryStr = _resolveChannelCountryForCode(channelCode, channelItems);
 
     final selectedCountry = countries.firstWhere(
@@ -431,30 +551,31 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
     );
   }
 
-  String _resolveChannelLabel() {
+  String _resolveChannelLabel(String channelCode) {
     final liveMethods = ref
         .read(booking_payment_methods.availablePaydunyaMethodsProvider)
         .asData
         ?.value;
     final matched = liveMethods?.firstWhere(
-      (item) => item.code == _channel,
+      (item) => item.code == channelCode,
       orElse: () => booking_payment_methods.PaydunyaMethodRecord(
-        code: _channel,
+        code: channelCode,
         country: '',
-        label: _channel,
+        label: channelCode,
         enabled: true,
       ),
     );
-    return matched?.label ?? _channel;
+    return matched?.label ?? channelCode;
   }
 
-  String? _resolveChannelCountry() {
+  String? _resolveChannelCountry(String channelCode) {
     final liveMethods = ref
         .read(booking_payment_methods.availablePaydunyaMethodsProvider)
         .asData
         ?.value;
-    final channelItems = liveMethods ?? const <booking_payment_methods.PaydunyaMethodRecord>[];
-    return _resolveChannelCountryForCode(_channel, channelItems);
+    final channelItems =
+        liveMethods ?? const <booking_payment_methods.PaydunyaMethodRecord>[];
+    return _resolveChannelCountryForCode(channelCode, channelItems);
   }
 
   String _resolveExistingChannel(

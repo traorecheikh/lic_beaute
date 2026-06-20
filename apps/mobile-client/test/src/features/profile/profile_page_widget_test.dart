@@ -1,6 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:beauteavenue_mobile_client/src/core/location/location_service.dart';
+import 'package:beauteavenue_mobile_client/src/core/sync/app_outbox.dart';
 import 'package:beauteavenue_mobile_client/src/features/profile/models/account_models.dart';
+import 'package:beauteavenue_mobile_client/src/features/profile/pages/profile_page.dart';
+import 'package:beauteavenue_mobile_client/src/features/profile/providers/profile_provider.dart';
+
+import '../../../test_harness.dart' show buildTestableRouterWidget;
+
+class _FixedProfileNotifier extends ProfileNotifier {
+  _FixedProfileNotifier(this._profile);
+
+  final ClientAccountProfile? _profile;
+
+  @override
+  Future<ClientAccountProfile?> build() async => _profile;
+}
 
 void main() {
   group('ProfilePage - model helpers', () {
@@ -35,10 +52,10 @@ void main() {
     });
 
     test('pending sync flag triggers sync banner', () {
-      final profile = ClientAccountProfile.fromJson(
-        {'id': 'user_1', 'fullName': 'Awa'},
-        pendingSync: true,
-      );
+      final profile = ClientAccountProfile.fromJson({
+        'id': 'user_1',
+        'fullName': 'Awa',
+      }, pendingSync: true);
       expect(profile.pendingSync, isTrue);
     });
   });
@@ -139,8 +156,10 @@ void main() {
       expect(benefit.kind, 'membership');
       expect(benefit.status, 'active');
       expect(benefit.remainingUses, 5);
-      expect('${benefit.remainingUses} utilisation(s) restante(s)',
-             '5 utilisation(s) restante(s)');
+      expect(
+        '${benefit.remainingUses} utilisation(s) restante(s)',
+        '5 utilisation(s) restante(s)',
+      );
     });
 
     test('package benefit shows Package label', () {
@@ -155,7 +174,9 @@ void main() {
         'createdAt': '2025-03-01T00:00:00.000Z',
       });
 
-      final kindLabel = benefit.kind == 'membership' ? 'Abonnement salon' : 'Package';
+      final kindLabel = benefit.kind == 'membership'
+          ? 'Abonnement salon'
+          : 'Package';
       expect(kindLabel, 'Package');
     });
 
@@ -217,6 +238,59 @@ void main() {
       const isDestructive = true;
       // When destructive, haptic is heavy and color is error
       expect(isDestructive, isTrue);
+    });
+
+    testWidgets('shows delete account entry and opens confirmation dialog', (
+      tester,
+    ) async {
+      final profile = ClientAccountProfile.fromJson({
+        'id': 'user_1',
+        'fullName': 'Awa Ndiaye',
+        'phone': '771234567',
+        'city': 'Dakar',
+        'preferredContactChannel': 'phone',
+        'pushOptIn': true,
+        'marketingOptIn': false,
+        'preferredLanguage': 'fr',
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            profileProvider.overrideWith(() => _FixedProfileNotifier(profile)),
+            pendingSyncCountProvider.overrideWith((ref) => 0),
+            cityFromLocationProvider.overrideWith((ref) async => 'Dakar'),
+          ],
+          child: buildTestableRouterWidget(
+            (_) => const ProfilePage(),
+            path: '/profile',
+            initialLocation: '/profile',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Supprimer mon compte'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Supprimer mon compte'), findsOneWidget);
+
+      await tester.tap(find.text('Supprimer mon compte'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Supprimer mon compte'), findsNWidgets(2));
+      expect(
+        find.text(
+          'Cette action supprime votre compte client sur cet appareil et vos données personnelles. Cette action est définitive.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Annuler'), findsOneWidget);
+      expect(find.text('Supprimer'), findsOneWidget);
     });
   });
 }

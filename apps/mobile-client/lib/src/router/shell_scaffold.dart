@@ -16,9 +16,21 @@ class ShellScaffold extends ConsumerWidget {
   final Widget child;
 
   static const _tabs = [
-    _TabItem(icon: 'compass', label: AppStrings.discoverTab, path: AppRoutes.home),
-    _TabItem(icon: 'calendar', label: AppStrings.bookingsTab, path: AppRoutes.bookingsList),
-    _TabItem(icon: 'user', label: AppStrings.profileTab, path: AppRoutes.profile),
+    _TabItem(
+      icon: 'compass',
+      label: AppStrings.discoverTab,
+      path: AppRoutes.home,
+    ),
+    _TabItem(
+      icon: 'calendar',
+      label: AppStrings.bookingsTab,
+      path: AppRoutes.bookingsList,
+    ),
+    _TabItem(
+      icon: 'user',
+      label: AppStrings.profileTab,
+      path: AppRoutes.profile,
+    ),
   ];
 
   int _currentIndex(BuildContext context) {
@@ -55,11 +67,7 @@ class ShellScaffold extends ConsumerWidget {
       body: child,
       bottomNavigationBar: isSearchPage
           ? null
-          : _BottomNav(
-              currentIndex: index,
-              tabs: _tabs,
-              onTap: handleTabTap,
-            ),
+          : _BottomNav(currentIndex: index, tabs: _tabs, onTap: handleTabTap),
     );
   }
 }
@@ -77,6 +85,9 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navHeight = 72.h < 64 ? 64.0 : 72.h;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -87,10 +98,10 @@ class _BottomNav extends StatelessWidget {
           ),
         ),
       ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 56.h,
+      child: SizedBox(
+        height: navHeight + bottomInset,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomInset),
           child: Row(
             children: List.generate(tabs.length, (i) {
               return Expanded(
@@ -131,40 +142,50 @@ class _NavItem extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-            children: [
-            AppIcon(
-              item.icon,
-              size: 22,
-              color: isActive ? activeColor : inactiveColor,
-              excludeFromSemantics: true,
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppIcon(
+                  item.icon,
+                  size: 20,
+                  color: isActive ? activeColor : inactiveColor,
+                  excludeFromSemantics: true,
+                ),
+                SizedBox(height: 1.h),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 150),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 9.sp,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                    color: isActive ? activeColor : inactiveColor,
+                    height: 1,
+                    letterSpacing: 0.2,
+                  ),
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                  ),
+                ),
+                SizedBox(height: 1.h),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: isActive ? 4.r : 0,
+                  height: isActive ? 4.r : 0,
+                  decoration: BoxDecoration(
+                    color: activeColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 3.h),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 150),
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 10.sp,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: isActive ? activeColor : inactiveColor,
-                letterSpacing: 0.2,
-              ),
-              child: Text(item.label),
-            ),
-            SizedBox(height: 4.h),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              width: isActive ? 4.r : 0,
-              height: isActive ? 4.r : 0,
-              decoration: BoxDecoration(
-                color: activeColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

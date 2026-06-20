@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/session/session_store.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -32,7 +33,8 @@ class ProfileBootstrapPage extends ConsumerStatefulWidget {
   final String nextRoute;
 
   @override
-  ConsumerState<ProfileBootstrapPage> createState() => _ProfileBootstrapPageState();
+  ConsumerState<ProfileBootstrapPage> createState() =>
+      _ProfileBootstrapPageState();
 }
 
 class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
@@ -43,6 +45,7 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
   bool _saving = false;
   bool _uploadingAvatar = false;
   String? _localAvatarPath;
+  PhoneCountry _phoneCountry = kPhoneCountries.first;
 
   @override
   void dispose() {
@@ -96,86 +99,86 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
             final avatarUrl = profile?.avatarUrl;
             final hasRemoteAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
             return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 28.w),
-            child: Form(
-              key: _formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 20.h, bottom: 40.h),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        height: 120.h,
-                        fit: BoxFit.contain,
+              padding: EdgeInsets.symmetric(horizontal: 28.w),
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 20.h, bottom: 40.h),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          height: 120.h,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    AppStrings.bootstrapTitle,
-                    style: AppTextStyles.displayMd,
-                  ),
-                  gapH12,
-                  Text(
-                    AppStrings.bootstrapSubtitle,
-                    style: AppTextStyles.bodyLg.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                    Text(
+                      AppStrings.bootstrapTitle,
+                      style: AppTextStyles.displayMd,
                     ),
-                  ),
-                  SizedBox(height: 30.h),
-                  Center(
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 50.r,
-                          backgroundImage: _localAvatarPath != null
-                              ? FileImage(File(_localAvatarPath!))
-                              : (hasRemoteAvatar
-                                    ? CachedNetworkImageProvider(avatarUrl)
-                                    : null),
-                          child:
-                              (_localAvatarPath == null && !hasRemoteAvatar)
-                              ? AppIcon(
-                                  'user',
-                                  size: 44,
-                                  color: AppColors.primary,
-                                )
-                              : null,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: AppPressable(
-                            onTap: _uploadingAvatar ? null : _pickAvatar,
-                            child: Container(
-                              padding: EdgeInsets.all(10.r),
-                              decoration: const BoxDecoration(
-                                color: AppColors.black,
-                                shape: BoxShape.circle,
-                              ),
-                              child: _uploadingAvatar
-                                  ? SizedBox(
-                                      width: 16.r,
-                                      height: 16.r,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2,
+                    gapH12,
+                    Text(
+                      AppStrings.bootstrapSubtitle,
+                      style: AppTextStyles.bodyLg.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    SizedBox(height: 30.h),
+                    Center(
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 50.r,
+                            backgroundImage: _localAvatarPath != null
+                                ? FileImage(File(_localAvatarPath!))
+                                : (hasRemoteAvatar
+                                      ? CachedNetworkImageProvider(avatarUrl)
+                                      : null),
+                            child:
+                                (_localAvatarPath == null && !hasRemoteAvatar)
+                                ? AppIcon(
+                                    'user',
+                                    size: 44,
+                                    color: AppColors.primary,
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: AppPressable(
+                              onTap: _uploadingAvatar ? null : _pickAvatar,
+                              child: Container(
+                                padding: EdgeInsets.all(10.r),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.black,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: _uploadingAvatar
+                                    ? SizedBox(
+                                        width: 16.r,
+                                        height: 16.r,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.white,
+                                        ),
+                                      )
+                                    : AppIcon(
+                                        'camera',
+                                        size: 16,
                                         color: AppColors.white,
                                       ),
-                                    )
-                                  : AppIcon(
-                                      'camera',
-                                      size: 16,
-                                      color: AppColors.white,
-                                    ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 30.h),
+                    SizedBox(height: 30.h),
                     TextFormField(
                       controller: _fullNameController,
                       decoration: const InputDecoration(
@@ -192,13 +195,17 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                     AppPhoneField(
                       controller: _phoneController,
                       labelText: AppStrings.phoneLabel,
+                      initialCountry: _phoneCountry,
+                      onCountryChanged: (country) =>
+                          setState(() => _phoneCountry = country),
                     ),
 
                     SizedBox(height: 48.h),
                     AppButton.primary(
-                      onPressed: _saving ? null : _submit,                    label: AppStrings.bootstrapSubmitCta,
-                    isLoading: _saving,
-                  ),
+                      onPressed: _saving ? null : _submit,
+                      label: AppStrings.bootstrapSubmitCta,
+                      isLoading: _saving,
+                    ),
                     if (!widget.requiredSetup) ...[
                       gapH16,
                       Center(
@@ -229,7 +236,9 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
       useRootNavigator: true,
       showDragHandle: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl.r)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl.r),
+        ),
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 32.h),
@@ -287,13 +296,40 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
     if (!_formKey.currentState!.validate()) return;
 
     AppHaptics.medium();
+    final phoneText = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+    final phone = phoneText.isNotEmpty
+        ? '${_phoneCountry.dialCode}$phoneText'
+        : null;
+
+    if (phone != null) {
+      final dio = ref.read(dioProvider);
+      try {
+        final check = await dio.get<Map<String, dynamic>>(
+          '/api/v1/auth/check-availability',
+          queryParameters: {'phone': phone},
+        );
+        if (check.data?['phone'] == 'taken') {
+          if (!mounted) return;
+          AppSnackbar.error(
+            context,
+            'Ce numéro de téléphone est déjà utilisé par un autre compte.',
+          );
+          return;
+        }
+      } catch (_) {
+        // Continue — the API will validate properly on submit.
+      }
+    }
+
     setState(() => _saving = true);
 
     try {
-      final phoneText = _phoneController.text.trim();
-      await ref.read(profileProvider.notifier).updateProfile(
+      await ref
+          .read(profileProvider.notifier)
+          .updateProfile(
             fullName: _fullNameController.text.trim(),
-            phone: phoneText.isNotEmpty ? phoneText : null,
+            phone: phone,
+            syncPhone: true,
           );
       if (!mounted) return;
       await LocationPromptManager.markJustRegistered();

@@ -63,21 +63,26 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
     bool? pushOptIn,
     bool? marketingOptIn,
     String? preferredLanguage,
+    bool syncPhone = false,
   }) async {
-    final payload = <String, dynamic>{
-      'fullName': ?fullName,
-      'phone': ?phone,
-      'city': ?city,
-      'preferredContactChannel': ?preferredContactChannel,
-      'pushOptIn': ?pushOptIn,
-      'marketingOptIn': ?marketingOptIn,
-      'preferredLanguage': ?preferredLanguage,
-    };
     final previous = state.asData?.value;
+    final payload = <String, dynamic>{
+      ...?(fullName != null ? {'fullName': fullName} : null),
+      if (syncPhone || phone != null) 'phone': phone,
+      ...?(city != null ? {'city': city} : null),
+      ...?(preferredContactChannel != null
+          ? {'preferredContactChannel': preferredContactChannel}
+          : null),
+      ...?(pushOptIn != null ? {'pushOptIn': pushOptIn} : null),
+      ...?(marketingOptIn != null ? {'marketingOptIn': marketingOptIn} : null),
+      ...?(preferredLanguage != null
+          ? {'preferredLanguage': preferredLanguage}
+          : null),
+    };
     if (previous != null) {
       final next = previous.copyWith(
         fullName: fullName,
-        phone: phone,
+        phone: syncPhone ? phone : previous.phone,
         city: city,
         preferredContactChannel: preferredContactChannel,
         pushOptIn: pushOptIn,
@@ -92,11 +97,14 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
       );
       state = AsyncData(next);
     }
-    await _updateAndSync(payload);
+    await _updateAndSync(payload, rollbackState: previous);
   }
 
-  Future<void> _updateAndSync(Map<String, dynamic> payload) async {
-    final previous = state.asData?.value;
+  Future<void> _updateAndSync(
+    Map<String, dynamic> payload, {
+    ClientAccountProfile? rollbackState,
+  }) async {
+    final previous = rollbackState ?? state.asData?.value;
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
       await ref.read(outboxProvider.notifier).clearByTypePrefix('profile_');
@@ -130,13 +138,11 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
         DioExceptionType.connectionError ||
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
-        DioExceptionType.receiveTimeout =>
-          true,
+        DioExceptionType.receiveTimeout => true,
         DioExceptionType.badResponse => false,
         DioExceptionType.cancel ||
         DioExceptionType.badCertificate ||
-        DioExceptionType.unknown =>
-          false,
+        DioExceptionType.unknown => false,
       };
       if (isTransient) {
         await ref
@@ -146,6 +152,14 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
           state = AsyncData(previous.copyWith(pendingSync: true));
         }
         return;
+      }
+      if (previous != null) {
+        await AppModelCache.putMap(
+          StorageKeys.profileBox,
+          StorageKeys.currentUser,
+          previous.toJson(),
+        );
+        state = AsyncData(previous);
       }
       rethrow;
     }

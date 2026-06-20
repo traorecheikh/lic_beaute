@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/session/session_store.dart';
 import '../../../core/sync/app_outbox.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -75,7 +76,10 @@ class ProfilePage extends ConsumerWidget {
                                 ),
                                 SizedBox(height: 6.h),
                                 Text(
-                                  ref.watch(cityFromLocationProvider).asData?.value ??
+                                  ref
+                                          .watch(cityFromLocationProvider)
+                                          .asData
+                                          ?.value ??
                                       profile.city ??
                                       AppStrings.cityAutoDetected,
                                   style: AppTextStyles.bodySm.copyWith(
@@ -127,7 +131,8 @@ class ProfilePage extends ConsumerWidget {
                                 color: AppColors.warning,
                               ),
                               SizedBox(width: 10.w),
-                              Expanded(                                  child: Text(
+                              Expanded(
+                                child: Text(
                                   AppStrings.pendingSyncMessage,
                                   style: AppTextStyles.bodySm.copyWith(
                                     color: AppColors.onWarningContainer,
@@ -195,6 +200,12 @@ class ProfilePage extends ConsumerWidget {
                         context.go(AppRoutes.auth);
                       },
                     ),
+                    _MenuTile(
+                      icon: 'alert-circle',
+                      label: 'Supprimer mon compte',
+                      destructive: true,
+                      onTap: () => _showDeleteAccountDialog(context, ref),
+                    ),
                     SizedBox(height: 100.h),
                   ]),
                 ),
@@ -204,6 +215,46 @@ class ProfilePage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _showDeleteAccountDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Supprimer mon compte'),
+          content: const Text(
+            'Cette action supprime votre compte client sur cet appareil et vos données personnelles. Cette action est définitive.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Supprimer'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.delete<void>('/api/v1/me');
+      await ref.read(sessionProvider.notifier).logout();
+      if (!context.mounted) return;
+      context.go(AppRoutes.auth);
+    } catch (error) {
+      if (!context.mounted) return;
+      AppSnackbar.error(context, 'Suppression impossible pour le moment.');
+    }
   }
 }
 

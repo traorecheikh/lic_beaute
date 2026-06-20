@@ -19,6 +19,7 @@ import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/app_top_bar.dart';
+import '../../../core/session/session_store.dart';
 import '../providers/profile_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
@@ -81,7 +82,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               onRetry: () => ref.refresh(profileOptionsProvider.future),
             ),
             data: (options) => SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, MediaQuery.of(context).padding.bottom + 120.h),
+              padding: EdgeInsets.fromLTRB(
+                24.w,
+                24.w,
+                24.w,
+                MediaQuery.of(context).padding.bottom + 120.h,
+              ),
               child: Form(
                 key: _formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -198,8 +204,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       items: options.languages
                           .map(
                             (language) => DropdownMenuItem(
-                              value: language,                                              child: Text(
-                                                language == 'fr' ? AppStrings.french : AppStrings.english,
+                              value: language,
+                              child: Text(
+                                language == 'fr'
+                                    ? AppStrings.french
+                                    : AppStrings.english,
                               ),
                             ),
                           )
@@ -213,9 +222,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     SizedBox(height: 24.h),
                     SwitchListTile.adaptive(
                       title: Text(AppStrings.pushNotifications),
-                      subtitle: Text(
-                        AppStrings.editPushNotificationsSubtitle,
-                      ),
+                      subtitle: Text(AppStrings.editPushNotificationsSubtitle),
                       value: _pushOptIn,
                       onChanged: (value) => setState(() => _pushOptIn = value),
                     ),
@@ -270,13 +277,41 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final phone = _resolvedPhoneValue();
+    if (phone != null) {
+      final session = ref.read(sessionProvider);
+      final dio = ref.read(dioProvider);
+      try {
+        final check = await dio.get<Map<String, dynamic>>(
+          '/api/v1/auth/check-availability',
+          queryParameters: {
+            'phone': phone,
+            if (session.isAuthenticated) 'excludeUserId': session.userId,
+          },
+        );
+        if (check.data?['phone'] == 'taken') {
+          if (!mounted) return;
+          AppSnackbar.error(
+            context,
+            'Ce numéro de téléphone est déjà utilisé par un autre compte.',
+          );
+          setState(() => _saving = false);
+          return;
+        }
+      } catch (_) {
+        // Silently continue — the API will return a proper error if taken.
+      }
+    }
+
     setState(() => _saving = true);
     try {
       await ref
           .read(profileProvider.notifier)
           .updateProfile(
             fullName: _fullNameController.text.trim(),
-            phone: _resolvedPhoneValue(),
+            phone: phone,
+            syncPhone: true,
             preferredContactChannel: _contactChannel,
             pushOptIn: _pushOptIn,
             marketingOptIn: _marketingOptIn,
