@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/debounced_action.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_pressable.dart';
@@ -72,7 +73,7 @@ class SearchBarContent extends StatelessWidget {
                   color: Colors.transparent,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => context.push(AppRoutes.search),
+                    onTap: debouncedAction(() => context.push(AppRoutes.search)),
                     child: Row(
                       children: [
                         AppIcon('search', size: 20, color: AppColors.onSurfaceVariant),
@@ -93,7 +94,7 @@ class SearchBarContent extends StatelessWidget {
             ),
             SizedBox(width: 8.w),
             GestureDetector(
-              onTap: () => context.push('${AppRoutes.search}?openFilters=1'),
+              onTap: debouncedAction(() => context.push('${AppRoutes.search}?openFilters=1')),
               child: Hero(
                 tag: _filterHeroTag,
                 child: Material(

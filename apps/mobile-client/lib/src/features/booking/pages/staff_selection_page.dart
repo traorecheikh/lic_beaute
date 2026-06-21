@@ -1,3 +1,4 @@
+import '../../../core/widgets/debounced_action.dart';
 import '../widgets/booking_funnel_shared.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -42,7 +43,7 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
         child: AppButton.primary(
           onPressed: (_selectedStaffId == null || _isResolvingAny)
               ? null
-              : _onContinue,
+              : debouncedAction(_onContinue),
           isLoading: _isResolvingAny,
           label: 'Continuer',
         ),

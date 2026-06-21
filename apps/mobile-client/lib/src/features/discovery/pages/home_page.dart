@@ -11,6 +11,7 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/session/session_store.dart';
+import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -275,7 +276,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.nearbySection,
                   action: AppStrings.viewAllCta,
-                  onAction: () => context.push(AppRoutes.salonsNearby),
+                  onAction: debouncedAction(() => context.push(AppRoutes.salonsNearby)),
                 ),
                 SalonListSliver(
                   salonsAsync: nearbyAsync,
@@ -360,7 +361,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.trendingSection,
                   action: AppStrings.viewAllCta,
-                  onAction: () => context.push(AppRoutes.salonsTrending),
+                  onAction: debouncedAction(() => context.push(AppRoutes.salonsTrending)),
                 ),
                 TrendingSalonSliver(salonsAsync: trendingAsync, onRetry: refreshAll),
               ],
@@ -370,7 +371,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.topRatedSection,
                   action: AppStrings.viewAllCta,
-                  onAction: () => context.push(AppRoutes.salonsTopRated),
+                  onAction: debouncedAction(() => context.push(AppRoutes.salonsTopRated)),
                 ),
                 SalonListSliver(
                   salonsAsync: topRatedAsync,
@@ -386,7 +387,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.prestigeSection,
                   action: AppStrings.viewAllCta,
-                  onAction: () => context.push(AppRoutes.salonsPrestige),
+                  onAction: debouncedAction(() => context.push(AppRoutes.salonsPrestige)),
                 ),
                 FeaturedSalonSliver(
                   salonsAsync: prestigeAsync,

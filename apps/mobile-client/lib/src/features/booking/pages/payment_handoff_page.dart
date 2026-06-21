@@ -87,6 +87,8 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
   bool _initScheduled = false;
   bool _resumedCallbackFlow = false;
 
+  DateTime _lastNavPush = DateTime(0);
+
   // ── Background polling state ──────────────────────────────────────────
   String? _backgroundPollPaymentId;
   bool _backgroundPollActive = false;
@@ -1608,7 +1610,11 @@ class _PaymentHandoffPageState extends ConsumerState<PaymentHandoffPage> {
           );
           await Future.delayed(const Duration(milliseconds: 600));
           if (mounted) {
-            context.push(AppRoutes.profileEdit);
+            final now = DateTime.now();
+            if (now.difference(_lastNavPush) > const Duration(milliseconds: 500)) {
+              _lastNavPush = now;
+              context.push(AppRoutes.profileEdit);
+            }
           }
           return;
         case 'reconcile_throttled':

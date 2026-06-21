@@ -41,6 +41,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   bool _isDebouncing = false;
   String? _sessionKey;
 
+  DateTime _lastNavTap = DateTime(0);
+
   // Results state
   List<SearchSuggestionsResponseTopMatchesInner> _results = [];
   List<SearchSalonsResponseModulesInner> _modules = [];
@@ -340,8 +342,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           salonId: salonId,
           position: index,
         );
-        context.push(
-          '${AppRoutes.salon(salonId)}?heroTag=${Uri.encodeComponent(tag)}',
+        _navigateToSalon(
+          salonId,
+          tag,
+          () => context.push(
+            '${AppRoutes.salon(salonId)}?heroTag=${Uri.encodeComponent(tag)}',
+          ),
         );
       },
       onModuleTap: (salonId, tag) {
@@ -350,10 +356,21 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           query: _debouncedQuery,
           salonId: salonId,
         );
-        context.push(
-          '${AppRoutes.salon(salonId)}?heroTag=${Uri.encodeComponent(tag)}',
+        _navigateToSalon(
+          salonId,
+          tag,
+          () => context.push(
+            '${AppRoutes.salon(salonId)}?heroTag=${Uri.encodeComponent(tag)}',
+          ),
         );
       },
     );
+  }
+
+  void _navigateToSalon(String salonId, String tag, VoidCallback navigate) {
+    final now = DateTime.now();
+    if (now.difference(_lastNavTap) < const Duration(milliseconds: 500)) return;
+    _lastNavTap = now;
+    navigate();
   }
 }

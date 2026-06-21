@@ -1,3 +1,4 @@
+import '../../../core/widgets/debounced_action.dart';
 import '../widgets/booking_funnel_shared.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -28,7 +29,7 @@ class _ServiceSelectionPageState extends ConsumerState<ServiceSelectionPage> {
       title: 'Choisir une prestation',
       bottomNavigationBar: AppBottomBar(
         child: AppButton.primary(
-          onPressed: _selectedServiceId == null ? null : _onContinue,
+          onPressed: _selectedServiceId == null ? null : debouncedAction(_onContinue),
           label: 'Continuer',
         ),
       ),

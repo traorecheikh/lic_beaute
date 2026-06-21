@@ -44,6 +44,8 @@ class FavoritesState {
 }
 
 class FavoritesNotifier extends Notifier<FavoritesState> {
+  final Set<String> _pendingToggles = {};
+
   @override
   FavoritesState build() {
     // Restore cached IDs immediately so heart icons show before API response
@@ -69,16 +71,21 @@ class FavoritesNotifier extends Notifier<FavoritesState> {
   }
 
   Future<void> toggle(String salonId) async {
+    // Guard: no-op if a toggle for this salonId is already in flight
+    if (_pendingToggles.contains(salonId)) return;
+    _pendingToggles.add(salonId);
+
     final isFav = state.contains(salonId);
     final updated = Set<String>.from(state.salonIds);
-    if (isFav) {
-      updated.remove(salonId);
-    } else {
-      updated.add(salonId);
-    }
-    state = state.copyWith(salonIds: updated);
 
     try {
+      if (isFav) {
+        updated.remove(salonId);
+      } else {
+        updated.add(salonId);
+      }
+      state = state.copyWith(salonIds: updated);
+
       final dio = ref.read(dioProvider);
       if (isFav) {
         await dio.delete(
@@ -97,6 +104,8 @@ class FavoritesNotifier extends Notifier<FavoritesState> {
       state = state.copyWith(
         salonIds: isFav ? {...updated, salonId} : (updated..remove(salonId)),
       );
+    } finally {
+      _pendingToggles.remove(salonId);
     }
   }
 }

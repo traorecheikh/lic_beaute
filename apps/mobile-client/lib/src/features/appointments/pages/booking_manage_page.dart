@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/debounced_action.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
@@ -48,7 +49,7 @@ class BookingManagePage extends ConsumerWidget {
                   icon: 'calendar',
                   title: AppStrings.moveRdv,
                   subtitle: AppStrings.moveRdvSubtitle,
-                  onTap: () {
+                  onTap: debouncedAction(() {
                     if (salonId.isEmpty || serviceId.isEmpty) {
                       AppSnackbar.error(context, AppStrings.missingInfo);
                       return;
@@ -58,7 +59,7 @@ class BookingManagePage extends ConsumerWidget {
                       '&serviceId=$serviceId'
                       '&rescheduleBookingId=$bookingId',
                     );
-                  },
+                  }),
                 ),
                 gapH16,
                 _OptionCard(

@@ -10,6 +10,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_share.dart';
+import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -589,7 +590,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                     price: salon.services.isNotEmpty
                         ? '${AppStrings.fromPrice}${salon.services.first.priceXof.toInt()} XOF'
                         : null,
-                    onBook: () => _showBookingSheet(context),
+                    onBook: debouncedAction(() => _showBookingSheet(context)),
                   ),
                 ),
               ),

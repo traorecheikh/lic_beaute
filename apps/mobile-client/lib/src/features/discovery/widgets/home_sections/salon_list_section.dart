@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/debounced_action.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_icon.dart';
@@ -246,9 +247,9 @@ class SalonListSliver extends StatelessWidget {
                   salon: salon,
                   showDistance: showDistance,
                   heroTag: tag,
-                  onTap: () => context.push(
+                  onTap: debouncedAction(() => context.push(
                     '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent(tag)}',
-                  ),
+                  )),
                 ),
               );
             },

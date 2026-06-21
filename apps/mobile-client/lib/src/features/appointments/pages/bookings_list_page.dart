@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_pressable.dart';
@@ -246,9 +247,9 @@ class _BookingTab extends StatelessWidget {
           final b = items[i];
 
           return AppPressable(
-            onTap: () => context.push(
+            onTap: debouncedAction(() => context.push(
               '${AppRoutes.bookingDetailPath(b.id)}${isUpcoming ? '' : '?past=true'}',
-            ),
+            )),
             child: BookingListTile(booking: b, isUpcoming: isUpcoming),
           );
         },

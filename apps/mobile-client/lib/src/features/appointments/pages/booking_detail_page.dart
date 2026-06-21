@@ -1,3 +1,4 @@
+import '../../../core/widgets/debounced_action.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -174,7 +175,7 @@ class BookingDetailPage extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: AppButton.outline(
-                            onPressed: () {
+                            onPressed: debouncedAction(() {
                               if (salonId.isEmpty) {
                                 AppSnackbar.error(
                                   context,
@@ -185,7 +186,7 @@ class BookingDetailPage extends ConsumerWidget {
                               context.push(
                                 '${AppRoutes.bookingService}?salonId=$salonId',
                               );
-                            },
+                            }),
                             label: AppStrings.bookAgain,
                           ),
                         ),
@@ -209,9 +210,9 @@ class BookingDetailPage extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: AppButton.outline(
-                            onPressed: () => context.push(
+                            onPressed: debouncedAction(() => context.push(
                               AppRoutes.bookingManagePath(bookingId),
-                            ),
+                            )),
                             label: AppStrings.modifyAction,
                           ),
                         ),

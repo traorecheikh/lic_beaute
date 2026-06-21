@@ -8,6 +8,7 @@ import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/app_async_view.dart';
+import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_scaffold.dart';
@@ -67,9 +68,9 @@ class FavoritesPage extends ConsumerWidget {
                     return SalonListCard(
                       salon: salon,
                       heroTag: tag,
-                      onTap: () => context.push(
+                      onTap: debouncedAction(() => context.push(
                         '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent(tag)}',
-                      ),
+                      )),
                       trailing: AppPressable(
                         onTap: () {
                           AppHaptics.light();

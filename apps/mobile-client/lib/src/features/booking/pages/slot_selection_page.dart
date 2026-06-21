@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/debounced_action.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../widgets/slot_variants.dart';
 import '../../../core/widgets/app_async_view.dart';
@@ -128,7 +129,7 @@ class _SlotSelectionPageState extends ConsumerState<SlotSelectionPage> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 12.h),
           child: AppButton.primary(
-            onPressed: _selectedSlot == null ? null : _onConfirm,
+            onPressed: _selectedSlot == null ? null : debouncedAction(_onConfirm),
             isLoading: _isRescheduling,
             label: widget.rescheduleBookingId != null
                 ? 'Déplacer au ${_selectedSlotLabel()}'

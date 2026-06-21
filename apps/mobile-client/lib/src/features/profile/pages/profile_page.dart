@@ -11,6 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_resource_view.dart';
@@ -99,7 +100,7 @@ class ProfilePage extends ConsumerWidget {
                             ),
                           ),
                           AppPressable(
-                            onTap: () => context.push(AppRoutes.profileEdit),
+                            onTap: debouncedAction(() => context.push(AppRoutes.profileEdit)),
                             child: Padding(
                               padding: EdgeInsets.all(12.r),
                               child: AppIcon(
@@ -154,18 +155,18 @@ class ProfilePage extends ConsumerWidget {
                     _MenuTile(
                       icon: 'heart',
                       label: AppStrings.favoritesTitle,
-                      onTap: () => context.push(AppRoutes.favorites),
+                      onTap: debouncedAction(() => context.push(AppRoutes.favorites)),
                     ),
                     _MenuTile(
                       icon: 'bell',
                       label: AppStrings.menuNotificationPreferences,
-                      onTap: () =>
-                          context.push(AppRoutes.notificationPreferences),
+                      onTap: debouncedAction(() =>
+                          context.push(AppRoutes.notificationPreferences)),
                     ),
                     _MenuTile(
                       icon: 'credit-card',
                       label: AppStrings.menuPaymentMethods,
-                      onTap: () => context.push(AppRoutes.profilePayments),
+                      onTap: debouncedAction(() => context.push(AppRoutes.profilePayments)),
                     ),
                     // Promos hidden — _MenuTile(
                     //   icon: 'gift',
@@ -176,17 +177,17 @@ class ProfilePage extends ConsumerWidget {
                     _MenuTile(
                       icon: 'help-circle',
                       label: AppStrings.menuSupport,
-                      onTap: () => context.push(AppRoutes.profileSupport),
+                      onTap: debouncedAction(() => context.push(AppRoutes.profileSupport)),
                     ),
                     _MenuTile(
                       icon: 'message-circle',
                       label: AppStrings.menuFaq,
-                      onTap: () => context.push(AppRoutes.profileFaq),
+                      onTap: debouncedAction(() => context.push(AppRoutes.profileFaq)),
                     ),
                     _MenuTile(
                       icon: 'info',
                       label: AppStrings.menuAbout,
-                      onTap: () => context.push(AppRoutes.profileAbout),
+                      onTap: debouncedAction(() => context.push(AppRoutes.profileAbout)),
                     ),
                     SizedBox(height: 12.h),
                     _MenuTile(

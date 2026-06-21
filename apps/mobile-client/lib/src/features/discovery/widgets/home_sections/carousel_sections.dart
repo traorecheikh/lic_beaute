@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/debounced_action.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_icon.dart';
 import '../../../../router/app_router.dart';
@@ -84,9 +85,9 @@ class FeaturedSalonSliver extends StatelessWidget {
                     isFavorite: favoriteIds.contains(salon.id),
                     isAuthenticated: isAuthenticated,
                     onFavoriteTap: () => onFavoriteTap(salon),
-                    onTap: () => context.push(
+                    onTap: debouncedAction(() => context.push(
                       '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent('prestige_salon_image_${salon.id}')}',
-                    ),
+                    )),
                   ),
                 );
               },
@@ -277,9 +278,9 @@ class TrendingSalonSliver extends StatelessWidget {
                   child: TrendingCard(
                     salon: salon,
                     rank: i + 1,
-                    onTap: () => context.push(
+                    onTap: debouncedAction(() => context.push(
                       '${AppRoutes.salon(salon.id)}?heroTag=${Uri.encodeComponent('trending_salon_image_${salon.id}')}',
-                    ),
+                    )),
                   ),
                 );
               },

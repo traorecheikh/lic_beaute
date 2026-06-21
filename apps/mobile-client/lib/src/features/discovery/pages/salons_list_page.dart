@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_async_view.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_icon.dart';
@@ -61,10 +62,10 @@ class SalonsListPage extends ConsumerWidget {
         title: _title,
         actions: [
           AppPressable(
-            onTap: () {
+            onTap: debouncedAction(() {
               AppHaptics.light();
               context.push(AppRoutes.search);
-            },
+            }),
             child: Padding(
               padding: EdgeInsets.all(8.r),
               child: AppIcon('search', size: 20, color: AppColors.onSurface),
@@ -120,10 +121,10 @@ class _SalonCard extends StatelessWidget {
     final badge = distanceBadge(salon);
 
     return GestureDetector(
-      onTap: () {
+      onTap: debouncedAction(() {
         AppHaptics.light();
         context.push(AppRoutes.salon(salon.id));
-      },
+      }),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
