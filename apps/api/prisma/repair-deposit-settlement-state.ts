@@ -125,7 +125,16 @@ async function resolveHistoricalBookings() {
   });
 
   let resolved = 0;
+  let rehydrated = 0;
   for (const booking of bookings) {
+    if (booking.depositSettlementStatus === "none") {
+      rehydrated++;
+      console.log(`[BOOKING] ${booking.id} settlement -> held`);
+      if (!dryRun) {
+        await markDepositHeld(booking.id);
+      }
+    }
+
     let resolution:
       | "completed"
       | "client_no_show"
@@ -157,7 +166,7 @@ async function resolveHistoricalBookings() {
     }
   }
 
-  return resolved;
+  return { resolved, rehydrated };
 }
 
 async function createMissingPayouts() {
@@ -186,12 +195,13 @@ async function main() {
   console.log(`mode: ${dryRun ? "dry-run" : "confirm"}`);
 
   const paymentsChanged = await reconcilePendingDepositPayments();
-  const bookingsResolved = await resolveHistoricalBookings();
+  const { resolved: bookingsResolved, rehydrated: bookingsRehydrated } = await resolveHistoricalBookings();
   const payoutsCreated = await createMissingPayouts();
 
   console.log("--- summary ---");
   console.log(`payments reconciled: ${paymentsChanged}`);
   console.log(`bookings resolved: ${bookingsResolved}`);
+  console.log(`bookings rehydrated: ${bookingsRehydrated}`);
   console.log(`payouts created: ${payoutsCreated}`);
 }
 
