@@ -163,7 +163,7 @@ describe("PaymentController - executePayment & getMethods", () => {
     });
     expect(txBookingUpdate).toHaveBeenCalledWith({
       where: { id: "b_async" },
-      data: { depositPaymentStatus: "authorized" }
+      data: { depositPaymentStatus: "authorized", depositSettlementStatus: "held" }
     });
     expect(txAuditLogCreate).toHaveBeenCalled();
     expect(mocks.ok).toHaveBeenCalled();
@@ -211,7 +211,7 @@ describe("PaymentController - executePayment & getMethods", () => {
     });
     expect(txBookingUpdate).toHaveBeenCalledWith({
       where: { id: "b_sms" },
-      data: { depositPaymentStatus: "authorized" }
+      data: { depositPaymentStatus: "authorized", depositSettlementStatus: "held" }
     });
     expect(txAuditLogCreate).toHaveBeenCalled();
   });

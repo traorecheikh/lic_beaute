@@ -26,6 +26,7 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "prisma db seed",
     "repair:booking-deposits": "tsx prisma/repair-booking-deposit-payments.ts",
+    "repair:deposit-settlements": "tsx prisma/repair-deposit-settlement-state.ts",
     "backfill:payouts": "tsx prisma/backfill-merchant-payouts.ts"
   },
   "dependencies": {

@@ -33,6 +33,28 @@ enum BookingStatus {
   cancelled
 }
 
+enum DepositSettlementStatus {
+  none
+  held
+  no_show_pending
+  payout_scheduled
+  paid_out
+  refund_scheduled
+  refunded
+  blocked
+}
+
+enum DepositResolution {
+  pending
+  completed
+  client_no_show
+  salon_no_show
+  client_cancelled
+  salon_cancelled
+  disputed
+  fraud_review
+}
+
 enum PaymentStatus {
   pending
   authorized
@@ -313,6 +335,12 @@ model Booking {
   source               String            @default("marketplace")
   depositAmountXof     Int               @default(0)
   depositPaymentStatus PaymentStatus     @default(pending)
+  depositSettlementStatus DepositSettlementStatus @default(none)
+  depositResolution    DepositResolution @default(pending)
+  depositResolutionAt  DateTime?
+  depositDisputeDeadlineAt DateTime?
+  depositSettledAt     DateTime?
+  depositSettlementNote String?
   isUnderFraudReview   Boolean             @default(false)
   refundRequested      Boolean             @default(false)
   disputeOpen          Boolean             @default(false)
@@ -336,6 +364,8 @@ model Booking {
   @@index([clientId, startsAt])
   @@index([employeeId, startsAt])
   @@index([salonId, startsAt, endsAt])
+  @@index([depositSettlementStatus, startsAt])
+  @@index([depositResolution, startsAt])
 }
 
 model Payment {
@@ -478,6 +508,7 @@ model Job {
 
   @@index([status, runAfter])
   @@index([queue, status])
+  @@unique([type, payloadJson, status])
 }
 
 model PlatformSetting {

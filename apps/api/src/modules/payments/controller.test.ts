@@ -473,7 +473,10 @@ describe("PaymentController", () => {
       "{}",
       undefined
     );
-    expect(tx.booking.update).toHaveBeenCalledWith({ where: { id: "b_failed" }, data: { depositPaymentStatus: "failed" } });
+    expect(tx.booking.update).toHaveBeenCalledWith({
+      where: { id: "b_failed" },
+      data: expect.objectContaining({ depositPaymentStatus: "failed", depositSettlementStatus: "none" })
+    });
 
     mocks.prisma.$transaction.mockImplementationOnce(async (cb: (arg: any) => Promise<any>) => cb(tx));
     const applySubscriptionChargeStatus = (c as any)._applySubscriptionChargeStatus.bind(c);
@@ -556,7 +559,10 @@ describe("PaymentController", () => {
       "{}",
       undefined
     );
-    expect(tx.booking.update).toHaveBeenCalledWith({ where: { id: "b_refund_branch" }, data: { depositPaymentStatus: "refunded" } });
+    expect(tx.booking.update).toHaveBeenCalledWith({
+      where: { id: "b_refund_branch" },
+      data: expect.objectContaining({ depositPaymentStatus: "refunded", depositSettlementStatus: "refunded" })
+    });
   });
 
   it("payment status update for succeeded updates deposit and auto-confirms pending booking", async () => {

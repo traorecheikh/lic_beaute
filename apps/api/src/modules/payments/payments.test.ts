@@ -349,7 +349,7 @@ describe("PaymentController", () => {
     }));
     expect(mocks.tx.booking.update).toHaveBeenCalledWith({
       where: { id: "book_1" },
-      data: { depositPaymentStatus: "refunded" }
+      data: expect.objectContaining({ depositPaymentStatus: "refunded", depositSettlementStatus: "refunded" })
     });
     expect(mocks.ok).toHaveBeenCalledWith(expect.anything(), { refunded: true, refundRef: "refund-REF_123" });
   });
@@ -596,7 +596,7 @@ describe("PaymentController", () => {
       timestamp: "123"
     }));
     expect(mocks.tx.booking.update).toHaveBeenCalledWith(expect.objectContaining({
-      data: { depositPaymentStatus: "failed" }
+      data: expect.objectContaining({ depositPaymentStatus: "failed", depositSettlementStatus: "none" })
     }));
   });
 

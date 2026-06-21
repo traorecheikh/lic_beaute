@@ -12,6 +12,12 @@ import { sendEmail } from "./lib/email.js";
 import { sendPushBatch } from "./lib/push.js";
 import { sendNotification } from "./modules/notifications/index.js";
 import { createPayoutForBooking, submitPayout, reconcilePayoutStatus } from "./lib/payout-service.js";
+import {
+  finalizeBookingNoShow,
+  isPayoutResolution,
+  isRefundResolution,
+  scanBookingForNoShow
+} from "./lib/deposit-settlement.js";
 
 const storageAdapter = getStorageAdapter(config.storageDriver, {
   storagePath: config.storagePath,
@@ -40,10 +46,14 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
     case "deposit_settlement": {
       const booking = await prisma.booking.findUnique({
         where: { id: payload.bookingId as string },
-        // Only release fully settled payments — "authorized" is not captured yet
         include: { payments: { where: { status: "succeeded" }, take: 1 } }
       });
       if (!booking) return;
+
+      const inferredResolution = (!booking.depositResolution || booking.depositResolution === "pending") && booking.status === "completed"
+        ? "completed"
+        : (booking.depositResolution ?? "pending");
+      if (!isPayoutResolution(inferredResolution)) return;
 
       const payment = booking.payments[0];
       if (!payment) return;
@@ -73,11 +83,31 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
 
       if (config.merchantPayoutEnabled) {
         try {
+          if (booking.depositResolution === "pending" && booking.status === "completed") {
+            await prisma.booking.update({
+              where: { id: booking.id },
+              data: {
+                depositResolution: "completed",
+                depositResolutionAt: new Date(),
+                depositSettlementStatus: "payout_scheduled"
+              }
+            });
+          }
           await createPayoutForBooking(booking.id);
         } catch (err) {
           logger.error("[worker] failed to create payout on deposit_settlement", { bookingId: booking.id, error: String(err) });
         }
       }
+      return;
+    }
+
+    case "deposit_resolution_scan": {
+      await scanBookingForNoShow(payload.bookingId as string);
+      return;
+    }
+
+    case "deposit_resolution_finalize": {
+      await finalizeBookingNoShow(payload.bookingId as string);
       return;
     }
 
@@ -111,33 +141,36 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
         data: { status: "scheduled" }
       });
 
-      if (claimResult.count === 0) return;
-
-      // Find the just-claimed payouts and set per-payout retry metadata
-      const claimedPayouts = await prisma.merchantPayout.findMany({
-        where: { status: "scheduled", attemptCount: { lt: 5 } }
-      });
-
-      for (const p of claimedPayouts) {
-        const nextAttempt = p.attemptCount + 1;
-        const backoffMinutes = Math.pow(2, nextAttempt) * 5;
-        const nextRetryTime = new Date(Date.now() + backoffMinutes * 60 * 1000);
-
-        await prisma.merchantPayout.update({
-          where: { id: p.id },
-          data: {
-            attemptCount: nextAttempt,
-            nextRetryTime,
-            status: "scheduled"
-          }
+      if (claimResult.count > 0) {
+        // Find the just-claimed payouts and set per-payout retry metadata
+        const claimedPayouts = await prisma.merchantPayout.findMany({
+          where: { status: "scheduled", attemptCount: { lt: 5 } }
         });
 
-        await enqueueJob({
-          type: "process_merchant_payout",
-          payload: { payoutId: p.id },
-          bookingId: p.bookingId ?? undefined
-        });
+        for (const p of claimedPayouts) {
+          const nextAttempt = p.attemptCount + 1;
+          const backoffMinutes = Math.pow(2, nextAttempt) * 5;
+          const nextRetryTime = new Date(Date.now() + backoffMinutes * 60 * 1000);
+
+          await prisma.merchantPayout.update({
+            where: { id: p.id },
+            data: {
+              attemptCount: nextAttempt,
+              nextRetryTime,
+              status: "scheduled"
+            }
+          });
+
+          await enqueueJob({
+            type: "process_merchant_payout",
+            payload: { payoutId: p.id },
+            bookingId: p.bookingId ?? undefined
+          });
+        }
       }
+      const nextHour = new Date();
+      nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+      await enqueueJob({ type: "payout_reconciliation", payload: {}, runAfter: nextHour });
       return;
     }
 
@@ -183,7 +216,11 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
         }
         await prisma.booking.update({
           where: { id: payment.bookingId },
-          data: { depositPaymentStatus: "refunded" }
+          data: {
+            depositPaymentStatus: "refunded",
+            depositSettlementStatus: "refunded",
+            depositSettledAt: new Date()
+          }
         });
         await prisma.settlementEvent.create({
           data: {
@@ -654,8 +691,7 @@ async function ensureRecurringSeedJobs() {
 async function startBullWorkers() {
   const connection = await getQueueRedis();
   if (!connection) {
-    logger.error("[WORKER] BullMQ mode requested but Redis is unavailable");
-    process.exit(1);
+    throw new Error("BullMQ mode requested but Redis is unavailable");
   }
 
   const workers: Worker[] = [];
@@ -713,7 +749,11 @@ async function main() {
   }, config.workerPollIntervalMs);
 }
 
-void main().catch((err) => {
-  logger.error("[WORKER] startup failed", { err: String(err) });
-  process.exit(1);
-});
+// Only run as entrypoint when executed directly (tsx worker.ts or node dist/worker.js),
+// not when imported as a module by tests.
+if (process.argv[1]?.endsWith("worker.ts") || process.argv[1]?.endsWith("worker.js")) {
+  void main().catch((err) => {
+    logger.error("[WORKER] startup failed", { err: String(err) });
+    process.exit(1);
+  });
+}

@@ -47,7 +47,9 @@ import {
   rejectBooking,
   startBooking,
   completeBooking,
-  createManualBooking
+  createManualBooking,
+  markClientNoShow,
+  markSalonNoShow
 } from "./bookings.js";
 
 import {
@@ -838,6 +840,8 @@ export class ProController {
   startBooking = startBooking;
   completeBooking = completeBooking;
   createManualBooking = createManualBooking;
+  markClientNoShow = markClientNoShow;
+  markSalonNoShow = markSalonNoShow;
 
   // ─── Clients ───────────────────────────────────────────────────────────────
 

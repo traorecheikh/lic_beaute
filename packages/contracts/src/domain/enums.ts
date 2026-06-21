@@ -14,6 +14,26 @@ export const bookingStatusSchema = z.enum([
   "completed",
   "cancelled"
 ]);
+export const depositSettlementStatusSchema = z.enum([
+  "none",
+  "held",
+  "no_show_pending",
+  "payout_scheduled",
+  "paid_out",
+  "refund_scheduled",
+  "refunded",
+  "blocked"
+]);
+export const depositResolutionSchema = z.enum([
+  "pending",
+  "completed",
+  "client_no_show",
+  "salon_no_show",
+  "client_cancelled",
+  "salon_cancelled",
+  "disputed",
+  "fraud_review"
+]);
 export const paymentStatusSchema = z.enum([
   "pending",
   "authorized",
@@ -70,6 +90,8 @@ export const cancellationReasonSchema = z.enum([
 export type Role = z.infer<typeof roleSchema>;
 export type SalonApprovalStatus = z.infer<typeof salonApprovalStatusSchema>;
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
+export type DepositSettlementStatus = z.infer<typeof depositSettlementStatusSchema>;
+export type DepositResolution = z.infer<typeof depositResolutionSchema>;
 export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
 export type SubscriptionTier = z.infer<typeof subscriptionTierSchema>;
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusSchema>;

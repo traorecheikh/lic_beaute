@@ -8,6 +8,11 @@ import { enqueueJob } from "../../lib/jobs.js";
 import { fail, handleError, ok } from "../../lib/http.js";
 import { toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
+import {
+  cancelDepositSettlementJobs,
+  markDepositHeld,
+  setDepositResolution
+} from "../../lib/deposit-settlement.js";
 
 import { proManualBookingInputSchema } from "@beauteavenue/contracts";
 
@@ -109,6 +114,9 @@ export async function listBookings(request: FastifyRequest, reply: FastifyReply)
         clientId: b.clientId, clientName: b.client?.fullName ?? null, clientPhone: b.client?.phone ?? null,
         startsAt: b.startsAt.toISOString(), endsAt: b.endsAt.toISOString(),
         status: b.status, source: b.source, depositAmountXof: b.depositAmountXof,
+        depositPaymentStatus: b.depositPaymentStatus,
+        depositSettlementStatus: b.depositSettlementStatus,
+        depositResolution: b.depositResolution,
         createdAt: b.createdAt.toISOString()
       })),
       total,
@@ -139,6 +147,12 @@ export async function getBooking(request: FastifyRequest, reply: FastifyReply) {
       clientId: booking.clientId, clientName: booking.client?.fullName ?? null, clientPhone: booking.client?.phone ?? null,
       startsAt: booking.startsAt.toISOString(), endsAt: booking.endsAt.toISOString(),
       status: booking.status, source: booking.source, depositAmountXof: booking.depositAmountXof,
+      depositPaymentStatus: booking.depositPaymentStatus,
+      depositSettlementStatus: booking.depositSettlementStatus,
+      depositResolution: booking.depositResolution,
+      depositResolutionAt: booking.depositResolutionAt?.toISOString() ?? null,
+      depositDisputeDeadlineAt: booking.depositDisputeDeadlineAt?.toISOString() ?? null,
+      depositSettledAt: booking.depositSettledAt?.toISOString() ?? null,
       createdAt: booking.createdAt.toISOString(),
       payments: booking.payments.map((p) => ({ id: p.id, status: p.status, amountXof: p.amountXof, provider: toPublicGatewayProvider(p.provider) })),
       events: booking.bookingEvents.map((e) => ({ eventType: e.eventType, fromStatus: e.fromStatus, toStatus: e.toStatus, createdAt: e.createdAt.toISOString() }))
@@ -190,8 +204,13 @@ export async function acceptBooking(request: FastifyRequest, reply: FastifyReply
 
 export async function rejectBooking(request: FastifyRequest, reply: FastifyReply) {
   await transitionBooking(request, reply, ["pending", "confirmed"], "cancelled", "rejected", async (bookingId, tx) => {
+    await cancelDepositSettlementJobs(bookingId, tx);
     const payment = await tx.payment.findFirst({ where: { bookingId, status: { in: ["authorized", "succeeded"] } } });
     if (payment) {
+      await setDepositResolution(bookingId, "salon_cancelled", {
+        dbClient: tx,
+        eventType: "deposit_resolution_salon_cancelled"
+      });
       await enqueueJob({
         type: "refund_reconciliation",
         payload: { paymentId: payment.id, bookingId },
@@ -208,7 +227,10 @@ export async function startBooking(request: FastifyRequest, reply: FastifyReply)
 
 export async function completeBooking(request: FastifyRequest, reply: FastifyReply) {
   await transitionBooking(request, reply, ["in_progress"], "completed", "completed", async (bookingId, tx) => {
-    await enqueueJob({ type: "deposit_settlement", payload: { bookingId }, dbClient: tx });
+    await setDepositResolution(bookingId, "completed", {
+      dbClient: tx,
+      eventType: "deposit_resolution_completed"
+    });
   });
   await invalidateCacheTags(["kpi:pro", "kpi:admin"]);
 }
@@ -318,11 +340,42 @@ export async function createManualBooking(request: FastifyRequest, reply: Fastif
             idempotencyKey: `manual-${b.id}-deposit`
           }
         });
+        await markDepositHeld(b.id, tx);
       }
       await tx.bookingEvent.create({ data: { bookingId: b.id, actorUserId: userId, eventType: "created_manual", toStatus: "confirmed" } });
       return b;
     });
 
     ok(reply, { id: booking.id, startsAt: booking.startsAt.toISOString(), endsAt: booking.endsAt.toISOString(), status: booking.status, source: booking.source }, 201);
+  } catch (e) { handleError(e, reply); }
+}
+
+export async function markClientNoShow(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { salonId, userId } = await ensurePro(request);
+    if (!(await ensureProWriteAccess(salonId, reply))) return;
+    const params = request.params as { bookingId: string };
+    const booking = await prisma.booking.findFirst({ where: { id: params.bookingId, salonId } });
+    if (!booking) { fail(reply, 404, "booking_not_found", "Réservation introuvable."); return; }
+    await setDepositResolution(booking.id, "client_no_show", {
+      actorUserId: userId,
+      eventType: "deposit_resolution_client_no_show"
+    });
+    ok(reply, { resolved: true, resolution: "client_no_show" });
+  } catch (e) { handleError(e, reply); }
+}
+
+export async function markSalonNoShow(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { salonId, userId } = await ensurePro(request);
+    if (!(await ensureProWriteAccess(salonId, reply))) return;
+    const params = request.params as { bookingId: string };
+    const booking = await prisma.booking.findFirst({ where: { id: params.bookingId, salonId } });
+    if (!booking) { fail(reply, 404, "booking_not_found", "Réservation introuvable."); return; }
+    await setDepositResolution(booking.id, "salon_no_show", {
+      actorUserId: userId,
+      eventType: "deposit_resolution_salon_no_show"
+    });
+    ok(reply, { resolved: true, resolution: "salon_no_show" });
   } catch (e) { handleError(e, reply); }
 }

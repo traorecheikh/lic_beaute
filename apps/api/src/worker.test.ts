@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => {
     pushToken: { findMany: vi.fn() },
     notification: { create: vi.fn() },
     merchantPayout: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
-    job: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]), create: vi.fn() }
+    job: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]), create: vi.fn(), updateMany: vi.fn() }
   };
 
   const config = {
@@ -56,10 +56,11 @@ const mocks = vi.hoisted(() => {
   const sendEmail = vi.fn();
   const sendPushBatch = vi.fn();
   const loggerWarn = vi.fn();
+  const createPayoutForBooking = vi.fn();
   const submitPayout = vi.fn();
   const reconcilePayoutStatus = vi.fn();
 
-  return { adapter, prisma, config, enqueueJob, sendNotification, sendEmail, sendPushBatch, loggerWarn, submitPayout, reconcilePayoutStatus };
+  return { adapter, prisma, config, enqueueJob, sendNotification, sendEmail, sendPushBatch, loggerWarn, createPayoutForBooking, submitPayout, reconcilePayoutStatus };
 });
 
 vi.mock("./adapters/index.js", () => ({
@@ -80,6 +81,7 @@ vi.mock("./lib/email.js", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("./lib/push.js", () => ({ sendPushBatch: mocks.sendPushBatch }));
 
 vi.mock("./lib/payout-service.js", () => ({
+  createPayoutForBooking: mocks.createPayoutForBooking,
   submitPayout: mocks.submitPayout,
   reconcilePayoutStatus: mocks.reconcilePayoutStatus
 }));
@@ -104,6 +106,8 @@ describe("handleJob — deposit_settlement", () => {
   it("creates a released settlementEvent when booking has a succeeded payment", async () => {
     mocks.prisma.booking.findUnique.mockResolvedValue({
       id: bookingId,
+      status: "completed",
+      depositResolution: "pending",
       payments: [{ id: paymentId, amountXof: 12_000, providerTxId: "txn_1" }]
     });
     mocks.prisma.settlementEvent.findFirst.mockResolvedValueOnce(null); // existing release
@@ -135,6 +139,8 @@ describe("handleJob — deposit_settlement", () => {
   it("does nothing when booking has no succeeded payments", async () => {
     mocks.prisma.booking.findUnique.mockResolvedValue({
       id: bookingId,
+      status: "completed",
+      depositResolution: "pending",
       payments: []
     });
 
@@ -146,6 +152,8 @@ describe("handleJob — deposit_settlement", () => {
   it("does nothing when a released settlementEvent already exists (dedupe)", async () => {
     mocks.prisma.booking.findUnique.mockResolvedValue({
       id: bookingId,
+      status: "completed",
+      depositResolution: "pending",
       payments: [{ id: paymentId, amountXof: 12_000, providerTxId: "txn_1" }]
     });
     mocks.prisma.settlementEvent.findFirst.mockResolvedValue({ id: "existing_release" });
@@ -191,7 +199,7 @@ describe("handleJob — refund_reconciliation", () => {
     });
     expect(mocks.prisma.booking.update).toHaveBeenCalledWith({
       where: { id: "booking_1" },
-      data: { depositPaymentStatus: "refunded" }
+      data: expect.objectContaining({ depositPaymentStatus: "refunded", depositSettlementStatus: "refunded" })
     });
     expect(mocks.prisma.settlementEvent.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -349,7 +357,9 @@ describe("handleJob — payout_reconciliation", () => {
 
     expect(mocks.reconcilePayoutStatus).toHaveBeenCalledWith("p_1");
     expect(mocks.reconcilePayoutStatus).toHaveBeenCalledWith("p_2");
-    expect(mocks.enqueueJob).not.toHaveBeenCalled();
+    expect(mocks.enqueueJob).toHaveBeenCalledWith(expect.objectContaining({
+      type: "payout_reconciliation"
+    }));
   });
 
   it("handles empty pending payouts gracefully", async () => {
@@ -397,10 +407,13 @@ describe("handleJob — payout_reconciliation", () => {
       })
     });
 
-    expect(mocks.enqueueJob).toHaveBeenCalledTimes(2);
+    expect(mocks.enqueueJob).toHaveBeenCalledTimes(3);
     expect(mocks.enqueueJob).toHaveBeenNthCalledWith(1, expect.objectContaining({
       type: "process_merchant_payout",
       payload: { payoutId: "p_r1" }
+    }));
+    expect(mocks.enqueueJob).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      type: "payout_reconciliation"
     }));
 
     vi.useRealTimers();
@@ -416,7 +429,9 @@ describe("handleJob — payout_reconciliation", () => {
     await handleJob("payout_reconciliation", {});
 
     expect(mocks.prisma.merchantPayout.update).not.toHaveBeenCalled();
-    expect(mocks.enqueueJob).not.toHaveBeenCalled();
+    expect(mocks.enqueueJob).toHaveBeenCalledWith(expect.objectContaining({
+      type: "payout_reconciliation"
+    }));
   });
 
   it("respects nextRetryTime and does not retry before it", async () => {
@@ -429,6 +444,8 @@ describe("handleJob — payout_reconciliation", () => {
     await handleJob("payout_reconciliation", {});
 
     expect(mocks.prisma.merchantPayout.update).not.toHaveBeenCalled();
-    expect(mocks.enqueueJob).not.toHaveBeenCalled();
+    expect(mocks.enqueueJob).toHaveBeenCalledWith(expect.objectContaining({
+      type: "payout_reconciliation"
+    }));
   });
 });

@@ -9,6 +9,8 @@ import { getQueueRedis } from "./redis.js";
 
 export type AppJobType =
   | "deposit_settlement"
+  | "deposit_resolution_scan"
+  | "deposit_resolution_finalize"
   | "refund_reconciliation"
   | "booking_reminder"
   | "new_booking_salon"
@@ -26,6 +28,8 @@ export type AppQueueName = "payments" | "notifications" | "maintenance";
 
 const JOB_QUEUE: Record<AppJobType, AppQueueName> = {
   deposit_settlement: "payments",
+  deposit_resolution_scan: "maintenance",
+  deposit_resolution_finalize: "maintenance",
   refund_reconciliation: "payments",
   booking_reminder: "notifications",
   new_booking_salon: "notifications",
@@ -101,23 +105,28 @@ export async function enqueueJob(input: {
   const db = input.dbClient ?? prisma;
   const runAfter = input.runAfter ?? new Date();
   const queueName = JOB_QUEUE[input.type];
-  const payloadJson = JSON.stringify(input.payload);
+  const payloadJson = stableStringify(input.payload);
 
   const existingPending = await db.job.findFirst({
     where: { type: input.type, payloadJson, status: "pending" },
     select: { id: true }
   });
   if (!existingPending) {
-    await db.job.create({
-      data: {
-        queue: queueName,
-        type: input.type,
-        payloadJson,
-        bookingId: input.bookingId ?? null,
-        status: input.status ?? "pending",
-        runAfter
-      }
-    });
+    try {
+      await db.job.create({
+        data: {
+          queue: queueName,
+          type: input.type,
+          payloadJson,
+          bookingId: input.bookingId ?? null,
+          status: input.status ?? "pending",
+          runAfter
+        }
+      });
+    } catch (err: any) {
+      // P2002 = unique constraint violation — another worker already created this job
+      if (err?.code !== 'P2002') throw err;
+    }
   }
 
   if (!shouldRunBull()) return;

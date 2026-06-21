@@ -12,6 +12,11 @@ import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
+import {
+  cancelDepositSettlementJobs,
+  scheduleDepositSettlementJobs,
+  setDepositResolution
+} from "../../lib/deposit-settlement.js";
 
 const paymentAdapter = getPaymentAdapter(config.paymentDriver, {
   baseOrigin: config.webOrigin,
@@ -67,6 +72,11 @@ function bookingSummary(booking: {
   source: string;
   depositAmountXof: number;
   depositPaymentStatus: string;
+  depositSettlementStatus?: string;
+  depositResolution?: string;
+  depositResolutionAt?: Date | null;
+  depositDisputeDeadlineAt?: Date | null;
+  depositSettledAt?: Date | null;
   paymentProvider: string | null;
   payments: Array<{ id: string; status?: string; amountXof?: number; provider?: string }>;
   review?: { id: string } | null;
@@ -90,6 +100,11 @@ function bookingSummary(booking: {
     depositAmountXof: booking.depositAmountXof,
     depositPaidXof,
     depositPaymentStatus: booking.depositPaymentStatus,
+    depositSettlementStatus: booking.depositSettlementStatus ?? "none",
+    depositResolution: booking.depositResolution ?? "pending",
+    depositResolutionAt: booking.depositResolutionAt?.toISOString() ?? null,
+    depositDisputeDeadlineAt: booking.depositDisputeDeadlineAt?.toISOString() ?? null,
+    depositSettledAt: booking.depositSettledAt?.toISOString() ?? null,
     paymentProvider: booking.paymentProvider
       ? toPublicGatewayProvider(booking.paymentProvider)
       : (latestPayment?.provider ? toPublicGatewayProvider(latestPayment.provider) : null),
@@ -315,8 +330,14 @@ export class BookingController {
           where: { type: "booking_reminder", bookingId: booking.id, status: "pending" },
           data: { status: "cancelled" }
         });
+        await cancelDepositSettlementJobs(booking.id, tx);
 
         if (booking.payments.length > 0) {
+          await setDepositResolution(booking.id, "client_cancelled", {
+            dbClient: tx,
+            actorUserId: session.sub,
+            eventType: "deposit_resolution_client_cancelled"
+          });
           await enqueueJob({
             type: "refund_reconciliation",
             payload: { paymentId: booking.payments[0].id, bookingId: booking.id },
@@ -403,9 +424,29 @@ export class BookingController {
           where: { type: "booking_reminder", bookingId: booking.id, status: "pending" },
           data: { status: "cancelled" }
         });
+        await cancelDepositSettlementJobs(booking.id, tx);
+        if (booking.depositAmountXof > 0 && booking.depositPaymentStatus === "succeeded") {
+          await tx.booking.update({
+            where: { id: booking.id },
+            data: {
+              depositSettlementStatus: "held",
+              depositResolution: "pending",
+              depositResolutionAt: null,
+              depositDisputeDeadlineAt: null,
+              depositSettlementNote: null
+            }
+          });
+        }
       });
 
       await scheduleReminders(booking.id, newStart);
+      if (booking.depositAmountXof > 0 && booking.depositPaymentStatus === "succeeded") {
+        await scheduleDepositSettlementJobs({
+          id: booking.id,
+          startsAt: newStart,
+          depositAmountXof: booking.depositAmountXof
+        });
+      }
 
       const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { salon: true, service: true, payments: { take: 1 } } });
       ok(reply, bookingSummary(updated!));

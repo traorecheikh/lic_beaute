@@ -3,8 +3,9 @@ import { logger } from "./logger.js";
 import { config } from "../config.js";
 import { getPaymentAdapter } from "../adapters/index.js";
 import { enqueueJob } from "./jobs.js";
+import { isPayoutResolution, syncTerminalSettlementState } from "./deposit-settlement.js";
 
-export async function checkPayoutEligibility(bookingId: string) {
+export async function checkPayoutEligibility(bookingId: string, excludePayoutId?: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -17,8 +18,11 @@ export async function checkPayoutEligibility(bookingId: string) {
     return { eligible: false, reason: "booking_not_found" };
   }
 
-  if (booking.status !== "completed") {
-    return { eligible: false, reason: "booking_not_completed", booking };
+  const resolution = (!booking.depositResolution || booking.depositResolution === "pending") && booking.status === "completed"
+    ? "completed"
+    : (booking.depositResolution ?? "pending");
+  if (!isPayoutResolution(resolution)) {
+    return { eligible: false, reason: "booking_not_settlement_eligible", booking };
   }
 
   const payment = booking.payments[0];
@@ -52,10 +56,14 @@ export async function checkPayoutEligibility(bookingId: string) {
     return { eligible: false, reason: "dispute_open", booking, payment };
   }
 
-  const existingPayout = await prisma.merchantPayout.findUnique({
-    where: { bookingId }
+  const existingPayout = await prisma.merchantPayout.findFirst({
+    where: {
+      bookingId,
+      id: excludePayoutId ? { not: excludePayoutId } : undefined,
+      status: { not: "cancelled" }
+    }
   });
-  if (existingPayout && existingPayout.status !== "cancelled") {
+  if (existingPayout) {
     return { eligible: false, reason: "payout_already_exists", booking, payment };
   }
 
@@ -180,6 +188,16 @@ export async function createPayoutForBooking(bookingId: string, options?: { forc
       }
     });
 
+    if (typeof (tx as any).booking?.update === "function") {
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          depositSettlementStatus: status === "scheduled" ? "payout_scheduled" : "blocked",
+          depositResolutionAt: booking.depositResolutionAt ?? eligibleAt
+        }
+      });
+    }
+
     return updated;
   });
 
@@ -231,7 +249,7 @@ export async function submitPayout(payoutId: string) {
     paydunyaBaseUrl: config.paydunyaBaseUrl
   });
 
-  const eligibility = await checkPayoutEligibility(payout.bookingId!);
+  const eligibility = await checkPayoutEligibility(payout.bookingId!, payout.id);
   if (!eligibility.eligible && !payout.disburseToken) {
     await prisma.merchantPayout.update({
       where: { id: payout.id },
@@ -384,6 +402,9 @@ export async function submitPayout(payoutId: string) {
           amountXof: payout.merchantPayoutAmount
         }
       });
+      if (payout.bookingId) {
+        await syncTerminalSettlementState(payout.bookingId);
+      }
     } else if (submitRes.status === "pending") {
       await prisma.merchantPayout.update({
         where: { id: payout.id },
@@ -462,6 +483,9 @@ export async function reconcilePayoutStatus(payoutId: string) {
             amountXof: payout.merchantPayoutAmount
           }
         });
+        if (payout.bookingId) {
+          await syncTerminalSettlementState(payout.bookingId);
+        }
       }
     } else if (res.status === "failed") {
       if (payout.status !== "succeeded") {

@@ -11,6 +11,11 @@ import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { toDbProvider, toPublicGatewayProvider } from "../../lib/payment-provider.js";
 import { prisma } from "../../lib/db/prisma.js";
+import {
+  markDepositHeld,
+  scheduleDepositSettlementJobs,
+  syncTerminalSettlementState
+} from "../../lib/deposit-settlement.js";
 import { buildBookingConfirmationPdf } from "../../lib/pdf.js";
 import { sendNotification } from "../notifications/index.js";
 import { checkWebhookReplay } from "../../lib/webhook-replay.js";
@@ -538,7 +543,11 @@ export class PaymentController {
         // Status already updated via atomic claim above; only persist side effects.
         await tx.booking.update({
           where: { id: payment.bookingId },
-          data: { depositPaymentStatus: "refunded" }
+          data: {
+            depositPaymentStatus: "refunded",
+            depositSettlementStatus: "refunded",
+            depositSettledAt: new Date()
+          }
         });
         await tx.settlementEvent.create({
           data: { bookingId: payment.bookingId, paymentId: payment.id, eventType: "refunded", amountXof: payment.amountXof, providerReference: refund.refundRef }
@@ -561,6 +570,8 @@ export class PaymentController {
           }
         });
       });
+
+      await syncTerminalSettlementState(payment.bookingId);
 
       ok(reply, { refunded: true, refundRef: refund.refundRef });
     } catch (error) {
@@ -655,7 +666,7 @@ export class PaymentController {
       pending: ["authorized", "succeeded", "failed"],
       authorized: ["succeeded", "failed", "refunded"],
       succeeded: ["refunded"],
-      failed: [],
+      failed: ["succeeded"],
       refunded: [],
     };
     if (!VALID_TRANSITIONS[payment.status]?.includes(newStatus)) {
@@ -692,6 +703,7 @@ export class PaymentController {
           where: { id: payment.bookingId },
           data: {
             depositPaymentStatus: newStatus,
+            depositSettlementStatus: newStatus === "authorized" ? "held" : undefined,
             ...(shouldAutoConfirm ? { status: "confirmed" } : {})
           }
         });
@@ -739,11 +751,17 @@ export class PaymentController {
               }
             });
           }
+          await markDepositHeld(payment.bookingId, tx);
         }
       } else if (newStatus === "failed" || newStatus === "refunded") {
         await tx.booking.update({
           where: { id: payment.bookingId },
-          data: { depositPaymentStatus: newStatus }
+          data: {
+            depositPaymentStatus: newStatus,
+            depositSettlementStatus: newStatus === "refunded" ? "refunded" : "none",
+            depositSettledAt: newStatus === "refunded" ? new Date() : null,
+            depositDisputeDeadlineAt: null
+          }
         });
       }
 
@@ -772,6 +790,11 @@ export class PaymentController {
       if (runAfter1h.getTime() > now) {
         await enqueueJob({ type: "booking_reminder", payload: { bookingId: meta.bookingId, window: "1h" }, bookingId: meta.bookingId, runAfter: runAfter1h });
       }
+      await scheduleDepositSettlementJobs({
+        id: meta.bookingId,
+        startsAt: meta.startsAt,
+        depositAmountXof: payment.amountXof
+      });
 
       await sendNotification(meta.clientId, "Réservation confirmée", `Votre RDV pour ${meta.serviceName} est confirmé.`).catch((err) =>
         logger.warn("[PAYMENT] push notification failed", { clientId: meta.clientId, err })
@@ -815,6 +838,10 @@ export class PaymentController {
           logger.warn("[PAYMENT] confirmation email with PDF failed", { to: meta.clientEmail, err });
         }
       }
+    }
+
+    if (newStatus === "refunded") {
+      await syncTerminalSettlementState(payment.bookingId);
     }
   }
 

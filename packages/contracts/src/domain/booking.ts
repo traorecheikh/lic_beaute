@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-import { bookingStatusSchema, paymentProviderSchema, paymentStatusSchema } from "./enums.js";
+import {
+  bookingStatusSchema,
+  depositResolutionSchema,
+  depositSettlementStatusSchema,
+  paymentProviderSchema,
+  paymentStatusSchema
+} from "./enums.js";
 import { paymentChannelSchema } from "./payment.js";
 
 export const bookingCreateSchema = z.object({
@@ -31,6 +37,11 @@ export const bookingSummarySchema = z.object({
   depositAmountXof: z.number().nonnegative(),
   depositPaidXof: z.number().nonnegative().nullable(),
   depositPaymentStatus: paymentStatusSchema,
+  depositSettlementStatus: depositSettlementStatusSchema,
+  depositResolution: depositResolutionSchema,
+  depositResolutionAt: z.string().datetime().nullable(),
+  depositDisputeDeadlineAt: z.string().datetime().nullable(),
+  depositSettledAt: z.string().datetime().nullable(),
   paymentProvider: paymentProviderSchema.nullable(),
   paymentId: z.string().nullable(),
   reviewId: z.string().nullable()
