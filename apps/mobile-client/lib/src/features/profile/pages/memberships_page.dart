@@ -27,7 +27,7 @@ class MembershipsPage extends ConsumerWidget {
         color: AppColors.primary,
         onRefresh: () => ref.refresh(benefitsProvider.future),
         child: benefitsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (error, _) => SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(

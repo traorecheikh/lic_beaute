@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 
 const mocks = vi.hoisted(() => {
   const prisma = {
-    user: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn() },
+    user: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     session: { create: vi.fn(), findMany: vi.fn(), deleteMany: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
     otpChallenge: { upsert: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn(), update: vi.fn() },
     platformSetting: { findUnique: vi.fn(), update: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
@@ -52,6 +52,7 @@ describe("AuthController", () => {
     vi.resetAllMocks();
     mocks.signSession.mockReturnValue({ accessToken: "a", refreshToken: "r", expiresInSeconds: 900 });
     mocks.prisma.session.findMany.mockResolvedValue([]);
+    mocks.prisma.user.update.mockResolvedValue({ tokenVersion: 1 });
     mocks.prisma.session.create.mockResolvedValue({});
     mocks.sendEmail.mockResolvedValue(undefined);
   });

@@ -8,6 +8,9 @@ See [paydunya/taste.md](paydunya/taste.md)
 # ui
 - Display form validation errors as field-level inline messages with red borders on the specific input fields, not as a generic message below the form. Confidence: 0.65
 
+# notifications
+- Send a payout success email with a PDF receipt to the salon owner when a merchant payout succeeds. Confidence: 0.85
+
 # architecture
 - Expose business rules (subscription features, payment method availability, deposit settings, auto-renewal, reports access) as admin-configurable settings that can be changed without code changes or redeployment. Confidence: 0.88
 - Seed subscription_features settings in both seed-impl.ts (local dev) and seed-admin.ts (production). Confidence: 0.70

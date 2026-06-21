@@ -11,7 +11,7 @@ class SearchLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
+      child: CircularProgressIndicator.adaptive(),
     );
   }
 }

@@ -29,6 +29,9 @@ const mocks = vi.hoisted(() => {
     booking: {
       findUnique: vi.fn()
     },
+    user: {
+      findFirst: vi.fn()
+    },
     merchantPayout: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
@@ -62,6 +65,14 @@ vi.mock("./jobs.js", () => ({
   enqueueJob: vi.fn()
 }));
 
+vi.mock("./email.js", () => ({
+  sendEmail: vi.fn()
+}));
+
+vi.mock("./pdf.js", () => ({
+  buildPayoutReceiptPdf: vi.fn(async () => Buffer.from("pdf"))
+}));
+
 import {
   checkPayoutEligibility,
   createPayoutForBooking,
@@ -72,6 +83,7 @@ import {
 describe("PayoutService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.user.findFirst.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -269,6 +281,45 @@ describe("PayoutService", () => {
       expect(payout.merchantPayoutAmount).toBe(189);
     });
 
+    it("keeps payout scheduled when merchant payout is below provider minimum so it can accumulate into a later batch", async () => {
+      mocks.prisma.booking.findUnique.mockResolvedValueOnce({
+        id: "b1",
+        status: "completed",
+        depositAmountXof: 200,
+        payments: [{ id: "p1", status: "succeeded", amountXof: 200 }],
+        salon: { payoutMethod: "wave_senegal", payoutPhone: "+221771234567", payoutVerificationStatus: "verified", isSuspended: false },
+        isUnderFraudReview: false,
+        refundRequested: false,
+        disputeOpen: false
+      });
+      mocks.prisma.merchantPayout.findUnique.mockResolvedValue(null);
+      mocks.prisma.platformSetting.findUnique.mockResolvedValueOnce({ value: "5" });
+
+      mocks.tx.merchantPayout.create.mockResolvedValueOnce({ id: "pay_1" });
+      mocks.tx.merchantPayout.update.mockResolvedValueOnce({
+        id: "pay_1",
+        salonId: "s1",
+        bookingId: "b1",
+        paymentId: "p1",
+        payoutMethod: "wave_senegal",
+        beneficiaryPhoneSnapshot: "+221771234567",
+        grossAmount: 200,
+        platformCommissionAmount: 10,
+        merchantPayoutAmount: 190,
+        status: "scheduled",
+        disburseId: "merchant_payout_pay_1"
+      });
+
+      const payout = await createPayoutForBooking("b1");
+      expect(payout.status).toBe("scheduled");
+      expect(mocks.tx.merchantPayout.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          status: "scheduled",
+          releaseBatchAt: expect.any(Date)
+        })
+      }));
+    });
+
     it("handles maximum valid amount (2^31-1 XOF)", async () => {
       const maxAmount = 2147483647;
       mocks.prisma.booking.findUnique.mockResolvedValueOnce({
@@ -301,6 +352,35 @@ describe("PayoutService", () => {
   });
 
   describe("submitPayout", () => {
+    it("blocks scheduled payouts that are below provider minimum before adapter calls", async () => {
+      mocks.prisma.merchantPayout.findUnique.mockResolvedValueOnce({
+        id: "pay_small",
+        bookingId: "b1",
+        paymentId: "p1",
+        salonId: "s1",
+        status: "scheduled",
+        version: 1,
+        merchantPayoutAmount: 190,
+        beneficiaryPhoneSnapshot: "+221771234567",
+        payoutMethod: "wave_senegal",
+        disburseId: "merchant_payout_pay_small",
+        disburseToken: null
+      });
+
+      const result = await submitPayout("pay_small");
+
+      expect(result?.id).toBe("pay_small");
+      expect(mocks.prisma.merchantPayout.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: "pay_small" },
+        data: expect.objectContaining({
+          status: "blocked",
+          failureCategory: "amount_threshold"
+        })
+      }));
+      expect(mocks.prisma.merchantPayout.updateMany).not.toHaveBeenCalled();
+      expect(mocks.adapter.createDisbursementInvoice).not.toHaveBeenCalled();
+    });
+
     it("sends disburse requests successfully and updates status to succeeded", async () => {
       mocks.prisma.merchantPayout.findUnique.mockResolvedValueOnce({
         id: "pay_1",
@@ -634,6 +714,37 @@ describe("PayoutService", () => {
       expect(mocks.prisma.merchantPayout.update).toHaveBeenCalledWith(expect.objectContaining({
         where: { id: "pay_reg" },
         data: expect.objectContaining({ status: "succeeded" })
+      }));
+    });
+
+    it("continues payout submission when balance probe fails", async () => {
+      mocks.prisma.merchantPayout.findUnique.mockResolvedValueOnce({
+        id: "pay_balance_probe", bookingId: "b1", paymentId: "p1", salonId: "s1",
+        status: "scheduled", version: 1, merchantPayoutAmount: 5000,
+        beneficiaryPhoneSnapshot: "+221771234567", payoutMethod: "wave_senegal",
+        disburseId: "merchant_payout_pay_balance_probe"
+      });
+
+      mocks.prisma.booking.findUnique.mockResolvedValueOnce({
+        id: "b1", status: "completed", depositAmountXof: 10000,
+        payments: [{ id: "p1", status: "succeeded", amountXof: 10000 }],
+        salon: { payoutMethod: "wave_senegal", payoutPhone: "+221771234567", payoutVerificationStatus: "verified", isSuspended: false },
+        isUnderFraudReview: false, refundRequested: false, disputeOpen: false
+      });
+
+      mocks.prisma.merchantPayout.findFirst.mockResolvedValueOnce(null);
+      mocks.prisma.merchantPayout.updateMany.mockResolvedValueOnce({ count: 1 });
+      mocks.adapter.getApproximateBalance.mockRejectedValueOnce(new Error("404"));
+      mocks.adapter.createDisbursementInvoice.mockResolvedValueOnce({ disburseToken: "tok_balance_probe" });
+      mocks.adapter.submitDisbursement.mockResolvedValueOnce({ status: "success", transactionId: "tx_balance_probe" });
+
+      await submitPayout("pay_balance_probe");
+
+      expect(mocks.adapter.createDisbursementInvoice).toHaveBeenCalled();
+      expect(mocks.adapter.submitDisbursement).toHaveBeenCalled();
+      expect(mocks.prisma.merchantPayout.update).not.toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: "pay_balance_probe" },
+        data: expect.objectContaining({ status: "manual_review" })
       }));
     });
 

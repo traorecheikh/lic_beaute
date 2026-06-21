@@ -295,6 +295,7 @@ model Salon {
   payoutVerifiedAt       DateTime?
   payoutVerifiedBy       String?
   payouts                MerchantPayout[]
+  payoutBatches          MerchantPayoutBatch[]
   ledgerEntries          LedgerEntry[]
 
   @@index([approvalStatus, isVisibleInMarketplace, subscriptionTier, averageRating])
@@ -903,6 +904,7 @@ model MerchantPayout {
   salonId                   String
   bookingId                 String?              @unique
   paymentId                 String?
+  batchId                   String?
   payoutMethod              PayoutMethod
   beneficiaryPhoneSnapshot  String
   beneficiaryNameSnapshot   String
@@ -912,8 +914,8 @@ model MerchantPayout {
   merchantPayoutAmount      Int
   collectionFeeAmount       Int                  @default(0)
   payoutFeeAmount           Int                  @default(0)
-  disburseToken             String?              @unique
-  disburseId                String               @unique
+  disburseToken             String?
+  disburseId                String
   transactionId             String?
   providerRef               String?
   providerDisburseTxId      String?
@@ -924,6 +926,7 @@ model MerchantPayout {
   attemptCount              Int                  @default(0)
   nextRetryTime             DateTime?
   eligibleAt                DateTime?
+  releaseBatchAt            DateTime?
   initiatedAt               DateTime?
   submittedAt               DateTime?
   completedAt               DateTime?
@@ -946,11 +949,60 @@ model MerchantPayout {
   salon                     Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
   booking                   Booking?             @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   payment                   Payment?             @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  batch                     MerchantPayoutBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([nextRetryTime])
   @@index([salonId])
   @@index([bookingId])
+  @@index([batchId])
+  @@index([releaseBatchAt])
+}
+
+model MerchantPayoutBatch {
+  id                        String               @id @default(cuid())
+  salonId                   String
+  payoutMethod              PayoutMethod
+  beneficiaryPhoneSnapshot  String
+  beneficiaryNameSnapshot   String
+  currency                  String               @default("XOF")
+  grossAmount               Int
+  platformCommissionAmount  Int
+  merchantPayoutAmount      Int
+  itemCount                 Int
+  cadence                   String
+  scheduledFor              DateTime
+  windowStartAt             DateTime?
+  windowEndAt               DateTime?
+  disburseToken             String?              @unique
+  disburseId                String               @unique
+  transactionId             String?
+  providerRef               String?
+  providerDisburseTxId      String?
+  status                    MerchantPayoutStatus @default(scheduled)
+  failureCategory           String?
+  failureCode               String?
+  safeFailureMessage        String?
+  attemptCount              Int                  @default(0)
+  nextRetryTime             DateTime?
+  initiatedAt               DateTime?
+  submittedAt               DateTime?
+  completedAt               DateTime?
+  failedAt                  DateTime?
+  cancelledAt               DateTime?
+  lastReconciledAt          DateTime?
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+  version                   Int                  @default(1)
+
+  salon                     Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  payouts                   MerchantPayout[]
+
+  @@unique([salonId, scheduledFor, payoutMethod, beneficiaryPhoneSnapshot])
+  @@index([status])
+  @@index([nextRetryTime])
+  @@index([scheduledFor])
+  @@index([salonId])
 }
 
 model LedgerEntry {

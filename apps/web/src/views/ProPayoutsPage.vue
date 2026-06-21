@@ -183,6 +183,7 @@
             <td class="px-8 py-5">
               <p class="row-primary">{{ tx.service }}</p>
               <p class="row-meta">RDV : {{ tx.bookingDate }}</p>
+              <p v-if="tx.batchItemCount > 1" class="row-meta">Lot partagé : {{ tx.batchItemCount }} lignes</p>
             </td>
             <td class="px-8 py-5">
               <p class="row-primary">{{ tx.beneficiaryName }}</p>
@@ -195,6 +196,7 @@
             <td class="px-8 py-5">
               <p class="text-sm font-bold text-espresso">{{ tx.payoutAmountLabel }}</p>
               <p class="text-[9px] text-cocoa/40 font-bold">Réf: {{ tx.bookingId }}</p>
+              <p v-if="tx.batchScheduledFor" class="text-[9px] text-cocoa/40">Lot déclenché le {{ tx.batchScheduledForLabel }}</p>
             </td>
             <td class="px-8 py-5">
               <div>
@@ -355,6 +357,9 @@ const transactions = computed(() => {
       platformCommission: p.platformCommission,
       payoutAmount: p.payoutAmount,
       payoutAmountLabel: formatMoneyXof(p.payoutAmount),
+      batchItemCount: p.batchItemCount ?? 1,
+      batchScheduledFor: p.batchScheduledFor,
+      batchScheduledForLabel: p.batchScheduledFor ? dayjs(p.batchScheduledFor).format("DD MMM YYYY, HH:mm") : null,
       status: p.status,
       statusLabel: statusLabels[p.status] || p.status,
       statusClass: getStatusClass(p.status),

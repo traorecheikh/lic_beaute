@@ -1045,14 +1045,6 @@ export class PaymentController {
   async webhookPayDunyaPayout(request: FastifyRequest, reply: FastifyReply) {
     logger.info("[PAYOUT-WEBHOOK] received callback", { headers: request.headers });
 
-    // Validate content type
-    const contentType = request.headers["content-type"] ?? "";
-    if (!contentType.includes("application/json") && !contentType.includes("text/plain")) {
-      logger.warn("[PAYOUT-WEBHOOK] unsupported content-type", { contentType });
-      reply.status(415).send({ error: "unsupported_media_type" });
-      return;
-    }
-
     // Validate payload size (max 100KB)
     const rawBody = (request as any).rawBody ?? JSON.stringify(request.body);
     if (rawBody.length > 102400) {
@@ -1063,17 +1055,16 @@ export class PaymentController {
 
     let payload: Record<string, any> = {};
     try {
-      payload = typeof request.body === "string" ? JSON.parse(request.body) : (request.body as Record<string, any>) ?? {};
+      if (typeof request.body === "string") {
+        payload = JSON.parse(request.body);
+      } else if (request.body && typeof request.body === "object" && !Array.isArray(request.body)) {
+        payload = request.body as Record<string, any>;
+      }
     } catch (err) {
-      logger.warn("[PAYOUT-WEBHOOK] failed to parse body JSON", { body: request.body });
-      reply.status(400).send({ error: "bad_json" });
-      return;
-    }
-
-    // Validate payload keys - reject if neither disburse_id nor token present
-    if (typeof payload !== "object" || Array.isArray(payload)) {
-      logger.warn("[PAYOUT-WEBHOOK] invalid payload type");
-      reply.status(400).send({ error: "invalid_payload" });
+      logger.info("[PAYOUT-WEBHOOK] callback validation ping acknowledged after parse failure", {
+        contentType: request.headers["content-type"] ?? "",
+      });
+      reply.status(200).send({ ok: true, message: "callback_validation_acknowledged" });
       return;
     }
 
@@ -1081,8 +1072,8 @@ export class PaymentController {
     const token = typeof payload.token === "string" ? payload.token : (typeof payload.disburse_token === "string" ? payload.disburse_token : null);
 
     if (!disburseId && !token) {
-      logger.warn("[PAYOUT-WEBHOOK] callback missing identifiers", { keys: Object.keys(payload) });
-      reply.status(400).send({ error: "missing_identifiers" });
+      logger.info("[PAYOUT-WEBHOOK] callback validation ping acknowledged", { keys: Object.keys(payload) });
+      reply.status(200).send({ ok: true, message: "callback_validation_acknowledged" });
       return;
     }
 

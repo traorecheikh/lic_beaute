@@ -67,6 +67,13 @@ type DisburseSubmitInvoiceResponse = {
   transaction_id?: string;
 };
 
+type DisburseCheckBalanceResponse = {
+  success?: boolean;
+  description?: string;
+  message?: string;
+  [key: string]: unknown;
+};
+
 
 // ─── IPN types ────────────────────────────────────────────────────────────────
 
@@ -923,23 +930,28 @@ export class PayDunyaAdapter implements PaymentAdapter {
   }
 
   async getApproximateBalance(): Promise<{ balance: number; currency: string }> {
-    try {
-      const response = await this._postJson<any>(
-        this.disburseApiUrl,
-        "/disburse/get-balance",
-        {}
+    const response = await this._getJson<DisburseCheckBalanceResponse>(
+      this.disburseApiUrl,
+      "/disburse/check-balance"
+    );
+
+    if (response.success !== true) {
+      throw new Error(
+        `PayDunya /disburse/check-balance failed: ${String(response.message ?? "unknown error")}`
       );
-      if (response.response_code === "00") {
-        return {
-          balance: Number(response.balance ?? 0),
-          currency: response.currency ?? "XOF"
-        };
-      }
-      return { balance: 0, currency: "XOF" };
-    } catch (err: any) {
-      logger.error("[paydunya] getApproximateBalance exception", { error: String(err) });
-      return { balance: 0, currency: "XOF" };
     }
+
+    const preferredBalance =
+      typeof response["Balance SN"] === "string"
+        ? response["Balance SN"]
+        : Object.entries(response).find(([key]) => key.startsWith("Balance "))?.[1];
+    const rawBalance = typeof preferredBalance === "string" ? preferredBalance : "0 XOF";
+    const match = rawBalance.match(/([\d.]+)/);
+
+    return {
+      balance: Number(match?.[1] ?? 0),
+      currency: rawBalance.split(" ").at(-1) ?? "XOF"
+    };
   }
 
   // ─── fetchPaymentStatus ──────────────────────────────────────────────────
@@ -1005,6 +1017,21 @@ export class PayDunyaAdapter implements PaymentAdapter {
       method: "POST",
       headers: this._headers(),
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000)
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`PayDunya ${path} failed: ${response.status} ${text}`);
+    }
+
+    return (await response.json()) as T;
+  }
+
+  private async _getJson<T>(baseUrl: string, path: string): Promise<T> {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: "GET",
+      headers: this._headers(),
       signal: AbortSignal.timeout(30_000)
     });
 

@@ -756,14 +756,14 @@ describe("PaymentController", () => {
 
   describe("webhookPayDunyaPayout", () => {
 
-    it("rejects unsupported content-type with 415", async () => {
+    it("acknowledges unsupported content-type validation pings with 200", async () => {
       const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
       await controller.webhookPayDunyaPayout(
         { headers: { "content-type": "text/xml" }, body: {} } as never,
         reply as never
       );
-      expect(reply.status).toHaveBeenCalledWith(415);
-      expect(reply.send).toHaveBeenCalledWith({ error: "unsupported_media_type" });
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: true, message: "callback_validation_acknowledged" });
     });
 
     it("rejects oversized payload with 413", async () => {
@@ -777,24 +777,24 @@ describe("PaymentController", () => {
       expect(reply.send).toHaveBeenCalledWith({ error: "payload_too_large" });
     });
 
-    it("rejects bad JSON body with 400", async () => {
+    it("acknowledges bad JSON validation pings with 200", async () => {
       const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
       await controller.webhookPayDunyaPayout(
         { headers: { "content-type": "application/json" }, body: "not-json", rawBody: "not-json" } as never,
         reply as never
       );
-      expect(reply.status).toHaveBeenCalledWith(400);
-      expect(reply.send).toHaveBeenCalledWith({ error: "bad_json" });
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: true, message: "callback_validation_acknowledged" });
     });
 
-    it("rejects payload with missing identifiers with 400", async () => {
+    it("acknowledges callback validation ping with 200 when identifiers are missing", async () => {
       const reply = { status: vi.fn().mockReturnThis(), send: vi.fn() };
       await controller.webhookPayDunyaPayout(
         { headers: { "content-type": "application/json" }, body: { some: "data" }, rawBody: '{"some":"data"}' } as never,
         reply as never
       );
-      expect(reply.status).toHaveBeenCalledWith(400);
-      expect(reply.send).toHaveBeenCalledWith({ error: "missing_identifiers" });
+      expect(reply.status).toHaveBeenCalledWith(200);
+      expect(reply.send).toHaveBeenCalledWith({ ok: true, message: "callback_validation_acknowledged" });
     });
 
     it("returns payout_not_found when no matching payout exists", async () => {

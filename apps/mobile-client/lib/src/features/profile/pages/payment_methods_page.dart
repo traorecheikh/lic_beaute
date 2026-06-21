@@ -89,7 +89,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         showBackButton: !widget.requiredSetup,
       ),
       body: methodsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (error, _) => AppEmptyState(
           icon: 'star',
           title: AppStrings.loadPaymentMethodsError,

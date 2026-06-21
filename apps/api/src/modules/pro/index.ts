@@ -23,6 +23,7 @@ import { fail, handleError, ok } from "../../lib/http.js";
 import { enqueueJob } from "../../lib/jobs.js";
 import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/db/prisma.js";
+import { getDepositMinimumXof } from "../../lib/platform-settings.js";
 import { getProAnalytics, getProDashboard } from "./data.js";
 
 import {
@@ -344,9 +345,20 @@ export class ProController {
         if (body.depositAmountXof > body.priceXof / 2) {
           fail(reply, 422, "deposit_exceeds_limit", "L'acompte ne peut pas dépasser 50% du prix de la prestation."); return;
         }
+        const depositMinimumXof = await getDepositMinimumXof();
+        if (body.depositAmountXof < depositMinimumXof) {
+          fail(reply, 422, "deposit_below_platform_minimum", `L'acompte doit être au minimum de ${depositMinimumXof} XOF.`); return;
+        }
       }
-      if (body.depositMode === "percent" && !body.depositPercent) {
-        fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
+      if (body.depositMode === "percent") {
+        if (!body.depositPercent) {
+          fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
+        }
+        const computedDepositXof = Math.round((body.depositPercent / 100) * body.priceXof);
+        const depositMinimumXof = await getDepositMinimumXof();
+        if (computedDepositXof < depositMinimumXof) {
+          fail(reply, 422, "deposit_below_platform_minimum", `L'acompte calculé doit être au minimum de ${depositMinimumXof} XOF.`); return;
+        }
       }
       const count = await prisma.service.count({ where: { salonId } });
       const service = await prisma.service.create({
@@ -391,9 +403,21 @@ export class ProController {
         if (effectiveAmount > price / 2) {
           fail(reply, 422, "deposit_exceeds_limit", "L'acompte ne peut pas dépasser 50% du prix de la prestation."); return;
         }
+        const depositMinimumXof = await getDepositMinimumXof();
+        if (effectiveAmount < depositMinimumXof) {
+          fail(reply, 422, "deposit_below_platform_minimum", `L'acompte doit être au minimum de ${depositMinimumXof} XOF.`); return;
+        }
       }
-      if (effectiveMode === "percent" && !effectivePercent) {
-        fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
+      if (effectiveMode === "percent") {
+        if (!effectivePercent) {
+          fail(reply, 422, "invalid_deposit", "depositPercent requis pour depositMode=percent."); return;
+        }
+        const price = body.priceXof ?? existing.priceXof;
+        const computedDepositXof = Math.round((effectivePercent / 100) * price);
+        const depositMinimumXof = await getDepositMinimumXof();
+        if (computedDepositXof < depositMinimumXof) {
+          fail(reply, 422, "deposit_below_platform_minimum", `L'acompte calculé doit être au minimum de ${depositMinimumXof} XOF.`); return;
+        }
       }
       const service = await prisma.service.update({ where: { id: params.serviceId }, data: body });
       await invalidateCacheTags(["catalog:list", `catalog:salon:${salonId}`, "kpi:pro", "kpi:admin"]);

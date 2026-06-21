@@ -366,7 +366,7 @@ class AuthPrimaryButton extends StatelessWidget {
             ? SizedBox(
                 width: 22.r,
                 height: 22.r,
-                child: const CircularProgressIndicator(
+                child: const CircularProgressIndicator.adaptive(
                   strokeWidth: 2.5,
                   valueColor:
                       AlwaysStoppedAnimation<Color>(AppColors.white),

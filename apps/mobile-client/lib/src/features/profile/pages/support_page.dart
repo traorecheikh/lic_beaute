@@ -26,7 +26,7 @@ class SupportPage extends ConsumerWidget {
         backgroundColor: AppColors.surface,
       ),
       body: configAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (_, _) => Center(child: Text(AppStrings.loadContactsError)),
         data: (config) => ListView(
           padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 60.h),

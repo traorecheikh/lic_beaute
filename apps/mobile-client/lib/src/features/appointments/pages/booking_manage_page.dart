@@ -29,7 +29,7 @@ class BookingManagePage extends ConsumerWidget {
       backgroundColor: AppColors.neutral,
       appBar: AppTopBar(title: AppStrings.manageBookingTitle, showBackButton: true),
       body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (_, _) => Center(
           child: Text(
             AppStrings.loadBookingInfoError,

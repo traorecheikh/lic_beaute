@@ -63,7 +63,7 @@ class _VouchersPageState extends ConsumerState<VouchersPage> {
                   gapH12,
                   ...vouchersAsync.when(
                     loading: () => const [
-                      Center(child: CircularProgressIndicator()),
+                      Center(child: CircularProgressIndicator.adaptive()),
                     ],
                     error: (error, _) => [
                       AppErrorState(

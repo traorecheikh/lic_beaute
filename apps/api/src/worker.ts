@@ -11,7 +11,13 @@ import { prisma } from "./lib/db/prisma.js";
 import { sendEmail } from "./lib/email.js";
 import { sendPushBatch } from "./lib/push.js";
 import { sendNotification } from "./modules/notifications/index.js";
-import { createPayoutForBooking, submitPayout, reconcilePayoutStatus } from "./lib/payout-service.js";
+import {
+  createPayoutForBooking,
+  processPayoutBatchSlot,
+  reconcilePayoutBatchStatus,
+  reconcilePayoutStatus,
+  submitPayout
+} from "./lib/payout-service.js";
 import {
   finalizeBookingNoShow,
   isPayoutResolution,
@@ -117,12 +123,28 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
       return;
     }
 
+    case "process_merchant_payout_batch": {
+      const salonId = payload.salonId as string;
+      const releaseBatchAt = new Date(payload.releaseBatchAt as string);
+      await processPayoutBatchSlot(salonId, releaseBatchAt);
+      return;
+    }
+
     case "payout_reconciliation": {
       const pendingPayouts = await prisma.merchantPayout.findMany({
-        where: { status: "pending" }
+        where: { status: "pending", batchId: null }
       });
       for (const p of pendingPayouts) {
         await reconcilePayoutStatus(p.id);
+      }
+
+      if ((prisma as any).merchantPayoutBatch?.findMany) {
+        const pendingBatches = await (prisma as any).merchantPayoutBatch.findMany({
+          where: { status: "pending" }
+        });
+        for (const batch of pendingBatches) {
+          await reconcilePayoutBatchStatus(batch.id);
+        }
       }
 
       // Atomically claim all retryable payouts to prevent duplicate processing
@@ -166,6 +188,47 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
             payload: { payoutId: p.id },
             bookingId: p.bookingId ?? undefined
           });
+        }
+      }
+
+      if ((prisma as any).merchantPayoutBatch?.updateMany) {
+        const batchClaimResult = await (prisma as any).merchantPayoutBatch.updateMany({
+          where: {
+            status: "failed_retryable",
+            attemptCount: { lt: 5 },
+            OR: [
+              { nextRetryTime: null },
+              { nextRetryTime: { lte: new Date() } }
+            ]
+          },
+          data: { status: "scheduled" }
+        });
+
+        if (batchClaimResult.count > 0) {
+          const claimedBatches = await (prisma as any).merchantPayoutBatch.findMany({
+            where: { status: "scheduled", attemptCount: { lt: 5 } }
+          });
+
+          for (const batch of claimedBatches) {
+            const nextAttempt = batch.attemptCount + 1;
+            const backoffMinutes = Math.pow(2, nextAttempt) * 5;
+            const nextRetryTime = new Date(Date.now() + backoffMinutes * 60 * 1000);
+
+            await (prisma as any).merchantPayoutBatch.update({
+              where: { id: batch.id },
+              data: {
+                attemptCount: nextAttempt,
+                nextRetryTime,
+                status: "scheduled"
+              }
+            });
+
+            await enqueueJob({
+              type: "process_merchant_payout_batch",
+              payload: { salonId: batch.salonId, releaseBatchAt: batch.scheduledFor.toISOString() },
+              runAfter: new Date()
+            });
+          }
         }
       }
       const nextHour = new Date();

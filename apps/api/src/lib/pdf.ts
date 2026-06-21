@@ -414,3 +414,47 @@ export async function buildInvoicePdf(input: {
 
   return Buffer.from(await ctx.doc.save());
 }
+
+export async function buildPayoutReceiptPdf(input: {
+  payoutReference: string;
+  issuedAt: string;
+  status: string;
+  grossAmountLabel: string;
+  commissionAmountLabel: string;
+  payoutAmountLabel: string;
+  payoutMethod: string;
+  salonName: string;
+  beneficiaryLabel: string;
+  transactionReference?: string | null;
+}): Promise<Buffer> {
+  const ctx = await createPdf();
+  drawHeader(ctx, "Recu de versement", "Justificatif de decaissement marchand", [
+    `Versement ${input.payoutReference}`,
+    `Emis le ${input.issuedAt}`,
+    `Statut ${input.status}`
+  ]);
+
+  drawInfoPanel(ctx, [
+    { label: "Salon", value: input.salonName },
+    { label: "Beneficiaire", value: input.beneficiaryLabel },
+    { label: "Mode de versement", value: input.payoutMethod },
+    { label: "Reference transaction", value: input.transactionReference ?? "-" }
+  ]);
+
+  drawSectionTitle(ctx, "Detail financier");
+  drawAmountTable(ctx, [
+    { label: "Montant brut", amount: `${input.grossAmountLabel} FCFA` },
+    { label: "Commission plateforme", amount: `${input.commissionAmountLabel} FCFA` },
+  ], "Montant verse", `${input.payoutAmountLabel} FCFA`);
+
+  drawTextBlock(ctx, "Ce recu confirme le versement marchand effectue par Beauté Avenue.", {
+    size: 10,
+    color: COLORS.muted
+  });
+  drawFooter(ctx, [
+    "Service client : support@beauteavenue.com | +221 33 800 12 34",
+    "Merci pour votre confiance."
+  ]);
+
+  return Buffer.from(await ctx.doc.save());
+}

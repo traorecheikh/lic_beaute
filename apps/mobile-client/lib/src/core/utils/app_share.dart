@@ -30,7 +30,7 @@ abstract final class AppShare {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: CircularProgressIndicator.adaptive()),
     );
 
     try {

@@ -187,9 +187,7 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
   });
   app.decorate("redisEnabled", redisEnabled);
 
-  // Allow DELETE (and other bodyless) requests that mistakenly carry
-  // Content-Type: application/json with no body (FST_ERR_CTP_EMPTY_JSON_BODY).
-  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
+  const parseOptionalBody = (_req: unknown, body: string, done: (err: Error | null, value?: unknown) => void) => {
     const raw = body as string;
     if (!raw || raw.trim() === "") {
       done(null, undefined);
@@ -201,6 +199,25 @@ export async function createApp({ databaseRuntime, prisma }: CreateAppOptions) {
       const err = Object.assign(new Error("Invalid JSON body"), { statusCode: 400 });
       done(err, undefined);
     }
+  };
+
+  // Allow DELETE (and other bodyless) requests that mistakenly carry
+  // Content-Type: application/json with no body (FST_ERR_CTP_EMPTY_JSON_BODY).
+  app.addContentTypeParser("application/json", { parseAs: "string" }, parseOptionalBody);
+
+  // Payout callback validation probes may use non-JSON content types. Parse them
+  // as raw strings so the webhook handler can acknowledge accessibility checks.
+  app.addContentTypeParser("text/plain", { parseAs: "string" }, (_req, body, done) => {
+    done(null, body);
+  });
+  app.addContentTypeParser("text/xml", { parseAs: "string" }, (_req, body, done) => {
+    done(null, body);
+  });
+  app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_req, body, done) => {
+    done(null, body);
+  });
+  app.addContentTypeParser("*", { parseAs: "string" }, (_req, body, done) => {
+    done(null, body);
   });
 
   await app.register(multipart, {

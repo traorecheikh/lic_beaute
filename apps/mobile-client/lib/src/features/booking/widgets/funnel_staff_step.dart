@@ -27,7 +27,7 @@ class FunnelStaffStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final salonAsync = ref.watch(salonDetailProvider(salonId));
     return salonAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator.adaptive()),
       error: (_, _) => Center(child: Text(AppStrings.loadStaffError)),
       data: (salon) {
         final staff = (salon?.staff.toList() ?? [])

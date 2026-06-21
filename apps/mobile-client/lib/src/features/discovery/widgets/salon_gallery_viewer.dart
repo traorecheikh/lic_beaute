@@ -58,8 +58,7 @@ class _SalonGalleryViewerState extends State<SalonGalleryViewer> {
                 imageUrl: widget.images[i],
                 fit: BoxFit.contain,
                 placeholder: (_, _) => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.white38,
+                  child: CircularProgressIndicator.adaptive(
                     strokeWidth: 2,
                   ),
                 ),

@@ -121,9 +121,8 @@ class _AppButtonState extends State<AppButton> {
     final Widget indicator = SizedBox(
       height: 20.h,
       width: 20.h,
-      child: CircularProgressIndicator(
+      child: CircularProgressIndicator.adaptive(
         strokeWidth: 2,
-        color: isPrimary ? AppColors.white : AppColors.primary,
       ),
     );
 

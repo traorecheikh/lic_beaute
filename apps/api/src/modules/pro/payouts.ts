@@ -142,6 +142,13 @@ export async function listMerchantPayouts(request: FastifyRequest, reply: Fastif
       where: { salonId },
       orderBy: { createdAt: "desc" },
       include: {
+        batch: {
+          select: {
+            id: true,
+            itemCount: true,
+            scheduledFor: true
+          }
+        },
         booking: {
           select: {
             id: true,
@@ -163,6 +170,9 @@ export async function listMerchantPayouts(request: FastifyRequest, reply: Fastif
       grossAmount: p.grossAmount,
       platformCommission: p.platformCommissionAmount,
       payoutAmount: p.merchantPayoutAmount,
+      batchId: p.batchId,
+      batchItemCount: p.batch?.itemCount ?? 1,
+      batchScheduledFor: p.batch?.scheduledFor.toISOString() ?? p.releaseBatchAt?.toISOString() ?? null,
       status: p.status,
       safeFailureMessage: p.safeFailureMessage,
       createdAt: p.createdAt.toISOString(),

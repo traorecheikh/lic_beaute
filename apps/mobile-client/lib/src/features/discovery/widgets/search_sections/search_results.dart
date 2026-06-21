@@ -127,8 +127,7 @@ class SearchResultsView extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.all(16.r),
                 child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
+                  child: CircularProgressIndicator.adaptive(
                     strokeWidth: 2,
                   ),
                 ),

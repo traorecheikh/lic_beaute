@@ -201,9 +201,8 @@ class _LocationPermissionButtonState
             ? SizedBox(
                 width: 20.r,
                 height: 20.r,
-                child: CircularProgressIndicator(
+                child: CircularProgressIndicator.adaptive(
                   strokeWidth: 2,
-                  color: AppColors.onPrimary,
                 ),
               )
             : Text(

@@ -63,7 +63,27 @@ export async function updateProPayoutSettings(token: string, payload: Record<str
   });
 }
 
-export async function fetchProMerchantPayouts(token: string): Promise<unknown[]> {
+export type ProMerchantPayoutRow = {
+  id: string;
+  bookingId: string | null;
+  bookingStartsAt: string | null;
+  serviceName: string | null;
+  payoutMethod: "wave_senegal" | "orange_money_senegal";
+  beneficiaryPhoneMasked: string;
+  beneficiaryName: string;
+  grossAmount: number;
+  platformCommission: number;
+  payoutAmount: number;
+  batchId: string | null;
+  batchItemCount: number;
+  batchScheduledFor: string | null;
+  status: string;
+  safeFailureMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+export async function fetchProMerchantPayouts(token: string): Promise<ProMerchantPayoutRow[]> {
   return withApiError(async () => {
     const apiBaseUrl = getProBaseUrl();
     const response = await fetch(`${apiBaseUrl}/api/v1/pro/merchant-payouts`, {
@@ -77,6 +97,6 @@ export async function fetchProMerchantPayouts(token: string): Promise<unknown[]>
       const payload = await response.json().catch(() => ({ message: "Erreur lors de la récupération de l'historique des règlements." })) as { code?: string; message?: string };
       throw new ApiError(response.status, payload.code ?? "error", payload.message ?? "Erreur lors de la récupération de l'historique des règlements.");
     }
-    return response.json() as Promise<unknown[]>;
+    return response.json() as Promise<ProMerchantPayoutRow[]>;
   });
 }

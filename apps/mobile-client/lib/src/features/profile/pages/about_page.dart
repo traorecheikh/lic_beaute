@@ -22,7 +22,7 @@ class AboutPage extends ConsumerWidget {
       backgroundColor: AppColors.neutral,
       appBar: AppTopBar(title: AppStrings.aboutTitle, showBackButton: true),
       body: configAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (_, _) => Center(child: Text(AppStrings.errorGeneric)),
         data: (config) => SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 60.h),

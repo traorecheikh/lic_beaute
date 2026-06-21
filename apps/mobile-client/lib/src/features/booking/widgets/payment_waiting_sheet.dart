@@ -176,9 +176,8 @@ class _PaymentWaitingSheetState extends State<PaymentWaitingSheet>
               SizedBox(
                 width: 48.r,
                 height: 48.r,
-                child: CircularProgressIndicator(
+                child: CircularProgressIndicator.adaptive(
                   strokeWidth: 3,
-                  color: AppColors.primary,
                 ),
               ),
               SizedBox(height: 20.h),

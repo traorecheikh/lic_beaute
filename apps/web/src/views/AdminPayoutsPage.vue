@@ -214,6 +214,7 @@
             <td class="px-6 py-4">
               <p class="font-semibold text-espresso">{{ p.salonName }}</p>
               <p class="text-[9px] text-cocoa/40 uppercase font-mono">{{ p.salonId }}</p>
+              <p v-if="p.batchItemCount > 1" class="text-[9px] text-cocoa/50">Lot de {{ p.batchItemCount }} lignes</p>
             </td>
             <td class="px-6 py-4">
               <p class="font-semibold text-espresso">{{ p.beneficiaryName }}</p>
@@ -286,6 +287,10 @@
               <p class="section-label text-[9px] mb-1">Délai de Retenue</p>
               <p class="row-primary">Hold : {{ detailData.payout.commissionSnapshot.feeResponsibilityPolicy || '0h' }}</p>
               <p class="row-meta mt-1">Éligible le : {{ formatDate(detailData.payout.eligibleAt) }}</p>
+              <p v-if="detailData.payout.batchScheduledFor" class="row-meta mt-1">
+                Lot prévu le : {{ formatDate(detailData.payout.batchScheduledFor) }}
+                <span v-if="detailData.payout.batchItemCount > 1">· {{ detailData.payout.batchItemCount }} lignes</span>
+              </p>
             </div>
           </div>
 

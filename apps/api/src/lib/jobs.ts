@@ -22,6 +22,7 @@ export type AppJobType =
   | "platform_settings_cleanup"
   | "prestige_score_refresh"
   | "process_merchant_payout"
+  | "process_merchant_payout_batch"
   | "payout_reconciliation";
 
 export type AppQueueName = "payments" | "notifications" | "maintenance";
@@ -41,6 +42,7 @@ const JOB_QUEUE: Record<AppJobType, AppQueueName> = {
   platform_settings_cleanup: "maintenance",
   prestige_score_refresh: "maintenance",
   process_merchant_payout: "payments",
+  process_merchant_payout_batch: "payments",
   payout_reconciliation: "payments"
 };
 

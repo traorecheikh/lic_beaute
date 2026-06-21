@@ -103,7 +103,7 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
 
     return AppScaffold(
       body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (error, _) => Padding(
           padding: EdgeInsets.all(24.r),
           child: AppErrorState(

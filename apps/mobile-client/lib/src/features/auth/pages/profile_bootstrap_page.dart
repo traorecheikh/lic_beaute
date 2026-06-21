@@ -162,9 +162,8 @@ class _ProfileBootstrapPageState extends ConsumerState<ProfileBootstrapPage> {
                                     ? SizedBox(
                                         width: 16.r,
                                         height: 16.r,
-                                        child: const CircularProgressIndicator(
+                                        child: const CircularProgressIndicator.adaptive(
                                           strokeWidth: 2,
-                                          color: AppColors.white,
                                         ),
                                       )
                                     : AppIcon(

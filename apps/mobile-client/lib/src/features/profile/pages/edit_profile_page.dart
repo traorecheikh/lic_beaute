@@ -76,7 +76,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             _marketingOptIn = profile.marketingOptIn;
           }
           return optionsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator.adaptive()),
             error: (error, _) => AppErrorState(
               title: AppStrings.loadOptionsError,
               message: error.toString(),
@@ -128,9 +128,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                     ? SizedBox(
                                         width: 16.r,
                                         height: 16.r,
-                                        child: const CircularProgressIndicator(
+                                        child: const CircularProgressIndicator.adaptive(
                                           strokeWidth: 2,
-                                          color: AppColors.white,
                                         ),
                                       )
                                     : AppIcon(

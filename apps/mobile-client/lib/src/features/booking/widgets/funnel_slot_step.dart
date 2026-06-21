@@ -151,7 +151,7 @@ class FunnelSlotStep extends ConsumerWidget {
         // ── Hour rail + minute grid ─────────────────────────────────────────
         Expanded(
           child: availabilityAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator.adaptive()),
             error: (_, _) => Center(
               child: Text(
                 AppStrings.loadAvailabilityError,

@@ -155,6 +155,13 @@ export async function listPayouts(request: FastifyRequest, reply: FastifyReply) 
       where,
       orderBy: { createdAt: "desc" },
       include: {
+        batch: {
+          select: {
+            id: true,
+            itemCount: true,
+            scheduledFor: true
+          }
+        },
         salon: { select: { name: true } },
         booking: { select: { id: true, startsAt: true } }
       }
@@ -172,6 +179,9 @@ export async function listPayouts(request: FastifyRequest, reply: FastifyReply) 
       grossAmount: p.grossAmount,
       platformCommission: p.platformCommissionAmount,
       payoutAmount: p.merchantPayoutAmount,
+      batchId: p.batchId,
+      batchItemCount: p.batch?.itemCount ?? 1,
+      batchScheduledFor: p.batch?.scheduledFor.toISOString() ?? p.releaseBatchAt?.toISOString() ?? null,
       status: p.status,
       attemptCount: p.attemptCount,
       createdAt: p.createdAt.toISOString(),
@@ -199,7 +209,20 @@ export async function payoutDetail(request: FastifyRequest, reply: FastifyReply)
             depositPaymentStatus: true
           }
         },
-        payment: { select: { id: true, provider: true, status: true, amountXof: true } }
+        payment: { select: { id: true, provider: true, status: true, amountXof: true } },
+        batch: {
+          select: {
+            id: true,
+            itemCount: true,
+            cadence: true,
+            scheduledFor: true,
+            disburseToken: true,
+            disburseId: true,
+            transactionId: true,
+            providerRef: true,
+            providerDisburseTxId: true
+          }
+        }
       }
     });
 
@@ -232,6 +255,10 @@ export async function payoutDetail(request: FastifyRequest, reply: FastifyReply)
         grossAmount: payout.grossAmount,
         platformCommission: payout.platformCommissionAmount,
         payoutAmount: payout.merchantPayoutAmount,
+        batchId: payout.batchId,
+        batchItemCount: payout.batch?.itemCount ?? 1,
+        batchCadence: payout.batch?.cadence ?? null,
+        batchScheduledFor: payout.batch?.scheduledFor.toISOString() ?? payout.releaseBatchAt?.toISOString() ?? null,
         collectionFee: payout.collectionFeeAmount,
         payoutFee: payout.payoutFeeAmount,
         status: payout.status,
@@ -240,12 +267,13 @@ export async function payoutDetail(request: FastifyRequest, reply: FastifyReply)
         failureCategory: payout.failureCategory,
         failureCode: payout.failureCode,
         safeFailureMessage: payout.safeFailureMessage,
-        disburseToken: payout.disburseToken,
-        disburseId: payout.disburseId,
-        transactionId: payout.transactionId,
-        providerRef: payout.providerRef,
-        providerDisburseTxId: payout.providerDisburseTxId,
+        disburseToken: payout.batch?.disburseToken ?? payout.disburseToken,
+        disburseId: payout.batch?.disburseId ?? payout.disburseId,
+        transactionId: payout.batch?.transactionId ?? payout.transactionId,
+        providerRef: payout.batch?.providerRef ?? payout.providerRef,
+        providerDisburseTxId: payout.batch?.providerDisburseTxId ?? payout.providerDisburseTxId,
         eligibleAt: payout.eligibleAt?.toISOString() ?? null,
+        releaseBatchAt: payout.releaseBatchAt?.toISOString() ?? null,
         initiatedAt: payout.initiatedAt?.toISOString() ?? null,
         submittedAt: payout.submittedAt?.toISOString() ?? null,
         completedAt: payout.completedAt?.toISOString() ?? null,
@@ -292,7 +320,7 @@ export async function reconcilePayout(request: FastifyRequest, reply: FastifyRep
       return;
     }
 
-    if (!payout.disburseToken) {
+    if (!payout.disburseToken && !payout.batchId) {
       fail(reply, 400, "not_submitted", "Ce règlement n'a pas encore de token PayDunya de disbursement.");
       return;
     }

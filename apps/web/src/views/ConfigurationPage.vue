@@ -801,6 +801,62 @@ const SETTINGS_META: Record<string, SettingMeta> = {
     max: 72,
     unit: 'h'
   },
+  merchant_payout_minimum_xof: {
+    label: 'Minimum de versement salon',
+    description: "Montant net minimal cumulé avant envoi d'un versement marchand à PayDunya.",
+    example: '200 XOF',
+    type: 'number',
+    min: 1,
+    unit: 'XOF'
+  },
+  merchant_payout_cadence: {
+    label: 'Cadence de versement',
+    description: "Quand Beauté Avenue déclenche les versements vers les salons. 'Immédiat' garde le comportement actuel, les autres modes regroupent les lignes éligibles par lot.",
+    type: 'select',
+    options: [
+      { value: 'immediate', label: 'Immédiat' },
+      { value: 'daily', label: 'Une fois par jour' },
+      { value: 'twice_weekly', label: 'Deux fois par semaine' },
+      { value: 'weekly', label: 'Une fois par semaine' }
+    ]
+  },
+  merchant_payout_release_hour_utc: {
+    label: 'Heure de déclenchement',
+    description: "Heure UTC utilisée pour lancer les versements batchés quotidiens ou hebdomadaires. Dakar est actuellement aligné sur UTC.",
+    example: '21 → 21h UTC',
+    type: 'number',
+    min: 0,
+    max: 23,
+    unit: 'UTC'
+  },
+  merchant_payout_weekly_day: {
+    label: 'Jour principal',
+    description: 'Jour utilisé pour la cadence hebdomadaire et comme premier jour de la cadence bihebdomadaire.',
+    type: 'select',
+    options: [
+      { value: 'monday', label: 'Lundi' },
+      { value: 'tuesday', label: 'Mardi' },
+      { value: 'wednesday', label: 'Mercredi' },
+      { value: 'thursday', label: 'Jeudi' },
+      { value: 'friday', label: 'Vendredi' },
+      { value: 'saturday', label: 'Samedi' },
+      { value: 'sunday', label: 'Dimanche' }
+    ]
+  },
+  merchant_payout_second_weekly_day: {
+    label: 'Second jour batch',
+    description: 'Deuxième jour utilisé uniquement quand la cadence est réglée sur deux fois par semaine.',
+    type: 'select',
+    options: [
+      { value: 'monday', label: 'Lundi' },
+      { value: 'tuesday', label: 'Mardi' },
+      { value: 'wednesday', label: 'Mercredi' },
+      { value: 'thursday', label: 'Jeudi' },
+      { value: 'friday', label: 'Vendredi' },
+      { value: 'saturday', label: 'Samedi' },
+      { value: 'sunday', label: 'Dimanche' }
+    ]
+  },
   // ── Feature flags (subscription_features group) ─────────────────────────
   feature_deposits_enabled: {
     label: 'Acomptes clients',
@@ -958,6 +1014,7 @@ const tabs = [
   { id: 'categories',       label: 'Catégories Salons',       description: "Catégories disponibles lors de l'inscription d'un partenaire.", icon: TagIcon },
   { id: 'service_suggestions', label: 'Prestations Standards', description: 'Gérer la liste des suggestions de prestations pour les salons.', icon: SparklesIcon },
   { id: 'pricing',          label: 'Tarification & Frais',    description: 'Règles financières appliquées aux réservations et abonnements.', icon: CurrencyDollarIcon },
+  { id: 'settlements',      label: 'Versements Salons',       description: 'Cadence, seuils minimums et règles de déclenchement des versements marchands.', icon: BellIcon },
   { id: 'payment_methods',  label: 'Moyens de Paiement',      description: 'Activer/désactiver les méthodes de paiement PayDunya.',         icon: CreditCardIcon },
   { id: 'subscription_features', label: 'Fonctionnalités',    description: 'Activer/désactiver les fonctionnalités par niveau d\'abonnement.', icon: SparklesIcon },
   { id: 'general',          label: 'Paramètres Généraux',     description: 'Coordonnées du support et règles opérationnelles globales.',     icon: Cog6ToothIcon },
@@ -966,7 +1023,7 @@ const tabs = [
 
 const activeTab = ref('documents');
 const currentTab = computed(() => tabs.find(t => t.id === activeTab.value));
-const isSettingsTab = computed(() => ['pricing', 'payment_methods', 'subscription_features', 'general'].includes(activeTab.value));
+const isSettingsTab = computed(() => ['pricing', 'settlements', 'payment_methods', 'subscription_features', 'general'].includes(activeTab.value));
 
 // ── Queries ────────────────────────────────────────────────────────────────
 

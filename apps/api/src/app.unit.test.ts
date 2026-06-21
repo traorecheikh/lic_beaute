@@ -63,6 +63,8 @@ describe("createApp unit", () => {
     const header = vi.fn();
     await hooks.onSend[0]({ id: "req-1" }, { header } as any);
     expect(header).toHaveBeenCalledWith("x-request-id", "req-1");
+    expect(app.addContentTypeParser).toHaveBeenCalledWith("text/xml", { parseAs: "string" }, expect.any(Function));
+    expect(app.addContentTypeParser).toHaveBeenCalledWith("application/x-www-form-urlencoded", { parseAs: "string" }, expect.any(Function));
   });
 
   it("connects redis and registers distributed rate limit", async () => {

@@ -92,7 +92,7 @@ class _AppErrorStateState extends ConsumerState<AppErrorState> {
                     ? SizedBox(
                         width: 18.r,
                         height: 18.r,
-                        child: const CircularProgressIndicator(
+                        child: const CircularProgressIndicator.adaptive(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             AppColors.white,

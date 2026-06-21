@@ -1178,9 +1178,10 @@ describe("PayDunyaAdapter", () => {
 
   it("retrieves balance estimate", async () => {
     const fetchMock = mockFetch({
-      response_code: "00",
-      balance: "500000",
-      currency: "XOF"
+      success: true,
+      description: "Approximate balance",
+      "Balance BF": "0.00 XOF",
+      "Balance SN": "500000.00 XOF"
     });
     vi.stubGlobal("fetch", fetchMock);
 

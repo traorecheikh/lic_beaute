@@ -15,6 +15,9 @@ dependencies:
   # Toast notifications
   toastification: ^3.2.0
 
+  # iOS Liquid Glass navigation (exploratory)
+  liquid_glass_widgets: ^0.17.1
+
   # Splash screens
   flutter_native_splash: 2.4.7
 

@@ -17,7 +17,7 @@ class AppProfileAsyncView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return profileAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator.adaptive()),
       error: (error, _) => AppErrorState(
         title: 'Impossible de charger le profil',
         message: error.toString(),
