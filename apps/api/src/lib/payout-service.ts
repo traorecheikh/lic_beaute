@@ -51,28 +51,32 @@ export async function notifyPayoutSucceeded(params: {
     transactionReference: params.transactionReference
   });
 
+  // Build salon name and date for PDF filename
+  const salonName = owner.salon?.name ?? "Salon";
+  const pdfDate = new Date().toISOString().split('T')[0];
+
   await sendEmail({
     to: owner.email,
-    subject: "Versement effectue | Beauté Avenue",
+    subject: "Versement effectué | Beauté Avenue",
     text:
       `Bonjour ${owner.fullName ?? ""},\n\n` +
-      `Votre versement de ${formatMoneyXof(params.merchantPayoutAmount)} FCFA a ete effectue.\n` +
-      `Reference: ${params.transactionReference ?? params.payoutId}\n\n` +
-      `Le recu PDF est joint a cet email.\n\n` +
-      `L'equipe Beauté Avenue`,
+      `Votre versement de ${formatMoneyXof(params.merchantPayoutAmount)} FCFA a été effectué.\n` +
+      `Référence : ${params.transactionReference ?? params.payoutId}\n\n` +
+      `Le reçu PDF est joint à cet email.\n\n` +
+      `L'équipe Beauté Avenue`,
     html: buildEmailHtml({
-      preheader: "Versement effectue",
+      preheader: "Versement effectué",
       greeting: `Bonjour ${owner.fullName ?? ""},`,
       bodyLines: [
-        `Votre versement de <strong>${formatMoneyXof(params.merchantPayoutAmount)} FCFA</strong> a ete effectue.`,
-        `<strong>Reference :</strong> ${params.transactionReference ?? params.payoutId}`
+        `Votre versement de <strong>${formatMoneyXof(params.merchantPayoutAmount)} FCFA</strong> a été effectué.`,
+        `<strong>Référence :</strong> ${params.transactionReference ?? params.payoutId}`
       ],
       cta: { url: `${config.webOrigin}/pro/payouts`, label: "Voir mes versements" },
       ignoreNote: false,
-      footerNote: "Le recu PDF est joint a cet email."
+      footerNote: "Le reçu PDF est joint à cet email."
     }),
     attachments: [{
-      filename: `versement-${params.payoutId.slice(0, 8)}.pdf`,
+      filename: `versement-${salonName}-${pdfDate}.pdf`,
       content: pdf,
       contentType: "application/pdf"
     }]

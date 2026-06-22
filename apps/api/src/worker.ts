@@ -316,7 +316,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
         const { buildEmailHtml } = await import("./lib/email-html.js");
         await sendEmail({
           to: booking.client.email,
-          subject: `Rappel — Votre RDV pour ${booking.service.name} ${windowLabel}`,
+          subject: `Rappel | Votre RDV pour ${booking.service.name} ${windowLabel}`,
           text: `Bonjour,\n\nRappel : votre rendez-vous pour "${booking.service.name}" est prévu ${windowLabel}.\n\nÀ bientôt sur BeautéAvenue.`,
           html: buildEmailHtml({
             preheader: `Rappel de réservation ${windowLabel}`,
@@ -360,7 +360,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
         const { buildEmailHtml } = await import("./lib/email-html.js");
         await sendEmail({
           to: ownerEmail,
-          subject: `Nouvelle réservation — ${serviceName}`,
+          subject: `Nouvelle réservation | ${serviceName}`,
           text: `Bonjour,\n\n${clientName} vient de réserver "${serviceName}" pour le ${startsLabel}.\n\nConsultez l'agenda sur votre espace pro.\n\n— L'équipe Beauté Avenue`,
           html: buildEmailHtml({
             preheader: "Nouvelle réservation",
@@ -371,7 +371,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
             ],
             cta: { url: `${config.webOrigin}/pro/calendar`, label: "Voir mon agenda" },
             ignoreNote: false,
-            footerNote: "— L'équipe Beauté Avenue"
+            footerNote: "L'équipe Beauté Avenue"
           })
         }).catch((err) => logger.warn("[WORKER] new_booking_salon email failed", { to: ownerEmail, err }));
       }
@@ -407,8 +407,8 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
         ).catch((err) => logger.warn("[WORKER] salon_submitted_admin push failed", { err }));
       }
       const emailSubject = isResubmission
-        ? `[Beauté Avenue] Dossier mis à jour — ${salonName}`
-        : `[Beauté Avenue] Nouveau dossier à valider — ${salonName}`;
+        ? `[Beauté Avenue] Dossier mis à jour | ${salonName}`
+        : `[Beauté Avenue] Nouveau dossier à valider | ${salonName}`;
       const emailText = isResubmission
         ? `Le salon "${salonName}" a fourni les informations complémentaires demandées et attend votre validation.\n\nConnectez-vous au backoffice : /admin/salons/${salonId}`
         : `Un nouveau salon "${salonName}" a soumis son dossier et attend votre approbation.\n\nConnectez-vous au backoffice : /admin/salons/${salonId}`;
@@ -513,7 +513,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
               ],
               cta: { url: "https://beauteavenue.sn/pro/subscription", label: "Renouveler mon abonnement" },
               ignoreNote: false,
-              footerNote: "— L'équipe Beauté Avenue"
+              footerNote: "L'équipe Beauté Avenue"
             })
           }).catch((err) => logger.warn("[WORKER] grace email failed", { to: ownerEmail, err }));
         }
@@ -561,7 +561,7 @@ export async function handleJob(type: AppJobType, payload: Record<string, unknow
               ],
               cta: { url: "https://beauteavenue.sn/pro/subscription", label: "Réactiver mon abonnement" },
               ignoreNote: false,
-              footerNote: "— L'équipe Beauté Avenue"
+              footerNote: "L'équipe Beauté Avenue"
             })
           }).catch((err) => logger.warn("[WORKER] expired email failed", { to: ownerEmail, err }));
         }

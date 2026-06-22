@@ -821,8 +821,8 @@ export class PaymentController {
           const { buildEmailHtml } = await import("../../lib/email-html.js");
           await sendEmail({
             to: meta.clientEmail,
-            subject: "Votre réservation est confirmée | Beauté Avenue",
-            text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur BeautéAvenue.`,
+            subject: "Réservation confirmée | Beauté Avenue",
+            text: `Bonjour,\n\nVotre réservation pour "${meta.serviceName}" est confirmée.\n\nÀ très bientôt sur Beauté Avenue.`,
             html: buildEmailHtml({
               preheader: "Réservation confirmée",
               greeting: "Bonjour,",
@@ -830,9 +830,9 @@ export class PaymentController {
                 `Votre réservation pour <strong>${meta.serviceName}</strong> est confirmée.`
               ],
               ignoreNote: false,
-              footerNote: "À très bientôt sur BeautéAvenue."
+              footerNote: "À très bientôt sur Beauté Avenue."
             }),
-            attachments: pdf ? [{ filename: `confirmation-${meta.bookingId.slice(0, 8)}.pdf`, content: pdf, contentType: "application/pdf" }] : undefined
+            attachments: pdf ? [{ filename: `reservation-${meta.bookingId.slice(0, 8)}.pdf`, content: pdf, contentType: "application/pdf" }] : undefined
           }).catch((err) => logger.warn("[PAYMENT] confirmation email failed", { to: meta.clientEmail, err }));
         } catch (err) {
           logger.warn("[PAYMENT] confirmation email with PDF failed", { to: meta.clientEmail, err });
@@ -959,24 +959,19 @@ export class PaymentController {
       const amountLabel = (charge.amountXof / 100).toLocaleString("fr-FR");
 
       if (newStatus === "succeeded") {
-        const chargeTypeLabel = charge.chargeType === "upgrade" ? "Passage Premium" : "Renouvellement";
         await sendEmail({
           to: ownerContact.email,
-          subject: "Paiement abonnement confirmé | Beauté Avenue",
+          subject: "Abonnement confirmé | Beauté Avenue",
           text:
             `Bonjour ${ownerName},\n\n` +
-            `Le paiement de votre abonnement pour "${salonName}" a été confirmé.\n` +
-            `Type: ${chargeTypeLabel}\n` +
-            `Montant: ${amountLabel} FCFA\n\n` +
+            `Le paiement de votre abonnement pour "${salonName}" a été confirmé.\n\n` +
             `Consultez votre espace pro pour suivre votre abonnement.\n\n` +
             `L'équipe Beauté Avenue`,
           html: buildEmailHtml({
-            preheader: "Paiement confirmé",
+            preheader: "Abonnement confirmé",
             greeting: `Bonjour ${ownerName},`,
             bodyLines: [
-              `Le paiement de votre abonnement pour <strong>${salonName}</strong> a été confirmé.`,
-              `<strong>Type :</strong> ${chargeTypeLabel}`,
-              `<strong>Montant :</strong> ${amountLabel} FCFA`
+              `Le paiement de votre abonnement pour <strong>${salonName}</strong> a été confirmé.`
             ],
             cta: { url: `${config.webOrigin}/pro/billing`, label: "Voir mon abonnement" },
             ignoreNote: false,
@@ -1002,7 +997,6 @@ export class PaymentController {
             greeting: `Bonjour ${ownerName},`,
             bodyLines: [
               `Le paiement de votre abonnement pour <strong>${salonName}</strong> a échoué.`,
-              `<strong>Montant :</strong> ${amountLabel} FCFA`,
               `Veuillez réessayer depuis votre espace abonnement.`
             ],
             cta: { url: `${config.webOrigin}/pro/billing`, label: "Réessayer" },

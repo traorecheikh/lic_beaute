@@ -361,13 +361,13 @@ export class AuthController {
       const { buildEmailHtml } = await import("../../lib/email-html.js");
       void sendEmail({
         to: body.email,
-        subject: "Inscription reçue — Beauté Avenue Pro",
+        subject: "Inscription reçue | Beauté Avenue Pro",
         text:
           `Bonjour ${body.fullName},\n\n` +
           `Votre dossier pour "${body.salon.name}" a bien été enregistré sur Beauté Avenue.\n` +
           `Statut actuel : en attente de validation.\n\n` +
           `Vous pouvez vous connecter pour suivre l'évolution de votre dossier.\n\n` +
-          `— L'équipe Beauté Avenue`,
+          `L'équipe Beauté Avenue`,
         html: buildEmailHtml({
           preheader: "Votre inscription a été reçue",
           greeting: `Bonjour ${body.fullName},`,
@@ -690,8 +690,8 @@ export class AuthController {
           const { buildEmailHtml } = await import("../../lib/email-html.js");
           void sendEmail({
             to: user.email,
-            subject: "Votre mot de passe a été modifié — Beauté Avenue",
-            text: `Bonjour ${user.fullName ?? ""},\n\nVotre mot de passe a bien été modifié. Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.\n\n— Beauté Avenue`,
+            subject: "Mot de passe modifié | Beauté Avenue",
+            text: `Bonjour ${user.fullName ?? ""},\n\nVotre mot de passe a bien été modifié. Si vous n'êtes pas à l'origine de cette action, contactez-nous immédiatement.\n\nL'équipe Beauté Avenue`,
             html: buildEmailHtml({
               preheader: "Mot de passe modifié",
               greeting: `Bonjour ${user.fullName ?? ""},`,
@@ -701,7 +701,7 @@ export class AuthController {
               ],
               cta: { url: `${config.webOrigin}/pro/login`, label: "Me connecter" },
               ignoreNote: false,
-              footerNote: "— Beauté Avenue"
+              footerNote: "L'équipe Beauté Avenue"
             })
           });
         }
@@ -895,8 +895,8 @@ export class AuthController {
       const { buildEmailHtml } = await import("../../lib/email-html.js");
       await sendEmail({
         to: email,
-        subject: "Beauté Avenue — Réinitialisation de votre mot de passe",
-        text: `Bonjour,\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur le lien ci-dessous pour définir un nouveau mot de passe (valable 72h) :\n${resetLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`,
+        subject: "Réinitialisation de votre mot de passe | Beauté Avenue",
+        text: `Bonjour,\n\nVous avez demandé la réinitialisation de votre mot de passe.\n\nCliquez sur le lien ci-dessous pour définir un nouveau mot de passe (valable 72h) :\n${resetLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\nL'équipe Beauté Avenue`,
         html: buildEmailHtml({
           preheader: "Réinitialisation de votre mot de passe",
           greeting: "Bonjour,",
@@ -1122,10 +1122,10 @@ export class AuthController {
     const { buildEmailHtml } = await import("../../lib/email-html.js");
     void sendEmail({
       to: body.email,
-      subject: "Votre code de vérification — Beauté Avenue",
-      text: `Bonjour,\n\nVotre code de vérification Beauté Avenue est : ${code}\n\nCe code est valable 5 minutes. Ne le partagez à personne.\n\n— L'équipe Beauté Avenue`,
+      subject: "Code de vérification | Beauté Avenue",
+      text: `Bonjour,\n\nVotre code de vérification Beauté Avenue est : ${code}\n\nCe code est valable 5 minutes. Ne le partagez à personne.\n\nL'équipe Beauté Avenue`,
       html: buildEmailHtml({
-        preheader: "Votre code de vérification",
+        preheader: "Code de vérification",
         greeting: "Bonjour,",
         bodyLines: [
           `Votre code de vérification <strong>Beauté Avenue</strong> est :`,
@@ -1134,7 +1134,7 @@ export class AuthController {
         ],
         cta: undefined,
         ignoreNote: false,
-        footerNote: "— L'équipe Beauté Avenue"
+        footerNote: "L'équipe Beauté Avenue"
       })
     }).catch((err) => logger.error("auth.requestEmailOtp: failed to send email", { err: String(err), to: body.email }));
 
@@ -1276,8 +1276,8 @@ export class AuthController {
       const { buildEmailHtml } = await import("../../lib/email-html.js");
       await sendEmail({
         to: email,
-        subject: "Confirmez la suppression de votre compte Beauté Avenue",
-        text: `Bonjour,\n\nVous avez demandé la suppression de votre compte Beauté Avenue.\n\nCliquez sur le lien ci-dessous pour confirmer la suppression définitive (valable 24h) :\n${confirmLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\n— L'équipe Beauté Avenue`,
+        subject: "Suppression de compte | Beauté Avenue",
+        text: `Bonjour,\n\nVous avez demandé la suppression de votre compte Beauté Avenue.\n\nCliquez sur le lien ci-dessous pour confirmer la suppression définitive (valable 24h) :\n${confirmLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\nL'équipe Beauté Avenue`,
         html: buildEmailHtml({
           preheader: "Confirmation de suppression de compte",
           greeting: "Bonjour,",
