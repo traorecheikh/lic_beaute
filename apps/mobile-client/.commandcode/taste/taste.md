@@ -5,4 +5,5 @@
 # workflow
 - When asked to fix text/copy issues (e.g., French accents, typos), apply the fixes directly to the source code files instead of only showing corrected output in conversation. Confidence: 0.65
 - Run `dart analyze` to verify no errors remain before reporting work as done. Confidence: 0.70
+- Do not automatically SSH into production servers to check configuration; ask the user for the info or guidance instead. Confidence: 0.75
 

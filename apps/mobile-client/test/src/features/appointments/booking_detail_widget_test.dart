@@ -75,13 +75,23 @@ void main() {
     });
 
     test('deposit label logic', () {
-      String depositLabel(bool hasDeposit, bool isDepositPaid) {
+      String depositLabel(
+        bool hasDeposit,
+        String depositPaymentStatus,
+        int depositPaid,
+      ) {
         if (!hasDeposit) return 'Aucun acompte';
+        final isDepositPaid =
+            depositPaymentStatus == 'succeeded' && depositPaid > 0;
+        if (depositPaymentStatus == 'authorized' && !isDepositPaid) {
+          return 'Vérification en cours';
+        }
         return isDepositPaid ? 'Acompte payé' : 'Acompte requis';
       }
-      expect(depositLabel(true, false), 'Acompte requis');
-      expect(depositLabel(true, true), 'Acompte payé');
-      expect(depositLabel(false, false), 'Aucun acompte');
+      expect(depositLabel(true, 'pending', 0), 'Acompte requis');
+      expect(depositLabel(true, 'authorized', 5000), 'Vérification en cours');
+      expect(depositLabel(true, 'succeeded', 5000), 'Acompte payé');
+      expect(depositLabel(false, 'pending', 0), 'Aucun acompte');
     });
   });
 

@@ -179,6 +179,7 @@ class _ReachabilityInterceptor extends Interceptor {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         _reachability.markConnectionFailure();
         break;
       case DioExceptionType.badResponse:

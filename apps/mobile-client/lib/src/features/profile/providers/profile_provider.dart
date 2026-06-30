@@ -138,7 +138,8 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
         DioExceptionType.connectionError ||
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
-        DioExceptionType.receiveTimeout => true,
+        DioExceptionType.receiveTimeout ||
+        DioExceptionType.transformTimeout => true,
         DioExceptionType.badResponse => false,
         DioExceptionType.cancel ||
         DioExceptionType.badCertificate ||

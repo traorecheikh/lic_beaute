@@ -55,7 +55,12 @@ class BookingDetailPage extends ConsumerWidget {
           0,
           depositAmountXof,
         );
-        final isDepositPaid = hasDeposit && depositPaidXof > 0;
+        final isDepositPaid = hasDeposit &&
+            resource.depositPaymentStatus == 'succeeded' &&
+            depositPaidXof > 0;
+        final isDepositPendingVerification = hasDeposit &&
+            resource.depositPaymentStatus == 'authorized' &&
+            !isDepositPaid;
         final remainingXof = totalAmountXof == null
             ? null
             : (totalAmountXof - depositPaidXof).clamp(
@@ -129,7 +134,11 @@ class BookingDetailPage extends ConsumerWidget {
                         _DetailRow(
                           icon: 'wallet',
                           title: AppStrings.depositLabel,
-                          subtitle: isDepositPaid ? AppStrings.paid : AppStrings.required,
+                          subtitle: isDepositPaid
+                              ? AppStrings.paid
+                              : isDepositPendingVerification
+                              ? AppStrings.paymentVerificationInProgress
+                              : AppStrings.required,
                           trailing: Text(
                             xof(isDepositPaid ? depositPaidXof : depositAmountXof),
                             style: AppTextStyles.bodyMd.copyWith(
@@ -539,4 +548,3 @@ class _RatingPromptCardState extends State<_RatingPromptCard> {
     );
   }
 }
-

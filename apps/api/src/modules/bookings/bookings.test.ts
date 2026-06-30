@@ -208,6 +208,41 @@ describe("BookingController invariants", () => {
     }));
   });
 
+  it("detail reports paid deposit only for succeeded payments", async () => {
+    mocks.prisma.booking.findFirst.mockResolvedValue({
+      id: "book_detail_1",
+      clientId: "client_1",
+      salonId: "salon_1",
+      salon: { name: "Salon", logoUrl: null },
+      serviceId: "svc_1",
+      service: { name: "Brushing + Soin" },
+      startsAt: new Date("2026-07-03T14:00:00.000Z"),
+      endsAt: new Date("2026-07-03T14:45:00.000Z"),
+      status: "pending",
+      source: "marketplace",
+      depositAmountXof: 200,
+      depositPaymentStatus: "authorized",
+      paymentProvider: "paydunya",
+      payments: [
+        { id: "pay_auth", status: "authorized", amountXof: 200, provider: "paydunya" }
+      ],
+      review: null
+    });
+
+    await controller.detail({
+      params: { bookingId: "book_detail_1" }
+    } as never, {} as never);
+
+    expect(mocks.ok).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        depositPaymentStatus: "authorized",
+        depositPaidXof: 0,
+        paymentId: "pay_auth"
+      })
+    );
+  });
+
   it("rejects cancel when cancellation window has passed", async () => {
     const soonDate = new Date();
     soonDate.setHours(soonDate.getHours() + 1);

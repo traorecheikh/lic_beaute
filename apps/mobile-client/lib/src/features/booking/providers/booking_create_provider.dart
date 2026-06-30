@@ -260,6 +260,7 @@ String bookingCreateErrorMessage(Object? error) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return 'La connexion est trop lente. Réessayez.';
       case DioExceptionType.connectionError:
         return 'Connexion indisponible. Vérifiez votre réseau puis réessayez.';

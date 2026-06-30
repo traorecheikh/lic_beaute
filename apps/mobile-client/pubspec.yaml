@@ -1,7 +1,7 @@
 name: beauteavenue_mobile_client
 description: Client mobile app for Beauté Avenue.
 publish_to: none
-version: 0.5.3
+version: 0.5.6
 
 environment:
   sdk: ">=3.8.0 <4.0.0"

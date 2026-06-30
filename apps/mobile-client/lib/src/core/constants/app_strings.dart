@@ -455,12 +455,13 @@ abstract final class AppStrings {
   static const loading = 'Chargement...';
 
   // ── Payment waiting ───────────────────────────────────────────────────────
-  static const paymentCloseConfirmTitle = 'Avez-vous effectué le paiement ?';
-  static const paymentCloseConfirmBody = 'Si vous n\'avez pas payé, vous devrez relancer le paiement.';
-  static const paymentCloseConfirmYes = 'Oui, j\'ai payé';
+  static const paymentCloseConfirmTitle = 'Avez-vous terminé dans votre application de paiement ?';
+  static const paymentCloseConfirmBody = 'Nous attendrons la confirmation automatique de l\'opérateur. Si vous n\'avez pas terminé, il faudra relancer le paiement.';
+  static const paymentCloseConfirmYes = 'Oui, continuer la vérification';
   static const paymentCloseConfirmNo = 'Non, annuler';
   static const paymentBackgroundTitle = 'Vérification en arrière-plan…';
   static const paymentBackgroundSubtitle = 'Nous vérifions automatiquement. Vous recevrez une notification dès confirmation.';
+  static const paymentVerificationInProgress = 'Vérification en cours';
   static const paymentCheckFailedTitle = 'Paiement non confirmé';
   static const paymentCheckFailedSubtitle = 'Nous n\'avons pas pu confirmer votre paiement après plusieurs tentatives.';
   static const paymentCheckFailedAction = 'Si vous avez payé, contactez notre support ou réessayez.';

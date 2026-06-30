@@ -83,7 +83,7 @@ function bookingSummary(booking: {
 }) {
   const latestPayment = booking.payments[0];
   const depositPaidXof = booking.payments
-    .filter((p) => p.status === "authorized" || p.status === "succeeded")
+    .filter((p) => p.status === "succeeded")
     .reduce((sum, p) => sum + (p.amountXof ?? 0), 0);
 
   return {

@@ -40,6 +40,7 @@ AppNetworkError resolveAppNetworkError(
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return AppNetworkError(
           type: AppNetworkErrorType.timeout,
           title: fallbackTitle,
