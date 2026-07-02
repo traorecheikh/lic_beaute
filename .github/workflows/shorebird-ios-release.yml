@@ -55,10 +55,6 @@ jobs:
           curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
           echo "$HOME/.shorebird/bin" >> "$GITHUB_PATH"
 
-      - name: Shorebird login
-        run: |
-          shorebird login:ci --token "${{ secrets.SHOREBIRD_TOKEN }}"
-
       - name: Import signing assets
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -83,6 +79,8 @@ jobs:
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/"
 
       - name: Build Shorebird iOS release
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           shorebird release ios \
             --flutter-version=3.41.7 \
