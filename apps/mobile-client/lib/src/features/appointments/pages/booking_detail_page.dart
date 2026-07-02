@@ -74,6 +74,15 @@ class BookingDetailPage extends ConsumerWidget {
         );
         final isCancelled =
             resource.status == 'cancelled' || resource.status == 'completed';
+        final canRetryDeposit = !isCancelled &&
+            !isPastNotClosed &&
+            depositAmountXof > 0 &&
+            resource.status == 'pending' &&
+            (resource.depositPaymentStatus == 'pending' ||
+                resource.depositPaymentStatus == 'failed' ||
+                resource.depositPaymentStatus == 'authorized');
+        final shouldVerifyDeposit =
+            resource.depositPaymentStatus == 'authorized';
 
         return [
           if (resource.isStale && resource.cachedAt != null)
@@ -81,11 +90,12 @@ class BookingDetailPage extends ConsumerWidget {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, MediaQuery.of(context).padding.bottom + 120.h),
+              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 28.h),
               child: Column(
                 children: [
                   _StatusHeader(
                     status: resource.status,
+                    depositPaymentStatus: resource.depositPaymentStatus,
                     bookingId: bookingId,
                     endsAt: resource.endsAt,
                   ),
@@ -169,6 +179,13 @@ class BookingDetailPage extends ConsumerWidget {
                       ],
                     ],
                   ),
+                  if (canRetryDeposit) ...[
+                    gapH20,
+                    _RetryDepositCard(
+                      bookingId: bookingId,
+                      shouldVerify: shouldVerifyDeposit,
+                    ),
+                  ],
                   gapH24,
                   if (resource.status == 'completed') ...[
                     _RatingPromptCard(
@@ -303,34 +320,108 @@ class BookingDetailPage extends ConsumerWidget {
   }
 }
 
+class _RetryDepositCard extends StatelessWidget {
+  const _RetryDepositCard({
+    required this.bookingId,
+    required this.shouldVerify,
+  });
+
+  final String bookingId;
+  final bool shouldVerify;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl.r),
+        border: Border.all(color: AppColors.outlineVariant),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: AppColors.warningContainer,
+              borderRadius: BorderRadius.circular(AppRadius.full.r),
+            ),
+            child: Text(
+              AppStrings.paymentPendingBookingBadge,
+              style: AppTextStyles.labelSm.copyWith(
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            AppStrings.paymentRetryBookingTitle,
+            style: AppTextStyles.headlineSm,
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            AppStrings.paymentRetryBookingBody,
+            style: AppTextStyles.bodySm,
+          ),
+          SizedBox(height: 16.h),
+          AppButton.primary(
+            onPressed: () => context.push(AppRoutes.paymentHandoff(bookingId)),
+            label: shouldVerify
+                ? AppStrings.paymentVerifyBookingCta
+                : AppStrings.paymentRetryBookingCta,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatusHeader extends StatelessWidget {
   const _StatusHeader({
     required this.status,
+    required this.depositPaymentStatus,
     required this.bookingId,
     this.endsAt,
   });
 
   final String status;
+  final String depositPaymentStatus;
   final String bookingId;
   final DateTime? endsAt;
 
   @override
   Widget build(BuildContext context) {
     final isPastNotClosed = bookingIsPastNotClosed(status: status, endsAt: endsAt);
+    final isAwaitingPaymentVerification =
+        status == 'pending' && depositPaymentStatus == 'authorized';
     final isSuccess = (status == 'confirmed' || status == 'completed') && !isPastNotClosed;
     final isCancelled = status == 'cancelled';
 
-    final iconColor = isSuccess
+    final iconColor = isAwaitingPaymentVerification
+        ? AppColors.warning
+        : isSuccess
         ? AppColors.success
         : (isCancelled ? AppColors.error : AppColors.secondary);
-    final bgColor = isSuccess
+    final bgColor = isAwaitingPaymentVerification
+        ? AppColors.warningContainer
+        : isSuccess
         ? AppColors.successContainer
         : (isCancelled
               ? AppColors.errorContainer
               : AppColors.secondaryContainer);
-    final icon = isSuccess ? 'check' : (isCancelled ? 'close' : 'clock');
+    final icon = isAwaitingPaymentVerification
+        ? 'wallet'
+        : (isSuccess ? 'check' : (isCancelled ? 'close' : 'clock'));
 
-    final title = bookingStatusHeadline(status, endsAt: endsAt);
+    final title = isAwaitingPaymentVerification
+        ? bookingDepositHeadline(depositPaymentStatus)
+        : bookingStatusHeadline(status, endsAt: endsAt);
+    final subtitle = isAwaitingPaymentVerification
+        ? bookingDepositSupportingText(depositPaymentStatus)
+        : '${AppStrings.refPrefix}${bookingId.split('-').first}';
 
     return Container(
       width: double.infinity,
@@ -352,7 +443,8 @@ class _StatusHeader extends StatelessWidget {
           Text(title, style: AppTextStyles.headlineSm),
           gapH4,
           Text(
-            '${AppStrings.refPrefix}${bookingId.split('-').first}',
+            subtitle,
+            textAlign: TextAlign.center,
             style: AppTextStyles.bodySm.copyWith(
               color: AppColors.onSurfaceVariant,
             ),

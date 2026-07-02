@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../constants/storage_keys.dart';
+import '../diagnostics/app_runtime_diagnostics.dart';
 import '../env/app_env.dart';
 import '../storage/secure_storage.dart';
 
@@ -20,6 +21,7 @@ Dio createDio(
   );
 
   dio.interceptors.addAll([
+    if (diagnosticsEnabled) HttpInstrumentationInterceptor(),
     _AuthInterceptor(
       secureStorage: secureStorage,
       dio: dio,

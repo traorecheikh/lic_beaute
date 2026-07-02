@@ -4,17 +4,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('resolvePostAuthRoute', () {
-    test('sends users without a name to the required profile bootstrap step', () {
+    test('keeps users without a name on the fallback route', () {
       expect(
         resolvePostAuthRoute(fullName: '', paymentMethodCount: 0),
-        AppRoutes.profileBootstrapSetup(next: AppRoutes.home),
+        AppRoutes.home,
       );
     });
 
-    test('sends users without a payment method to the required payment step', () {
+    test('keeps users without a payment method on the fallback route', () {
       expect(
         resolvePostAuthRoute(fullName: 'Awa Ndiaye', paymentMethodCount: 0),
-        AppRoutes.profilePaymentsSetup(next: AppRoutes.home),
+        AppRoutes.home,
       );
     });
 

@@ -3,10 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 
-/// Sticky bottom action bar with a surface background and an upward drop shadow.
+/// Sticky bottom action surface that always shrink-wraps its content.
 ///
-/// Replaces the recurring Container + BoxDecoration + SafeArea pattern used in
-/// booking_detail_page, review_new_page, and salon_detail_page.
+/// The explicit [Align.heightFactor] is intentional. A bottom-bar child can
+/// otherwise inherit a loose full-screen height from a route transition and
+/// briefly turn a normal CTA into a screen-sized capsule.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     required this.child,
@@ -23,7 +24,7 @@ class AppBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.surface,
         borderRadius: topRadius != null
@@ -31,8 +32,15 @@ class AppBottomBar extends StatelessWidget {
             : null,
         boxShadow: AppShadows.nav,
       ),
-      padding: padding ?? EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
-      child: SafeArea(top: false, child: child),
+      child: SafeArea(
+        top: false,
+        minimum: padding ?? EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: 1,
+          child: SizedBox(width: double.infinity, child: child),
+        ),
+      ),
     );
   }
 }

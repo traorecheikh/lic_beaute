@@ -31,43 +31,45 @@ class AppSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 24.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: AppTextStyles.headlineMd),
-            gapH8,
-            Text(
-              body,
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: AppTextStyles.headlineMd),
+              gapH8,
+              Text(
+                body,
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
-            ),
-            gapH24,
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onConfirm,
-                style: destructive
-                    ? ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                        foregroundColor: AppColors.white,
-                      )
-                    : null,
-                child: Text(confirmLabel),
+              gapH24,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onConfirm,
+                  style: destructive
+                      ? ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: AppColors.white,
+                        )
+                      : null,
+                  child: Text(confirmLabel),
+                ),
               ),
-            ),
-            SizedBox(height: 10.h),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: onCancel ?? () => Navigator.of(context).pop(),
-                child: Text(cancelLabel),
+              SizedBox(height: 10.h),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: onCancel ?? () => Navigator.of(context).pop(),
+                  child: Text(cancelLabel),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

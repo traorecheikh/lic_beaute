@@ -7,6 +7,7 @@ import '../../../core/services/media_upload_service.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/storage_keys.dart';
+import '../../../core/diagnostics/app_runtime_diagnostics.dart';
 import '../../../core/network/connectivity_provider.dart';
 import '../../../core/session/session_store.dart';
 import '../../../core/storage/app_model_cache.dart';
@@ -31,7 +32,10 @@ class ProfileNotifier extends AsyncNotifier<ClientAccountProfile?> {
         );
     try {
       final dio = ref.read(dioProvider);
-      final response = await dio.get<Map<String, dynamic>>('/api/v1/me');
+      final response = await AppRuntimeDiagnostics.runWithInitiator(
+        'profileProvider',
+        () => dio.get<Map<String, dynamic>>('/api/v1/me'),
+      );
       final data = response.data;
       if (data == null) {
         return cached == null
@@ -215,8 +219,9 @@ final profileProvider =
 
 final profileOptionsProvider = FutureProvider<ProfileOptions>((ref) async {
   final dio = ref.read(dioProvider);
-  final response = await dio.get<Map<String, dynamic>>(
-    '/api/v1/metadata/profile-options',
+  final response = await AppRuntimeDiagnostics.runWithInitiator(
+    'profileOptionsProvider',
+    () => dio.get<Map<String, dynamic>>('/api/v1/metadata/profile-options'),
   );
   return ProfileOptions.fromJson(response.data ?? const {});
 });

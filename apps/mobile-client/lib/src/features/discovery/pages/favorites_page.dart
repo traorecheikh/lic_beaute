@@ -84,7 +84,7 @@ class FavoritesPage extends ConsumerWidget {
                     );
                   },
                 ),
-              SliverPadding(padding: EdgeInsets.only(bottom: 120.h)),
+              SliverPadding(padding: EdgeInsets.only(bottom: 28.h)),
             ],
           );
         },

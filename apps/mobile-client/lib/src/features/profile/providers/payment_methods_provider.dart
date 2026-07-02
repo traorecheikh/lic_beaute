@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/storage_keys.dart';
+import '../../../core/diagnostics/app_runtime_diagnostics.dart';
 import '../../../core/network/connectivity_provider.dart';
 import '../../../core/storage/cached_fetch.dart';
 import '../../../core/session/session_store.dart';
@@ -21,6 +22,7 @@ class PaymentMethodsNotifier extends AsyncNotifier<List<PaymentMethodRecord>> {
       boxName: StorageKeys.profileBox,
       cacheKey: StorageKeys.paymentMethods,
       fromJson: PaymentMethodRecord.fromJson,
+      initiator: 'paymentMethodsProvider',
     );
     return _mergePending(items);
   }

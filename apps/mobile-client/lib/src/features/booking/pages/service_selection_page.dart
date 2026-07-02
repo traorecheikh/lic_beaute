@@ -29,8 +29,11 @@ class _ServiceSelectionPageState extends ConsumerState<ServiceSelectionPage> {
       title: 'Choisir une prestation',
       bottomNavigationBar: AppBottomBar(
         child: AppButton.primary(
-          onPressed: _selectedServiceId == null ? null : debouncedAction(_onContinue),
+          onPressed: _selectedServiceId == null
+              ? null
+              : debouncedAction(_onContinue),
           label: 'Continuer',
+          height: 58.h,
         ),
       ),
       builder: (salon) {

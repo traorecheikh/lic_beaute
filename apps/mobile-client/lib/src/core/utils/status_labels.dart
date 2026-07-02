@@ -35,3 +35,25 @@ String bookingStatusHeadline(String status, {DateTime? endsAt}) {
     _ => 'En attente de confirmation',
   };
 }
+
+String bookingDepositHeadline(String depositPaymentStatus) {
+  return switch (depositPaymentStatus) {
+    'authorized' => 'Paiement en vérification',
+    'succeeded' => 'Acompte confirmé',
+    'failed' => 'Paiement à reprendre',
+    'refunded' => 'Acompte remboursé',
+    _ => 'Acompte à finaliser',
+  };
+}
+
+String bookingDepositSupportingText(String depositPaymentStatus) {
+  return switch (depositPaymentStatus) {
+    'authorized' =>
+      'Le paiement a été lancé. Nous attendons encore la confirmation de l\'opérateur.',
+    'succeeded' => 'Votre acompte a bien été confirmé.',
+    'failed' =>
+      'Le paiement n\'a pas été confirmé. Relancez le paiement pour finaliser la réservation.',
+    'refunded' => 'Cet acompte a été remboursé.',
+    _ => 'Le rendez-vous sera confirmé dès réception de l\'acompte.',
+  };
+}

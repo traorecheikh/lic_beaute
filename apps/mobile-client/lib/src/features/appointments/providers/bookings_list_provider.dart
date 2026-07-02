@@ -5,6 +5,7 @@ import 'package:built_value/serializer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/storage_keys.dart';
+import '../../../core/diagnostics/app_runtime_diagnostics.dart';
 import '../../../core/network/api_client_provider.dart';
 import '../../../core/session/session_store.dart';
 import '../../../core/storage/app_model_cache.dart';
@@ -28,7 +29,10 @@ final bookingsListProvider =
       final cacheKey = '${StorageKeys.bookingsListKeyPrefix}${session.userId}';
       final api = ref.read(apiClientProvider).getBookingsApi();
       try {
-        final response = await api.apiV1BookingsGet();
+        final response = await AppRuntimeDiagnostics.runWithInitiator(
+          'bookingsListProvider',
+          () => api.apiV1BookingsGet(),
+        );
         final data = response.data;
         DateTime? cachedAt;
         if (data != null) {
@@ -71,8 +75,9 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
       '${StorageKeys.bookingDetailKeyPrefix}${session.userId ?? 'anon'}:$bookingId';
   final api = ref.read(apiClientProvider).getBookingsApi();
   try {
-    final response = await api.apiV1BookingsBookingIdGet(
-      bookingId: bookingId,
+    final response = await AppRuntimeDiagnostics.runWithInitiator(
+      'bookingDetailProvider',
+      () => api.apiV1BookingsBookingIdGet(bookingId: bookingId),
     );
     final summary = response.data;
     BookingDetail? data;
@@ -116,11 +121,8 @@ _fetchBookingDetail(Ref ref, String bookingId) async {
 }
 
 /// Single source of truth for booking detail. Returns the full CachedResource.
-final bookingDetailResourceProvider =
-    FutureProvider.autoDispose.family<CachedResource<BookingDetail>, String>((
-      ref,
-      bookingId,
-    ) async {
+final bookingDetailResourceProvider = FutureProvider.autoDispose
+    .family<CachedResource<BookingDetail>, String>((ref, bookingId) async {
       final result = await _fetchBookingDetail(ref, bookingId);
       return CachedResource(
         data: result.data,
@@ -131,10 +133,10 @@ final bookingDetailResourceProvider =
 
 /// Convenience accessor that extracts just the booking detail.
 /// Delegates to [bookingDetailResourceProvider] so both share the same cache.
-final bookingDetailProvider = FutureProvider.autoDispose.family<BookingDetail?, String>((
-  ref,
-  bookingId,
-) async {
-  final resource = await ref.watch(bookingDetailResourceProvider(bookingId).future);
-  return resource.data;
-});
+final bookingDetailProvider = FutureProvider.autoDispose
+    .family<BookingDetail?, String>((ref, bookingId) async {
+      final resource = await ref.watch(
+        bookingDetailResourceProvider(bookingId).future,
+      );
+      return resource.data;
+    });

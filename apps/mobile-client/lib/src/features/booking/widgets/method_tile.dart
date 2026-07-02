@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
 
-/// A tile widget for selecting a payment method in the payment handoff page.
+/// A branded tile for selecting a payment method.
 class MethodTile extends StatelessWidget {
   const MethodTile({
     required this.id,
@@ -17,57 +17,89 @@ class MethodTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  String? get _logoAsset {
+    final normalized = id.toLowerCase();
+    if (normalized.contains('wave')) return 'assets/wave.png';
+    if (normalized.contains('orange') || normalized.startsWith('om_')) {
+      return 'assets/om.png';
+    }
+    return null;
+  }
+
+  String get _displayLabel => label.toLowerCase().contains('paydunya')
+      ? 'Portefeuille mobile'
+      : label;
+
+  String get _supportingLabel {
+    if (id == 'carte_bancaire') return 'Carte bancaire';
+    if (id == 'paydunya_wallet') return 'Portefeuille mobile';
+    return 'Paiement mobile';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.05)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.outlineVariant,
-            width: selected ? 2 : 1,
+    final logoAsset = _logoAsset;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: _displayLabel,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.05)
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(18.r),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44.r,
-              height: 44.r,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                shape: BoxShape.circle,
+          child: Row(
+            children: [
+              Container(
+                width: 48.r,
+                height: 48.r,
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                child: logoAsset != null
+                    ? Image.asset(logoAsset, fit: BoxFit.contain)
+                    : AppIcon(
+                        id == 'carte_bancaire' ? 'credit-card' : 'wallet',
+                        size: 22,
+                        color: AppColors.onSurfaceVariant,
+                      ),
               ),
-              child: Center(
-                child: AppIcon('smartphone', size: 20, color: AppColors.onSurfaceVariant),
-              ),
-            ),
-            SizedBox(width: 14.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: AppTextStyles.labelLg),
-                  SizedBox(height: 2.h),
-                  Text(
-                    id.replaceAll('_', ' ').toUpperCase(),
-                    style: AppTextStyles.bodySm.copyWith(
-                      color: AppColors.onSurfaceVariant,
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_displayLabel, style: AppTextStyles.labelLg),
+                    SizedBox(height: 2.h),
+                    Text(
+                      _supportingLabel,
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (selected)
-              AppIcon('check-circle', color: AppColors.primary, size: 22)
-            else
-              AppIcon('circle', color: AppColors.outline, size: 22),
-          ],
+              AppIcon(
+                selected ? 'check-circle' : 'circle',
+                color: selected ? AppColors.primary : AppColors.outline,
+                size: 22,
+              ),
+            ],
+          ),
         ),
       ),
     );

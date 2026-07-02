@@ -159,11 +159,13 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                       elevation: 0,
                       leading: SalonCircleBtn(
                         icon: 'arrow-left',
+                        semanticLabel: 'Retour',
                         onTap: () => Navigator.of(context).pop(),
                       ),
                       actions: [
                         SalonCircleBtn(
                           icon: 'share',
+                          semanticLabel: 'Partager le salon',
                           onTap: () {
                             AppHaptics.light();
                             AppShare.card(
@@ -177,6 +179,9 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                         SizedBox(width: 6.w),
                         SalonCircleBtn(
                           icon: isFavorite ? 'heart-filled' : 'heart',
+                          semanticLabel: isFavorite
+                              ? 'Retirer des favoris'
+                              : 'Ajouter aux favoris',
                           iconColor: isFavorite ? AppColors.primary : null,
                           onTap: () async {
                             AppHaptics.light();
@@ -281,30 +286,52 @@ class _SalonDetailPageState extends ConsumerState<SalonDetailPage> {
                                 ),
                               ),
 
-                            // Photo count badge (tappable → viewer)
+                            // Compact gallery counter. Fixed height and an
+                            // icon keep the control visibly pill-shaped instead
+                            // of collapsing into an oversized circle.
                             if (images.length > 1)
                               Positioned(
-                                bottom: 48.h,
-                                right: 16.w,
+                                bottom: 42.h,
+                                right: 18.w,
                                 child: AppPressable(
                                   onTap: () =>
                                       _openGallery(context, images, _heroPage),
+                                  minSize: const Size(56, 34),
                                   child: Container(
+                                    height: 34.h,
+                                    constraints: BoxConstraints(minWidth: 62.w),
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: 10.w,
-                                      vertical: 5.h,
+                                      horizontal: 11.w,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.black54,
-                                      borderRadius: BorderRadius.circular(
-                                        AppRadius.full.r,
+                                      color: AppColors.black.withValues(
+                                        alpha: 0.58,
+                                      ),
+                                      borderRadius: BorderRadius.circular(17.r),
+                                      border: Border.all(
+                                        color: AppColors.white.withValues(
+                                          alpha: 0.20,
+                                        ),
                                       ),
                                     ),
-                                    child: Text(
-                                      '${_heroPage + 1} / ${images.length}',
-                                      style: AppTextStyles.bodyXs.copyWith(
-                                        color: AppColors.white,
-                                      ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        AppIcon(
+                                          'image',
+                                          size: 13,
+                                          color: AppColors.white,
+                                        ),
+                                        SizedBox(width: 6.w),
+                                        Text(
+                                          '${_heroPage + 1}/${images.length}',
+                                          style: AppTextStyles.labelSm.copyWith(
+                                            color: AppColors.white,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

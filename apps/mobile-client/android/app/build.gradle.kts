@@ -41,7 +41,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        testInstrumentationRunner = "pl.leancode.patrol.PatrolJUnitRunner"
     }
 
     signingConfigs {

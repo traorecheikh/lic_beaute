@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../theme/app_theme.dart';
 import 'app_pressable.dart';
 
@@ -23,6 +25,32 @@ abstract final class AppDialog {
     required List<AppDialogAction> actions,
     bool barrierDismissible = true,
   }) {
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      return showCupertinoDialog<T>(
+        context: context,
+        barrierDismissible: barrierDismissible,
+        builder: (dialogContext) => CupertinoAlertDialog(
+          title: Text(title),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(body),
+          ),
+          actions: actions
+              .map(
+                (action) => CupertinoDialogAction(
+                  isDestructiveAction: action.isDestructive,
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    action.onPressed();
+                  },
+                  child: Text(action.label),
+                ),
+              )
+              .toList(growable: false),
+        ),
+      );
+    }
+
     return showDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
@@ -51,43 +79,68 @@ class _AppDialogWidget extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
-          boxShadow: AppShadows.card,
-        ),
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: AppTextStyles.headlineSm),
-            SizedBox(height: 12.h),
-            Text(body, style: AppTextStyles.bodyMd),
-            SizedBox(height: 24.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: actions.map((action) {
-                final color = action.isDestructive
-                    ? AppColors.error
-                    : AppColors.primary;
-                return AppPressable(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    action.onPressed();
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.all(8.r),
-                    child: Text(
-                      action.label,
-                      style: AppTextStyles.labelMd.copyWith(color: color),
+      insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 420.w),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.xl.r),
+            border: Border.all(color: AppColors.outlineVariant),
+            boxShadow: AppShadows.card,
+          ),
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(title, style: AppTextStyles.headlineSm),
+              SizedBox(height: 12.h),
+              Text(
+                body,
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: 22.h),
+              ...actions.map(
+                (action) => Padding(
+                  padding: EdgeInsets.only(top: 8.h),
+                  child: AppPressable(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      action.onPressed();
+                    },
+                    minSize: const Size(44, 48),
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 13.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: action.isDestructive
+                            ? AppColors.errorContainer
+                            : AppColors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppRadius.full.r),
+                      ),
+                      child: Text(
+                        action.label,
+                        maxLines: 2,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.labelLg.copyWith(
+                          color: action.isDestructive
+                              ? AppColors.error
+                              : AppColors.onSurface,
+                        ),
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

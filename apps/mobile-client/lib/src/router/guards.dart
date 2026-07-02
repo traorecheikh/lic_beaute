@@ -46,6 +46,11 @@ String? resolveRequiredSetupRedirect({
   Map<String, dynamic>? cachedProfile,
   Map<String, dynamic>? cachedPaymentMethods,
 }) {
+  final requiresBlockingSetup = location.startsWith(
+    '/booking/payment-handoff/',
+  );
+  if (!requiresBlockingSetup) return null;
+
   if (cachedProfile != null) {
     final profile = ClientAccountProfile.fromJson(cachedProfile);
     if (profile.fullName.trim().isEmpty) {

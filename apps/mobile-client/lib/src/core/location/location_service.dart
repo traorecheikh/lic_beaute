@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:hive_ce/hive_ce.dart';
 
 import '../constants/storage_keys.dart';
+import '../diagnostics/app_runtime_diagnostics.dart';
 
 enum LocationStatus { granted, denied, deniedForever, serviceDisabled }
 
@@ -17,7 +18,15 @@ LocationStatus _mapPermission(LocationPermission perm) => switch (perm) {
   _ => LocationStatus.denied,
 };
 
-final locationStatusProvider = FutureProvider.autoDispose<LocationStatus>((ref) async {
+final locationStatusProvider = FutureProvider.autoDispose<LocationStatus>((
+  ref,
+) async {
+  if (AppRuntimeDiagnostics.config.forceDisableLocation) {
+    AppRuntimeDiagnostics.logLifecycle(
+      'locationStatusProvider forced disabled',
+    );
+    return LocationStatus.denied;
+  }
   final serviceEnabled = await Geolocator.isLocationServiceEnabled();
   debugPrint('[Location] service enabled: $serviceEnabled');
   if (!serviceEnabled) {
@@ -33,6 +42,12 @@ final locationStatusProvider = FutureProvider.autoDispose<LocationStatus>((ref) 
 });
 
 final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
+  if (AppRuntimeDiagnostics.config.forceDisableLocation) {
+    AppRuntimeDiagnostics.logLifecycle(
+      'locationProvider skipped by diagnostics',
+    );
+    return null;
+  }
   final status = await ref.watch(locationStatusProvider.future);
   debugPrint('[Location] locationProvider: status=$status');
   if (status != LocationStatus.granted) {
@@ -55,7 +70,9 @@ final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
             timeLimit: const Duration(seconds: 8),
           );
     final pos = await Geolocator.getCurrentPosition(locationSettings: settings);
-    debugPrint('[Location] → got position: lat=${pos.latitude}, lng=${pos.longitude}');
+    debugPrint(
+      '[Location] → got position: lat=${pos.latitude}, lng=${pos.longitude}',
+    );
     return pos;
   } catch (e) {
     debugPrint('[Location] → getCurrentPosition failed: $e');
@@ -66,7 +83,16 @@ final locationProvider = FutureProvider.autoDispose<Position?>((ref) async {
 /// Reverse-geocodes the current GPS position to a location label
 /// including quartier/sub-locality when available (e.g. "Médina, Dakar").
 /// Returns null if location permission is not granted or geocoding fails.
-final cityFromLocationProvider = FutureProvider.autoDispose<String?>((ref) async {
+final cityFromLocationProvider = FutureProvider.autoDispose<String?>((
+  ref,
+) async {
+  final forcedLabel = AppRuntimeDiagnostics.config.forceLocationLabel;
+  if (forcedLabel != null) {
+    AppRuntimeDiagnostics.logLifecycle(
+      'cityFromLocationProvider forced label=$forcedLabel',
+    );
+    return forcedLabel;
+  }
   final position = await ref.watch(locationProvider.future);
   if (position == null) return null;
   try {
@@ -81,8 +107,10 @@ final cityFromLocationProvider = FutureProvider.autoDispose<String?>((ref) async
         p.locality?.trim() ??
         p.subAdministrativeArea?.trim() ??
         p.administrativeArea?.trim();
-    if (subLocality != null && subLocality.isNotEmpty &&
-        locality != null && locality.isNotEmpty &&
+    if (subLocality != null &&
+        subLocality.isNotEmpty &&
+        locality != null &&
+        locality.isNotEmpty &&
         subLocality != locality) {
       return '$subLocality, $locality';
     }
@@ -124,14 +152,16 @@ class LocationPromptManager {
 
   static Future<bool> shouldShowPrompt() async {
     final status = await Geolocator.checkPermission();
-    if (status == LocationPermission.always || status == LocationPermission.whileInUse) {
+    if (status == LocationPermission.always ||
+        status == LocationPermission.whileInUse) {
       return false;
     }
 
     final box = Hive.box<dynamic>(StorageKeys.settingsBox);
-    
+
     // Override if user just completed registration/inscription
-    final justRegistered = box.get(_keyJustRegistered, defaultValue: false) as bool;
+    final justRegistered =
+        box.get(_keyJustRegistered, defaultValue: false) as bool;
     if (justRegistered) {
       return true;
     }

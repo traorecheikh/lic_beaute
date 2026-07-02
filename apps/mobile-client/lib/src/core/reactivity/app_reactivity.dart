@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../diagnostics/app_runtime_diagnostics.dart';
 import '../../features/appointments/providers/bookings_list_provider.dart';
 import '../../features/discovery/providers/favorites_provider.dart';
 import '../../features/discovery/providers/salon_detail_provider.dart';
@@ -28,9 +29,11 @@ class AppReactivity {
   void refreshAll({bool force = false}) {
     final now = DateTime.now();
     if (!force && now.difference(_lastRefreshAll) < _staleThreshold) {
+      AppRuntimeDiagnostics.logLifecycle('refreshAll skipped force=$force');
       return;
     }
     _lastRefreshAll = now;
+    AppRuntimeDiagnostics.logLifecycle('refreshAll force=$force');
 
     _ref.invalidate(salonListProvider);
     _ref.invalidate(nearbyProvider);

@@ -1,0 +1,50 @@
+{
+  "base_archive": "BeauteAvenue_merged_latest_payment_ios_ux.zip",
+  "patch_name": "search_nav_layout_consistency_fix",
+  "date": "2026-07-01",
+  "changed_files": [
+    "lib/src/core/widgets/app_bottom_bar.dart",
+    "lib/src/core/widgets/ios_native_search_bar.dart",
+    "lib/src/features/appointments/pages/booking_detail_page.dart",
+    "lib/src/features/appointments/pages/booking_manage_page.dart",
+    "lib/src/features/appointments/pages/bookings_list_page.dart",
+    "lib/src/features/booking/pages/service_selection_page.dart",
+    "lib/src/features/booking/pages/staff_selection_page.dart",
+    "lib/src/features/discovery/pages/favorites_page.dart",
+    "lib/src/features/discovery/pages/home_page.dart",
+    "lib/src/features/discovery/pages/salon_detail_page.dart",
+    "lib/src/features/discovery/pages/search_page.dart",
+    "lib/src/features/discovery/widgets/home_sections/app_bar_sections.dart",
+    "lib/src/features/discovery/widgets/salon_gallery_viewer.dart",
+    "lib/src/features/discovery/widgets/search_sections/search_bar.dart",
+    "lib/src/features/profile/pages/edit_profile_page.dart",
+    "lib/src/features/profile/pages/legal_page.dart",
+    "lib/src/features/profile/pages/profile_page.dart",
+    "lib/src/router/app_router.dart",
+    "lib/src/router/shell_scaffold.dart",
+    "test/core/widgets/app_bottom_bar_test.dart",
+    "test/src/router/shell_scaffold_widget_test.dart"
+  ],
+  "new_documentation": [
+    "UI_CONSISTENCY_FIX_NOTES.md",
+    "UI_CONSISTENCY_PATCH_MANIFEST.json"
+  ],
+  "fixes": {
+    "native_ios_home_search": true,
+    "pinned_home_search": true,
+    "ios_search_activity_indicator": true,
+    "native_ios_appointments_segments": true,
+    "salon_gallery_counter_redesign": true,
+    "compact_booking_bottom_bar": true,
+    "central_bottom_navigation_clearance": true,
+    "android_material_fallback_preserved": true,
+    "branch_page_bottom_clearance_audit": true,
+    "booking_route_cleanup": true
+  },
+  "runtime_validation": {
+    "flutter_analyze_run": false,
+    "flutter_tests_run": false,
+    "physical_ios_test_run": false,
+    "reason": "Flutter and Dart executables are unavailable in the patching environment."
+  }
+}

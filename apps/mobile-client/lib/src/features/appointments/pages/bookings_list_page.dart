@@ -25,146 +25,176 @@ class BookingsListPage extends ConsumerWidget {
     final bookingsAsync = ref.watch(bookingsListProvider);
     Future<void> refreshBookings() => ref.refresh(bookingsListProvider.future);
 
-    final innerTabBar = TabBar(
-      indicatorSize: TabBarIndicatorSize.tab,
-      dividerColor: Colors.transparent,
-      splashFactory: NoSplash.splashFactory,
-      overlayColor: WidgetStateProperty.all(Colors.transparent),
-      indicator: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md.r),
-        boxShadow: AppShadows.sm,
-      ),
-      indicatorPadding: EdgeInsets.all(4.r),
-      labelColor: AppColors.onSurface,
-      unselectedLabelColor: AppColors.onSurfaceVariant,
-      labelStyle: AppTextStyles.labelMd,
-      unselectedLabelStyle: AppTextStyles.labelMd,
-      tabs: [
-        Tab(text: AppStrings.bookingsTabUpcoming),
-        Tab(text: AppStrings.bookingsTabPast),
-      ],
-    );
-
     return DefaultTabController(
       length: 2,
       child: AppScaffold(
         backgroundColor: AppColors.neutral,
-        body: NestedScrollView(
-          headerSliverBuilder: (context, _) => [
-            SliverToBoxAdapter(
-              child: Container(
-                color: AppColors.surface,
-                padding: EdgeInsets.fromLTRB(
-                  24.w,
-                  MediaQuery.paddingOf(context).top + 20.h,
-                  24.w,
-                  0,
-                ),
-                child: Text(
-                  AppStrings.bookingsPageHeading,
-                  style: AppTextStyles.headlineMd,
-                ),
+        body: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              color: AppColors.surface,
+              padding: EdgeInsets.fromLTRB(
+                24.w,
+                MediaQuery.paddingOf(context).top + 20.h,
+                20.w,
+                12.h,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.bookingsPageHeading,
+                    style: AppTextStyles.headlineMd,
+                  ),
+                  SizedBox(height: 16.h),
+                  const _AdaptiveBookingsSegments(),
+                ],
               ),
             ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                innerTabBar,
-                extent: innerTabBar.preferredSize.height + 20.h,
+            Expanded(
+              child: AppAsyncView(
+                value: bookingsAsync,
+                keepDataOnReload: true,
+                errorTitle: AppStrings.loadBookingsError,
+                serverTitle: AppStrings.bookingsServerTitle,
+                onRetry: refreshBookings,
+                builder: (resource) {
+                  final all =
+                      resource.data?.items.toList() ??
+                      const <BookingSummaryListResponseItemsInner>[];
+                  final now = DateTime.now();
+                  final upcoming = all
+                      .where(
+                        (b) =>
+                            b.startsAt.isAfter(now) &&
+                            b.status !=
+                                BookingSummaryListResponseItemsInnerStatusEnum
+                                    .cancelled,
+                      )
+                      .toList();
+                  final past = all
+                      .where(
+                        (b) =>
+                            b.startsAt.isBefore(now) ||
+                            b.status ==
+                                BookingSummaryListResponseItemsInnerStatusEnum
+                                    .completed ||
+                            b.status ==
+                                BookingSummaryListResponseItemsInnerStatusEnum
+                                    .cancelled,
+                      )
+                      .toList();
+
+                  return TabBarView(
+                    children: [
+                      _BookingTab(
+                        items: upcoming,
+                        isUpcoming: true,
+                        onRefresh: refreshBookings,
+                        staleAt: resource.isStale ? resource.cachedAt : null,
+                      ),
+                      _BookingTab(
+                        items: past,
+                        isUpcoming: false,
+                        onRefresh: refreshBookings,
+                        staleAt: resource.isStale ? resource.cachedAt : null,
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
-          body: AppAsyncView(
-            value: bookingsAsync,
-            keepDataOnReload: true,
-            errorTitle: AppStrings.loadBookingsError,
-            serverTitle: AppStrings.bookingsServerTitle,
-            onRetry: refreshBookings,
-            builder: (resource) {
-              final all =
-                  resource.data?.items.toList() ??
-                  const <BookingSummaryListResponseItemsInner>[];
-              final now = DateTime.now();
-              final upcoming = all
-                  .where(
-                    (b) =>
-                        b.startsAt.isAfter(now) &&
-                        b.status !=
-                            BookingSummaryListResponseItemsInnerStatusEnum
-                                .cancelled,
-                  )
-                  .toList();
-              final past = all
-                  .where(
-                    (b) =>
-                        b.startsAt.isBefore(now) ||
-                        b.status ==
-                            BookingSummaryListResponseItemsInnerStatusEnum
-                                .completed ||
-                        b.status ==
-                            BookingSummaryListResponseItemsInnerStatusEnum
-                                .cancelled,
-                  )
-                  .toList();
-
-              return TabBarView(
-                children: [
-                  _BookingTab(
-                    items: upcoming,
-                    isUpcoming: true,
-                    onRefresh: refreshBookings,
-                    staleAt: resource.isStale ? resource.cachedAt : null,
-                  ),
-                  _BookingTab(
-                    items: past,
-                    isUpcoming: false,
-                    onRefresh: refreshBookings,
-                    staleAt: resource.isStale ? resource.cachedAt : null,
-                  ),
-                ],
-              );
-            },
-          ),
         ),
       ),
     );
   }
 }
 
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  _TabBarDelegate(this._tabBar, {required this.extent});
-
-  final Widget _tabBar;
-  final double extent;
+class _AdaptiveBookingsSegments extends StatelessWidget {
+  const _AdaptiveBookingsSegments();
 
   @override
-  double get minExtent => extent;
-  @override
-  double get maxExtent => extent;
+  Widget build(BuildContext context) {
+    final controller = DefaultTabController.of(context);
 
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: AppColors.surface,
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppRadius.lg.r),
-        ),
-        child: _tabBar,
-      ),
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final selectedIndex = controller.index;
+        if (Theme.of(context).platform == TargetPlatform.android) {
+          return SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<int>(
+              segments: const [
+                ButtonSegment<int>(
+                  value: 0,
+                  label: Text(AppStrings.bookingsTabUpcoming),
+                  icon: Icon(Icons.upcoming_rounded),
+                ),
+                ButtonSegment<int>(
+                  value: 1,
+                  label: Text(AppStrings.bookingsTabPast),
+                  icon: Icon(Icons.history_rounded),
+                ),
+              ],
+              selected: {selectedIndex},
+              showSelectedIcon: false,
+              onSelectionChanged: (selection) {
+                controller.animateTo(selection.first);
+              },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.comfortable,
+                minimumSize: WidgetStatePropertyAll(Size(0, 48.h)),
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  return states.contains(WidgetState.selected)
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant;
+                }),
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  return states.contains(WidgetState.selected)
+                      ? AppColors.primaryLight
+                      : AppColors.surface;
+                }),
+                side: WidgetStatePropertyAll(
+                  BorderSide(color: AppColors.outlineVariant),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(AppRadius.lg.r),
+          ),
+          child: TabBar(
+            controller: controller,
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            splashFactory: NoSplash.splashFactory,
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
+            indicator: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppRadius.md.r),
+              boxShadow: AppShadows.sm,
+            ),
+            indicatorPadding: EdgeInsets.all(4.r),
+            labelColor: AppColors.onPrimary,
+            unselectedLabelColor: AppColors.onSurfaceVariant,
+            labelStyle: AppTextStyles.labelMd,
+            unselectedLabelStyle: AppTextStyles.labelMd,
+            tabs: const [
+              Tab(text: AppStrings.bookingsTabUpcoming),
+              Tab(text: AppStrings.bookingsTabPast),
+            ],
+          ),
+        );
+      },
     );
   }
-
-  @override
-  bool shouldRebuild(_TabBarDelegate oldDelegate) =>
-      _tabBar != oldDelegate._tabBar;
 }
 
 class _BookingTab extends StatelessWidget {
@@ -191,7 +221,7 @@ class _BookingTab extends StatelessWidget {
             parent: BouncingScrollPhysics(),
           ),
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).padding.bottom + 120.h,
+            bottom: 28.h,
           ),
           children: [
             if (staleAt != null)
@@ -234,7 +264,12 @@ class _BookingTab extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: EdgeInsets.fromLTRB(20.w, 20.w, 20.w, MediaQuery.of(context).padding.bottom + 120.h),
+        padding: EdgeInsets.fromLTRB(
+          20.w,
+          20.w,
+          20.w,
+          28.h,
+        ),
         itemCount: items.length + (staleAt != null ? 1 : 0),
         separatorBuilder: (_, _) => gapH16,
         itemBuilder: (_, i) {
@@ -247,9 +282,11 @@ class _BookingTab extends StatelessWidget {
           final b = items[i];
 
           return AppPressable(
-            onTap: debouncedAction(() => context.push(
-              '${AppRoutes.bookingDetailPath(b.id)}${isUpcoming ? '' : '?past=true'}',
-            )),
+            onTap: debouncedAction(
+              () => context.push(
+                '${AppRoutes.bookingDetailPath(b.id)}${isUpcoming ? '' : '?past=true'}',
+              ),
+            ),
             child: BookingListTile(booking: b, isUpcoming: isUpcoming),
           );
         },

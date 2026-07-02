@@ -21,14 +21,16 @@ abstract final class AppStrings {
   static const signUpCta = "S'inscrire";
   static const alreadyHaveAccount = 'Déjà un compte ?';
   static const continueWithoutAccount = 'Continuer sans compte';
-  static const authTagline = 'Réservez les meilleurs salons\nde beauté autour de vous.';
+  static const authTagline =
+      'Réservez les meilleurs salons\nde beauté autour de vous.';
   static const authVerificationTitle = 'Vérification';
   static const authCreateAccount = 'Créer un compte';
   static const authEmailUppercase = 'EMAIL';
   static const authReceiveCode = 'RECEVOIR LE CODE';
   static const authVerifyCode = 'VÉRIFIER LE CODE';
   static const authConnectCta = 'SE CONNECTER';
-  static const authCode6Digits = 'Un code à 6 chiffres vous a été envoyé par email.';
+  static const authCode6Digits =
+      'Un code à 6 chiffres vous a été envoyé par email.';
   static const authCodeSentTo = 'Code envoyé au ';
   static const authSmsCode = 'Nous vous enverrons un code par SMS.';
   static const authCodeSentSuccess = 'Code OTP envoyé.';
@@ -43,19 +45,25 @@ abstract final class AppStrings {
   static const authInvalidEmail = "Format d'email invalide";
   static const authCodeMustBe6 = 'Le code doit contenir 6 chiffres.';
   static const authInvalidOtp = 'Code incorrect. Vérifiez et réessayez.';
-  static const authOtpLocked = 'Trop de tentatives. Veuillez redemander un code.';
+  static const authOtpLocked =
+      'Trop de tentatives. Veuillez redemander un code.';
   static const authOtpExpired = 'Code expiré. Demandez un nouveau code.';
-  static const authOtpRateLimited = 'Trop de tentatives. Réessayez dans quelques minutes.';
+  static const authOtpRateLimited =
+      'Trop de tentatives. Réessayez dans quelques minutes.';
   static const authSendCodeFailed = 'Envoi du code impossible.';
   static const authVerifyFailed = 'Vérification impossible.';
   static const authLoginFailed = 'Connexion impossible.';
-  static const authEmailAlreadyUsed = 'Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.';
+  static const authEmailAlreadyUsed =
+      'Cet email est déjà utilisé. Connectez-vous avec votre mot de passe.';
   static const authCodeSentEmail = 'Code de vérification envoyé par email.';
-  static const authInvalidPhone = 'Numéro invalide. Veuillez vérifier votre saisie.';
+  static const authInvalidPhone =
+      'Numéro invalide. Veuillez vérifier votre saisie.';
   static const authResendCodePrefix = 'Renvoyer le code dans ';
   static const authResendCodeSuffix = 's';
-  static const authEnterEmailCode = 'Saisissez votre email pour recevoir un code de vérification.';
-  static const authEnterEmailLogin = 'Saisissez votre email pour recevoir un code de connexion.';
+  static const authEnterEmailCode =
+      'Saisissez votre email pour recevoir un code de vérification.';
+  static const authEnterEmailLogin =
+      'Saisissez votre email pour recevoir un code de connexion.';
   static const authCodeSentLogin = 'Code de connexion envoyé par email.';
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -77,13 +85,16 @@ abstract final class AppStrings {
   static const prestigeSection = 'Adresses prestige';
   static const viewAllCta = 'Tout voir';
   static const noSalonTitle = 'Aucun salon disponible';
-  static const noSalonCategorySubtitle = 'Les salons de cette catégorie apparaîtront ici.';
-  static const noSalonNearbySubtitle = 'Les salons proches de vous apparaîtront ici. Revenez bientôt !';
+  static const noSalonCategorySubtitle =
+      'Les salons de cette catégorie apparaîtront ici.';
+  static const noSalonNearbySubtitle =
+      'Les salons proches de vous apparaîtront ici. Revenez bientôt !';
   static const loadingSalons = 'Chargement des salons…';
   static const catalogUnavailable = 'Catalogue indisponible';
   static const catalogUnavailableServer = 'Le catalogue est indisponible';
   static const noFavoritesTitle = 'Aucun favori';
-  static const noFavoritesSubtitle = 'Enregistrez vos salons préférés pour les retrouver ici facilement.';
+  static const noFavoritesSubtitle =
+      'Enregistrez vos salons préférés pour les retrouver ici facilement.';
   static const discoverSalonsCta = 'Découvrir des salons';
   static const loadFavoritesError = 'Impossible de charger vos favoris';
   static const loadFavoritesServer = 'Les favoris sont indisponibles';
@@ -100,14 +111,17 @@ abstract final class AppStrings {
   static const fromPrice = 'À partir de ';
   static const refreshAction = 'Actualiser';
   static const activatePositionTitle = 'Activez votre position';
-  static const activatePositionSubtitle = 'Activez la localisation pour voir les salons près de chez vous.';
+  static const activatePositionSubtitle =
+      'Activez la localisation pour voir les salons près de chez vous.';
+  static const continueAction = 'Continuer';
   static const greetingPrefixDay = 'Bonjour';
   static const greetingPrefixEvening = 'Bonsoir';
   static const greetingSuffix = 'que désirez-vous ?';
 
   // ── Search ────────────────────────────────────────────────────────────────
   static const noResultsFor = 'Aucun résultat pour ';
-  static const noResultsSuggestion = 'Essayez un autre terme, une catégorie, ou élargissez votre recherche.';
+  static const noResultsSuggestion =
+      'Essayez un autre terme, une catégorie, ou élargissez votre recherche.';
   static const didYouMean = 'Vouliez-vous dire: ';
   static const sortLabel = 'Trier';
   static const sortRelevance = 'Pertinence';
@@ -140,6 +154,7 @@ abstract final class AppStrings {
   static const confirmBookingCta = 'Confirmer la réservation';
   static const payDepositCta = "Payer l'acompte";
   static const bookingSuccessTitle = 'Réservation confirmée !';
+  static const bookingPendingVerificationTitle = 'Réservation en attente';
   static const viewBookingCta = 'Voir mon rendez-vous';
   static const slotUnavailable = "Ce créneau n'est plus disponible.";
   static const funnelStepService = 'Prestation';
@@ -150,12 +165,14 @@ abstract final class AppStrings {
   static const funnelAnyStaff = 'Peu importe';
   static const funnelFirstAvailable = 'Premier disponible';
   static const funnelSpecialist = 'Spécialiste';
-  static const funnelResolvingBestStaff = 'Recherche du meilleur prestataire...';
+  static const funnelResolvingBestStaff =
+      'Recherche du meilleur prestataire...';
   static const loadServicesError = 'Impossible de charger les services.';
   static const noServicesAvailable = 'Aucune prestation disponible.';
   static const loadStaffError = "Impossible de charger l'équipe.";
   static const slotChooseServiceFirst = 'Choisissez d\'abord une prestation.';
-  static const loadAvailabilityError = 'Impossible de charger les disponibilités.';
+  static const loadAvailabilityError =
+      'Impossible de charger les disponibilités.';
   static const noSlotsDate = 'Aucun créneau ce jour';
   static const tryAnotherDate = 'Essayez une autre date.';
   static const timeRangeLabel = 'Plage horaire';
@@ -169,17 +186,26 @@ abstract final class AppStrings {
   static const depositToPayNow = 'Acompte à payer maintenant';
   static const remainingOnSite = 'Reste sur place';
   static const remainingToPayOnSite = 'Reste à payer sur place';
-  static const cancellationFree = "Annulation gratuite jusqu'à 24h avant le rendez-vous.";
+  static const cancellationFree =
+      "Annulation gratuite jusqu'à 24h avant le rendez-vous.";
   static const serviceLabel = 'Prestation';
   static const slotNotSet = 'Créneau non défini';
   static const loadConfirmationError = 'Impossible de charger la confirmation';
   static const confirmationServerTitle = 'La confirmation est indisponible';
-  static const depositReceived = 'Votre acompte a bien été reçu. À très vite au salon !';
-  static const bookingConfirmed = 'Votre réservation est confirmée. À très vite au salon !';
+  static const depositReceived =
+      'Votre acompte a bien été reçu. À très vite au salon !';
+  static const bookingConfirmed =
+      'Votre réservation est confirmée. À très vite au salon !';
+  static const bookingPendingVerificationBody =
+      'Votre paiement a été lancé. Nous attendons encore la confirmation de l\'opérateur avant de confirmer le rendez-vous.';
+  static const bookingPendingVerificationDetail =
+      'Nous vous notifierons dès validation. Tant que ce retour n\'arrive pas, le rendez-vous reste en attente.';
   static const shareBookingCta = 'Partager ma réservation';
   static const backToHomeCta = "Retour à l'accueil";
-  static const sessionExpiredMsg = 'Session expirée. Reconnectez-vous pour confirmer la réservation.';
-  static const serverErrorMsg = "Erreur serveur lors de la confirmation. Vérifiez 'Mes rendez-vous' avant de réessayer.";
+  static const sessionExpiredMsg =
+      'Session expirée. Reconnectez-vous pour confirmer la réservation.';
+  static const serverErrorMsg =
+      "Erreur serveur lors de la confirmation. Vérifiez 'Mes rendez-vous' avant de réessayer.";
 
   // ── Booking management ────────────────────────────────────────────────────
   static const bookingsTitle = 'Mes rendez-vous';
@@ -188,14 +214,17 @@ abstract final class AppStrings {
   static const bookingsTabUpcoming = 'À VENIR';
   static const bookingsTabPast = 'PASSÉS';
   static const bookingsEmptyTitle = 'Aucun rendez-vous';
-  static const bookingsEmptySubtitle = 'Vos réservations à venir et passées apparaîtront ici.';
+  static const bookingsEmptySubtitle =
+      'Vos réservations à venir et passées apparaîtront ici.';
   static const loadBookingsError = 'Impossible de charger les rendez-vous';
-  static const bookingsServerTitle = 'Le suivi des rendez-vous est indisponible';
+  static const bookingsServerTitle =
+      'Le suivi des rendez-vous est indisponible';
   static const cancelBookingCta = 'Annuler la réservation';
   static const rescheduleBookingCta = 'Modifier le créneau';
   static const confirmCancelCta = "Confirmer l'annulation";
   static const bookingDetailError = 'Impossible de charger le rendez-vous';
-  static const bookingDetailServer = 'Le détail du rendez-vous est indisponible';
+  static const bookingDetailServer =
+      'Le détail du rendez-vous est indisponible';
   static const whereAndWhen = 'Où et quand';
   static const depositLabel = 'Acompte';
   static const paid = 'Payé';
@@ -213,22 +242,26 @@ abstract final class AppStrings {
   static const no = 'Non';
   static const cancelRdvAction = 'Annuler le rendez-vous';
   static const bookingCancelled = 'Rendez-vous annulé.';
-  static const salonNotFoundOnBooking = 'Salon introuvable. Ouvrez la fiche salon pour réserver.';
+  static const salonNotFoundOnBooking =
+      'Salon introuvable. Ouvrez la fiche salon pour réserver.';
   static const refPrefix = 'Réf. #';
   static const manageBookingTitle = 'Modifier le RDV';
   static const loadBookingInfoError = 'Impossible de charger les informations.';
   static const moveRdv = 'Déplacer le rendez-vous';
-  static const moveRdvSubtitle = 'Changer la date ou l\'heure de votre prestation.';
+  static const moveRdvSubtitle =
+      'Changer la date ou l\'heure de votre prestation.';
   static const missingInfo = 'Informations manquantes.';
   static const cancelRdvSubtitle = 'Si vous ne pouvez plus venir.';
   static const cancelRdvConfirmTitle = 'Annuler le rendez-vous ?';
-  static const cancelRdvConfirmBody = "Cette action est irréversible. Confirmez-vous l'annulation ?";
+  static const cancelRdvConfirmBody =
+      "Cette action est irréversible. Confirmez-vous l'annulation ?";
   static const cancelRdvConfirmLabel = 'Annuler le RDV';
   static const cancelBookingError = "Impossible d'annuler le rendez-vous.";
   static const giveReview = 'Donnez votre avis';
   static const howWasRdv = "Comment s'était ce rendez-vous ?";
   static const tapStarToReview = 'Touchez une étoile pour laisser un avis';
-  static const loadReviewFormError = "Impossible de charger le formulaire d'avis";
+  static const loadReviewFormError =
+      "Impossible de charger le formulaire d'avis";
   static const reviewUnavailable = "L'avis est indisponible";
   static const howWasExperience = "Comment s'est passée\nvotre expérience ?";
   static const shareReviewPrompt = 'Partagez votre avis sur ce rendez-vous.';
@@ -238,7 +271,8 @@ abstract final class AppStrings {
   static const reviewSubmitError = "Impossible de publier l'avis.";
   static const tapStarToRate = 'Touchez une étoile pour noter';
   static const commentOptional = 'Votre commentaire (optionnel)';
-  static const commentShareHint = 'Partagez votre expérience en quelques mots...';
+  static const commentShareHint =
+      'Partagez votre expérience en quelques mots...';
   static const later = 'Plus tard';
   static const neverShowAgain = 'Ne plus afficher';
   static const rating1 = 'Très décevant \u{1F615}';
@@ -246,15 +280,19 @@ abstract final class AppStrings {
   static const rating3 = 'Bien \u{1F642}';
   static const rating4 = 'Très bien \u{1F60A}';
   static const rating5 = 'Excellent ! \u{2728}';
-  static const howWasExperienceInline = "Comment s'est passée votre expérience ?";
+  static const howWasExperienceInline =
+      "Comment s'est passée votre expérience ?";
 
   // ── Onboarding ────────────────────────────────────────────────────────────
   static const onboardingSlide1Title = 'Découvrez les meilleurs salons';
-  static const onboardingSlide1Subtitle = 'Une sélection exclusive de salons de beauté et de bien-être, triés pour vous.';
+  static const onboardingSlide1Subtitle =
+      'Une sélection exclusive de salons de beauté et de bien-être, triés pour vous.';
   static const onboardingSlide2Title = 'Réservez en quelques secondes';
-  static const onboardingSlide2Subtitle = 'Choisissez votre prestation, votre professionnel et votre créneau sans friction.';
+  static const onboardingSlide2Subtitle =
+      'Choisissez votre prestation, votre professionnel et votre créneau sans friction.';
   static const onboardingSlide3Title = "Vivez l'expérience Beauté Avenue";
-  static const onboardingSlide3Subtitle = 'Gérez vos rendez-vous, laissez des avis et fidélisez-vous à vos adresses préférées.';
+  static const onboardingSlide3Subtitle =
+      'Gérez vos rendez-vous, laissez des avis et fidélisez-vous à vos adresses préférées.';
   static const onboardingStartCta = 'COMMENCER';
   static const onboardingNextCta = 'SUIVANT';
   static const onboardingSkip = 'Passer';
@@ -272,9 +310,11 @@ abstract final class AppStrings {
   static const markAllReadCta = 'Tout marquer comme lu';
   static const notificationsEmpty = 'Aucune notification.';
   static const loadProfileError = 'Impossible de charger le profil';
-  static const profileEmptyMessage = 'Connectez-vous pour accéder à votre compte.';
+  static const profileEmptyMessage =
+      'Connectez-vous pour accéder à votre compte.';
   static const cityAutoDetected = 'Ville détectée automatiquement';
-  static const pendingSyncMessage = 'Modifications en attente de synchronisation.';
+  static const pendingSyncMessage =
+      'Modifications en attente de synchronisation.';
   static const sessionClosed = 'Session fermée.';
   static const editProfileTitle = 'Modifier mon profil';
   static const loadOptionsError = 'Impossible de charger les options';
@@ -284,19 +324,23 @@ abstract final class AppStrings {
   static const french = 'Français';
   static const english = 'English';
   static const pushNotifications = 'Notifications push';
-  static const editPushNotificationsSubtitle = 'Rappels et mises à jour de rendez-vous';
+  static const editPushNotificationsSubtitle =
+      'Rappels et mises à jour de rendez-vous';
   static const photoUpdated = 'Photo de profil mise à jour.';
   static const uploadFailed = 'Upload impossible.';
   static const profileSaved = 'Profil enregistré.';
   static const saveFailed = 'Enregistrement impossible.';
   static const fullNameRequired = 'Nom complet requis';
   static const phoneInvalidPrefix = 'Numéro invalide (';
-  static const loadPaymentMethodsError = 'Impossible de charger vos moyens de paiement';
+  static const loadPaymentMethodsError =
+      'Impossible de charger vos moyens de paiement';
   static const paymentMethodsTitle = 'Moyens de paiement';
   static const lastStep = 'Dernière étape';
-  static const lastStepSubtitle = 'Ajoutez un moyen de paiement par défaut pour terminer la configuration de votre compte.';
+  static const lastStepSubtitle =
+      'Ajoutez un moyen de paiement par défaut pour terminer la configuration de votre compte.';
   static const noPaymentMethod = 'Aucun moyen de paiement';
-  static const noPaymentMethodSubtitle = 'Enregistrez un compte mobile money pour simplifier vos réservations.';
+  static const noPaymentMethodSubtitle =
+      'Enregistrez un compte mobile money pour simplifier vos réservations.';
   static const addPhoneNumber = 'Ajouter un numéro';
   static const operatorLabel = 'Opérateur';
   static const editPaymentMethod = 'Modifier le moyen de paiement';
@@ -305,7 +349,8 @@ abstract final class AppStrings {
   static const paymentUpdated = 'Moyen de paiement mis à jour.';
   static const paymentAdded = 'Moyen de paiement ajouté.';
   static const paymentDeleted = 'Moyen de paiement supprimé.';
-  static const paymentDefaultUpdated = 'Moyen de paiement par défaut mis à jour.';
+  static const paymentDefaultUpdated =
+      'Moyen de paiement par défaut mis à jour.';
   static const updateFailed = 'Mise à jour impossible.';
   static const addFailed = 'Ajout impossible.';
   static const deleteFailed = 'Suppression impossible.';
@@ -315,7 +360,8 @@ abstract final class AppStrings {
   static const voucherCopiedPrefix = 'Code "';
   static const voucherCopiedSuffix = '" copié.';
   static const noCodeTitle = 'Aucun code enregistré';
-  static const noCodeSubtitle = 'Entrez un code ci-dessous pour le sauvegarder.';
+  static const noCodeSubtitle =
+      'Entrez un code ci-dessous pour le sauvegarder.';
   static const savedCodesLabel = 'Codes enregistrés';
   static const loadVouchersError = 'Impossible de charger vos codes';
   static const addPromoCodeLabel = 'Ajouter un code promo';
@@ -324,7 +370,8 @@ abstract final class AppStrings {
   static const membershipsTitle = 'Mes abonnements';
   static const loadBenefitsError = 'Impossible de charger vos avantages';
   static const noSubscriptionTitle = 'Aucun abonnement';
-  static const noSubscriptionSubtitle = 'Vos abonnements et packages attribués par les salons apparaîtront ici.';
+  static const noSubscriptionSubtitle =
+      'Vos abonnements et packages attribués par les salons apparaîtront ici.';
   static const membershipLabel = 'Abonnement salon';
   static const packageLabel = 'Package';
   static const statusPaused = 'En pause';
@@ -360,7 +407,8 @@ abstract final class AppStrings {
   static const whoWeAre = 'Qui sommes-nous ?';
   static const frequentlyAskedQuestions = 'Questions fréquentes';
   static const alertsSection = 'Alertes';
-  static const pushNotificationsSubtitle = 'Rappels de rendez-vous, confirmations et alertes salon.';
+  static const pushNotificationsSubtitle =
+      'Rappels de rendez-vous, confirmations et alertes salon.';
   static const savePrefError = 'Impossible de sauvegarder la préférence.';
   static const loadPrefsError = 'Impossible de charger les préférences';
   static const serviceUnavailable = 'Service momentanément indisponible';
@@ -370,14 +418,18 @@ abstract final class AppStrings {
   static const notificationsPageTitle = 'Notifications';
   static const markAllReadCompact = 'Tout marquer lu';
   static const notificationsEmptyTitle = 'Aucune notification';
-  static const notificationsEmptySubtitle = 'Vos rappels et confirmations apparaîtront ici.';
-  static const notificationsLoadError = 'Impossible de charger les notifications';
-  static const notificationsMarkedRead = 'Toutes les notifications sont marquées comme lues.';
+  static const notificationsEmptySubtitle =
+      'Vos rappels et confirmations apparaîtront ici.';
+  static const notificationsLoadError =
+      'Impossible de charger les notifications';
+  static const notificationsMarkedRead =
+      'Toutes les notifications sont marquées comme lues.';
   static const notificationsUpdateFailed = 'Mise à jour impossible.';
 
   // ── Connectivity ──────────────────────────────────────────────────────────
   static const offlineTitle = 'Connexion indisponible';
-  static const offlineSubtitle = 'Certaines informations peuvent être obsolètes.';
+  static const offlineSubtitle =
+      'Certaines informations peuvent être obsolètes.';
   static const recoveryTitle = 'Connexion rétablie';
   static const recoverySubtitle = 'Actualisation des données…';
 
@@ -385,64 +437,83 @@ abstract final class AppStrings {
   static const bootstrapAvatarUpdated = 'Photo de profil mise à jour.';
   static const bootstrapUploadFailed = 'Upload impossible.';
   static const bootstrapTitle = 'Complétez votre profil';
-  static const bootstrapSubtitle = 'Votre nom sera utilisé pour personnaliser vos réservations.';
+  static const bootstrapSubtitle =
+      'Votre nom sera utilisé pour personnaliser vos réservations.';
   static const bootstrapSubmitCta = "Commencer l'aventure";
   static const bootstrapSkip = "Passer pour l'instant";
-  static const bootstrapNameRequired = 'Nom complet requis (2 caractères minimum)';
+  static const bootstrapNameRequired =
+      'Nom complet requis (2 caractères minimum)';
   static const bootstrapFormError = 'Impossible de charger le formulaire';
   static const bootstrapSaveFailed = 'Mise à jour impossible.';
   static const bootstrapPaymentNudgeTitle = 'Réservez en un tap';
-  static const bootstrapPaymentNudgeBody = 'Ajoutez un moyen de paiement maintenant pour réserver sans friction.';
+  static const bootstrapPaymentNudgeBody =
+      'Ajoutez un moyen de paiement maintenant pour réserver sans friction.';
   static const bootstrapPaymentNudgeCta = 'Ajouter un moyen de paiement';
   static const bootstrapLater = 'Plus tard';
 
   // ── Payment (handoff) ─────────────────────────────────────────────────────
   static const paymentHandoffTitle = 'Paiement';
-  static const paymentHandoffSubtitle = 'Sécurisez votre réservation avec un acompte.';
+  static const paymentHandoffSubtitle =
+      'Sécurisez votre réservation avec un acompte.';
   static const paymentDepositSummary = 'Acompte à régler';
   static const paymentMethodLabel = 'Moyen de paiement';
   static const paymentMethodDefault = 'Moyen de paiement';
-  static const paymentMethodsLoadError = 'Impossible de charger les moyens de paiement';
+  static const paymentMethodsLoadError =
+      'Impossible de charger les moyens de paiement';
   static const paymentCardInfo = 'Informations de la carte';
   static const paymentCardName = 'Nom sur la carte';
   static const paymentCardNumber = 'Numéro de carte';
   static const paymentCardExpiryMonth = 'Mois exp. (MM)';
   static const paymentCardExpiryYear = 'Année exp. (YY)';
   static const paymentCardCvc = 'CVC / CVV';
-  static const paymentWallet = 'Portefeuille PayDunya';
+  static const paymentWallet = 'Portefeuille mobile';
   static const paymentWalletIdentifier = 'Numéro de téléphone / Email';
-  static const paymentWalletPassword = 'Mot de passe PayDunya';
+  static const paymentWalletPassword = 'Mot de passe du portefeuille';
   static const paymentInfoTitle = 'Informations de paiement';
   static const paymentPhoneNumber = 'Numéro de téléphone';
   static const paymentFullName = 'Nom complet';
   static const paymentOtpCode = "Code d'autorisation OTP";
-  static const paymentPciDssAccepted = "J'accepte de soumettre mes informations bancaires via PayDunya. Mes données sont chiffrées en transit (TLS) et non stockées sur Beauté Avenue.";
-  static const paymentCardSecureMsg = 'Les données de votre carte sont transmises de manière sécurisée via PayDunya. Elles ne sont pas stockées sur nos serveurs.';
+  static const paymentPciDssAccepted = "J'accepte de transmettre mes informations bancaires de manière sécurisée. Elles ne sont pas stockées par Beauté Avenue.";
+  static const paymentCardSecureMsg = 'Les données de votre carte sont chiffrées pendant la transmission et ne sont pas stockées par Beauté Avenue.';
   static const paymentPayCta = 'Payer';
   static const paymentContinueCta = 'Continuer';
-  static const paymentPciRequired = 'Vous devez accepter les conditions PCI-DSS.';
-  static const paymentCardFieldsRequired = 'Veuillez remplir tous les champs de la carte.';
-  static const paymentWalletFieldsRequired = 'Veuillez remplir vos identifiants PayDunya.';
-  static const paymentPhoneRequired = 'Veuillez saisir votre numéro de téléphone.';
-  static const paymentProfileRequired = 'Ajoutez un numéro de téléphone à votre profil pour payer.';
-  static const paymentReconcileThrottled = 'Réconciliation trop fréquente. Réessayez dans quelques secondes.';
-  static const paymentInvalidStatus = "Cette tentative de paiement n'est plus valide. Relancez le paiement.";
-  static const paymentMissingToken = "Le paiement n'a pas pu être préparé correctement. Réessayez.";
-  static const paymentNotFound = 'Paiement introuvable. Recommencez la réservation ou relancez le paiement.';
+  static const paymentPciRequired =
+      'Vous devez accepter les conditions PCI-DSS.';
+  static const paymentCardFieldsRequired =
+      'Veuillez remplir tous les champs de la carte.';
+  static const paymentWalletFieldsRequired = 'Veuillez remplir les informations de votre portefeuille.';
+  static const paymentPhoneRequired =
+      'Veuillez saisir votre numéro de téléphone.';
+  static const paymentProfileRequired =
+      'Ajoutez un numéro de téléphone à votre profil pour payer.';
+  static const paymentReconcileThrottled =
+      'Réconciliation trop fréquente. Réessayez dans quelques secondes.';
+  static const paymentInvalidStatus =
+      "Cette tentative de paiement n'est plus valide. Relancez le paiement.";
+  static const paymentMissingToken =
+      "Le paiement n'a pas pu être préparé correctement. Réessayez.";
+  static const paymentNotFound =
+      'Paiement introuvable. Recommencez la réservation ou relancez le paiement.';
   static const paymentFailed = 'Échec du paiement.';
   static const paymentInitFailed = 'Échec de la création du paiement.';
-  static const paymentHandoffUnavailable = 'Paiement indisponible pour le moment';
-  static const paymentHandoffServer = 'Le récapitulatif de paiement est indisponible';
-  static const paymentIncompleteProfileTitle = 'Complétez votre profil pour payer';
-  static const paymentIncompleteProfileBody = 'Ajoutez votre nom complet et un moyen de paiement pour finaliser votre réservation.';
+  static const paymentHandoffUnavailable =
+      'Paiement indisponible pour le moment';
+  static const paymentHandoffServer =
+      'Le récapitulatif de paiement est indisponible';
+  static const paymentIncompleteProfileTitle =
+      'Complétez votre profil pour payer';
+  static const paymentIncompleteProfileBody =
+      'Ajoutez votre nom complet et un moyen de paiement pour finaliser votre réservation.';
   static const paymentProfileCta = 'Mon profil';
   static const paymentDjamoCountryLabel = 'Pays du compte Djamo';
   static const paymentWizallCid = 'Échec de la validation Wizall.';
   static const paymentWizallTitle = 'Wizall Sénégal';
   static const paymentUnavailableError = 'Paiement indisponible pour le moment';
-  static const paymentServerError = 'Le récapitulatif de paiement est indisponible';
+  static const paymentServerError =
+      'Le récapitulatif de paiement est indisponible';
   static const paymentOtpValidationTitle = 'Validation OTP';
-  static const paymentOtpValidationBody = 'Saisissez le code de validation reçu par SMS pour valider votre paiement via ';
+  static const paymentOtpValidationBody =
+      'Saisissez le code de validation reçu par SMS pour valider votre paiement via ';
   static const paymentOtpConfirm = 'Confirmer';
   static const paymentOtpCancel = 'Annuler';
   static const paymentReopenFailed = 'Impossible de rouvrir ';
@@ -455,24 +526,53 @@ abstract final class AppStrings {
   static const loading = 'Chargement...';
 
   // ── Payment waiting ───────────────────────────────────────────────────────
-  static const paymentCloseConfirmTitle = 'Avez-vous terminé dans votre application de paiement ?';
-  static const paymentCloseConfirmBody = 'Nous attendrons la confirmation automatique de l\'opérateur. Si vous n\'avez pas terminé, il faudra relancer le paiement.';
-  static const paymentCloseConfirmYes = 'Oui, continuer la vérification';
-  static const paymentCloseConfirmNo = 'Non, annuler';
-  static const paymentBackgroundTitle = 'Vérification en arrière-plan…';
-  static const paymentBackgroundSubtitle = 'Nous vérifions automatiquement. Vous recevrez une notification dès confirmation.';
+  static const paymentCloseConfirmTitle = 'Continuer plus tard ?';
+  static const paymentCloseConfirmBody = 'La vérification continuera en arrière-plan. Vous pourrez reprendre le paiement depuis votre rendez-vous.';
+  static const paymentCloseConfirmYes = 'Continuer plus tard';
+  static const paymentCloseConfirmNo = 'Rester ici';
+  static const paymentCloseConfirmHintTitle = 'Confirmation automatique';
+  static const paymentCloseConfirmHintBody = 'Votre réservation sera confirmée dès que le paiement sera reçu.';
+  static const paymentBackgroundTitle = 'Suivi du paiement';
+  static const paymentBackgroundSubtitle = 'Nous vous préviendrons dès que le paiement sera confirmé.';
   static const paymentVerificationInProgress = 'Vérification en cours';
   static const paymentCheckFailedTitle = 'Paiement non confirmé';
-  static const paymentCheckFailedSubtitle = 'Nous n\'avons pas pu confirmer votre paiement après plusieurs tentatives.';
-  static const paymentCheckFailedAction = 'Si vous avez payé, contactez notre support ou réessayez.';
-  static const paymentRetry = 'Vérifier à nouveau';
+  static const paymentCheckFailedSubtitle =
+      'Nous n\'avons pas pu confirmer l\'acompte. Le rendez-vous reste en attente tant que le paiement n\'est pas validé.';
+  static const paymentCheckFailedAction =
+      'Si vous avez payé, contactez notre support. Sinon, relancez le paiement pour finaliser la réservation.';
+  static const paymentWaitingTitle = 'Paiement en attente';
+  static const paymentWaitingBody = 'Terminez le paiement dans votre application, puis revenez ici.';
+  static const paymentWaitingOperatorBadge = 'Paiement sécurisé';
+  static const paymentPendingTitle = 'Toujours en attente';
+  static const paymentPendingBody = 'Le paiement n\'est pas encore confirmé. Vous pouvez le reprendre ou vérifier à nouveau.';
+  static const paymentPendingBookingBadge = 'Réservation en attente';
+  static const paymentPendingBookingBody = 'Nous attendons la confirmation de votre acompte. Le rendez-vous sera confirmé dès réception.';
+  static const paymentRetryBookingTitle = 'Finaliser votre acompte';
+  static const paymentRetryBookingBody =
+      'Votre créneau reste réservé tant que la réservation est en attente. Relancez ou vérifiez le paiement avant qu\'il n\'expire.';
+  static const paymentRetryBookingCta = 'Reprendre le paiement';
+  static const paymentVerifyBookingCta = 'Vérifier le paiement';
+  static const paymentNetworkLostTitle = 'Vérification interrompue';
+  static const paymentNetworkLostBody = 'Vérifiez votre connexion, puis réessayez.';
+  static const paymentVerificationHintTitle = 'Confirmation automatique';
+  static const paymentVerificationHintBody = 'La confirmation peut prendre quelques instants après votre validation.';
+  static const paymentReturnToPayment = 'Vous pourrez reprendre le paiement depuis votre rendez-vous.';
+  static const paymentRetry = 'Vérifier maintenant';
+  static const paymentReopen = 'Revenir au paiement';
+  static const paymentRestart = 'Relancer le paiement';
+  static const paymentCloseAndContinue = 'Continuer plus tard';
+  static const paymentViewStatus = 'Suivre le paiement';
   static const paymentContactSupport = 'Contacter le support';
   static const paymentConfirmedNotifTitle = 'Paiement confirmé !';
   static const paymentConfirmedNotifBody = 'Votre réservation est confirmée.';
+  static const paymentFailedNotifTitle = 'Paiement à reprendre';
+  static const paymentFailedNotifBody =
+      'Nous n\'avons pas confirmé votre acompte. Votre réservation reste en attente.';
   static const paymentSupportSubject = 'Problème de paiement - Réservation';
-  static const paymentSupportBody = 'Bonjour, je n\'arrive pas à confirmer mon paiement pour la réservation ';
-  static const paymentBackgroundBanner = 'Vérification en arrière-plan…';
-  static const paymentBackgroundBannerSub = 'Vous recevrez une notification dès confirmation.';
+  static const paymentSupportBody =
+      'Bonjour, je n\'arrive pas à confirmer mon paiement pour la réservation ';
+  static const paymentBackgroundBanner = 'Paiement en attente';
+  static const paymentBackgroundBannerSub = 'Nous vous préviendrons dès qu’il sera confirmé.';
   static const errorGeneric = 'Une erreur est survenue.';
   static const offlineBanner =
       'Vous êtes hors ligne. Certaines données peuvent être obsolètes.';

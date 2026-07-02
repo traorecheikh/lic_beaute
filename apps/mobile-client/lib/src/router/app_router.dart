@@ -1,10 +1,14 @@
+import 'package:cupertino_native_better/components/tab_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
 
+import '../core/platform/ios_version.dart';
 import '../core/session/session_store.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/app_button.dart';
 import '../core/widgets/app_icon.dart';
 import '../core/widgets/app_scaffold.dart';
 import '../core/widgets/app_top_bar.dart';
@@ -42,6 +46,7 @@ import '../features/profile/pages/about_page.dart';
 import '../features/profile/pages/faq_page.dart';
 import 'guards.dart';
 import 'listenable.dart';
+import 'navigation_debug.dart';
 import 'shell_scaffold.dart';
 import 'splash_page.dart';
 
@@ -114,12 +119,42 @@ abstract final class AppRoutes {
 
 // ── Provider ──────────────────────────────────────────────────────────────
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNav');
+final _discoverNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'discoverBranchNav',
+);
+final _bookingsNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'bookingsBranchNav',
+);
+final _profileNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'profileBranchNav',
+);
+final _shellRouteKey = GlobalKey<StatefulNavigationShellState>(
+  debugLabel: 'mainShell',
+);
+
 final routerProvider = Provider<GoRouter>((ref) {
   final sessionListenable = SessionListenable(ref);
+  late final GoRouter router;
+  String currentUri() => router.routeInformationProvider.value.uri.toString();
+  int? currentBranchIndex() => _shellRouteKey.currentState?.currentIndex;
 
-  return GoRouter(
+  router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: sessionListenable,
+    debugLogDiagnostics: !kReleaseMode,
+    observers: [
+      // Required for correct z-ordering of native Liquid Glass platform views
+      // (CNTabBar, CNButton.icon, CNSearchBar) — prevents glass bleeding
+      // through modals, dialogs, and sheets on iOS 26+.
+      if (IOSVersion.supportsNativeGlass) CNTabBarRouteObserver(),
+      LoggingNavigatorObserver(
+        navigatorName: 'root',
+        currentUri: currentUri,
+        selectedBranchIndex: currentBranchIndex,
+      ),
+    ],
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final location = state.matchedLocation;
@@ -171,66 +206,122 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ── Main shell (bottom nav) ───────────────────────────────────────────
-      ShellRoute(
-        builder: (context, state, child) => ShellScaffold(child: child),
-        routes: [
-          GoRoute(
-            path: AppRoutes.home,
-            builder: (_, _) => const HomePage(),
-            routes: [
-              GoRoute(path: 'search', builder: (_, _) => const SearchPage()),
-              GoRoute(
-                path: 'favorites',
-                builder: (_, _) => const FavoritesPage(),
+      StatefulShellRoute.indexedStack(
+        key: _shellRouteKey,
+        notifyRootObserver: false,
+        builder: (context, state, navigationShell) =>
+            ShellScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            navigatorKey: _discoverNavigatorKey,
+            observers: [
+              if (IOSVersion.supportsNativeGlass) CNTabBarRouteObserver(),
+              LoggingNavigatorObserver(
+                navigatorName: 'branch-discover',
+                currentUri: currentUri,
+                selectedBranchIndex: currentBranchIndex,
               ),
             ],
-          ),
-          GoRoute(
-            path: AppRoutes.bookingsList,
-            builder: (_, _) => const BookingsListPage(),
             routes: [
               GoRoute(
-                path: ':bookingId',
-                builder: (_, state) => BookingDetailPage(
-                  bookingId: state.pathParameters['bookingId']!,
-                  isPast: state.uri.queryParameters['past'] == 'true',
-                ),
+                path: AppRoutes.home,
+                builder: (_, _) => const HomePage(),
                 routes: [
                   GoRoute(
-                    path: 'manage',
-                    builder: (_, state) => BookingManagePage(
-                      bookingId: state.pathParameters['bookingId']!,
+                    path: 'search',
+                    builder: (_, state) => SearchPage(
+                      initialQuery: state.uri.queryParameters['q'],
+                      openFilters:
+                          state.uri.queryParameters['openFilters'] == '1',
                     ),
+                  ),
+                  GoRoute(
+                    path: 'favorites',
+                    builder: (_, _) => const FavoritesPage(),
                   ),
                 ],
               ),
             ],
           ),
-          GoRoute(
-            path: AppRoutes.profile,
-            builder: (_, _) => const ProfilePage(),
+          StatefulShellBranch(
+            navigatorKey: _bookingsNavigatorKey,
+            observers: [
+              if (IOSVersion.supportsNativeGlass) CNTabBarRouteObserver(),
+              LoggingNavigatorObserver(
+                navigatorName: 'branch-bookings',
+                currentUri: currentUri,
+                selectedBranchIndex: currentBranchIndex,
+              ),
+            ],
             routes: [
-              GoRoute(path: 'edit', builder: (_, _) => const EditProfilePage()),
               GoRoute(
-                path: 'notification-preferences',
-                builder: (_, _) => const NotificationPreferencesPage(),
+                path: AppRoutes.bookingsList,
+                builder: (_, _) => const BookingsListPage(),
+                routes: [
+                  GoRoute(
+                    path: ':bookingId',
+                    builder: (_, state) => BookingDetailPage(
+                      bookingId: state.pathParameters['bookingId']!,
+                      isPast: state.uri.queryParameters['past'] == 'true',
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'manage',
+                        builder: (_, state) => BookingManagePage(
+                          bookingId: state.pathParameters['bookingId']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _profileNavigatorKey,
+            observers: [
+              if (IOSVersion.supportsNativeGlass) CNTabBarRouteObserver(),
+              LoggingNavigatorObserver(
+                navigatorName: 'branch-profile',
+                currentUri: currentUri,
+                selectedBranchIndex: currentBranchIndex,
+              ),
+            ],
+            routes: [
               GoRoute(
-                path: 'payment-methods',
-                builder: (_, state) => PaymentMethodsPage(
-                  requiredSetup: state.uri.queryParameters['required'] == '1',
-                  nextRoute:
-                      state.uri.queryParameters['next'] ?? AppRoutes.home,
-                ),
+                path: AppRoutes.profile,
+                builder: (_, _) => const ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, _) => const EditProfilePage(),
+                  ),
+                  GoRoute(
+                    path: 'notification-preferences',
+                    builder: (_, _) => const NotificationPreferencesPage(),
+                  ),
+                  GoRoute(
+                    path: 'payment-methods',
+                    builder: (_, state) => PaymentMethodsPage(
+                      requiredSetup:
+                          state.uri.queryParameters['required'] == '1',
+                      nextRoute:
+                          state.uri.queryParameters['next'] ?? AppRoutes.home,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'memberships',
+                    builder: (_, _) => const MembershipsPage(),
+                  ),
+                  GoRoute(
+                    path: 'support',
+                    builder: (_, _) => const SupportPage(),
+                  ),
+                  GoRoute(path: 'legal', builder: (_, _) => const LegalPage()),
+                  GoRoute(path: 'about', builder: (_, _) => const AboutPage()),
+                  GoRoute(path: 'faq', builder: (_, _) => const FaqPage()),
+                ],
               ),
-              GoRoute(
-                path: 'memberships',
-                builder: (_, _) => const MembershipsPage(),
-              ),
-              GoRoute(path: 'support', builder: (_, _) => const SupportPage()),
-              GoRoute(path: 'legal', builder: (_, _) => const LegalPage()),
-              GoRoute(path: 'about', builder: (_, _) => const AboutPage()),
-              GoRoute(path: 'faq', builder: (_, _) => const FaqPage()),
             ],
           ),
         ],
@@ -360,6 +451,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  return router;
 });
 
 class BookingRouteErrorPage extends StatelessWidget {
@@ -402,25 +495,9 @@ class BookingRouteErrorPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 24.h),
-              FilledButton(
+              AppButton.primary(
+                label: "Retour à l'accueil",
                 onPressed: () => GoRouter.of(context).go(AppRoutes.home),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 32.w,
-                    vertical: 14.h,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                ),
-                child: Text(
-                  "Retour à l'accueil",
-                  style: AppTextStyles.labelLg.copyWith(
-                    color: AppColors.onPrimary,
-                  ),
-                ),
               ),
             ],
           ),

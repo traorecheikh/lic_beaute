@@ -1,7 +1,7 @@
 name: beauteavenue_mobile_client
 description: Client mobile app for Beauté Avenue.
 publish_to: none
-version: 0.5.6
+version: 1.0.0+2
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -14,9 +14,6 @@ dependencies:
 
   # Toast notifications
   toastification: ^3.2.0
-
-  # iOS Liquid Glass navigation (exploratory)
-  liquid_glass_widgets: ^0.17.1
 
   # Splash screens
   flutter_native_splash: 2.4.7
@@ -84,6 +81,9 @@ dependencies:
   # SVG icon rendering
   flutter_svg: ^2.2.4
 
+  # Native iOS 26+ Liquid Glass widgets (platform views)
+  cupertino_native_better: ^1.5.1
+
   # Native share sheet (iOS + Android)
   share_plus: ^12.0.2
 
@@ -106,6 +106,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
@@ -114,15 +116,6 @@ dev_dependencies:
   riverpod_lint: ^3.1.0
   custom_lint: ^0.8.1
   hive_ce_generator: ^1.8.0
-
-  patrol: ^4.6.0
-
-patrol:
-  app_name: Beauté Avenue
-  android:
-    package_name: sn.numuconnect.beauteavenue
-  ios:
-    bundle_id: sn.numuconnect.beauteavenue
 
 flutter_launcher_icons:
   image_path: "assets/logo_foreground.png"
@@ -141,6 +134,8 @@ flutter_native_splash:
     image: "assets/logo.png"
 
 flutter:
+  config:
+    enable-swift-package-manager: true
   uses-material-design: true
   assets:
     - .env

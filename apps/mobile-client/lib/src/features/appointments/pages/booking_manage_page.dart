@@ -41,7 +41,7 @@ class BookingManagePage extends ConsumerWidget {
           final serviceId = detail?.serviceId ?? '';
 
           return Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, MediaQuery.of(context).padding.bottom + 120.h),
+            padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, 28.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

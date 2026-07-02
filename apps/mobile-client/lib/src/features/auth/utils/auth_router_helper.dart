@@ -14,12 +14,8 @@ String resolvePostAuthRoute({
   required int paymentMethodCount,
   String fallbackRoute = AppRoutes.home,
 }) {
-  if (needsProfileBootstrap(fullName)) {
-    return AppRoutes.profileBootstrapSetup(next: fallbackRoute);
-  }
-  if (needsPaymentMethodSetup(paymentMethodCount)) {
-    return AppRoutes.profilePaymentsSetup(next: fallbackRoute);
-  }
+  // Keep app access unblocked after authentication. Profile and payment setup
+  // are now enforced contextually inside flows that genuinely require them.
   return fallbackRoute;
 }
 

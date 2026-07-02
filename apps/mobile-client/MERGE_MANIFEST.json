@@ -1,0 +1,45 @@
+{
+  "base_project": "Archive.zip",
+  "fix_archive": "BeauteAvenue_payment_ios_ux_fix.zip",
+  "common_ancestor": "BeauteAvenue_platform_adaptive_glass_search.zip",
+  "strategy": "three-way, current project as destination",
+  "custom_merged": [
+    "lib/src/core/constants/app_strings.dart"
+  ],
+  "applied_from_fix": [
+    "lib/src/core/widgets/app_back_button.dart",
+    "lib/src/core/widgets/app_button.dart",
+    "lib/src/core/widgets/app_dialog.dart",
+    "lib/src/features/booking/pages/payment_handoff_page.dart",
+    "lib/src/features/booking/paydunya_launch.dart",
+    "lib/src/features/booking/utils/payment_error_handler.dart",
+    "lib/src/features/booking/widgets/method_tile.dart",
+    "lib/src/features/booking/widgets/payment_card_form.dart",
+    "lib/src/features/booking/widgets/payment_waiting_sheet.dart",
+    "lib/src/features/discovery/widgets/salon_detail_buttons.dart",
+    "lib/src/features/profile/pages/payment_methods_page.dart",
+    "lib/src/features/profile/pages/profile_page.dart",
+    "lib/src/features/profile/widgets/payment_method_sheet.dart",
+    "lib/src/features/profile/widgets/payment_tile.dart",
+    "test/core/widgets/app_button_test.dart",
+    "test/src/features/booking/paydunya_launch_test.dart"
+  ],
+  "preserved_from_current": [
+    "pubspec.yaml",
+    "lib/src/core/widgets/android_material_nav_bar.dart",
+    "ios/Runner.xcodeproj/project.pbxproj",
+    "all other iOS project/build files"
+  ],
+  "already_equivalent_in_current": [
+    "lib/src/core/theme/app_theme.dart",
+    "lib/src/router/shell_scaffold.dart"
+  ],
+  "validation": {
+    "merge_markers": 0,
+    "balanced_modified_dart_files": 17,
+    "duplicate_app_strings": 0,
+    "missing_relative_imports": 0,
+    "flutter_analyze_run": false,
+    "flutter_tests_run": false
+  }
+}

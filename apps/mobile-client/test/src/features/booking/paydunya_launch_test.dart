@@ -90,7 +90,7 @@ void main() {
       expect(paydunyaLaunchLabel('https://pay.wave.com/c/abc'), 'Wave');
       expect(
         paydunyaLaunchLabel('https://app.paydunya.com/recharge-orange-sn?token=abc'),
-        'la page PayDunya',
+        'la page de paiement',
       );
     });
 
@@ -101,26 +101,26 @@ void main() {
       );
       expect(
         paydunyaLaunchLabel('HTTPS://APP.PAYDUNYA.COM/test'),
-        'la page PayDunya',
+        'la page de paiement',
       );
     });
 
     test('returns generic label for unknown urls', () {
-      expect(paydunyaLaunchLabel('https://unknown-payment.com/test'), 'le moyen de paiement');
+      expect(paydunyaLaunchLabel('https://unknown-payment.com/test'), 'l’application de paiement');
     });
 
     test('handles null input', () {
-      expect(paydunyaLaunchLabel(null), 'le moyen de paiement');
+      expect(paydunyaLaunchLabel(null), 'l’application de paiement');
     });
 
     test('handles empty string', () {
-      expect(paydunyaLaunchLabel(''), 'le moyen de paiement');
+      expect(paydunyaLaunchLabel(''), 'l’application de paiement');
     });
 
     test('matches paydunya.com without subdomain', () {
       expect(
         paydunyaLaunchLabel('https://paydunya.com/recharge'),
-        'la page PayDunya',
+        'la page de paiement',
       );
     });
   });

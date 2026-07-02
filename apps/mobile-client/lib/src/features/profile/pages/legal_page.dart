@@ -39,7 +39,7 @@ class LegalPage extends ConsumerWidget {
     return AppScaffold(
       appBar: AppTopBar(title: AppStrings.legalTitle, showBackButton: true),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, MediaQuery.of(context).padding.bottom + 120.h),
+        padding: EdgeInsets.fromLTRB(24.w, 24.w, 24.w, 28.h),
         children: [
           ..._documents.map(
             (doc) => _buildLegalTile(context, doc.title, doc.url),

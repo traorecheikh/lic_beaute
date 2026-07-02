@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../constants/app_strings.dart';
+import '../diagnostics/app_runtime_diagnostics.dart';
 import '../reactivity/app_reactivity.dart';
 import '../network/connectivity_provider.dart';
 import '../sync/app_outbox.dart';
@@ -29,6 +30,7 @@ class _AppConnectivityRecoveryState
     Future<void>.microtask(() => ref.read(outboxProvider.notifier).flush());
     ref.listenManual<bool>(isOnlineProvider, (previous, next) {
       if (previous == false && next == true) {
+        AppRuntimeDiagnostics.logLifecycle('connectivity recovered');
         _showRecoveryCue();
         ref.read(outboxProvider.notifier).flush();
         ref.read(appReactivityProvider).refreshAll();
@@ -54,7 +56,9 @@ class _AppConnectivityRecoveryState
               decoration: BoxDecoration(
                 color: AppColors.successContainer.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(18.r),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.25),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.black.withValues(alpha: 0.08),

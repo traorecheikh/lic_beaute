@@ -1,0 +1,20 @@
+{
+  "base_archive": "BeauteAvenue_search_nav_layout_consistency_fix.zip",
+  "changed_files": [
+    {
+      "path": "lib/src/features/appointments/pages/bookings_list_page.dart",
+      "sha256": "e75426362831767f347039d1a1bb57a84b2fc4e19154ea57e97891992578a248",
+      "size": 11156
+    },
+    {
+      "path": "test/src/features/appointments/bookings_list_layout_test.dart",
+      "sha256": "468a04e75236fc554066e765a6f21635ee898cb054ea38321f5e732d5a5e1248",
+      "size": 1752
+    },
+    {
+      "path": "SLIVER_HEADER_CRASH_FIX.md",
+      "sha256": "c4ae456b83c3aa0df29f9409ce12005423feffa4c9eb2a382792a68969c2b8c2",
+      "size": 1967
+    }
+  ]
+}

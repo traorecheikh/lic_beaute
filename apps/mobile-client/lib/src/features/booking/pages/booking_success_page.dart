@@ -77,6 +77,8 @@ class _BookingSuccessPageState extends ConsumerState<BookingSuccessPage>
               fade: _fade,
               staleAt: resource.isStale ? resource.cachedAt : null,
               hasDeposit: (resource.depositXof ?? 0) > 0,
+              bookingStatus: resource.status,
+              depositPaymentStatus: resource.depositPaymentStatus,
             ),
           ),
         ];
@@ -96,6 +98,8 @@ class _SuccessBody extends StatelessWidget {
     required this.fade,
     required this.staleAt,
     required this.hasDeposit,
+    required this.bookingStatus,
+    required this.depositPaymentStatus,
   });
 
   final GlobalKey shareKey;
@@ -103,9 +107,28 @@ class _SuccessBody extends StatelessWidget {
   final Animation<double> scale, fade;
   final DateTime? staleAt;
   final bool hasDeposit;
+  final String bookingStatus;
+  final String depositPaymentStatus;
 
   @override
   Widget build(BuildContext context) {
+    final isPendingVerification =
+        bookingStatus == 'pending' && depositPaymentStatus == 'authorized';
+    final heroBg = isPendingVerification
+        ? AppColors.warningContainer
+        : AppColors.successContainer;
+    final heroIcon = isPendingVerification ? 'clock' : 'check';
+    final heroIconColor = isPendingVerification
+        ? AppColors.warning
+        : AppColors.success;
+    final title = isPendingVerification
+        ? AppStrings.bookingPendingVerificationTitle
+        : AppStrings.bookingSuccessTitle;
+    final subtitle = isPendingVerification
+        ? AppStrings.bookingPendingVerificationBody
+        : (hasDeposit
+              ? AppStrings.depositReceived
+              : AppStrings.bookingConfirmed);
     return Stack(
       children: [
         // Off-screen share card (pre-rendered via RepaintBoundary)
@@ -135,12 +158,12 @@ class _SuccessBody extends StatelessWidget {
                 child: Container(
                   width: 100.r,
                   height: 100.r,
-                  decoration: const BoxDecoration(
-                    color: AppColors.successContainer,
+                  decoration: BoxDecoration(
+                    color: heroBg,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: AppIcon('check', size: 48, color: AppColors.success),
+                    child: AppIcon(heroIcon, size: 48, color: heroIconColor),
                   ),
                 ),
               ),
@@ -154,20 +177,34 @@ class _SuccessBody extends StatelessWidget {
                       SizedBox(height: 20.h),
                     ],
                     Text(
-                      AppStrings.bookingSuccessTitle,
+                      title,
                       style: AppTextStyles.displaySm,
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      hasDeposit
-                          ? AppStrings.depositReceived
-                          : AppStrings.bookingConfirmed,
+                      subtitle,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    if (isPendingVerification) ...[
+                      SizedBox(height: 12.h),
+                      Container(
+                        padding: EdgeInsets.all(14.r),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(AppRadius.lg.r),
+                          border: Border.all(color: AppColors.outlineVariant),
+                        ),
+                        child: Text(
+                          AppStrings.bookingPendingVerificationDetail,
+                          style: AppTextStyles.bodySm,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

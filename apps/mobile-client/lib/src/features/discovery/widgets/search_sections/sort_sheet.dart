@@ -1,3 +1,4 @@
+import 'package:cupertino_native_better/components/bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:beauteavenue_mobile_client/src/core/constants/app_strings.dart';
@@ -21,13 +22,15 @@ class SearchSortSheet extends StatelessWidget {
   }) {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: SearchSortSheet(
-          currentSort: currentSort,
-          onSortSelected: (sort) {
-            onSortSelected(sort);
-            Navigator.pop(ctx);
-          },
+      builder: (ctx) => CNSheetGeometryProbe(
+        child: SafeArea(
+          child: SearchSortSheet(
+            currentSort: currentSort,
+            onSortSelected: (sort) {
+              onSortSelected(sort);
+              Navigator.pop(ctx);
+            },
+          ),
         ),
       ),
     );

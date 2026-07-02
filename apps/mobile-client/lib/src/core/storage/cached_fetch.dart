@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../diagnostics/app_runtime_diagnostics.dart';
 import '../network/dio_exception_utils.dart';
 import 'app_model_cache.dart';
 
@@ -12,11 +13,17 @@ Future<List<T>> fetchCachedItemList<T>({
   required String cacheKey,
   required JsonDecoder<T> fromJson,
   bool fallbackOnAnyError = false,
+  String? initiator,
 }) async {
   final cached = AppModelCache.getMap(boxName, cacheKey);
   List<dynamic> items;
   try {
-    final response = await dio.get<Map<String, dynamic>>(path);
+    final response = await (initiator == null
+        ? dio.get<Map<String, dynamic>>(path)
+        : AppRuntimeDiagnostics.runWithInitiator(
+            initiator,
+            () => dio.get<Map<String, dynamic>>(path),
+          ));
     final payload = response.data ?? const <String, dynamic>{'items': []};
     await AppModelCache.putMap(boxName, cacheKey, payload);
     items = (payload['items'] as List<dynamic>?) ?? const [];
@@ -24,9 +31,11 @@ Future<List<T>> fetchCachedItemList<T>({
     if (!fallbackOnAnyError && !isConnectionLikeDioException(error)) {
       rethrow;
     }
+    AppRuntimeDiagnostics.markCacheHit('GET', path, const <String, dynamic>{});
     items = (cached?['items'] as List<dynamic>?) ?? const [];
   } catch (_) {
     if (!fallbackOnAnyError) rethrow;
+    AppRuntimeDiagnostics.markCacheHit('GET', path, const <String, dynamic>{});
     items = (cached?['items'] as List<dynamic>?) ?? const [];
   }
 

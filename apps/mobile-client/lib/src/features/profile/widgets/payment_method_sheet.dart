@@ -4,10 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_phone_field.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/providers/supported_countries_provider.dart';
 import '../../booking/providers/payment_methods_provider.dart'
     as booking_payment_methods;
@@ -181,12 +181,14 @@ class _PaymentMethodSheetContentState
           ),
         );
       }
-    } catch (error) {
+    } catch (_) {
       setState(() => _saving = false);
       if (context.mounted) {
-        await context.handleHttpError(
-          error,
-          widget.isEdit ? 'Mise à jour impossible.' : 'Ajout impossible.',
+        AppSnackbar.error(
+          context,
+          widget.isEdit
+              ? 'Mise à jour impossible pour le moment.'
+              : 'Ajout impossible pour le moment.',
         );
       }
     }
@@ -202,7 +204,15 @@ class _PaymentMethodSheetContentState
         enabled: true,
       ),
     );
-    return matched.label;
+    return _displayChannelLabel(matched);
+  }
+
+  String _displayChannelLabel(
+    booking_payment_methods.PaydunyaMethodRecord item,
+  ) {
+    return item.label.toLowerCase().contains('paydunya')
+        ? 'Portefeuille mobile'
+        : item.label;
   }
 
   String? _resolveChannelCountry() {
@@ -257,9 +267,9 @@ class _PaymentMethodSheetContentState
                 label: widget.isEdit ? 'Opérateur' : AppStrings.operatorLabel,
                 value: _selectedChannel,
                 items: widget.channelItems.map((item) => item.code).toList(),
-                itemLabel: (value) => widget.channelItems
-                    .firstWhere((item) => item.code == value)
-                    .label,
+                itemLabel: (value) => _displayChannelLabel(
+                  widget.channelItems.firstWhere((item) => item.code == value),
+                ),
                 onChanged: widget.isEdit
                     ? (val) {
                         setState(() {
@@ -276,8 +286,8 @@ class _PaymentMethodSheetContentState
                           final currentLabel = _labelController.text.trim();
                           if (prevMethod != null && newMethod != null) {
                             if (currentLabel.isEmpty ||
-                                currentLabel == prevMethod.label) {
-                              _labelController.text = newMethod.label;
+                                currentLabel == _displayChannelLabel(prevMethod)) {
+                              _labelController.text = _displayChannelLabel(newMethod);
                             }
                           }
                         });

@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/diagnostics/app_runtime_diagnostics.dart';
+import '../../../core/platform/ios_version.dart';
 import '../../../core/session/session_store.dart';
 import '../../../core/sync/app_outbox.dart';
 import '../../../core/theme/app_colors.dart';
@@ -12,11 +14,13 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/debounced_action.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pressable.dart';
 import '../../../core/widgets/app_resource_view.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_snackbar.dart';
+import '../../../core/widgets/ios_native_icon_button.dart';
 import '../../../router/app_router.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/location/location_service.dart';
@@ -99,15 +103,9 @@ class ProfilePage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          AppPressable(
-                            onTap: debouncedAction(() => context.push(AppRoutes.profileEdit)),
-                            child: Padding(
-                              padding: EdgeInsets.all(12.r),
-                              child: AppIcon(
-                                'edit',
-                                size: 20,
-                                color: AppColors.onSurfaceVariant,
-                              ),
+                          _ProfileEditButton(
+                            onPressed: debouncedAction(
+                              () => context.push(AppRoutes.profileEdit),
                             ),
                           ),
                         ],
@@ -216,7 +214,7 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 100.h),
+                    SizedBox(height: 28.h),
                   ]),
                 ),
               ),
@@ -231,32 +229,24 @@ class ProfilePage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Supprimer mon compte'),
-          content: const Text(
-            'Cette action supprime votre compte client sur cet appareil et vos données personnelles. Cette action est définitive.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Annuler'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
-              ),
-              child: const Text('Supprimer'),
-            ),
-          ],
-        );
-      },
+    bool confirmed = false;
+    await AppDialog.show<void>(
+      context,
+      title: 'Supprimer mon compte ?',
+      body:
+          'Vos données personnelles et votre accès seront supprimés définitivement.',
+      barrierDismissible: false,
+      actions: [
+        AppDialogAction(label: 'Conserver mon compte', onPressed: () {}),
+        AppDialogAction(
+          label: 'Supprimer définitivement',
+          isDestructive: true,
+          onPressed: () => confirmed = true,
+        ),
+      ],
     );
 
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     try {
       final dio = ref.read(dioProvider);
@@ -269,6 +259,55 @@ class ProfilePage extends ConsumerWidget {
       if (!context.mounted) return;
       AppSnackbar.error(context, 'Suppression impossible pour le moment.');
     }
+  }
+}
+
+class _ProfileEditButton extends StatelessWidget {
+  const _ProfileEditButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final useNativeIOSControl =
+        IOSVersion.supportsNativeGlass &&
+        (AppRuntimeDiagnostics.config.enableIOSNativeGlass ||
+            AppRuntimeDiagnostics.config.enableIOSNativeIconButtons);
+
+    if (useNativeIOSControl) {
+      return IOSNativeIconButton(
+        iconName: 'edit',
+        foregroundColor: AppColors.onSurface,
+        tintColor: AppColors.surfaceVariant.withValues(alpha: 0.62),
+        semanticLabel: 'Modifier le profil',
+        onPressed: onPressed,
+      );
+    }
+
+    if (Theme.of(context).platform == TargetPlatform.android) {
+      return IconButton.filledTonal(
+        onPressed: onPressed,
+        tooltip: 'Modifier le profil',
+        style: IconButton.styleFrom(
+          minimumSize: Size.square(48.r),
+          foregroundColor: AppColors.onSurfaceVariant,
+          backgroundColor: AppColors.surfaceVariant,
+        ),
+        icon: const Icon(Icons.edit_rounded),
+      );
+    }
+
+    return AppPressable(
+      onTap: onPressed,
+      child: Padding(
+        padding: EdgeInsets.all(12.r),
+        child: AppIcon(
+          'edit',
+          size: 20,
+          color: AppColors.onSurfaceVariant,
+        ),
+      ),
+    );
   }
 }
 

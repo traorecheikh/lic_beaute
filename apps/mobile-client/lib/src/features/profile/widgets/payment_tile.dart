@@ -28,8 +28,10 @@ class PaymentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final channel = _resolveChannel(method.provider, method.method, method.label);
-    final title = (method.label != null && method.label!.trim().isNotEmpty)
-        ? method.label!.trim()
+    final savedLabel = method.label?.trim() ?? '';
+    final title = savedLabel.isNotEmpty &&
+            !savedLabel.toLowerCase().contains('paydunya')
+        ? savedLabel
         : _displayTitle(channel);
     final logoAsset = _logoAsset(channel);
 
@@ -88,13 +90,6 @@ class PaymentTile extends StatelessWidget {
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
-                    if (method.label != null && method.label!.isNotEmpty)
-                      Text(
-                        method.label!,
-                        style: AppTextStyles.bodySm.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -197,7 +192,7 @@ class PaymentTile extends StatelessWidget {
       case 'djamo':
         return 'Djamo';
       case 'paydunya_wallet':
-        return 'Portefeuille PayDunya';
+        return 'Portefeuille mobile';
       default:
         return 'Moyen de paiement';
     }

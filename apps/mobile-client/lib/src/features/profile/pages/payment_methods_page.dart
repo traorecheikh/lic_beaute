@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
-import '../../../core/utils/app_http_error_handler.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_scaffold.dart';
@@ -247,8 +246,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       await ref.read(paymentMethodsProvider.notifier).remove(id);
       if (!mounted) return;
       AppSnackbar.success(context, 'Moyen de paiement supprimé.');
-    } catch (error) {
-      await context.handleHttpError(error, 'Suppression impossible.');
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, 'Suppression impossible pour le moment.');
+      }
     }
   }
 
@@ -257,8 +258,10 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       await ref.read(paymentMethodsProvider.notifier).setDefault(id);
       if (!mounted) return;
       AppSnackbar.success(context, 'Moyen de paiement par défaut mis à jour.');
-    } catch (error) {
-      await context.handleHttpError(error, 'Mise à jour impossible.');
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, 'Mise à jour impossible pour le moment.');
+      }
     }
   }
 }

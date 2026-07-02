@@ -1,11 +1,17 @@
 import 'dart:async';
 
 import 'package:beauteavenue_api/beauteavenue_api.dart';
+import 'package:cupertino_native_better/components/bottom_sheet.dart';
+import 'package:cupertino_native_better/components/search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/diagnostics/app_runtime_diagnostics.dart';
+import '../../../core/platform/ios_version.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../router/app_router.dart';
 import '../providers/categories_provider.dart';
@@ -18,7 +24,14 @@ import '../widgets/search_sections/sort_sheet.dart';
 import '../widgets/search_sections/states.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
-  const SearchPage({super.key});
+  const SearchPage({
+    this.initialQuery,
+    this.openFilters = false,
+    super.key,
+  });
+
+  final String? initialQuery;
+  final bool openFilters;
 
   @override
   ConsumerState<SearchPage> createState() => _SearchPageState();
@@ -28,6 +41,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   final _controller = TextEditingController();
   final _focus = FocusNode();
   final _scrollController = ScrollController();
+  final _nativeSearchController = CNSearchBarController();
 
   String _query = '';
   String _debouncedQuery = '';
@@ -42,6 +56,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   String? _sessionKey;
 
   DateTime _lastNavTap = DateTime(0);
+
+  bool get _useNativeIOSSearch =>
+      IOSVersion.supportsNativeGlass &&
+      (AppRuntimeDiagnostics.config.enableIOSNativeSearchBar ||
+          AppRuntimeDiagnostics.config.enableIOSNativeGlass);
 
   // Results state
   List<SearchSuggestionsResponseTopMatchesInner> _results = [];
@@ -60,10 +79,55 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     _sessionKey = generateSessionKey();
     _controller.addListener(_onQueryChanged);
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focus.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(searchEventTrackerProvider).setSessionKey(_sessionKey!);
+
+      final initialQuery = widget.initialQuery?.trim() ?? '';
+      if (initialQuery.isNotEmpty) {
+        await _setSearchText(initialQuery);
+      } else if (!widget.openFilters && _useNativeIOSSearch) {
+        await _nativeSearchController.focus();
+      } else if (!widget.openFilters) {
+        _focus.requestFocus();
+      }
+
+      if (widget.openFilters && mounted) {
+        await _openQuickFiltersSheet();
+      }
     });
+  }
+
+  Future<void> _setSearchText(String text) async {
+    _controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    if (_useNativeIOSSearch) {
+      await _nativeSearchController.setText(text);
+      await _nativeSearchController.focus();
+    } else {
+      _focus.requestFocus();
+    }
+  }
+
+  void _onNativeSearchChanged(String text) {
+    if (_controller.text == text) return;
+    _controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+
+  void _onNativeSearchSubmitted(String text) {
+    _onNativeSearchChanged(text);
+    if (text.trim().length >= 2) {
+      _debounce?.cancel();
+      setState(() {
+        _debouncedQuery = text.trim();
+        _isDebouncing = false;
+      });
+      _performSearch(reset: true);
+    }
   }
 
   void _onQueryChanged() {
@@ -215,6 +279,85 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     );
   }
 
+  String get _sortLabel {
+    switch (_sort) {
+      case 'nearby':
+        return AppStrings.sortProximity;
+      case 'trending':
+        return AppStrings.sortTrending;
+      case 'prestige':
+        return AppStrings.sortPrestige;
+      case 'price_asc':
+        return AppStrings.sortPriceAsc;
+      case 'price_desc':
+        return AppStrings.sortPriceDesc;
+      default:
+        return AppStrings.sortRelevance;
+    }
+  }
+
+  Future<void> _openQuickFiltersSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => CNSheetGeometryProbe(
+        child: StatefulBuilder(
+          builder: (context, setSheetState) {
+            void updateSheet(VoidCallback update) {
+              update();
+              setSheetState(() {});
+            }
+
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Filtres de recherche',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(AppStrings.filterOpenNow),
+                      value: _openNow,
+                      onChanged: (_) => updateSheet(_toggleOpenNow),
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(AppStrings.filterBookableSoon),
+                      value: _bookableSoon,
+                      onChanged: (_) => updateSheet(_toggleBookableSoon),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(AppStrings.sortByLabel),
+                      subtitle: Text(_sortLabel),
+                      trailing: const AppIcon('chevron-right', size: 16),
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        _openSortSheet();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    AppButton.primary(
+                      label: 'Afficher les résultats',
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -236,10 +379,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           SearchAppBar(
             controller: _controller,
             focusNode: _focus,
+            nativeController: _nativeSearchController,
             sort: _sort,
             isDebouncing: _isDebouncing,
             onSortChanged: _setSort,
-            onOpenSortSheet: _openSortSheet,
+            onOpenSortSheet: _openQuickFiltersSheet,
+            onNativeChanged: _onNativeSearchChanged,
+            onNativeSubmitted: _onNativeSearchSubmitted,
           ),
 
           // ── Filter chips (when searching) ──────────────────────────
@@ -268,20 +414,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       return SearchIdleState(
         categories: categories,
         recentSearches: recentSearches,
-        onCategoryTap: (cat) {
-          _controller.text = cat;
-          _controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: cat.length),
-          );
-          _focus.requestFocus();
-        },
-        onRecentTap: (term) {
-          _controller.text = term;
-          _controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: term.length),
-          );
-          _focus.requestFocus();
-        },
+        onCategoryTap: (cat) => _setSearchText(cat),
+        onRecentTap: (term) => _setSearchText(term),
         onRecentRemove: (term) =>
             ref.read(recentSearchesProvider.notifier).remove(term),
       );
@@ -304,11 +438,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         query: _debouncedQuery,
         correctedQuery: _correctedQuery,
         onCorrectedTap: _correctedQuery != null
-            ? () {
-                _controller.text = _correctedQuery!;
-                _controller.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _correctedQuery!.length),
-                );
+            ? () async {
+                await _setSearchText(_correctedQuery!);
                 setState(() => _debouncedQuery = _correctedQuery!);
                 _performSearch(reset: true);
               }
@@ -327,11 +458,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       query: _debouncedQuery,
       scrollController: _scrollController,
       onRefresh: () => _performSearch(reset: true),
-      onCorrectedTap: () {
-        _controller.text = _correctedQuery!;
-        _controller.selection = TextSelection.fromPosition(
-          TextPosition(offset: _correctedQuery!.length),
-        );
+      onCorrectedTap: () async {
+        await _setSearchText(_correctedQuery!);
         setState(() => _debouncedQuery = _correctedQuery!);
         _performSearch(reset: true);
       },

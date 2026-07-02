@@ -118,8 +118,8 @@ class BackgroundPollingService extends Notifier<BackgroundPollingStatus> {
   int _attempts = 0;
   String? _paymentId;
   String? _bookingId;
-  static const _maxAttempts = 3;
-  static const _interval = Duration(minutes: 15);
+  static const _maxAttempts = 6;
+  static const _interval = Duration(minutes: 2);
 
   @override
   BackgroundPollingStatus build() {
@@ -168,22 +168,22 @@ class BackgroundPollingService extends Notifier<BackgroundPollingStatus> {
 
       if (status == 'succeeded') {
         ref.invalidate(bookingDetailResourceProvider(bookingId));
+        ref.invalidate(bookingsListProvider);
         _showNotification(
           id: 0,
           title: AppStrings.paymentConfirmedNotifTitle,
           body: AppStrings.paymentConfirmedNotifBody,
-          payload: 'type=payment_confirmed&bookingId=$bookingId',
+          payload:
+              'type=payment_confirmed&bookingId=$bookingId&paymentId=$paymentId',
         );
         state = BackgroundPollingStatus.idle;
         return;
       }
 
       if (status == 'failed' || status == 'refunded') {
-        if (_attempts >= _maxAttempts) {
-          _exhausted(bookingId);
-          return;
-        }
-        _scheduleNext();
+        ref.invalidate(bookingDetailResourceProvider(bookingId));
+        ref.invalidate(bookingsListProvider);
+        _exhausted(bookingId);
         return;
       }
 
@@ -208,9 +208,9 @@ class BackgroundPollingService extends Notifier<BackgroundPollingStatus> {
     state = BackgroundPollingStatus.exhausted;
     _showNotification(
       id: 1,
-      title: AppStrings.paymentCheckFailedTitle,
-      body: AppStrings.paymentCheckFailedSubtitle,
-      payload: 'type=payment_failed&bookingId=$bookingId',
+      title: AppStrings.paymentFailedNotifTitle,
+      body: AppStrings.paymentFailedNotifBody,
+      payload: 'type=payment_failed&bookingId=$bookingId&paymentId=$_paymentId',
     );
   }
 

@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/utils/app_http_error_handler.dart';
 import '../../../router/app_router.dart';
 
 /// Handles payment-related [DioException] errors with user-facing messages
@@ -29,11 +28,14 @@ Future<void> handlePaymentError(
         }
         return;
       case 'reconcile_throttled':
-        AppSnackbar.info(
-          context,
-          retryAfter ??
-              'Réconciliation trop fréquente. Réessayez dans quelques secondes.',
-        );
+        final safeRetryMessage = retryAfter != null &&
+                !RegExp(
+                  r'paydunya|provider|invoice|merchant|token|callback|webhook|reconcile',
+                  caseSensitive: false,
+                ).hasMatch(retryAfter)
+            ? retryAfter
+            : 'Veuillez patienter quelques secondes, puis réessayez.';
+        AppSnackbar.info(context, safeRetryMessage);
         return;
       case 'invalid_status':
         AppSnackbar.error(
@@ -56,6 +58,6 @@ Future<void> handlePaymentError(
     }
   }
   if (context.mounted) {
-    await context.handleHttpError(error, 'Échec du paiement.');
+    AppSnackbar.error(context, 'Le paiement n’a pas abouti. Réessayez.');
   }
 }

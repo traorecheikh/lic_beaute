@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
+import '../constants/app_strings.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_icon.dart';
-import '../widgets/app_pressable.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/app_top_bar.dart';
 import 'location_service.dart';
@@ -21,18 +21,10 @@ class LocationPermissionPage extends ConsumerWidget {
         backgroundColor: AppColors.transparent,
         elevation: 0,
         showBackButton: false,
-        actions: [
-          AppPressable(
-            onTap: () => context.pop(),
-            child: Padding(
-              padding: EdgeInsets.all(12.r),
-              child: AppIcon('close', size: 22, color: AppColors.onSurface),
-            ),
-          ),
-        ],
       ),
       // top: false because AppScaffold/AppBar already handle the status bar inset
-      body: SafeArea(top: false,
+      body: SafeArea(
+        top: false,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 32.w),
           child: Column(
@@ -94,7 +86,11 @@ class LocationPermissionPage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Center(
-                          child: AppIcon(item.$2, size: 18, color: AppColors.primary),
+                          child: AppIcon(
+                            item.$2,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                       SizedBox(width: 14.w),
@@ -110,21 +106,6 @@ class LocationPermissionPage extends ConsumerWidget {
 
               // CTA
               _LocationPermissionButton(),
-
-              gapH12,
-
-              AppPressable(
-                onTap: () => context.pop(),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-                  child: Text(
-                    'Plus tard',
-                    style: AppTextStyles.labelMd.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
 
               gapH16,
             ],
@@ -157,8 +138,13 @@ class _LocationPermissionButtonState
       if (mounted) context.pop(true);
     } else if (status == LocationStatus.deniedForever) {
       await _showSettingsDialog();
+      if (mounted) context.pop(false);
+    } else if (status == LocationStatus.serviceDisabled) {
+      await _showLocationServicesDialog();
+      if (mounted) context.pop(false);
+    } else {
+      context.pop(false);
     }
-    // denied: just stay on page, user can retry or dismiss
   }
 
   Future<void> _showSettingsDialog() async {
@@ -167,12 +153,10 @@ class _LocationPermissionButtonState
     await AppDialog.show<void>(
       context,
       title: 'Autorisation requise',
-      body: 'La localisation a été refusée définitivement. Ouvrez les paramètres de l\'application pour l\'activer.',
+      body:
+          'La localisation a été refusée définitivement. Ouvrez les paramètres de l\'application pour l\'activer.',
       actions: [
-        AppDialogAction(
-          label: 'Annuler',
-          onPressed: () {},
-        ),
+        AppDialogAction(label: 'Annuler', onPressed: () {}),
         AppDialogAction(
           label: 'Paramètres',
           onPressed: () => openSettings = true,
@@ -180,6 +164,25 @@ class _LocationPermissionButtonState
       ],
     );
     if (openSettings) await openAppSettings();
+  }
+
+  Future<void> _showLocationServicesDialog() async {
+    if (!mounted) return;
+    bool openSettings = false;
+    await AppDialog.show<void>(
+      context,
+      title: 'Localisation désactivée',
+      body:
+          'Activez les services de localisation sur votre appareil pour afficher les salons proches de vous.',
+      actions: [
+        AppDialogAction(label: 'Pas maintenant', onPressed: () {}),
+        AppDialogAction(
+          label: 'Réglages',
+          onPressed: () => openSettings = true,
+        ),
+      ],
+    );
+    if (openSettings) await openLocationSettings();
   }
 
   @override
@@ -201,12 +204,10 @@ class _LocationPermissionButtonState
             ? SizedBox(
                 width: 20.r,
                 height: 20.r,
-                child: CircularProgressIndicator.adaptive(
-                  strokeWidth: 2,
-                ),
+                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
               )
             : Text(
-                'Activer la localisation',
+                AppStrings.continueAction,
                 style: AppTextStyles.labelLg.copyWith(
                   color: AppColors.onPrimary,
                 ),

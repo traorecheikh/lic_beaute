@@ -164,6 +164,37 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.lg.r),
         ),
       ),
+      // ── NavigationBar (M3) ────────────────────────────────────────
+      navigationBarTheme: NavigationBarThemeData(
+        indicatorColor: AppColors.primaryLight,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.surface,
+        elevation: 3,
+        shadowColor: AppColors.black.withValues(alpha: 0.08),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(size: 24, color: AppColors.primary);
+          }
+          return const IconThemeData(size: 24, color: AppColors.onSurfaceVariant);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.onSurface,
+            );
+          }
+          return const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppColors.onSurfaceVariant,
+          );
+        }),
+      ),
       // Hide the default BottomNavigationBar — we use a custom FloatingNavBar
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,

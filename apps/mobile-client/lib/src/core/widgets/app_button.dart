@@ -116,30 +116,30 @@ class _AppButtonState extends State<AppButton> {
   @override
   Widget build(BuildContext context) {
     final isDisabled = widget.isLoading || widget.onPressed == null;
-    final isPrimary = widget.variant == AppButtonVariant.primary;
 
     final Widget indicator = SizedBox(
       height: 20.h,
       width: 20.h,
-      child: CircularProgressIndicator.adaptive(
-        strokeWidth: 2,
-      ),
+      child: const CircularProgressIndicator.adaptive(strokeWidth: 2),
     );
 
-    final Widget labelWidget =
-        widget.isLoading
-            ? indicator
-            : Text(
-                widget.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                softWrap: false,
-              );
+    final Widget labelWidget = widget.isLoading
+        ? indicator
+        : Text(
+            widget.label,
+            maxLines: 2,
+            overflow: TextOverflow.visible,
+            softWrap: true,
+            textAlign: TextAlign.center,
+          );
 
     final Widget content = widget.icon != null && !widget.isLoading
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [widget.icon!, gapW8, labelWidget],
+        ? Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8.w,
+            runSpacing: 4.h,
+            children: [widget.icon!, labelWidget],
           )
         : labelWidget;
 
@@ -147,7 +147,7 @@ class _AppButtonState extends State<AppButton> {
     final Color textColor;
     final BoxBorder? border;
     final EdgeInsets padding;
-    final double? minHeight;
+    final double minHeight;
 
     switch (widget.variant) {
       case AppButtonVariant.primary:
@@ -155,62 +155,66 @@ class _AppButtonState extends State<AppButton> {
         textColor =
             isDisabled ? AppColors.onSurfaceVariant : AppColors.onPrimary;
         border = null;
-        padding = EdgeInsets.symmetric(horizontal: 28.w, vertical: 16.h);
+        padding = EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h);
         minHeight = 56.h;
+        break;
       case AppButtonVariant.outline:
         bgColor = isDisabled ? AppColors.outlineVariant : AppColors.surface;
         textColor = AppColors.onSurface;
         border = Border.all(color: AppColors.outline, width: 1.5);
-        padding = EdgeInsets.symmetric(horizontal: 28.w, vertical: 16.h);
+        padding = EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h);
         minHeight = 56.h;
+        break;
       case AppButtonVariant.text:
         bgColor = AppColors.transparent;
         textColor = AppColors.primary;
         border = null;
         padding = EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h);
-        minHeight = null;
+        minHeight = 44.h;
+        break;
     }
 
-    Widget container = Container(
-      constraints: minHeight != null
-          ? BoxConstraints(minHeight: minHeight)
-          : null,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(AppRadius.full.r),
-        border: border,
-      ),
-      child: DefaultTextStyle(
-        style: AppTextStyles.labelLg.copyWith(color: textColor),
-        child: IconTheme(
-          data: IconThemeData(color: textColor, size: 20.r),
-          child: Center(child: content),
+    Widget button = AnimatedOpacity(
+      opacity: _pressed ? 0.7 : 1,
+      duration: const Duration(milliseconds: 150),
+      child: Container(
+        constraints: BoxConstraints(minHeight: minHeight),
+        padding: padding,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(AppRadius.full.r),
+          border: border,
+        ),
+        child: DefaultTextStyle(
+          style: AppTextStyles.labelLg.copyWith(color: textColor),
+          child: IconTheme(
+            data: IconThemeData(color: textColor, size: 20.r),
+            child: Center(child: content),
+          ),
         ),
       ),
     );
 
-    Widget button = AnimatedOpacity(
-      opacity: _pressed ? 0.7 : 1.0,
-      duration: const Duration(milliseconds: 150),
-      child: container,
+    button = Semantics(
+      button: true,
+      enabled: !isDisabled,
+      label: widget.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: isDisabled ? null : widget.onPressed,
+        onTapDown: isDisabled ? null : _onTapDown,
+        onTapUp: isDisabled ? null : _onTapUp,
+        onTapCancel: isDisabled ? null : _onTapCancel,
+        child: button,
+      ),
     );
 
-    button = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: isDisabled ? null : widget.onPressed,
-      onTapDown: isDisabled ? null : _onTapDown,
-      onTapUp: isDisabled ? null : _onTapUp,
-      onTapCancel: isDisabled ? null : _onTapCancel,
-      child: button,
-    );
-
-    final fixedHeight = widget.height ??
-        (widget.variant == AppButtonVariant.text ? null : 56.h);
-    if (widget.isFullWidth || widget.width != null || fixedHeight != null) {
-      return SizedBox(
-        width: widget.width ?? (widget.isFullWidth ? double.infinity : null),
-        height: fixedHeight,
+    if (widget.height != null) {
+      button = SizedBox(height: widget.height, child: button);
+    }
+    if (widget.isFullWidth || widget.width != null) {
+      button = SizedBox(
+        width: widget.width ?? double.infinity,
         child: button,
       );
     }

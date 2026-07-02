@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:beauteavenue_api/beauteavenue_api.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,12 +11,15 @@ import 'package:go_router/go_router.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/location/location_service.dart';
+import '../../../core/platform/ios_version.dart';
 import '../../../core/session/session_store.dart';
+import '../../../core/diagnostics/app_runtime_diagnostics.dart';
 import '../../../core/widgets/debounced_action.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_error_state.dart';
 import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/ios_native_icon_button.dart';
 import '../../../router/app_router.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../auth/widgets/auth_required_sheet.dart';
@@ -50,6 +54,17 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _scrollCtrl.addListener(_onScroll);
+    ref.listenManual<AsyncValue<String?>>(cityFromLocationProvider, (_, next) {
+      if (next.isLoading && !_showLocationLoading) {
+        _locationLoadTimer?.cancel();
+        _locationLoadTimer = Timer(const Duration(milliseconds: 300), () {
+          if (mounted) setState(() => _showLocationLoading = true);
+        });
+      } else if (!next.isLoading && _showLocationLoading) {
+        _locationLoadTimer?.cancel();
+        setState(() => _showLocationLoading = false);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _checkLocationAutoPrompt();
       await _checkPendingReview();
@@ -127,22 +142,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Debounce le spinner de localisation : ne l'affiche qu'après 300ms
-    // pour éviter un flash loading quand le GPS résout rapidement.
-    ref.listen<AsyncValue<String?>>(cityFromLocationProvider, (_, next) {
-      if (next.isLoading && !_showLocationLoading) {
-        _locationLoadTimer?.cancel();
-        _locationLoadTimer = Timer(const Duration(milliseconds: 300), () {
-          if (mounted) setState(() => _showLocationLoading = true);
-        });
-      } else if (!next.isLoading && _showLocationLoading) {
-        _locationLoadTimer?.cancel();
-        setState(() => _showLocationLoading = false);
-      }
-    });
-
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    final bottomNavClearance = bottomInset + 92.h;
+    // The shell reserves the native/material tab-bar height. Keep only a
+    // small end-of-list breathing space here instead of compensating twice.
+    final bottomNavClearance = 24.h;
     final nearbyAsync = ref.watch(nearbyProvider);
     final topRatedAsync = ref.watch(topRatedProvider);
     final trendingAsync = ref.watch(trendingProvider);
@@ -161,21 +163,26 @@ class _HomePageState extends ConsumerState<HomePage> {
     final hasTopRatedData = topRatedAsync.asData?.value.any(hasPhoto) == true;
     final hasTrendingData = trendingAsync.asData?.value.any(hasPhoto) == true;
     final hasPrestigeData = prestigeAsync.asData?.value.any(hasPhoto) == true;
-    final hasAnyCatalogData = hasTopRatedData || hasTrendingData || hasPrestigeData;
-    final allCoreLoading = topRatedAsync.isLoading &&
+    final hasAnyCatalogData =
+        hasTopRatedData || hasTrendingData || hasPrestigeData;
+    final allCoreLoading =
+        topRatedAsync.isLoading &&
         trendingAsync.isLoading &&
         prestigeAsync.isLoading &&
         !hasAnyCatalogData;
-    final allCoreFailed = topRatedAsync.hasError &&
+    final allCoreFailed =
+        topRatedAsync.hasError &&
         trendingAsync.hasError &&
         prestigeAsync.hasError &&
         !hasAnyCatalogData;
     final showGlobalLoading = allCoreLoading;
     final showGlobalError = !showGlobalLoading && allCoreFailed;
-    final allLoaded = !topRatedAsync.isLoading &&
+    final allLoaded =
+        !topRatedAsync.isLoading &&
         !trendingAsync.isLoading &&
         !prestigeAsync.isLoading;
-    final showGlobalEmpty = !showGlobalLoading &&
+    final showGlobalEmpty =
+        !showGlobalLoading &&
         !showGlobalError &&
         allLoaded &&
         !hasAnyCatalogData &&
@@ -208,15 +215,18 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           slivers: [
             _buildAppBar(),
-            const SliverToBoxAdapter(child: SearchBarContent()),
+            _buildSearchBar(),
 
             if (showBanner)
               SliverToBoxAdapter(
                 child: LocationBanner(
-                  onDismiss: () =>
-                      ref.read(locationBannerDismissedProvider.notifier).dismiss(),
+                  onDismiss: () => ref
+                      .read(locationBannerDismissedProvider.notifier)
+                      .dismiss(),
                   onEnable: () async {
-                    final granted = await context.push<bool>(AppRoutes.locationPermission);
+                    final granted = await context.push<bool>(
+                      AppRoutes.locationPermission,
+                    );
                     if (granted == true) {
                       ref.invalidate(nearbyProvider);
                       ref.invalidate(locationStatusProvider);
@@ -236,7 +246,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       SizedBox(height: 12.h),
                       Text(
                         AppStrings.loadingSalons,
-                        style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -245,7 +257,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
             if (showGlobalError)
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 120.h),
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 28.h),
                 sliver: SliverToBoxAdapter(
                   child: AppErrorState(
                     error: topRatedAsync.error,
@@ -260,7 +272,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 120.h),
+                  padding: EdgeInsets.fromLTRB(32.w, 40.h, 32.w, 28.h),
                   child: AppEmptyState(
                     icon: 'store',
                     title: AppStrings.noSalonTitle,
@@ -276,7 +288,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.nearbySection,
                   action: AppStrings.viewAllCta,
-                  onAction: debouncedAction(() => context.push(AppRoutes.salonsNearby)),
+                  onAction: debouncedAction(
+                    () => context.push(AppRoutes.salonsNearby),
+                  ),
                 ),
                 SalonListSliver(
                   salonsAsync: nearbyAsync,
@@ -292,14 +306,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                     padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 4.h),
                     child: GestureDetector(
                       onTap: () async {
-                        final granted = await context.push<bool>(AppRoutes.locationPermission);
+                        final granted = await context.push<bool>(
+                          AppRoutes.locationPermission,
+                        );
                         if (granted == true) {
                           ref.invalidate(nearbyProvider);
                           ref.invalidate(locationStatusProvider);
                         }
                       },
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 14.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(AppRadius.xl.r),
@@ -318,7 +337,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 color: AppColors.primaryLight,
                                 shape: BoxShape.circle,
                               ),
-                              child: Center(child: AppIcon('map-pin', size: 20, color: AppColors.primary)),
+                              child: Center(
+                                child: AppIcon(
+                                  'map-pin',
+                                  size: 20,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ),
                             SizedBox(width: 14.w),
                             Expanded(
@@ -361,9 +386,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.trendingSection,
                   action: AppStrings.viewAllCta,
-                  onAction: debouncedAction(() => context.push(AppRoutes.salonsTrending)),
+                  onAction: debouncedAction(
+                    () => context.push(AppRoutes.salonsTrending),
+                  ),
                 ),
-                TrendingSalonSliver(salonsAsync: trendingAsync, onRetry: refreshAll),
+                TrendingSalonSliver(
+                  salonsAsync: trendingAsync,
+                  onRetry: refreshAll,
+                ),
               ],
 
             if (!showGlobalLoading && !showGlobalError)
@@ -371,7 +401,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SectionHeaderSliver(
                   title: AppStrings.topRatedSection,
                   action: AppStrings.viewAllCta,
-                  onAction: debouncedAction(() => context.push(AppRoutes.salonsTopRated)),
+                  onAction: debouncedAction(
+                    () => context.push(AppRoutes.salonsTopRated),
+                  ),
                 ),
                 SalonListSliver(
                   salonsAsync: topRatedAsync,
@@ -383,11 +415,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
 
             if (!showGlobalLoading && !showGlobalError)
-              if (hasPrestigeData || prestigeAsync.isLoading || prestigeAsync.hasError) ...[
+              if (hasPrestigeData ||
+                  prestigeAsync.isLoading ||
+                  prestigeAsync.hasError) ...[
                 SectionHeaderSliver(
                   title: AppStrings.prestigeSection,
                   action: AppStrings.viewAllCta,
-                  onAction: debouncedAction(() => context.push(AppRoutes.salonsPrestige)),
+                  onAction: debouncedAction(
+                    () => context.push(AppRoutes.salonsPrestige),
+                  ),
                 ),
                 FeaturedSalonSliver(
                   salonsAsync: prestigeAsync,
@@ -414,6 +450,16 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _HomeSearchHeaderDelegate(
+        extent: 72.h,
+        child: const SearchBarContent(),
+      ),
+    );
+  }
+
   Widget _buildAppBar() {
     final iconOnExpanded = AppColors.white;
     final iconOnCollapsed = AppColors.onSurface;
@@ -424,6 +470,17 @@ class _HomePageState extends ConsumerState<HomePage> {
       AppColors.surface,
       _collapseRatio,
     )!;
+    final isAndroid = Platform.isAndroid;
+    Future<void> notificationAction() async {
+      if (session.isAuthenticated) {
+        context.push(AppRoutes.notifications);
+        return;
+      }
+      await showAuthRequiredSheet(
+        context,
+        onLogin: () => context.go(AppRoutes.auth),
+      );
+    }
 
     return SliverAppBar(
       expandedHeight: _heroHeight.h,
@@ -437,7 +494,12 @@ class _HomePageState extends ConsumerState<HomePage> {
         padding: EdgeInsets.only(left: 14.w, top: 8.h, bottom: 8.h),
         child: Row(
           children: [
-            Image.asset('assets/logo.png', width: 52.r, height: 52.r, fit: BoxFit.contain),
+            Image.asset(
+              'assets/logo.png',
+              width: 52.r,
+              height: 52.r,
+              fit: BoxFit.contain,
+            ),
             SizedBox(width: 10.w),
             Expanded(
               child: Text(
@@ -457,21 +519,41 @@ class _HomePageState extends ConsumerState<HomePage> {
       actions: [
         Padding(
           padding: EdgeInsets.only(right: 16.w),
-          child: AdaptiveIconButton(
-            icon: 'bell',
-            color: adaptiveIconColor,
-            hasBg: _collapseRatio < 0.6,
-            onTap: () async {
-              if (session.isAuthenticated) {
-                context.push(AppRoutes.notifications);
-                return;
-              }
-              await showAuthRequiredSheet(
-                context,
-                onLogin: () => context.go(AppRoutes.auth),
-              );
-            },
-          ),
+          child:
+              IOSVersion.supportsNativeGlass &&
+                  (AppRuntimeDiagnostics.config.enableIOSNativeIconButtons ||
+                      AppRuntimeDiagnostics.config.enableIOSNativeGlass)
+              ? IOSNativeIconButton(
+                  iconName: 'bell',
+                  foregroundColor: adaptiveIconColor,
+                  tintColor: _collapseRatio < 0.6
+                      ? AppColors.white.withValues(alpha: 0.22)
+                      : AppColors.surfaceVariant.withValues(alpha: 0.72),
+                  semanticLabel: 'Notifications',
+                  onPressed: notificationAction,
+                )
+              : isAndroid
+              ? IconButton.filledTonal(
+                  onPressed: notificationAction,
+                  style: IconButton.styleFrom(
+                    backgroundColor: _collapseRatio < 0.6
+                        ? AppColors.white.withValues(alpha: 0.82)
+                        : AppColors.surfaceVariant.withValues(alpha: 0.92),
+                    foregroundColor: AppColors.onSurface,
+                    minimumSize: Size.square(44.r),
+                    maximumSize: Size.square(44.r),
+                    padding: EdgeInsets.zero,
+                    shape: const CircleBorder(),
+                  ),
+                  icon: const Icon(Icons.notifications_none_rounded),
+                  tooltip: 'Notifications',
+                )
+              : AdaptiveIconButton(
+                  icon: 'bell',
+                  color: adaptiveIconColor,
+                  hasBg: _collapseRatio < 0.6,
+                  onTap: notificationAction,
+                ),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -562,7 +644,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   height: 32.r,
                   decoration: BoxDecoration(
                     color: AppColors.neutral,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28.r),
+                    ),
                   ),
                   child: Center(
                     child: Container(
@@ -581,5 +665,49 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
     );
+  }
+}
+
+class _HomeSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _HomeSearchHeaderDelegate({
+    required this.extent,
+    required this.child,
+  });
+
+  final double extent;
+  final Widget child;
+
+  @override
+  double get minExtent => extent;
+
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.neutral,
+        boxShadow: overlapsContent
+            ? [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: SizedBox.expand(child: child),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_HomeSearchHeaderDelegate oldDelegate) {
+    return extent != oldDelegate.extent || child != oldDelegate.child;
   }
 }

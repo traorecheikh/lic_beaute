@@ -46,6 +46,7 @@ class _StaffSelectionPageState extends ConsumerState<StaffSelectionPage> {
               : debouncedAction(_onContinue),
           isLoading: _isResolvingAny,
           label: 'Continuer',
+          height: 58.h,
         ),
       ),
       builder: (salon) {

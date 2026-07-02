@@ -120,5 +120,26 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
+
+    testWidgets('long labels wrap instead of being replaced by an ellipsis', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          SizedBox(
+            width: 250,
+            child: AppButton.primary(
+              label: 'Continuer la vérification en arrière-plan',
+              onPressed: () {},
+            ),
+          ),
+        ),
+      );
+
+      final text = tester.widget<Text>(
+        find.text('Continuer la vérification en arrière-plan'),
+      );
+      expect(text.maxLines, 2);
+      expect(text.overflow, TextOverflow.visible);
+      expect(tester.getSize(find.byType(AppButton)).height, greaterThanOrEqualTo(56));
+    });
   });
 }

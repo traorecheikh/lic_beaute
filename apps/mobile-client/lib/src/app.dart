@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toastification/toastification.dart';
 
 import 'core/reactivity/app_reactivity.dart';
+import 'core/diagnostics/app_runtime_diagnostics.dart';
 import 'core/services/engagement_notification_service.dart';
 import 'core/services/foreground_notification_service.dart';
 import 'core/theme/app_theme.dart';
@@ -47,8 +48,12 @@ class ClientApp extends ConsumerWidget {
           return;
         case 'payment_failed':
           final bookingId = data['bookingId'];
+          final paymentId = data['paymentId'];
           if (bookingId != null && bookingId.isNotEmpty) {
-            router.go(AppRoutes.bookingDetailPath(bookingId));
+            final route = paymentId != null && paymentId.isNotEmpty
+                ? '${AppRoutes.paymentHandoff(bookingId)}?paymentId=$paymentId'
+                : AppRoutes.bookingDetailPath(bookingId);
+            router.go(route);
           } else {
             router.go(AppRoutes.bookingsList);
           }
@@ -149,6 +154,7 @@ class _AppLifecycleRefreshState extends ConsumerState<_AppLifecycleRefresh>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      AppRuntimeDiagnostics.logLifecycle('appLifecycle resumed');
       _backgroundHandled = false;
       EngagementNotificationService.handleAppResumed();
       EngagementNotificationService.syncPrestigeCandidate(ref);
@@ -157,6 +163,7 @@ class _AppLifecycleRefreshState extends ConsumerState<_AppLifecycleRefresh>
     }
 
     if (state == AppLifecycleState.paused && !_backgroundHandled) {
+      AppRuntimeDiagnostics.logLifecycle('appLifecycle paused');
       _backgroundHandled = true;
       EngagementNotificationService.handleAppBackgrounded();
     }

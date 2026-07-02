@@ -138,6 +138,10 @@ function constantTimeEquals(a: string, b: string): boolean {
   return timingSafeEqual(left, right);
 }
 
+function reviewUserDisplayName(): string {
+  return "Compte test";
+}
+
 async function serializeCurrentUser(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -1158,7 +1162,16 @@ export class AuthController {
       let user = await prisma.user.findUnique({ where: { email: body.email } });
       if (!user) {
         user = await prisma.user.create({
-          data: { fullName: "", email: body.email, role: "client" }
+          data: {
+            fullName: reviewUserDisplayName(),
+            email: body.email,
+            role: "client"
+          }
+        });
+      } else if (user.fullName.trim().length === 0) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { fullName: reviewUserDisplayName() }
         });
       }
       const tokens = signSession(user.id, user.role, user.tokenVersion);

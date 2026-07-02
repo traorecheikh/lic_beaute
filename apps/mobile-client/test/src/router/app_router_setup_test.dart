@@ -8,7 +8,7 @@ void main() {
       expect(isPublicRouteWithoutAuth(AppRoutes.paymentCallback), isTrue);
     });
 
-    test('forces profile bootstrap when cached profile has no full name', () {
+    test('does not block general app access for incomplete profiles', () {
       expect(
         resolveRequiredSetupRedirect(
           location: AppRoutes.home,
@@ -21,30 +21,29 @@ void main() {
             'preferredLanguage': 'fr',
           },
         ),
-        AppRoutes.profileBootstrapSetup(next: AppRoutes.home),
+        isNull,
       );
     });
 
-    test(
-      'forces payment setup when profile exists but no payment methods exist',
-      () {
-        expect(
-          resolveRequiredSetupRedirect(
-            location: AppRoutes.bookingsList,
-            cachedProfile: {
-              'id': 'user_1',
-              'fullName': 'Awa Ndiaye',
-              'preferredContactChannel': 'phone',
-              'pushOptIn': true,
-              'marketingOptIn': false,
-              'preferredLanguage': 'fr',
-            },
-            cachedPaymentMethods: {'items': []},
-          ),
-          AppRoutes.profilePaymentsSetup(next: AppRoutes.bookingsList),
-        );
-      },
-    );
+    test('forces payment setup only inside payment handoff flow', () {
+      expect(
+        resolveRequiredSetupRedirect(
+          location: AppRoutes.paymentHandoff('booking_1'),
+          cachedProfile: {
+            'id': 'user_1',
+            'fullName': 'Awa Ndiaye',
+            'preferredContactChannel': 'phone',
+            'pushOptIn': true,
+            'marketingOptIn': false,
+            'preferredLanguage': 'fr',
+          },
+          cachedPaymentMethods: {'items': []},
+        ),
+        AppRoutes.profilePaymentsSetup(
+          next: AppRoutes.paymentHandoff('booking_1'),
+        ),
+      );
+    });
 
     test('does not redirect when already on the required setup route', () {
       expect(
@@ -98,7 +97,7 @@ void main() {
       () {
         expect(
           resolveRequiredSetupRedirect(
-            location: AppRoutes.home,
+            location: AppRoutes.paymentHandoff('booking_1'),
             cachedProfile: {
               'id': 'user_1',
               'fullName': 'Awa Ndiaye',

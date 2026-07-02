@@ -124,7 +124,12 @@ describe("Play Store reviewer bypass", () => {
     );
 
     expect(mocks.prisma.user.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ email: "reviewer@test.com" }) })
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email: "reviewer@test.com",
+          fullName: "Compte test"
+        })
+      })
     );
     expect(mocks.signSession).toHaveBeenCalled();
     expect(mocks.prisma.session.create).toHaveBeenCalled();
@@ -222,14 +227,22 @@ describe("Play Store reviewer bypass", () => {
 
     expect(mocks.prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ email: "reviewer@test.com", role: "client" })
+        data: expect.objectContaining({
+          email: "reviewer@test.com",
+          role: "client",
+          fullName: "Compte test"
+        })
       })
     );
     expect(mocks.ok).toHaveBeenCalled();
   });
 
   it("signs in existing reviewer user without creating", async () => {
-    mocks.prisma.user.findUnique.mockResolvedValue({ id: "existing_reviewer", role: "client" });
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: "existing_reviewer",
+      role: "client",
+      fullName: "Reviewer Name"
+    });
 
     await controller.verifyEmailOtp(
       {
@@ -242,6 +255,39 @@ describe("Play Store reviewer bypass", () => {
     expect(mocks.prisma.user.create).not.toHaveBeenCalled();
     expect(mocks.signSession).toHaveBeenCalledWith("existing_reviewer", "client", undefined);
     expect(mocks.ok).toHaveBeenCalled();
+  });
+
+  it("repairs existing reviewer users with an empty full name", async () => {
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: "existing_reviewer",
+      role: "client",
+      tokenVersion: 3,
+      fullName: "   "
+    });
+    mocks.prisma.user.update.mockResolvedValue({
+      id: "existing_reviewer",
+      role: "client",
+      tokenVersion: 3,
+      fullName: "Compte test"
+    });
+
+    await controller.verifyEmailOtp(
+      {
+        body: { email: "reviewer@test.com", code: "482731" },
+        headers: { "user-agent": "test-agent/1.0" }
+      } as never,
+      {} as never
+    );
+
+    expect(mocks.prisma.user.update).toHaveBeenCalledWith({
+      where: { id: "existing_reviewer" },
+      data: { fullName: "Compte test" }
+    });
+    expect(mocks.signSession).toHaveBeenCalledWith(
+      "existing_reviewer",
+      "client",
+      3
+    );
   });
 
   it("does not leak reviewer status in error response", async () => {

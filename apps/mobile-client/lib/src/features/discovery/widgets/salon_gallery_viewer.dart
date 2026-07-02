@@ -84,21 +84,42 @@ class _SalonGalleryViewerState extends State<SalonGalleryViewer> {
             ),
           ),
 
-          // Counter
+          // Compact, consistently pill-shaped counter.
           Positioned(
-            top: topPad + 16,
+            top: topPad + 12,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                height: 34,
+                constraints: const BoxConstraints(minWidth: 64),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.black54,
-                  borderRadius: BorderRadius.circular(AppRadius.full.r),
+                  color: AppColors.black.withValues(alpha: 0.58),
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(
+                    color: AppColors.white.withValues(alpha: 0.20),
+                  ),
                 ),
-                child: Text(
-                  '${_current + 1} / ${widget.images.length}',
-                  style: const TextStyle(color: AppColors.white, fontSize: 13),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const AppIcon(
+                      'image',
+                      color: AppColors.white,
+                      size: 13,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_current + 1}/${widget.images.length}',
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -87,7 +87,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 24.w,
                 24.w,
                 24.w,
-                MediaQuery.of(context).padding.bottom + 120.h,
+                28.h,
               ),
               child: Form(
                 key: _formKey,

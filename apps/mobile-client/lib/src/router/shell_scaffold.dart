@@ -4,70 +4,120 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/constants/app_strings.dart';
+import '../core/diagnostics/app_runtime_diagnostics.dart';
+import '../core/platform/ios_version.dart';
 import '../core/session/session_store.dart';
+import '../core/widgets/android_material_nav_bar.dart';
 import 'package:beauteavenue_mobile_client/src/core/theme/app_theme.dart';
 import '../core/widgets/app_icon.dart';
 import '../features/auth/widgets/auth_required_sheet.dart';
 import 'app_router.dart';
+import 'ios_native_tab_bar.dart';
+import 'navigation_debug.dart';
 
-class ShellScaffold extends ConsumerWidget {
-  const ShellScaffold({required this.child, super.key});
+class ShellScaffold extends ConsumerStatefulWidget {
+  const ShellScaffold({required this.navigationShell, super.key});
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  ConsumerState<ShellScaffold> createState() => _ShellScaffoldState();
+}
+
+class _ShellScaffoldState extends ConsumerState<ShellScaffold> {
+  bool _authSheetOpen = false;
 
   static const _tabs = [
     _TabItem(
+      id: 'discover',
       icon: 'compass',
       label: AppStrings.discoverTab,
       path: AppRoutes.home,
     ),
     _TabItem(
+      id: 'bookings',
       icon: 'calendar',
       label: AppStrings.bookingsTab,
       path: AppRoutes.bookingsList,
     ),
     _TabItem(
+      id: 'profile',
       icon: 'user',
       label: AppStrings.profileTab,
       path: AppRoutes.profile,
     ),
   ];
 
-  int _currentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith(AppRoutes.bookingsList)) return 1;
-    if (location.startsWith(AppRoutes.profile)) return 2;
-    return 0;
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final index = _currentIndex(context);
+  Widget build(BuildContext context) {
+    final index = widget.navigationShell.currentIndex;
     final session = ref.watch(sessionProvider);
     final location = GoRouterState.of(context).matchedLocation;
     final isSearchPage = location == '/search';
+    AppRuntimeDiagnostics.updateNavigation(uri: location, branchIndex: index);
 
     Future<void> handleTabTap(int i) async {
-      if (i == 0) {
-        context.go(_tabs[i].path);
+      final currentUri = GoRouter.of(
+        context,
+      ).routeInformationProvider.value.uri.toString();
+      logBranchTap(
+        currentIndex: index,
+        requestedIndex: i,
+        currentUri: currentUri,
+      );
+
+      if (i == 0 || session.isAuthenticated) {
+        final restoringStaleProfileSetup =
+            i == 2 &&
+            index != 2 &&
+            NavigationDebugRegistry.topRouteName('branch-profile') ==
+                'payment-methods';
+        if (restoringStaleProfileSetup) {
+          context.go(AppRoutes.profile);
+          return;
+        }
+        widget.navigationShell.goBranch(i, initialLocation: i == index);
         return;
       }
-      if (session.isAuthenticated) {
-        context.go(_tabs[i].path);
-        return;
-      }
+      if (_authSheetOpen) return;
+      _authSheetOpen = true;
       await showAuthRequiredSheet(
         context,
         onLogin: () => context.go(AppRoutes.auth),
       );
+      _authSheetOpen = false;
     }
 
     return Scaffold(
-      extendBody: true,
-      body: child,
+      // Reserve the tab-bar footprint so page content and footers never sit
+      // underneath the native glass or Material navigation controls.
+      extendBody: false,
+      body: widget.navigationShell,
       bottomNavigationBar: isSearchPage
           ? null
-          : _BottomNav(currentIndex: index, tabs: _tabs, onTap: handleTabTap),
+          : Theme.of(context).platform == TargetPlatform.android
+              ? AndroidMaterialNavigationBar(
+                  currentIndex: index,
+                  onTap: handleTabTap,
+                )
+              : IOSVersion.supportsNativeGlass &&
+                      (AppRuntimeDiagnostics.config.enableIOSNativeTabBar ||
+                          AppRuntimeDiagnostics.config.enableIOSNativeGlass)
+                  ? IOSNativeTabBar(
+                      currentIndex: index,
+                      onTap: handleTabTap,
+                    )
+                  : AppRuntimeDiagnostics.config.useStockNavigationBar
+                      ? _StockBottomNav(
+                          currentIndex: index,
+                          tabs: _tabs,
+                          onTap: handleTabTap,
+                        )
+                      : _BottomNav(
+                          currentIndex: index,
+                          tabs: _tabs,
+                          onTap: handleTabTap,
+                        ),
     );
   }
 }
@@ -85,7 +135,7 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navHeight = 72.h < 64 ? 64.0 : 72.h;
+    const navContentHeight = 50.0;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Container(
@@ -99,20 +149,26 @@ class _BottomNav extends StatelessWidget {
         ),
       ),
       child: SizedBox(
-        height: navHeight + bottomInset,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: Row(
-            children: List.generate(tabs.length, (i) {
-              return Expanded(
-                child: _NavItem(
-                  item: tabs[i],
-                  isActive: i == currentIndex,
-                  onTap: () => onTap(i),
-                ),
-              );
-            }),
-          ),
+        height: navContentHeight + bottomInset,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: navContentHeight,
+              child: Row(
+                children: List.generate(tabs.length, (i) {
+                  return Expanded(
+                    child: _NavItem(
+                      item: tabs[i],
+                      isActive: i == currentIndex,
+                      onTap: () => onTap(i),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            SizedBox(height: bottomInset),
+          ],
         ),
       ),
     );
@@ -133,13 +189,16 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeColor = AppColors.primary;
-    final inactiveColor = AppColors.onSurfaceVariant.withValues(alpha: 0.5);
+    final inactiveColor = AppColors.onSurfaceVariant;
+    final animationsDisabled =
+        AppRuntimeDiagnostics.config.disableCustomNavAnimations;
 
     return Semantics(
       label: item.label,
       button: true,
       selected: isActive,
       child: GestureDetector(
+        key: ValueKey('bottom-tab-${item.id}'),
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Center(
@@ -157,7 +216,9 @@ class _NavItem extends StatelessWidget {
                 ),
                 SizedBox(height: 1.h),
                 AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 150),
+                  duration: animationsDisabled
+                      ? Duration.zero
+                      : const Duration(milliseconds: 150),
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 9.sp,
@@ -174,7 +235,9 @@ class _NavItem extends StatelessWidget {
                 ),
                 SizedBox(height: 1.h),
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: animationsDisabled
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
                   curve: Curves.easeOutCubic,
                   width: isActive ? 4.r : 0,
                   height: isActive ? 4.r : 0,
@@ -192,9 +255,53 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _TabItem {
-  const _TabItem({required this.icon, required this.label, required this.path});
+class _StockBottomNav extends StatelessWidget {
+  const _StockBottomNav({
+    required this.currentIndex,
+    required this.tabs,
+    required this.onTap,
+  });
 
+  final int currentIndex;
+  final List<_TabItem> tabs;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return NavigationBar(
+      selectedIndex: currentIndex,
+      onDestinationSelected: onTap,
+      height: 64,
+      destinations: tabs
+          .map(
+            (tab) => NavigationDestination(
+              icon: AppIcon(
+                tab.icon,
+                size: 20,
+                color: AppColors.onSurfaceVariant,
+              ),
+              selectedIcon: AppIcon(
+                tab.icon,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              label: tab.label,
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+}
+
+class _TabItem {
+  const _TabItem({
+    required this.id,
+    required this.icon,
+    required this.label,
+    required this.path,
+  });
+
+  final String id;
   final String icon;
   final String label;
   final String path;

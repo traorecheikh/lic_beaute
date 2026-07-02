@@ -91,7 +91,7 @@ class PaymentCardForm extends StatelessWidget {
           gapW8,
           Expanded(
             child: Text(
-              'Les données de votre carte sont transmises de manière sécurisée via PayDunya. Elles ne sont pas stockées sur nos serveurs.',
+              'Les données de votre carte sont chiffrées pendant la transmission et ne sont pas stockées par Beauté Avenue.',
               style: AppTextStyles.bodyXs.copyWith(
                 color: AppColors.onSurfaceVariant,
                 height: 1.4,
@@ -161,7 +161,7 @@ class PaymentCardForm extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(top: 8.h),
               child: Text(
-                "J'accepte de soumettre mes informations bancaires via PayDunya. Mes données sont chiffrées en transit (TLS) et non stockées sur Beauté Avenue.",
+                "J'accepte de transmettre mes informations bancaires de manière sécurisée. Elles ne sont pas stockées par Beauté Avenue.",
                 style: AppTextStyles.bodySm.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
