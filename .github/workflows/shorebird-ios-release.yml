@@ -74,6 +74,7 @@ jobs:
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/"
 
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<<"$(security cms -D -i "$PROFILE_PATH")")
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -106,10 +107,11 @@ jobs:
       - name: Configure manual signing for CI
         run: |
           python3 - <<'PY'
+          import os
           from pathlib import Path
           path = Path("ios/Runner.xcodeproj/project.pbxproj")
           text = path.read_text()
-          profile_name = "XC sn numuconnect beauteavenue ios_app_store 1782954963"
+          profile_name = os.environ["PROFILE_NAME"]
           target_sections = [
               '97C147061CF9000F007C117D /* Debug */ = {',
               '97C147071CF9000F007C117D /* Release */ = {',
