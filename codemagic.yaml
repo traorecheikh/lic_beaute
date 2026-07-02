@@ -1,0 +1,52 @@
+workflows:
+  ios-shorebird-release:
+    name: iOS Shorebird Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.44.2
+      xcode: 26.4
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: sn.numuconnect.beauteavenue
+      vars:
+        APP_DIR: apps/mobile-client
+        BUNDLE_ID: sn.numuconnect.beauteavenue
+        BUILD_NAME: 1.0.0
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+        - $HOME/Library/Developer/Xcode/DerivedData
+    scripts:
+      - name: Prepare app files
+        script: |
+          cd "$CM_BUILD_DIR/$APP_DIR"
+          cp .env.example .env || touch .env
+          printf '%s' "$IOS_GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
+      - name: Get Flutter packages
+        script: |
+          cd "$CM_BUILD_DIR/$APP_DIR"
+          flutter pub get
+      - name: Verify iOS workspace
+        script: |
+          cd "$CM_BUILD_DIR/$APP_DIR"
+          xcodebuild -list -workspace ios/Runner.xcworkspace
+      - name: Set up code signing
+        script: |
+          cd "$CM_BUILD_DIR/$APP_DIR"
+          xcode-project use-profiles
+      - name: Build Shorebird iOS release
+        script: |
+          cd "$CM_BUILD_DIR/$APP_DIR"
+          BUILD_NUMBER="${BUILD_NUMBER:-$CM_BUILD_ID}"
+          echo "Using build number: $BUILD_NUMBER"
+          shorebird release ios \
+            --flutter-version 3.44.2 \
+            --build-name "$BUILD_NAME" \
+            --build-number "$BUILD_NUMBER" \
+            --export-options-plist /Users/builder/export_options.plist
+    artifacts:
+      - apps/mobile-client/build/ios/ipa/*.ipa
+      - apps/mobile-client/build/ios/archive/*.xcarchive
+      - /tmp/xcodebuild_logs/*.log
