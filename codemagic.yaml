@@ -16,8 +16,11 @@ workflows:
     cache:
       cache_paths:
         - $HOME/.pub-cache
+        - $HOME/.shorebird
         - $HOME/Library/Caches/CocoaPods
         - $HOME/Library/Developer/Xcode/DerivedData
+        - $HOME/Library/Caches/org.swift.swiftpm
+        - $HOME/Library/Developer/Xcode/SourcePackages
     scripts:
       - name: Prepare app files
         script: |
