@@ -33,7 +33,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.41.7"
+          flutter-version: "3.44.2"
           channel: stable
           cache: true
 
@@ -78,11 +78,67 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/"
 
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<<"$(security cms -D -i "$PROFILE_PATH")")
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string>MJ59869224</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>sn.numuconnect.beauteavenue</key>
+              <string>${PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Configure manual signing for CI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("ios/Runner.xcodeproj/project.pbxproj")
+          text = path.read_text()
+          profile_name = "XC sn numuconnect beauteavenue ios_app_store 1782954963"
+          replacements = {
+              '97C147061CF9000F007C117D /* Debug */ = {': [
+                  '\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";',
+                  '\t\t\t\tCODE_SIGN_STYLE = Manual;',
+                  f'\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profile_name}";',
+              ],
+              '97C147071CF9000F007C117D /* Release */ = {': [
+                  '\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";',
+                  '\t\t\t\tCODE_SIGN_STYLE = Manual;',
+                  f'\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profile_name}";',
+              ],
+              '249021D4217E4FDB00AE95B9 /* Profile */ = {': [
+                  '\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";',
+                  '\t\t\t\tCODE_SIGN_STYLE = Manual;',
+                  f'\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profile_name}";',
+              ],
+          }
+          for marker, lines in replacements.items():
+              start = text.index(marker)
+              build_settings = text.index('buildSettings = {', start)
+              insert_at = text.index('\n', build_settings) + 1
+              for line in reversed(lines):
+                  if line not in text[start:text.index('};', build_settings)]:
+                      text = text[:insert_at] + line + '\n' + text[insert_at:]
+          path.write_text(text)
+          PY
+
       - name: Build Shorebird iOS release
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           shorebird release ios \
-            --flutter-version=3.41.7 \
+            --flutter-version=3.44.2 \
             --build-name="${{ github.event.inputs.build_name }}" \
-            --build-number="${{ github.event.inputs.build_number }}"
+            --build-number="${{ github.event.inputs.build_number }}" \
+            --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
