@@ -39,6 +39,10 @@ workflows:
         script: |
           cd "$CM_BUILD_DIR/$APP_DIR"
           xcode-project use-profiles
+      - name: Install Shorebird CLI
+        script: |
+          curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          echo 'export PATH="$HOME/.shorebird/bin:$PATH"' >> "$CM_ENV"
       - name: Build Shorebird iOS release
         script: |
           cd "$CM_BUILD_DIR/$APP_DIR"
